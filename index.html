@@ -210,6 +210,18 @@
 
   <div class="card" style="margin-bottom:16px;">
     <div class="dtc-header">
+      <h2>Consumo de Combustível</h2>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Consumo Instantâneo</div><div class="value" id="v_instConsumption">–<span class="unit">L/100km</span></div></div>
+      <div class="tile"><div class="label">Consumo Médio da Sessão</div><div class="value" id="v_avgConsumption">–<span class="unit">L/100km</span></div></div>
+      <div class="tile"><div class="label">Distância da Sessão</div><div class="value" id="v_sessionDist">–<span class="unit">km</span></div></div>
+      <div class="tile"><div class="label">Combustível Consumido</div><div class="value" id="v_sessionFuel">–<span class="unit">L</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
       <h2>Motor &amp; Admissão</h2>
     </div>
     <div class="tiles">
@@ -275,6 +287,8 @@
     <b>Sobre os PIDs exibidos:</b> todos os valores vêm de PIDs padrão OBD-II (Modo 01, SAE J1979), suportados pela ECU do Onix Joy 1.0 2018. Nem toda ECU implementa 100% dos PIDs opcionais — se algum campo ficar travado em "–", significa que o adaptador não recebeu resposta para aquele PID específico (comum em Teor de Etanol, Fator Lambda e Temp. Ambiente, que são opcionais). O <b>Teor de Etanol</b> é o dado mais específico para um flex brasileiro: mostra a proporção de etanol na mistura que a ECU está lendo do sensor de combustível.
     <br><br>
     <b>Sobre o Diagnóstico Inteligente:</b> o painel cruza as leituras ao vivo (MAP, MAF, ajustes de combustível, temperatura, avanço de ignição, etc.) contra padrões conhecidos de falha e mostra um alerta quando as condições batem. É uma heurística baseada em regras simples, não uma leitura de módulo de fábrica — serve para apontar a direção do problema, mas não substitui a confirmação com um mecânico ou scanner profissional antes de qualquer troca de peça.
+    <br><br>
+    <b>Sobre o consumo de combustível:</b> os valores são estimados a partir do Fluxo de Ar (MAF) e do Teor de Etanol, usando a relação ar/combustível estequiométrica proporcional à mistura flex (gasolina ≈14,7:1, etanol ≈9:1) e a densidade do combustível. O consumo médio e a distância são acumulados desde a última conexão — desconectar e reconectar zera a sessão.
   </div>
 
 </div>
@@ -344,6 +358,13 @@
   let displayedRpm = 0, targetRpm = 0, rafId = null;
   const readings = {};
   const rpmHistory = [];
+  const stftHistory = [];
+  const sessionHistory = [];
+  const instConsumptionHistory = [];
+  let lastRuntime = null;
+  let lastPollTs = null;
+  let sessionFuelLiters = 0;
+  let sessionDistanceKm = 0;
 
   // ---------------------------------------------------------------------
   // DOM
@@ -448,6 +469,17 @@
   }
   gaugeLoop();
 
+  function resetSessionState() {
+    sessionFuelLiters = 0;
+    sessionDistanceKm = 0;
+    lastPollTs = null;
+    lastRuntime = null;
+    rpmHistory.length = 0;
+    stftHistory.length = 0;
+    sessionHistory.length = 0;
+    instConsumptionHistory.length = 0;
+  }
+
   function startupSweep() {
     return new Promise(resolve => {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -512,6 +544,7 @@
       readDtcBtn.disabled = false;
       clearDtcBtn.disabled = false;
 
+      resetSessionState();
       await startupSweep();
       startPolling();
     } catch (err) {
@@ -597,6 +630,10 @@
   }
 
   async function pollOnce() {
+    const now = Date.now();
+    const dtHours = lastPollTs !== null ? (now - lastPollTs) / 3600000 : 0;
+    lastPollTs = now;
+
     // RPM
     try {
       const raw = await sendCommand("010C");
@@ -652,7 +689,55 @@
       }
     } catch (e) { /* skip */ }
 
+    if (readings.v_stft1 !== undefined) {
+      stftHistory.push(readings.v_stft1);
+      if (stftHistory.length > 8) stftHistory.shift();
+    }
+    sessionHistory.push({ rpm: readings.rpm, speed: readings.v_speed, throttle: readings.v_throttle, lambda: readings.v_lambda });
+    if (sessionHistory.length > 6) sessionHistory.shift();
+
+    updateFuelConsumption(dtHours);
+
     runDiagnostics();
+  }
+
+  // ---------------------------------------------------------------------
+  // FUEL CONSUMPTION (estimated from MAF + ethanol content)
+  // ---------------------------------------------------------------------
+  function updateFuelConsumption(dtHours) {
+    const r = readings;
+    if (r.v_maf === undefined) return;
+
+    const ethanolFrac = (r.v_ethanol !== undefined ? r.v_ethanol : 0) / 100;
+    const afr = 14.7 * (1 - ethanolFrac) + 9.0 * ethanolFrac;
+    const density = 745 * (1 - ethanolFrac) + 789 * ethanolFrac; // g/L
+    const litersPerHour = (r.v_maf / afr) * 3600 / density;
+
+    if (dtHours > 0) {
+      sessionFuelLiters += litersPerHour * dtHours;
+      if (r.v_speed !== undefined) sessionDistanceKm += r.v_speed * dtHours;
+    }
+
+    const instEl = $("v_instConsumption");
+    if (r.v_speed !== undefined && r.v_speed > 3) {
+      const instL100 = (litersPerHour / r.v_speed) * 100;
+      instEl.innerHTML = instL100.toFixed(1) + '<span class="unit">L/100km</span>';
+      instConsumptionHistory.push(instL100);
+      if (instConsumptionHistory.length > 6) instConsumptionHistory.shift();
+    } else {
+      instEl.innerHTML = litersPerHour.toFixed(2) + '<span class="unit">L/h (parado)</span>';
+    }
+
+    $("v_sessionDist").innerHTML = sessionDistanceKm.toFixed(1) + '<span class="unit">km</span>';
+    $("v_sessionFuel").innerHTML = sessionFuelLiters.toFixed(2) + '<span class="unit">L</span>';
+
+    const avgEl = $("v_avgConsumption");
+    if (sessionDistanceKm > 0.1) {
+      const avgL100 = (sessionFuelLiters / sessionDistanceKm) * 100;
+      avgEl.innerHTML = avgL100.toFixed(1) + '<span class="unit">L/100km</span>';
+    } else {
+      avgEl.innerHTML = '–<span class="unit">L/100km</span>';
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -705,6 +790,55 @@
     if (r.v_iat !== undefined && r.v_ambient !== undefined && r.v_runtime !== undefined && r.v_runtime > 300 &&
         Math.abs(r.v_iat - r.v_ambient) < 2 && r.v_coolant !== undefined && r.v_coolant > 80) {
       alerts.push("Temperatura do ar de admissão igual à ambiente mesmo com o motor quente — sensor IAT pode estar solto ou mal posicionado.");
+    }
+
+    if (r.rpm !== undefined && r.rpm === 0 && r.v_map !== undefined && r.v_baro !== undefined &&
+        Math.abs(r.v_map - r.v_baro) > 3) {
+      alerts.push("Sensor de pressão do coletor (MAP) pode estar descalibrado: com o motor parado e a chave ligada, o MAP deveria ser igual à pressão barométrica (diferença atual de " + Math.abs(r.v_map - r.v_baro).toFixed(0) + " kPa).");
+    }
+
+    if (stftHistory.length >= 6 && r.v_ltft1 !== undefined && Math.abs(r.v_ltft1) < 3 && stdev(stftHistory) > 8) {
+      alerts.push("Ajuste de combustível de curto prazo oscilando bastante enquanto o de longo prazo está estável perto de zero — sinal de sonda lambda respondendo devagar (envelhecida).");
+    }
+
+    if (r.v_throttle !== undefined && r.v_throttle > 55 && r.v_load !== undefined && r.v_load < 25) {
+      alerts.push("Acelerador em posição alta sem aumento correspondente na carga do motor — possível embreagem escorregando ou corpo de borboleta com problema.");
+    }
+
+    if (sessionHistory.length >= 4) {
+      const first = sessionHistory[0], last = sessionHistory[sessionHistory.length - 1];
+      if (first.speed !== undefined && last.speed !== undefined && first.rpm !== undefined && last.rpm !== undefined && last.throttle !== undefined) {
+        const dSpeed = last.speed - first.speed;
+        const dRpm = last.rpm - first.rpm;
+        if (dSpeed > 8 && dRpm < 50 && last.throttle > 20) {
+          alerts.push("Velocidade subindo sem o RPM acompanhar proporcionalmente, com o acelerador pressionado — possível embreagem escorregando.");
+        }
+      }
+    }
+
+    if (sessionHistory.length >= 2) {
+      const prev = sessionHistory[sessionHistory.length - 2];
+      const cur = sessionHistory[sessionHistory.length - 1];
+      if (cur.throttle !== undefined && cur.throttle < 5 &&
+          prev.rpm !== undefined && cur.rpm !== undefined && cur.rpm < prev.rpm - 100 && cur.rpm > 1200 &&
+          cur.lambda !== undefined && cur.lambda < 1.15) {
+        alerts.push("Corte de combustível em desaceleração (DFCO) pode não estar atuando: pé fora do acelerador com RPM caindo, mas o fator lambda não indica a mistura pobre esperada nesse momento.");
+      }
+    }
+
+    if (r.v_runtime !== undefined) {
+      if (lastRuntime !== null && r.v_runtime < lastRuntime - 2) {
+        alerts.push("Tempo de funcionamento da ECU voltou para trás durante a mesma sessão — indício de reset do módulo (queda de tensão momentânea ou mau contato elétrico).");
+      }
+      lastRuntime = r.v_runtime;
+    }
+
+    if (instConsumptionHistory.length >= 4 && r.v_speed !== undefined && r.v_speed > 40 &&
+        r.v_throttle !== undefined && r.v_throttle < 40) {
+      const avgInst = instConsumptionHistory.reduce((a, b) => a + b, 0) / instConsumptionHistory.length;
+      if (avgInst > 14) {
+        alerts.push("Consumo instantâneo estimado acima do esperado em velocidade de cruzeiro (~" + avgInst.toFixed(1) + " L/100km) — possível freio arrastando, pneu murcho ou mistura rica generalizada.");
+      }
     }
 
     if (r.v_speed === 0 && rpmHistory.length >= 6 && stdev(rpmHistory) > 100) {
