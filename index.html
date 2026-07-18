@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terminal OBD — Leitor ELM327 BLE</title>
+<title>Terminal OBD — Onix Joy 1.0 (ELM327 BLE)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -92,8 +92,7 @@
     padding:16px;
   }
   .gauge-card{display:flex;flex-direction:column;align-items:center;justify-content:center;}
-  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  @media (max-width:520px){ .tiles{grid-template-columns:repeat(2,1fr);} }
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill, minmax(150px,1fr));gap:12px;}
 
   .tile{
     background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
@@ -157,13 +156,27 @@
     <div class="brand">
       <div class="dot" id="statusDot"></div>
       <div>
-        <h1>Terminal OBD</h1>
+        <h1>Terminal OBD <span style="font-size:11px;color:var(--text-dim);text-transform:none;letter-spacing:0;font-weight:400;">· Onix Joy 1.0 · 2018</span></h1>
         <div class="sub" id="statusText">desconectado</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="primary" id="connectBtn">Conectar ELM327</button>
       <button id="disconnectBtn" disabled>Desconectar</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
+      <h2>Ficha do Veículo</h2>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Modelo</div><div class="value" style="font-size:16px;">Onix Joy 1.0</div></div>
+      <div class="tile"><div class="label">Ano/Modelo</div><div class="value" style="font-size:16px;">2018</div></div>
+      <div class="tile"><div class="label">Motor</div><div class="value" style="font-size:16px;">1.0 SPE/4 Flex</div></div>
+      <div class="tile"><div class="label">Potência</div><div class="value" style="font-size:16px;">75cv (E) / 72cv (G)</div></div>
+      <div class="tile"><div class="label">Câmbio</div><div class="value" style="font-size:16px;">Manual 5 marchas</div></div>
+      <div class="tile"><div class="label">Combustível</div><div class="value" style="font-size:16px;">Flex (Gasolina/Etanol)</div></div>
     </div>
   </div>
 
@@ -178,7 +191,46 @@
       <div class="tile"><div class="label">Nível de Combustível</div><div class="value" id="v_fuel">–<span class="unit">%</span></div></div>
       <div class="tile"><div class="label">Acelerador</div><div class="value" id="v_throttle">–<span class="unit">%</span></div></div>
       <div class="tile"><div class="label">Ar de Admissão</div><div class="value" id="v_iat">–<span class="unit">°C</span></div></div>
-      <div class="tile"><div class="label">Bateria</div><div class="value" id="v_volts">–<span class="unit">V</span></div></div>
+      <div class="tile"><div class="label">Bateria (tensão do sistema)</div><div class="value" id="v_volts">–<span class="unit">V</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
+      <h2>Combustível &amp; Etanol</h2>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Teor de Etanol</div><div class="value" id="v_ethanol">–<span class="unit">%</span></div></div>
+      <div class="tile"><div class="label">Ajuste Combustível Curto Prazo</div><div class="value" id="v_stft1">–<span class="unit">%</span></div></div>
+      <div class="tile"><div class="label">Ajuste Combustível Longo Prazo</div><div class="value" id="v_ltft1">–<span class="unit">%</span></div></div>
+      <div class="tile"><div class="label">Fator Lambda</div><div class="value" id="v_lambda">–<span class="unit">λ</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
+      <h2>Motor &amp; Admissão</h2>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Carga Calculada do Motor</div><div class="value" id="v_load">–<span class="unit">%</span></div></div>
+      <div class="tile"><div class="label">Pressão no Coletor (MAP)</div><div class="value" id="v_map">–<span class="unit">kPa</span></div></div>
+      <div class="tile"><div class="label">Fluxo de Ar (MAF)</div><div class="value" id="v_maf">–<span class="unit">g/s</span></div></div>
+      <div class="tile"><div class="label">Avanço de Ignição</div><div class="value" id="v_timing">–<span class="unit">°</span></div></div>
+      <div class="tile"><div class="label">Temp. Ambiente</div><div class="value" id="v_ambient">–<span class="unit">°C</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
+      <h2>Diagnóstico do Sistema</h2>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Luz de Injeção (MIL)</div><div class="value" id="v_mil">–</div></div>
+      <div class="tile"><div class="label">DTCs Armazenados</div><div class="value" id="v_dtccount">–</div></div>
+      <div class="tile"><div class="label">Tempo de Funcionamento</div><div class="value" id="v_runtime">–<span class="unit">s</span></div></div>
+      <div class="tile"><div class="label">Distância com MIL Acesa</div><div class="value" id="v_mildist">–<span class="unit">km</span></div></div>
+      <div class="tile"><div class="label">Pressão Barométrica</div><div class="value" id="v_baro">–<span class="unit">kPa</span></div></div>
+      <div class="tile"><div class="label">Voltagem do Módulo (ECU)</div><div class="value" id="v_moduleV">–<span class="unit">V</span></div></div>
     </div>
   </div>
 
@@ -209,6 +261,8 @@
 
   <div class="notice">
     <b>Antes de conectar:</b> o Web Bluetooth só funciona no Chrome, Edge ou Opera, no computador ou Android — não funciona no Safari nem no Firefox. A página precisa ser aberta via <b>https://</b> ou <b>http://localhost</b> (abrir o arquivo diretamente com <code>file://</code> geralmente não terá permissão para usar Bluetooth). Adaptadores ELM327 BLE genéricos não seguem um perfil único padronizado, então o app tenta automaticamente alguns UUIDs de serviço comuns (FFF0, FFE0, Nordic UART); se não encontrar uma característica compatível, use um app scanner de BLE (como o nRF Connect) para descobrir o UUID de serviço do seu adaptador e cole no campo "UUID de serviço personalizado" acima.
+    <br><br>
+    <b>Sobre os PIDs exibidos:</b> todos os valores vêm de PIDs padrão OBD-II (Modo 01, SAE J1979), suportados pela ECU do Onix Joy 1.0 2018. Nem toda ECU implementa 100% dos PIDs opcionais — se algum campo ficar travado em "–", significa que o adaptador não recebeu resposta para aquele PID específico (comum em Teor de Etanol, Fator Lambda e Temp. Ambiente, que são opcionais). O <b>Teor de Etanol</b> é o dado mais específico para um flex brasileiro: mostra a proporção de etanol na mistura que a ECU está lendo do sensor de combustível.
   </div>
 
 </div>
@@ -237,6 +291,19 @@
     { pid: "2F", bytes: 1, elId: "v_fuel",     parse: b => Math.round(b[0] * 100 / 255) },
     { pid: "11", bytes: 1, elId: "v_throttle", parse: b => Math.round(b[0] * 100 / 255) },
     { pid: "0F", bytes: 1, elId: "v_iat",      parse: b => b[0] - 40 },
+    { pid: "52", bytes: 1, elId: "v_ethanol",  parse: b => Math.round(b[0] * 100 / 255) },
+    { pid: "06", bytes: 1, elId: "v_stft1",    parse: b => ((b[0] - 128) * 100 / 128).toFixed(1) },
+    { pid: "07", bytes: 1, elId: "v_ltft1",    parse: b => ((b[0] - 128) * 100 / 128).toFixed(1) },
+    { pid: "44", bytes: 2, elId: "v_lambda",   parse: b => (((b[0] * 256) + b[1]) / 32768).toFixed(2) },
+    { pid: "04", bytes: 1, elId: "v_load",     parse: b => Math.round(b[0] * 100 / 255) },
+    { pid: "0B", bytes: 1, elId: "v_map",      parse: b => b[0] },
+    { pid: "10", bytes: 2, elId: "v_maf",      parse: b => (((b[0] * 256) + b[1]) / 100).toFixed(2) },
+    { pid: "0E", bytes: 1, elId: "v_timing",   parse: b => (b[0] / 2 - 64).toFixed(1) },
+    { pid: "46", bytes: 1, elId: "v_ambient",  parse: b => b[0] - 40 },
+    { pid: "1F", bytes: 2, elId: "v_runtime",  parse: b => (b[0] * 256) + b[1] },
+    { pid: "21", bytes: 2, elId: "v_mildist",  parse: b => (b[0] * 256) + b[1] },
+    { pid: "33", bytes: 1, elId: "v_baro",     parse: b => b[0] },
+    { pid: "42", bytes: 2, elId: "v_moduleV",  parse: b => (((b[0] * 256) + b[1]) / 1000).toFixed(2) },
   ];
 
   const DTC_DB = {
@@ -524,6 +591,22 @@
         targetRpm = ((b[i + 2] * 256) + b[i + 3]) / 4;
       }
     } catch (e) { /* skip this cycle */ }
+
+    // Monitor status: MIL (check engine) state + stored DTC count
+    try {
+      const raw = await sendCommand("0101");
+      const b = hexBytesFrom(raw);
+      const i = b.indexOf(0x41);
+      if (i >= 0 && b[i + 1] === 0x01 && b.length >= i + 3) {
+        const A = b[i + 2];
+        const milOn = (A & 0x80) !== 0;
+        const dtcCount = A & 0x7F;
+        const milEl = $("v_mil");
+        milEl.textContent = milOn ? "ACESA" : "Apagada";
+        milEl.style.color = milOn ? "var(--red)" : "var(--teal)";
+        $("v_dtccount").textContent = String(dtcCount);
+      }
+    } catch (e) { /* skip */ }
 
     for (const p of PIDS) {
       if (p.isRpm) continue;
