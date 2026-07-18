@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal OBD — Leitor ELM327 BLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171b;
+    --panel:#1b1f24;
+    --panel-2:#20252b;
+    --border:#2a2f36;
+    --amber:#ffb000;
+    --amber-dim:#8a6103;
+    --teal:#37e6c4;
+    --red:#ff5252;
+    --text:#c7cdd6;
+    --text-dim:#6b7280;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(55,230,196,0.05), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(255,176,0,0.05), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:20px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+
+  /* ---- Header / status bar ---- */
+  .statusbar{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px 18px;
+    margin-bottom:16px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--text-dim);
+    box-shadow:0 0 0 rgba(0,0,0,0);
+    transition:background .3s, box-shadow .3s;
+  }
+  .dot.connecting{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulse 1s infinite;}
+  .dot.connected{background:var(--teal);box-shadow:0 0 8px var(--teal);}
+  .dot.error{background:var(--red);box-shadow:0 0 8px var(--red);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .brand h1{font-family:'Chakra Petch',sans-serif;font-size:16px;letter-spacing:.08em;margin:0;text-transform:uppercase;color:var(--text);}
+  .brand .sub{font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;}
+
+  button{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    background:var(--panel-2);color:var(--text);
+    border:1px solid var(--border);border-radius:8px;
+    padding:10px 16px;cursor:pointer;letter-spacing:.02em;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  button:hover{border-color:var(--teal);color:var(--teal);}
+  button:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  button.primary{background:var(--teal);color:#0a1512;border-color:var(--teal);}
+  button.primary:hover{background:#4ff0cf;color:#0a1512;}
+  button.danger:hover{border-color:var(--red);color:var(--red);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button:disabled:hover{border-color:var(--border);color:var(--text);}
+
+  /* ---- Main grid ---- */
+  .dash{
+    display:grid;
+    grid-template-columns:300px 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  @media (max-width:720px){ .dash{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .gauge-card{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media (max-width:520px){ .tiles{grid-template-columns:repeat(2,1fr);} }
+
+  .tile{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 12px;display:flex;flex-direction:column;gap:4px;
+  }
+  .tile .label{font-size:11px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;}
+  .tile .value{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:28px;color:var(--amber);line-height:1;}
+  .tile .value .unit{font-size:13px;font-weight:400;color:var(--text-dim);margin-left:4px;}
+
+  /* ---- DTC panel ---- */
+  .dtc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px;}
+  .dtc-header h2{font-family:'Chakra Petch',sans-serif;font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0;color:var(--text);}
+  .dtc-actions{display:flex;gap:8px;}
+  .dtc-list{display:flex;flex-direction:column;gap:8px;}
+  .dtc-empty{color:var(--text-dim);font-size:13px;font-family:'JetBrains Mono',monospace;}
+  .dtc-item{
+    display:flex;align-items:baseline;gap:10px;
+    background:var(--panel-2);border:1px solid var(--border);border-left:3px solid var(--red);
+    border-radius:6px;padding:10px 12px;
+  }
+  .dtc-item code{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--red);font-size:14px;}
+  .dtc-item span{font-size:13px;color:var(--text);}
+
+  /* ---- Log panel ---- */
+  .log-toggle{
+    display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;
+  }
+  .log-toggle h2{font-family:'Chakra Petch',sans-serif;font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0;color:var(--text);}
+  .log-toggle .chevron{transition:transform .15s;color:var(--text-dim);}
+  .log-toggle.open .chevron{transform:rotate(90deg);}
+  .log-box{
+    display:none;
+    margin-top:12px;background:#0f1216;border:1px solid var(--border);border-radius:8px;
+    padding:10px 12px;height:180px;overflow-y:auto;
+    font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;
+  }
+  .log-box.open{display:block;}
+  .log-line.tx{color:var(--teal);}
+  .log-line.rx{color:var(--text);}
+  .log-line.sys{color:var(--text-dim);font-style:italic;}
+
+  .advanced{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .advanced input{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:6px;color:var(--text);
+    padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;flex:1;min-width:220px;
+  }
+  .advanced input:focus-visible{outline:2px solid var(--teal);outline-offset:1px;}
+  .advanced label{font-size:12px;color:var(--text-dim);white-space:nowrap;}
+
+  .notice{
+    font-size:12px;color:var(--text-dim);line-height:1.6;margin-top:16px;padding:12px 14px;
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  }
+  .notice b{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="statusbar">
+    <div class="brand">
+      <div class="dot" id="statusDot"></div>
+      <div>
+        <h1>Terminal OBD</h1>
+        <div class="sub" id="statusText">desconectado</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="primary" id="connectBtn">Conectar ELM327</button>
+      <button id="disconnectBtn" disabled>Desconectar</button>
+    </div>
+  </div>
+
+  <div class="dash">
+    <div class="card gauge-card">
+      <canvas id="rpmGauge" width="260" height="260"></canvas>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="label">Velocidade</div><div class="value" id="v_speed">–<span class="unit">km/h</span></div></div>
+      <div class="tile"><div class="label">Temp. Arrefecimento</div><div class="value" id="v_coolant">–<span class="unit">°C</span></div></div>
+      <div class="tile"><div class="label">Nível de Combustível</div><div class="value" id="v_fuel">–<span class="unit">%</span></div></div>
+      <div class="tile"><div class="label">Acelerador</div><div class="value" id="v_throttle">–<span class="unit">%</span></div></div>
+      <div class="tile"><div class="label">Ar de Admissão</div><div class="value" id="v_iat">–<span class="unit">°C</span></div></div>
+      <div class="tile"><div class="label">Bateria</div><div class="value" id="v_volts">–<span class="unit">V</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
+      <h2>Códigos de Falha (DTC)</h2>
+      <div class="dtc-actions">
+        <button id="readDtcBtn" disabled>Ler Códigos</button>
+        <button id="clearDtcBtn" disabled class="danger">Apagar Códigos</button>
+      </div>
+    </div>
+    <div class="dtc-list" id="dtcList">
+      <div class="dtc-empty">Conecte-se a um veículo e pressione "Ler Códigos".</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="log-toggle" id="logToggle">
+      <h2>Log Bruto</h2>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="log-box" id="logBox"></div>
+    <div class="advanced">
+      <label for="customService">UUID de serviço personalizado (opcional):</label>
+      <input type="text" id="customService" placeholder="e.g. 0000fff0-0000-1000-8000-00805f9b34fb">
+    </div>
+  </div>
+
+  <div class="notice">
+    <b>Antes de conectar:</b> o Web Bluetooth só funciona no Chrome, Edge ou Opera, no computador ou Android — não funciona no Safari nem no Firefox. A página precisa ser aberta via <b>https://</b> ou <b>http://localhost</b> (abrir o arquivo diretamente com <code>file://</code> geralmente não terá permissão para usar Bluetooth). Adaptadores ELM327 BLE genéricos não seguem um perfil único padronizado, então o app tenta automaticamente alguns UUIDs de serviço comuns (FFF0, FFE0, Nordic UART); se não encontrar uma característica compatível, use um app scanner de BLE (como o nRF Connect) para descobrir o UUID de serviço do seu adaptador e cole no campo "UUID de serviço personalizado" acima.
+  </div>
+
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // CONFIG
+  // ---------------------------------------------------------------------
+  const KNOWN_SERVICES = [
+    "0000fff0-0000-1000-8000-00805f9b34fb", // common ELM327 BLE clones (HM-10 style)
+    "0000ffe0-0000-1000-8000-00805f9b34fb", // HM-10 default
+    "6e400001-b5a3-f393-e0a9-e50e24dcca9e", // Nordic UART Service
+    "000018f0-0000-1000-8000-00805f9b34fb"  // seen on some Vgate units
+  ];
+
+  const MAX_RPM = 8000;
+  const REDLINE_START = 6500;
+
+  const PIDS = [
+    { pid: "0C", bytes: 2, elId: null, isRpm: true },
+    { pid: "0D", bytes: 1, elId: "v_speed",    parse: b => b[0] },
+    { pid: "05", bytes: 1, elId: "v_coolant",  parse: b => b[0] - 40 },
+    { pid: "2F", bytes: 1, elId: "v_fuel",     parse: b => Math.round(b[0] * 100 / 255) },
+    { pid: "11", bytes: 1, elId: "v_throttle", parse: b => Math.round(b[0] * 100 / 255) },
+    { pid: "0F", bytes: 1, elId: "v_iat",      parse: b => b[0] - 40 },
+  ];
+
+  const DTC_DB = {
+    P0100:"Mau funcionamento do circuito do sensor MAF (fluxo de ar)", P0101:"Faixa/desempenho do circuito do sensor MAF",
+    P0110:"Mau funcionamento do circuito do sensor de temperatura do ar de admissão", P0115:"Mau funcionamento do circuito do sensor de temperatura do arrefecimento",
+    P0120:"Mau funcionamento do circuito do sensor de posição do acelerador (TPS)", P0128:"Termostato do arrefecimento abaixo da temperatura de regulagem",
+    P0130:"Mau funcionamento do circuito da sonda lambda (banco 1, sensor 1)", P0171:"Mistura pobre (banco 1)",
+    P0172:"Mistura rica (banco 1)", P0174:"Mistura pobre (banco 2)", P0175:"Mistura rica (banco 2)",
+    P0300:"Falha de ignição aleatória/em múltiplos cilindros detectada", P0301:"Falha de ignição detectada no cilindro 1",
+    P0302:"Falha de ignição detectada no cilindro 2", P0303:"Falha de ignição detectada no cilindro 3", P0304:"Falha de ignição detectada no cilindro 4",
+    P0325:"Mau funcionamento do circuito do sensor de detonação", P0335:"Mau funcionamento do circuito do sensor de posição do virabrequim",
+    P0340:"Mau funcionamento do circuito do sensor de posição do comando de válvulas", P0420:"Eficiência do catalisador abaixo do limite (banco 1)",
+    P0430:"Eficiência do catalisador abaixo do limite (banco 2)", P0440:"Mau funcionamento do sistema EVAP (evaporativo)",
+    P0442:"Vazamento pequeno detectado no sistema EVAP", P0455:"Vazamento grande detectado no sistema EVAP",
+    P0500:"Mau funcionamento do sensor de velocidade do veículo", P0505:"Mau funcionamento do sistema de controle de marcha lenta",
+    P0700:"Mau funcionamento do sistema de controle da transmissão", P0715:"Mau funcionamento do circuito do sensor de velocidade de entrada/turbina"
+  };
+
+  // ---------------------------------------------------------------------
+  // STATE
+  // ---------------------------------------------------------------------
+  let device = null, server = null, writeChar = null, notifyChar = null;
+  let rxBuffer = "";
+  let pending = null; // { resolve, reject, timer }
+  let pollTimer = null;
+  let displayedRpm = 0, targetRpm = 0, rafId = null;
+
+  // ---------------------------------------------------------------------
+  // DOM
+  // ---------------------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const statusDot = $("statusDot"), statusText = $("statusText");
+  const connectBtn = $("connectBtn"), disconnectBtn = $("disconnectBtn");
+  const readDtcBtn = $("readDtcBtn"), clearDtcBtn = $("clearDtcBtn");
+  const dtcList = $("dtcList");
+  const logBox = $("logBox"), logToggle = $("logToggle");
+  const customServiceInput = $("customService");
+
+  logToggle.addEventListener("click", () => {
+    logToggle.classList.toggle("open");
+    logBox.classList.toggle("open");
+  });
+
+  function log(kind, text) {
+    const line = document.createElement("div");
+    line.className = "log-line " + kind;
+    const prefix = kind === "tx" ? "› " : kind === "rx" ? "‹ " : "· ";
+    line.textContent = prefix + text;
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function setStatus(state, text) {
+    statusDot.className = "dot " + state;
+    statusText.textContent = text;
+  }
+
+  // ---------------------------------------------------------------------
+  // GAUGE (canvas tachometer)
+  // ---------------------------------------------------------------------
+  const canvas = $("rpmGauge"), ctx = canvas.getContext("2d");
+  const cx = 130, cy = 140, R = 105;
+  const startDeg = 135, sweepDeg = 270;
+
+  function angleFor(rpm) {
+    const t = Math.max(0, Math.min(1, rpm / MAX_RPM));
+    return (startDeg + t * sweepDeg) * Math.PI / 180;
+  }
+
+  function drawGauge(rpm) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // outer tick arc
+    ctx.strokeStyle = "#2a2f36";
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, startDeg * Math.PI / 180, (startDeg + sweepDeg) * Math.PI / 180);
+    ctx.stroke();
+
+    // redline arc
+    const redStartAngle = angleFor(REDLINE_START);
+    const redEndAngle = angleFor(MAX_RPM);
+    ctx.strokeStyle = "#ff5252";
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, redStartAngle, redEndAngle);
+    ctx.stroke();
+
+    // ticks + labels
+    ctx.fillStyle = "#8b93a0";
+    ctx.font = "11px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let k = 0; k <= 8; k++) {
+      const a = angleFor(k * 1000);
+      const x1 = cx + Math.cos(a) * (R - 10), y1 = cy + Math.sin(a) * (R - 10);
+      const x2 = cx + Math.cos(a) * (R + 2), y2 = cy + Math.sin(a) * (R + 2);
+      ctx.strokeStyle = k * 1000 >= REDLINE_START ? "#ff5252" : "#4a515c";
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      const lx = cx + Math.cos(a) * (R - 24), ly = cy + Math.sin(a) * (R - 24);
+      ctx.fillText(String(k), lx, ly);
+    }
+
+    // needle
+    const a = angleFor(rpm);
+    const nx = cx + Math.cos(a) * (R - 20), ny = cy + Math.sin(a) * (R - 20);
+    ctx.strokeStyle = "#ffb000";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke();
+    ctx.fillStyle = "#ffb000";
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+
+    // digital readout
+    ctx.fillStyle = "#ffb000";
+    ctx.font = "700 32px 'Chakra Petch', sans-serif";
+    ctx.fillText(String(Math.round(rpm)), cx, cy + 45);
+    ctx.fillStyle = "#6b7280";
+    ctx.font = "11px 'Inter', sans-serif";
+    ctx.fillText("RPM", cx, cy + 65);
+  }
+
+  function gaugeLoop() {
+    displayedRpm += (targetRpm - displayedRpm) * 0.18;
+    if (Math.abs(displayedRpm - targetRpm) < 0.5) displayedRpm = targetRpm;
+    drawGauge(displayedRpm);
+    rafId = requestAnimationFrame(gaugeLoop);
+  }
+  gaugeLoop();
+
+  function startupSweep() {
+    return new Promise(resolve => {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce) { resolve(); return; }
+      targetRpm = MAX_RPM;
+      setTimeout(() => { targetRpm = 0; setTimeout(resolve, 700); }, 600);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // BLE CONNECTION
+  // ---------------------------------------------------------------------
+  async function connect() {
+    if (!navigator.bluetooth) {
+      setStatus("error", "Web Bluetooth não está disponível neste navegador");
+      log("sys", "navigator.bluetooth não está definido — use Chrome/Edge/Opera no computador ou Android, via https:// ou localhost.");
+      return;
+    }
+
+    const optionalServices = [...KNOWN_SERVICES];
+    const custom = customServiceInput.value.trim().toLowerCase();
+    if (custom) optionalServices.unshift(custom);
+
+    try {
+      setStatus("connecting", "selecione um dispositivo…");
+      device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices
+      });
+      device.addEventListener("gattserverdisconnected", onDisconnected);
+
+      setStatus("connecting", "conectando…");
+      server = await device.gatt.connect();
+
+      const candidates = custom ? [custom, ...KNOWN_SERVICES] : KNOWN_SERVICES;
+      let service = null;
+      for (const uuid of candidates) {
+        try {
+          service = await server.getPrimaryService(uuid);
+          log("sys", "serviço encontrado " + uuid);
+          break;
+        } catch (e) { /* try next */ }
+      }
+      if (!service) throw new Error("Nenhum serviço OBD conhecido foi encontrado neste dispositivo. Tente o campo de UUID personalizado.");
+
+      const chars = await service.getCharacteristics();
+      for (const c of chars) {
+        if (c.properties.notify) notifyChar = c;
+        if (c.properties.write || c.properties.writeWithoutResponse) writeChar = c;
+      }
+      if (!writeChar || !notifyChar) throw new Error("Não foi possível encontrar uma característica de escrita e notificação.");
+
+      await notifyChar.startNotifications();
+      notifyChar.addEventListener("characteristicvaluechanged", onNotify);
+
+      setStatus("connecting", "inicializando adaptador…");
+      await initAdapter();
+
+      setStatus("connected", (device.name || "ELM327") + " — conectado");
+      connectBtn.disabled = true;
+      disconnectBtn.disabled = false;
+      readDtcBtn.disabled = false;
+      clearDtcBtn.disabled = false;
+
+      await startupSweep();
+      startPolling();
+    } catch (err) {
+      setStatus("error", err.message || "falha na conexão");
+      log("sys", "erro: " + (err.message || err));
+      cleanup();
+    }
+  }
+
+  function onDisconnected() {
+    setStatus("error", "dispositivo desconectado");
+    log("sys", "servidor GATT desconectado");
+    cleanup();
+  }
+
+  function cleanup() {
+    stopPolling();
+    writeChar = null; notifyChar = null; server = null;
+    connectBtn.disabled = false;
+    disconnectBtn.disabled = true;
+    readDtcBtn.disabled = true;
+    clearDtcBtn.disabled = true;
+    targetRpm = 0;
+  }
+
+  function disconnect() {
+    if (device && device.gatt.connected) device.gatt.disconnect();
+    cleanup();
+    setStatus("", "desconectado");
+  }
+
+  function onNotify(event) {
+    const text = new TextDecoder().decode(event.target.value);
+    rxBuffer += text;
+    if (rxBuffer.includes(">")) {
+      const full = rxBuffer;
+      rxBuffer = "";
+      log("rx", full.replace(/[\r\n>]+/g, " ").trim());
+      if (pending) {
+        clearTimeout(pending.timer);
+        pending.resolve(full);
+        pending = null;
+      }
+    }
+  }
+
+  function sendCommand(cmd, timeoutMs = 2500) {
+    return new Promise(async (resolve, reject) => {
+      if (!writeChar) { reject(new Error("não conectado")); return; }
+      pending = {
+        resolve, reject,
+        timer: setTimeout(() => { pending = null; reject(new Error("tempo esgotado: " + cmd)); }, timeoutMs)
+      };
+      log("tx", cmd);
+      try {
+        const data = new TextEncoder().encode(cmd + "\r");
+        if (writeChar.properties.writeWithoutResponse) await writeChar.writeValueWithoutResponse(data);
+        else await writeChar.writeValue(data);
+      } catch (e) {
+        clearTimeout(pending.timer);
+        pending = null;
+        reject(e);
+      }
+    });
+  }
+
+  async function initAdapter() {
+    const initCmds = ["ATZ", "ATE0", "ATL0", "ATS0", "ATH0", "ATSP0"];
+    for (const cmd of initCmds) {
+      try { await sendCommand(cmd, cmd === "ATZ" ? 3000 : 2000); }
+      catch (e) { log("sys", "aviso de inicialização: " + e.message); }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // PID PARSING
+  // ---------------------------------------------------------------------
+  function hexBytesFrom(raw) {
+    const clean = raw.replace(/SEARCHING\.*/gi, "").replace(/[^0-9A-Fa-f]/g, "");
+    const bytes = [];
+    for (let i = 0; i + 1 < clean.length; i += 2) bytes.push(parseInt(clean.substr(i, 2), 16));
+    return bytes;
+  }
+
+  async function pollOnce() {
+    // RPM
+    try {
+      const raw = await sendCommand("010C");
+      const b = hexBytesFrom(raw);
+      const i = b.indexOf(0x41);
+      if (i >= 0 && b[i + 1] === 0x0C && b.length >= i + 4) {
+        targetRpm = ((b[i + 2] * 256) + b[i + 3]) / 4;
+      }
+    } catch (e) { /* skip this cycle */ }
+
+    for (const p of PIDS) {
+      if (p.isRpm) continue;
+      try {
+        const raw = await sendCommand("01" + p.pid);
+        const b = hexBytesFrom(raw);
+        const i = b.indexOf(0x41);
+        if (i >= 0 && b[i + 1] === parseInt(p.pid, 16) && b.length >= i + 2 + p.bytes) {
+          const data = b.slice(i + 2, i + 2 + p.bytes);
+          const val = p.parse(data);
+          $(p.elId).innerHTML = val + '<span class="unit">' + $(p.elId).querySelector(".unit").textContent + "</span>";
+        }
+      } catch (e) { /* skip */ }
+    }
+
+    try {
+      const raw = await sendCommand("ATRV");
+      const m = raw.match(/(\d+\.?\d*)\s*V/i);
+      if (m) $("v_volts").innerHTML = m[1] + '<span class="unit">V</span>';
+    } catch (e) { /* skip */ }
+  }
+
+  function startPolling() {
+    stopPolling();
+    (async function loop() {
+      while (writeChar) {
+        await pollOnce();
+        await new Promise(r => setTimeout(r, 250));
+      }
+    })();
+  }
+  function stopPolling() { /* loop exits when writeChar is null */ }
+
+  // ---------------------------------------------------------------------
+  // DTCs
+  // ---------------------------------------------------------------------
+  function decodeDtcPair(b1, b2) {
+    if (b1 === 0 && b2 === 0) return null;
+    const letters = ["P", "C", "B", "U"];
+    const letter = letters[(b1 >> 6) & 0x03];
+    const d1 = (b1 >> 4) & 0x03;
+    const d2 = (b1 & 0x0F).toString(16).toUpperCase();
+    const d3 = ((b2 >> 4) & 0x0F).toString(16).toUpperCase();
+    const d4 = (b2 & 0x0F).toString(16).toUpperCase();
+    return letter + d1 + d2 + d3 + d4;
+  }
+
+  async function readDtcs() {
+    dtcList.innerHTML = '<div class="dtc-empty">Lendo…</div>';
+    try {
+      const raw = await sendCommand("03", 4000);
+      const b = hexBytesFrom(raw);
+      const i = b.indexOf(0x43);
+      const data = i >= 0 ? b.slice(i + 1) : b;
+      const codes = [];
+      for (let k = 0; k + 1 < data.length; k += 2) {
+        const code = decodeDtcPair(data[k], data[k + 1]);
+        if (code) codes.push(code);
+      }
+      if (codes.length === 0) {
+        dtcList.innerHTML = '<div class="dtc-empty">Nenhum código armazenado. Veículo sem falhas.</div>';
+        return;
+      }
+      dtcList.innerHTML = "";
+      for (const code of codes) {
+        const desc = DTC_DB[code] || "Consulte uma tabela de códigos para este — não está na lista embutida.";
+        const item = document.createElement("div");
+        item.className = "dtc-item";
+        item.innerHTML = "<code>" + code + "</code><span>" + desc + "</span>";
+        dtcList.appendChild(item);
+      }
+    } catch (e) {
+      dtcList.innerHTML = '<div class="dtc-empty">Não foi possível ler os códigos: ' + e.message + "</div>";
+    }
+  }
+
+  async function clearDtcs() {
+    if (!confirm("Apagar todos os códigos de falha armazenados e reiniciar os monitores de prontidão?")) return;
+    try {
+      await sendCommand("04", 3000);
+      dtcList.innerHTML = '<div class="dtc-empty">Códigos apagados. Pressione "Ler Códigos" para verificar.</div>';
+    } catch (e) {
+      log("sys", "falha ao apagar: " + e.message);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // EVENTS
+  // ---------------------------------------------------------------------
+  connectBtn.addEventListener("click", connect);
+  disconnectBtn.addEventListener("click", disconnect);
+  readDtcBtn.addEventListener("click", readDtcs);
+  clearDtcBtn.addEventListener("click", clearDtcs);
+
+  drawGauge(0);
+})();
+</script>
+</body>
+</html>
