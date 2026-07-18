@@ -115,6 +115,7 @@
   }
   .dtc-item code{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--red);font-size:14px;}
   .dtc-item span{font-size:13px;color:var(--text);}
+  .dtc-item.diag{border-left-color:var(--amber);}
 
   /* ---- Log panel ---- */
   .log-toggle{
@@ -236,6 +237,15 @@
 
   <div class="card" style="margin-bottom:16px;">
     <div class="dtc-header">
+      <h2>Diagnóstico Inteligente</h2>
+    </div>
+    <div class="dtc-list" id="diagList">
+      <div class="dtc-empty">Conecte-se ao veículo para começar a análise cruzada dos dados.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="dtc-header">
       <h2>Códigos de Falha (DTC)</h2>
       <div class="dtc-actions">
         <button id="readDtcBtn" disabled>Ler Códigos</button>
@@ -263,6 +273,8 @@
     <b>Antes de conectar:</b> o Web Bluetooth só funciona no Chrome, Edge ou Opera, no computador ou Android — não funciona no Safari nem no Firefox. A página precisa ser aberta via <b>https://</b> ou <b>http://localhost</b> (abrir o arquivo diretamente com <code>file://</code> geralmente não terá permissão para usar Bluetooth). Adaptadores ELM327 BLE genéricos não seguem um perfil único padronizado, então o app tenta automaticamente alguns UUIDs de serviço comuns (FFF0, FFE0, Nordic UART); se não encontrar uma característica compatível, use um app scanner de BLE (como o nRF Connect) para descobrir o UUID de serviço do seu adaptador e cole no campo "UUID de serviço personalizado" acima.
     <br><br>
     <b>Sobre os PIDs exibidos:</b> todos os valores vêm de PIDs padrão OBD-II (Modo 01, SAE J1979), suportados pela ECU do Onix Joy 1.0 2018. Nem toda ECU implementa 100% dos PIDs opcionais — se algum campo ficar travado em "–", significa que o adaptador não recebeu resposta para aquele PID específico (comum em Teor de Etanol, Fator Lambda e Temp. Ambiente, que são opcionais). O <b>Teor de Etanol</b> é o dado mais específico para um flex brasileiro: mostra a proporção de etanol na mistura que a ECU está lendo do sensor de combustível.
+    <br><br>
+    <b>Sobre o Diagnóstico Inteligente:</b> o painel cruza as leituras ao vivo (MAP, MAF, ajustes de combustível, temperatura, avanço de ignição, etc.) contra padrões conhecidos de falha e mostra um alerta quando as condições batem. É uma heurística baseada em regras simples, não uma leitura de módulo de fábrica — serve para apontar a direção do problema, mas não substitui a confirmação com um mecânico ou scanner profissional antes de qualquer troca de peça.
   </div>
 
 </div>
@@ -330,6 +342,8 @@
   let pending = null; // { resolve, reject, timer }
   let pollTimer = null;
   let displayedRpm = 0, targetRpm = 0, rafId = null;
+  const readings = {};
+  const rpmHistory = [];
 
   // ---------------------------------------------------------------------
   // DOM
@@ -339,6 +353,7 @@
   const connectBtn = $("connectBtn"), disconnectBtn = $("disconnectBtn");
   const readDtcBtn = $("readDtcBtn"), clearDtcBtn = $("clearDtcBtn");
   const dtcList = $("dtcList");
+  const diagList = $("diagList");
   const logBox = $("logBox"), logToggle = $("logToggle");
   const customServiceInput = $("customService");
 
@@ -589,6 +604,9 @@
       const i = b.indexOf(0x41);
       if (i >= 0 && b[i + 1] === 0x0C && b.length >= i + 4) {
         targetRpm = ((b[i + 2] * 256) + b[i + 3]) / 4;
+        readings.rpm = targetRpm;
+        rpmHistory.push(targetRpm);
+        if (rpmHistory.length > 8) rpmHistory.shift();
       }
     } catch (e) { /* skip this cycle */ }
 
@@ -601,6 +619,8 @@
         const A = b[i + 2];
         const milOn = (A & 0x80) !== 0;
         const dtcCount = A & 0x7F;
+        readings.milOn = milOn;
+        readings.dtcCount = dtcCount;
         const milEl = $("v_mil");
         milEl.textContent = milOn ? "ACESA" : "Apagada";
         milEl.style.color = milOn ? "var(--red)" : "var(--teal)";
@@ -617,6 +637,7 @@
         if (i >= 0 && b[i + 1] === parseInt(p.pid, 16) && b.length >= i + 2 + p.bytes) {
           const data = b.slice(i + 2, i + 2 + p.bytes);
           const val = p.parse(data);
+          readings[p.elId] = Number(val);
           $(p.elId).innerHTML = val + '<span class="unit">' + $(p.elId).querySelector(".unit").textContent + "</span>";
         }
       } catch (e) { /* skip */ }
@@ -625,8 +646,90 @@
     try {
       const raw = await sendCommand("ATRV");
       const m = raw.match(/(\d+\.?\d*)\s*V/i);
-      if (m) $("v_volts").innerHTML = m[1] + '<span class="unit">V</span>';
+      if (m) {
+        readings.v_volts = Number(m[1]);
+        $("v_volts").innerHTML = m[1] + '<span class="unit">V</span>';
+      }
     } catch (e) { /* skip */ }
+
+    runDiagnostics();
+  }
+
+  // ---------------------------------------------------------------------
+  // SMART DIAGNOSTICS (cross-referenced failure patterns)
+  // ---------------------------------------------------------------------
+  function stdev(arr) {
+    const n = arr.length;
+    if (n < 2) return 0;
+    const mean = arr.reduce((a, b) => a + b, 0) / n;
+    const variance = arr.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+    return Math.sqrt(variance);
+  }
+
+  function runDiagnostics() {
+    const r = readings;
+    const alerts = [];
+
+    if (r.v_map !== undefined && r.rpm !== undefined && r.rpm < 1200 && r.v_map > 45 &&
+        ((r.v_stft1 !== undefined && r.v_stft1 > 10) || (r.v_ltft1 !== undefined && r.v_ltft1 > 10))) {
+      alerts.push("Possível vazamento de vácuo: pressão no coletor (MAP) alta em marcha lenta com ajuste de combustível positivo — indício de entrada de ar não medida.");
+    }
+
+    if (r.v_ethanol !== undefined && (r.v_ethanol === 0 || r.v_ethanol === 100) &&
+        r.v_ltft1 !== undefined && Math.abs(r.v_ltft1) > 15) {
+      alerts.push("Sensor de etanol pode estar com leitura incorreta: teor travado em um extremo (0% ou 100%) com ajuste de combustível de longo prazo fora do normal.");
+    }
+
+    if (r.rpm !== undefined && r.rpm > 1000 && r.v_runtime !== undefined && r.v_runtime > 300 &&
+        r.v_coolant !== undefined && r.v_coolant < 80 && r.v_ltft1 !== undefined && r.v_ltft1 > 8) {
+      alerts.push("Termostato pode estar aberto/preso: temperatura de arrefecimento baixa após mais de 5 minutos de funcionamento, com ajuste de combustível positivo.");
+    }
+
+    if (r.rpm !== undefined && r.rpm > 1500 && r.v_moduleV !== undefined && r.v_moduleV < 13.5) {
+      alerts.push("Possível falha no alternador: voltagem do módulo abaixo de 13,5V com o motor em rotação média/alta.");
+    }
+
+    if (r.rpm !== undefined && r.rpm > 3000 && r.v_timing !== undefined && r.v_timing < 5) {
+      alerts.push("Avanço de ignição muito baixo em rotação alta — possível detonação sendo controlada pelo módulo (combustível de baixa octanagem ou teor de etanol incorreto).");
+    }
+
+    if (r.v_maf !== undefined && r.v_load !== undefined && r.v_maf < 2 && r.v_load > 50) {
+      alerts.push("Fluxo de ar (MAF) muito baixo para a carga do motor reportada — possível sensor MAF descalibrado ou entrada de ar não medida.");
+    }
+
+    if (r.v_lambda !== undefined && r.v_lambda < 0.9 &&
+        ((r.v_stft1 !== undefined && r.v_stft1 < -10) || (r.v_ltft1 !== undefined && r.v_ltft1 < -10))) {
+      alerts.push("Mistura rica persistente mesmo com o ajuste de combustível tentando compensar — possível sonda lambda contaminada ou injetor vazando.");
+    }
+
+    if (r.v_iat !== undefined && r.v_ambient !== undefined && r.v_runtime !== undefined && r.v_runtime > 300 &&
+        Math.abs(r.v_iat - r.v_ambient) < 2 && r.v_coolant !== undefined && r.v_coolant > 80) {
+      alerts.push("Temperatura do ar de admissão igual à ambiente mesmo com o motor quente — sensor IAT pode estar solto ou mal posicionado.");
+    }
+
+    if (r.v_speed === 0 && rpmHistory.length >= 6 && stdev(rpmHistory) > 100) {
+      alerts.push("Marcha lenta instável: variação de RPM alta com o veículo parado — verifique corpo de borboleta/válvula de marcha lenta.");
+    }
+
+    if (r.milOn) {
+      alerts.push("Luz de injeção (MIL) acesa" + (r.dtcCount ? " com " + r.dtcCount + " código(s) armazenado(s)" : "") + " — consulte o painel de Códigos de Falha para o diagnóstico exato.");
+    }
+
+    renderDiagnostics(alerts);
+  }
+
+  function renderDiagnostics(alerts) {
+    if (alerts.length === 0) {
+      diagList.innerHTML = '<div class="dtc-empty">Nenhum padrão de falha detectado nos dados atuais.</div>';
+      return;
+    }
+    diagList.innerHTML = "";
+    for (const msg of alerts) {
+      const item = document.createElement("div");
+      item.className = "dtc-item diag";
+      item.innerHTML = "<span>⚠ " + msg + "</span>";
+      diagList.appendChild(item);
+    }
   }
 
   function startPolling() {
