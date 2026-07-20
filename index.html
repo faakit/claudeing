@@ -759,62 +759,44 @@
     }
   };
 
+  // Engine configuration used by physics-based rules (speed-density VE, etc.)
+  const ENGINE_DISPLACEMENT_L = 1.0; // Onix Joy 1.0 (999 cc, 3 cilindros)
+
   // =====================================================================
   // DIAGNOSTICS REGISTRY — each rule is a function (r, S) => message|null.
   // r = live readings (Store.data), S = Signals (rolling buffers/helpers).
   // Add a rule: append one entry. Order defines display order.
+  // See DIAGNOSTICOS.md for the technical basis and sources of each rule.
   // =====================================================================
   const DIAGNOSTICS = [
+    // --- Mistura / combustível ---------------------------------------
+    // Vazamento de vácuo: MAP alto em marcha lenta com ajuste positivo.
     (r, S) => (r.v_map !== undefined && r.rpm !== undefined && r.rpm < 1200 && r.v_map > 45 &&
         ((r.v_stft1 !== undefined && r.v_stft1 > 10) || (r.v_ltft1 !== undefined && r.v_ltft1 > 10)))
       ? "Possível vazamento de vácuo: pressão no coletor (MAP) alta em marcha lenta com ajuste de combustível positivo — indício de entrada de ar não medida." : null,
 
+    // N1 — Ajuste total de combustível (STFT + LTFT): melhor indicador de mistura.
+    (r, S) => {
+      if (r.v_stft1 === undefined || r.v_ltft1 === undefined) return null;
+      const total = r.v_stft1 + r.v_ltft1;
+      if (total > 25) return "Ajuste total de combustível muito positivo (+" + total.toFixed(0) + "%) — mistura pobre acentuada (faixa do código P0171): possível vazamento de vácuo, MAF sub-reportando ou pressão de combustível baixa.";
+      if (total < -25) return "Ajuste total de combustível muito negativo (" + total.toFixed(0) + "%) — mistura rica acentuada (faixa do código P0172): possível injetor vazando, pressão de combustível alta ou MAF super-reportando.";
+      return null;
+    },
+
+    // Sensor de etanol travado num extremo com ajuste de longo prazo alto.
     (r, S) => (r.v_ethanol !== undefined && (r.v_ethanol === 0 || r.v_ethanol === 100) &&
         r.v_ltft1 !== undefined && Math.abs(r.v_ltft1) > 15)
       ? "Sensor de etanol pode estar com leitura incorreta: teor travado em um extremo (0% ou 100%) com ajuste de combustível de longo prazo fora do normal." : null,
 
-    (r, S) => (r.rpm !== undefined && r.rpm > 1000 && r.v_runtime !== undefined && r.v_runtime > 300 &&
-        r.v_coolant !== undefined && r.v_coolant < 80 && r.v_ltft1 !== undefined && r.v_ltft1 > 8)
-      ? "Termostato pode estar aberto/preso: temperatura de arrefecimento baixa após mais de 5 minutos de funcionamento, com ajuste de combustível positivo." : null,
-
-    (r, S) => (r.rpm !== undefined && r.rpm > 1500 && r.v_moduleV !== undefined && r.v_moduleV < 13.5)
-      ? "Possível falha no alternador: voltagem do módulo abaixo de 13,5V com o motor em rotação média/alta." : null,
-
-    (r, S) => (r.rpm !== undefined && r.rpm > 3000 && r.v_timing !== undefined && r.v_timing < 5)
-      ? "Avanço de ignição muito baixo em rotação alta — possível detonação sendo controlada pelo módulo (combustível de baixa octanagem ou teor de etanol incorreto)." : null,
-
-    (r, S) => (r.v_maf !== undefined && r.v_load !== undefined && r.v_maf < 2 && r.v_load > 50)
-      ? "Fluxo de ar (MAF) muito baixo para a carga do motor reportada — possível sensor MAF descalibrado ou entrada de ar não medida." : null,
-
+    // Mistura rica persistente, EXCLUINDO plena carga (WOT), onde o enriquecimento
+    // é comandado e normal. Obs.: PID 44 é o lambda COMANDADO, não o medido.
     (r, S) => (r.v_lambda !== undefined && r.v_lambda < 0.9 &&
+        r.v_throttle !== undefined && r.v_throttle < 50 &&
         ((r.v_stft1 !== undefined && r.v_stft1 < -10) || (r.v_ltft1 !== undefined && r.v_ltft1 < -10)))
-      ? "Mistura rica persistente mesmo com o ajuste de combustível tentando compensar — possível sonda lambda contaminada ou injetor vazando." : null,
+      ? "Mistura rica persistente fora de plena carga, com o ajuste de combustível tentando compensar — possível sonda lambda contaminada ou injetor vazando." : null,
 
-    (r, S) => (r.v_iat !== undefined && r.v_ambient !== undefined && r.v_runtime !== undefined && r.v_runtime > 300 &&
-        Math.abs(r.v_iat - r.v_ambient) < 2 && r.v_coolant !== undefined && r.v_coolant > 80)
-      ? "Temperatura do ar de admissão igual à ambiente mesmo com o motor quente — sensor IAT pode estar solto ou mal posicionado." : null,
-
-    (r, S) => (r.rpm !== undefined && r.rpm === 0 && r.v_map !== undefined && r.v_baro !== undefined &&
-        Math.abs(r.v_map - r.v_baro) > 3)
-      ? "Sensor de pressão do coletor (MAP) pode estar descalibrado: com o motor parado e a chave ligada, o MAP deveria ser igual à pressão barométrica (diferença atual de " + Math.abs(r.v_map - r.v_baro).toFixed(0) + " kPa)." : null,
-
-    (r, S) => (S.stftHistory.length >= 6 && r.v_ltft1 !== undefined && Math.abs(r.v_ltft1) < 3 && S.stdev(S.stftHistory) > 8)
-      ? "Ajuste de combustível de curto prazo oscilando bastante enquanto o de longo prazo está estável perto de zero — sinal de sonda lambda respondendo devagar (envelhecida)." : null,
-
-    (r, S) => (r.v_throttle !== undefined && r.v_throttle > 55 && r.v_load !== undefined && r.v_load < 25)
-      ? "Acelerador em posição alta sem aumento correspondente na carga do motor — possível embreagem escorregando ou corpo de borboleta com problema." : null,
-
-    (r, S) => {
-      if (S.sessionHistory.length < 4) return null;
-      const first = S.sessionHistory[0], last = S.sessionHistory[S.sessionHistory.length - 1];
-      if (first.speed !== undefined && last.speed !== undefined && first.rpm !== undefined && last.rpm !== undefined && last.throttle !== undefined) {
-        const dSpeed = last.speed - first.speed, dRpm = last.rpm - first.rpm;
-        if (dSpeed > 8 && dRpm < 50 && last.throttle > 20)
-          return "Velocidade subindo sem o RPM acompanhar proporcionalmente, com o acelerador pressionado — possível embreagem escorregando.";
-      }
-      return null;
-    },
-
+    // DFCO pode não estar cortando. Obs.: usa o lambda COMANDADO (PID 44).
     (r, S) => {
       if (S.sessionHistory.length < 2) return null;
       const prev = S.sessionHistory[S.sessionHistory.length - 2];
@@ -822,10 +804,87 @@
       if (cur.throttle !== undefined && cur.throttle < 5 &&
           prev.rpm !== undefined && cur.rpm !== undefined && cur.rpm < prev.rpm - 100 && cur.rpm > 1200 &&
           cur.lambda !== undefined && cur.lambda < 1.15)
-        return "Corte de combustível em desaceleração (DFCO) pode não estar atuando: pé fora do acelerador com RPM caindo, mas o fator lambda não indica a mistura pobre esperada nesse momento.";
+        return "Corte de combustível em desaceleração (DFCO) pode não estar atuando: pé fora do acelerador com RPM caindo, mas o lambda comandado não indica a mistura pobre esperada nesse momento.";
       return null;
     },
 
+    // --- Temperatura -------------------------------------------------
+    // Termostato preso aberto.
+    (r, S) => (r.rpm !== undefined && r.rpm > 1000 && r.v_runtime !== undefined && r.v_runtime > 300 &&
+        r.v_coolant !== undefined && r.v_coolant < 80 && r.v_ltft1 !== undefined && r.v_ltft1 > 8)
+      ? "Termostato pode estar aberto/preso: temperatura de arrefecimento baixa após mais de 5 minutos de funcionamento, com ajuste de combustível positivo." : null,
+
+    // N3 — Superaquecimento (dois níveis).
+    (r, S) => {
+      if (r.v_coolant === undefined) return null;
+      if (r.v_coolant > 110) return "Temperatura de arrefecimento crítica (" + r.v_coolant + " °C) — risco de superaquecimento e dano ao motor. Reduza a carga e verifique o sistema de arrefecimento.";
+      if (r.v_coolant > 105) return "Temperatura de arrefecimento acima do normal (" + r.v_coolant + " °C) — atenção ao sistema de arrefecimento (ventoinha, bomba d'água, nível do líquido).";
+      return null;
+    },
+
+    // N6 — Sensor IAT colado na ambiente. Só vale PARADO (heat soak); em
+    // movimento IAT ≈ ambiente é normal (por isso a guarda de velocidade).
+    (r, S) => (r.v_speed !== undefined && r.v_speed < 5 &&
+        r.v_iat !== undefined && r.v_ambient !== undefined && r.v_runtime !== undefined && r.v_runtime > 300 &&
+        Math.abs(r.v_iat - r.v_ambient) < 2 && r.v_coolant !== undefined && r.v_coolant > 80)
+      ? "Com o motor quente e o carro parado, a temperatura do ar de admissão deveria subir acima da ambiente (calor do cofre), mas está igual — sensor IAT pode estar solto ou mal posicionado." : null,
+
+    // N7 — Risco de detonação por ar de admissão quente sob carga.
+    (r, S) => (r.v_iat !== undefined && r.v_iat > 60 && r.v_load !== undefined && r.v_load > 70 &&
+        r.v_timing !== undefined && r.v_timing < 10)
+      ? "Ar de admissão quente (" + r.v_iat + " °C) sob carga alta com avanço recuado — risco de detonação agravado pela temperatura do ar (verifique a entrada de ar frio da admissão)." : null,
+
+    // --- Ar / eficiência ---------------------------------------------
+    // MAF muito baixo para a carga reportada.
+    (r, S) => (r.v_maf !== undefined && r.v_load !== undefined && r.v_maf < 2 && r.v_load > 50)
+      ? "Fluxo de ar (MAF) muito baixo para a carga do motor reportada — possível sensor MAF descalibrado ou entrada de ar não medida." : null,
+
+    // N2 — Eficiência volumétrica (speed-density x MAF) em carga alta.
+    (r, S) => {
+      if (r.v_maf === undefined || r.v_map === undefined || r.rpm === undefined || r.v_iat === undefined) return null;
+      if (r.rpm < 1000) return null;
+      const baro = r.v_baro !== undefined ? r.v_baro : 101;
+      if (r.v_map < 0.8 * baro) return null; // só sob carga (perto de plena carga)
+      const imap = (r.rpm * r.v_map) / ((r.v_iat + 273.15) * 2);
+      const mafIdeal = imap * ENGINE_DISPLACEMENT_L * 0.05807; // g/s a VE=100%
+      if (mafIdeal <= 0) return null;
+      const ve = 100 * r.v_maf / mafIdeal;
+      if (ve > 20 && ve < 65)
+        return "Eficiência volumétrica baixa (~" + ve.toFixed(0) + "%) em carga alta — possível restrição de admissão (filtro de ar), escape obstruído (catalisador), folga de válvulas ou distribuição fora de ponto.";
+      return null;
+    },
+
+    // Avanço de ignição muito baixo em rotação alta.
+    (r, S) => (r.rpm !== undefined && r.rpm > 3000 && r.v_timing !== undefined && r.v_timing < 5)
+      ? "Avanço de ignição muito baixo em rotação alta — possível detonação sendo controlada pelo módulo (combustível de baixa octanagem ou teor de etanol incorreto)." : null,
+
+    // --- Sensores / plausibilidade -----------------------------------
+    // MAP deve igualar a barométrica com o motor parado (chave ligada).
+    (r, S) => (r.rpm !== undefined && r.rpm === 0 && r.v_map !== undefined && r.v_baro !== undefined &&
+        Math.abs(r.v_map - r.v_baro) > 3)
+      ? "Sensor de pressão do coletor (MAP) pode estar descalibrado: com o motor parado e a chave ligada, o MAP deveria ser igual à pressão barométrica (diferença atual de " + Math.abs(r.v_map - r.v_baro).toFixed(0) + " kPa)." : null,
+
+    // N5 — Incoerência borboleta x MAP em desaceleração (freio motor).
+    (r, S) => (r.rpm !== undefined && r.rpm > 1500 && r.v_throttle !== undefined && r.v_throttle < 5 &&
+        r.v_map !== undefined && r.v_map > 50)
+      ? "Incoerência entre borboleta e coletor: acelerador fechado em rotação alta deveria gerar alta depressão (MAP baixo), mas o MAP está em " + r.v_map + " kPa — possível corpo de borboleta preso/sujo ou sensor MAP/TPS com defeito." : null,
+
+    // --- Elétrico ----------------------------------------------------
+    // Alternador: tensão baixa com o motor em rotação média/alta.
+    (r, S) => (r.rpm !== undefined && r.rpm > 1500 && r.v_moduleV !== undefined && r.v_moduleV < 13.5)
+      ? "Possível falha no alternador: voltagem do módulo abaixo de 13,5V com o motor em rotação média/alta." : null,
+
+    // N4 — Saúde da bateria com o motor desligado (chave ligada).
+    (r, S) => {
+      if (r.rpm === undefined || r.rpm > 0) return null;
+      const v = r.v_moduleV !== undefined ? r.v_moduleV : r.v_volts;
+      if (v === undefined) return null;
+      if (v < 12.0) return "Bateria fraca/descarregada: tensão em repouso de " + v.toFixed(1) + " V com o motor parado (≤12,0 V indica descarga) — pode dificultar a partida.";
+      if (v < 12.2) return "Bateria com carga baixa: tensão em repouso de " + v.toFixed(1) + " V com o motor parado (~50% de carga).";
+      return null;
+    },
+
+    // Reset da ECU: tempo de funcionamento retrocedeu na mesma sessão.
     (r, S) => {
       if (r.v_runtime === undefined) return null;
       let msg = null;
@@ -835,6 +894,29 @@
       return msg;
     },
 
+    // --- Mecânico ----------------------------------------------------
+    // Embreagem patinando: a relação rotação/velocidade sobe (motor acelera)
+    // sem a velocidade acompanhar, com o carro em movimento e pé no acelerador.
+    (r, S) => {
+      if (S.sessionHistory.length < 4) return null;
+      const w = S.sessionHistory;
+      const first = w[0], last = w[w.length - 1];
+      if (first.speed === undefined || last.speed === undefined || first.rpm === undefined || last.rpm === undefined) return null;
+      if (last.throttle === undefined || last.throttle < 30) return null;
+      if (first.speed < 5 || last.speed < 15) return null; // em marcha real, não em arrancada
+      const gFirst = first.rpm / Math.max(first.speed, 1);
+      const gLast = last.rpm / Math.max(last.speed, 1);
+      if (gLast > gFirst * 1.3 && last.rpm > first.rpm + 300 && (last.speed - first.speed) < 5)
+        return "Relação rotação/velocidade subindo (motor acelerando sem a velocidade acompanhar) com o carro em movimento e acelerador aplicado — possível embreagem patinando.";
+      return null;
+    },
+
+    // Marcha lenta instável.
+    (r, S) => (r.v_speed === 0 && S.rpmHistory.length >= 6 && S.stdev(S.rpmHistory) > 100)
+      ? "Marcha lenta instável: variação de RPM alta com o veículo parado — verifique corpo de borboleta/válvula de marcha lenta." : null,
+
+    // --- Consumo / status --------------------------------------------
+    // Consumo de cruzeiro abaixo do esperado.
     (r, S) => {
       if (S.instConsumptionHistory.length >= 4 && r.v_speed !== undefined && r.v_speed > 40 &&
           r.v_throttle !== undefined && r.v_throttle < 40) {
@@ -845,9 +927,7 @@
       return null;
     },
 
-    (r, S) => (r.v_speed === 0 && S.rpmHistory.length >= 6 && S.stdev(S.rpmHistory) > 100)
-      ? "Marcha lenta instável: variação de RPM alta com o veículo parado — verifique corpo de borboleta/válvula de marcha lenta." : null,
-
+    // Luz de injeção (MIL) acesa.
     (r, S) => r.milOn
       ? "Luz de injeção (MIL) acesa" + (r.dtcCount ? " com " + r.dtcCount + " código(s) armazenado(s)" : "") + " — consulte a aba Códigos para o diagnóstico exato." : null,
   ];

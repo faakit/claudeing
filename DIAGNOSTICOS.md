@@ -1,15 +1,18 @@
 # Diagnósticos Inteligentes — Base Técnica
 
 Documento de referência para o painel **Diagnóstico Inteligente** do Terminal OBD
-(Onix Joy 1.0 2018, flex, via ELM327 BLE). Serve para: (1) registrar quais regras
-têm matemática/lógica sólida (**consolidadas**), (2) apontar as regras com falha
-que precisam de revisão, e (3) listar novas fórmulas que podemos implementar,
-todas baseadas apenas nos sensores que já lemos.
+(Onix Joy 1.0 2018, flex, via ELM327 BLE). Serve para registrar a base matemática
+de cada regra, quais são **consolidadas**, e o caminho de evolução.
 
 > As regras vivem no array `DIAGNOSTICS` em `index.html`. Cada regra é uma função
-> pura `(r, S) => mensagem | null`, onde `r` são as leituras ao vivo e `S` os
-> buffers de tendência (`rpmHistory`, `stftHistory`, `sessionHistory`,
-> `instConsumptionHistory`, `lastRuntime`, `stdev`).
+> pura `(r, S) => mensagem | null`, onde `r` são as leituras ao vivo (`Store.data`)
+> e `S` os buffers de tendência (`rpmHistory`, `stftHistory`, `sessionHistory`,
+> `instConsumptionHistory`, `lastRuntime`, `stdev`). Adicionar uma regra = adicionar
+> um item ao array.
+
+**Estado atual: 21 regras ativas.** A revisão inicial encontrou 6 regras com falha;
+todas foram corrigidas ou substituídas, e 7 novas fórmulas foram implementadas
+(ver §4 e §5). O histórico completo da revisão está em §6.
 
 ---
 
@@ -45,242 +48,199 @@ conferidas — estão **corretas**. `A`, `B` são o 1º e o 2º byte de dados.
 > ⚠️ **Atenção ao PID 0144:** ele é a **razão de equivalência *comandada*** (o alvo
 > que a ECU pede), **não** o λ *medido* pela sonda. É um valor pensado para
 > scanners genéricos (SAE J1979) e nem sempre reflete a mistura real, sobretudo
-> em malha aberta (partida a frio, plena carga, corte em desaceleração). Isso
-> afeta as regras que tratam esse valor como se fosse leitura de sonda — ver §3.
+> em malha aberta (partida a frio, plena carga, corte em desaceleração). As regras
+> que o usam (mistura rica, DFCO) foram calibradas para reduzir esse efeito — ver §4.
 
 ---
 
-## 2. Veredito rápido das 17 regras atuais
+## 2. Regras ativas (21)
 
-| # | Regra | Condição resumida | Veredito |
-|---|-------|-------------------|----------|
+Grupo **Mistura / combustível**
+
+| # | Regra | Condição resumida | Base |
+|---|-------|-------------------|------|
 | 1 | Vazamento de vácuo | `rpm<1200 & MAP>45 & (STFT>10 ou LTFT>10)` | ✅ Consolidada |
-| 2 | Sensor de etanol | `etanol∈{0,100} & \|LTFT\|>15` | 🟡 Ressalva (PID 52) |
-| 3 | Termostato aberto | `rpm>1000 & runtime>300 & coolant<80 & LTFT>8` | ✅ Consolidada |
-| 4 | Alternador | `rpm>1500 & moduleV<13,5` | ✅ Consolidada |
-| 5 | Avanço baixo / detonação | `rpm>3000 & timing<5` | ✅ Consolidada |
-| 6 | MAF × carga | `MAF<2 & load>50` | ✅ Consolidada |
-| 7 | Mistura rica persistente | `λ<0,9 & (STFT<-10 ou LTFT<-10)` | ⚠️ Revisar (PID 44) |
-| 8 | IAT × ambiente | `runtime>300 & \|IAT-amb\|<2 & coolant>80` | ⚠️ Revisar (falso positivo) |
-| 9 | MAP = Barométrica (KOEO) | `rpm=0 & \|MAP-baro\|>3` | ✅ Consolidada (forte) |
-| 10 | Sonda envelhecida | `\|LTFT\|<3 & desvio(STFT)>8` | ⚠️ Revisar (premissa fraca) |
-| 11 | Embreagem (TPS×carga) | `throttle>55 & load<25` | ⚠️ Revisar (transitório) |
-| 12 | Embreagem (tendência) | `Δvel>8 & Δrpm<50 & throttle>20` | ⚠️ Revisar (assinatura invertida) |
-| 13 | DFCO não atua | `throttle<5 & rpm caindo>100 & rpm>1200 & λ<1,15` | ⚠️ Revisar (PID 44) |
-| 14 | Reset da ECU | `runtime < runtime_anterior-2` | ✅ Consolidada (forte) |
-| 15 | Consumo de cruzeiro | `vel>40 & throttle<40 & média km/L<7` | 🟡 Ressalva (estimativa) |
-| 16 | Marcha lenta instável | `vel=0 & desvio(rpm)>100` | ✅ Consolidada |
-| 17 | Luz de injeção (MIL) | `milOn` | ✅ Consolidada (leitura direta) |
+| 2 | **Ajuste total (STFT+LTFT)** | `STFT+LTFT > +25%` (pobre) ou `< -25%` (rica) | ✅ Consolidada · N1 |
+| 3 | Sensor de etanol | `etanol∈{0,100} & \|LTFT\|>15` | 🟡 Depende do PID 52 |
+| 4 | Mistura rica (fora de WOT) | `λ<0,9 & throttle<50 & (STFT<-10 ou LTFT<-10)` | 🟡 λ comandado |
+| 5 | DFCO não atua | `throttle<5 & rpm caindo>100 & rpm>1200 & λ<1,15` | 🟡 λ comandado |
 
-**Resumo:** 9 consolidadas · 2 com ressalva · 6 a revisar.
+Grupo **Temperatura**
 
----
+| # | Regra | Condição resumida | Base |
+|---|-------|-------------------|------|
+| 6 | Termostato preso aberto | `rpm>1000 & runtime>300 & coolant<80 & LTFT>8` | ✅ Consolidada |
+| 7 | **Superaquecimento** | `coolant>110` (crítico) ou `>105` (alerta) | ✅ Consolidada · N3 |
+| 8 | Sensor IAT (parado) | `vel<5 & runtime>300 & coolant>80 & \|IAT-amb\|<2` | ✅ Consolidada · N6 |
+| 9 | **Detonação por ar quente** | `IAT>60 & load>70 & timing<10` | ✅ Consolidada · N7 |
 
-## 3. Regras consolidadas (matemática e lógica corretas)
+Grupo **Ar / eficiência**
 
-Estas podem ser tratadas como base confiável — a conta está correta e a condição
-mapeia bem a falha que descreve.
+| # | Regra | Condição resumida | Base |
+|---|-------|-------------------|------|
+| 10 | MAF × carga | `MAF<2 & load>50` | ✅ Consolidada |
+| 11 | **Eficiência volumétrica** | `carga alta & VE(speed-density) < 65%` | ✅ Consolidada · N2 |
+| 12 | Avanço baixo / detonação | `rpm>3000 & timing<5` | ✅ Consolidada |
 
-- **R1 — Vazamento de vácuo.** Em marcha lenta o coletor de um motor aspirado fica
-  em depressão (MAP típico ~30–40 kPa). MAP alto no ralenti **com** ajuste de
-  combustível positivo (ECU adicionando combustível) é a assinatura clássica de ar
-  não medido entrando por uma fenda.
-- **R3 — Termostato preso aberto.** Após ~5 min o líquido deveria passar de 80 °C.
-  Ficar abaixo disso com LTFT positivo é o comportamento do código **P0128**.
-- **R4 — Alternador fraco.** Com o motor acima de 1500 rpm a tensão de carga deve
-  ficar em ~13,8–14,4 V. Abaixo de 13,5 V indica carga deficiente. Comparação
-  simples com limiar consagrado.
-- **R5 — Avanço baixo / detonação.** Acima de 3000 rpm o avanço normal é ~20–40°.
-  Menos de 5° indica a ECU recuando o ponto (proteção contra detonação). A
-  conversão `A/2-64` está exata.
-- **R6 — MAF × carga incoerentes.** Carga calculada alta (>50%) com MAF quase nulo
-  (<2 g/s) é contradição física — bom indicador de MAF sub-reportando.
-- **R9 — MAP = Barométrica (chave ligada, motor parado). ⭐** Com o motor parado o
-  MAP deve ser **igual** à pressão barométrica (ambos absolutos, em kPa). Diferença
-  > 3 kPa denuncia descalibração do MAP. É um teste de igualdade física exato —
-  o diagnóstico mais robusto do conjunto.
-- **R14 — Reset da ECU. ⭐** `runtime` (PID 011F) é monotônico crescente enquanto o
-  motor roda. Se ele **retrocede** durante a sessão, houve reinício/reset. Lógica
-  exata. (Obs.: uma parada+partida deliberada também dispara — é, de fato, um
-  reset.)
-- **R16 — Marcha lenta instável.** Com o carro parado, desvio-padrão de RPM > 100
-  indica ralenti oscilando. Boa medida estatística de "hunting".
-- **R17 — MIL acesa.** Leitura direta do bit 7 do PID 0101. Trivial e correta.
+Grupo **Sensores / plausibilidade**
+
+| # | Regra | Condição resumida | Base |
+|---|-------|-------------------|------|
+| 13 | MAP = Barométrica (KOEO) | `rpm=0 & \|MAP-baro\|>3` | ✅ Consolidada (forte) |
+| 14 | **MAP × acelerador (freio motor)** | `rpm>1500 & throttle<5 & MAP>50` | ✅ Consolidada · N5 |
+
+Grupo **Elétrico**
+
+| # | Regra | Condição resumida | Base |
+|---|-------|-------------------|------|
+| 15 | Alternador | `rpm>1500 & moduleV<13,5` | ✅ Consolidada |
+| 16 | **Saúde da bateria (motor off)** | `rpm=0 & tensão<12,2 V` | ✅ Consolidada · N4 |
+| 17 | Reset da ECU | `runtime < runtime_anterior-2` | ✅ Consolidada (forte) |
+
+Grupo **Mecânico / consumo / status**
+
+| # | Regra | Condição resumida | Base |
+|---|-------|-------------------|------|
+| 18 | Embreagem patinando | `g=rpm/vel sobe >30% & rpm sobe & vel ~ estável` | ✅ Consolidada (corrigida) |
+| 19 | Marcha lenta instável | `vel=0 & desvio(rpm)>100` | ✅ Consolidada |
+| 20 | Consumo de cruzeiro | `vel>40 & throttle<40 & média km/L<7` | 🟡 Depende da estimativa |
+| 21 | Luz de injeção (MIL) | `milOn` | ✅ Consolidada (leitura direta) |
+
+**Resumo:** 17 consolidadas · 4 com ressalva declarada (3/4/5/20). Nenhuma regra
+com falha aberta.
 
 ---
 
-## 4. Falhas encontradas (regras a revisar)
+## 3. Detalhe das regras consolidadas
 
-### ⚠️ R8 — IAT × ambiente (falso positivo em movimento)
-A regra assume que, com o motor quente, a temperatura do ar de admissão deve ficar
-**acima** da ambiente (heat soak do cofre). Mas isso só vale **parado/em marcha
-lenta**. **Rodando**, IAT ≈ ambiente é o esperado e desejável (ar fresco entrando).
-Como a regra não checa velocidade, ela acusa "sensor IAT solto" em qualquer viagem
-de estrada.
-**Correção:** exigir `v_speed < 5` (condição de heat soak) antes de esperar IAT >
-ambiente. Ver proposta **N6**.
-
-### ⚠️ R10 — Sonda envelhecida via desvio do STFT (premissa fraca)
-A regra marca "sonda lenta" quando o STFT oscila muito (`desvio>8`) e o LTFT está
-perto de zero. O problema: **um STFT que oscila é justamente o comportamento
-normal** de uma sonda de banda estreita saudável (ela força a mistura a ziguezaguear
-em torno do estequiométrico). O sinal de uma sonda **preguiçosa** é a queda da
-**frequência de comutação** (cross counts / tempo de resposta), **não** a
-amplitude/desvio. Além disso, o polling é lento (~1 leitura por ciclo de vários
-segundos), longe da taxa de comutação da sonda (~1 Hz+), então nem dá para medir
-isso de forma confiável aqui. Resultado: a regra tende a disparar em motor
-saudável.
-**Correção:** remover, ou substituir por uma medida de resposta (exige leitura
-rápida e dedicada da tensão da sonda — PID 0114, não lido hoje).
-
-### ⚠️ R12 — Embreagem por tendência (assinatura invertida)
-A regra dispara com **velocidade subindo e RPM parado** (`Δvel>8 & Δrpm<50`). Mas
-a assinatura real de **embreagem patinando** é o **oposto**: o motor acelera
-(RPM sobe rápido) e a velocidade **não** acompanha. "Velocidade sobe e RPM fica
-parado" descreve, na prática, uma **troca de marcha para cima** (comportamento
-normal), gerando falso positivo.
-**Correção:** inverter a lógica — detectar `Δrpm` alto com `Δvel` ~ constante,
-acelerador pressionado e carro em movimento (`v_speed>5`). Ainda é difícil separar
-de reduções com "ponta-e-tacão"; ver **N-nota** em §5.
-
-### ⚠️ R11 — Embreagem por TPS×carga (transitório)
-`throttle>55 & load<25`. A assinatura (acelerador aberto sem a carga acompanhar) é
-direcionalmente correta para embreagem patinando, mas o polling lento captura
-**transitórios de aceleração** (pisada no acelerador antes do fluxo de ar/carga
-subir) como se fossem permanentes. Falso positivo provável em cada arrancada.
-**Correção:** exigir a condição sustentada por N ciclos, ou combinar com RPM
-subindo e velocidade estável.
-
-### ⚠️ R7 e R13 — uso do λ *comandado* (PID 44) como se fosse medido
-Ambas comparam `v_lambda` (PID 0144) contra limiares de mistura:
-- **R7** (mistura rica): `λ<0,9` pode ser simplesmente **enriquecimento de plena
-  carga** comandado pela ECU (malha aberta) — situação **normal** em aceleração
-  forte, quando os ajustes de combustível ficam congelados.
-- **R13** (DFCO): durante o corte em desaceleração o λ *comandado* reportado não
-  reflete de forma confiável o corte de injeção real.
-
-Como o PID 44 é o valor **comandado** (alvo), não a leitura da sonda, as duas regras
-podem enganar.
-**Correção:** ou (a) restringir R7 a `throttle` baixo/médio (fora de WOT) para
-evitar o enriquecimento normal, ou (b) usar a **sonda de banda larga** (PID 0134,
-"razão de equivalência do sensor de O₂"), que é o valor *medido*, se a ECU
-suportar. Documentar que hoje o valor é o comandado.
+- **Vazamento de vácuo (1).** Em marcha lenta o coletor de um motor aspirado fica em
+  depressão (MAP ~30–40 kPa). MAP alto no ralenti com ajuste positivo = ar não
+  medido entrando.
+- **Ajuste total STFT+LTFT (2 · N1).** O melhor indicador de mistura é a *soma* dos
+  ajustes: `|total| ≤ 10%` normal; `> ±25%` sustentado é a faixa que acende a MIL
+  (P0171 pobre / P0172 rica).
+- **Termostato preso aberto (6).** Após ~5 min o líquido deve passar de 80 °C;
+  ficar abaixo com LTFT positivo é o padrão do **P0128**.
+- **Superaquecimento (7 · N3).** Faixa normal 90–105 °C; alerta > 105 °C, crítico
+  > 110 °C.
+- **Sensor IAT parado (8 · N6).** Só espera IAT > ambiente **com o carro parado**
+  (heat soak do cofre). A guarda `vel<5` elimina o falso positivo em estrada.
+- **Detonação por ar quente (9 · N7).** Ar de admissão quente sob carga alta com
+  avanço recuado qualifica o risco de detonação por temperatura.
+- **MAF × carga (10).** Carga alta com MAF quase nulo é contradição física → MAF
+  sub-reportando.
+- **Eficiência volumétrica (11 · N2).** Ver a fórmula completa em §5. VE < 65% em
+  carga alta = restrição (filtro/escape/válvulas/distribuição).
+- **Avanço baixo (12).** Menos de 5° acima de 3000 rpm indica a ECU recuando o
+  ponto (proteção contra detonação).
+- **MAP = Barométrica com motor parado (13). ⭐** Teste de igualdade física exato;
+  diferença > 3 kPa denuncia MAP descalibrado.
+- **MAP × acelerador no freio motor (14 · N5).** Acelerador fechado em rotação alta
+  deve gerar alta depressão (MAP baixo); MAP alto = borboleta presa/suja ou
+  MAP/TPS com defeito.
+- **Alternador (15).** Motor > 1500 rpm deve carregar a ~13,8–14,4 V; < 13,5 V =
+  carga deficiente.
+- **Saúde da bateria motor off (16 · N4).** Em repouso: ≥12,6 V ~100%, 12,4 V ~75%,
+  12,2 V ~50%, ≤12,0 V descarregada.
+- **Reset da ECU (17). ⭐** `runtime` é monotônico; se retrocede, houve
+  reinício/reset.
+- **Embreagem patinando (18).** Ver §4 (regra corrigida). Assinatura correta:
+  relação `rpm/velocidade` sobe (motor acelera) sem a velocidade acompanhar.
+- **Marcha lenta instável (19).** Desvio-padrão de RPM > 100 com o carro parado.
+- **MIL (21).** Leitura direta do bit 7 do PID 0101.
 
 ---
 
-## 5. Novas fórmulas propostas (com fontes)
+## 4. Correções aplicadas (regras que tinham falha)
 
-Ordenadas por **valor × solidez**, todas usando **apenas sensores que já lemos**
-(exceto onde indicado). As duas primeiras são as de maior retorno.
+| Regra original | Falha | Correção implementada |
+|----------------|-------|-----------------------|
+| **Sonda envelhecida** (desvio do STFT) | Premissa invertida: STFT oscilando é comportamento *normal*; envelhecimento é frequência de comutação, não amplitude — e o polling é lento demais. | **Removida.** Precisaria de leitura rápida da tensão da sonda (PID 0114). |
+| **Embreagem (TPS×carga)** e **Embreagem (tendência)** | A 1ª pegava transitório de aceleração; a 2ª tinha **assinatura invertida** (acusava trocas de marcha). | **Fundidas numa única regra** baseada na relação de transmissão instantânea `g = rpm/velocidade`: só acusa quando `g` sobe >30%, o RPM sobe e a velocidade fica ~estável, com o carro em movimento e acelerador aplicado. |
+| **IAT × ambiente** | Falso positivo em movimento (IAT ≈ ambiente é normal rodando). | Adicionada a guarda `v_speed < 5` (regra 8 / N6). |
+| **Mistura rica** (λ comandado) | Disparava no enriquecimento normal de plena carga (WOT). | Adicionada a guarda `throttle < 50` para excluir WOT (regra 4). |
+| **DFCO** (λ comandado) | O λ comandado não confirma o corte de injeção real. | Mantida com a **ressalva documentada** de que usa o λ comandado (regra 5). Confirmação exige λ medido (PID 0134). |
 
-### N1 — Ajuste de combustível total (STFT + LTFT) ⭐ consolidável
-O melhor indicador de mistura vem da **soma** dos dois ajustes, não deles isolados:
+---
 
+## 5. Fórmulas das novas regras (implementadas)
+
+### N1 — Ajuste de combustível total (STFT + LTFT) — *regra 2*
 ```
 FT_total = STFT + LTFT           (%)
 ```
-
 - `|FT_total| ≤ 10%` → normal.
-- `FT_total > +20…25%` sustentado → **mistura pobre** (faixa do código P0171):
-  vazamento de vácuo, MAF sub-reportando, bomba/injetores fracos.
-- `FT_total < -20…25%` → **mistura rica** (P0172): injetor vazando, pressão de
-  combustível alta, MAF super-reportando.
+- `FT_total > +25%` sustentado → mistura pobre (P0171): vazamento de vácuo, MAF
+  sub-reportando, bomba/injetores fracos.
+- `FT_total < -25%` → mistura rica (P0172): injetor vazando, pressão alta, MAF
+  super-reportando.
 
-Sensores: `v_stft1` (0106) + `v_ltft1` (0107). Limiar de ±25% é o usado pela
-maioria dos fabricantes para acender a MIL; a faixa saudável é ±10%.
-*Fontes:* Innova, AA1Car, OBD-Codes (ver §6).
+*Fontes:* Innova, AA1Car, OBD-Codes.
 
-### N2 — Eficiência Volumétrica (VE) por speed-density × MAF ⭐
-Cruza MAF medido com o fluxo teórico calculado por *speed-density* (lei dos gases).
+### N2 — Eficiência Volumétrica (speed-density × MAF) — *regra 11*
 Com `IAT_K = IAT + 273,15` (K), `MAP` em kPa, `V_disp = 1,0 L`:
-
 ```
 IMAP     = (RPM × MAP) / (IAT_K × 2)
 MAF_100% = IMAP × V_disp × 0,05807          (g/s, para VE=100%)
            └─ 0,05807 = M_ar / (R × 60) = 28,97 / (8,314 × 60)
 VE(%)    = 100 × MAF_medido / MAF_100%
 ```
+Só avaliada sob carga (`MAP ≥ 80% da barométrica`). VE < 65% → restrição de
+admissão (filtro), escape obstruído (catalisador), folga de válvulas ou
+distribuição fora de ponto. (Validado: cenário 5000 rpm / MAP 95 / IAT 70 °C /
+MAF 20 g/s ⇒ VE ≈ 50%.)
 
-Uso diagnóstico:
-- **Em carga alta** (MAP > ~80% da barométrica, próximo de WOT) a VE deve ficar em
-  **75–90%**. VE < ~65% → restrição de admissão (filtro de ar entupido), escape
-  obstruído (catalisador), folga de válvulas ou distribuição/corrente adiantada.
-- **Divergência MAF × speed-density** persistente (> ~20%, assumindo VE nominal)
-  → sensor **MAF** ou **MAP** com defeito (cross-check entre os dois).
-
-Sensores: `v_maf` (0110), `v_map` (010B), `rpm` (010C), `v_iat` (010F);
-`V_disp=1,0 L` é conhecido do carro.
 *Fontes:* GMTuners, Lightner (obd2guru), TunerTools, HP Academy.
 
-### N3 — Superaquecimento / temperatura fora de faixa ⭐ consolidável (hoje ausente)
-Não temos nenhum alerta de motor **quente** — só o de termostato preso aberto.
-
+### N3 — Superaquecimento — *regra 7*
 ```
-coolant > 105 °C  → alerta de superaquecimento
-coolant > 110 °C  → crítico (risco de dano)
+coolant > 110 °C → crítico      coolant > 105 °C → alerta
 ```
+*Fontes:* HP Academy, VehicleFreak (faixa normal 90–105 °C).
 
-Complemento ao R3 (preso aberto): `coolant` não atingir 80 °C após `runtime>600 s`
-com `rpm>800` reforça o diagnóstico de termostato travado aberto.
-Sensores: `v_coolant` (0105), `v_runtime` (011F).
-*Fontes:* HP Academy, VehicleFreak (faixa normal 90–105 °C; MIL/alerta ~110 °C).
-
-### N4 — Saúde da bateria (motor desligado) ⭐ consolidável
-Com o motor parado (`rpm=0`, alternador sem carregar), a tensão em repouso indica
-o estado de carga:
-
+### N4 — Saúde da bateria (motor desligado) — *regra 16*
 ```
-moduleV ≥ 12,6 V → ~100%      12,4 V → ~75%
-moduleV  12,2 V → ~50%        ≤ 12,0 V → descarregada / fraca
+rpm = 0 & tensão < 12,0 V → descarregada      < 12,2 V → carga baixa (~50%)
+```
+Usa `moduleV` (0142) ou, na falta, `ATRV`.
+
+### N5 — Plausibilidade MAP × acelerador (freio motor) — *regra 14*
+```
+rpm > 1500 & throttle < 5 & MAP > 50 kPa → incoerência
 ```
 
-Alerta quando `rpm=0 & moduleV < 12,2 V`. Complementa o R4 (que cobre o caso
-"motor rodando"). Sensores: `v_moduleV` (0142) ou `ATRV`.
-
-### N5 — Plausibilidade MAP × acelerador em desaceleração
-No "freio motor" (acelerador fechado, RPM alto), o coletor deve estar em **alta
-depressão** (MAP baixo). Se com `throttle<5 & rpm>1500` o `MAP` estiver alto
-(> ~50 kPa), há incoerência entre borboleta e MAP → corpo de borboleta preso/suja
-ou sensor MAP/TPS com defeito.
-Sensores: `v_throttle` (0111), `v_map` (010B), `rpm` (010C).
-
-### N6 — Correção do R8 (IAT com guarda de velocidade)
-Reescrever a regra do sensor IAT para só esperar IAT > ambiente **quando o carro
-está parado** e o motor quente (condição de heat soak):
-
+### N6 — Correção do sensor IAT (guarda de velocidade) — *regra 8*
 ```
-v_speed < 5  &  runtime > 300  &  coolant > 80  &  |IAT - ambiente| < 2
+v_speed < 5 & runtime > 300 & coolant > 80 & |IAT - ambiente| < 2
 ```
 
-Elimina o falso positivo em estrada e mantém a detecção do sensor "colado" na
-ambiente com o motor fervendo parado.
+### N7 — Risco de detonação por ar de admissão quente — *regra 9*
+```
+IAT > 60 °C & load > 70% & timing < 10°
+```
 
-### N7 — Risco de detonação por ar de admissão quente
-Ar de admissão quente sob carga eleva o risco de detonação. Cruzar `IAT` alto
-(> ~60 °C) **com** carga alta (`load>70`) **e** avanço recuado (`timing` baixo)
-reforça e qualifica o R5 (distingue "detonação por ar quente" de "por octanagem").
-Sensores: `v_iat` (010F), `v_load` (0104), `v_timing` (010E).
-
-> **Nota sobre embreagem (R11/R12):** com os sensores disponíveis, a separação
-> confiável entre *patinação de embreagem*, *troca de marcha* e *aceleração em
-> ponto morto* é intrinsecamente difícil (faltaria uma relação marcha =
-> `rpm/velocidade` estável ao longo do tempo). A abordagem mais robusta é calcular
-> a **relação de transmissão instantânea** `g = rpm / max(v_speed,1)` e sinalizar
-> quando `g` **sobe abruptamente** e permanece elevada com o carro em movimento e
-> acelerador aplicado — isso sim é a assinatura de patinação. Fica como evolução
-> futura de N-nível.
-
-### Precisam de PIDs que ainda não lemos (evolução futura)
-- **Eficiência do catalisador**: exige a sonda **pós-catalisador** (PIDs de O₂
-  do sensor 2). Uma sonda traseira que "copia" a dianteira indica catalisador
-  gasto (base do P0420).
-- **λ medido real**: PID 0134 (razão de equivalência do sensor de O₂, banda larga)
-  — o valor *medido*, que corrigiria as ressalvas de R7/R13.
-- **Tempo de resposta da sonda**: PID 0114 (tensão do O₂) lido em alta taxa.
+### Embreagem patinando (corrigida) — *regra 18*
+```
+g = rpm / max(velocidade, 1)
+Dispara: g_final > 1,3 × g_inicial  &  Δrpm > 300  &  Δvelocidade < 5
+         &  velocidade em movimento (>15) &  throttle > 30
+```
 
 ---
 
-## 6. Fontes
+## 6. Evolução futura (precisa de PIDs que ainda não lemos)
+
+- **Eficiência do catalisador**: exige a sonda **pós-catalisador** (PIDs de O₂ do
+  sensor 2). Uma sonda traseira que "copia" a dianteira indica catalisador gasto
+  (base do P0420).
+- **λ medido real**: PID 0134 (razão de equivalência do sensor de O₂, banda larga)
+  — o valor *medido*, que eliminaria as ressalvas das regras 4 e 5.
+- **Tempo de resposta da sonda**: PID 0114 (tensão do O₂) lido em alta taxa —
+  permitiria reintroduzir a detecção de sonda envelhecida de forma correta.
+
+---
+
+## 7. Fontes
 
 **Ajuste de combustível (fuel trim):**
 - Innova — *Reading Fuel Trim in Live Data*: <https://www.innova.com/blogs/fix-advices/reading-fuel-trim-in-live-data>
