@@ -18,6 +18,7 @@ import {
 import { keyOf, displayName, iconKey, refOf, type ItemRef } from '../../systems/itemRef';
 import { countStack } from '../../systems/inventory';
 import { gameEvents } from '../../systems/events';
+import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
@@ -34,7 +35,7 @@ export class NpcPanel extends Modal {
   private reply = '';
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 262);
+    super(scene, 236);
   }
 
   openFor(id: string): void {
@@ -55,7 +56,7 @@ export class NpcPanel extends Modal {
     const def = npcs[this.id]!;
     this.panel();
     this.label(8, 8, def.name, C.gold);
-    this.label(8, 20, def.blurb, C.creamDim, 1, 'left', 120);
+    this.label(8, 20, fitText(def.blurb, 136), C.creamDim);
     const hearts = heartsOf(s, this.id);
     for (let i = 0; i < MAX_HEARTS; i++)
       this.icon(150 + i * 9, 13, 'ui_heart').setTint(i < hearts ? 0xe0574a : 0x4a4560);
@@ -72,12 +73,12 @@ export class NpcPanel extends Modal {
   private buildTalk(hearts: number): void {
     const s = getState();
     const def = npcs[this.id]!;
-    this.label(8, 40, `"${this.reply || this.line}"`, C.cream, 1, 'left', 184);
-    if (this.gained > 0) this.label(8, 82, `+${this.gained} friendship`, C.green);
+    this.label(8, 42, `"${this.reply || this.line}"`, C.cream, 1, 'left', 184);
+    if (this.gained > 0) this.label(8, 88, `+${this.gained} friendship`, C.green);
     const next = nextPerk(s, this.id);
     this.label(
       8,
-      98,
+      104,
       next
         ? `At ${next.hearts} hearts: ${perkLine(next.perks)}`
         : 'Best friends! All perks unlocked.',
@@ -88,9 +89,9 @@ export class NpcPanel extends Modal {
     );
     if (hearts >= 3) {
       const loves = def.loves.map((i) => items[i]?.name ?? i).join(', ');
-      this.label(8, 122, `Loves: ${loves}`, C.warn, 1, 'left', 184);
+      this.label(8, 128, `Loves: ${loves}`, C.warn, 1, 'left', 184);
     } else
-      this.label(8, 122, 'Reach 3 hearts to learn their favourites.', C.creamDim, 1, 'left', 184);
+      this.label(8, 128, 'Reach 3 hearts to learn their favourites.', C.creamDim, 1, 'left', 184);
     const y = this.panelH - 62;
     this.button(
       8,
@@ -121,7 +122,7 @@ export class NpcPanel extends Modal {
 
   private buildGift(): void {
     const s = getState();
-    this.label(8, 34, `A gift for ${npcs[this.id]!.name}?`, C.cream);
+    this.label(8, 36, `A gift for ${npcs[this.id]!.name}?`, C.cream);
     const kinds = new Map<string, ItemRef>();
     for (const st of s.inventory.slots) if (st && isGiftable(st)) kinds.set(keyOf(st), refOf(st));
     const list = [...kinds.values()];

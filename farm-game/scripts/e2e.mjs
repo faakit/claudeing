@@ -250,6 +250,34 @@ try {
     !m.placed.farm && m.inventory.slots.some((x) => x?.item === 'sprinkler'),
     JSON.stringify(m.placed),
   );
+  // villagers and animals
+  await mPlace(15, 12, 'right');
+  await mTap('KeyE');
+  m = await mState();
+  const npcOpen = await mp.evaluate(() => window.__farm.game.scene.getScene('UI').npc.isOpen);
+  check(
+    'Interact talks to a villager: panel opens and friendship grows',
+    npcOpen && m.friends.rosa?.points === 10 && m.stats.talked === 1,
+    JSON.stringify(m.friends),
+  );
+  await mp.keyboard.press('Escape');
+  await mp.waitForTimeout(300);
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.inventory.slots[5] = { item: 'chicken', qty: 1 };
+    s.inventory.slots[6] = { item: 'chicken_feed', qty: 3 };
+    s.placed.farm = [{ id: 9, type: 'coop', tx: 10, ty: 10, data: {} }];
+    s.nextPlacedId = 10;
+    window.__farm.gameEvents.emit('placedChanged', { map: 'farm' });
+  });
+  await mPlace(11, 10, 'left');
+  await mTap('KeyE');
+  m = await mState();
+  check(
+    'Interact at a coop moves the chicken in and feeds it',
+    m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
+    JSON.stringify(m.placed.farm[0]),
+  );
   await mPlace(18, 31, 'right');
   await mp.keyboard.press('Digit4'); // fishing rod
   const energyBefore = (await mState()).energy;

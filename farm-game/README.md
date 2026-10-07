@@ -36,8 +36,10 @@ available (pick up or harvest beats planting beats tilling), so you never have t
 5. **Craft** (Menu > Craft): fertilizer, bait, sprinklers, preserve jars. Recipes unlock as your skills level up.
 6. **Preserve**: put fruit in a jar for jam or vegetables for pickles; collect after a few mornings. Worth far more than raw.
 7. **Orders**: the town board posts three requests every morning that pay well above the shipping bin.
-8. **Skills**: farming, foraging and fishing level up with use and grant perks (quality, energy, double finds, wider fishing zone).
-9. Follow the goal tracker at the top; each goal introduces a new mechanic. Summer 28 ends the first year.
+8. **Animals**: craft a coop (and later a barn), buy chickens and feed in town. One tap on the coop moves animals in, collects eggs and feeds them. Fed animals get happier and lay better-quality eggs; hungry ones sulk.
+9. **Villagers**: Mara (shop), Finn (woods) and Rosa (farm) greet you with a "!" each day. Chat once a day and give gifts to grow hearts; hearts unlock discounts, daily presents and perks.
+10. **Skills**: farming, foraging and fishing level up with use and grant perks (quality, energy, double finds, wider fishing zone).
+11. Follow the goal tracker at the top; each goal introduces a new mechanic. Summer 28 ends the first year.
 
 ## Project layout
 

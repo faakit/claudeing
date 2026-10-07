@@ -57,6 +57,22 @@ later hooks). Example: `mechanics/orders.ts` rewrites the town board in `morning
 Per-object state lives in `obj.data` (plain JSON, saved automatically). `interact` returns `pickup`,
 `message`, or `panel` (open a sheet; see below). See `mechanics/sprinkler.ts` and `mechanics/jar.ts`.
 
+### Animal houses
+
+A coop or barn is just a placeable whose behavior is `animalHouse` and whose `params.species` names a row in
+`animals.json` (`item`, `feed`, `product`, `capacity`). A new animal is data plus art: add the animal, feed
+and product items, one `animals.json` row, a house in `placeables.json`, and the sprites. Per-house state is
+`obj.data.house` (`n`, `fed`, `ready`, `joy`); `systems/animals.ts` holds the rules.
+
+### Villagers
+
+`npcs.json` defines each villager: home map and tile, tint, loved/liked/disliked items, lines by friendship
+tier plus rainy-day lines, a daily gift once friends, and **perks by heart level** (`{"2": {"shopDiscount": 0.05}}`).
+Perks are summed into `perk(state, key)` just like skill perks, so any system can read them.
+`systems/friendship.ts` has the rules (one chat and one gift per day). Add a villager with one JSON entry; they
+appear, block their tile, show a "!" until greeted, and open the same panel. A villager with `"role": "shop"` also
+gets a Shop button.
+
 ## 4. Items: quality and derived goods
 
 A stack is identified by `{ item, q?, of? }` (`systems/itemRef.ts`): quality tier 0/1/2 and, for goods made
