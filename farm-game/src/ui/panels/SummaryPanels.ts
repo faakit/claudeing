@@ -70,94 +70,80 @@ export class SummaryPanel extends WaitModal {
   }
 
   protected build(): void {
-    const sum = this.summary;
-    if (!sum) return;
-    const s = getState();
-    const lines = sum.shipped.slice(0, 6);
-    const extra = sum.shipped.length - lines.length;
-    const bodyRows = Math.max(1, lines.length + (extra > 0 ? 1 : 0));
-    this.setHeight(
-      150 + bodyRows * 11 + 40 + (sum.withered > 0 ? 22 : 0) + (sum.notes?.length ?? 0) * 11,
-    );
-    this.panel();
-    this.label(
-      this.panelW / 2,
-      8,
-      `${seasonLabel(sum.endedSeason)} ${sum.endedDay} complete`,
-      C.gold,
-      1,
-      'center',
-    );
-    this.label(
-      this.panelW / 2,
-      22,
-      sum.passedOut ? 'You passed out from exhaustion...' : 'You slept soundly.',
-      sum.passedOut ? C.warn : C.green,
-      1,
-      'center',
-    );
-    this.label(8, 40, 'SOLD THIS MORNING', C.gold);
-    let y = 52;
-    if (lines.length === 0) {
-      this.label(8, y, 'Nothing shipped. Use the bin by the house!', C.creamDim, 1, 'left', 184);
-      y += 11;
-    }
-    for (const l of lines) {
-      this.label(8, y, `${displayName(parseKey(l.item))} x${l.qty}`, C.cream, 1, 'left', 130);
-      this.label(192, y, `${fmt(l.gold)}g`, C.gold, 1, 'right');
-      y += 11;
-    }
-    if (extra > 0) {
-      this.label(8, y, `...and ${extra} more`, C.creamDim);
-      y += 11;
-    }
-    y += 3;
-    this.label(8, y, 'Total', C.cream);
-    this.label(192, y, `+${fmt(sum.total)}g`, C.green, 1, 'right');
-    y += 14;
-    if (sum.withered > 0) {
-      this.label(
-        8,
-        y,
-        `${sum.withered} crop${sum.withered > 1 ? 's' : ''} withered with the new season.`,
-        C.warn,
-        1,
-        'left',
-        184,
-      );
-      y += 22;
-    }
-    for (const note of sum.notes ?? []) {
-      this.label(8, y, note, C.cream, 1, 'left', 184);
-      y += 11;
-    }
-    this.label(
-      8,
-      y,
-      `Now: ${seasonLabel(s.time.season)} ${s.time.day}. Gold: ${fmt(s.money)}`,
-      C.cream,
-    );
-    y += 11;
-    this.label(
-      8,
-      y,
-      sum.weather === 'rain' ? 'It is raining. Crops are watered!' : 'The sun is out today.',
-      sum.weather === 'rain' ? C.blue : C.creamDim,
-    );
-    y += 14;
-    this.label(
-      8,
-      y,
-      `Tip: ${TIPS[(s.time.day + s.time.year) % TIPS.length]}`,
-      C.creamDim,
-      1,
-      'left',
-      184,
-    );
+    if (!this.summary) return;
+    // Text wraps to a length we cannot know up front, so lay it out once to measure the real height,
+    // then again at that height. Nothing is placed at a fixed y, so lines can never overlap.
+    this.setHeight(400);
+    const end = this.draw(this.summary);
+    this.content.removeAll(true);
+    this.setHeight(end + 40);
+    this.draw(this.summary);
     this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Wake up', () => this.finish(), {
       textColor: C.green,
       rim: C.green,
     });
+  }
+
+  /** Draw the summary top to bottom; returns the y just below the last line. */
+  private draw(sum: DaySummary): number {
+    const s = getState();
+    const lines = sum.shipped.slice(0, 6);
+    const extra = sum.shipped.length - lines.length;
+    this.panel();
+    let y = 8;
+    const text = (
+      t: string,
+      color: number,
+      opts: { x?: number; align?: 'left' | 'center' | 'right'; wrap?: number; gap?: number } = {},
+    ): number => {
+      const l = this.label(opts.x ?? 8, y, t, color, 1, opts.align ?? 'left', opts.wrap);
+      return l.textHeight + (opts.gap ?? 3);
+    };
+    const mid = this.panelW / 2;
+    y +=
+      this.label(
+        mid,
+        y,
+        `${seasonLabel(sum.endedSeason)} ${sum.endedDay} complete`,
+        C.gold,
+        1,
+        'center',
+      ).textHeight + 3;
+    y += text(
+      sum.passedOut ? 'You passed out from exhaustion...' : 'You slept soundly.',
+      sum.passedOut ? C.warn : C.green,
+      { x: mid, align: 'center', gap: 9 },
+    );
+    y += text('SOLD THIS MORNING', C.gold, { gap: 4 });
+    if (lines.length === 0)
+      y += text('Nothing shipped. Use the bin by the house!', C.creamDim, { wrap: 184, gap: 4 });
+    for (const l of lines) {
+      this.label(192, y, `${fmt(l.gold)}g`, C.gold, 1, 'right');
+      y += text(`${displayName(parseKey(l.item))} x${l.qty}`, C.cream, { wrap: 130 });
+    }
+    if (extra > 0) y += text(`...and ${extra} more`, C.creamDim);
+    y += 3;
+    this.label(192, y, `+${fmt(sum.total)}g`, C.green, 1, 'right');
+    y += text('Total', C.cream, { gap: 8 });
+    if (sum.withered > 0)
+      y += text(
+        `${sum.withered} crop${sum.withered > 1 ? 's' : ''} withered with the new season.`,
+        C.warn,
+        { wrap: 184, gap: 4 },
+      );
+    for (const note of sum.notes ?? []) y += text(note, C.cream, { wrap: 184, gap: 4 });
+    y += text(`Now: ${seasonLabel(s.time.season)} ${s.time.day}. Gold: ${fmt(s.money)}`, C.cream, {
+      wrap: 184,
+    });
+    y += text(
+      sum.weather === 'rain' ? 'It is raining. Crops are watered!' : 'The sun is out today.',
+      sum.weather === 'rain' ? C.blue : C.creamDim,
+      { gap: 8 },
+    );
+    y += text(`Tip: ${TIPS[(s.time.day + s.time.year) % TIPS.length]}`, C.creamDim, {
+      wrap: 184,
+    });
+    return y;
   }
 }
 

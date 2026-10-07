@@ -189,6 +189,7 @@ export abstract class Modal {
   protected panelH: number;
   private readonly dim: Phaser.GameObjects.Rectangle;
   private opened = false;
+  private dimPressed = false;
   /** Tapping outside the sheet closes it. Flows that must be acknowledged turn this off. */
   protected dismissOnDim = true;
   onClosed: (() => void) | null = null;
@@ -204,8 +205,13 @@ export abstract class Modal {
       .setDepth(200)
       .setVisible(false);
     this.dim.setInteractive();
+    // A press that opened this sheet (Interact, a menu button) ends on the dim once the finger lifts;
+    // only a press that also began on the dim counts as "tap outside".
+    this.dim.on('pointerdown', () => (this.dimPressed = true));
     this.dim.on('pointerup', () => {
-      if (this.dismissOnDim) this.close();
+      const armed = this.dimPressed;
+      this.dimPressed = false;
+      if (armed && this.dismissOnDim) this.close();
     });
     this.root = scene.add
       .container(0, GAME_HEIGHT - panelH)
@@ -239,6 +245,7 @@ export abstract class Modal {
   open(): void {
     if (this.opened) return;
     this.opened = true;
+    this.dimPressed = false;
     runtime.modals += 1;
     this.rebuild();
     this.dim.setVisible(true).setAlpha(0);

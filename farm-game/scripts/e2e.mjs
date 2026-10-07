@@ -262,6 +262,25 @@ try {
   );
   await mp.keyboard.press('Escape');
   await mp.waitForTimeout(300);
+  // A real press-and-release on the on-screen Interact button must leave the sheet open
+  // (the release lands on the dim backdrop; it used to count as "tap outside" and close it).
+  await mPlace(15, 12, 'right');
+  await mp.waitForTimeout(300);
+  const box = await mp.evaluate(() => {
+    const c = document.querySelector('canvas').getBoundingClientRect();
+    return { x: c.x, y: c.y, k: c.width / 200 };
+  });
+  await mp.mouse.move(box.x + 125 * box.k, box.y + 343 * box.k);
+  await mp.mouse.down();
+  await mp.waitForTimeout(150);
+  await mp.mouse.up();
+  await mp.waitForTimeout(500);
+  check(
+    'tap on the Interact button opens the villager sheet and it stays open on release',
+    await mp.evaluate(() => window.__farm.game.scene.getScene('UI').npc.isOpen),
+  );
+  await mp.keyboard.press('Escape');
+  await mp.waitForTimeout(300);
   await mp.evaluate(() => {
     const s = window.__farm.getState();
     s.inventory.slots[5] = { item: 'chicken', qty: 1 };

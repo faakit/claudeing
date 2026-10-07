@@ -104,3 +104,8 @@
 - **Shop sheet got tabs (Seeds / Animals / Upgrades)** so it never overflows the portrait screen as stock grows.
 - **Save version 4** adds `friends`; v3 saves migrate by adding it.
 - **Not done:** villager schedules (they stand at one spot), a cow and chicken that walk across the farm (they mill about their house), and animal death or illness by design.
+
+## Bug fixes from a real phone
+
+- **Morning summary overlapped:** wrapped lines were placed at fixed y steps. The sheet now lays out top to bottom using each label's real height, measures once, then draws at the measured height. Rule: never place wrapped text at a fixed y.
+- **Villager sheet flashed shut on a tap:** buttons act on press, so the sheet opened under the finger and the release landed on the dim backdrop, which counted as "tap outside". Backdrops now only dismiss when the press also began on them. An e2e check presses and releases the real Interact button.
