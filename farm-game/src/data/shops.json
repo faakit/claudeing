@@ -45,6 +45,22 @@
       {
         "item": "speed_gro",
         "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "chicken",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "chicken_feed",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "cow",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "hay",
+        "seasons": ["spring", "summer", "fall", "winter"]
       }
     ],
     "upgrades": [

@@ -1,4 +1,4 @@
-import { crops, game, goals, items, mapsData, placeables, shops, skills } from '../data';
+import { crops, game, goals, items, mapsData, npcs, placeables, shops, skills } from '../data';
 import { isDirection } from './direction';
 import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
@@ -59,7 +59,16 @@ function migrateV2(raw: Raw): Raw {
   };
 }
 
-const MIGRATIONS: Record<number, (raw: Raw) => Raw> = { 1: migrateV1, 2: migrateV2 };
+/** v3 -> v4: villagers. Animals need no migration: their state lives in placed objects' data. */
+function migrateV3(raw: Raw): Raw {
+  return { ...raw, version: 4, friends: {} };
+}
+
+const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
+  1: migrateV1,
+  2: migrateV2,
+  3: migrateV3,
+};
 
 /** Bring any saved shape up to the current version, then validate it. */
 export function migrate(input: unknown): GameState {
@@ -263,6 +272,16 @@ export function sanitize(raw: Raw): GameState {
     }
   }
 
+  const friends: GameState['friends'] = {};
+  for (const [id, f] of Object.entries(obj(raw['friends']))) {
+    if (!npcs[id] || !isObj(f)) continue;
+    friends[id] = {
+      points: int(f['points'], 0, 0, 250),
+      talkedDay: int(f['talkedDay'], 0, 0, 1e7),
+      giftedDay: int(f['giftedDay'], 0, 0, 1e7),
+    };
+  }
+
   return {
     version: STATE_VERSION,
     time,
@@ -286,6 +305,7 @@ export function sanitize(raw: Raw): GameState {
     skills: skillXp,
     forage: forageOut,
     orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
+    friends,
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
   };

@@ -6,11 +6,16 @@ import { restoreEnergy } from './energy';
 import { gameEvents } from './events';
 import { addStat } from './goals';
 import { addItem, countStack, removeStack, roomFor } from './inventory';
+import { perk } from './skills';
 import { keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 
 /** Base price of an item id (normal quality, not derived). */
 export const sellPrice = (itemId: string): number => items[itemId]?.sellPrice ?? 0;
 export const buyPrice = (itemId: string): number => items[itemId]?.buyPrice ?? 0;
+
+/** What the player actually pays: the list price less any friendship discount (never more than 30%). */
+export const priceFor = (state: GameState, itemId: string): number =>
+  Math.max(1, Math.round(buyPrice(itemId) * (1 - Math.min(0.3, perk(state, 'shopDiscount')))));
 
 export const isShippable = (ref: string | ItemRef): boolean => {
   const r = typeof ref === 'string' ? { item: ref } : ref;
@@ -65,7 +70,7 @@ export function buyItem(state: GameState, shopId: string, itemId: string, qty: n
   if (!stockFor(shopId, state.time.season).includes(itemId)) {
     return shops[shopId]?.stock.some((s) => s.item === itemId) ? 'out_of_season' : 'unknown';
   }
-  const cost = buyPrice(itemId) * qty;
+  const cost = priceFor(state, itemId) * qty;
   if (state.money < cost) return 'no_money';
   if (roomFor(state, itemId, qty) < qty) return 'full';
   state.money -= cost;

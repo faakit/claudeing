@@ -69,6 +69,13 @@ export interface Order {
   done: boolean;
 }
 
+/** How a villager feels about the player. Days are absolute day numbers (0 = never). */
+export interface Friendship {
+  points: number;
+  talkedDay: number;
+  giftedDay: number;
+}
+
 export interface DaySummary {
   /** The day that just ended. */
   endedDay: number;
@@ -123,11 +130,13 @@ export interface GameState {
   forage: Record<string, Record<string, string>>;
   /** Today's orders. `day` is the absolute day number they were generated for. */
   orders: { day: number; list: Order[] };
+  /** Friendship with villagers by npc id. */
+  friends: Record<string, Friendship>;
   lastSummary: DaySummary | null;
   rng: number;
 }
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -165,6 +174,7 @@ export function createInitialState(): GameState {
     skills: {},
     forage: {},
     orders: { day: 0, list: [] },
+    friends: {},
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,
   };

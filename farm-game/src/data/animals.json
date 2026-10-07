@@ -1,0 +1,20 @@
+{
+  "chicken": {
+    "name": "Chicken",
+    "item": "chicken",
+    "feed": "chicken_feed",
+    "product": "egg",
+    "capacity": 3,
+    "sprite": "animal_chicken",
+    "perDay": 1
+  },
+  "cow": {
+    "name": "Cow",
+    "item": "cow",
+    "feed": "hay",
+    "product": "milk",
+    "capacity": 2,
+    "sprite": "animal_cow",
+    "perDay": 1
+  }
+}

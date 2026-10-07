@@ -130,5 +130,41 @@
       "skill": "farming",
       "level": 5
     }
+  },
+  "coop": {
+    "name": "Coop",
+    "output": {
+      "item": "coop",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 20
+      }
+    ],
+    "gold": 400,
+    "unlock": {
+      "skill": "farming",
+      "level": 3
+    }
+  },
+  "barn": {
+    "name": "Barn",
+    "output": {
+      "item": "barn",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 40
+      }
+    ],
+    "gold": 1000,
+    "unlock": {
+      "skill": "farming",
+      "level": 5
+    }
   }
 }

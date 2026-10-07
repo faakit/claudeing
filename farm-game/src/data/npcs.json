@@ -1,0 +1,143 @@
+{
+  "mara": {
+    "name": "Mara",
+    "role": "shop",
+    "map": "town",
+    "tx": 8,
+    "ty": 10,
+    "facing": "down",
+    "tint": "#ffb08a",
+    "blurb": "Runs the General Store.",
+    "loves": ["daffodil", "jam", "wild_sunflower"],
+    "likes": ["tomato", "melon", "pickles", "egg", "milk"],
+    "dislikes": ["fiber", "mushroom"],
+    "lines": {
+      "stranger": [
+        "Welcome to the General Store!",
+        "New face? Seeds are on the shelf.",
+        "Mind the step. Prices are fair here."
+      ],
+      "friend": [
+        "Good to see you again!",
+        "Your crops are the talk of town.",
+        "I saved the best seeds for you."
+      ],
+      "close": [
+        "You always brighten my day!",
+        "Anything you need, just ask.",
+        "Best customer in the valley, honestly."
+      ],
+      "rain": ["Rain means seed sales. Lovely!", "Wet boots? Wipe them on the mat."]
+    },
+    "gifts": [
+      {
+        "item": "fiber",
+        "qty": 3
+      }
+    ],
+    "giftHearts": 3,
+    "perks": {
+      "2": {
+        "shopDiscount": 0.05
+      },
+      "4": {
+        "shopDiscount": 0.05
+      },
+      "5": {
+        "shopDiscount": 0.05
+      }
+    }
+  },
+  "finn": {
+    "name": "Finn",
+    "role": "friend",
+    "map": "woods",
+    "tx": 11,
+    "ty": 17,
+    "facing": "left",
+    "tint": "#8fc7e8",
+    "blurb": "Fishes the woods lake all day.",
+    "loves": ["catfish", "salmon", "trout"],
+    "likes": ["carp", "bluegill", "perch", "blackberry"],
+    "dislikes": ["parsnip", "potato"],
+    "lines": {
+      "stranger": [
+        "Shh. You will scare the fish.",
+        "Fishing is mostly waiting.",
+        "Nice lake, huh?"
+      ],
+      "friend": [
+        "Try tapping the second it dips.",
+        "Bait helps. A lot.",
+        "The big ones bite in the rain."
+      ],
+      "close": [
+        "Here, take some of my bait.",
+        "You are getting good at this!",
+        "Best catches come at dusk, friend."
+      ],
+      "rain": ["Perfect weather. Catfish love rain.", "Rain on the lake, my favourite."]
+    },
+    "gifts": [
+      {
+        "item": "bait",
+        "qty": 3
+      }
+    ],
+    "giftHearts": 3,
+    "perks": {
+      "3": {
+        "fishWindow": 0.04
+      },
+      "5": {
+        "fishWindow": 0.04
+      }
+    }
+  },
+  "rosa": {
+    "name": "Rosa",
+    "role": "friend",
+    "map": "farm",
+    "tx": 16,
+    "ty": 12,
+    "facing": "left",
+    "tint": "#c9a0e8",
+    "blurb": "Your neighbour. Knows soil.",
+    "loves": ["pumpkin", "wild_berry", "cauliflower"],
+    "likes": ["parsnip", "corn", "yam", "jam", "pickles"],
+    "dislikes": ["holly", "winter_root"],
+    "lines": {
+      "stranger": [
+        "Oh, you are the new farmer!",
+        "Good soil here. Treat it kindly.",
+        "Welcome to the valley."
+      ],
+      "friend": [
+        "Water early, sleep well.",
+        "Fertilizer makes the pretty ones.",
+        "Sprinklers save so many mornings."
+      ],
+      "close": [
+        "Take this, it will help your crops.",
+        "I love watching your farm grow.",
+        "You have the touch. Truly."
+      ],
+      "rain": ["Free watering today!", "Rain day. Rest your back."]
+    },
+    "gifts": [
+      {
+        "item": "fertilizer",
+        "qty": 1
+      }
+    ],
+    "giftHearts": 3,
+    "perks": {
+      "3": {
+        "qualityBonus": 0.03
+      },
+      "5": {
+        "qualityBonus": 0.03
+      }
+    }
+  }
+}

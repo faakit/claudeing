@@ -4,22 +4,8 @@ import { levelOf, levelProgress, maxLevel, perk } from '../../systems/skills';
 import { C } from '../theme';
 import { drawBar } from '../widgets';
 import { fmt } from './format';
+import { perkLine } from './perkText';
 import type { MenuTabContext } from './MenuPanel';
-
-/** What each perk key means to a player, for the "next reward" line. Unknown keys fall back to the key. */
-const PERK_TEXT: Record<string, (v: number) => string> = {
-  qualityBonus: (v) => `+${Math.round(v * 100)}% better quality`,
-  maxEnergy: (v) => `+${v} max energy`,
-  sellBonus: (v) => `+${Math.round(v * 100)}% sell price`,
-  forageDouble: (v) => `+${Math.round(v * 100)}% double finds`,
-  forageQuality: (v) => `+${Math.round(v * 100)}% forage quality`,
-  fishWindow: (v) => `+${Math.round(v * 100)}% catch zone`,
-};
-
-const perkLine = (perks: Record<string, number>): string =>
-  Object.entries(perks)
-    .map(([k, v]) => (PERK_TEXT[k] ? PERK_TEXT[k]!(v) : `${k} +${v}`))
-    .join(', ');
 
 /** Menu tab: every skill with its level, XP bar and the next perk waiting at the next level. */
 export function buildSkills(c: MenuTabContext): void {

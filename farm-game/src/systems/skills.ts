@@ -2,6 +2,7 @@ import { recipes, skills } from '../data';
 import type { RecipeDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents } from './events';
+import { friendPerk } from './friendship';
 
 export const skillIds = (): string[] => Object.keys(skills);
 
@@ -52,7 +53,7 @@ export function perk(state: GameState, key: string): number {
       if (Number(lvl) <= level) total += perks[key] ?? 0;
     }
   }
-  return total;
+  return total + friendPerk(state, key);
 }
 
 export const isRecipeUnlocked = (state: GameState, recipe: RecipeDef): boolean =>

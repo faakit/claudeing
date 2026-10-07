@@ -406,5 +406,75 @@
     "derived": true,
     "sellMultiplier": 1.8,
     "nameTemplate": "{of} Pickles"
+  },
+  "chicken": {
+    "name": "Chicken",
+    "type": "animal",
+    "icon": "item_chicken",
+    "color": "#f4ead2",
+    "sellPrice": 0,
+    "description": "Put it in a coop. Lays eggs when fed.",
+    "buyPrice": 350
+  },
+  "chicken_feed": {
+    "name": "Chicken Feed",
+    "type": "feed",
+    "icon": "item_chicken_feed",
+    "color": "#d8b24a",
+    "sellPrice": 2,
+    "description": "One scoop per chicken, every day.",
+    "buyPrice": 8
+  },
+  "egg": {
+    "name": "Egg",
+    "type": "product",
+    "icon": "item_egg",
+    "color": "#f1e3c0",
+    "sellPrice": 50,
+    "description": "Fresh from the coop."
+  },
+  "cow": {
+    "name": "Cow",
+    "type": "animal",
+    "icon": "item_cow",
+    "color": "#e8e0d0",
+    "sellPrice": 0,
+    "description": "Put it in a barn. Gives milk when fed.",
+    "buyPrice": 1200
+  },
+  "hay": {
+    "name": "Hay",
+    "type": "feed",
+    "icon": "item_hay",
+    "color": "#c9a24a",
+    "sellPrice": 3,
+    "description": "One bundle per cow, every day.",
+    "buyPrice": 15
+  },
+  "milk": {
+    "name": "Milk",
+    "type": "product",
+    "icon": "item_milk",
+    "color": "#f4f4f8",
+    "sellPrice": 130,
+    "description": "Rich and creamy."
+  },
+  "coop": {
+    "name": "Coop",
+    "type": "placeable",
+    "icon": "item_coop",
+    "color": "#b9783c",
+    "sellPrice": 100,
+    "description": "A home for up to 3 chickens.",
+    "placeable": true
+  },
+  "barn": {
+    "name": "Barn",
+    "type": "placeable",
+    "icon": "item_barn",
+    "color": "#a8443a",
+    "sellPrice": 250,
+    "description": "A home for up to 2 cows.",
+    "placeable": true
   }
 }

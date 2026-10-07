@@ -98,6 +98,34 @@
     "reward": 150
   },
   {
+    "id": "talk",
+    "text": "Say hello to a villager",
+    "stat": "talked",
+    "target": 1,
+    "reward": 40
+  },
+  {
+    "id": "chicken",
+    "text": "Raise your first chicken in a coop",
+    "stat": "animalsAdded",
+    "target": 1,
+    "reward": 150
+  },
+  {
+    "id": "eggs",
+    "text": "Collect 5 eggs or milk",
+    "stat": "collected",
+    "target": 5,
+    "reward": 150
+  },
+  {
+    "id": "friend",
+    "text": "Reach 2 hearts with a villager",
+    "stat": "maxHearts",
+    "target": 2,
+    "reward": 200
+  },
+  {
     "id": "earn1k",
     "text": "Earn 1,000g selling crops",
     "stat": "earned",

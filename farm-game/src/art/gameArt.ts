@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { crops, items, placeables } from '../data';
+import { animals, crops, items, placeables } from '../data';
 
 /** Code-generated gameplay art (soil, crops, items, UI glyphs). Replaced by atlases in M7. */
 export const SOIL_TEXTURE = { tilled: 'soil_tilled', watered: 'soil_watered' } as const;
@@ -240,6 +240,29 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(3, 4, 10, 2, '#c9ad72'); // lid
     r(3, 4, 10, 1, '#efe0b0');
     if (id === 'pickles') r(7, 10, 1, 1, dk);
+  } else if (it.type === 'animal') {
+    drawAnimal(ctx, id, 16, 16, 0, 0);
+  } else if (it.type === 'feed') {
+    r(3, 5, 10, 9, '#d8c08a'); // sack
+    r(3, 5, 10, 1, '#efe0b0');
+    r(4, 3, 8, 3, '#c9ad72');
+    r(5, 8, 6, 4, c);
+    r(5, 8, 6, 1, lt);
+    r(6, 10, 1, 1, dk);
+    r(9, 9, 1, 1, dk);
+  } else if (it.type === 'product') {
+    if (id === 'milk') {
+      r(5, 6, 6, 8, '#f4f4f8'); // bottle
+      r(5, 6, 6, 1, '#ffffff');
+      r(6, 3, 4, 3, '#dfe6f0');
+      r(5, 9, 6, 3, '#6fa3e0');
+      r(6, 2, 4, 1, '#c9d3e4');
+    } else {
+      disc(ctx, 8, 9, 5, c); // egg
+      r(6, 5, 3, 1, lt);
+      r(5, 7, 1, 2, '#ffffff');
+      r(9, 12, 2, 1, dk);
+    }
   } else if (it.type === 'placeable') {
     drawPlaceable(ctx, id, c, dk, lt);
   } else if (it.type === 'forage') {
@@ -256,7 +279,19 @@ function drawPlaceable(ctx: Ctx, id: string, c: string, dk: string, lt: string):
     ctx.fillStyle = col;
     ctx.fillRect(x, y, w, h);
   };
-  if (id === 'preserve_jar') {
+  if (id === 'coop' || id === 'barn') {
+    const wall = id === 'coop' ? '#b9783c' : '#a8443a';
+    const roof = id === 'coop' ? '#7a4a28' : '#5a2a28';
+    r(2, 7, 12, 8, wall);
+    r(2, 7, 12, 1, shade(wall, 35));
+    for (let x = 4; x < 14; x += 3) r(x, 8, 1, 7, shade(wall, -35));
+    r(1, 4, 14, 4, roof);
+    r(3, 2, 10, 3, roof);
+    r(3, 2, 10, 1, shade(roof, 40));
+    r(6, 10, 4, 5, '#2a1a1a'); // door
+    r(7, 10, 2, 1, '#f4d35e');
+    if (id === 'barn') r(7, 4, 2, 2, '#f4ead2');
+  } else if (id === 'preserve_jar') {
     r(3, 5, 10, 9, '#8a5a32'); // wooden barrel
     r(3, 5, 10, 1, '#b07a48');
     r(3, 8, 10, 1, '#5a3a20');
@@ -277,6 +312,39 @@ function drawPlaceable(ctx: Ctx, id: string, c: string, dk: string, lt: string):
       r(11, 5, 2, 1, lt);
       r(7, 1, 2, 1, '#f4d35e');
     }
+  }
+}
+
+/** A farm animal, drawn at (ox, oy). Icons use the 16px box; world sprites use the same drawing. */
+function drawAnimal(ctx: Ctx, id: string, _w: number, _h: number, ox: number, oy: number): void {
+  const r = (x: number, y: number, w: number, h: number, col: string) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(ox + x, oy + y, w, h);
+  };
+  if (id === 'cow') {
+    r(3, 5, 9, 6, '#f4f0e6');
+    r(3, 5, 9, 1, '#ffffff');
+    r(4, 6, 3, 3, '#4a3a33'); // spots
+    r(9, 8, 2, 2, '#4a3a33');
+    r(11, 3, 4, 4, '#f4f0e6'); // head
+    r(14, 5, 2, 2, '#e8a0a0'); // snout
+    r(11, 2, 1, 2, '#4a3a33'); // horn
+    r(12, 4, 1, 1, '#14101f'); // eye
+    r(4, 11, 2, 3, '#e8e0d0'); // legs
+    r(9, 11, 2, 3, '#e8e0d0');
+    r(2, 6, 1, 4, '#d8d0c0'); // tail
+  } else {
+    r(4, 6, 8, 6, '#f8f2e4'); // body
+    r(4, 6, 8, 1, '#ffffff');
+    r(10, 3, 4, 5, '#f8f2e4'); // head
+    r(11, 2, 2, 2, '#e0574a'); // comb
+    r(14, 5, 2, 1, '#f2a65a'); // beak
+    r(12, 4, 1, 1, '#14101f'); // eye
+    r(10, 8, 2, 2, '#e0574a'); // wattle
+    r(2, 5, 3, 4, '#e8dec8'); // tail
+    r(6, 12, 1, 2, '#f2a65a'); // legs
+    r(9, 12, 1, 2, '#f2a65a');
+    r(5, 8, 5, 2, '#e8dec8'); // wing
   }
 }
 
@@ -515,6 +583,21 @@ function drawGlyphs(scene: Phaser.Scene): void {
     ctx.fillRect(x, y, w, 1);
   outline(ctx, 0, 0, 7, 7, '#3a3350');
   refresh(scene, 'ui_star');
+  // heart (tinted red when earned, grey when not)
+  ctx = canvas(scene, 'ui_heart', 7, 6);
+  ctx.fillStyle = '#ffffff';
+  for (const [x, y, w] of [
+    [1, 0, 2],
+    [4, 0, 2],
+    [0, 1, 7],
+    [0, 2, 7],
+    [1, 3, 5],
+    [2, 4, 3],
+    [3, 5, 1],
+  ] as const)
+    ctx.fillRect(x, y, w, 1);
+  outline(ctx, 0, 0, 7, 6, '#3a3350');
+  refresh(scene, 'ui_heart');
   // 2x2 particle pixel
   ctx = canvas(scene, PX_TEXTURE, 2, 2);
   ctx.fillStyle = '#ffffff';
@@ -562,6 +645,12 @@ export function generateGameArt(scene: Phaser.Scene): void {
     if (it) drawPlaceable(ctx, id, it.color, shade(it.color, -45), shade(it.color, 40));
     outline(ctx, 0, 0, 16, 16);
     refresh(scene, def.sprite);
+  }
+  for (const a of Object.values(animals)) {
+    const ctx = canvas(scene, a.sprite, 16, 16);
+    drawAnimal(ctx, a.item, 16, 16, 0, 0);
+    outline(ctx, 0, 0, 16, 16);
+    refresh(scene, a.sprite);
   }
   drawGlyphs(scene);
 }

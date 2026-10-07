@@ -37,6 +37,7 @@ import {
   FishingPanel,
   installMenuTabs,
   JarPanel,
+  NpcPanel,
   MenuPanel,
   ShopPanel,
   SleepPanel,
@@ -81,6 +82,13 @@ function drawBoardIcon(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(INK, 0.6).fillRect(-9, 7, 2, 4).fillRect(7, 7, 2, 4);
 }
 
+function drawTalkIcon(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(INK, 0.6).fillRect(-11, -9, 22, 15).fillRect(-6, 5, 5, 5);
+  g.fillStyle(CREAM, 1).fillRect(-10, -8, 20, 13).fillRect(-5, 5, 4, 4);
+  g.fillStyle(INK, 0.9);
+  for (const x of [-5, 0, 5]) g.fillRect(x - 1, -3, 2, 2);
+}
+
 function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(CREAM, 1);
   for (const y of [-5, -1, 3]) g.fillRect(-6, y, 12, 2);
@@ -90,6 +98,7 @@ function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
 export const INTERACT_ICONS: Record<string, (g: Phaser.GameObjects.Graphics) => void> = {
   bed: drawBedIcon,
   board: drawBoardIcon,
+  npc: drawTalkIcon,
 };
 
 /** HUD overlay and flow controller: thumb controls, panels, day tint, sleep and results. */
@@ -106,6 +115,7 @@ export class UIScene extends Phaser.Scene {
   private summary!: SummaryPanel;
   private yearEnd!: YearEndPanel;
   private jar!: JarPanel;
+  private npc!: NpcPanel;
   private fishing!: FishingPanel;
   /** Panels a placed object can open, by the name its behavior gives in `interact`. */
   private jarPanels: Record<string, { openFor(id: number): void }> = {};
@@ -179,6 +189,11 @@ export class UIScene extends Phaser.Scene {
           inputHub.clearHeld();
           this.jarPanels[panel]?.openFor(id);
         }
+      }),
+      gameEvents.on('talkTo', ({ id }) => {
+        if (runtime.blocked) return;
+        inputHub.clearHeld();
+        this.npc.openFor(id);
       }),
       gameEvents.on('startFishing', ({ fish, bait }) => {
         inputHub.clearHeld();
@@ -328,7 +343,9 @@ export class UIScene extends Phaser.Scene {
     this.interactButton.setEnabled(type !== null);
     if (type !== null) {
       this.interactIcon.clear();
-      (INTERACT_ICONS[type] ?? drawHandIcon)(this.interactIcon);
+      (INTERACT_ICONS[type] ?? INTERACT_ICONS[type.split(':')[0] ?? ''] ?? drawHandIcon)(
+        this.interactIcon,
+      );
     }
     this.tweens.add({ targets: this.interactIcon, alpha: type !== null ? 1 : 0, duration: 140 });
   }
@@ -363,20 +380,22 @@ export class UIScene extends Phaser.Scene {
     this.panels.set('bin', new BinPanel(this));
     this.panels.set('board', new BoardPanel(this));
     this.jar = new JarPanel(this);
+    this.npc = new NpcPanel(this);
     this.fishing = new FishingPanel(this);
     this.panels.set('fishing', this.fishing);
     this.panels.set('sleep', new SleepPanel(this, () => void this.runSleep(false)));
     this.jarPanels = { jar: this.jar };
-    for (const m of [...this.panels.values(), this.jar]) m.onClosed = () => void saveNow(true);
+    for (const m of [...this.panels.values(), this.jar, this.npc])
+      m.onClosed = () => void saveNow(true);
   }
 
   private allModals(): Modal[] {
-    return [...this.panels.values(), this.jar, this.summary, this.yearEnd];
+    return [...this.panels.values(), this.jar, this.npc, this.summary, this.yearEnd];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
-    return [...this.panels.values(), this.jar].find((m) => m.isOpen) ?? null;
+    return [...this.panels.values(), this.jar, this.npc].find((m) => m.isOpen) ?? null;
   }
 
   private openPanel(type: PanelType): void {

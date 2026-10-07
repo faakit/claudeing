@@ -27,5 +27,23 @@
     "params": {
       "days": 3
     }
+  },
+  "coop": {
+    "name": "Coop",
+    "behavior": "animalHouse",
+    "solid": true,
+    "sprite": "obj_coop",
+    "params": {
+      "species": "chicken"
+    }
+  },
+  "barn": {
+    "name": "Barn",
+    "behavior": "animalHouse",
+    "solid": true,
+    "sprite": "obj_barn",
+    "params": {
+      "species": "cow"
+    }
   }
 }

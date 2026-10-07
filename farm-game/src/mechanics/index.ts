@@ -11,3 +11,4 @@ import './sprinkler';
 import './jar';
 import './orders';
 import './fishing';
+import './animalHouse';

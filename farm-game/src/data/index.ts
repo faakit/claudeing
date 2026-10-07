@@ -11,6 +11,8 @@ import placeablesRaw from './placeables.json';
 import forageRaw from './forage.json';
 import fishRaw from './fish.json';
 import ordersRaw from './orders.json';
+import animalsRaw from './animals.json';
+import npcsRaw from './npcs.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -46,7 +48,10 @@ export type ItemType =
   | 'fertilizer'
   | 'bait'
   | 'placeable'
-  | 'preserve';
+  | 'preserve'
+  | 'animal'
+  | 'feed'
+  | 'product';
 export interface ItemDef {
   name: string;
   type: ItemType;
@@ -146,6 +151,36 @@ export interface OrdersDef {
   tiers: { maxValue: number; qty: [number, number] }[];
   xpPerValue: number;
 }
+export interface AnimalDef {
+  name: string;
+  /** The item you buy and put in a house. */
+  item: string;
+  feed: string;
+  product: string;
+  capacity: number;
+  sprite: string;
+  perDay: number;
+}
+export interface NpcDef {
+  name: string;
+  role: 'shop' | 'friend';
+  map: string;
+  tx: number;
+  ty: number;
+  facing: Direction;
+  tint: string;
+  blurb: string;
+  loves: string[];
+  likes: string[];
+  dislikes: string[];
+  /** Lines by friendship tier (stranger 0-1 hearts, friend 2-3, close 4-5) plus rainy-day lines. */
+  lines: Record<'stranger' | 'friend' | 'close' | 'rain', string[]>;
+  /** Handed over after the first chat of a day once friendship reaches `giftHearts`. */
+  gifts: { item: string; qty: number }[];
+  giftHearts: number;
+  /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
+  perks: Record<string, Record<string, number>>;
+}
 export interface GameData {
   startingMoney: number;
   startingItems: { item: string; qty: number }[];
@@ -209,6 +244,8 @@ export const placeables = placeablesRaw as unknown as Record<string, PlaceableDe
 export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
+export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
@@ -291,6 +328,25 @@ export function validateContent(): void {
     for (const m of f.maps) if (!mapIds.includes(m)) fail('fish', `unknown map "${m}"`);
   }
   if (orders.tiers.length === 0 || orders.perDay < 1) fail('orders', 'needs tiers and perDay >= 1');
+  for (const [id, a] of Object.entries(animals)) {
+    for (const ref of [a.item, a.feed, a.product])
+      if (!items[ref]) fail('animals', `"${id}" references unknown item "${ref}"`);
+    if (items[a.item]?.type !== 'animal') fail('animals', `"${a.item}" must be an animal item`);
+    if (a.capacity < 1 || a.perDay < 1) fail('animals', `"${id}" needs capacity and perDay >= 1`);
+  }
+  for (const [id, pl] of Object.entries(placeables))
+    if (pl.behavior === 'animalHouse' && !animals[String(pl.params['species'])])
+      fail('placeables', `"${id}" houses unknown species "${pl.params['species']}"`);
+  for (const [id, n] of Object.entries(npcs)) {
+    if (!mapIds.includes(n.map)) fail('npcs', `"${id}" lives on unknown map "${n.map}"`);
+    if (!/^#[0-9a-f]{6}$/i.test(n.tint)) fail('npcs', `"${id}" needs a #rrggbb tint`);
+    for (const ref of [...n.loves, ...n.likes, ...n.dislikes, ...n.gifts.map((g) => g.item)])
+      if (!items[ref]) fail('npcs', `"${id}" mentions unknown item "${ref}"`);
+    for (const tier of ['stranger', 'friend', 'close', 'rain'] as const)
+      if (n.lines[tier].length === 0) fail('npcs', `"${id}" needs "${tier}" lines`);
+    for (const lvl of Object.keys(n.perks))
+      if (Number(lvl) < 1 || Number(lvl) > 5) fail('npcs', `"${id}" perk at invalid hearts ${lvl}`);
+  }
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');

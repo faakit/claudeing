@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TILE_SIZE } from '../config';
 import { items, placeables } from '../data';
 import type { GameState } from '../state/GameState';
+import { houseOf, speciesOf } from '../systems/animals';
 import { jarContents, jarReady } from '../systems/preserves';
 
 interface Shown {
@@ -91,7 +92,14 @@ export class ObjectsRenderer {
       const def = placeables[obj.type];
       if (!def) continue;
       const jar = jarContents(obj);
-      const sig = jar ? (jarReady(obj) ? 'ready' : 'busy') : 'idle';
+      const house = def.behavior === 'animalHouse' ? houseOf(obj) : null;
+      const sig = house
+        ? `house${house.n}${house.ready > 0 ? 'r' : ''}${house.fed ? 'f' : ''}`
+        : jar
+          ? jarReady(obj)
+            ? 'ready'
+            : 'busy'
+          : 'idle';
       const shown = this.placed.get(obj.id);
       if (shown?.sig === sig) continue;
       shown?.sprite.destroy();
@@ -114,6 +122,43 @@ export class ObjectsRenderer {
           .setDepth(10 + y);
         this.scene.tweens.add({ targets: mark, y: y - 20, duration: 500, yoyo: true, repeat: -1 });
         extra.push(mark);
+      }
+      const species = house ? speciesOf(obj) : undefined;
+      if (house && species) {
+        // Residents mill about in front of the house; a bubble shows when goods are waiting.
+        for (let i = 0; i < house.n; i++) {
+          const home = x - 10 + i * 10;
+          const critter = this.scene.add
+            .image(home, y + 6, species.sprite)
+            .setOrigin(0.5, 1)
+            .setScale(0.62)
+            .setDepth(10 + y + 4);
+          this.scene.tweens.add({
+            targets: critter,
+            x: home + (i % 2 ? -6 : 6),
+            duration: 1400 + i * 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+            onYoyo: () => critter.setFlipX(!critter.flipX),
+            delay: i * 400,
+          });
+          extra.push(critter);
+        }
+        if (house.ready > 0) {
+          const bubble = this.scene.add
+            .image(x, y - 19, items[species.product]?.icon ?? 'ui_star')
+            .setScale(0.8)
+            .setDepth(10 + y + 8);
+          this.scene.tweens.add({
+            targets: bubble,
+            y: y - 22,
+            duration: 520,
+            yoyo: true,
+            repeat: -1,
+          });
+          extra.push(bubble);
+        }
       }
       if (animate && !shown) {
         sprite.setScale(0.5);

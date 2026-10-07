@@ -19,6 +19,7 @@ import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
 import { FarmRenderer } from '../game/FarmRenderer';
+import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
@@ -54,6 +55,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private grid!: CollisionGrid;
   private raw!: TiledMapLike;
   private things: ObjectsRenderer | null = null;
+  private npcs: NpcRenderer | null = null;
   private objects: WorldObject[] = [];
   private sprite!: Phaser.GameObjects.Sprite;
   private shadow!: Phaser.GameObjects.Image;
@@ -113,6 +115,9 @@ export abstract class WorldScene extends Phaser.Scene {
       this.farm.sync(state, false);
     }
 
+    this.npcs = new NpcRenderer(this, this.mapId);
+    this.npcs.sync(state);
+    this.rebuildGrid();
     this.things = new ObjectsRenderer(this, this.mapId);
     this.things.sync(state, false);
     this.highlight = new TileHighlight(this);
@@ -135,6 +140,7 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('interact', () => this.onInteract()),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
+      gameEvents.on('friendsChanged', () => this.npcs?.sync(getState())),
       gameEvents.on('forageChanged', ({ map }) => {
         if (map === this.mapId) this.things?.sync(getState(), true);
       }),
@@ -151,6 +157,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.farm = null;
       this.things?.destroy();
       this.things = null;
+      this.npcs?.destroy();
+      this.npcs = null;
       this.game.events.emit(EVT_INTERACT_TARGET, null);
     });
   }
@@ -264,6 +272,8 @@ export abstract class WorldScene extends Phaser.Scene {
       if (tx >= 0 && ty >= 0 && tx < this.grid.width && ty < this.grid.height)
         this.grid.blocked[ty * this.grid.width + tx] = 1;
     }
+    for (const [tx, ty] of this.npcs?.tiles() ?? [])
+      this.grid.blocked[ty * this.grid.width + tx] = 1;
   }
 
   /**
@@ -283,6 +293,8 @@ export abstract class WorldScene extends Phaser.Scene {
 
   /** What Interact would do on a tile: a map object (bed, bin...) or a placed machine. */
   private interactableAt(t: TileCoord): string | null {
+    const npc = this.npcs?.at(t.tx, t.ty);
+    if (npc) return `npc:${npc}`;
     const obj = objectAt(this.objects, t.tx, t.ty);
     if (obj && ['bed', 'bin', 'shop', 'board'].includes(obj.type)) return obj.type;
     return placedAt(getState(), this.mapId, t.tx, t.ty)?.type ?? null;
@@ -364,6 +376,12 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!hit?.type) return;
     this.highlight.pulse();
     audio.play('ui');
+    if (hit.type.startsWith('npc:')) {
+      const id = hit.type.slice(4);
+      const p = getState().player;
+      this.npcs?.faceToward(id, p.x, p.y);
+      return void gameEvents.emit('talkTo', { id });
+    }
     if (hit.type === 'bed') return void gameEvents.emit('openPanel', { type: 'sleep' });
     if (hit.type === 'bin') return void gameEvents.emit('openPanel', { type: 'bin' });
     if (hit.type === 'shop') return void gameEvents.emit('openPanel', { type: 'shop' });
