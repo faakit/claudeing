@@ -1,0 +1,7 @@
+{
+  "start": { "map": "farm", "tx": 7, "ty": 9, "facing": "down" },
+  "maps": {
+    "farm": { "scene": "Farm", "file": "assets/maps/farm.tmj" },
+    "house": { "scene": "House", "file": "assets/maps/house.tmj" }
+  }
+}

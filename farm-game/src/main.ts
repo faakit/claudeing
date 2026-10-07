@@ -3,6 +3,8 @@ import { GAME_HEIGHT, GAME_WIDTH } from './config';
 import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
 import { FarmScene } from './scenes/FarmScene';
+import { HouseScene } from './scenes/HouseScene';
+import { UIScene } from './scenes/UIScene';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -13,5 +15,5 @@ new Phaser.Game({
   pixelArt: true,
   roundPixels: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [BootScene, PreloadScene, FarmScene],
+  scene: [BootScene, PreloadScene, FarmScene, HouseScene, UIScene],
 });

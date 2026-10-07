@@ -11,13 +11,14 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "gen:farm-map": "node scripts/generate-farm-map.mjs"
+    "gen:maps": "node scripts/generate-maps.mjs"
   },
   "dependencies": {
     "phaser": "3.90.0"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/node": "^22.20.5",
     "eslint": "10.12.0",
     "prettier": "3.9.9",
     "typescript": "6.0.3",

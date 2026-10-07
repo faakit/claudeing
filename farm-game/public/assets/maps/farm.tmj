@@ -10,8 +10,8 @@
  "type": "map",
  "tilewidth": 16,
  "tileheight": 16,
- "nextlayerid": 3,
- "nextobjectid": 1,
+ "nextlayerid": 4,
+ "nextobjectid": 3,
  "layers": [
   {
    "id": 1,
@@ -394,7 +394,7 @@
     6,
     1,
     1,
-    1,
+    13,
     1,
     1,
     1,
@@ -1607,7 +1607,7 @@
     0,
     0,
     0,
-    0,
+    13,
     0,
     0,
     0,
@@ -2438,6 +2438,63 @@
     7,
     7
    ]
+  },
+  {
+   "id": 3,
+   "name": "objects",
+   "type": "objectgroup",
+   "x": 0,
+   "y": 0,
+   "opacity": 1,
+   "visible": true,
+   "draworder": "topdown",
+   "objects": [
+    {
+     "id": 1,
+     "name": "house_door",
+     "type": "door",
+     "x": 112,
+     "y": 112,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "targetMap",
+       "type": "string",
+       "value": "house"
+      },
+      {
+       "name": "spawnTx",
+       "type": "int",
+       "value": 8
+      },
+      {
+       "name": "spawnTy",
+       "type": "int",
+       "value": 10
+      },
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "name": "shipping_bin",
+     "type": "bin",
+     "x": 160,
+     "y": 144,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": []
+    }
+   ]
   }
  ],
  "tilesets": [
@@ -2445,12 +2502,12 @@
    "firstgid": 1,
    "name": "placeholder",
    "image": "../tilesets/placeholder.png",
-   "imagewidth": 144,
+   "imagewidth": 208,
    "imageheight": 16,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 9,
-   "columns": 9,
+   "tilecount": 13,
+   "columns": 13,
    "margin": 0,
    "spacing": 0
   }
