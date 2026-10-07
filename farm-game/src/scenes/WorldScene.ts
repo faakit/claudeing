@@ -19,16 +19,19 @@ import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
 import { FarmRenderer } from '../game/FarmRenderer';
+import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
-import { performAction, type TileInfo } from '../systems/actions';
-import { gameEvents } from '../systems/events';
+import { performBest, planAction, type TileInfo } from '../systems/actions';
+import { gameEvents, toast } from '../systems/events';
 import { getSoil, isMature } from '../systems/farming';
-import { selectedStack } from '../systems/inventory';
+import { forageAt } from '../systems/forage';
+import { addItem, roomFor, selectedStack } from '../systems/inventory';
+import { canPickUp, interactWith, placedAt, removePlaced, solidTiles } from '../systems/placeables';
 import { faceDirection, isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
 import { tickTime } from '../systems/time';
 import {
@@ -49,6 +52,8 @@ import { mapCacheKey } from './PreloadScene';
 /** Shared behavior for every walkable map: render, move, collide, doors, farming input. */
 export abstract class WorldScene extends Phaser.Scene {
   private grid!: CollisionGrid;
+  private raw!: TiledMapLike;
+  private things: ObjectsRenderer | null = null;
   private objects: WorldObject[] = [];
   private sprite!: Phaser.GameObjects.Sprite;
   private shadow!: Phaser.GameObjects.Image;
@@ -83,7 +88,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.lastTarget = undefined;
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
-    this.grid = buildCollisionGrid(raw);
+    this.raw = raw;
+    this.rebuildGrid();
     this.objects = parseMapObjects(raw);
 
     const map = this.make.tilemap({ key: mapCacheKey(this.mapId) });
@@ -107,6 +113,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.farm.sync(state, false);
     }
 
+    this.things = new ObjectsRenderer(this, this.mapId);
+    this.things.sync(state, false);
     this.highlight = new TileHighlight(this);
     this.shadow = this.add.image(0, 0, SHADOW_TEXTURE).setOrigin(0.5, 0.5);
     this.sprite = this.add
@@ -127,12 +135,22 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('interact', () => this.onInteract()),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
+      gameEvents.on('forageChanged', ({ map }) => {
+        if (map === this.mapId) this.things?.sync(getState(), true);
+      }),
+      gameEvents.on('placedChanged', ({ map }) => {
+        if (map !== this.mapId) return;
+        this.rebuildGrid();
+        this.things?.sync(getState(), true);
+      }),
     );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.cleanup.forEach((off) => off());
       this.cleanup = [];
       this.farm?.destroy();
       this.farm = null;
+      this.things?.destroy();
+      this.things = null;
       this.game.events.emit(EVT_INTERACT_TARGET, null);
     });
   }
@@ -239,36 +257,91 @@ export abstract class WorldScene extends Phaser.Scene {
     return t.tx >= 0 && t.ty >= 0 && t.tx < this.grid.width && t.ty < this.grid.height;
   }
 
-  private updateTarget(): void {
-    const t = facingTile(getState().player);
+  /** Placed objects block movement when solid, so the collision grid is the map plus those. */
+  private rebuildGrid(): void {
+    this.grid = buildCollisionGrid(this.raw);
+    for (const [tx, ty] of solidTiles(getState(), this.mapId)) {
+      if (tx >= 0 && ty >= 0 && tx < this.grid.width && ty < this.grid.height)
+        this.grid.blocked[ty * this.grid.width + tx] = 1;
+    }
+  }
+
+  /**
+   * One-thumb targeting: the tile in front, then the two beside it. The player never has to line up
+   * exactly with a plant or a pick-up; whatever the equipped item can act on nearby gets the action.
+   */
+  private candidates(): TileCoord[] {
+    const p = getState().player;
+    const f = facingTile(p);
+    const side = p.facing === 'up' || p.facing === 'down' ? { x: 1, y: 0 } : { x: 0, y: 1 };
+    return [
+      f,
+      { tx: f.tx - side.x, ty: f.ty - side.y },
+      { tx: f.tx + side.x, ty: f.ty + side.y },
+    ].filter((t) => this.inMap(t));
+  }
+
+  /** What Interact would do on a tile: a map object (bed, bin...) or a placed machine. */
+  private interactableAt(t: TileCoord): string | null {
     const obj = objectAt(this.objects, t.tx, t.ty);
-    const type = obj && ['bed', 'bin', 'shop'].includes(obj.type) ? obj.type : null;
+    if (obj && ['bed', 'bin', 'shop', 'board'].includes(obj.type)) return obj.type;
+    return placedAt(getState(), this.mapId, t.tx, t.ty)?.type ?? null;
+  }
+
+  /** The first nearby tile Interact applies to. */
+  private interactTile(): { tile: TileCoord; type: string } | null {
+    for (const tile of this.candidates()) {
+      const type = this.interactableAt(tile);
+      if (type) return { tile, type };
+    }
+    return null;
+  }
+
+  /** The tile the equipped item would act on right now (first that works), else the one faced. */
+  private actionTile(): { tile: TileCoord; works: boolean } {
+    const state = getState();
+    const cands = this.candidates();
+    for (const tile of cands) {
+      if (planAction(state, this.tileInfo(tile)).ok) return { tile, works: true };
+    }
+    return { tile: facingTile(state.player), works: false };
+  }
+
+  private updateTarget(): void {
+    const type = this.interactTile()?.type ?? null;
     if (type !== this.lastTarget) {
       this.lastTarget = type;
       this.game.events.emit(EVT_INTERACT_TARGET, type);
     }
   }
 
-  private highlightKind(t: TileCoord): HighlightKind {
-    if (this.lastTarget) return 'interactive';
-    const crop = getSoil(getState(), t.tx, t.ty)?.crop;
-    if (crop && isMature(crop)) return 'harvest';
+  private highlightKind(t: TileCoord, works: boolean): HighlightKind {
+    if (this.interactableAt(t)) return 'interactive';
+    const state = getState();
+    const crop = getSoil(state, t.tx, t.ty)?.crop;
+    if ((crop && isMature(crop)) || forageAt(state, this.mapId, t.tx, t.ty)) return 'harvest';
+    if (works) return 'free';
     return isTileBlocked(this.grid, t.tx, t.ty) ? 'solid' : 'free';
   }
 
   private updateHighlight(time: number): void {
-    const t = facingTile(getState().player);
-    this.highlight.update(this.inMap(t) ? t : null, this.highlightKind(t), time);
+    const interact = this.interactTile();
+    const act = this.actionTile();
+    const t = interact && !act.works ? interact.tile : act.tile;
+    this.highlight.update(this.inMap(t) ? t : null, this.highlightKind(t, act.works), time);
   }
 
   // ---- actions ----
 
-  private tryAction(): void {
+  private tryAction(only?: TileCoord): void {
     const state = getState();
-    const t = facingTile(state.player);
-    if (!this.inMap(t)) return;
+    const tiles = only ? [only] : this.candidates();
+    if (tiles.length === 0) return;
     const stack = selectedStack(state);
-    const res = performAction(state, this.tileInfo(t));
+    const res = performBest(
+      state,
+      tiles.map((t) => this.tileInfo(t)),
+    );
     this.highlight.pulse();
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
@@ -283,16 +356,31 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
-  private onInteract(): void {
+  private onInteract(tile?: TileCoord): void {
     if (this.transitioning || runtime.blocked || this.inputLocked) return;
-    const t = facingTile(getState().player);
-    const obj = objectAt(this.objects, t.tx, t.ty);
-    if (!obj) return;
+    const hit = tile ? { tile, type: this.interactableAt(tile) } : this.interactTile();
+    if (!hit?.type) return;
     this.highlight.pulse();
     audio.play('ui');
-    if (obj.type === 'bed') gameEvents.emit('openPanel', { type: 'sleep' });
-    else if (obj.type === 'bin') gameEvents.emit('openPanel', { type: 'bin' });
-    else if (obj.type === 'shop') gameEvents.emit('openPanel', { type: 'shop' });
+    if (hit.type === 'bed') return void gameEvents.emit('openPanel', { type: 'sleep' });
+    if (hit.type === 'bin') return void gameEvents.emit('openPanel', { type: 'bin' });
+    if (hit.type === 'shop') return void gameEvents.emit('openPanel', { type: 'shop' });
+    if (hit.type === 'board') return void gameEvents.emit('openPanel', { type: 'board' });
+    const state = getState();
+    const obj = placedAt(state, this.mapId, hit.tile.tx, hit.tile.ty);
+    if (!obj) return;
+    const res = interactWith(state, obj);
+    if (res.kind === 'panel') gameEvents.emit('placedPanel', { panel: res.panel, id: res.id });
+    else if (res.kind === 'message' && res.text) toast(res.text, 'info');
+    else if (res.kind === 'pickup') {
+      if (!canPickUp(obj)) toast("It's busy. Wait until it's done.", 'warn');
+      else if (roomFor(state, obj.type, 1) < 1) toast('Inventory full!', 'warn');
+      else {
+        removePlaced(state, this.mapId, obj.id);
+        addItem(state, obj.type, 1);
+      }
+    }
+    this.things?.sync(state, true);
   }
 
   /** Tapping a tile next to the player turns toward it and uses the equipped item there. */
@@ -309,9 +397,9 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!dir) return;
     faceDirection(player, dir);
     this.syncSprite(false);
-    const obj = objectAt(this.objects, target.tx, target.ty);
-    if (obj && ['bed', 'bin', 'shop'].includes(obj.type)) this.onInteract();
-    else this.tryAction();
+    if (this.interactableAt(target) && !planAction(getState(), this.tileInfo(target)).ok)
+      this.onInteract(target);
+    else this.tryAction(target);
   }
 
   private useDoor(door: WorldObject): void {

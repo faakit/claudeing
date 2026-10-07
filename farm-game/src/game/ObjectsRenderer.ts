@@ -1,0 +1,144 @@
+import Phaser from 'phaser';
+import { TILE_SIZE } from '../config';
+import { items, placeables } from '../data';
+import type { GameState } from '../state/GameState';
+import { jarContents, jarReady } from '../systems/preserves';
+
+interface Shown {
+  sprite: Phaser.GameObjects.Image;
+  extra: Phaser.GameObjects.GameObject[];
+  sig: string;
+}
+
+/**
+ * Draws what lies on the ground of one map: forageables and placed machines. Reads state, never
+ * edits it. Call `sync` after `forageChanged` / `placedChanged` / `farmChanged`.
+ */
+export class ObjectsRenderer {
+  private forage = new Map<string, Shown>();
+  private placed = new Map<number, Shown>();
+
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly mapId: string,
+  ) {}
+
+  sync(state: GameState, animate: boolean): void {
+    this.syncForage(state, animate);
+    this.syncPlaced(state, animate);
+  }
+
+  private syncForage(state: GameState, animate: boolean): void {
+    const here = state.forage[this.mapId] ?? {};
+    for (const [key, item] of Object.entries(here)) {
+      const shown = this.forage.get(key);
+      if (shown?.sig === item) continue;
+      shown?.sprite.destroy();
+      shown?.extra.forEach((e) => e.destroy());
+      const [tx, ty] = key.split(',').map(Number) as [number, number];
+      const x = tx * TILE_SIZE + TILE_SIZE / 2;
+      const y = ty * TILE_SIZE + TILE_SIZE / 2;
+      const shadow = this.scene.add.ellipse(x, y + 5, 9, 3, 0x14101f, 0.3).setDepth(0.7);
+      const sprite = this.scene.add
+        .image(x, y, items[item]?.icon ?? 'ui_coin')
+        .setScale(0.8)
+        .setDepth(0.8 + ty * 0.001);
+      // A gentle bob + a twinkle makes goods easy to spot from across a field.
+      this.scene.tweens.add({
+        targets: sprite,
+        y: y - 1.5,
+        duration: 900 + ((tx * 7 + ty * 13) % 5) * 90,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+      const twinkle = this.scene.add
+        .image(x + 4, y - 5, 'ui_star')
+        .setScale(0.6)
+        .setDepth(0.9);
+      twinkle.setTint(0xfff1b0);
+      this.scene.tweens.add({
+        targets: twinkle,
+        alpha: { from: 0, to: 1 },
+        duration: 700,
+        yoyo: true,
+        repeat: -1,
+        delay: (tx * 131 + ty * 71) % 900,
+      });
+      if (animate) {
+        sprite.setScale(0.3);
+        this.scene.tweens.add({ targets: sprite, scale: 0.8, duration: 260, ease: 'Back.easeOut' });
+      }
+      this.forage.set(key, { sprite, extra: [shadow, twinkle], sig: item });
+    }
+    for (const [key, shown] of this.forage) {
+      if (here[key]) continue;
+      this.scene.tweens.killTweensOf(shown.sprite);
+      shown.extra.forEach((e) => {
+        this.scene.tweens.killTweensOf(e);
+        e.destroy();
+      });
+      shown.sprite.destroy();
+      this.forage.delete(key);
+    }
+  }
+
+  private syncPlaced(state: GameState, animate: boolean): void {
+    const list = state.placed[this.mapId] ?? [];
+    const live = new Set<number>();
+    for (const obj of list) {
+      live.add(obj.id);
+      const def = placeables[obj.type];
+      if (!def) continue;
+      const jar = jarContents(obj);
+      const sig = jar ? (jarReady(obj) ? 'ready' : 'busy') : 'idle';
+      const shown = this.placed.get(obj.id);
+      if (shown?.sig === sig) continue;
+      shown?.sprite.destroy();
+      shown?.extra.forEach((e) => {
+        this.scene.tweens.killTweensOf(e);
+        e.destroy();
+      });
+      const x = obj.tx * TILE_SIZE + TILE_SIZE / 2;
+      const y = (obj.ty + 1) * TILE_SIZE;
+      const sprite = this.scene.add
+        .image(x, y, def.sprite)
+        .setOrigin(0.5, 1)
+        .setDepth(10 + y - 3);
+      const extra: Phaser.GameObjects.GameObject[] = [];
+      if (sig === 'busy') sprite.setTint(0xd9d9d9);
+      if (sig === 'ready') {
+        const mark = this.scene.add
+          .image(x, y - 17, 'ui_star')
+          .setTint(0xf4d35e)
+          .setDepth(10 + y);
+        this.scene.tweens.add({ targets: mark, y: y - 20, duration: 500, yoyo: true, repeat: -1 });
+        extra.push(mark);
+      }
+      if (animate && !shown) {
+        sprite.setScale(0.5);
+        this.scene.tweens.add({ targets: sprite, scale: 1, duration: 240, ease: 'Back.easeOut' });
+      }
+      this.placed.set(obj.id, { sprite, extra, sig });
+    }
+    for (const [id, shown] of this.placed) {
+      if (live.has(id)) continue;
+      shown.sprite.destroy();
+      shown.extra.forEach((e) => e.destroy());
+      this.placed.delete(id);
+    }
+  }
+
+  destroy(): void {
+    for (const s of [...this.forage.values(), ...this.placed.values()]) {
+      this.scene.tweens.killTweensOf(s.sprite);
+      s.sprite.destroy();
+      s.extra.forEach((e) => {
+        this.scene.tweens.killTweensOf(e);
+        e.destroy();
+      });
+    }
+    this.forage.clear();
+    this.placed.clear();
+  }
+}

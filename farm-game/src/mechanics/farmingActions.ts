@@ -166,7 +166,13 @@ registerActionHandler({
 registerToolAction('till', ({ state, tile, tool }) => {
   if (tile.farmland && state.farm.tiles[tileKey(tile.tx, tile.ty)])
     return { refusal: 'Already tilled.' };
-  if (!tile.farmland || !tile.tillable || tile.blocked) return { refusal: "Can't till here." };
+  if (
+    !tile.farmland ||
+    !tile.tillable ||
+    tile.blocked ||
+    placedAt(state, tile.map, tile.tx, tile.ty)
+  )
+    return { refusal: "Can't till here." };
   if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
   return {
     plan: {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { crops, items } from '../data';
+import { crops, items, placeables } from '../data';
 
 /** Code-generated gameplay art (soil, crops, items, UI glyphs). Replaced by atlases in M7. */
 export const SOIL_TEXTURE = { tilled: 'soil_tilled', watered: 'soil_watered' } as const;
@@ -177,6 +177,12 @@ function drawIcon(ctx: Ctx, id: string): void {
       r(4, 4, 6, 2, dk);
       r(1, 7, 2, 4, dk);
       r(5, 11, 4, 1, dk);
+    } else if (id === 'fishing_rod') {
+      for (let i = 0; i < 12; i++) r(2 + i, 14 - i, 2, 2, '#9a6a3a'); // rod
+      r(13, 2, 2, 1, '#9a6a3a');
+      r(14, 3, 1, 6, '#e8e8f0'); // line
+      r(13, 9, 3, 3, '#e0574a'); // float
+      r(13, 9, 3, 1, '#f4ead2');
     } else {
       for (let i = 0; i < 10; i++) r(4 + i, 13 - i, 2, 2, '#9a6a3a'); // scythe handle
       r(2, 2, 10, 2, c);
@@ -202,10 +208,140 @@ function drawIcon(ctx: Ctx, id: string): void {
       r(x, 14 - h, 1, h, lt);
     }
     r(3, 13, 11, 1, '#6a4a2a');
+  } else if (it.type === 'fish') {
+    r(2, 7, 10, 5, c); // body
+    r(2, 7, 10, 1, lt);
+    r(3, 11, 8, 1, dk);
+    r(11, 5, 3, 3, c); // tail
+    r(11, 11, 3, 2, c);
+    r(12, 8, 1, 3, c);
+    r(4, 8, 1, 1, '#14101f'); // eye
+    r(7, 8, 1, 3, dk); // gill
+    r(6, 5, 3, 2, dk); // fin
+  } else if (it.type === 'fertilizer') {
+    r(3, 5, 10, 9, '#d8c08a'); // sack
+    r(3, 5, 10, 1, '#efe0b0');
+    r(4, 3, 8, 3, '#c9ad72');
+    r(5, 8, 6, 4, c);
+    r(6, 9, 4, 1, lt);
+    r(7, 10, 2, 1, dk);
+  } else if (it.type === 'bait') {
+    r(4, 9, 8, 4, c); // worm tin
+    r(4, 9, 8, 1, lt);
+    r(3, 8, 10, 2, '#9aa3b4');
+    r(6, 5, 2, 3, '#e08a8a'); // worms
+    r(9, 6, 2, 2, '#e08a8a');
+    r(7, 4, 1, 1, '#e08a8a');
+  } else if (it.type === 'preserve') {
+    r(4, 6, 8, 8, '#cfe6f0'); // glass jar
+    r(4, 6, 8, 1, '#ffffff');
+    r(5, 8, 6, 5, c); // contents
+    r(6, 8, 4, 1, lt);
+    r(3, 4, 10, 2, '#c9ad72'); // lid
+    r(3, 4, 10, 1, '#efe0b0');
+    if (id === 'pickles') r(7, 10, 1, 1, dk);
+  } else if (it.type === 'placeable') {
+    drawPlaceable(ctx, id, c, dk, lt);
+  } else if (it.type === 'forage') {
+    drawForage(ctx, id, c, dk, lt);
   } else {
     drawCrop(ctx, id, c, dk, lt);
   }
   outline(ctx, 0, 0, 16, 16);
+}
+
+/** Placed machines. Also used (same drawing) as the in-world sprite and as the item icon. */
+function drawPlaceable(ctx: Ctx, id: string, c: string, dk: string, lt: string): void {
+  const r = (x: number, y: number, w: number, h: number, col: string) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(x, y, w, h);
+  };
+  if (id === 'preserve_jar') {
+    r(3, 5, 10, 9, '#8a5a32'); // wooden barrel
+    r(3, 5, 10, 1, '#b07a48');
+    r(3, 8, 10, 1, '#5a3a20');
+    r(3, 11, 10, 1, '#5a3a20');
+    r(4, 3, 8, 3, '#cfe6f0'); // glass lid
+    r(4, 3, 8, 1, '#ffffff');
+    r(5, 4, 6, 1, c);
+  } else {
+    // sprinkler: a standpipe with a spray head
+    r(7, 6, 2, 8, '#8d98ab');
+    r(7, 6, 1, 8, '#b8c2d4');
+    r(5, 12, 6, 2, '#6b7488');
+    r(5, 4, 6, 3, c);
+    r(5, 4, 6, 1, lt);
+    r(7, 2, 2, 2, dk);
+    if (id === 'quality_sprinkler') {
+      r(3, 5, 2, 1, lt);
+      r(11, 5, 2, 1, lt);
+      r(7, 1, 2, 1, '#f4d35e');
+    }
+  }
+}
+
+/** Wild goods: a few distinct silhouettes (flower, berry, mushroom, root, leaf) tinted per item. */
+function drawForage(ctx: Ctx, id: string, c: string, dk: string, lt: string): void {
+  const r = (x: number, y: number, w: number, h: number, col: string) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(x, y, w, h);
+  };
+  const green = '#5fae4e';
+  switch (id) {
+    case 'mushroom':
+      r(6, 8, 4, 5, '#efe0c8');
+      r(3, 4, 10, 5, c);
+      r(4, 3, 8, 1, c);
+      r(5, 5, 2, 2, lt);
+      r(9, 6, 2, 1, lt);
+      break;
+    case 'wild_berry':
+    case 'blackberry':
+      r(7, 2, 2, 3, green);
+      for (const [x, y] of [
+        [4, 6],
+        [8, 6],
+        [6, 9],
+        [10, 9],
+        [2, 9],
+      ] as const)
+        disc(ctx, x + 1, y + 1, 2, c);
+      r(4, 5, 1, 1, lt);
+      break;
+    case 'daffodil':
+    case 'wild_sunflower':
+      r(7, 8, 2, 6, green);
+      for (const [x, y] of [
+        [7, 2],
+        [7, 7],
+        [4, 5],
+        [10, 5],
+      ] as const)
+        r(x, y, 2, 3, c);
+      r(7, 5, 2, 2, id === 'daffodil' ? '#f2a65a' : '#7a4a20');
+      break;
+    case 'holly':
+      r(3, 5, 6, 5, '#3f8f4a');
+      r(7, 7, 6, 5, '#2f7a3a');
+      r(4, 5, 4, 1, '#6fc46f');
+      disc(ctx, 7, 8, 1, c);
+      disc(ctx, 9, 9, 1, c);
+      break;
+    case 'winter_root':
+      r(7, 2, 2, 4, green);
+      r(5, 6, 6, 4, c);
+      r(6, 10, 4, 2, c);
+      r(7, 12, 2, 2, dk);
+      r(5, 6, 2, 1, lt);
+      break;
+    default:
+      // wild leek and anything new: a leafy bundle
+      r(7, 2, 2, 8, green);
+      r(5, 4, 2, 6, '#4a9a3f');
+      r(9, 4, 2, 6, '#4a9a3f');
+      r(6, 10, 4, 3, c);
+      r(6, 10, 4, 1, lt);
+  }
 }
 
 function drawCrop(ctx: Ctx, id: string, c: string, dk: string, lt: string): void {
@@ -418,6 +554,14 @@ export function generateGameArt(scene: Phaser.Scene): void {
   for (const [id, it] of Object.entries(items)) {
     drawIcon(canvas(scene, it.icon, 16, 16), id);
     refresh(scene, it.icon);
+  }
+  // In-world sprites for placed objects: the item icon drawn without the outline's tight crop.
+  for (const [id, def] of Object.entries(placeables)) {
+    const ctx = canvas(scene, def.sprite, 16, 16);
+    const it = items[id];
+    if (it) drawPlaceable(ctx, id, it.color, shade(it.color, -45), shade(it.color, 40));
+    outline(ctx, 0, 0, 16, 16);
+    refresh(scene, def.sprite);
   }
   drawGlyphs(scene);
 }

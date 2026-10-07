@@ -1,4 +1,7 @@
 export { BinPanel } from './BinPanel';
+export { BoardPanel } from './BoardPanel';
+export { FishingPanel } from './FishingPanel';
+export { JarPanel } from './JarPanel';
 export {
   installMenuTabs,
   MenuPanel,

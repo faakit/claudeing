@@ -11,7 +11,7 @@ import {
 } from '../config';
 import { game, mapsData } from '../data';
 import { RainLayer } from '../fx/RainLayer';
-import { weedCandidates } from '../game/farmInfo';
+import { forageCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
@@ -33,7 +33,10 @@ import { Label } from '../ui/font';
 import { Hud } from '../ui/Hud';
 import {
   BinPanel,
+  BoardPanel,
+  FishingPanel,
   installMenuTabs,
+  JarPanel,
   MenuPanel,
   ShopPanel,
   SleepPanel,
@@ -70,6 +73,14 @@ function drawBedIcon(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(INK, 0.6).fillRect(-11, 4, 2, 6).fillRect(9, 4, 2, 6);
 }
 
+function drawBoardIcon(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(INK, 0.6).fillRect(-11, -10, 22, 18);
+  g.fillStyle(0xb98a52, 1).fillRect(-10, -9, 20, 16);
+  g.fillStyle(CREAM, 1).fillRect(-7, -6, 6, 7).fillRect(1, -6, 6, 5);
+  g.fillStyle(INK, 0.5).fillRect(-6, -4, 4, 1).fillRect(2, -4, 4, 1);
+  g.fillStyle(INK, 0.6).fillRect(-9, 7, 2, 4).fillRect(7, 7, 2, 4);
+}
+
 function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(CREAM, 1);
   for (const y of [-5, -1, 3]) g.fillRect(-6, y, 12, 2);
@@ -78,6 +89,7 @@ function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
 /** Interact-button icon by the kind of thing in reach. Mechanics add an entry for their objects. */
 export const INTERACT_ICONS: Record<string, (g: Phaser.GameObjects.Graphics) => void> = {
   bed: drawBedIcon,
+  board: drawBoardIcon,
 };
 
 /** HUD overlay and flow controller: thumb controls, panels, day tint, sleep and results. */
@@ -93,6 +105,10 @@ export class UIScene extends Phaser.Scene {
   private menu!: MenuPanel;
   private summary!: SummaryPanel;
   private yearEnd!: YearEndPanel;
+  private jar!: JarPanel;
+  private fishing!: FishingPanel;
+  /** Panels a placed object can open, by the name its behavior gives in `interact`. */
+  private jarPanels: Record<string, { openFor(id: number): void }> = {};
   /** Dismissible sheets by panel type. */
   private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
@@ -158,6 +174,16 @@ export class UIScene extends Phaser.Scene {
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       gameEvents.on('settingsChanged', () => this.buildControls()),
+      gameEvents.on('placedPanel', ({ panel, id }) => {
+        if (!runtime.blocked) {
+          inputHub.clearHeld();
+          this.jarPanels[panel]?.openFor(id);
+        }
+      }),
+      gameEvents.on('startFishing', ({ fish, bait }) => {
+        inputHub.clearHeld();
+        this.fishing.start(fish, bait);
+      }),
       inputHub.on('menu', () => this.toggleMenu()),
       inputHub.on('confirm', () =>
         this.allModals()
@@ -335,23 +361,31 @@ export class UIScene extends Phaser.Scene {
     this.panels.set('menu', this.menu);
     this.panels.set('shop', new ShopPanel(this));
     this.panels.set('bin', new BinPanel(this));
+    this.panels.set('board', new BoardPanel(this));
+    this.jar = new JarPanel(this);
+    this.fishing = new FishingPanel(this);
+    this.panels.set('fishing', this.fishing);
     this.panels.set('sleep', new SleepPanel(this, () => void this.runSleep(false)));
-    for (const m of this.panels.values()) m.onClosed = () => void saveNow(true);
+    this.jarPanels = { jar: this.jar };
+    for (const m of [...this.panels.values(), this.jar]) m.onClosed = () => void saveNow(true);
   }
 
   private allModals(): Modal[] {
-    return [...this.panels.values(), this.summary, this.yearEnd];
+    return [...this.panels.values(), this.jar, this.summary, this.yearEnd];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
-    return [...this.panels.values()].find((m) => m.isOpen) ?? null;
+    return [...this.panels.values(), this.jar].find((m) => m.isOpen) ?? null;
   }
 
   private openPanel(type: PanelType): void {
     if (runtime.blocked) return;
     inputHub.clearHeld();
-    this.panels.get(type)?.open();
+    if (type === 'craft' || type === 'skills') this.menu.openTab(type);
+    else if (type === 'fishing')
+      return; // started only by casting
+    else this.panels.get(type)?.open();
   }
 
   private toggleMenu(): void {
@@ -393,7 +427,12 @@ export class UIScene extends Phaser.Scene {
 
     const state = getState();
     const farm = this.cache.tilemap.get(mapCacheKey('farm')).data as TiledMapLike;
-    const summary = endDay(state, { passedOut, weedCandidates: weedCandidates(farm) });
+    const forageSpots: Record<string, [number, number][]> = {};
+    for (const id of Object.keys(mapsData.maps)) {
+      const raw = this.cache.tilemap.get(mapCacheKey(id))?.data as TiledMapLike | undefined;
+      if (raw) forageSpots[id] = forageCandidates(raw);
+    }
+    const summary = endDay(state, { passedOut, weedCandidates: weedCandidates(farm), forageSpots });
     const wake = mapsData.wake;
     teleportPlayer(state, wake);
     await saveNow(true);

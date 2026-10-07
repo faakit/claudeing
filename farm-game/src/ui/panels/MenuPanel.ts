@@ -21,6 +21,8 @@ import { C } from '../theme';
 import type { Label } from '../font';
 import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from '../widgets';
 import { fmt } from './format';
+import { buildCraft } from './CraftTab';
+import { buildSkills } from './SkillsTab';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -166,6 +168,8 @@ export class MenuPanel extends Modal {
 export function installMenuTabs(menu: MenuPanel): void {
   registerMenuTab({ id: 'bag', label: 'Bag', build: (c) => buildBag(c, menu) });
   registerMenuTab({ id: 'goals', label: 'Goals', build: buildGoals });
+  registerMenuTab({ id: 'craft', label: 'Craft', build: buildCraft });
+  registerMenuTab({ id: 'skills', label: 'Skills', build: buildSkills });
   registerMenuTab({ id: 'opts', label: 'Opts', build: (c) => buildOptions(c, menu) });
 }
 
