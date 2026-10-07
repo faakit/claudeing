@@ -1,5 +1,22 @@
 {
-  "hoe": { "energyCost": 2, "action": "till", "icon": "item_hoe" },
-  "watering_can": { "energyCost": 1, "action": "water", "icon": "item_watering_can" },
-  "scythe": { "energyCost": 1, "action": "clear", "icon": "item_scythe" }
+  "hoe": {
+    "energyCost": 2,
+    "action": "till",
+    "icon": "item_hoe"
+  },
+  "watering_can": {
+    "energyCost": 1,
+    "action": "water",
+    "icon": "item_watering_can"
+  },
+  "scythe": {
+    "energyCost": 1,
+    "action": "clear",
+    "icon": "item_scythe"
+  },
+  "fishing_rod": {
+    "energyCost": 2,
+    "action": "fish",
+    "icon": "item_fishing_rod"
+  }
 }

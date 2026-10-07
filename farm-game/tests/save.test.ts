@@ -145,10 +145,11 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
     raw.time.day = 400;
     const s = migrate(raw);
     expect(s.inventory.slots).toHaveLength(24);
-    expect(s.inventory.slots.slice(0, 3).map((x) => x?.item)).toEqual([
+    expect(s.inventory.slots.slice(0, 4).map((x) => x?.item)).toEqual([
       'hoe',
       'watering_can',
       'scythe',
+      'fishing_rod',
     ]);
     expect(s.inventory.slots[1]?.item).toBe('watering_can');
     expect(s.inventory.selected).toBe(7);

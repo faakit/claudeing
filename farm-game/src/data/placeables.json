@@ -1,0 +1,31 @@
+{
+  "sprinkler": {
+    "name": "Sprinkler",
+    "behavior": "sprinkler",
+    "solid": false,
+    "sprite": "obj_sprinkler",
+    "params": {
+      "reach": 1,
+      "diagonal": false
+    }
+  },
+  "quality_sprinkler": {
+    "name": "Quality Sprinkler",
+    "behavior": "sprinkler",
+    "solid": false,
+    "sprite": "obj_sprinkler_q",
+    "params": {
+      "reach": 1,
+      "diagonal": true
+    }
+  },
+  "preserve_jar": {
+    "name": "Preserve Jar",
+    "behavior": "jar",
+    "solid": true,
+    "sprite": "obj_jar",
+    "params": {
+      "days": 3
+    }
+  }
+}

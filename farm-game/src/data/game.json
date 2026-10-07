@@ -8,7 +8,7 @@
   ],
   "inventorySlots": 24,
   "hotbarSlots": 8,
-  "toolSlots": 3,
+  "toolSlots": 4,
   "stackLimit": 99,
   "baseEnergy": 100,
   "energyPerUpgrade": 20,

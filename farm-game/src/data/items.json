@@ -23,7 +23,14 @@
     "tool": "scythe",
     "description": "Clears weeds."
   },
-
+  "fishing_rod": {
+    "name": "Fishing Rod",
+    "type": "tool",
+    "icon": "item_fishing_rod",
+    "color": "#8b6a3a",
+    "tool": "fishing_rod",
+    "description": "Cast at water, tap to hook, hold to reel."
+  },
   "parsnip_seed": {
     "name": "Parsnip Seeds",
     "type": "seed",
@@ -104,14 +111,14 @@
     "plants": "yam",
     "description": "Quick fall crop. 5 days."
   },
-
   "parsnip": {
     "name": "Parsnip",
     "type": "crop",
     "icon": "item_parsnip",
     "color": "#f2e6c9",
     "sellPrice": 35,
-    "description": "Crunchy and sweet."
+    "description": "Crunchy and sweet.",
+    "family": "veg"
   },
   "potato": {
     "name": "Potato",
@@ -119,7 +126,8 @@
     "icon": "item_potato",
     "color": "#c49a6c",
     "sellPrice": 100,
-    "description": "A farm staple."
+    "description": "A farm staple.",
+    "family": "veg"
   },
   "cauliflower": {
     "name": "Cauliflower",
@@ -127,7 +135,8 @@
     "icon": "item_cauliflower",
     "color": "#eef3e6",
     "sellPrice": 230,
-    "description": "Worth the wait."
+    "description": "Worth the wait.",
+    "family": "veg"
   },
   "tomato": {
     "name": "Tomato",
@@ -135,7 +144,8 @@
     "icon": "item_tomato",
     "color": "#e0574a",
     "sellPrice": 85,
-    "description": "Juicy summer red."
+    "description": "Juicy summer red.",
+    "family": "fruit"
   },
   "melon": {
     "name": "Melon",
@@ -143,7 +153,8 @@
     "icon": "item_melon",
     "color": "#7fc96b",
     "sellPrice": 310,
-    "description": "Heavy and sweet."
+    "description": "Heavy and sweet.",
+    "family": "fruit"
   },
   "corn": {
     "name": "Corn",
@@ -151,7 +162,8 @@
     "icon": "item_corn",
     "color": "#f2d04a",
     "sellPrice": 80,
-    "description": "Keeps on giving."
+    "description": "Keeps on giving.",
+    "family": "veg"
   },
   "pumpkin": {
     "name": "Pumpkin",
@@ -159,7 +171,8 @@
     "icon": "item_pumpkin",
     "color": "#e8893a",
     "sellPrice": 330,
-    "description": "A fall favorite."
+    "description": "A fall favorite.",
+    "family": "veg"
   },
   "yam": {
     "name": "Yam",
@@ -167,9 +180,9 @@
     "icon": "item_yam",
     "color": "#b5546e",
     "sellPrice": 65,
-    "description": "Earthy and filling."
+    "description": "Earthy and filling.",
+    "family": "veg"
   },
-
   "fiber": {
     "name": "Fiber",
     "type": "material",
@@ -177,5 +190,218 @@
     "color": "#8fbf5a",
     "sellPrice": 2,
     "description": "Cut from weeds."
+  },
+  "wild_leek": {
+    "name": "Wild Leek",
+    "type": "forage",
+    "icon": "item_wild_leek",
+    "color": "#9fd36b",
+    "sellPrice": 28,
+    "description": "A spring wild onion.",
+    "family": "veg"
+  },
+  "daffodil": {
+    "name": "Daffodil",
+    "type": "forage",
+    "icon": "item_daffodil",
+    "color": "#f4d35e",
+    "sellPrice": 40,
+    "description": "Bright spring flower.",
+    "family": "flower"
+  },
+  "wild_berry": {
+    "name": "Wild Berry",
+    "type": "forage",
+    "icon": "item_wild_berry",
+    "color": "#c0396a",
+    "sellPrice": 45,
+    "description": "Sweet summer berries.",
+    "family": "fruit"
+  },
+  "wild_sunflower": {
+    "name": "Wild Sunflower",
+    "type": "forage",
+    "icon": "item_wild_sunflower",
+    "color": "#f2b03e",
+    "sellPrice": 60,
+    "description": "Tall and cheerful.",
+    "family": "flower"
+  },
+  "blackberry": {
+    "name": "Blackberry",
+    "type": "forage",
+    "icon": "item_blackberry",
+    "color": "#4a2a6a",
+    "sellPrice": 55,
+    "description": "Plump fall berries.",
+    "family": "fruit"
+  },
+  "mushroom": {
+    "name": "Mushroom",
+    "type": "forage",
+    "icon": "item_mushroom",
+    "color": "#c9a27a",
+    "sellPrice": 70,
+    "description": "Earthy woodland find.",
+    "family": "veg"
+  },
+  "winter_root": {
+    "name": "Winter Root",
+    "type": "forage",
+    "icon": "item_winter_root",
+    "color": "#b8956a",
+    "sellPrice": 60,
+    "description": "Dug from frozen ground.",
+    "family": "veg"
+  },
+  "holly": {
+    "name": "Holly",
+    "type": "forage",
+    "icon": "item_holly",
+    "color": "#2f8a45",
+    "sellPrice": 50,
+    "description": "Festive winter sprig.",
+    "family": "flower"
+  },
+  "carp": {
+    "name": "Carp",
+    "type": "fish",
+    "icon": "item_carp",
+    "color": "#c9a24a",
+    "sellPrice": 60,
+    "description": "Common pond fish."
+  },
+  "bluegill": {
+    "name": "Bluegill",
+    "type": "fish",
+    "icon": "item_bluegill",
+    "color": "#4a8ac0",
+    "sellPrice": 85,
+    "description": "Small and feisty."
+  },
+  "perch": {
+    "name": "Perch",
+    "type": "fish",
+    "icon": "item_perch",
+    "color": "#8aa84a",
+    "sellPrice": 95,
+    "description": "Striped cold-water fish."
+  },
+  "trout": {
+    "name": "Trout",
+    "type": "fish",
+    "icon": "item_trout",
+    "color": "#d98a8a",
+    "sellPrice": 110,
+    "description": "Quick river fish."
+  },
+  "catfish": {
+    "name": "Catfish",
+    "type": "fish",
+    "icon": "item_catfish",
+    "color": "#6a6a7a",
+    "sellPrice": 150,
+    "description": "Bites best in the rain."
+  },
+  "salmon": {
+    "name": "Salmon",
+    "type": "fish",
+    "icon": "item_salmon",
+    "color": "#e0745a",
+    "sellPrice": 170,
+    "description": "A prized fall catch."
+  },
+  "fertilizer": {
+    "name": "Fertilizer",
+    "type": "fertilizer",
+    "icon": "item_fertilizer",
+    "color": "#8b6a3a",
+    "sellPrice": 8,
+    "description": "Raises crop quality. Use on tilled soil.",
+    "fertilizer": {
+      "quality": 0.35,
+      "growth": 0
+    }
+  },
+  "rich_fertilizer": {
+    "name": "Rich Fertilizer",
+    "type": "fertilizer",
+    "icon": "item_rich_fertilizer",
+    "color": "#5a4a2a",
+    "sellPrice": 20,
+    "description": "Much better quality odds.",
+    "fertilizer": {
+      "quality": 0.7,
+      "growth": 0
+    }
+  },
+  "speed_gro": {
+    "name": "Speed-Gro",
+    "type": "fertilizer",
+    "icon": "item_speed_gro",
+    "color": "#7fd36a",
+    "sellPrice": 15,
+    "description": "Crops often grow a day faster.",
+    "fertilizer": {
+      "quality": 0,
+      "growth": 0.35
+    }
+  },
+  "bait": {
+    "name": "Bait",
+    "type": "bait",
+    "icon": "item_bait",
+    "color": "#c9a27a",
+    "sellPrice": 3,
+    "description": "Fish bite faster. Used automatically."
+  },
+  "sprinkler": {
+    "name": "Sprinkler",
+    "type": "placeable",
+    "icon": "item_sprinkler",
+    "color": "#6fa3e0",
+    "sellPrice": 30,
+    "description": "Waters the 4 tiles around it each morning.",
+    "placeable": true
+  },
+  "quality_sprinkler": {
+    "name": "Quality Sprinkler",
+    "type": "placeable",
+    "icon": "item_quality_sprinkler",
+    "color": "#9bd0f0",
+    "sellPrice": 80,
+    "description": "Waters all 8 tiles around it each morning.",
+    "placeable": true
+  },
+  "preserve_jar": {
+    "name": "Preserve Jar",
+    "type": "placeable",
+    "icon": "item_preserve_jar",
+    "color": "#c0a070",
+    "sellPrice": 40,
+    "description": "Turns crops and forage into jam or pickles.",
+    "placeable": true
+  },
+  "jam": {
+    "name": "Jam",
+    "type": "preserve",
+    "icon": "item_jam",
+    "color": "#c0396a",
+    "sellPrice": 30,
+    "description": "Sweet and valuable.",
+    "derived": true,
+    "sellMultiplier": 2.0,
+    "nameTemplate": "{of} Jam"
+  },
+  "pickles": {
+    "name": "Pickles",
+    "type": "preserve",
+    "icon": "item_pickles",
+    "color": "#7aa94a",
+    "sellPrice": 25,
+    "description": "Tangy and long-lasting.",
+    "derived": true,
+    "sellMultiplier": 1.8,
+    "nameTemplate": "{of} Pickles"
   }
 }

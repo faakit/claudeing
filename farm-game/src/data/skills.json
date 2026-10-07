@@ -1,0 +1,75 @@
+{
+  "farming": {
+    "name": "Farming",
+    "xpTable": [0, 60, 150, 280, 450, 680, 980, 1350, 1800, 2400],
+    "perks": {
+      "2": {
+        "qualityBonus": 0.03
+      },
+      "3": {
+        "maxEnergy": 5
+      },
+      "4": {
+        "qualityBonus": 0.04
+      },
+      "5": {
+        "maxEnergy": 5
+      },
+      "6": {
+        "qualityBonus": 0.05
+      },
+      "8": {
+        "maxEnergy": 10
+      },
+      "10": {
+        "qualityBonus": 0.08,
+        "sellBonus": 0.05
+      }
+    },
+    "blurb": "Harvest and plant to grow. Better quality, more energy."
+  },
+  "foraging": {
+    "name": "Foraging",
+    "xpTable": [0, 40, 100, 190, 320, 500, 740, 1050, 1450, 2000],
+    "perks": {
+      "3": {
+        "forageDouble": 0.1
+      },
+      "5": {
+        "forageDouble": 0.1,
+        "maxEnergy": 5
+      },
+      "7": {
+        "forageDouble": 0.1
+      },
+      "9": {
+        "forageDouble": 0.1,
+        "maxEnergy": 5
+      }
+    },
+    "blurb": "Pick wild goods. Chance to find double."
+  },
+  "fishing": {
+    "name": "Fishing",
+    "xpTable": [0, 40, 100, 190, 320, 500, 740, 1050, 1450, 2000],
+    "perks": {
+      "2": {
+        "fishWindow": 0.05
+      },
+      "4": {
+        "fishWindow": 0.05
+      },
+      "6": {
+        "fishWindow": 0.06
+      },
+      "8": {
+        "fishWindow": 0.06,
+        "maxEnergy": 5
+      },
+      "10": {
+        "fishWindow": 0.08
+      }
+    },
+    "blurb": "Cast at water. A wider catch zone and better bites."
+  }
+}

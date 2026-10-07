@@ -225,6 +225,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const gid = this.ground.getTileAt(t.tx, t.ty)?.index ?? 0;
     const tillable = mapsData.maps[this.mapId]?.tillable ?? [];
     return {
+      map: this.mapId,
       tx: t.tx,
       ty: t.ty,
       kind: tileKind(gid),

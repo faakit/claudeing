@@ -1,0 +1,61 @@
+{
+  "perDay": {
+    "farm": 3,
+    "town": 4,
+    "woods": 9
+  },
+  "cap": {
+    "farm": 8,
+    "town": 10,
+    "woods": 20
+  },
+  "table": [
+    {
+      "item": "wild_leek",
+      "seasons": ["spring"],
+      "weight": 4
+    },
+    {
+      "item": "daffodil",
+      "seasons": ["spring"],
+      "weight": 3
+    },
+    {
+      "item": "mushroom",
+      "seasons": ["spring", "fall"],
+      "maps": ["woods"],
+      "weight": 3
+    },
+    {
+      "item": "wild_berry",
+      "seasons": ["summer"],
+      "weight": 4
+    },
+    {
+      "item": "wild_sunflower",
+      "seasons": ["summer"],
+      "weight": 3
+    },
+    {
+      "item": "blackberry",
+      "seasons": ["fall"],
+      "weight": 4
+    },
+    {
+      "item": "mushroom",
+      "seasons": ["summer"],
+      "maps": ["woods"],
+      "weight": 2
+    },
+    {
+      "item": "winter_root",
+      "seasons": ["winter"],
+      "weight": 4
+    },
+    {
+      "item": "holly",
+      "seasons": ["winter"],
+      "weight": 3
+    }
+  ]
+}

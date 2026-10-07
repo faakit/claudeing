@@ -1,0 +1,19 @@
+{
+  "perDay": 3,
+  "rewardMultiplier": [1.35, 1.9],
+  "tiers": [
+    {
+      "maxValue": 60,
+      "qty": [4, 10]
+    },
+    {
+      "maxValue": 150,
+      "qty": [2, 5]
+    },
+    {
+      "maxValue": 9999,
+      "qty": [1, 3]
+    }
+  ],
+  "xpPerValue": 0.08
+}

@@ -1,14 +1,12 @@
 import { game } from '../data';
+import '../mechanics'; // registers the built-in day hooks
 import type { DaySummary, GameState } from '../state/GameState';
-import { restoreEnergy } from './energy';
+import { runDayPipeline } from './dayHooks';
 import { gameEvents } from './events';
-import { checkGoals } from './goals';
-import { growCrops, killOutOfSeason, spawnWeeds } from './farming';
-import { parseKey, sellValue } from './itemRef';
-import { advanceCalendar } from './time';
-import { rollWeather, waterAllSoil } from './weather';
 
 export interface EndDayOptions {
+  /** Tiles where forageables may appear, by map id (from each map's "forage" zones). */
+  forageSpots?: Readonly<Record<string, readonly [number, number][]>>;
   /** True when the clock ran out (02:00) rather than the player choosing bed. */
   passedOut: boolean;
   /** Farmable tiles where weeds may appear. */
@@ -16,49 +14,30 @@ export interface EndDayOptions {
 }
 
 /**
- * Day rollover, in the order the design requires: crops grow, shipped items are paid
- * for, then the calendar moves on. The caller autosaves afterwards.
+ * Day rollover. The steps live in registered hooks (see systems/dayHooks.ts and mechanics/); this
+ * builds the summary and runs the pipeline in phase order: crops grow, shipped goods are paid,
+ * the calendar advances, then the new day sets itself up. The caller autosaves afterwards.
  */
 export function endDay(state: GameState, opts: EndDayOptions): DaySummary {
-  const endedDay = state.time.day;
-  const endedSeason = state.time.season;
-
-  growCrops(state);
-
-  // Shipping is keyed by stack identity ("tomato|2|"), so quality and derived goods price correctly.
-  const shipped = Object.entries(state.shipping).map(([key, qty]) => ({
-    item: key,
-    qty,
-    gold: sellValue(parseKey(key)) * qty,
-  }));
-  const total = shipped.reduce((s, l) => s + l.gold, 0);
-  state.money += total;
-  state.shipping = {};
-  if (total > 0) {
-    gameEvents.emit('moneyChanged', { delta: total });
-    state.stats['earned'] = (state.stats['earned'] ?? 0) + total;
-  }
-
-  const yearEnd = endedSeason === 'summer' && endedDay === game.seasonLength;
-  const seasonChanged = advanceCalendar(state);
-  const withered = seasonChanged ? killOutOfSeason(state) : 0;
-  spawnWeeds(state, opts.weedCandidates);
-  state.weather = rollWeather(state);
-  if (state.weather === 'rain') waterAllSoil(state);
-  restoreEnergy(state, opts.passedOut ? game.passOutEnergyFraction : 1);
-  if (!opts.passedOut) state.stats['daysSlept'] = (state.stats['daysSlept'] ?? 0) + 1;
-  checkGoals(state);
-
   const summary: DaySummary = {
-    endedDay,
-    endedSeason,
-    shipped,
-    total,
-    withered,
+    endedDay: state.time.day,
+    endedSeason: state.time.season,
+    shipped: [],
+    total: 0,
+    withered: 0,
     passedOut: opts.passedOut,
     weather: state.weather,
-    yearEnd,
+    yearEnd: false,
+    notes: [],
   };
+  runDayPipeline(state, {
+    passedOut: opts.passedOut,
+    weedCandidates: opts.weedCandidates,
+    forageSpots: opts.forageSpots ?? {},
+    notes: summary.notes as string[],
+    scratch: {},
+    summary,
+  });
   state.lastSummary = summary;
   gameEvents.emit('daySummary', summary);
   return summary;

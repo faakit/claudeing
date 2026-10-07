@@ -9,7 +9,7 @@ import {
   unshipItem,
 } from '../src/systems/economy';
 import { addItem, countItem } from '../src/systems/inventory';
-import { newState } from './helpers';
+import { FULL_INVENTORY, newState, TOOL_SLOTS } from './helpers';
 
 const STORE = 'town_general_store';
 
@@ -38,8 +38,8 @@ describe('economy', () => {
 
   it('a full inventory blocks a purchase without charging', () => {
     const s = newState();
-    addItem(s, 'melon', 20 * 99);
-    s.inventory.slots[3] = { item: 'melon', qty: 99 };
+    addItem(s, 'melon', FULL_INVENTORY);
+    s.inventory.slots[TOOL_SLOTS] = { item: 'melon', qty: 99 };
     expect(buyItem(s, STORE, 'potato_seed', 1)).toBe('full');
     expect(s.money).toBe(500);
   });

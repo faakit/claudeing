@@ -13,6 +13,7 @@ const STORE = 'town_general_store';
 const FIELD: [number, number][] = [];
 for (let y = 17; y < 28; y++) for (let x = 11; x < 29; x++) FIELD.push([x, y]);
 const tile = (tx: number, ty: number): TileInfo => ({
+  map: 'farm',
   tx,
   ty,
   kind: 'grass',
@@ -21,6 +22,7 @@ const tile = (tx: number, ty: number): TileInfo => ({
   farmland: true,
 });
 const POND: TileInfo = {
+  map: 'farm',
   tx: 0,
   ty: 0,
   kind: 'water',

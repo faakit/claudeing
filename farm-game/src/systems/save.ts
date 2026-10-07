@@ -1,4 +1,4 @@
-import { crops, game, goals, items, mapsData, shops } from '../data';
+import { crops, game, goals, items, mapsData, placeables, shops, skills } from '../data';
 import { isDirection } from './direction';
 import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
@@ -22,14 +22,44 @@ function migrateV1(raw: Raw): Raw {
   if (typeof raw['season'] === 'string') time['season'] = raw['season'];
   return {
     ...fresh,
-    version: 2,
+    version: STATE_VERSION,
     time,
     money: typeof raw['money'] === 'number' ? raw['money'] : fresh['money'],
     player: mapOk ? player : fresh['player'],
   };
 }
 
-const MIGRATIONS: Record<number, (raw: Raw) => Raw> = { 1: migrateV1 };
+/**
+ * v2 -> v3: a fourth tool (the fishing rod) now owns inventory slot 3, so everything that sat in
+ * slot 3 and after shifts down one (trimming a spare empty slot), and the new mechanics' state is added.
+ */
+function migrateV2(raw: Raw): Raw {
+  const inv = isObj(raw['inventory']) ? raw['inventory'] : {};
+  const old = Array.isArray(inv['slots']) ? [...(inv['slots'] as unknown[])] : [];
+  const oldTools = 3;
+  const slots: unknown[] = [
+    ...old.slice(0, oldTools),
+    { item: 'fishing_rod', qty: 1 },
+    ...old.slice(oldTools),
+  ];
+  while (slots.length > game.inventorySlots) {
+    const spare = slots.lastIndexOf(null);
+    slots.splice(spare > oldTools ? spare : slots.length - 1, 1);
+  }
+  const selected = typeof inv['selected'] === 'number' ? inv['selected'] : 0;
+  return {
+    ...raw,
+    version: 3,
+    inventory: { ...inv, slots, selected: selected >= oldTools ? selected + 1 : selected },
+    placed: {},
+    nextPlacedId: 1,
+    skills: {},
+    forage: {},
+    orders: { day: 0, list: [] },
+  };
+}
+
+const MIGRATIONS: Record<number, (raw: Raw) => Raw> = { 1: migrateV1, 2: migrateV2 };
 
 /** Bring any saved shape up to the current version, then validate it. */
 export function migrate(input: unknown): GameState {
@@ -137,7 +167,11 @@ export function sanitize(raw: Raw): GameState {
         regrow: c['regrow'] === true,
       };
     }
-    tiles[key] = { watered: soil['watered'] === true, crop };
+    const fert =
+      typeof soil['fert'] === 'string' && items[soil['fert']]?.type === 'fertilizer'
+        ? soil['fert']
+        : undefined;
+    tiles[key] = { watered: soil['watered'] === true, crop, ...(fert ? { fert } : {}) };
   }
   const weeds: GameState['farm']['weeds'] = {};
   for (const key of Object.keys(obj(farmRaw['weeds']))) if (TILE_KEY.test(key)) weeds[key] = true;
@@ -174,6 +208,61 @@ export function sanitize(raw: Raw): GameState {
     leftHanded: st['leftHanded'] === true,
   };
 
+  // Placed objects: known types, real tiles, unique ids.
+  const placed: GameState['placed'] = {};
+  const usedIds = new Set<number>();
+  let maxId = 0;
+  for (const [mapId, list] of Object.entries(obj(raw['placed']))) {
+    if (!mapsData.maps[mapId] || !Array.isArray(list)) continue;
+    const out: GameState['placed'][string] = [];
+    for (const o of list) {
+      if (!isObj(o) || typeof o['type'] !== 'string' || !placeables[o['type']]) continue;
+      const tx = int(o['tx'], -1, -1, 999);
+      const ty = int(o['ty'], -1, -1, 999);
+      let id = int(o['id'], 0, 0, 1e9);
+      if (tx < 0 || ty < 0) continue;
+      if (id === 0 || usedIds.has(id)) id = maxId + 1;
+      usedIds.add(id);
+      maxId = Math.max(maxId, id);
+      out.push({ id, type: o['type'], tx, ty, data: isObj(o['data']) ? { ...o['data'] } : {} });
+    }
+    if (out.length) placed[mapId] = out;
+  }
+
+  const skillXp: Record<string, number> = {};
+  for (const [id, xp] of Object.entries(obj(raw['skills']))) {
+    if (skills[id] && isFiniteNum(xp) && xp >= 0) skillXp[id] = Math.floor(xp);
+  }
+
+  const forageOut: GameState['forage'] = {};
+  for (const [mapId, tilesRaw] of Object.entries(obj(raw['forage']))) {
+    if (!mapsData.maps[mapId]) continue;
+    const out: Record<string, string> = {};
+    for (const [key, item] of Object.entries(obj(tilesRaw))) {
+      if (TILE_KEY.test(key) && typeof item === 'string' && items[item]?.type === 'forage')
+        out[key] = item;
+    }
+    if (Object.keys(out).length) forageOut[mapId] = out;
+  }
+
+  const ordersRaw = obj(raw['orders']);
+  const orderList: GameState['orders']['list'] = [];
+  if (Array.isArray(ordersRaw['list'])) {
+    for (const o of ordersRaw['list'].slice(0, 6)) {
+      if (!isObj(o) || typeof o['item'] !== 'string') continue;
+      const ref = parseKey(o['item']);
+      if (!items[ref.item] || items[ref.item]?.type === 'tool') continue;
+      orderList.push({
+        id: int(o['id'], orderList.length + 1, 0, 1e9),
+        item: keyOf(ref),
+        qty: int(o['qty'], 1, 1, 999),
+        reward: int(o['reward'], 0, 0, 1e7),
+        xp: int(o['xp'], 0, 0, 1e5),
+        done: o['done'] === true,
+      });
+    }
+  }
+
   return {
     version: STATE_VERSION,
     time,
@@ -192,6 +281,11 @@ export function sanitize(raw: Raw): GameState {
     goalIndex: int(raw['goalIndex'], 0, 0, goals.length),
     settings,
     weather: raw['weather'] === 'rain' ? 'rain' : 'sunny',
+    placed,
+    nextPlacedId: Math.max(int(raw['nextPlacedId'], 1, 1, 1e9), maxId + 1),
+    skills: skillXp,
+    forage: forageOut,
+    orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
   };

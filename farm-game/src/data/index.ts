@@ -5,6 +5,12 @@ import itemsRaw from './items.json';
 import mapsRaw from './maps.json';
 import shopsRaw from './shops.json';
 import toolsRaw from './tools.json';
+import skillsRaw from './skills.json';
+import recipesRaw from './recipes.json';
+import placeablesRaw from './placeables.json';
+import forageRaw from './forage.json';
+import fishRaw from './fish.json';
+import ordersRaw from './orders.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -30,7 +36,17 @@ export interface MapsData {
   maps: Record<string, MapDef>;
 }
 
-export type ItemType = 'tool' | 'seed' | 'crop' | 'material';
+export type ItemType =
+  | 'tool'
+  | 'seed'
+  | 'crop'
+  | 'material'
+  | 'forage'
+  | 'fish'
+  | 'fertilizer'
+  | 'bait'
+  | 'placeable'
+  | 'preserve';
 export interface ItemDef {
   name: string;
   type: ItemType;
@@ -44,6 +60,11 @@ export interface ItemDef {
   plants?: string;
   tool?: string;
   /** Derived goods (jam, pickles) are made from another item: value = base + input value x multiplier. */
+  /** What a preserve jar makes of it: fruit -> jam, veg -> pickles. Flowers cannot be preserved. */
+  family?: 'fruit' | 'veg' | 'flower';
+  fertilizer?: { quality: number; growth: number };
+  /** True for items that are put down in the world (see placeables.json). */
+  placeable?: boolean;
   derived?: boolean;
   sellMultiplier?: number;
   /** Display name template; `{of}` is replaced by the source item's name. */
@@ -60,7 +81,8 @@ export interface CropDef {
 }
 export interface ToolDef {
   energyCost: number;
-  action: 'till' | 'water' | 'clear';
+  /** Key in the tool-action registry (code). Open-ended so new tools need no type change. */
+  action: string;
   icon: string;
 }
 export interface UpgradeDef {
@@ -79,6 +101,50 @@ export interface GoalDef {
   stat: string;
   target: number;
   reward: number;
+}
+export interface SkillDef {
+  name: string;
+  /** Total XP needed to reach level n+1 is xpTable[n]; level 1 needs 0. */
+  xpTable: number[];
+  /** Perk values gained on reaching a level (levels are 1-based). Summed across levels reached. */
+  perks: Record<string, Record<string, number>>;
+  blurb: string;
+}
+export interface RecipeDef {
+  name: string;
+  output: { item: string; qty: number };
+  ingredients: { item: string; qty: number }[];
+  gold: number;
+  unlock: { skill: string; level: number } | null;
+}
+export interface PlaceableDef {
+  name: string;
+  /** Key in the placeable behavior registry (code), e.g. "sprinkler" or "jar". */
+  behavior: string;
+  /** Solid placeables block movement. */
+  solid: boolean;
+  sprite: string;
+  params: Record<string, number | boolean | string>;
+}
+export interface ForageDef {
+  perDay: Record<string, number>;
+  cap: Record<string, number>;
+  table: { item: string; seasons: Season[]; maps?: string[]; weight: number }[];
+}
+export interface FishDef {
+  item: string;
+  maps: string[];
+  seasons: Season[];
+  weather?: 'sunny' | 'rain';
+  weight: number;
+  /** 0..1: how hard the reel mini-game is. */
+  difficulty: number;
+}
+export interface OrdersDef {
+  perDay: number;
+  rewardMultiplier: [number, number];
+  tiers: { maxValue: number; qty: [number, number] }[];
+  xpPerValue: number;
 }
 export interface GameData {
   startingMoney: number;
@@ -137,6 +203,12 @@ export const tools = toolsRaw as unknown as Record<string, ToolDef>;
 export const shops = shopsRaw as unknown as Record<string, ShopDef>;
 export const goals = goalsRaw as unknown as GoalDef[];
 export const game = gameRaw as unknown as GameData;
+export const skills = skillsRaw as unknown as Record<string, SkillDef>;
+export const recipes = recipesRaw as unknown as Record<string, RecipeDef>;
+export const placeables = placeablesRaw as unknown as Record<string, PlaceableDef>;
+export const forage = forageRaw as unknown as ForageDef;
+export const fish = fishRaw as unknown as FishDef[];
+export const orders = ordersRaw as unknown as OrdersDef;
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
@@ -177,6 +249,48 @@ export function validateContent(): void {
   for (const si of game.startingItems)
     if (!items[si.item]) fail('game', `unknown starting item "${si.item}"`);
   for (const g of goals) if (!g.id || !g.stat || g.target < 1) fail('goals', `bad goal "${g.id}"`);
+  const mapIds = Object.keys(mapsData.maps);
+  for (const [id, sk] of Object.entries(skills)) {
+    if (sk.xpTable[0] !== 0 || sk.xpTable.some((v, i) => i > 0 && v <= (sk.xpTable[i - 1] ?? 0))) {
+      fail('skills', `"${id}" xpTable must start at 0 and strictly increase`);
+    }
+    for (const lvl of Object.keys(sk.perks)) {
+      if (Number(lvl) < 2 || Number(lvl) > sk.xpTable.length)
+        fail('skills', `"${id}" has a perk at invalid level ${lvl}`);
+    }
+  }
+  for (const [id, r] of Object.entries(recipes)) {
+    if (!items[r.output.item]) fail('recipes', `"${id}" outputs unknown item "${r.output.item}"`);
+    for (const ing of r.ingredients)
+      if (!items[ing.item]) fail('recipes', `"${id}" needs unknown item "${ing.item}"`);
+    if (r.unlock && !skills[r.unlock.skill])
+      fail('recipes', `"${id}" unlocks with unknown skill "${r.unlock.skill}"`);
+    if (r.output.qty < 1 || r.gold < 0) fail('recipes', `"${id}" has a bad quantity or price`);
+  }
+  for (const [id, pl] of Object.entries(placeables)) {
+    if (!items[id]?.placeable)
+      fail('placeables', `"${id}" must also be an item with "placeable": true`);
+    if (!pl.behavior || !pl.sprite) fail('placeables', `"${id}" needs behavior and sprite`);
+  }
+  for (const [id, it] of Object.entries(items)) {
+    if (it.placeable && !placeables[id])
+      fail('items', `placeable item "${id}" has no entry in placeables.json`);
+    if (it.type === 'fertilizer' && !it.fertilizer)
+      fail('items', `fertilizer "${id}" needs a "fertilizer" block`);
+  }
+  for (const e of forage.table) {
+    if (items[e.item]?.type !== 'forage') fail('forage', `"${e.item}" is not a forage item`);
+    for (const m of e.maps ?? []) if (!mapIds.includes(m)) fail('forage', `unknown map "${m}"`);
+  }
+  for (const m of [...Object.keys(forage.perDay), ...Object.keys(forage.cap)]) {
+    if (!mapIds.includes(m)) fail('forage', `unknown map "${m}"`);
+  }
+  for (const f of fish) {
+    if (items[f.item]?.type !== 'fish') fail('fish', `"${f.item}" is not a fish item`);
+    if (f.difficulty < 0 || f.difficulty > 1) fail('fish', `"${f.item}" difficulty must be 0..1`);
+    for (const m of f.maps) if (!mapIds.includes(m)) fail('fish', `unknown map "${m}"`);
+  }
+  if (orders.tiers.length === 0 || orders.perDay < 1) fail('orders', 'needs tiers and perDay >= 1');
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');

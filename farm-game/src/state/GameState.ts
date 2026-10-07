@@ -44,6 +44,29 @@ export interface CropState {
 export interface SoilTile {
   watered: boolean;
   crop: CropState | null;
+  /** Fertilizer item id applied to this tile; consumed when the crop is harvested. */
+  fert?: string;
+}
+
+/** Something the player put down in the world (a sprinkler, a jar...). Behaviour comes from the registry. */
+export interface PlacedObject {
+  id: number;
+  /** Key in placeables.json (also the item id that places it). */
+  type: string;
+  tx: number;
+  ty: number;
+  /** Per-behaviour state, e.g. a jar's contents. Always plain JSON. */
+  data: Record<string, unknown>;
+}
+
+/** A town order: deliver `qty` of a stack for gold and XP. `item` is a stack key (see itemRef). */
+export interface Order {
+  id: number;
+  item: string;
+  qty: number;
+  reward: number;
+  xp: number;
+  done: boolean;
 }
 
 export interface DaySummary {
@@ -91,11 +114,20 @@ export interface GameState {
   goalIndex: number;
   settings: Settings;
   weather: Weather;
+  /** Placed objects by map id. */
+  placed: Record<string, PlacedObject[]>;
+  nextPlacedId: number;
+  /** Total XP per skill id (levels are derived from skills.json). */
+  skills: Record<string, number>;
+  /** Forageables lying on the ground: map id -> tile key -> item id. */
+  forage: Record<string, Record<string, string>>;
+  /** Today's orders. `day` is the absolute day number they were generated for. */
+  orders: { day: number; list: Order[] };
   lastSummary: DaySummary | null;
   rng: number;
 }
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -128,6 +160,11 @@ export function createInitialState(): GameState {
     goalIndex: 0,
     settings: { music: 0.6, sfx: 0.8, muted: false, vibrate: true, leftHanded: false },
     weather: 'sunny',
+    placed: {},
+    nextPlacedId: 1,
+    skills: {},
+    forage: {},
+    orders: { day: 0, list: [] },
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,
   };

@@ -1,3 +1,4 @@
+import { game } from '../src/data';
 import { createInitialState, type GameState } from '../src/state/GameState';
 import type { TileInfo } from '../src/systems/actions';
 
@@ -8,6 +9,7 @@ export const newState = (): GameState => {
 };
 
 export const grass = (tx: number, ty: number): TileInfo => ({
+  map: 'farm',
   tx,
   ty,
   kind: 'grass',
@@ -16,6 +18,7 @@ export const grass = (tx: number, ty: number): TileInfo => ({
   farmland: true,
 });
 export const pond = (tx: number, ty: number): TileInfo => ({
+  map: 'farm',
   tx,
   ty,
   kind: 'water',
@@ -30,3 +33,8 @@ export function equip(s: GameState, itemId: string): void {
   if (i < 0 || i > 7) throw new Error(`${itemId} is not on the hotbar`);
   s.inventory.selected = i;
 }
+
+/** Number of fixed tool slots, and the first slot a regular item lands in. */
+export const TOOL_SLOTS = game.toolSlots;
+/** How many items of one kind fill every non-tool slot, leaving none free. */
+export const FULL_INVENTORY = (game.inventorySlots - game.toolSlots) * game.stackLimit;

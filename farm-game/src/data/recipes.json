@@ -1,0 +1,134 @@
+{
+  "fertilizer": {
+    "name": "Fertilizer",
+    "output": {
+      "item": "fertilizer",
+      "qty": 3
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 6
+      }
+    ],
+    "gold": 0,
+    "unlock": null
+  },
+  "bait": {
+    "name": "Bait",
+    "output": {
+      "item": "bait",
+      "qty": 5
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 3
+      }
+    ],
+    "gold": 0,
+    "unlock": null
+  },
+  "sprinkler": {
+    "name": "Sprinkler",
+    "output": {
+      "item": "sprinkler",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 12
+      }
+    ],
+    "gold": 120,
+    "unlock": {
+      "skill": "farming",
+      "level": 2
+    }
+  },
+  "preserve_jar": {
+    "name": "Preserve Jar",
+    "output": {
+      "item": "preserve_jar",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 10
+      }
+    ],
+    "gold": 100,
+    "unlock": {
+      "skill": "farming",
+      "level": 2
+    }
+  },
+  "speed_gro": {
+    "name": "Speed-Gro",
+    "output": {
+      "item": "speed_gro",
+      "qty": 2
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 4
+      },
+      {
+        "item": "mushroom",
+        "qty": 1
+      }
+    ],
+    "gold": 0,
+    "unlock": {
+      "skill": "foraging",
+      "level": 2
+    }
+  },
+  "rich_fertilizer": {
+    "name": "Rich Fertilizer",
+    "output": {
+      "item": "rich_fertilizer",
+      "qty": 2
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 4
+      },
+      {
+        "item": "carp",
+        "qty": 1
+      }
+    ],
+    "gold": 0,
+    "unlock": {
+      "skill": "fishing",
+      "level": 2
+    }
+  },
+  "quality_sprinkler": {
+    "name": "Quality Sprinkler",
+    "output": {
+      "item": "quality_sprinkler",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "sprinkler",
+        "qty": 2
+      },
+      {
+        "item": "fiber",
+        "qty": 10
+      }
+    ],
+    "gold": 300,
+    "unlock": {
+      "skill": "farming",
+      "level": 5
+    }
+  }
+}

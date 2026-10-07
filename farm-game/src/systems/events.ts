@@ -1,6 +1,6 @@
 import type { DaySummary } from '../state/GameState';
 
-export type PanelType = 'shop' | 'bin' | 'sleep' | 'menu';
+export type PanelType = 'shop' | 'bin' | 'sleep' | 'menu' | 'board' | 'craft' | 'skills';
 
 export interface GameEvents {
   toast: { text: string; kind?: 'info' | 'warn' | 'good' };
@@ -13,6 +13,14 @@ export interface GameEvents {
   openPanel: { type: PanelType };
   daySummary: DaySummary;
   levelUp: { skill: string; level: number };
+  /** Objects were placed/removed/changed on a map: renderers should resync. */
+  placedChanged: { map: string };
+  /** Forageables on a map changed (spawned or picked). */
+  forageChanged: { map: string };
+  /** Ask the UI to open a placed object's panel (jar picker...). */
+  placedPanel: { panel: string; id: number };
+  /** Start the fishing mini-game; resolve with the outcome. */
+  startFishing: { map: string; bait: boolean };
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
   sleepRequest: { passedOut: boolean };
   saved: undefined;

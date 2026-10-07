@@ -1,0 +1,45 @@
+[
+  {
+    "item": "carp",
+    "maps": ["farm", "town", "woods"],
+    "seasons": ["spring", "summer", "fall", "winter"],
+    "weight": 5,
+    "difficulty": 0.25
+  },
+  {
+    "item": "bluegill",
+    "maps": ["farm", "woods"],
+    "seasons": ["spring", "summer"],
+    "weight": 4,
+    "difficulty": 0.3
+  },
+  {
+    "item": "perch",
+    "maps": ["town", "woods"],
+    "seasons": ["fall", "winter"],
+    "weight": 4,
+    "difficulty": 0.35
+  },
+  {
+    "item": "trout",
+    "maps": ["town"],
+    "seasons": ["spring", "fall"],
+    "weight": 3,
+    "difficulty": 0.45
+  },
+  {
+    "item": "catfish",
+    "maps": ["town", "woods"],
+    "seasons": ["summer", "fall"],
+    "weather": "rain",
+    "weight": 3,
+    "difficulty": 0.6
+  },
+  {
+    "item": "salmon",
+    "maps": ["town"],
+    "seasons": ["fall"],
+    "weight": 2,
+    "difficulty": 0.7
+  }
+]

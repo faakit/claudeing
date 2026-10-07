@@ -9,7 +9,7 @@ import {
   selectSlot,
   swapSlots,
 } from '../src/systems/inventory';
-import { newState } from './helpers';
+import { FULL_INVENTORY, newState, TOOL_SLOTS } from './helpers';
 
 describe('inventory', () => {
   it('stacks up to the limit then spills into a new slot', () => {
@@ -23,11 +23,12 @@ describe('inventory', () => {
 
   it('returns the leftover when full instead of losing items silently', () => {
     const s = newState();
-    // 24 slots - 3 tools - 1 seed stack = 20 free slots.
-    expect(addItem(s, 'melon', 20 * 99)).toBe(0);
+    // Every slot that is neither a tool nor the starting seed stack is free.
+    const free = TOOL_SLOTS === 0 ? 0 : FULL_INVENTORY / 99 - 1;
+    expect(addItem(s, 'melon', free * 99)).toBe(0);
     expect(roomFor(s, 'melon', 1)).toBe(0);
     expect(addItem(s, 'melon', 7)).toBe(7);
-    expect(countItem(s, 'melon')).toBe(20 * 99);
+    expect(countItem(s, 'melon')).toBe(free * 99);
   });
 
   it('never places items in tool slots', () => {
@@ -54,17 +55,17 @@ describe('inventory', () => {
 
   it('empties the slot when the last item is removed', () => {
     const s = newState();
-    removeFromSlot(s, 3, 10);
-    expect(s.inventory.slots[3]).toBeNull();
+    removeFromSlot(s, TOOL_SLOTS, 10);
+    expect(s.inventory.slots[TOOL_SLOTS]).toBeNull();
   });
 
   it('swaps and merges stacks but never touches tool slots', () => {
     const s = newState();
     addItem(s, 'tomato', 5);
     expect(swapSlots(s, 0, 5)).toBe(false);
-    swapSlots(s, 3, 4);
-    expect(s.inventory.slots[3]?.item).toBe('tomato');
-    expect(s.inventory.slots[4]?.item).toBe('parsnip_seed');
+    swapSlots(s, TOOL_SLOTS, TOOL_SLOTS + 1);
+    expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('tomato');
+    expect(s.inventory.slots[TOOL_SLOTS + 1]?.item).toBe('parsnip_seed');
   });
 
   it('selection clamps to the hotbar and cycles', () => {

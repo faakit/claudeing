@@ -1,8 +1,9 @@
-import { crops, game } from '../data';
+import { crops, game, items } from '../data';
 import type { CropDef } from '../data';
 import type { CropState, GameState, SoilTile } from '../state/GameState';
 import { gameEvents } from './events';
 import { addItem, roomFor } from './inventory';
+import { rollQuality } from './quality';
 import { random } from './rng';
 
 export const tileKey = (tx: number, ty: number): string => `${tx},${ty}`;
@@ -40,14 +41,21 @@ export function till(state: GameState, tx: number, ty: number): boolean {
 
 export type PlantResult = 'ok' | 'no_soil' | 'occupied' | 'out_of_season';
 
-export function plant(state: GameState, tx: number, ty: number, cropId: string): PlantResult {
+/** Can this crop be planted here? Pure: changes nothing. */
+export function checkPlant(state: GameState, tx: number, ty: number, cropId: string): PlantResult {
   const soil = getSoil(state, tx, ty);
   const def = crops[cropId];
   if (!def) throw new Error(`Unknown crop "${cropId}"`);
   if (!soil) return 'no_soil';
   if (soil.crop) return 'occupied';
   if (!def.seasons.includes(state.time.season)) return 'out_of_season';
-  soil.crop = { cropId, stage: 0, daysInStage: 0, regrow: false };
+  return 'ok';
+}
+
+export function plant(state: GameState, tx: number, ty: number, cropId: string): PlantResult {
+  const check = checkPlant(state, tx, ty, cropId);
+  if (check !== 'ok') return check;
+  (getSoil(state, tx, ty) as SoilTile).crop = { cropId, stage: 0, daysInStage: 0, regrow: false };
   gameEvents.emit('farmChanged', undefined);
   return 'ok';
 }
@@ -61,7 +69,8 @@ export function water(state: GameState, tx: number, ty: number): boolean {
 }
 
 export type HarvestResult =
-  { ok: true; item: string; qty: number } | { ok: false; reason: 'none' | 'immature' | 'full' };
+  | { ok: true; item: string; qty: number; q: number }
+  | { ok: false; reason: 'none' | 'immature' | 'full' };
 
 /** Harvest a mature crop into the inventory. Regrowing crops reset; others are removed. */
 export function harvest(state: GameState, tx: number, ty: number): HarvestResult {
@@ -73,7 +82,10 @@ export function harvest(state: GameState, tx: number, ty: number): HarvestResult
   if (roomFor(state, def.harvestItem, def.harvestQuantity) < def.harvestQuantity) {
     return { ok: false, reason: 'full' }; // never lose the harvest silently
   }
-  addItem(state, def.harvestItem, def.harvestQuantity);
+  // Fertilizer improves the odds of silver/gold and is used up by the harvest.
+  const q = rollQuality(state, items[soil.fert ?? '']?.fertilizer?.quality ?? 0);
+  addItem(state, q > 0 ? { item: def.harvestItem, q } : def.harvestItem, def.harvestQuantity);
+  delete soil.fert;
   if (def.regrowDays) {
     crop.stage = def.stageDays.length - 1;
     crop.daysInStage = 0;
@@ -82,20 +94,31 @@ export function harvest(state: GameState, tx: number, ty: number): HarvestResult
     soil.crop = null;
   }
   gameEvents.emit('farmChanged', undefined);
-  return { ok: true, item: def.harvestItem, qty: def.harvestQuantity };
+  return { ok: true, item: def.harvestItem, qty: def.harvestQuantity, q };
 }
 
-/** Watered crops advance one day; then every tile dries. Unwatered crops do not grow. */
+/** Move a crop forward one growth day (no-op when already mature). */
+function advanceCrop(crop: CropState): void {
+  if (isMature(crop)) return;
+  crop.daysInStage += 1;
+  if (crop.daysInStage >= stageLength(crop)) {
+    crop.stage += 1;
+    crop.daysInStage = 0;
+    crop.regrow = false;
+  }
+}
+
+/**
+ * Watered crops advance one day; then every tile dries. Unwatered crops do not grow.
+ * Growth fertilizer gives each watered crop a chance to advance a second day that night.
+ */
 export function growCrops(state: GameState): void {
   for (const soil of Object.values(state.farm.tiles)) {
     const crop = soil.crop;
-    if (crop && soil.watered && !isMature(crop)) {
-      crop.daysInStage += 1;
-      if (crop.daysInStage >= stageLength(crop)) {
-        crop.stage += 1;
-        crop.daysInStage = 0;
-        crop.regrow = false;
-      }
+    if (crop && soil.watered) {
+      advanceCrop(crop);
+      const boost = items[soil.fert ?? '']?.fertilizer?.growth ?? 0;
+      if (boost > 0 && random(state) < boost) advanceCrop(crop);
     }
     soil.watered = false;
   }

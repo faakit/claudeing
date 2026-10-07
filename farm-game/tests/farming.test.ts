@@ -12,7 +12,7 @@ import {
   till,
   water,
 } from '../src/systems/farming';
-import { newState } from './helpers';
+import { FULL_INVENTORY, newState } from './helpers';
 
 function growDays(s: ReturnType<typeof newState>, days: number, watered = true) {
   for (let i = 0; i < days; i++) {
@@ -47,7 +47,7 @@ describe('farming', () => {
     expect(harvest(s, 1, 1)).toEqual({ ok: false, reason: 'immature' });
     growDays(s, 1);
     expect(isMature(getSoil(s, 1, 1)!.crop!)).toBe(true);
-    expect(harvest(s, 1, 1)).toEqual({ ok: true, item: 'parsnip', qty: 1 });
+    expect(harvest(s, 1, 1)).toMatchObject({ ok: true, item: 'parsnip', qty: 1 });
     expect(countItem(s, 'parsnip')).toBe(1);
     expect(getSoil(s, 1, 1)!.crop).toBeNull();
   });
@@ -108,7 +108,7 @@ describe('farming', () => {
     till(s, 1, 1);
     plant(s, 1, 1, 'parsnip');
     growDays(s, 4);
-    addItem(s, 'melon', 20 * 99);
+    addItem(s, 'melon', FULL_INVENTORY);
     expect(harvest(s, 1, 1)).toEqual({ ok: false, reason: 'full' });
     expect(getSoil(s, 1, 1)!.crop).not.toBeNull();
   });

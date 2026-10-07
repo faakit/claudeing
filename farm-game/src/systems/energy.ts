@@ -1,9 +1,10 @@
 import { game } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents } from './events';
+import { perk } from './skills';
 
 export const maxEnergy = (state: GameState): number =>
-  game.baseEnergy + state.upgrades.stamina * game.energyPerUpgrade;
+  game.baseEnergy + state.upgrades.stamina * game.energyPerUpgrade + perk(state, 'maxEnergy');
 
 export const canAfford = (state: GameState, cost: number): boolean => state.energy >= cost;
 
