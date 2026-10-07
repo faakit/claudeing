@@ -48,6 +48,7 @@ available (pick up or harvest beats planting beats tilling), so you never have t
 - `src/scenes/`, `src/ui/`, `src/input/`, `src/fx/` rendering and input only.
 - `public/assets/maps/*.tmj` Tiled maps (regenerate the placeholders with `npm run gen:maps`).
 - `src/mechanics/` each gameplay mechanic registers itself (actions, day hooks, placeable behaviors). See [docs/EXTENDING.md](docs/EXTENDING.md) for how to add one.
+- `ROADMAP.md` what we build next, in priority order.
 - `DECISIONS.md` every judgment call. `GOAL.md` the MVP definition.
 
 All art and audio are currently generated in code (placeholders). Real assets are the next step.
