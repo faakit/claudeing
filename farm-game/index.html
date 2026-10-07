@@ -44,7 +44,7 @@
         justify-content: center;
         padding: 24px;
       }
-      @media (orientation: portrait) and (max-width: 700px) {
+      @media (orientation: landscape) and (max-height: 520px) {
         #rotate {
           display: flex;
         }
@@ -66,7 +66,7 @@
   </head>
   <body>
     <div id="frame"><div id="game"></div></div>
-    <div id="rotate">Please rotate your device to landscape to play Tiny Acre.</div>
+    <div id="rotate">Please turn your phone upright to play Tiny Acre.</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

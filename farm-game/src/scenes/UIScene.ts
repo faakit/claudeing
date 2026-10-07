@@ -1,13 +1,16 @@
 import Phaser from 'phaser';
 import {
+  DOCK_Y,
   EVT_INTERACT_TARGET,
   GAME_HEIGHT,
   GAME_WIDTH,
   TAP_MAX_MOVE,
   TAP_MAX_MS,
   UI_LAYOUT,
+  WORLD_VIEW,
 } from '../config';
 import { game, mapsData } from '../data';
+import { RainLayer } from '../fx/RainLayer';
 import { weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
@@ -19,35 +22,37 @@ import { lifecycle } from '../platform/lifecycle';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { endDay } from '../systems/day';
-import { gameEvents } from '../systems/events';
+import { gameEvents, type PanelType } from '../systems/events';
+import { addStat, stat } from '../systems/goals';
 import { cycleSlot, selectSlot } from '../systems/inventory';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { mixColor } from '../ui/color';
 import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
-import { RainLayer } from '../fx/RainLayer';
+import { Label } from '../ui/font';
 import { Hud } from '../ui/Hud';
 import {
   BinPanel,
+  installMenuTabs,
   MenuPanel,
   ShopPanel,
   SleepPanel,
   SummaryPanel,
   YearEndPanel,
 } from '../ui/panels';
-import { Button, type Modal } from '../ui/widgets';
+import type { Modal } from '../ui/widgets';
 import { mapCacheKey } from './PreloadScene';
 import { WorldScene } from './WorldScene';
 
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
 
-/** Hoe silhouette: the placeholder for "use equipped tool" until real tool icons arrive. */
+/** Hoe silhouette: the placeholder for "use equipped item" until real tool icons arrive. */
 function drawActionIcon(g: Phaser.GameObjects.Graphics): void {
-  g.lineStyle(4, INK, 0.6).lineBetween(-8, 9, 7, -6);
-  g.lineStyle(2, CREAM, 1).lineBetween(-8, 9, 7, -6);
-  g.fillStyle(INK, 0.6).fillRect(2, -11, 10, 7);
-  g.fillStyle(CREAM, 1).fillRect(3, -10, 8, 5);
+  g.lineStyle(4, INK, 0.6).lineBetween(-9, 10, 8, -7);
+  g.lineStyle(2, CREAM, 1).lineBetween(-9, 10, 8, -7);
+  g.fillStyle(INK, 0.6).fillRect(2, -12, 11, 8);
+  g.fillStyle(CREAM, 1).fillRect(3, -11, 9, 6);
 }
 
 function drawHandIcon(g: Phaser.GameObjects.Graphics): void {
@@ -65,27 +70,35 @@ function drawBedIcon(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(INK, 0.6).fillRect(-11, 4, 2, 6).fillRect(9, 4, 2, 6);
 }
 
-const INTERACT_ICONS: Record<string, (g: Phaser.GameObjects.Graphics) => void> = {
+function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(CREAM, 1);
+  for (const y of [-5, -1, 3]) g.fillRect(-6, y, 12, 2);
+}
+
+/** Interact-button icon by the kind of thing in reach. Mechanics add an entry for their objects. */
+export const INTERACT_ICONS: Record<string, (g: Phaser.GameObjects.Graphics) => void> = {
   bed: drawBedIcon,
 };
 
-/** HUD overlay and flow controller: touch controls, panels, day tint, sleep and results. */
+/** HUD overlay and flow controller: thumb controls, panels, day tint, sleep and results. */
 export class UIScene extends Phaser.Scene {
-  private interactButton!: TouchButton;
-  private interactIcon!: Phaser.GameObjects.Graphics;
+  private controls: TouchButton[] = [];
+  private interactButton: TouchButton | null = null;
+  private interactIcon: Phaser.GameObjects.Graphics | null = null;
+  private interactType: string | null = null;
   private taps = new Map<number, { x: number; y: number; t: number }>();
   private hud!: Hud;
   private tint!: Phaser.GameObjects.Rectangle;
   private blackout!: Phaser.GameObjects.Rectangle;
   private menu!: MenuPanel;
-  private shop!: ShopPanel;
-  private bin!: BinPanel;
-  private sleepPanel!: SleepPanel;
   private summary!: SummaryPanel;
   private yearEnd!: YearEndPanel;
+  /** Dismissible sheets by panel type. */
+  private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
   private lateWarnedDay = -1;
   private rain!: RainLayer;
+  private dragHint: Phaser.GameObjects.Container | null = null;
   private sleeping = false;
   private cleanup: (() => void)[] = [];
 
@@ -96,15 +109,18 @@ export class UIScene extends Phaser.Scene {
   create(): void {
     this.taps.clear();
     this.cleanup = [];
+    this.controls = [];
+    this.interactButton = null;
+    this.interactIcon = null;
     this.lastNight = -1;
     this.sleeping = false;
-    this.input.addPointer(3); // mouse + joystick thumb + both buttons
+    this.input.addPointer(2); // mouse + a thumb + a spare for multi-touch
     new KeyboardInput(this, inputHub);
     new VirtualJoystick(this, inputHub);
     wireAutosave();
 
     this.tint = this.add
-      .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0xffffff)
+      .rectangle(WORLD_VIEW.x, WORLD_VIEW.y, WORLD_VIEW.w, WORLD_VIEW.h, 0xffffff)
       .setOrigin(0)
       .setDepth(1)
       .setBlendMode(Phaser.BlendModes.MULTIPLY);
@@ -118,6 +134,8 @@ export class UIScene extends Phaser.Scene {
     this.hud = new Hud(this, getState);
     this.buildControls();
     this.buildPanels();
+    this.buildDragHint();
+
     const fresh = getState();
     if (
       fresh.goalIndex === 0 &&
@@ -126,24 +144,28 @@ export class UIScene extends Phaser.Scene {
       !fresh.stats['tilled']
     ) {
       this.time.delayedCall(900, () =>
-        this.hud.toast('Welcome to Tiny Acre! Pick the hoe and press Action to till soil.', 'good'),
+        this.hud.toast('Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.', 'good'),
       );
       this.time.delayedCall(4200, () =>
-        this.hud.toast('Hold Action to work a row. Your goals are at the top.', 'info'),
+        this.hud.toast(
+          'Drag anywhere low on the screen to walk. Hold Action to keep working.',
+          'info',
+        ),
       );
     }
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
+      gameEvents.on('settingsChanged', () => this.buildControls()),
       inputHub.on('menu', () => this.toggleMenu()),
-      // Android back: close the open dialog, otherwise open the menu (never kill the game by accident).
-      lifecycle.on('back', () => this.toggleMenu()),
       inputHub.on('confirm', () =>
         this.allModals()
           .find((m) => m.isOpen)
           ?.confirm(),
       ),
+      // Android back: close the open dialog, otherwise open the menu (never kill the game by accident).
+      lifecycle.on('back', () => this.toggleMenu()),
       inputHub.on('slot', (i) => selectSlot(getState(), i)),
       inputHub.on('cycle', (d) => cycleSlot(getState(), d)),
     );
@@ -164,13 +186,18 @@ export class UIScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     const s = getState();
+    if (this.dragHint && inputHub.direction !== null) {
+      addStat(s, 'moved', 1); // remembered in the save, so the hint never returns
+      this.dragHint.destroy();
+      this.dragHint = null;
+    }
     this.hud.update(time);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather === 'rain';
     let base = daylightColor(s.time.minutes);
     if (raining && !indoors) base = mixColor(base, 0x9db0cc, 0.4); // grey-blue overcast
     const grade = indoors ? indoorColor(base) : base;
-    // A white multiply overlay changes nothing but still costs a full-screen blend, so skip it.
+    // A white multiply overlay changes nothing but still costs a blend, so skip it.
     this.tint.setVisible(grade !== 0xffffff).setFillStyle(grade);
     this.rain.setIntensity(raining && !indoors ? 1 : 0);
     this.rain.update(delta);
@@ -190,43 +217,88 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  // ---- controls ----
+  // ---- thumb controls ----
 
+  /** (Re)build the dock controls. Right-handed puts Action under the right thumb; left-handed mirrors. */
   private buildControls(): void {
-    const { margin, actionRadius, interactRadius } = UI_LAYOUT;
-    const ax = GAME_WIDTH - margin - actionRadius;
-    const ay = GAME_HEIGHT - margin - actionRadius;
-    new TouchButton(
+    this.controls.forEach((c) => c.destroy());
+    this.controls = [];
+    this.interactIcon?.destroy();
+    const { actionRadius: ar, interactRadius: ir, menuRadius: mr, edge } = UI_LAYOUT;
+    const left = getState().settings.leftHanded;
+    const x = (rightHandedX: number) => (left ? GAME_WIDTH - rightHandedX : rightHandedX);
+
+    // Action sits low in the corner where the resting thumb lands; Interact is a short slide away.
+    const action = new TouchButton(
       this,
-      ax,
-      ay,
-      actionRadius,
+      x(GAME_WIDTH - edge - ar),
+      DOCK_Y + 8 + ar,
+      ar,
       drawActionIcon,
       () => (inputHub.actionHeld = true),
       () => (inputHub.actionHeld = false),
     );
-    // Stacked above Action, so the bottom edge stays free for a wide, comfortable hotbar.
     this.interactButton = new TouchButton(
       this,
-      ax,
-      ay - actionRadius - interactRadius - 8,
-      interactRadius,
+      x(GAME_WIDTH - edge - ar - ir - 20),
+      DOCK_Y + 34 + ir,
+      ir,
       () => undefined,
       () => inputHub.emit('interact', undefined),
     );
+    // Menu is rarely needed, so it lives up and away from the working corner: no accidental taps.
+    const menu = new TouchButton(this, x(edge + mr + 2), DOCK_Y + 12 + mr, mr, drawMenuIcon, () =>
+      this.toggleMenu(),
+    );
+    this.controls.push(action, this.interactButton, menu);
+
     this.interactIcon = this.add.graphics().setDepth(91);
     this.interactIcon.setPosition(this.interactButton.view.x, this.interactButton.view.y);
     this.interactButton.view.setAlpha(0).setScale(0.8);
     this.interactButton.setEnabled(false);
     this.interactIcon.setAlpha(0);
+    this.setInteractTarget(this.interactType);
+  }
 
-    const menuBtn = new Button(this, GAME_WIDTH - 38, 6, 32, 32, '', () =>
-      this.toggleMenu(),
-    ).setDepth(60);
-    menuBtn.add(this.add.image(16, 16, 'ui_menu'));
+  /** A faint ring in the thumb zone on a fresh game: shows where to drag. Gone after the first step. */
+  private buildDragHint(): void {
+    this.dragHint?.destroy();
+    this.dragHint = null;
+    if (stat(getState(), 'moved') > 0) return;
+    const left = getState().settings.leftHanded;
+    const cx = left ? GAME_WIDTH - 64 : 64;
+    const cy = DOCK_Y + 56;
+    const ring = this.add.graphics();
+    ring.lineStyle(2, 0xf4ead2, 0.45).strokeCircle(0, 0, 24);
+    ring.fillStyle(0xf4ead2, 0.18).fillCircle(0, 0, 10);
+    for (const a of [0, 90, 180, 270]) {
+      const r = Phaser.Math.DegToRad(a);
+      ring
+        .fillStyle(0xf4ead2, 0.5)
+        .fillTriangle(
+          Math.cos(r) * 34,
+          Math.sin(r) * 34,
+          Math.cos(r + 0.35) * 28,
+          Math.sin(r + 0.35) * 28,
+          Math.cos(r - 0.35) * 28,
+          Math.sin(r - 0.35) * 28,
+        );
+    }
+    const label = new Label(this, 0, 40, 'Drag to walk', { align: 'center', color: 0xf4ead2 });
+    this.dragHint = this.add.container(cx, cy, [ring, label]).setDepth(60);
+    this.tweens.add({
+      targets: this.dragHint,
+      alpha: { from: 1, to: 0.45 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
   }
 
   private setInteractTarget(type: string | null): void {
+    this.interactType = type;
+    if (!this.interactButton || !this.interactIcon) return;
     this.interactButton.setEnabled(type !== null);
     if (type !== null) {
       this.interactIcon.clear();
@@ -255,31 +327,31 @@ export class UIScene extends Phaser.Scene {
   // ---- panels ----
 
   private buildPanels(): void {
+    this.panels.clear();
     this.menu = new MenuPanel(this, () => this.quitToTitle());
-    this.shop = new ShopPanel(this);
-    this.bin = new BinPanel(this);
-    this.sleepPanel = new SleepPanel(this, () => void this.runSleep(false));
+    installMenuTabs(this.menu);
     this.summary = new SummaryPanel(this);
     this.yearEnd = new YearEndPanel(this);
-    for (const m of [this.menu, this.shop, this.bin, this.sleepPanel]) {
-      m.onClosed = () => void saveNow(true);
-    }
+    this.panels.set('menu', this.menu);
+    this.panels.set('shop', new ShopPanel(this));
+    this.panels.set('bin', new BinPanel(this));
+    this.panels.set('sleep', new SleepPanel(this, () => void this.runSleep(false)));
+    for (const m of this.panels.values()) m.onClosed = () => void saveNow(true);
   }
 
   private allModals(): Modal[] {
-    return [this.menu, this.shop, this.bin, this.sleepPanel, this.summary, this.yearEnd];
+    return [...this.panels.values(), this.summary, this.yearEnd];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
-    return [this.menu, this.shop, this.bin, this.sleepPanel].find((m) => m.isOpen) ?? null;
+    return [...this.panels.values()].find((m) => m.isOpen) ?? null;
   }
 
-  private openPanel(type: 'shop' | 'bin' | 'sleep' | 'menu'): void {
+  private openPanel(type: PanelType): void {
     if (runtime.blocked) return;
     inputHub.clearHeld();
-    const panel = { shop: this.shop, bin: this.bin, sleep: this.sleepPanel, menu: this.menu }[type];
-    panel.open();
+    this.panels.get(type)?.open();
   }
 
   private toggleMenu(): void {
@@ -310,7 +382,7 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  /** Bed or 02:00: fade out, roll the day, wake in bed, show the summary, fade back in. */
+  /** Bed or pass-out: fade out, roll the day, wake in bed, show the summary, fade back in. */
   private async runSleep(passedOut: boolean): Promise<void> {
     if (this.sleeping) return; // never run two rollovers at once
     this.sleeping = true;

@@ -36,28 +36,39 @@ export class TitleScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#1b1530');
     this.drawBackdrop();
 
-    const title = new Label(this, GAME_WIDTH / 2, 40, 'TINY ACRE', {
-      scale: 5,
+    const title = new Label(this, GAME_WIDTH / 2, 52, 'TINY', {
+      scale: 6,
       align: 'center',
       color: C.gold,
     });
-    this.tweens.add({
-      targets: title,
-      y: 44,
-      duration: 1800,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
+    const title2 = new Label(this, GAME_WIDTH / 2, 98, 'ACRE', {
+      scale: 6,
+      align: 'center',
+      color: C.gold,
     });
-    new Label(this, GAME_WIDTH / 2, 88, 'a cozy little farming game', {
+    for (const t of [title, title2]) {
+      this.tweens.add({
+        targets: t,
+        y: t.y + 3,
+        duration: 1800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+    new Label(this, GAME_WIDTH / 2, 150, 'a cozy little farming game', {
       align: 'center',
       color: C.cream,
     });
-    new Label(this, GAME_WIDTH - 6, GAME_HEIGHT - 12, 'prototype v0.1', {
+    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 10, 'prototype v0.2', {
       align: 'right',
       color: C.creamDim,
     });
-    this.note = new Label(this, GAME_WIDTH / 2, 196, '', { align: 'center', color: C.creamDim });
+    this.note = new Label(this, GAME_WIDTH / 2, 176, '', {
+      align: 'center',
+      color: C.creamDim,
+      maxWidth: 180,
+    });
 
     void loadGame(saveStore).then((res) => {
       this.loaded = res?.state ?? null;
@@ -75,13 +86,13 @@ export class TitleScene extends Phaser.Scene {
     this.primary = this.loaded
       ? () => this.start(this.loaded as GameState)
       : () => this.start(createInitialState());
-    let y = 112;
+    let y = 200;
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;
     if (this.loaded) {
       const t = this.loaded.time;
       this.buttons.push(
-        new Button(this, x, y, w, 28, 'Continue', () => this.start(this.loaded as GameState), {
+        new Button(this, x, y, w, 30, 'Continue', () => this.start(this.loaded as GameState), {
           textColor: C.green,
           rim: C.green,
         }),
@@ -89,11 +100,11 @@ export class TitleScene extends Phaser.Scene {
       new Label(
         this,
         GAME_WIDTH / 2,
-        y + 32,
-        `${seasonLabel(t.season)} ${t.day}, year ${t.year}   ${this.loaded.money}g`,
+        y + 36,
+        `${seasonLabel(t.season)} ${t.day}, year ${t.year}  ${this.loaded.money}g`,
         { align: 'center', color: C.creamDim },
       );
-      y += 50;
+      y += 62;
     }
     this.buttons.push(
       new Button(
@@ -101,7 +112,7 @@ export class TitleScene extends Phaser.Scene {
         x,
         y,
         w,
-        28,
+        30,
         this.confirmNew ? 'Erase save? Tap again' : 'New Game',
         () => {
           if (this.loaded && !this.confirmNew) {
@@ -133,27 +144,25 @@ export class TitleScene extends Phaser.Scene {
   private drawBackdrop(): void {
     const g = this.add.graphics();
     const bands = [0x2a1f4a, 0x3d2a5c, 0x5a3a6a, 0x8a4a6a, 0xc0645a, 0xe08a5a];
-    bands.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 28, GAME_WIDTH, 30));
-    g.fillStyle(0xf4d35e, 1).fillCircle(380, 132, 22); // low sun
-    g.fillStyle(0xffe9a0, 0.5).fillCircle(380, 132, 28);
+    bands.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 46, GAME_WIDTH, 50));
+    g.fillStyle(0xf4d35e, 1).fillCircle(150, 300, 26); // low sun
+    g.fillStyle(0xffe9a0, 0.5).fillCircle(150, 300, 33);
     g.fillStyle(0x3b2a52, 1);
-    g.fillTriangle(-20, 190, 90, 120, 200, 190)
-      .fillTriangle(120, 190, 250, 105, 400, 190)
-      .fillTriangle(300, 190, 430, 128, 520, 190);
-    g.fillStyle(0x2c4a3a, 1).fillRect(0, 186, GAME_WIDTH, 84);
-    g.fillStyle(0x3a6a44, 1).fillRect(0, 186, GAME_WIDTH, 3);
-    // a row of soil with crops in every growth stage, swaying gently
-    g.fillStyle(0x5e4025, 1).fillRect(0, 232, GAME_WIDTH, 38);
-    g.fillStyle(0x7a5530, 1).fillRect(0, 232, GAME_WIDTH, 2);
+    g.fillTriangle(-30, 340, 50, 262, 130, 340).fillTriangle(60, 340, 140, 252, 230, 340);
+    g.fillStyle(0x2c4a3a, 1).fillRect(0, 336, GAME_WIDTH, 64);
+    g.fillStyle(0x3a6a44, 1).fillRect(0, 336, GAME_WIDTH, 3);
+    // soil with crops in every growth stage, swaying gently
+    g.fillStyle(0x5e4025, 1).fillRect(0, 366, GAME_WIDTH, 34);
+    g.fillStyle(0x7a5530, 1).fillRect(0, 366, GAME_WIDTH, 2);
     const ids = Object.keys(crops);
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 12; i++) {
       const id = ids[i % ids.length]!;
       const total = crops[id]!.stageDays.length;
       const stage = (i * 3) % (total + 1);
       const img = this.add
-        .image(10 + i * 20, 262, CROPS_TEXTURE, cropFrame(id, stage))
+        .image(10 + i * 16, 390, CROPS_TEXTURE, cropFrame(id, stage))
         .setOrigin(0.5, 1)
-        .setScale(1.5);
+        .setScale(1.3);
       this.tweens.add({
         targets: img,
         angle: { from: -3, to: 3 },
@@ -165,15 +174,15 @@ export class TitleScene extends Phaser.Scene {
       });
     }
     // fireflies
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 14; i++) {
       const f = this.add
-        .rectangle(Math.random() * GAME_WIDTH, 150 + Math.random() * 90, 2, 2, 0xf4ead2)
+        .rectangle(Math.random() * GAME_WIDTH, 260 + Math.random() * 100, 2, 2, 0xf4ead2)
         .setAlpha(0);
       this.tweens.add({
         targets: f,
         alpha: { from: 0, to: 0.9 },
-        x: f.x + (Math.random() - 0.5) * 60,
-        y: f.y - 14 - Math.random() * 20,
+        x: f.x + (Math.random() - 0.5) * 40,
+        y: f.y - 12 - Math.random() * 20,
         duration: 1800 + Math.random() * 1600,
         yoyo: true,
         repeat: -1,

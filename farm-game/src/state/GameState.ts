@@ -27,6 +27,10 @@ export interface TimeState {
 export interface ItemStack {
   item: string;
   qty: number;
+  /** Quality tier: 1 silver, 2 gold (omitted = normal). */
+  q?: number;
+  /** For derived goods: the item this was made from (e.g. jam made from tomato). */
+  of?: string;
 }
 
 export interface CropState {
@@ -54,6 +58,8 @@ export interface DaySummary {
   weather: Weather;
   /** Set when Summer 28 ends: shows the results screen. */
   yearEnd: boolean;
+  /** Extra morning news from mechanics (jars ready, new orders...). Each is one short line. */
+  notes?: string[];
 }
 
 export interface Settings {
@@ -62,6 +68,8 @@ export interface Settings {
   muted: boolean;
   /** Haptic/vibration feedback on actions. */
   vibrate: boolean;
+  /** Mirror the thumb controls to the left side of the dock. */
+  leftHanded: boolean;
 }
 
 /** Everything that must be saved lives here. Plain, serializable data only. */
@@ -118,7 +126,7 @@ export function createInitialState(): GameState {
     player: { map, ...spawnPosition(tx, ty), facing },
     stats: {},
     goalIndex: 0,
-    settings: { music: 0.6, sfx: 0.8, muted: false, vibrate: true },
+    settings: { music: 0.6, sfx: 0.8, muted: false, vibrate: true, leftHanded: false },
     weather: 'sunny',
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,

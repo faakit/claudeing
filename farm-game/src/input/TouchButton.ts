@@ -64,6 +64,12 @@ export class TouchButton {
     this.scene.tweens.add({ targets: this.glow, alpha: down ? 1 : 0, duration: down ? 40 : 160 });
   }
 
+  /** Remove the button (used when the controls are re-laid out, e.g. left-handed mode). */
+  destroy(): void {
+    this.zone.destroy();
+    this.view.destroy();
+  }
+
   /** Show or hide with a small pop; a hidden button cannot be hit. */
   setEnabled(enabled: boolean): void {
     if (this.enabled === enabled) return;

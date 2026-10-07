@@ -1,5 +1,5 @@
-// Phone-profile checks on the production build: safe-area insets (notch), canvas fit, real
-// touch-target sizes, and the portrait "rotate" overlay. Run `npm run build` first.
+// Phone-profile checks (portrait, one-handed) on the production build: safe-area insets (notch), canvas fit, real
+// touch-target sizes, and the landscape "turn upright" overlay. Run `npm run build` first.
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 
@@ -8,35 +8,42 @@ const BASE = `http://localhost:${PORT}/`;
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const MIN_TOUCH_CSS = 44;
 
-// CSS-pixel viewport, device pixel ratio, and notch/home-indicator safe-area insets (landscape).
+// CSS-pixel viewport, device pixel ratio, and notch/home-indicator safe-area insets (portrait).
 const PROFILES = [
   {
     name: 'iPhone 13/14 (notch)',
-    w: 844,
-    h: 390,
+    w: 390,
+    h: 844,
     dpr: 3,
-    insets: { top: 0, left: 47, bottom: 21, right: 47 },
+    insets: { top: 47, left: 0, bottom: 34, right: 0 },
   },
   {
     name: 'iPhone 15 Pro Max',
-    w: 932,
-    h: 430,
+    w: 430,
+    h: 932,
     dpr: 3,
-    insets: { top: 0, left: 59, bottom: 21, right: 59 },
+    insets: { top: 59, left: 0, bottom: 34, right: 0 },
   },
-  { name: 'Pixel 7', w: 915, h: 412, dpr: 2.6, insets: { top: 0, left: 0, bottom: 0, right: 0 } },
+  { name: 'Pixel 7', w: 412, h: 915, dpr: 2.6, insets: { top: 24, left: 0, bottom: 0, right: 0 } },
   {
     name: 'Android punch-hole',
-    w: 851,
-    h: 393,
+    w: 393,
+    h: 851,
     dpr: 2.75,
-    insets: { top: 0, left: 36, bottom: 0, right: 0 },
+    insets: { top: 36, left: 0, bottom: 0, right: 0 },
   },
   {
-    name: 'iPhone SE (small)',
-    w: 667,
-    h: 375,
+    name: 'iPhone SE (16:9, small)',
+    w: 375,
+    h: 667,
     dpr: 2,
+    insets: { top: 20, left: 0, bottom: 0, right: 0 },
+  },
+  {
+    name: 'Galaxy Fold (narrow)',
+    w: 280,
+    h: 653,
+    dpr: 3,
     insets: { top: 0, left: 0, bottom: 0, right: 0 },
   },
 ];
@@ -84,7 +91,7 @@ try {
     const m = await page.evaluate(() => {
       const c = document.querySelector('canvas').getBoundingClientRect();
       const ui = window.__farm.game.scene.getScene('UI');
-      const k = ui.scale.displaySize.width / 480; // CSS px per logical px
+      const k = ui.scale.displaySize.width / 200; // CSS px per logical px
       const sizes = [];
       for (const o of ui.children.list) {
         if (o.type !== 'Zone' || !o.input?.enabled) continue;
@@ -121,23 +128,27 @@ try {
       JSON.stringify({ rect: m.rect, inset }),
     );
     check(
-      `${p.name}: canvas keeps a 16:9 shape`,
-      Math.abs((m.rect.r - m.rect.l) / (m.rect.b - m.rect.t) - 16 / 9) < 0.02,
+      `${p.name}: canvas keeps its 1:2 portrait shape`,
+      Math.abs((m.rect.r - m.rect.l) / (m.rect.b - m.rect.t) - 1 / 2) < 0.02,
     );
     // Phones from ~680 CSS px wide up must meet the 44px guideline; smaller ones are reported only.
-    if (p.w >= 800)
+    // Modern phones must meet the 44px guideline (1px of rounding slack); small ones a looser bar;
+    // very narrow devices (foldables closed) are reported in the table only.
+    const required = p.w >= 390 ? MIN_TOUCH_CSS - 1 : p.w >= 360 ? 38 : 0;
+    if (required > 0) {
       check(
-        `${p.name}: every touch target >= ${MIN_TOUCH_CSS} css px`,
-        minTouch >= MIN_TOUCH_CSS - 1,
+        `${p.name}: every touch target >= ${required} css px`,
+        minTouch >= required,
         `smallest ${minTouch.toFixed(1)}`,
       );
+    }
     check(`${p.name}: no console errors`, errors.length === 0, errors.join(' | '));
     await ctx.close();
   }
 
-  // Portrait phones get the rotate overlay.
+  // Landscape phones are asked to turn upright.
   const ctx = await browser.newContext({
-    viewport: { width: 390, height: 844 },
+    viewport: { width: 844, height: 390 },
     deviceScaleFactor: 3,
     isMobile: true,
     hasTouch: true,
@@ -146,7 +157,7 @@ try {
   await page.goto(BASE);
   await page.waitForTimeout(800);
   check(
-    'portrait phone shows the rotate-to-landscape overlay',
+    'landscape phone shows the turn-upright overlay',
     await page.evaluate(
       () => getComputedStyle(document.querySelector('#rotate')).display !== 'none',
     ),

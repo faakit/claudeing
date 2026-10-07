@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, JOYSTICK } from '../config';
+import { JOYSTICK, THUMB_ZONE_Y } from '../config';
 import { dominantDirection } from '../systems/direction';
 import type { Direction } from '../state/GameState';
 import type { InputHub } from './InputHub';
 
 const FADE_MS = 120;
 
-/** Floating stick: appears under the thumb anywhere in the left half of the screen. */
+/** Floating stick: appears under the thumb anywhere in the lower part of the screen (the thumb zone). */
 export class VirtualJoystick {
   private pointerId: number | null = null;
   private origin = new Phaser.Math.Vector2();
@@ -18,7 +18,6 @@ export class VirtualJoystick {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly hub: InputHub,
-    private readonly side: 'left' | 'right' = 'left',
   ) {
     const { radius } = JOYSTICK;
     this.gfx = scene.add.graphics().setDepth(100).setAlpha(0);
@@ -41,12 +40,13 @@ export class VirtualJoystick {
     input.on('gameout', this.release, this);
   }
 
-  private inZone(x: number): boolean {
-    return this.side === 'left' ? x < GAME_WIDTH / 2 : x >= GAME_WIDTH / 2;
+  /** The whole lower part of the screen is a joystick: a thumb never has to find a fixed spot. */
+  private inZone(y: number): boolean {
+    return y >= THUMB_ZONE_Y;
   }
 
   private onDown(p: Phaser.Input.Pointer): void {
-    if (this.pointerId !== null || !this.inZone(p.x)) return;
+    if (this.pointerId !== null || !this.inZone(p.y)) return;
     if (this.scene.input.hitTestPointer(p).length > 0) return; // pointer belongs to a button
     this.pointerId = p.id;
     this.origin.set(p.x, p.y);

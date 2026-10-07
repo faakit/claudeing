@@ -18,3 +18,8 @@ export function toggleVibration(state: GameState): boolean {
   state.settings.vibrate = !state.settings.vibrate;
   return state.settings.vibrate;
 }
+
+export function toggleLeftHanded(state: GameState): boolean {
+  state.settings.leftHanded = !state.settings.leftHanded;
+  return state.settings.leftHanded;
+}

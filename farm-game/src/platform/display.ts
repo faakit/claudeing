@@ -1,4 +1,4 @@
-/** Browser display helpers: fullscreen + landscape lock, and gesture/scroll suppression. */
+/** Browser display helpers: fullscreen + portrait lock, and gesture/scroll suppression. */
 
 type LockableOrientation = ScreenOrientation & { lock?: (o: string) => Promise<void> };
 
@@ -15,7 +15,7 @@ export const isStandalone = (): boolean =>
   window.matchMedia('(display-mode: standalone)').matches ||
   (navigator as { standalone?: boolean }).standalone === true;
 
-/** Enter fullscreen and lock to landscape (Android Chrome allows the lock only in fullscreen). */
+/** Enter fullscreen and lock to portrait (Android Chrome allows the lock only in fullscreen). */
 export async function toggleFullscreen(): Promise<void> {
   if (document.fullscreenElement) {
     await document.exitFullscreen().catch(() => undefined);
@@ -24,7 +24,7 @@ export async function toggleFullscreen(): Promise<void> {
   }
   try {
     await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-    await (screen.orientation as LockableOrientation | undefined)?.lock?.('landscape');
+    await (screen.orientation as LockableOrientation | undefined)?.lock?.('portrait');
   } catch {
     /* denied, unsupported, or not lockable: the game still plays */
   }

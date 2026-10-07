@@ -43,7 +43,7 @@ describe('full loop', () => {
     const summary = endDay(s, { passedOut: false, weedCandidates: NO_WEEDS });
     expect(summary.total).toBe(105);
     expect(s.money).toBeGreaterThanOrEqual(before + 105);
-    expect(summary.shipped).toEqual([{ item: 'parsnip', qty: 3, gold: 105 }]);
+    expect(summary.shipped).toEqual([{ item: 'parsnip|0|', qty: 3, gold: 105 }]);
 
     // Buy more seeds with the proceeds.
     expect(buyItem(s, 'town_general_store', 'parsnip_seed', 5)).toBe('ok');

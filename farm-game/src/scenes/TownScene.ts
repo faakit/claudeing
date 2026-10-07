@@ -5,7 +5,7 @@ import { Label } from '../ui/font';
 import { C } from '../ui/theme';
 import { WorldScene } from './WorldScene';
 
-const NPC_TILE = { tx: 13, ty: 8 };
+const NPC_TILE = { tx: 8, ty: 10 };
 
 export class TownScene extends WorldScene {
   private greeted = false;

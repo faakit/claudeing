@@ -122,6 +122,26 @@ function drawTile(ctx: Ctx, index: number): void {
       px(3, 5, '#7a4f2e', 10, 11);
       px(11, 10, '#f4d35e', 2, 2);
       break;
+    case 'board':
+      speckle(10, '#4a8a3f');
+      px(2, 1, '#6e4a2a', 12, 10); // frame
+      px(3, 2, tile.accent, 10, 8); // cork
+      px(4, 3, '#f4ead2', 4, 3);
+      px(9, 4, '#f4ead2', 3, 4);
+      px(5, 7, '#e0574a', 2, 1);
+      px(3, 11, '#6e4a2a', 2, 5);
+      px(11, 11, '#6e4a2a', 2, 5);
+      break;
+    case 'bush':
+      speckle(8, '#4a8a3f');
+      px(2, 4, tile.accent, 12, 10);
+      px(4, 2, tile.accent, 8, 12);
+      px(4, 5, '#3f9d55', 3, 3);
+      px(9, 8, '#256a2f', 3, 3);
+      px(5, 10, '#d9544a', 1, 1); // berries
+      px(10, 5, '#d9544a', 1, 1);
+      px(8, 11, '#d9544a', 1, 1);
+      break;
     case 'bin':
       px(1, 3, tile.color, 14, 12);
       px(0, 2, tile.accent, 16, 3);

@@ -4,7 +4,7 @@ import { restoreEnergy } from './energy';
 import { gameEvents } from './events';
 import { checkGoals } from './goals';
 import { growCrops, killOutOfSeason, spawnWeeds } from './farming';
-import { sellPrice } from './economy';
+import { parseKey, sellValue } from './itemRef';
 import { advanceCalendar } from './time';
 import { rollWeather, waterAllSoil } from './weather';
 
@@ -25,10 +25,11 @@ export function endDay(state: GameState, opts: EndDayOptions): DaySummary {
 
   growCrops(state);
 
-  const shipped = Object.entries(state.shipping).map(([item, qty]) => ({
-    item,
+  // Shipping is keyed by stack identity ("tomato|2|"), so quality and derived goods price correctly.
+  const shipped = Object.entries(state.shipping).map(([key, qty]) => ({
+    item: key,
     qty,
-    gold: sellPrice(item) * qty,
+    gold: sellValue(parseKey(key)) * qty,
   }));
   const total = shipped.reduce((s, l) => s + l.gold, 0);
   state.money += total;

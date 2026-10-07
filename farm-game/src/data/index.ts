@@ -43,6 +43,11 @@ export interface ItemDef {
   stackLimit?: number;
   plants?: string;
   tool?: string;
+  /** Derived goods (jam, pickles) are made from another item: value = base + input value x multiplier. */
+  derived?: boolean;
+  sellMultiplier?: number;
+  /** Display name template; `{of}` is replaced by the source item's name. */
+  nameTemplate?: string;
 }
 export interface CropDef {
   seasons: Season[];
@@ -93,6 +98,8 @@ export interface GameData {
   maxWeeds: number;
   ranks: { min: number; title: string }[];
   /** Chance (0-1) that a new day is rainy, by season. */
+  /** Sell-price multiplier per quality tier (0 normal, 1 silver, 2 gold). */
+  qualityMultipliers: number[];
   rainChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;

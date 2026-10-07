@@ -6,14 +6,13 @@ import {
   EVT_INTERACT_TARGET,
   FADE_COLOR,
   FADE_MS,
-  GAME_HEIGHT,
-  GAME_WIDTH,
   MAX_CLOCK_DT_MS,
   SEASON_TINT,
   tileKind,
   TILE_SIZE,
   TILESET_KEY,
   VOID_COLOR,
+  WORLD_VIEW,
 } from '../config';
 import { mapsData } from '../data';
 import { Effects } from '../fx/Effects';
@@ -187,10 +186,12 @@ export abstract class WorldScene extends Phaser.Scene {
 
   private setupCamera(mapW: number, mapH: number): void {
     const cam = this.cameras.main;
+    // The world only draws between the HUD and the dock, so nothing is ever hidden behind a control.
+    cam.setViewport(WORLD_VIEW.x, WORLD_VIEW.y, WORLD_VIEW.w, WORLD_VIEW.h);
     cam.setBackgroundColor(VOID_COLOR);
-    // Maps smaller than the screen get bounds equal to the screen, centered on the map.
-    const bw = Math.max(mapW, GAME_WIDTH);
-    const bh = Math.max(mapH, GAME_HEIGHT);
+    // Maps smaller than the view get bounds equal to the view, centered on the map.
+    const bw = Math.max(mapW, WORLD_VIEW.w);
+    const bh = Math.max(mapH, WORLD_VIEW.h);
     cam.setBounds(-(bw - mapW) / 2, -(bh - mapH) / 2, bw, bh);
     const p = getState().player;
     const bodyOffset = PLAYER_H / 2 - 4; // aim at the body, not the feet
@@ -296,8 +297,12 @@ export abstract class WorldScene extends Phaser.Scene {
   /** Tapping a tile next to the player turns toward it and uses the equipped item there. */
   private onTap(x: number, y: number): void {
     if (this.transitioning || runtime.blocked || this.actionLock > 0) return;
-    const wp = this.cameras.main.getWorldPoint(x, y);
-    const target = { tx: Math.floor(wp.x / TILE_SIZE), ty: Math.floor(wp.y / TILE_SIZE) };
+    // Taps arrive in screen space; only the world viewport shows tiles.
+    if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return;
+    const cam = this.cameras.main;
+    const wx = x - cam.x + cam.scrollX;
+    const wy = y - cam.y + cam.scrollY;
+    const target = { tx: Math.floor(wx / TILE_SIZE), ty: Math.floor(wy / TILE_SIZE) };
     const player = getState().player;
     const dir = adjacentDirection(playerTile(player), target);
     if (!dir) return;

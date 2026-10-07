@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../config';
-import { game, items } from '../data';
+import { DOCK_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
+import { game } from '../data';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
@@ -8,20 +8,21 @@ import { waterCapacity } from '../systems/actions';
 import { maxEnergy } from '../systems/energy';
 import { gameEvents } from '../systems/events';
 import { goalProgress } from '../systems/goals';
-import { selectedStack, selectSlot, isToolSlot } from '../systems/inventory';
+import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
-import { C } from './theme';
 import { hitSize } from './hit';
+import { C } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
+import { displayName, iconKey, refOf } from '../systems/itemRef';
 
-/** Slot size; 34 logical px keeps hotbar taps >= ~44 CSS px even on notched phones. */
-export const SLOT = 34;
+/** Hotbar slot size: 23 logical px is ~45 CSS px on a typical phone, so taps land first time. */
+export const SLOT = 23;
 const SLOT_GAP = 1;
 export const HOTBAR_X = Math.round(
   (GAME_WIDTH - (game.hotbarSlots * (SLOT + SLOT_GAP) - SLOT_GAP)) / 2,
 );
-export const HOTBAR_Y = GAME_HEIGHT - SLOT - 6;
+export const HOTBAR_Y = GAME_HEIGHT - SLOT - 5;
 
 interface Toast {
   label: Label;
@@ -29,29 +30,32 @@ interface Toast {
   born: number;
 }
 
-/** Always-on overlay: clock, gold, goal, energy/water, hotbar, toasts. Reads state only. */
+/**
+ * Always-on overlay. Top: clock, gold, weather, energy/water, goal (read-only, out of thumb reach
+ * on purpose). Bottom: the dock background and hotbar. Reads state only.
+ */
 export class Hud {
-  private readonly timePanel: Phaser.GameObjects.Graphics;
   private readonly dateLabel: Label;
   private readonly timeLabel: Label;
   private readonly goldLabel: Label;
+  private readonly weatherLabel: Label;
   private readonly coin: Phaser.GameObjects.Image;
-  private shownMoney = -1;
   private readonly weatherIcon: Phaser.GameObjects.Image;
+  private shownMoney = -1;
 
   private readonly goalGfx: Phaser.GameObjects.Graphics;
   private readonly goalLabel: Label;
   private readonly goalCount: Label;
   private goalKey = '';
-  private meterKey = '';
 
   private readonly meters: Phaser.GameObjects.Graphics;
-  private readonly energyLabel: Label;
+  private meterKey = '';
 
   private readonly hotbarGfx: Phaser.GameObjects.Graphics;
   private hotbarIcons: Phaser.GameObjects.Image[] = [];
-  private hotbarZones: Phaser.GameObjects.Zone[] = [];
   private hotbarQty: Label[] = [];
+  private hotbarStars: Phaser.GameObjects.Image[] = [];
+  private hotbarZones: Phaser.GameObjects.Zone[] = [];
   private readonly nameLabel: Label;
   private nameTween: Phaser.Tweens.Tween | null = null;
   private lastSelected = -1;
@@ -67,30 +71,42 @@ export class Hud {
     private readonly getState: () => GameState,
   ) {
     const depth = 50;
-    this.timePanel = scene.add.graphics().setDepth(depth);
-    drawPanel(this.timePanel, 6, 6, 98, 36);
-    drawPanel(this.timePanel, 6, 46, 70, 17);
-    this.dateLabel = new Label(scene, 13, 12, '', { color: C.creamDim }).setDepth(depth + 1);
-    this.timeLabel = new Label(scene, 13, 23, '', { scale: 2 }).setDepth(depth + 1);
-    this.weatherIcon = scene.add.image(93, 15, 'ui_sun').setDepth(depth + 1);
-    this.coin = scene.add.image(17, 55, 'ui_coin').setDepth(depth + 1);
-    this.goldLabel = new Label(scene, 25, 51, '', { color: C.gold }).setDepth(depth + 1);
+    // Static panels drawn once.
+    const panels = scene.add.graphics().setDepth(depth);
+    drawPanel(panels, 3, 2, 104, 32);
+    drawPanel(panels, 110, 2, 87, 32);
+    // Dock: solid so the world never shows through behind controls.
+    panels.fillStyle(C.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
+    panels.fillStyle(C.cream, 0.55).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
+    panels.fillStyle(C.panelLight, 0.5).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
+    // Dark band above the world too, so the HUD reads as its own strip.
+    panels.fillStyle(C.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
 
-    this.goalGfx = scene.add.graphics().setDepth(depth);
-    this.goalLabel = new Label(scene, 120, 12, '', { color: C.cream }).setDepth(depth + 1);
-    this.goalCount = new Label(scene, 426, 26, '', { color: C.gold, align: 'right' }).setDepth(
-      depth + 1,
-    );
+    this.dateLabel = new Label(scene, 10, 5, '', { color: C.creamDim }).setDepth(depth + 1);
+    this.timeLabel = new Label(scene, 10, 14, '', { scale: 2 }).setDepth(depth + 1);
+    this.coin = scene.add.image(121, 10, 'ui_coin').setDepth(depth + 1);
+    this.goldLabel = new Label(scene, 130, 6, '', { color: C.gold }).setDepth(depth + 1);
+    this.weatherIcon = scene.add.image(121, 25, 'ui_sun').setDepth(depth + 1);
+    this.weatherLabel = new Label(scene, 130, 21, '', { color: C.creamDim }).setDepth(depth + 1);
 
     this.meters = scene.add.graphics().setDepth(depth);
-    scene.add.image(15, 176, 'ui_bolt').setDepth(depth + 1);
-    scene.add.image(30, 176, 'ui_drop').setDepth(depth + 1);
-    this.energyLabel = new Label(scene, 15, 254, '', { align: 'center', color: C.gold }).setDepth(
+    scene.add
+      .image(10, 41, 'ui_bolt')
+      .setScale(0.8)
+      .setDepth(depth + 1);
+    scene.add
+      .image(107, 41, 'ui_drop')
+      .setScale(0.8)
+      .setDepth(depth + 1);
+
+    this.goalGfx = scene.add.graphics().setDepth(depth);
+    this.goalLabel = new Label(scene, 9, 52, '', { color: C.cream }).setDepth(depth + 1);
+    this.goalCount = new Label(scene, 191, 63, '', { color: C.gold, align: 'right' }).setDepth(
       depth + 1,
     );
 
     this.hotbarGfx = scene.add.graphics().setDepth(depth);
-    this.nameLabel = new Label(scene, GAME_WIDTH / 2, HOTBAR_Y - 12, '', { align: 'center' })
+    this.nameLabel = new Label(scene, GAME_WIDTH / 2, HOTBAR_Y - 11, '', { align: 'center' })
       .setDepth(depth + 2)
       .setAlpha(0);
     for (let i = 0; i < game.hotbarSlots; i++) {
@@ -101,14 +117,20 @@ export class Hud {
           .setDepth(depth + 1)
           .setVisible(false),
       );
+      this.hotbarStars.push(
+        scene.add
+          .image(x + 5, HOTBAR_Y + SLOT - 5, 'ui_star')
+          .setDepth(depth + 2)
+          .setVisible(false),
+      );
       this.hotbarQty.push(
-        new Label(scene, x + SLOT - 3, HOTBAR_Y + SLOT - 10, '', { align: 'right' }).setDepth(
+        new Label(scene, x + SLOT - 2, HOTBAR_Y + SLOT - 9, '', { align: 'right' }).setDepth(
           depth + 2,
         ),
       );
-      new Label(scene, x + 4, HOTBAR_Y + 4, String(i + 1), { color: C.creamDim, shadow: null })
+      new Label(scene, x + 3, HOTBAR_Y + 2, String(i + 1), { color: C.creamDim, shadow: null })
         .setDepth(depth + 2)
-        .setAlpha(0.7);
+        .setAlpha(0.6);
       const zone = scene.add
         .zone(x, HOTBAR_Y, SLOT, SLOT)
         .setOrigin(0, 0)
@@ -118,19 +140,20 @@ export class Hud {
       zone.on('pointerdown', () => {
         selectSlot(this.getState(), i);
         audio.play('select');
+        haptic('tick');
       });
     }
 
-    this.savedLabel = new Label(scene, GAME_WIDTH - 10, 46, 'Saved', {
+    this.savedLabel = new Label(scene, GAME_WIDTH - 5, HUD_H + 3, 'Saved', {
       color: C.green,
       align: 'right',
     })
       .setDepth(depth + 1)
       .setAlpha(0);
-    this.banner = new Label(scene, GAME_WIDTH / 2, 76, '', {
+    this.banner = new Label(scene, GAME_WIDTH / 2, HUD_H + 14, '', {
       color: C.gold,
-      scale: 2,
       align: 'center',
+      maxWidth: 190,
     })
       .setDepth(depth + 5)
       .setAlpha(0);
@@ -143,11 +166,14 @@ export class Hud {
       gameEvents.on('inventoryChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('energyChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('saved', () => this.flashSaved()),
-      gameEvents.on('goalCompleted', (g) => this.goalBanner(g.reward)),
+      gameEvents.on('goalCompleted', (g) => this.goalBanner(`GOAL COMPLETE  +${g.reward}g`)),
+      gameEvents.on('levelUp', (e) =>
+        this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`),
+      ),
     );
   }
 
-  /** Hotbar slots are 31px apart; grow each touch area up to that pitch to approach 44 CSS px. */
+  /** Slots are 24px apart; grow each touch area up to that pitch so it reaches ~44 CSS px. */
   private fitHotbarHits(): void {
     const size = hitSize(this.scene, SLOT, SLOT + SLOT_GAP);
     const grow = (size - SLOT) / 2;
@@ -166,9 +192,7 @@ export class Hud {
     const s = this.getState();
     this.dateLabel.setText(`${seasonLabel(s.time.season)} ${s.time.day}  Y${s.time.year}`);
     this.timeLabel.setText(formatClock(s.time.minutes));
-    const weatherKey = s.weather === 'rain' ? 'ui_rain' : 'ui_sun';
-    if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
-    // Late-night warning: the clock turns orange then red as 02:00 nears.
+    // Late-night warning: the clock turns orange then red as pass-out nears.
     this.timeLabel.setColor(
       s.time.minutes >= game.dayEndMinutes - 60
         ? C.red
@@ -176,6 +200,10 @@ export class Hud {
           ? C.warn
           : C.cream,
     );
+    const rainy = s.weather === 'rain';
+    const weatherKey = rainy ? 'ui_rain' : 'ui_sun';
+    if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
+    this.weatherLabel.setText(rainy ? 'Rainy' : 'Sunny');
 
     if (this.shownMoney < 0) this.shownMoney = s.money;
     if (this.shownMoney !== s.money) {
@@ -184,7 +212,7 @@ export class Hud {
       if (Math.abs(s.money - this.shownMoney) < 1) this.shownMoney = s.money;
       this.coin.setScale(1 + 0.25 * Math.abs(Math.sin(time / 60)));
     } else this.coin.setScale(1);
-    this.goldLabel.setText(String(this.shownMoney));
+    this.goldLabel.setText(this.shownMoney.toLocaleString('en-US'));
 
     this.drawGoal(s);
     this.drawMeters(s);
@@ -199,32 +227,41 @@ export class Hud {
     if (key === this.goalKey) return;
     this.goalKey = key;
     this.goalGfx.clear();
-    drawPanel(this.goalGfx, 112, 6, 322, 34);
+    drawPanel(this.goalGfx, 3, 48, 194, 25);
     if (!prog) {
-      this.goalLabel.setText('All goals complete! Enjoy your farm.').setColor(C.green);
+      this.goalLabel.setText('All goals complete!').setColor(C.green);
       this.goalCount.setText('');
       return;
     }
     this.goalLabel.setText(prog.goal.text).setColor(C.cream);
     this.goalCount.setText(
-      `${prog.value.toLocaleString('en-US')}/${prog.goal.target.toLocaleString('en-US')} +${prog.goal.reward.toLocaleString('en-US')}g`,
+      `${prog.value.toLocaleString('en-US')}/${prog.goal.target.toLocaleString('en-US')}`,
     );
-    drawBar(this.goalGfx, 120, 27, 190, 5, prog.value / prog.goal.target, C.gold);
+    drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, C.gold);
   }
 
-  private goalBanner(reward: number): void {
+  private goalBanner(text: string): void {
     audio.play('goal');
     haptic('success');
-    this.banner.setText(`GOAL COMPLETE  +${reward}g`).setAlpha(0).setY(84);
+    this.banner
+      .setText(text)
+      .setAlpha(0)
+      .setY(HUD_H + 22);
     this.scene.tweens.killTweensOf(this.banner);
     this.scene.tweens.add({
       targets: this.banner,
       alpha: 1,
-      y: 76,
+      y: HUD_H + 14,
       duration: 220,
       ease: 'Back.easeOut',
     });
-    this.scene.tweens.add({ targets: this.banner, alpha: 0, y: 70, duration: 400, delay: 1700 });
+    this.scene.tweens.add({
+      targets: this.banner,
+      alpha: 0,
+      y: HUD_H + 8,
+      duration: 400,
+      delay: 1700,
+    });
   }
 
   // ---- energy & water ----
@@ -235,9 +272,8 @@ export class Hud {
     const e = s.energy / maxEnergy(s);
     const g = this.meters;
     g.clear();
-    drawBar(g, 10, 184, 10, 66, e, e > 0.5 ? C.green : e > 0.2 ? C.warn : C.red, true);
-    drawBar(g, 25, 184, 10, 66, s.water / waterCapacity(s), C.blue, true);
-    this.energyLabel.setText(String(s.energy));
+    drawBar(g, 17, 37, 80, 8, e, e > 0.5 ? C.green : e > 0.2 ? C.warn : C.red);
+    drawBar(g, 114, 37, 80, 8, s.water / waterCapacity(s), C.blue);
   }
 
   // ---- hotbar ----
@@ -252,23 +288,32 @@ export class Hud {
       const stack = s.inventory.slots[i] ?? null;
       const icon = this.hotbarIcons[i]!;
       const qty = this.hotbarQty[i]!;
+      const star = this.hotbarStars[i]!;
+      const lift = sel ? 2 : 0;
       if (stack) {
+        const ref = refOf(stack);
         icon
-          .setTexture(items[stack.item]!.icon)
+          .setTexture(iconKey(ref))
           .setVisible(true)
-          .setY(HOTBAR_Y + SLOT / 2 + 1 - (sel ? 2 : 0));
+          .setY(HOTBAR_Y + SLOT / 2 + 1 - lift);
         qty
           .setText(!isToolSlot(i) && stack.qty > 1 ? String(stack.qty) : '')
-          .setY(HOTBAR_Y + SLOT - 10 - (sel ? 2 : 0));
+          .setY(HOTBAR_Y + SLOT - 9 - lift);
+        const q = ref.q ?? 0;
+        star
+          .setVisible(q > 0)
+          .setTint(q >= 2 ? 0xf4d35e : 0xc9d3e4)
+          .setY(HOTBAR_Y + SLOT - 5 - lift);
       } else {
         icon.setVisible(false);
         qty.setText('');
+        star.setVisible(false);
       }
     }
     if (s.inventory.selected !== this.lastSelected) {
       this.lastSelected = s.inventory.selected;
       const stack = selectedStack(s);
-      this.showName(stack ? items[stack.item]!.name : '');
+      this.showName(stack ? displayName(refOf(stack)) : '');
     }
   }
 
@@ -293,9 +338,10 @@ export class Hud {
       return;
     }
     const color = kind === 'warn' ? C.warn : kind === 'good' ? C.green : C.cream;
-    const label = new Label(this.scene, GAME_WIDTH / 2, HOTBAR_Y - 28, text, {
+    const label = new Label(this.scene, GAME_WIDTH / 2, DOCK_Y - 14, text, {
       color,
       align: 'center',
+      maxWidth: 186,
     }).setDepth(80);
     this.toasts.push({ label, text, born: now });
     if (this.toasts.length > 3) this.toasts.shift()?.label.destroy();
@@ -304,18 +350,20 @@ export class Hud {
   private updateToasts(time: number): void {
     this.toasts = this.toasts.filter((t) => {
       const age = time - t.born;
-      if (age > 2600) {
+      if (age > 2800) {
         t.label.destroy();
         return false;
       }
-      t.label.setAlpha(age > 2000 ? 1 - (age - 2000) / 600 : 1);
+      t.label.setAlpha(age > 2200 ? 1 - (age - 2200) / 600 : 1);
       return true;
     });
-    const baseY = HOTBAR_Y - 30;
-    this.toasts.forEach((t, i) => {
-      const target = baseY - (this.toasts.length - 1 - i) * 11;
-      t.label.y += (target - t.label.y) * 0.3;
-    });
+    // Newest sits on the bottom; older ones stack upward by their real (wrapped) height.
+    let y = DOCK_Y - 6;
+    for (let i = this.toasts.length - 1; i >= 0; i--) {
+      const t = this.toasts[i]!;
+      y -= t.label.textHeight + 2;
+      t.label.y += (y - t.label.y) * 0.3;
+    }
   }
 
   private flashSaved(): void {

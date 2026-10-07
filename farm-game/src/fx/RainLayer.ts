@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { WORLD_VIEW } from '../config';
 
 const DROPS = 90;
 
@@ -13,7 +13,13 @@ export class RainLayer {
   constructor(scene: Phaser.Scene, depth: number) {
     for (let i = 0; i < DROPS; i++) {
       const d = scene.add
-        .rectangle(Math.random() * GAME_WIDTH, Math.random() * GAME_HEIGHT, 1, 5, 0xd6e6fa)
+        .rectangle(
+          WORLD_VIEW.x + Math.random() * WORLD_VIEW.w,
+          WORLD_VIEW.y + Math.random() * WORLD_VIEW.h,
+          1,
+          5,
+          0xd6e6fa,
+        )
         .setOrigin(0)
         .setDepth(depth)
         .setAlpha(0)
@@ -38,11 +44,11 @@ export class RainLayer {
       if (!active) return;
       d.y += this.speeds[i]! * dt;
       d.x -= this.speeds[i]! * dt * 0.22;
-      if (d.y > GAME_HEIGHT) {
-        d.y = -6;
-        d.x = Math.random() * (GAME_WIDTH + 60);
+      if (d.y > WORLD_VIEW.y + WORLD_VIEW.h) {
+        d.y = WORLD_VIEW.y - 6;
+        d.x = WORLD_VIEW.x + Math.random() * (WORLD_VIEW.w + 40);
       }
-      if (d.x < -4) d.x = GAME_WIDTH + 4;
+      if (d.x < WORLD_VIEW.x - 4) d.x = WORLD_VIEW.x + WORLD_VIEW.w + 4;
       d.setAlpha(0.8 * this.intensity * (0.6 + (i % 5) * 0.1));
     });
   }

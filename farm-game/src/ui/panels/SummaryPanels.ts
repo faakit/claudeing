@@ -1,18 +1,16 @@
 import Phaser from 'phaser';
-import { goals, items } from '../../data';
+import { goals } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import type { DaySummary } from '../../state/GameState';
 import { getState } from '../../state/store';
 import { rankTitle } from '../../systems/day';
 import { stat } from '../../systems/goals';
+import { displayName, parseKey } from '../../systems/itemRef';
 import { seasonLabel } from '../../systems/time';
 import { C } from '../theme';
 import { Modal } from '../widgets';
-
 import { fmt } from './format';
-
-// ============================================================ Day summary & year end
 
 const TIPS = [
   'Water your crops every day. Unwatered crops do not grow.',
@@ -26,8 +24,14 @@ const TIPS = [
   'The shipping bin pays the next morning, so ship before bed.',
 ];
 
+/** A modal the player must acknowledge: no tap-outside dismiss. */
 abstract class WaitModal extends Modal {
   private resolve: (() => void) | null = null;
+
+  protected constructor(scene: Phaser.Scene, h: number) {
+    super(scene, h);
+    this.dismissOnDim = false;
+  }
 
   override confirm(): void {
     this.finish();
@@ -51,7 +55,7 @@ export class SummaryPanel extends WaitModal {
   private summary: DaySummary | null = null;
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 300, 220);
+    super(scene, 260);
   }
 
   present(summary: DaySummary): Promise<void> {
@@ -71,73 +75,86 @@ export class SummaryPanel extends WaitModal {
     const s = getState();
     const lines = sum.shipped.slice(0, 6);
     const extra = sum.shipped.length - lines.length;
-    this.panelH = 124 + Math.max(1, lines.length + (extra > 0 ? 1 : 0)) * 11 + 34;
-    this.root.setY(Math.round((270 - this.panelH) / 2));
-    this.panel(this.panelW, this.panelH);
+    const bodyRows = Math.max(1, lines.length + (extra > 0 ? 1 : 0));
+    this.setHeight(
+      150 + bodyRows * 11 + 40 + (sum.withered > 0 ? 22 : 0) + (sum.notes?.length ?? 0) * 11,
+    );
+    this.panel();
     this.label(
       this.panelW / 2,
-      10,
+      8,
       `${seasonLabel(sum.endedSeason)} ${sum.endedDay} complete`,
       C.gold,
-      2,
+      1,
       'center',
     );
     this.label(
       this.panelW / 2,
-      30,
+      22,
       sum.passedOut ? 'You passed out from exhaustion...' : 'You slept soundly.',
       sum.passedOut ? C.warn : C.green,
       1,
       'center',
     );
-    this.label(14, 48, 'SOLD THIS MORNING', C.gold);
-    let y = 60;
+    this.label(8, 40, 'SOLD THIS MORNING', C.gold);
+    let y = 52;
     if (lines.length === 0) {
-      this.label(14, y, 'Nothing shipped. Use the bin by the house!', C.creamDim);
+      this.label(8, y, 'Nothing shipped. Use the bin by the house!', C.creamDim, 1, 'left', 184);
       y += 11;
     }
     for (const l of lines) {
-      this.label(14, y, `${items[l.item]?.name ?? l.item} x${l.qty}`);
-      this.label(this.panelW - 14, y, `${fmt(l.gold)}g`, C.gold, 1, 'right');
+      this.label(8, y, `${displayName(parseKey(l.item))} x${l.qty}`, C.cream, 1, 'left', 130);
+      this.label(192, y, `${fmt(l.gold)}g`, C.gold, 1, 'right');
       y += 11;
     }
     if (extra > 0) {
-      this.label(14, y, `...and ${extra} more`, C.creamDim);
+      this.label(8, y, `...and ${extra} more`, C.creamDim);
       y += 11;
     }
-    y += 4;
-    this.label(14, y, 'Total', C.cream);
-    this.label(this.panelW - 14, y, `+${fmt(sum.total)}g`, C.green, 1, 'right');
+    y += 3;
+    this.label(8, y, 'Total', C.cream);
+    this.label(192, y, `+${fmt(sum.total)}g`, C.green, 1, 'right');
     y += 14;
     if (sum.withered > 0) {
       this.label(
-        14,
+        8,
         y,
         `${sum.withered} crop${sum.withered > 1 ? 's' : ''} withered with the new season.`,
         C.warn,
         1,
         'left',
-        270,
+        184,
       );
+      y += 22;
+    }
+    for (const note of sum.notes ?? []) {
+      this.label(8, y, note, C.cream, 1, 'left', 184);
       y += 11;
     }
     this.label(
-      14,
+      8,
       y,
       `Now: ${seasonLabel(s.time.season)} ${s.time.day}. Gold: ${fmt(s.money)}`,
       C.cream,
     );
+    y += 11;
+    this.label(
+      8,
+      y,
+      sum.weather === 'rain' ? 'It is raining. Crops are watered!' : 'The sun is out today.',
+      sum.weather === 'rain' ? C.blue : C.creamDim,
+    );
     y += 14;
     this.label(
-      14,
+      8,
       y,
       `Tip: ${TIPS[(s.time.day + s.time.year) % TIPS.length]}`,
       C.creamDim,
       1,
       'left',
-      270,
+      184,
     );
-    this.button(this.panelW / 2 - 55, this.panelH - 30, 110, 22, 'Wake up', () => this.finish(), {
+    this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Wake up', () => this.finish(), {
       textColor: C.green,
       rim: C.green,
     });
@@ -146,7 +163,7 @@ export class SummaryPanel extends WaitModal {
 
 export class YearEndPanel extends WaitModal {
   constructor(scene: Phaser.Scene) {
-    super(scene, 300, 190);
+    super(scene, 250);
   }
 
   present(): Promise<void> {
@@ -157,22 +174,22 @@ export class YearEndPanel extends WaitModal {
     const s = getState();
     const earned = stat(s, 'earned');
     this.panel();
-    this.label(this.panelW / 2, 12, 'END OF SUMMER', C.gold, 2, 'center');
-    this.label(this.panelW / 2, 32, `Year ${s.time.year} results`, C.creamDim, 1, 'center');
+    this.label(this.panelW / 2, 10, 'END OF SUMMER', C.gold, 2, 'center');
+    this.label(this.panelW / 2, 30, `Year ${s.time.year} results`, C.creamDim, 1, 'center');
     const rows: [string, string][] = [
-      ['Gold earned selling crops', `${fmt(earned)}g`],
+      ['Gold earned', `${fmt(earned)}g`],
       ['Crops harvested', fmt(stat(s, 'harvested'))],
       ['Seeds planted', fmt(stat(s, 'planted'))],
       ['Goals completed', `${s.goalIndex}/${goals.length}`],
     ];
     rows.forEach(([k, v], i) => {
-      this.label(18, 52 + i * 13, k);
-      this.label(this.panelW - 18, 52 + i * 13, v, C.gold, 1, 'right');
+      this.label(10, 50 + i * 13, k);
+      this.label(190, 50 + i * 13, v, C.gold, 1, 'right');
     });
-    this.label(this.panelW / 2, 110, 'Your rank', C.creamDim, 1, 'center');
-    this.label(this.panelW / 2, 122, rankTitle(earned).toUpperCase(), C.green, 2, 'center');
-    this.label(this.panelW / 2, 144, 'Fall crops await. Keep farming!', C.cream, 1, 'center');
-    this.button(this.panelW / 2 - 55, 160, 110, 22, 'Keep playing', () => this.finish(), {
+    this.label(this.panelW / 2, 112, 'Your rank', C.creamDim, 1, 'center');
+    this.label(this.panelW / 2, 124, rankTitle(earned).toUpperCase(), C.green, 2, 'center');
+    this.label(this.panelW / 2, 150, 'Fall crops await. Keep farming!', C.cream, 1, 'center');
+    this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Keep playing', () => this.finish(), {
       textColor: C.green,
       rim: C.green,
     });

@@ -1,79 +1,119 @@
 import Phaser from 'phaser';
-import { items } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
-import { isShippable, sellPrice, shipItem, shippingValue, unshipItem } from '../../systems/economy';
-import { countItem } from '../../systems/inventory';
+import { isShippable, shipStack, shippingValue, unshipStack } from '../../systems/economy';
+import { countStack } from '../../systems/inventory';
+import {
+  displayName,
+  iconKey,
+  keyOf,
+  parseKey,
+  sellValue,
+  type ItemRef,
+} from '../../systems/itemRef';
 import { C } from '../theme';
-import { Modal } from '../widgets';
-
+import { Modal, ROW_H } from '../widgets';
 import { fmt } from './format';
 
-// ============================================================ Shipping bin
+const ROWS = 6;
 
 export class BinPanel extends Modal {
   private page = 0;
-  private static readonly ROWS = 6;
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 380, 226);
+    super(scene, 250);
   }
 
   protected build(): void {
     const s = getState();
     this.panel();
-    this.label(14, 11, 'Shipping Bin', C.gold, 2);
-    this.label(14, 30, 'Sold tomorrow morning at full price.', C.creamDim);
-    this.closeButton();
+    this.label(8, 8, 'Shipping Bin', C.gold);
+    this.label(8, 20, 'Sold tomorrow morning at full price.', C.creamDim);
 
-    const ids = new Set<string>();
-    s.inventory.slots.forEach((st) => st && isShippable(st.item) && ids.add(st.item));
-    Object.keys(s.shipping).forEach((id) => ids.add(id));
-    const list = [...ids].sort((a, b) => sellPrice(b) - sellPrice(a));
-    const pages = Math.max(1, Math.ceil(list.length / BinPanel.ROWS));
+    // Every distinct stack the player holds or has already put in the bin.
+    const refs = new Map<string, ItemRef>();
+    for (const st of s.inventory.slots)
+      if (st && isShippable(st)) refs.set(keyOf(st), parseKey(keyOf(st)));
+    for (const k of Object.keys(s.shipping)) refs.set(k, parseKey(k));
+    const list = [...refs.values()].sort((a, b) => sellValue(b) - sellValue(a));
+    const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
 
-    if (list.length === 0) {
-      this.label(14, 70, 'Nothing to ship yet. Harvest some crops first!', C.creamDim);
+    if (list.length === 0)
+      this.label(
+        8,
+        50,
+        'Nothing to ship yet. Harvest some crops first!',
+        C.creamDim,
+        1,
+        'left',
+        184,
+      );
+    let y = 34;
+    for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
+      const have = countStack(s, ref);
+      const inBin = s.shipping[keyOf(ref)] ?? 0;
+      y = this.row(y, {
+        icon: iconKey(ref),
+        title: displayName(ref),
+        sub: `${fmt(sellValue(ref))}g  have ${have}  bin ${inBin}`,
+        subColor: inBin ? C.gold : C.creamDim,
+        buttons: [
+          {
+            label: 'All',
+            width: 28,
+            onClick: () => this.move(ref, have),
+            color: have ? C.gold : C.creamDim,
+          },
+          {
+            label: '+',
+            width: 22,
+            onClick: () => this.move(ref, 1),
+            color: have ? C.cream : C.creamDim,
+          },
+          {
+            label: '-',
+            width: 22,
+            onClick: () => this.move(ref, -1),
+            color: inBin ? C.cream : C.creamDim,
+          },
+        ],
+      });
     }
-    list.slice(this.page * BinPanel.ROWS, (this.page + 1) * BinPanel.ROWS).forEach((id, i) => {
-      const y = 44 + i * 24;
-      const def = items[id]!;
-      const have = countItem(s, id);
-      const inBin = s.shipping[id] ?? 0;
-      this.icon(24, y + 11, def.icon);
-      this.label(40, y + 2, def.name);
-      this.label(40, y + 12, `${sellPrice(id)}g each`, C.creamDim);
-      this.label(176, y + 7, `Have ${have}`, C.creamDim, 1, 'right');
-      this.label(236, y + 7, `Bin ${inBin}`, inBin ? C.gold : C.creamDim, 1, 'right');
-      this.button(244, y, 28, 22, '-1', () => this.move(id, -1), {
-        textColor: inBin ? C.cream : C.creamDim,
-      });
-      this.button(276, y, 28, 22, '+1', () => this.move(id, 1), {
-        textColor: have ? C.cream : C.creamDim,
-      });
-      this.button(308, y, 56, 22, 'All', () => this.move(id, have), {
-        textColor: have ? C.gold : C.creamDim,
-      });
-    });
+    const footerY = 34 + ROWS * ROW_H + 4;
     if (pages > 1) {
-      this.button(14, 204, 26, 18, '<', () => {
-        this.page = (this.page + pages - 1) % pages;
-        this.rebuild();
-      });
-      this.button(44, 204, 26, 18, '>', () => {
-        this.page = (this.page + 1) % pages;
-        this.rebuild();
-      });
+      this.button(
+        8,
+        footerY,
+        24,
+        20,
+        '<',
+        () => ((this.page = (this.page + pages - 1) % pages), this.rebuild()),
+      );
+      this.button(
+        36,
+        footerY,
+        24,
+        20,
+        '>',
+        () => ((this.page = (this.page + 1) % pages), this.rebuild()),
+      );
     }
-    this.label(14 + (pages > 1 ? 84 : 0), 208, `In the bin: ${fmt(shippingValue(s))}g`, C.gold);
-    this.button(this.panelW - 74, 200, 62, 22, 'Done', () => this.close(), { textColor: C.green });
+    this.label(
+      this.panelW - 8,
+      footerY + 6,
+      `In bin: ${fmt(shippingValue(s))}g`,
+      C.gold,
+      1,
+      'right',
+    );
+    this.closeButton('Done');
   }
 
-  private move(id: string, delta: number): void {
+  private move(ref: ItemRef, delta: number): void {
     const s = getState();
-    const moved = delta > 0 ? shipItem(s, id, delta) : unshipItem(s, id, -delta);
+    const moved = delta > 0 ? shipStack(s, ref, delta) : unshipStack(s, ref, -delta);
     if (moved === 0) audio.play('error');
     else {
       audio.play('coin');

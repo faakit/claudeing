@@ -364,6 +364,21 @@ function drawGlyphs(scene: Phaser.Scene): void {
   ] as const)
     ctx.fillRect(x, y, 1, 2);
   refresh(scene, 'ui_rain');
+  // quality star (tinted silver/gold in the UI)
+  ctx = canvas(scene, 'ui_star', 7, 7);
+  ctx.fillStyle = '#ffffff';
+  for (const [x, y, w] of [
+    [3, 0, 1],
+    [3, 1, 1],
+    [1, 2, 5],
+    [2, 3, 3],
+    [2, 4, 3],
+    [1, 5, 2],
+    [4, 5, 2],
+  ] as const)
+    ctx.fillRect(x, y, w, 1);
+  outline(ctx, 0, 0, 7, 7, '#3a3350');
+  refresh(scene, 'ui_star');
   // 2x2 particle pixel
   ctx = canvas(scene, PX_TEXTURE, 2, 2);
   ctx.fillStyle = '#ffffff';

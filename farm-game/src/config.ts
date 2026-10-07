@@ -1,7 +1,17 @@
 /** All tunable constants live here. */
 export const TILE_SIZE = 16;
-export const GAME_WIDTH = 480;
-export const GAME_HEIGHT = 270;
+// Portrait, 1:2. Almost every phone is between 9:16 and 9:20, so a 1:2 canvas fits them all with
+// slim bars at worst. 200 logical px across is ~12 tiles: big readable sprites and 44px+ touch targets.
+export const GAME_WIDTH = 200;
+export const GAME_HEIGHT = 400;
+
+// Screen zones (logical px). Everything the thumb touches lives in the bottom dock.
+export const HUD_H = 74; // read-only info at the top, out of thumb reach on purpose
+export const DOCK_H = 112; // controls + hotbar
+export const DOCK_Y = GAME_HEIGHT - DOCK_H;
+export const WORLD_VIEW = { x: 0, y: HUD_H, w: GAME_WIDTH, h: DOCK_Y - HUD_H } as const;
+/** The floating joystick may start anywhere below this line (the lower ~60% of the screen). */
+export const THUMB_ZONE_Y = 150;
 
 export const MAP_KEYS = { farm: 'map_farm' } as const;
 export const TILESET_KEY = 'tiles_placeholder';
@@ -28,6 +38,8 @@ export const PLACEHOLDER_TILES = [
   { name: 'flower', color: '#5a9e4b', accent: '#f2a6c0' },
   { name: 'shopwall', color: '#d9c7a0', accent: '#b04a3a' },
   { name: 'shopdoor', color: '#d9c7a0', accent: '#b04a3a' },
+  { name: 'board', color: '#5a9e4b', accent: '#c9a26a' },
+  { name: 'bush', color: '#5a9e4b', accent: '#2f8a45' },
 ] as const;
 
 /** Tile kind by gid, for game rules (water refills the can, etc). */
@@ -50,10 +62,10 @@ export const FADE_COLOR = { r: 16, g: 12, b: 28 } as const;
 export const VOID_COLOR = '#14101f';
 
 // --- Touch controls (logical px at 480x270) ---
-export const JOYSTICK = { radius: 26, deadzone: 7, axisBias: 1.25 } as const;
+export const JOYSTICK = { radius: 24, deadzone: 6, axisBias: 1.25 } as const;
 export const TAP_MAX_MS = 250;
 export const TAP_MAX_MOVE = 8;
-export const UI_LAYOUT = { margin: 14, actionRadius: 26, interactRadius: 20 } as const;
+export const UI_LAYOUT = { actionRadius: 28, interactRadius: 21, menuRadius: 14, edge: 6 } as const;
 export const EVT_INTERACT_TARGET = 'interact-target';
 
 // --- Time (M2) ---

@@ -131,7 +131,7 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
     expect(s.inventory.slots[5]).toBeNull();
     expect(s.inventory.slots[6]).toEqual({ item: 'parsnip', qty: 12 });
     expect(s.farm.tiles['4,4']).toEqual({ watered: true, crop: null });
-    expect(s.shipping).toEqual({ parsnip: 2 });
+    expect(s.shipping).toEqual({ 'parsnip|0|': 2 }); // legacy bare ids upgrade to stack keys
   });
 
   it('restores tools, pads the inventory, and clamps wild numbers', () => {

@@ -1,7 +1,7 @@
 {
   "start": {
     "map": "farm",
-    "tx": 7,
+    "tx": 14,
     "ty": 9,
     "facing": "down"
   },
@@ -21,11 +21,16 @@
       "scene": "Town",
       "file": "assets/maps/town.tmj",
       "outdoor": true
+    },
+    "woods": {
+      "scene": "Woods",
+      "file": "assets/maps/woods.tmj",
+      "outdoor": true
     }
   },
   "wake": {
     "map": "house",
-    "tx": 4,
+    "tx": 3,
     "ty": 3,
     "facing": "down"
   }

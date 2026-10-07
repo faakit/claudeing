@@ -1,5 +1,6 @@
 import { crops, game, goals, items, mapsData, shops } from '../data';
 import { isDirection } from './direction';
+import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
 import { createInitialState, STATE_VERSION, type GameState } from '../state/GameState';
 
@@ -110,7 +111,14 @@ export function sanitize(raw: Raw): GameState {
       if (!isObj(st) || typeof st['item'] !== 'string') return null;
       const def = items[st['item']];
       if (!def || def.type === 'tool') return null;
-      return { item: st['item'], qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit) };
+      const stack: NonNullable<GameState['inventory']['slots'][number]> = {
+        item: st['item'],
+        qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit),
+      };
+      const q = int(st['q'], 0, 0, game.qualityMultipliers.length - 1);
+      if (q > 0) stack.q = q;
+      if (def.derived && typeof st['of'] === 'string' && items[st['of']]) stack.of = st['of'];
+      return stack;
     },
   );
 
@@ -135,9 +143,13 @@ export function sanitize(raw: Raw): GameState {
   for (const key of Object.keys(obj(farmRaw['weeds']))) if (TILE_KEY.test(key)) weeds[key] = true;
 
   const shipping: GameState['shipping'] = {};
-  for (const [id, qty] of Object.entries(obj(raw['shipping']))) {
-    if (items[id] && items[id]?.type !== 'tool' && isFiniteNum(qty) && qty > 0)
-      shipping[id] = Math.floor(qty);
+  for (const [key, qty] of Object.entries(obj(raw['shipping']))) {
+    // Keys are stack identities ("tomato|2|"); a bare legacy item id ("parsnip") upgrades to "parsnip|0|".
+    const ref = parseKey(key.includes('|') ? key : `${key}|0|`);
+    if (items[ref.item] && items[ref.item]?.type !== 'tool' && isFiniteNum(qty) && qty > 0) {
+      const k = keyOf(ref);
+      shipping[k] = (shipping[k] ?? 0) + Math.floor(qty);
+    }
   }
 
   const p = obj(raw['player']);
@@ -159,6 +171,7 @@ export function sanitize(raw: Raw): GameState {
     sfx: isFiniteNum(st['sfx']) ? clamp(st['sfx'], 0, 1) : fresh.settings.sfx,
     muted: st['muted'] === true,
     vibrate: st['vibrate'] !== false, // default on, including for saves that predate the setting
+    leftHanded: st['leftHanded'] === true,
   };
 
   return {

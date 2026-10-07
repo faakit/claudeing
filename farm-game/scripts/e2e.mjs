@@ -1,5 +1,5 @@
 // End-to-end smoke test: builds nothing, serves dist/ with `vite preview`, and plays the core
-// loop in headless Chromium. Run `npm run build` first. Needs a Chromium: set CHROMIUM_PATH
+// loop in headless Chromium, in a portrait phone viewport. Run `npm run build` first. Needs a Chromium: set CHROMIUM_PATH
 // (defaults to the Playwright cache location used in CI/cloud sandboxes).
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
@@ -35,7 +35,7 @@ const check = (name, ok, detail = '') => {
 await waitForServer();
 const browser = await chromium.launch({ executablePath: CHROMIUM });
 try {
-  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
   const page = await ctx.newPage();
   const errors = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -70,7 +70,7 @@ try {
   check('new game enters the farm with the UI overlay', (await sceneKeys()).join() === 'Farm,UI');
 
   // 2. Till, plant, water on the farm
-  await placePlayer(14, 17, 'down');
+  await placePlayer(8, 17, 'down');
   await page.keyboard.press('Digit1');
   await tap('Space');
   let s = await state();
@@ -164,8 +164,8 @@ try {
   const manifestUrl = new URL('manifest.webmanifest', URL_).href;
   const manifest = await (await fetch(manifestUrl)).json();
   check(
-    'manifest asks for fullscreen landscape',
-    manifest.display === 'fullscreen' && manifest.orientation === 'landscape',
+    'manifest asks for fullscreen portrait',
+    manifest.display === 'fullscreen' && manifest.orientation === 'portrait',
   );
   const iconResponses = await Promise.all(
     manifest.icons.map((i) => fetch(new URL(i.src, manifestUrl))),
@@ -184,7 +184,7 @@ try {
 
   // 7. Offline: after the first visit the whole game works with the network cut
   const offCtx = await browser.newContext({
-    viewport: { width: 844, height: 390 },
+    viewport: { width: 390, height: 844 },
     hasTouch: true,
   });
   const off = await offCtx.newPage();

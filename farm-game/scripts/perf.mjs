@@ -28,7 +28,7 @@ const results = [];
 try {
   for (const rate of throttles) {
     const ctx = await browser.newContext({
-      viewport: { width: 844, height: 390 },
+      viewport: { width: 390, height: 844 },
       hasTouch: true,
       deviceScaleFactor: 2,
     });
@@ -105,17 +105,17 @@ try {
         const s = window.__farm.getState();
         s.weather = 'sunny';
         s.time.minutes = 700;
-        for (let y = 17; y < 28; y++) {
-          for (let x = 11; x < 29; x++) {
+        for (let y = 16; y < 27; y++) {
+          for (let x = 5; x < 25; x++) {
             s.farm.tiles[`${x},${y}`] = {
               watered: x % 2 === 0,
               crop: { cropId: 'parsnip', stage: (x + y) % 5, daysInStage: 0, regrow: false },
             };
           }
         }
-        for (let i = 0; i < 24; i++) s.farm.weeds[`${12 + i},${16}`] = true;
-        s.player.x = 20 * 16 + 8;
-        s.player.y = 16 * 16 + 11;
+        for (let i = 0; i < 24; i++) s.farm.weeds[`${5 + i},${14}`] = true;
+        s.player.x = 14 * 16 + 8;
+        s.player.y = 20 * 16 + 11;
         window.__farm.gameEvents.emit('farmChanged', undefined);
       });
     });

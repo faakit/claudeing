@@ -3,7 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
-import { Label } from './font';
+import { fitText, Label } from './font';
 import { C } from './theme';
 
 /** Notched pixel-art panel: ink outline, cream rim, soft shadow. Drawn at (x, y). */
@@ -160,36 +160,73 @@ export class Button extends Phaser.GameObjects.Container {
   }
 }
 
-/** Full-screen dimmer + centered panel. Opening a modal freezes the world and the clock. */
+/** One list row: icon, title + subtitle on the left, an optional button on the right. */
+export interface RowSpec {
+  icon?: string;
+  title: string;
+  sub?: string;
+  subColor?: number;
+  /** Right-aligned buttons, laid out right to left. */
+  buttons?: {
+    label: string;
+    onClick: () => void;
+    width?: number;
+    color?: number;
+    enabled?: boolean;
+  }[];
+}
+
+export const ROW_H = 26;
+
+/**
+ * A bottom sheet: full-width dialog anchored to the bottom of the screen, where the thumb is.
+ * Opening it freezes the world and the clock. Tapping the dimmed area above dismisses it.
+ */
 export abstract class Modal {
   readonly root: Phaser.GameObjects.Container;
   protected readonly content: Phaser.GameObjects.Container;
+  protected readonly panelW = GAME_WIDTH;
+  protected panelH: number;
   private readonly dim: Phaser.GameObjects.Rectangle;
   private opened = false;
+  /** Tapping outside the sheet closes it. Flows that must be acknowledged turn this off. */
+  protected dismissOnDim = true;
   onClosed: (() => void) | null = null;
 
   protected constructor(
     protected readonly scene: Phaser.Scene,
-    protected panelW: number,
-    protected panelH: number,
+    panelH: number,
   ) {
+    this.panelH = panelH;
     this.dim = scene.add
       .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, C.ink, 0.6)
       .setOrigin(0)
       .setDepth(200)
       .setVisible(false);
-    this.dim.setInteractive(); // swallows pointers so nothing underneath reacts
-    this.root = scene.add.container(0, 0).setDepth(210).setVisible(false);
+    this.dim.setInteractive();
+    this.dim.on('pointerup', () => {
+      if (this.dismissOnDim) this.close();
+    });
+    this.root = scene.add
+      .container(0, GAME_HEIGHT - panelH)
+      .setDepth(210)
+      .setVisible(false);
     this.content = scene.add.container(0, 0);
     this.root.add(this.content);
   }
 
-  /** Subclasses draw into `content`, in panel-local coordinates (0,0 = panel top-left). */
+  /** Subclasses draw into `content` in sheet-local coordinates (0,0 = sheet top-left). */
   protected abstract build(): void;
 
   protected rebuild(): void {
     this.content.removeAll(true);
     this.build();
+    if (this.opened) this.root.y = GAME_HEIGHT - this.panelH;
+  }
+
+  /** Change the sheet height from inside build(); the sheet stays glued to the bottom edge. */
+  protected setHeight(h: number): void {
+    this.panelH = Math.min(h, GAME_HEIGHT - 60);
   }
 
   /** Enter key: run the dialog's primary action. Dialogs without one ignore it. */
@@ -204,19 +241,14 @@ export abstract class Modal {
     this.opened = true;
     runtime.modals += 1;
     this.rebuild();
-    this.root.setPosition(
-      Math.round((GAME_WIDTH - this.panelW) / 2),
-      Math.round((GAME_HEIGHT - this.panelH) / 2),
-    );
     this.dim.setVisible(true).setAlpha(0);
-    this.root.setVisible(true).setAlpha(0).setScale(0.94);
+    this.root.setVisible(true).setAlpha(1).setY(GAME_HEIGHT);
     this.scene.tweens.add({ targets: this.dim, alpha: 1, duration: 140 });
     this.scene.tweens.add({
       targets: this.root,
-      alpha: 1,
-      scale: 1,
-      duration: 160,
-      ease: 'Back.easeOut',
+      y: GAME_HEIGHT - this.panelH,
+      duration: 190,
+      ease: 'Cubic.easeOut',
     });
     audio.play('select');
   }
@@ -227,13 +259,15 @@ export abstract class Modal {
     runtime.modals = Math.max(0, runtime.modals - 1);
     this.dim.setVisible(false);
     this.root.setVisible(false);
+    this.scene.tweens.killTweensOf(this.root);
     audio.play('select');
     this.onClosed?.();
   }
 
-  protected panel(w = this.panelW, h = this.panelH): Phaser.GameObjects.Graphics {
+  /** The sheet background. Extends below the screen so its bottom corners are never visible. */
+  protected panel(h = this.panelH): Phaser.GameObjects.Graphics {
     const g = this.scene.add.graphics();
-    drawPanel(g, 0, 0, w, h);
+    drawPanel(g, 0, 0, this.panelW, h + 6);
     this.content.add(g);
     return g;
   }
@@ -272,7 +306,29 @@ export abstract class Modal {
     return img;
   }
 
-  protected closeButton(): void {
-    this.button(this.panelW - 30, 6, 24, 18, 'X', () => this.close(), { textColor: C.warn });
+  /** Full-width Close button pinned to the bottom of the sheet (thumb-friendly). */
+  protected closeButton(label = 'Close'): void {
+    this.button(8, this.panelH - 28, this.panelW - 16, 22, label, () => this.close(), {
+      textColor: C.warn,
+    });
+  }
+
+  /** Lay out one list row at `y`. Returns the y of the next row. */
+  protected row(y: number, spec: RowSpec): number {
+    if (spec.icon) this.icon(15, y + 12, spec.icon);
+    const right = (spec.buttons ?? []).reduce((w, b) => w + (b.width ?? 44) + 3, 0);
+    const maxText = this.panelW - 8 - 28 - right - 2;
+    this.label(28, y + 3, fitText(spec.title, maxText));
+    if (spec.sub) this.label(28, y + 14, fitText(spec.sub, maxText), spec.subColor ?? C.creamDim);
+    let x = this.panelW - 8;
+    for (const b of spec.buttons ?? []) {
+      const w = b.width ?? 44;
+      x -= w;
+      this.button(x, y, w, 22, b.label, b.onClick, { textColor: b.color ?? C.cream }).setEnabled(
+        b.enabled !== false,
+      );
+      x -= 3;
+    }
+    return y + ROW_H;
   }
 }

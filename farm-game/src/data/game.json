@@ -43,5 +43,6 @@
     "fall": 0.28,
     "winter": 0
   },
-  "calmDays": 2
+  "calmDays": 2,
+  "qualityMultipliers": [1, 1.25, 1.5]
 }

@@ -6,6 +6,7 @@ import { FarmScene } from './scenes/FarmScene';
 import { HouseScene } from './scenes/HouseScene';
 import { TitleScene } from './scenes/TitleScene';
 import { TownScene } from './scenes/TownScene';
+import { WoodsScene } from './scenes/WoodsScene';
 import { UIScene } from './scenes/UIScene';
 import { getState } from './state/store';
 import { audio } from './platform/audio';
@@ -28,7 +29,16 @@ const game = new Phaser.Game({
   pixelArt: true,
   roundPixels: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [BootScene, PreloadScene, TitleScene, FarmScene, HouseScene, TownScene, UIScene],
+  scene: [
+    BootScene,
+    PreloadScene,
+    TitleScene,
+    FarmScene,
+    HouseScene,
+    TownScene,
+    WoodsScene,
+    UIScene,
+  ],
 });
 
 // Offline play + installability. Registration can fail in sandboxed frames or insecure origins;

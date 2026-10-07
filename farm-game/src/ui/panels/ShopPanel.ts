@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { items, shops } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
@@ -8,73 +7,78 @@ import { toast } from '../../systems/events';
 import { countItem } from '../../systems/inventory';
 import { seasonLabel } from '../../systems/time';
 import { C } from '../theme';
-import { Modal } from '../widgets';
-
+import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
-
-// ============================================================ Shop
+import Phaser from 'phaser';
 
 export class ShopPanel extends Modal {
   constructor(scene: Phaser.Scene) {
-    super(scene, 400, 226);
+    super(scene, 240);
   }
 
   protected build(): void {
     const s = getState();
     const shop = shops[SHOP_ID]!;
     const stock = stockFor(SHOP_ID, s.time.season);
-    const rows = stock.length + shop.upgrades.length;
-    this.panelH = 52 + Math.max(1, stock.length) * 28 + shop.upgrades.length * 28 + 22;
-    this.root.setY(Math.round((270 - this.panelH) / 2));
-    this.panel(this.panelW, this.panelH);
-    this.label(14, 11, shop.name, C.gold, 2);
-    this.label(this.panelW - 40, 10, `${fmt(s.money)}g`, C.gold, 1, 'right');
-    this.icon(this.panelW - 34, 14, 'ui_coin');
-    this.label(
-      14,
-      30,
-      `${seasonLabel(s.time.season)} stock. Seeds only grow in their season.`,
-      C.creamDim,
-    );
-    this.closeButton();
-    void rows;
+    this.setHeight(34 + Math.max(1, stock.length) * ROW_H + 16 + shop.upgrades.length * ROW_H + 36);
+    this.panel();
+    this.label(8, 8, shop.name, C.gold);
+    this.icon(this.panelW - 12, 12, 'ui_coin');
+    this.label(this.panelW - 20, 8, fmt(s.money), C.gold, 1, 'right');
+    this.label(8, 20, `${seasonLabel(s.time.season)} stock: seeds grow in-season`, C.creamDim);
 
-    let y = 44;
+    let y = 34;
     if (stock.length === 0) {
-      this.label(14, y + 8, 'Nothing grows in winter. Rest up and plan ahead!', C.creamDim);
-      y += 28;
+      this.label(8, y + 6, 'Nothing grows in winter. Rest up!', C.creamDim);
+      y += ROW_H;
     }
     for (const id of stock) {
       const def = items[id]!;
       const price = buyPrice(id);
-      this.icon(24, y + 12, def.icon);
-      this.label(42, y + 3, def.name);
-      this.label(42, y + 14, def.description, C.creamDim);
       const own = countItem(s, id);
-      if (own > 0) this.label(250, y + 3, `Own ${own}`, C.creamDim, 1, 'right');
-      this.button(262, y, 70, 24, `${price}g`, () => this.buy(id, 1), {
-        textColor: s.money >= price ? C.gold : C.red,
+      y = this.row(y, {
+        icon: def.icon,
+        title: def.name,
+        sub: own > 0 ? `${def.description}  (own ${own})` : def.description,
+        buttons: [
+          {
+            label: `${fmt(price)}g`,
+            width: 44,
+            onClick: () => this.buy(id, 1),
+            color: s.money >= price ? C.gold : C.red,
+          },
+          {
+            label: 'x5',
+            width: 26,
+            onClick: () => this.buy(id, 5),
+            color: s.money >= price * 5 ? C.cream : C.creamDim,
+          },
+        ],
       });
-      this.button(338, y, 48, 24, 'x5', () => this.buy(id, 5), {
-        textColor: s.money >= price * 5 ? C.cream : C.creamDim,
-      });
-      y += 28;
     }
-    this.label(14, y + 2, 'UPGRADES', C.gold);
-    y += 14;
+    this.label(8, y + 3, 'UPGRADES', C.gold);
+    y += 16;
     for (const up of shop.upgrades) {
       const next = nextUpgrade(s, up);
       const lvl = s.upgrades[up.id];
-      this.icon(24, y + 12, up.id === 'can' ? 'ui_drop' : 'ui_bolt');
-      this.label(42, y + 3, `${up.name}  Lv ${lvl + 1}/${up.levels.length + 1}`);
-      this.label(42, y + 14, next ? next.label : 'Fully upgraded!', next ? C.creamDim : C.green);
-      if (next) {
-        this.button(262, y, 124, 24, `${fmt(next.price)}g`, () => this.buyUp(up.id), {
-          textColor: s.money >= next.price ? C.gold : C.red,
-        });
-      }
-      y += 28;
+      y = this.row(y, {
+        icon: up.id === 'can' ? 'ui_drop' : 'ui_bolt',
+        title: `${up.name} ${lvl + 1}/${up.levels.length + 1}`,
+        sub: next ? next.label : 'Fully upgraded!',
+        subColor: next ? C.creamDim : C.green,
+        buttons: next
+          ? [
+              {
+                label: `${fmt(next.price)}g`,
+                width: 58,
+                onClick: () => this.buyUp(up.id),
+                color: s.money >= next.price ? C.gold : C.red,
+              },
+            ]
+          : [],
+      });
     }
+    this.closeButton();
   }
 
   private buy(id: string, qty: number): void {
@@ -86,6 +90,7 @@ export class ShopPanel extends Modal {
       toast(`Bought ${qty} ${name}`, 'good');
     } else {
       audio.play('error');
+      haptic('error');
       toast(
         res === 'no_money'
           ? 'Not enough gold.'
