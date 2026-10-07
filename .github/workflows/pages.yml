@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - claude/repo-code-github-pages-3ukz7j
+      - ccr-57a7430b-tj2108
   workflow_dispatch:
 
 permissions:
@@ -29,10 +30,29 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Set up Node (for the farm game build)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: farm-game/package-lock.json
+      - name: Build farm game
+        working-directory: farm-game
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
+      - name: Assemble site (existing app at / and the farm game at /farm/)
+        run: |
+          mkdir _site
+          rsync -a --exclude='.git' --exclude='_site' --exclude='farm-game' ./ _site/
+          mkdir -p _site/farm
+          cp -r farm-game/dist/. _site/farm/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

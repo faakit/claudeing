@@ -3,6 +3,7 @@
 Self-check at every step: **is this fun?** (clear goals, satisfying feedback, meaningful choices, no dead ends.)
 
 Done when a stranger can open the page, press Start, and without instructions:
+
 1. Learn the loop from the on-screen goal tracker (till, plant, water, sleep, harvest, ship, shop).
 2. Play spring -> summer -> fall -> winter with real choices (crop mix, upgrades, when to sleep).
 3. Close the tab and Continue later (autosave, backup fallback).

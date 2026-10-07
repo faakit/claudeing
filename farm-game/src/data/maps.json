@@ -9,7 +9,8 @@
     "farm": {
       "scene": "Farm",
       "file": "assets/maps/farm.tmj",
-      "tillable": [1, 2]
+      "tillable": [1, 2],
+      "outdoor": true
     },
     "house": {
       "scene": "House",
@@ -17,7 +18,8 @@
     },
     "town": {
       "scene": "Town",
-      "file": "assets/maps/town.tmj"
+      "file": "assets/maps/town.tmj",
+      "outdoor": true
     }
   },
   "wake": {

@@ -16,6 +16,7 @@ export class TouchButton {
     radius: number,
     icon: IconDrawer,
     onPress: () => void,
+    onRelease?: () => void,
   ) {
     const body = scene.add.graphics();
     body.fillStyle(0x14101f, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
@@ -40,7 +41,12 @@ export class TouchButton {
       this.press(true);
       onPress();
     });
-    for (const ev of ['pointerup', 'pointerout']) this.zone.on(ev, () => this.press(false));
+    for (const ev of ['pointerup', 'pointerout']) {
+      this.zone.on(ev, () => {
+        this.press(false);
+        onRelease?.();
+      });
+    }
   }
 
   private press(down: boolean): void {

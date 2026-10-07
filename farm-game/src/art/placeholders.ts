@@ -93,6 +93,35 @@ function drawTile(ctx: Ctx, index: number): void {
       px(2, 2, tile.color, 12, 12);
       px(3, 3, tile.accent, 10, 4);
       break;
+    case 'tree':
+      speckle(10, '#4a8a3f');
+      px(6, 9, '#6e4a2a', 4, 7);
+      px(1, 1, tile.accent, 14, 10);
+      px(3, 0, tile.accent, 10, 12);
+      px(4, 2, '#3f9448', 4, 3);
+      px(9, 5, '#256a2f', 4, 4);
+      break;
+    case 'flower':
+      speckle(10, '#4a8a3f');
+      for (let i = 0; i < 3; i++) {
+        const fx = 2 + Math.floor(rand() * 11);
+        const fy = 2 + Math.floor(rand() * 11);
+        px(fx, fy, i === 1 ? '#f4d35e' : tile.accent, 2, 2);
+        px(fx, fy + 2, '#3f7a35');
+      }
+      break;
+    case 'shopwall':
+      px(0, 0, '#c9b68c', 16, 1);
+      for (let r = 3; r < 16; r += 5) px(0, r, '#bfa97c', 16, 1);
+      break;
+    case 'shopdoor':
+      px(0, 0, '#c9b68c', 16, 16);
+      px(0, 0, tile.accent, 16, 4);
+      for (let c = 0; c < 16; c += 4) px(c, 0, '#f4ead2', 2, 4);
+      px(2, 4, '#5c3a21', 12, 12);
+      px(3, 5, '#7a4f2e', 10, 11);
+      px(11, 10, '#f4d35e', 2, 2);
+      break;
     case 'bin':
       px(1, 3, tile.color, 14, 12);
       px(0, 2, tile.accent, 16, 3);

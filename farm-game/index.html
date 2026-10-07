@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
     <link rel="icon" href="data:," />
-    <title>Farm Game</title>
+    <title>Tiny Acre</title>
     <style>
       html,
       body {
@@ -20,6 +20,24 @@
         -webkit-user-select: none;
         -webkit-touch-callout: none;
       }
+      #rotate {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        background: #1a1c2c;
+        color: #f4ead2;
+        font: 16px/1.4 monospace;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      @media (orientation: portrait) and (max-width: 700px) {
+        #rotate {
+          display: flex;
+        }
+      }
       #game {
         position: fixed;
         inset: 0;
@@ -31,6 +49,7 @@
   </head>
   <body>
     <div id="game"></div>
+    <div id="rotate">Please rotate your device to landscape to play Tiny Acre.</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

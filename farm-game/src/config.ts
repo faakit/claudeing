@@ -61,3 +61,12 @@ export const EVT_INTERACT_TARGET = 'interact-target';
 export const MS_PER_GAME_MINUTE = 500;
 /** Longest frame delta fed to the clock, so a backgrounded tab can't skip hours. */
 export const MAX_CLOCK_DT_MS = 100;
+
+// --- Season ground tint (multiply); real seasonal tilesets replace this in M7 ---
+export const SEASON_TINT = {
+  spring: 0xffffff,
+  summer: 0xfff0b8,
+  fall: 0xffc48c,
+  winter: 0xc4d6f2,
+} as const;
+export const ACTION_LOCK_MS = { ok: 200, fail: 280 } as const;

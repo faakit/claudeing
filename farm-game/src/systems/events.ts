@@ -12,6 +12,9 @@ export interface GameEvents {
   goalCompleted: { text: string; reward: number };
   openPanel: { type: PanelType };
   daySummary: DaySummary;
+  /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
+  sleepRequest: { passedOut: boolean };
+  saved: undefined;
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;

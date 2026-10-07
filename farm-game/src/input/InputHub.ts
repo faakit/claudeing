@@ -9,6 +9,11 @@ export interface InputEvents {
   interact: undefined;
   /** Short touch in logical screen coordinates. */
   tap: TapPoint;
+  /** Hotbar slot picked by number key (0-based). */
+  slot: number;
+  /** Cycle the hotbar by +1 / -1 (wheel, Tab). */
+  cycle: number;
+  menu: undefined;
 }
 
 type Listener<K extends keyof InputEvents> = (payload: InputEvents[K]) => void;
@@ -20,6 +25,8 @@ type Listener<K extends keyof InputEvents> = (payload: InputEvents[K]) => void;
 export class InputHub {
   private keys: Direction[] = [];
   private stick: Direction | null = null;
+  /** True while the Action button or Space is held, so tools repeat. */
+  actionHeld = false;
   private listeners = new Map<keyof InputEvents, Set<Listener<never>>>();
 
   /** Joystick wins over keyboard; among keys the most recently pressed wins. */
@@ -44,6 +51,7 @@ export class InputHub {
   clearHeld(): void {
     this.keys = [];
     this.stick = null;
+    this.actionHeld = false;
   }
 
   on<K extends keyof InputEvents>(event: K, fn: Listener<K>): () => void {

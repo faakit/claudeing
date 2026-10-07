@@ -12,6 +12,8 @@ export interface MapDef {
   file: string;
   /** Tile gids (1-based tileset index) that the hoe can till. */
   tillable?: number[];
+  /** Outdoor maps get the day/night tint and the season tint. */
+  outdoor?: boolean;
 }
 export interface SpawnDef {
   map: string;

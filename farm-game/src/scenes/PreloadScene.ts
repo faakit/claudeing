@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
+import { generateGameArt } from '../art/gameArt';
+import { generateFont } from '../ui/font';
 import { generatePlaceholderTextures, PLAYER_TEXTURE, playerWalkFrames } from '../art/placeholders';
 import { WALK_FPS } from '../config';
 import { mapsData } from '../data';
-import { getState } from '../state/store';
 import { DIRECTIONS } from '../systems/direction';
 
 export const mapCacheKey = (mapId: string) => `map_${mapId}`;
@@ -19,7 +20,9 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
+    generateFont(this);
     generatePlaceholderTextures(this);
+    generateGameArt(this);
     for (const dir of DIRECTIONS) {
       this.anims.create({
         key: `player_walk_${dir}`,
@@ -28,9 +31,6 @@ export class PreloadScene extends Phaser.Scene {
         repeat: -1,
       });
     }
-    const start = mapsData.maps[getState().player.map];
-    if (!start) throw new Error(`Start map "${getState().player.map}" is not defined`);
-    this.scene.start(start.scene);
-    this.scene.launch('UI');
+    this.scene.start('Title');
   }
 }

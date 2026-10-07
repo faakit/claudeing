@@ -6,7 +6,7 @@ import {
   type PlayerState,
 } from '../state/GameState';
 import { DIR_VECTORS, isDirection } from './direction';
-import { createGrid, type CollisionGrid, type Hitbox } from './movement';
+import { createGrid, isTileBlocked, type CollisionGrid, type Hitbox } from './movement';
 
 type PropValue = string | number | boolean;
 
@@ -145,3 +145,5 @@ export function doorTarget(door: WorldObject): DoorTarget {
 export function teleportPlayer(state: GameState, target: DoorTarget): void {
   state.player = { map: target.map, ...spawnPosition(target.tx, target.ty), facing: target.facing };
 }
+
+export const isTileBlockedAt = isTileBlocked;
