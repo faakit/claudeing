@@ -90,6 +90,7 @@ export class UIScene extends Phaser.Scene {
   private lastNight = -1;
   private lateWarnedDay = -1;
   private rain!: RainLayer;
+  private sleeping = false;
   private cleanup: (() => void)[] = [];
 
   constructor() {
@@ -100,6 +101,7 @@ export class UIScene extends Phaser.Scene {
     this.taps.clear();
     this.cleanup = [];
     this.lastNight = -1;
+    this.sleeping = false;
     this.input.addPointer(3); // mouse + joystick thumb + both buttons
     new KeyboardInput(this, inputHub);
     new VirtualJoystick(this, inputHub);
@@ -292,6 +294,8 @@ export class UIScene extends Phaser.Scene {
 
   /** Bed or 02:00: fade out, roll the day, wake in bed, show the summary, fade back in. */
   private async runSleep(passedOut: boolean): Promise<void> {
+    if (this.sleeping) return; // never run two rollovers at once
+    this.sleeping = true;
     runtime.busy = true;
     inputHub.clearHeld();
     await this.fadeBlackout(1, 650);
@@ -316,6 +320,7 @@ export class UIScene extends Phaser.Scene {
     );
     await this.fadeBlackout(0, 600);
     runtime.busy = false;
+    this.sleeping = false;
   }
 
   private delay(ms: number): Promise<void> {

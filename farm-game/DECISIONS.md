@@ -44,3 +44,10 @@
 - **Shopkeeper NPC is decorative with a greeting:** real NPCs, dialogue and gifts are backlog.
 - **Hosting:** the existing Pages workflow now also builds the game and publishes it at `/farm/` beside the existing app; a separate gh-pages workflow would have conflicted with Actions-based Pages.
 - **Debug hook `window.__farm`:** exposes state/events/input for automated playtests; read-mostly, harmless in production.
+
+## Weather, balance, QA
+
+- **Weather = sunny/rain only; rain waters every tilled tile on wake-up:** gives a relaxed rhythm break; days 1-2 of a new game are always sunny; winter never rains (snow is backlog). Chance per season lives in `game.json`.
+- **Balance is checked by a simulation (`tests/sim.test.ts`):** a tireless greedy bot plays a full year through the real rules. It earns ~40-100k, so ranks are set well above casual play (Green Thumb 4k, Farm Hero 12k, Harvest Legend 25k) and upgrade tracks are deep (stamina x5, can x3) to keep gold meaningful late.
+- **Rollover re-entrancy guard:** a second sleep request while one is running is ignored, so a day can never be counted twice.
+- **Layout bugs found by screenshot audit and fixed:** goal tracker counter overlapping long goal text, wrapped goal lines overlapping on the Goals tab, bin pager colliding with the 7th row (now 6 rows per page).

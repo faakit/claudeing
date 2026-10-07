@@ -8,6 +8,7 @@ import { TitleScene } from './scenes/TitleScene';
 import { TownScene } from './scenes/TownScene';
 import { UIScene } from './scenes/UIScene';
 import { getState } from './state/store';
+import { audio } from './platform/audio';
 import { gameEvents } from './systems/events';
 import { inputHub } from './input/InputHub';
 
@@ -24,4 +25,4 @@ const game = new Phaser.Game({
 });
 
 // Debug/test hook: lets automated checks drive and inspect the running game.
-(window as unknown as { __farm: unknown }).__farm = { game, getState, gameEvents, inputHub };
+(window as unknown as { __farm: unknown }).__farm = { game, getState, gameEvents, inputHub, audio };

@@ -74,7 +74,7 @@ export class Hud {
 
     this.goalGfx = scene.add.graphics().setDepth(depth);
     this.goalLabel = new Label(scene, 120, 12, '', { color: C.cream }).setDepth(depth + 1);
-    this.goalCount = new Label(scene, 424, 12, '', { color: C.gold, align: 'right' }).setDepth(
+    this.goalCount = new Label(scene, 426, 26, '', { color: C.gold, align: 'right' }).setDepth(
       depth + 1,
     );
 
@@ -175,15 +175,17 @@ export class Hud {
     if (key === this.goalKey) return;
     this.goalKey = key;
     this.goalGfx.clear();
-    drawPanel(this.goalGfx, 112, 6, 322, 28);
+    drawPanel(this.goalGfx, 112, 6, 322, 34);
     if (!prog) {
       this.goalLabel.setText('All goals complete! Enjoy your farm.').setColor(C.green);
       this.goalCount.setText('');
       return;
     }
     this.goalLabel.setText(prog.goal.text).setColor(C.cream);
-    this.goalCount.setText(`${prog.value}/${prog.goal.target}  +${prog.goal.reward}g`);
-    drawBar(this.goalGfx, 120, 24, 306, 5, prog.value / prog.goal.target, C.gold);
+    this.goalCount.setText(
+      `${prog.value.toLocaleString('en-US')}/${prog.goal.target.toLocaleString('en-US')} +${prog.goal.reward.toLocaleString('en-US')}g`,
+    );
+    drawBar(this.goalGfx, 120, 27, 190, 5, prog.value / prog.goal.target, C.gold);
   }
 
   private goalBanner(reward: number): void {

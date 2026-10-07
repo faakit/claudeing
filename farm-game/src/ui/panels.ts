@@ -167,7 +167,11 @@ export class MenuPanel extends Modal {
     this.label(14, 104, 'COMPLETED', C.gold);
     const done = goals.slice(Math.max(0, s.goalIndex - 5), s.goalIndex);
     if (done.length === 0) this.label(14, 118, 'Nothing yet. You can do it!', C.creamDim);
-    done.forEach((d, i) => this.label(14, 118 + i * 11, `+ ${d.text}`, C.creamDim, 1, 'left', 250));
+    let doneY = 118;
+    for (const d of done.slice(-4)) {
+      const row = this.label(14, doneY, `+ ${d.text}`, C.creamDim, 1, 'left', 250);
+      doneY += row.textHeight + 3; // wrapped goals take two lines
+    }
     const stats: [string, number][] = [
       ['Gold earned', stat(s, 'earned')],
       ['Crops harvested', stat(s, 'harvested')],
@@ -339,7 +343,7 @@ export class ShopPanel extends Modal {
 
 export class BinPanel extends Modal {
   private page = 0;
-  private static readonly ROWS = 7;
+  private static readonly ROWS = 6;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 380, 226);
