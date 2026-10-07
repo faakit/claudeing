@@ -34,11 +34,13 @@ export class Hud {
   private readonly goldLabel: Label;
   private readonly coin: Phaser.GameObjects.Image;
   private shownMoney = -1;
+  private readonly weatherIcon: Phaser.GameObjects.Image;
 
   private readonly goalGfx: Phaser.GameObjects.Graphics;
   private readonly goalLabel: Label;
   private readonly goalCount: Label;
   private goalKey = '';
+  private meterKey = '';
 
   private readonly meters: Phaser.GameObjects.Graphics;
   private readonly energyLabel: Label;
@@ -66,6 +68,7 @@ export class Hud {
     drawPanel(this.timePanel, 6, 46, 70, 17);
     this.dateLabel = new Label(scene, 13, 12, '', { color: C.creamDim }).setDepth(depth + 1);
     this.timeLabel = new Label(scene, 13, 23, '', { scale: 2 }).setDepth(depth + 1);
+    this.weatherIcon = scene.add.image(93, 15, 'ui_sun').setDepth(depth + 1);
     this.coin = scene.add.image(17, 55, 'ui_coin').setDepth(depth + 1);
     this.goldLabel = new Label(scene, 25, 51, '', { color: C.gold }).setDepth(depth + 1);
 
@@ -144,6 +147,7 @@ export class Hud {
     const s = this.getState();
     this.dateLabel.setText(`${seasonLabel(s.time.season)} ${s.time.day}  Y${s.time.year}`);
     this.timeLabel.setText(formatClock(s.time.minutes));
+    this.weatherIcon.setTexture(s.weather === 'rain' ? 'ui_rain' : 'ui_sun');
     // Late-night warning: the clock turns orange then red as 02:00 nears.
     this.timeLabel.setColor(
       s.time.minutes >= 1500 ? C.red : s.time.minutes >= 1380 ? C.warn : C.cream,
@@ -198,6 +202,9 @@ export class Hud {
 
   // ---- energy & water ----
   private drawMeters(s: GameState): void {
+    const key = `${s.energy}|${s.water}|${maxEnergy(s)}|${waterCapacity(s)}`;
+    if (key === this.meterKey) return; // only redraw when a value changed
+    this.meterKey = key;
     const e = s.energy / maxEnergy(s);
     const g = this.meters;
     g.clear();

@@ -90,6 +90,10 @@ export interface GameData {
   weedsPerDay: number;
   maxWeeds: number;
   ranks: { min: number; title: string }[];
+  /** Chance (0-1) that a new day is rainy, by season. */
+  rainChance: Record<Season, number>;
+  /** Sunny days guaranteed at the very start of a new game. */
+  calmDays: number;
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];

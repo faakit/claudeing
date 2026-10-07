@@ -68,6 +68,8 @@ describe('economy', () => {
     expect(buyUpgrade(s, can)).toBe('ok');
     expect(s.water).toBe(40);
     expect(buyUpgrade(s, can)).toBe('ok');
+    expect(buyUpgrade(s, can)).toBe('ok');
+    expect(s.water).toBe(100);
     expect(buyUpgrade(s, can)).toBe('maxed');
     s.money = 0;
     const stamina = shops[STORE]!.upgrades.find((u) => u.id === 'stamina')!;

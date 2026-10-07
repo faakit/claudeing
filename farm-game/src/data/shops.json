@@ -2,30 +2,82 @@
   "town_general_store": {
     "name": "General Store",
     "stock": [
-      { "item": "parsnip_seed", "seasons": ["spring"] },
-      { "item": "potato_seed", "seasons": ["spring"] },
-      { "item": "cauliflower_seed", "seasons": ["spring"] },
-      { "item": "tomato_seed", "seasons": ["summer"] },
-      { "item": "melon_seed", "seasons": ["summer"] },
-      { "item": "corn_seed", "seasons": ["summer"] },
-      { "item": "pumpkin_seed", "seasons": ["fall"] },
-      { "item": "yam_seed", "seasons": ["fall"] }
+      {
+        "item": "parsnip_seed",
+        "seasons": ["spring"]
+      },
+      {
+        "item": "potato_seed",
+        "seasons": ["spring"]
+      },
+      {
+        "item": "cauliflower_seed",
+        "seasons": ["spring"]
+      },
+      {
+        "item": "tomato_seed",
+        "seasons": ["summer"]
+      },
+      {
+        "item": "melon_seed",
+        "seasons": ["summer"]
+      },
+      {
+        "item": "corn_seed",
+        "seasons": ["summer"]
+      },
+      {
+        "item": "pumpkin_seed",
+        "seasons": ["fall"]
+      },
+      {
+        "item": "yam_seed",
+        "seasons": ["fall"]
+      }
     ],
     "upgrades": [
       {
         "id": "can",
         "name": "Watering Can",
         "levels": [
-          { "price": 400, "label": "Holds 40" },
-          { "price": 900, "label": "Holds 60" }
+          {
+            "price": 400,
+            "label": "Holds 40"
+          },
+          {
+            "price": 900,
+            "label": "Holds 60"
+          },
+          {
+            "price": 2500,
+            "label": "Holds 100"
+          }
         ]
       },
       {
         "id": "stamina",
         "name": "Stamina Tonic",
         "levels": [
-          { "price": 600, "label": "+20 energy" },
-          { "price": 1400, "label": "+20 energy" }
+          {
+            "price": 600,
+            "label": "+20 energy"
+          },
+          {
+            "price": 1400,
+            "label": "+20 energy"
+          },
+          {
+            "price": 3000,
+            "label": "+20 energy"
+          },
+          {
+            "price": 6000,
+            "label": "+20 energy"
+          },
+          {
+            "price": 12000,
+            "label": "+20 energy"
+          }
         ]
       }
     ]

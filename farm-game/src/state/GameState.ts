@@ -3,6 +3,7 @@ import { game, items, mapsData } from '../data';
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type Season = 'spring' | 'summer' | 'fall' | 'winter';
+export type Weather = 'sunny' | 'rain';
 export const SEASONS: readonly Season[] = ['spring', 'summer', 'fall', 'winter'];
 
 /** Player position is the feet-center in map pixels. */
@@ -49,6 +50,8 @@ export interface DaySummary {
   total: number;
   withered: number;
   passedOut: boolean;
+  /** Weather of the new day that just began. */
+  weather: Weather;
   /** Set when Summer 28 ends: shows the results screen. */
   yearEnd: boolean;
 }
@@ -77,6 +80,7 @@ export interface GameState {
   /** Index into goals.json; equals goals.length when all are done. */
   goalIndex: number;
   settings: Settings;
+  weather: Weather;
   lastSummary: DaySummary | null;
   rng: number;
 }
@@ -113,6 +117,7 @@ export function createInitialState(): GameState {
     stats: {},
     goalIndex: 0,
     settings: { music: 0.6, sfx: 0.8, muted: false },
+    weather: 'sunny',
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,
   };

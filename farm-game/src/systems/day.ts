@@ -6,6 +6,7 @@ import { checkGoals } from './goals';
 import { growCrops, killOutOfSeason, spawnWeeds } from './farming';
 import { sellPrice } from './economy';
 import { advanceCalendar } from './time';
+import { rollWeather, waterAllSoil } from './weather';
 
 export interface EndDayOptions {
   /** True when the clock ran out (02:00) rather than the player choosing bed. */
@@ -41,6 +42,8 @@ export function endDay(state: GameState, opts: EndDayOptions): DaySummary {
   const seasonChanged = advanceCalendar(state);
   const withered = seasonChanged ? killOutOfSeason(state) : 0;
   spawnWeeds(state, opts.weedCandidates);
+  state.weather = rollWeather(state);
+  if (state.weather === 'rain') waterAllSoil(state);
   restoreEnergy(state, opts.passedOut ? game.passOutEnergyFraction : 1);
   if (!opts.passedOut) state.stats['daysSlept'] = (state.stats['daysSlept'] ?? 0) + 1;
   checkGoals(state);
@@ -52,6 +55,7 @@ export function endDay(state: GameState, opts: EndDayOptions): DaySummary {
     total,
     withered,
     passedOut: opts.passedOut,
+    weather: state.weather,
     yearEnd,
   };
   state.lastSummary = summary;

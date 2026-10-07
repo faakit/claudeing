@@ -499,7 +499,7 @@ export class SummaryPanel extends WaitModal {
     const s = getState();
     const lines = sum.shipped.slice(0, 6);
     const extra = sum.shipped.length - lines.length;
-    this.panelH = 112 + Math.max(1, lines.length + (extra > 0 ? 1 : 0)) * 11 + 34;
+    this.panelH = 124 + Math.max(1, lines.length + (extra > 0 ? 1 : 0)) * 11 + 34;
     this.root.setY(Math.round((270 - this.panelH) / 2));
     this.panel(this.panelW, this.panelH);
     this.label(

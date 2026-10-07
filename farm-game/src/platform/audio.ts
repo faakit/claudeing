@@ -45,6 +45,7 @@ class AudioEngine {
   private muted = false;
   private night = 0;
   private timer: number | null = null;
+  private rainGain: GainNode | null = null;
   private nextBar = 0;
   private bar = 0;
   private seed = 7;
@@ -107,6 +108,30 @@ class AudioEngine {
     const t = this.ctx.currentTime;
     this.dayBus.gain.setTargetAtTime(1 - this.night, t, 0.6);
     this.nightBus.gain.setTargetAtTime(this.night, t, 0.6);
+  }
+
+  /** Continuous soft rain bed. 0 = silent. Created lazily on first use. */
+  setRain(amount: number): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    if (!this.rainGain) {
+      const src = ctx.createBufferSource();
+      src.buffer = this.noise;
+      src.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.frequency.value = 1400;
+      f.Q.value = 0.4;
+      this.rainGain = ctx.createGain();
+      this.rainGain.gain.value = 0;
+      src.connect(f).connect(this.rainGain).connect(this.sfxBus);
+      src.start();
+    }
+    this.rainGain.gain.setTargetAtTime(
+      Math.max(0, Math.min(1, amount)) * 0.22,
+      ctx.currentTime,
+      0.4,
+    );
   }
 
   // ---- synth helpers ----

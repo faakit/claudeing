@@ -27,7 +27,13 @@
     "target": 1,
     "reward": 30
   },
-  { "id": "harvest", "text": "Harvest 5 crops", "stat": "harvested", "target": 5, "reward": 50 },
+  {
+    "id": "harvest",
+    "text": "Harvest 5 crops",
+    "stat": "harvested",
+    "target": 5,
+    "reward": 50
+  },
   {
     "id": "ship",
     "text": "Ship 5 items in the bin by the house",
@@ -64,10 +70,10 @@
     "reward": 250
   },
   {
-    "id": "earn15k",
-    "text": "Earn 15,000g and become a Harvest Legend",
+    "id": "earn20k",
+    "text": "Earn 20,000g and become a Harvest Legend",
     "stat": "earned",
-    "target": 15000,
-    "reward": 500
+    "target": 20000,
+    "reward": 1000
   }
 ]

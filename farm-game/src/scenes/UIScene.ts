@@ -23,6 +23,7 @@ import { cycleSlot, selectSlot } from '../systems/inventory';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
+import { RainLayer } from '../fx/RainLayer';
 import { Hud } from '../ui/Hud';
 import {
   BinPanel,
@@ -35,6 +36,12 @@ import {
 import { Button, type Modal } from '../ui/widgets';
 import { mapCacheKey } from './PreloadScene';
 import { WorldScene } from './WorldScene';
+
+function mixColor(a: number, b: number, t: number): number {
+  const ch = (shift: number) =>
+    Math.round(((a >> shift) & 255) * (1 - t) + ((b >> shift) & 255) * t);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+}
 
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
@@ -82,6 +89,7 @@ export class UIScene extends Phaser.Scene {
   private yearEnd!: YearEndPanel;
   private lastNight = -1;
   private lateWarnedDay = -1;
+  private rain!: RainLayer;
   private cleanup: (() => void)[] = [];
 
   constructor() {
@@ -108,9 +116,24 @@ export class UIScene extends Phaser.Scene {
       .setDepth(190)
       .setAlpha(0);
 
+    this.rain = new RainLayer(this, 2);
     this.hud = new Hud(this, getState);
     this.buildControls();
     this.buildPanels();
+    const fresh = getState();
+    if (
+      fresh.goalIndex === 0 &&
+      fresh.time.day === 1 &&
+      fresh.time.season === 'spring' &&
+      !fresh.stats['tilled']
+    ) {
+      this.time.delayedCall(900, () =>
+        this.hud.toast('Welcome to Tiny Acre! Pick the hoe and press Action to till soil.', 'good'),
+      );
+      this.time.delayedCall(4200, () =>
+        this.hud.toast('Hold Action to work a row. Your goals are at the top.', 'info'),
+      );
+    }
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
@@ -131,12 +154,17 @@ export class UIScene extends Phaser.Scene {
     this.setupTaps();
   }
 
-  update(time: number): void {
+  update(time: number, delta: number): void {
     const s = getState();
     this.hud.update(time);
-    const base = daylightColor(s.time.minutes);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
+    const raining = s.weather === 'rain';
+    let base = daylightColor(s.time.minutes);
+    if (raining && !indoors) base = mixColor(base, 0x9db0cc, 0.4); // grey-blue overcast
     this.tint.setFillStyle(indoors ? indoorColor(base) : base);
+    this.rain.setIntensity(raining && !indoors ? 1 : 0);
+    this.rain.update(delta);
+    audio.setRain(raining ? (indoors ? 0.35 : 1) : 0);
     if (s.time.minutes >= 1500 && this.lateWarnedDay !== s.time.day && !runtime.busy) {
       this.lateWarnedDay = s.time.day;
       this.hud.toast("It's getting late. Head to bed soon!", 'warn');
@@ -280,7 +308,12 @@ export class UIScene extends Phaser.Scene {
     await this.delay(500);
     await this.summary.present(summary);
     if (summary.yearEnd) await this.yearEnd.present();
-    this.hud.toast(`Good morning! ${seasonLabel(state.time.season)} ${state.time.day}`, 'info');
+    this.hud.toast(
+      state.weather === 'rain'
+        ? `Good morning! It's raining, crops are watered.`
+        : `Good morning! ${seasonLabel(state.time.season)} ${state.time.day}`,
+      'info',
+    );
     await this.fadeBlackout(0, 600);
     runtime.busy = false;
   }

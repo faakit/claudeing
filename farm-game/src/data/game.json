@@ -1,13 +1,18 @@
 {
   "startingMoney": 500,
-  "startingItems": [{ "item": "parsnip_seed", "qty": 10 }],
+  "startingItems": [
+    {
+      "item": "parsnip_seed",
+      "qty": 10
+    }
+  ],
   "inventorySlots": 24,
   "hotbarSlots": 8,
   "toolSlots": 3,
   "stackLimit": 99,
   "baseEnergy": 100,
   "energyPerUpgrade": 20,
-  "canCapacity": [20, 40, 60],
+  "canCapacity": [20, 40, 60, 100],
   "dayStartMinutes": 360,
   "dayEndMinutes": 1560,
   "seasonLength": 28,
@@ -15,9 +20,28 @@
   "weedsPerDay": 4,
   "maxWeeds": 24,
   "ranks": [
-    { "min": 0, "title": "Seedling" },
-    { "min": 3000, "title": "Green Thumb" },
-    { "min": 8000, "title": "Farm Hero" },
-    { "min": 15000, "title": "Harvest Legend" }
-  ]
+    {
+      "min": 0,
+      "title": "Seedling"
+    },
+    {
+      "min": 4000,
+      "title": "Green Thumb"
+    },
+    {
+      "min": 12000,
+      "title": "Farm Hero"
+    },
+    {
+      "min": 25000,
+      "title": "Harvest Legend"
+    }
+  ],
+  "rainChance": {
+    "spring": 0.28,
+    "summer": 0.15,
+    "fall": 0.28,
+    "winter": 0
+  },
+  "calmDays": 2
 }

@@ -331,6 +331,39 @@ function drawGlyphs(scene: Phaser.Scene): void {
   ctx.fillStyle = '#f4ead2';
   for (const y of [0, 3, 6]) ctx.fillRect(0, y, 11, 2);
   refresh(scene, 'ui_menu');
+  // sun
+  ctx = canvas(scene, 'ui_sun', 11, 11);
+  disc(ctx, 5, 5, 3, '#f4d35e');
+  ctx.fillStyle = '#f4d35e';
+  for (const [x, y] of [
+    [5, 0],
+    [5, 10],
+    [0, 5],
+    [10, 5],
+    [1, 1],
+    [9, 1],
+    [1, 9],
+    [9, 9],
+  ] as const)
+    ctx.fillRect(x, y, 1, 1);
+  ctx.fillStyle = '#fff3b0';
+  ctx.fillRect(4, 4, 2, 1);
+  refresh(scene, 'ui_sun');
+  // rain cloud
+  ctx = canvas(scene, 'ui_rain', 13, 11);
+  disc(ctx, 4, 4, 3, '#b9c4d8');
+  disc(ctx, 8, 3, 3, '#c9d3e4');
+  ctx.fillStyle = '#b9c4d8';
+  ctx.fillRect(2, 4, 9, 3);
+  outline(ctx, 0, 0, 13, 11, '#3a4258');
+  ctx.fillStyle = '#6fa3e0';
+  for (const [x, y] of [
+    [3, 8],
+    [6, 9],
+    [9, 8],
+  ] as const)
+    ctx.fillRect(x, y, 1, 2);
+  refresh(scene, 'ui_rain');
   // 2x2 particle pixel
   ctx = canvas(scene, PX_TEXTURE, 2, 2);
   ctx.fillStyle = '#ffffff';
