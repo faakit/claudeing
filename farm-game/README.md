@@ -42,6 +42,13 @@ The game autosaves when you sleep, change map, close the tab, and every minute.
 
 All art and audio are currently generated in code (placeholders). Real assets are the next step.
 
+## Phones and stores
+
+The same code runs as a website, an installable PWA (fullscreen landscape, works offline once visited), and
+Capacitor apps for Android and iOS (`android/`, `ios/`). `npm run cap:android` / `npm run cap:ios` build the web app,
+sync it, and open the native IDE. See [docs/MOBILE.md](docs/MOBILE.md) for build steps, the store checklist, what is
+verified automatically, and the manual device checklist.
+
 ## Architecture in one minute
 
 Dependencies only point downward. Scenes never edit state directly; they call system functions.
@@ -63,6 +70,8 @@ crash the game; a corrupt main save falls back to the backup.
 Hosted build: deployed by `.github/workflows/pages.yml` to `/farm/` on GitHub Pages.
 
 `npm test` (Vitest), `npm run coverage`, `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build`.
+
+`npm run verify` runs everything below in one go. `npm run e2e:mobile` checks phone profiles (notch insets, 44px touch targets, portrait overlay), `npm run perf` enforces render budgets (GL draw calls and JS time per frame).
 
 `npm run e2e` plays the core loop (new game, till, plant, water, sleep, reload, continue) in headless Chromium
 against the production build (`npm run build` first; set `CHROMIUM_PATH` if Chromium is not at the default

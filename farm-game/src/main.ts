@@ -12,6 +12,7 @@ import { audio } from './platform/audio';
 import { wireLifecycle } from './game/lifecycleWiring';
 import { refreshOnRotate, suppressBrowserGestures } from './platform/display';
 import { installWebLifecycle, lifecycle } from './platform/lifecycle';
+import { initNative, isNative } from './platform/native';
 import { gameEvents } from './systems/events';
 import { inputHub } from './input/InputHub';
 
@@ -30,9 +31,20 @@ const game = new Phaser.Game({
   scene: [BootScene, PreloadScene, TitleScene, FarmScene, HouseScene, TownScene, UIScene],
 });
 
+// Offline play + installability. Registration can fail in sandboxed frames or insecure origins;
+// the game works the same without it.
+// Not in the native apps: their bundle is already local, and a cache-first worker could keep
+// serving an old game after an app update.
+if (import.meta.env.PROD && !isNative() && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => undefined);
+  });
+}
+
 refreshOnRotate(() => game.scale.refresh());
 wireLifecycle(game);
 installWebLifecycle(lifecycle, document, window);
+initNative();
 
 // Debug/test hook for automated checks and tinkering. Enabled in dev builds, or with ?debug in the URL.
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {

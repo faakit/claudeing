@@ -4,6 +4,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { crops, mapsData } from '../data';
 import { saveStore } from '../game/persistence';
 import { audio } from '../platform/audio';
+import { hideSplash } from '../platform/native';
 import { setHapticsEnabled } from '../platform/haptics';
 import { createInitialState, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
@@ -29,6 +30,7 @@ export class TitleScene extends Phaser.Scene {
 
   create(): void {
     runtime.inGame = false;
+    hideSplash(); // first real screen is up: drop the native splash
     this.confirmNew = false;
     this.buttons = [];
     this.cameras.main.setBackgroundColor('#1b1530');

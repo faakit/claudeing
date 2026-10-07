@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tiny Acre</string>
+    <string name="title_activity_main">Tiny Acre</string>
+    <string name="package_name">app.tinyacre.farm</string>
+    <string name="custom_url_scheme">app.tinyacre.farm</string>
+</resources>

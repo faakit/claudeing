@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
+import { offlineServiceWorker } from './scripts/sw-plugin.mjs';
 
 export default defineConfig({
   base: './',
+  plugins: [offlineServiceWorker()],
   build: {
     chunkSizeWarningLimit: 2000,
     // Phaser is ~90% of the bytes and rarely changes: its own chunk lets returning players

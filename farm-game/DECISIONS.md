@@ -65,3 +65,19 @@
 - **`window.__farm` only with `?debug` (or dev builds).**
 - **Pages workflow no longer deploys the work-in-progress branch to production;** run it manually (workflow_dispatch) or merge to main.
 - **Phaser in its own chunk:** the game chunk is ~98 kB, so updates re-download little.
+
+## M8 phone hardening
+
+- **Safe areas live on an outer frame, not on the Phaser parent:** Phaser sizes the canvas from the parent's border box and ignores its padding, so notches were covered. An e2e with injected `safe-area-inset-*` caught it.
+- **Touch targets are sized from the real on-screen scale:** hit areas grow to 44 CSS px but never past neighbouring controls. Interact moved above Action and hotbar slots grew to 34px so even a notched iPhone measures >= 46 CSS px.
+- **Performance budgets instead of FPS targets:** headless software GL cannot predict a phone's FPS, but GL draw calls and JS ms per frame are hardware-independent. Measured 2-3 draws and ~1.3-1.8 ms/frame with a full field; `npm run perf` fails if that regresses (<= 12 draws, <= 3.5 ms).
+- **No-op overlays are skipped (white multiply tints):** a white tint still costs a full-screen blend (5 -> 2-3 draws/frame).
+- **One lifecycle (`platform/lifecycle.ts`) fed by `visibilitychange`/`pagehide` on the web and Capacitor app state natively:** the game freezes clock/input/audio and autosaves identically everywhere. `pause` is idempotent (iOS fires both events).
+- **Android back is routed into the game:** closes dialogs, then opens the menu; only the title screen exits the app.
+- **Audio unlock on every gesture type, plus a silent-buffer prime and interruption handling:** older iOS only counts touchend/click; phone calls leave the context suspended until the next tap.
+- **PWA via a hand-rolled, build-generated service worker (cache-first, content-hash versioned, precaches everything):** ~40 lines, no dependency, verified offline in a real browser. Not registered in the native apps (a stale cache could shadow an app update).
+- **Native saves use Capacitor Preferences, not IndexedDB:** the OS can evict WebView storage; Preferences is durable and in Android auto-backup.
+- **Vibration is a saved setting (default on):** native haptic engine in the apps, `navigator.vibrate` on Android web, nothing on iOS web.
+- **Screen stays awake in the Android app; iOS plays audio regardless of the silent switch:** both small native changes that could not be compiled here (documented in docs/MOBILE.md).
+- **App id `app.tinyacre.farm` is a placeholder to be changed before the first store listing** (procedure in docs/MOBILE.md).
+- **Not done / needs a device:** the native projects were generated and synced but not compiled (no Android SDK or Xcode in the sandbox; `dl.google.com` is blocked), and real-phone FPS, audio interruptions and haptics feel are on the manual checklist.

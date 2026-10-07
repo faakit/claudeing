@@ -16,12 +16,27 @@
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "perf": "node scripts/perf.mjs",
-    "e2e:mobile": "node scripts/e2e-mobile.mjs"
+    "e2e:mobile": "node scripts/e2e-mobile.mjs",
+    "cap:sync": "npm run build && cap sync",
+    "cap:android": "npm run cap:sync && cap open android",
+    "cap:ios": "npm run cap:sync && cap open ios",
+    "assets": "node scripts/make-icons.mjs && capacitor-assets generate --android --ios --iconBackgroundColor '#2a1f4a' --iconBackgroundColorDark '#2a1f4a' --splashBackgroundColor '#1b1530' --splashBackgroundColorDark '#1b1530'",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run e2e && npm run e2e:mobile && npm run perf"
   },
   "dependencies": {
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.4",
     "phaser": "3.90.0"
   },
   "devDependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@eslint/js": "10.0.1",
     "@types/node": "^22.20.5",
     "@vitest/coverage-v8": "^5.0.3",

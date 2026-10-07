@@ -40,8 +40,11 @@ export class Lifecycle {
     this.fire('resume');
   }
 
-  back(): void {
+  /** Returns true if any listener handled the request, so the caller can fall back (e.g. exit the app). */
+  back(): boolean {
+    const handled = this.listeners.back.size > 0;
     this.fire('back');
+    return handled;
   }
 
   private fire(event: LifecycleEvent): void {

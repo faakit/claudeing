@@ -160,7 +160,74 @@ try {
     JSON.stringify(t2),
   );
 
+  // 6. Installability: the manifest is valid and every icon it names exists
+  const manifestUrl = new URL('manifest.webmanifest', URL_).href;
+  const manifest = await (await fetch(manifestUrl)).json();
+  check(
+    'manifest asks for fullscreen landscape',
+    manifest.display === 'fullscreen' && manifest.orientation === 'landscape',
+  );
+  const iconResponses = await Promise.all(
+    manifest.icons.map((i) => fetch(new URL(i.src, manifestUrl))),
+  );
+  check(
+    'manifest icons all load',
+    iconResponses.every((r) => r.ok && r.headers.get('content-type')?.includes('image/png')),
+  );
+  check(
+    'manifest has a maskable icon and a 512px icon',
+    manifest.icons.some((i) => i.purpose === 'maskable') &&
+      manifest.icons.some((i) => i.sizes === '512x512'),
+  );
+
   check('no console errors during the whole run', errors.length === 0, errors.join(' | '));
+
+  // 7. Offline: after the first visit the whole game works with the network cut
+  const offCtx = await browser.newContext({
+    viewport: { width: 844, height: 390 },
+    hasTouch: true,
+  });
+  const off = await offCtx.newPage();
+  const offErrors = [];
+  off.on('console', (m) => m.type() === 'error' && offErrors.push(m.text()));
+  off.on('pageerror', (e) => offErrors.push(String(e)));
+  await off.goto(URL_);
+  await off.waitForTimeout(1500);
+  const swReady = await off.evaluate(async () => {
+    const reg = await navigator.serviceWorker.ready;
+    return Boolean(reg.active);
+  });
+  check('service worker installs and activates', swReady);
+  await off.waitForTimeout(800); // precache finishes during install; give claim() a moment
+  await offCtx.setOffline(true);
+  await off.reload();
+  await off.waitForTimeout(1800);
+  const offScenes = await off.evaluate(() =>
+    window.__farm?.game.scene
+      .getScenes(true)
+      .map((s) => s.scene.key)
+      .join(),
+  );
+  check(
+    'offline reload still boots to the title screen',
+    offScenes?.includes('Title'),
+    String(offScenes),
+  );
+  await off.keyboard.press('Enter');
+  await off.waitForTimeout(1800);
+  const offGame = await off.evaluate(() =>
+    window.__farm?.game.scene
+      .getScenes(true)
+      .map((s) => s.scene.key)
+      .join(),
+  );
+  check(
+    'offline: a new game starts and the farm map loads',
+    offGame === 'Farm,UI',
+    String(offGame),
+  );
+  check('offline: no console errors', offErrors.length === 0, offErrors.join(' | '));
+  await offCtx.close();
 } finally {
   await browser.close();
   stop();

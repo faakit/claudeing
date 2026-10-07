@@ -1,11 +1,11 @@
 import { lifecycle } from '../platform/lifecycle';
-import { createWebStore } from '../platform/webStore';
+import { createSaveStore } from '../platform/store';
 import { getState } from '../state/store';
 import { runtime } from '../state/runtime';
 import { saveGame } from '../systems/save';
 import { gameEvents } from '../systems/events';
 
-export const saveStore = createWebStore();
+export const saveStore = createSaveStore();
 
 /** Saves run strictly one after another, each writing the snapshot taken when it was requested. */
 let chain: Promise<unknown> = Promise.resolve();
