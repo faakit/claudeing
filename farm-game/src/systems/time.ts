@@ -46,3 +46,9 @@ export function formatClock(minutes: number): string {
 }
 
 export const seasonLabel = (s: Season): string => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** A day number that keeps rising across seasons and years (1 = the first day). */
+export const absoluteDay = (state: GameState): number => {
+  const t = state.time;
+  return ((t.year - 1) * SEASONS.length + SEASONS.indexOf(t.season)) * game.seasonLength + t.day;
+};

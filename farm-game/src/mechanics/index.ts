@@ -8,3 +8,6 @@ import './dayCore';
 import './placedHooks';
 import './foraging';
 import './sprinkler';
+import './jar';
+import './orders';
+import './fishing';

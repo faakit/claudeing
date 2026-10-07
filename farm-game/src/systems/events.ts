@@ -20,7 +20,7 @@ export interface GameEvents {
   /** Ask the UI to open a placed object's panel (jar picker...). */
   placedPanel: { panel: string; id: number };
   /** Start the fishing mini-game; resolve with the outcome. */
-  startFishing: { map: string; bait: boolean };
+  startFishing: { map: string; fish: string; bait: boolean };
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
   sleepRequest: { passedOut: boolean };
   saved: undefined;

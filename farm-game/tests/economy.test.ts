@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shops } from '../src/data';
+import { items, shops } from '../src/data';
 import {
   buyItem,
   buyUpgrade,
@@ -17,7 +17,7 @@ describe('economy', () => {
   it('stock is filtered by season', () => {
     expect(stockFor(STORE, 'spring')).toContain('parsnip_seed');
     expect(stockFor(STORE, 'spring')).not.toContain('tomato_seed');
-    expect(stockFor(STORE, 'winter')).toEqual([]);
+    expect(stockFor(STORE, 'winter').filter((id) => items[id]?.type === 'seed')).toEqual([]);
   });
 
   it('buys with exact gold, never below zero', () => {

@@ -33,6 +33,18 @@
       {
         "item": "yam_seed",
         "seasons": ["fall"]
+      },
+      {
+        "item": "fertilizer",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "bait",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "speed_gro",
+        "seasons": ["spring", "summer", "fall", "winter"]
       }
     ],
     "upgrades": [

@@ -321,7 +321,8 @@
     "fertilizer": {
       "quality": 0.35,
       "growth": 0
-    }
+    },
+    "buyPrice": 20
   },
   "rich_fertilizer": {
     "name": "Rich Fertilizer",
@@ -345,7 +346,8 @@
     "fertilizer": {
       "quality": 0,
       "growth": 0.35
-    }
+    },
+    "buyPrice": 35
   },
   "bait": {
     "name": "Bait",
@@ -353,7 +355,8 @@
     "icon": "item_bait",
     "color": "#c9a27a",
     "sellPrice": 3,
-    "description": "Fish bite faster. Used automatically."
+    "description": "Fish bite faster. Used automatically.",
+    "buyPrice": 6
   },
   "sprinkler": {
     "name": "Sprinkler",

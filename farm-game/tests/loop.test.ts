@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { performAction } from '../src/systems/actions';
 import { endDay } from '../src/systems/day';
-import { buyItem, shipItem } from '../src/systems/economy';
+import { buyItem, shipStack } from '../src/systems/economy';
 import { currentGoal } from '../src/systems/goals';
 import { countItem } from '../src/systems/inventory';
 import { tickTime } from '../src/systems/time';
@@ -38,12 +38,18 @@ describe('full loop', () => {
     s.inventory.selected = 0;
     for (const p of plots) expect(performAction(s, p)).toMatchObject({ kind: 'harvest' });
     expect(countItem(s, 'parsnip')).toBe(3);
-    expect(shipItem(s, 'parsnip', 3)).toBe(3);
+    // Harvests may roll silver or gold, so ship every kind of parsnip stack.
+    let shipped = 0;
+    for (const st of s.inventory.slots.filter((x) => x?.item === 'parsnip'))
+      shipped += shipStack(s, { item: 'parsnip', q: st?.q }, st?.qty ?? 0);
+    expect(shipped).toBe(3);
     const before = s.money;
     const summary = endDay(s, { passedOut: false, weedCandidates: NO_WEEDS });
-    expect(summary.total).toBe(105);
-    expect(s.money).toBeGreaterThanOrEqual(before + 105);
-    expect(summary.shipped).toEqual([{ item: 'parsnip|0|', qty: 3, gold: 105 }]);
+    // 35g each at normal quality; silver/gold harvests (random) pay more.
+    expect(summary.total).toBeGreaterThanOrEqual(105);
+    expect(summary.shipped.reduce((n, l) => n + l.qty, 0)).toBe(3);
+    expect(summary.shipped.reduce((n, l) => n + l.gold, 0)).toBe(summary.total);
+    expect(s.money).toBeGreaterThanOrEqual(before + summary.total);
 
     // Buy more seeds with the proceeds.
     expect(buyItem(s, 'town_general_store', 'parsnip_seed', 5)).toBe('ok');
