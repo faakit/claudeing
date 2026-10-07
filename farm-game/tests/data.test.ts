@@ -31,3 +31,63 @@ describe('content data', () => {
     }
   });
 });
+
+describe('content validation fails loudly on bad data', () => {
+  /** Run `fn` with a temporary edit to shared data, always restoring it. */
+  function withEdit(edit: () => () => void, fn: () => void) {
+    const undo = edit();
+    try {
+      fn();
+    } finally {
+      undo();
+    }
+  }
+
+  it('rejects a seed that plants an unknown crop', () => {
+    withEdit(
+      () => {
+        const old = items['parsnip_seed']!.plants;
+        items['parsnip_seed']!.plants = 'nope';
+        return () => (items['parsnip_seed']!.plants = old);
+      },
+      () => expect(() => validateContent()).toThrow(/unknown crop "nope"/),
+    );
+  });
+
+  it('rejects a crop that harvests a missing item', () => {
+    withEdit(
+      () => {
+        const old = crops['potato']!.harvestItem;
+        crops['potato']!.harvestItem = 'ghost';
+        return () => (crops['potato']!.harvestItem = old);
+      },
+      () => expect(() => validateContent()).toThrow(/unknown item "ghost"/),
+    );
+  });
+
+  it('rejects a crop with too few growth stages', () => {
+    withEdit(
+      () => {
+        const old = crops['potato']!.stageDays;
+        crops['potato']!.stageDays = [1];
+        return () => (crops['potato']!.stageDays = old);
+      },
+      () => expect(() => validateContent()).toThrow(/stageDays/),
+    );
+  });
+
+  it('rejects an item missing required art/description fields', () => {
+    withEdit(
+      () => {
+        const old = items['fiber']!.description;
+        items['fiber']!.description = '';
+        return () => (items['fiber']!.description = old);
+      },
+      () => expect(() => validateContent()).toThrow(/missing "description"/),
+    );
+  });
+
+  it('passes again once the data is restored', () => {
+    expect(() => validateContent()).not.toThrow();
+  });
+});

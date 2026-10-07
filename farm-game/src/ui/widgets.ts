@@ -188,6 +188,9 @@ export abstract class Modal {
     this.build();
   }
 
+  /** Enter key: run the dialog's primary action. Dialogs without one ignore it. */
+  confirm(): void {}
+
   get isOpen(): boolean {
     return this.opened;
   }

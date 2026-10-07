@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { daylightColor, indoorColor, nightAmount } from '../src/ui/daylight';
+import { game } from '../src/data';
+import { DAYLIGHT_KEYS, daylightColor, indoorColor, nightAmount } from '../src/ui/daylight';
 
 const brightness = (c: number) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255);
 
@@ -29,5 +30,10 @@ describe('daylight', () => {
     expect(nightAmount(600)).toBe(0);
     expect(nightAmount(1500)).toBe(1);
     expect(nightAmount(1230)).toBeGreaterThan(0);
+  });
+
+  it('keyframes span exactly the game day, so a rebalanced day length is caught here', () => {
+    expect(DAYLIGHT_KEYS[0]![0]).toBe(game.dayStartMinutes);
+    expect(DAYLIGHT_KEYS[DAYLIGHT_KEYS.length - 1]![0]).toBe(game.dayEndMinutes);
   });
 });

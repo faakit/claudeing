@@ -10,7 +10,8 @@
       "scene": "Farm",
       "file": "assets/maps/farm.tmj",
       "tillable": [1, 2],
-      "outdoor": true
+      "outdoor": true,
+      "farmland": true
     },
     "house": {
       "scene": "House",

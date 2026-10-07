@@ -51,3 +51,17 @@
 - **Balance is checked by a simulation (`tests/sim.test.ts`):** a tireless greedy bot plays a full year through the real rules. It earns ~40-100k, so ranks are set well above casual play (Green Thumb 4k, Farm Hero 12k, Harvest Legend 25k) and upgrade tracks are deep (stamina x5, can x3) to keep gold meaningful late.
 - **Rollover re-entrancy guard:** a second sleep request while one is running is ignored, so a day can never be counted twice.
 - **Layout bugs found by screenshot audit and fixed:** goal tracker counter overlapping long goal text, wrapped goal lines overlapping on the Goals tab, bin pager colliding with the 7th row (now 6 rows per page).
+
+## Code-review pass
+
+- **Farm actions are refused off the farm map (`TileInfo.farmland`):** soil, crops and weeds are keyed by tile only, so before this the town or house could harvest or water invisible farm tiles at matching coordinates.
+- **Saves are queued, not coalesced; `saveNow` resolves true only if data reached persistent storage:** UI never claims "Saved!" for a memory-only or failed write, and Quit offers "Quit anyway?" instead of silently discarding a session.
+- **Loads are sanitised, not just validated:** deep defaults, unknown items/crops dropped, numbers clamped, tools restored. One bad nested field can no longer crash the HUD.
+- **TouchButton only releases what it pressed:** a mouse crossing the on-screen Action button no longer cancels a held Space.
+- **Clock warnings derive from `dayEndMinutes`; a test pins the daylight keyframes to the day length.**
+- **Enter confirms the primary button of the open dialog (and the title):** keyboard accessibility, and robust tests without pixel clicks.
+- **Scenes mutate nothing directly:** facing and volume/mute moved into tested system functions.
+- **Structure:** panels split one-per-file; `TileHighlight` and `actionFx` extracted from `WorldScene`; shared `mixColor`.
+- **`window.__farm` only with `?debug` (or dev builds).**
+- **Pages workflow no longer deploys the work-in-progress branch to production;** run it manually (workflow_dispatch) or merge to main.
+- **Phaser in its own chunk:** the game chunk is ~98 kB, so updates re-download little.

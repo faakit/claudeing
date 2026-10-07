@@ -150,7 +150,11 @@ export class Hud {
     this.weatherIcon.setTexture(s.weather === 'rain' ? 'ui_rain' : 'ui_sun');
     // Late-night warning: the clock turns orange then red as 02:00 nears.
     this.timeLabel.setColor(
-      s.time.minutes >= 1500 ? C.red : s.time.minutes >= 1380 ? C.warn : C.cream,
+      s.time.minutes >= game.dayEndMinutes - 60
+        ? C.red
+        : s.time.minutes >= game.dayEndMinutes - 180
+          ? C.warn
+          : C.cream,
     );
 
     if (this.shownMoney < 0) this.shownMoney = s.money;

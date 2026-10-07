@@ -19,6 +19,8 @@ export class TitleScene extends Phaser.Scene {
   private confirmNew = false;
   private buttons: Button[] = [];
   private note!: Label;
+  /** Enter on the title runs the main button (Continue if there is a save, else New Game). */
+  private primary: (() => void) | null = null;
 
   constructor() {
     super('Title');
@@ -61,11 +63,15 @@ export class TitleScene extends Phaser.Scene {
     });
     this.input.once('pointerdown', () => audio.unlock());
     this.input.keyboard?.once('keydown', () => audio.unlock());
+    this.input.keyboard?.on('keydown-ENTER', () => this.primary?.());
   }
 
   private buildButtons(): void {
     this.buttons.forEach((b) => b.destroy());
     this.buttons = [];
+    this.primary = this.loaded
+      ? () => this.start(this.loaded as GameState)
+      : () => this.start(createInitialState());
     let y = 112;
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;

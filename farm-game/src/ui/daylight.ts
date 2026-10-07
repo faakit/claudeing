@@ -1,5 +1,7 @@
+import { mixColor as mix } from './color';
+
 /** Time-of-day color grade, applied as a multiply overlay. Keyframes are [minutes, 0xRRGGBB]. */
-const KEYS: [number, number][] = [
+export const DAYLIGHT_KEYS: [number, number][] = [
   [360, 0xffd9b8], // 6:00 warm dawn
   [480, 0xfff4e2], // 8:00
   [600, 0xffffff], // 10:00 neutral day
@@ -11,21 +13,14 @@ const KEYS: [number, number][] = [
   [1560, 0x5864a6], // 2:00 AM deep night
 ];
 
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-
-function mix(a: number, b: number, t: number): number {
-  const ch = (shift: number) => Math.round(lerp((a >> shift) & 255, (b >> shift) & 255, t));
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
-}
-
 export function daylightColor(minutes: number): number {
-  const first = KEYS[0]!;
-  const last = KEYS[KEYS.length - 1]!;
+  const first = DAYLIGHT_KEYS[0]!;
+  const last = DAYLIGHT_KEYS[DAYLIGHT_KEYS.length - 1]!;
   if (minutes <= first[0]) return first[1];
   if (minutes >= last[0]) return last[1];
-  for (let i = 1; i < KEYS.length; i++) {
-    const [t1, c1] = KEYS[i]!;
-    const [t0, c0] = KEYS[i - 1]!;
+  for (let i = 1; i < DAYLIGHT_KEYS.length; i++) {
+    const [t1, c1] = DAYLIGHT_KEYS[i]!;
+    const [t0, c0] = DAYLIGHT_KEYS[i - 1]!;
     if (minutes <= t1) return mix(c0, c1, (minutes - t0) / (t1 - t0));
   }
   return last[1];

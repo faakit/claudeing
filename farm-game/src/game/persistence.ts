@@ -6,22 +6,30 @@ import { gameEvents } from '../systems/events';
 
 export const saveStore = createWebStore();
 
-let saving: Promise<void> | null = null;
+/** Saves run strictly one after another, each writing the snapshot taken when it was requested. */
+let chain: Promise<unknown> = Promise.resolve();
 
-/** Write the current state. Safe to call often; overlapping saves coalesce. */
-export async function saveNow(quiet = false): Promise<void> {
-  if (!runtime.inGame) return;
-  if (saving) return saving;
+/**
+ * Snapshot the current state and write it. Every call persists the state as of *that call*
+ * (a save requested mid-save queues behind it instead of being dropped). Resolves true only
+ * when the data really reached persistent storage, so callers never claim a save that failed.
+ */
+export function saveNow(quiet = false): Promise<boolean> {
+  if (!runtime.inGame) return Promise.resolve(false);
   const snapshot = JSON.parse(JSON.stringify(getState()));
-  saving = saveGame(saveStore, snapshot)
-    .then(() => {
-      if (!quiet) gameEvents.emit('saved', undefined);
-    })
-    .catch(() => undefined)
-    .finally(() => {
-      saving = null;
-    });
-  return saving;
+  const run = async (): Promise<boolean> => {
+    try {
+      await saveGame(saveStore, snapshot);
+    } catch {
+      return false;
+    }
+    if (!saveStore.persistent) return false; // memory-only fallback: nothing survives a reload
+    if (!quiet) gameEvents.emit('saved', undefined);
+    return true;
+  };
+  const result = chain.then(run, run);
+  chain = result;
+  return result;
 }
 
 let wired = false;

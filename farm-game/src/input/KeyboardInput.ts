@@ -25,6 +25,7 @@ export class KeyboardInput {
       if (e.repeat) return;
       if (e.code === 'Space') hub.actionHeld = true;
       if (e.code === 'KeyE') hub.emit('interact', undefined);
+      if (e.code === 'Enter' || e.code === 'NumpadEnter') hub.emit('confirm', undefined);
       if (e.code === 'Escape' || e.code === 'KeyM') hub.emit('menu', undefined);
       if (e.code === 'Tab') hub.emit('cycle', e.shiftKey ? -1 : 1);
       const digit = /^Digit([1-8])$/.exec(e.code);
@@ -36,6 +37,10 @@ export class KeyboardInput {
       if (e.code === 'Space') hub.actionHeld = false;
     });
     // A keyup is never delivered if focus leaves the page, so release everything.
-    scene.game.events.on(Phaser.Core.Events.BLUR, () => hub.clearHeld());
+    const onBlur = () => hub.clearHeld();
+    scene.game.events.on(Phaser.Core.Events.BLUR, onBlur);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      scene.game.events.off(Phaser.Core.Events.BLUR, onBlur),
+    );
   }
 }

@@ -14,6 +14,8 @@ export interface MapDef {
   tillable?: number[];
   /** Outdoor maps get the day/night tint and the season tint. */
   outdoor?: boolean;
+  /** This map holds the farm's soil, crops and weeds. Farm actions are refused elsewhere. */
+  farmland?: boolean;
 }
 export interface SpawnDef {
   map: string;

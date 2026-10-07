@@ -42,8 +42,28 @@ The game autosaves when you sleep, change map, close the tab, and every minute.
 
 All art and audio are currently generated in code (placeholders). Real assets are the next step.
 
+## Architecture in one minute
+
+Dependencies only point downward. Scenes never edit state directly; they call system functions.
+
+```
+scenes / ui / input / fx   render + input only (Phaser)         <- covered by `npm run e2e`
+        |  call
+systems/*                  pure rules, no Phaser, emit events   <- unit tested (~95% lines)
+        |  read/write
+state/GameState + data/*.json   one serializable state object + validated content
+```
+
+Saves are one versioned JSON blob. `systems/save.ts` migrates old versions and _sanitises_ every load
+(unknown items dropped, numbers clamped, missing fields defaulted), so a damaged or outdated save cannot
+crash the game; a corrupt main save falls back to the backup.
+
 ## Checks
 
 Hosted build: deployed by `.github/workflows/pages.yml` to `/farm/` on GitHub Pages.
 
-`npm test` (Vitest), `npm run lint`, `npm run format:check`, `npm run build`.
+`npm test` (Vitest), `npm run coverage`, `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build`.
+
+`npm run e2e` plays the core loop (new game, till, plant, water, sleep, reload, continue) in headless Chromium
+against the production build (`npm run build` first; set `CHROMIUM_PATH` if Chromium is not at the default
+Playwright cache path). Append `?debug` to the game URL to expose `window.__farm` for poking at state.

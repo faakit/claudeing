@@ -18,8 +18,16 @@ const tile = (tx: number, ty: number): TileInfo => ({
   kind: 'grass',
   tillable: true,
   blocked: false,
+  farmland: true,
 });
-const POND: TileInfo = { tx: 0, ty: 0, kind: 'water', tillable: false, blocked: true };
+const POND: TileInfo = {
+  tx: 0,
+  ty: 0,
+  kind: 'water',
+  tillable: false,
+  blocked: true,
+  farmland: true,
+};
 
 const equipItem = (s: GameState, id: string) => {
   const i = s.inventory.slots.findIndex((x) => x?.item === id);

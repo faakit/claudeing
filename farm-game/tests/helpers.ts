@@ -13,6 +13,7 @@ export const grass = (tx: number, ty: number): TileInfo => ({
   kind: 'grass',
   tillable: true,
   blocked: false,
+  farmland: true,
 });
 export const pond = (tx: number, ty: number): TileInfo => ({
   tx,
@@ -20,6 +21,7 @@ export const pond = (tx: number, ty: number): TileInfo => ({
   kind: 'water',
   tillable: false,
   blocked: true,
+  farmland: true,
 });
 
 /** Equip the first inventory slot holding `itemId` (must be on the hotbar). */

@@ -15,19 +15,21 @@ import {
   TILESET_KEY,
   VOID_COLOR,
 } from '../config';
-import { items, mapsData } from '../data';
+import { mapsData } from '../data';
 import { Effects } from '../fx/Effects';
+import { playActionFx } from '../fx/actionFx';
+import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { saveNow } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
-import { performAction, type ActionResult, type TileInfo } from '../systems/actions';
+import { performAction, type TileInfo } from '../systems/actions';
 import { gameEvents } from '../systems/events';
 import { getSoil, isMature } from '../systems/farming';
 import { selectedStack } from '../systems/inventory';
-import { isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
+import { faceDirection, isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
 import { tickTime } from '../systems/time';
 import {
   adjacentDirection,
@@ -44,16 +46,13 @@ import {
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
 
-type HighlightKind = 'free' | 'solid' | 'interactive' | 'harvest';
-
 /** Shared behavior for every walkable map: render, move, collide, doors, farming input. */
 export abstract class WorldScene extends Phaser.Scene {
   private grid!: CollisionGrid;
   private objects: WorldObject[] = [];
   private sprite!: Phaser.GameObjects.Sprite;
   private shadow!: Phaser.GameObjects.Image;
-  private highlight!: Phaser.GameObjects.Graphics;
-  private highlightKey = '';
+  private highlight!: TileHighlight;
   private ground!: Phaser.Tilemaps.TilemapLayer;
   private farm: FarmRenderer | null = null;
   protected fx!: Effects;
@@ -82,7 +81,6 @@ export abstract class WorldScene extends Phaser.Scene {
     this.actionLock = 0;
     this.heldFailed = false;
     this.lastTarget = undefined;
-    this.highlightKey = '';
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.grid = buildCollisionGrid(raw);
@@ -109,7 +107,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.farm.sync(state, false);
     }
 
-    this.highlight = this.add.graphics().setDepth(1);
+    this.highlight = new TileHighlight(this);
     this.shadow = this.add.image(0, 0, SHADOW_TEXTURE).setOrigin(0.5, 0.5);
     this.sprite = this.add
       .sprite(0, 0, PLAYER_TEXTURE, playerIdleFrame(state.player.facing))
@@ -230,6 +228,7 @@ export abstract class WorldScene extends Phaser.Scene {
       kind: tileKind(gid),
       tillable: tillable.includes(gid),
       blocked: isTileBlocked(this.grid, t.tx, t.ty),
+      farmland: mapsData.maps[this.mapId]?.farmland === true,
     };
   }
 
@@ -256,54 +255,7 @@ export abstract class WorldScene extends Phaser.Scene {
 
   private updateHighlight(time: number): void {
     const t = facingTile(getState().player);
-    this.highlight.setVisible(this.inMap(t));
-    if (!this.inMap(t)) return;
-    const kind = this.highlightKind(t);
-    if (kind !== this.highlightKey) {
-      this.highlightKey = kind;
-      this.drawHighlight(kind);
-    }
-    this.highlight.setPosition(t.tx * TILE_SIZE + TILE_SIZE / 2, t.ty * TILE_SIZE + TILE_SIZE / 2);
-    const base = kind === 'solid' ? 0.4 : 1;
-    this.highlight.setAlpha(base * (0.78 + 0.22 * Math.sin(time / 170)));
-  }
-
-  /** Corner brackets read well on any ground color and never hide the tile. */
-  private drawHighlight(kind: HighlightKind): void {
-    const g = this.highlight;
-    const color = { free: 0xffffff, solid: 0xf4ead2, interactive: 0xf4d35e, harvest: 0x9be37f }[
-      kind
-    ];
-    const h = TILE_SIZE / 2;
-    const len = 4;
-    g.clear();
-    for (const [sx, sy] of [
-      [-1, -1],
-      [1, -1],
-      [-1, 1],
-      [1, 1],
-    ] as const) {
-      const cx = sx * (h - 1);
-      const cy = sy * (h - 1);
-      g.lineStyle(3, 0x14101f, 0.55); // dark underlay keeps it visible on light tiles
-      g.beginPath()
-        .moveTo(cx - sx * len, cy)
-        .lineTo(cx, cy)
-        .lineTo(cx, cy - sy * len)
-        .strokePath();
-      g.lineStyle(1, color, 1);
-      g.beginPath()
-        .moveTo(cx - sx * len, cy)
-        .lineTo(cx, cy)
-        .lineTo(cx, cy - sy * len)
-        .strokePath();
-    }
-  }
-
-  private pulse(): void {
-    this.tweens.killTweensOf(this.highlight);
-    this.highlight.setScale(1.3);
-    this.tweens.add({ targets: this.highlight, scale: 1, duration: 150, ease: 'Back.easeOut' });
+    this.highlight.update(this.inMap(t) ? t : null, this.highlightKind(t), time);
   }
 
   // ---- actions ----
@@ -314,11 +266,11 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!this.inMap(t)) return;
     const stack = selectedStack(state);
     const res = performAction(state, this.tileInfo(t));
-    this.pulse();
+    this.highlight.pulse();
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.heldFailed = false;
-      this.playActionFx(res, stack?.item);
+      playActionFx(this.fx, res, getState().player, stack?.item);
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;
@@ -327,56 +279,12 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
-  private playActionFx(res: Extract<ActionResult, { ok: true }>, equipped?: string): void {
-    const { x, y } = FarmRenderer.center(res.tx, res.ty);
-    const p = getState().player;
-    const icon = equipped ? items[equipped]?.icon : undefined;
-    if (icon && items[equipped as string]?.type === 'tool') {
-      this.fx.swing(p.x, p.y, icon, p.facing);
-      audio.play('swing');
-    }
-    switch (res.kind) {
-      case 'till':
-        this.fx.dust(x, y);
-        audio.play('till');
-        break;
-      case 'water':
-        this.fx.splash(x, y);
-        audio.play('water');
-        break;
-      case 'refill':
-        this.fx.splash(x, y);
-        this.fx.floatText(p.x, p.y - 30, 'Refilled!', 0x6fa3e0);
-        audio.play('refill');
-        break;
-      case 'clear':
-        this.fx.leaves(x, y);
-        this.fx.floatText(p.x, p.y - 30, '+1 Fiber', 0x7fc96b);
-        audio.play('cut');
-        break;
-      case 'plant':
-        this.fx.dust(x, y);
-        audio.play('plant');
-        break;
-      case 'harvest': {
-        const def = items[res.item ?? ''];
-        this.fx.sparkle(x, y - 4, parseInt((def?.color ?? '#ffffff').slice(1), 16));
-        if (def) {
-          this.fx.itemPop(x, y - 8, def.icon);
-          this.fx.floatText(p.x, p.y - 30, `+${res.qty ?? 1} ${def.name}`, 0xf4ead2);
-        }
-        audio.play('harvest');
-        break;
-      }
-    }
-  }
-
   private onInteract(): void {
     if (this.transitioning || runtime.blocked || this.inputLocked) return;
     const t = facingTile(getState().player);
     const obj = objectAt(this.objects, t.tx, t.ty);
     if (!obj) return;
-    this.pulse();
+    this.highlight.pulse();
     audio.play('ui');
     if (obj.type === 'bed') gameEvents.emit('openPanel', { type: 'sleep' });
     else if (obj.type === 'bin') gameEvents.emit('openPanel', { type: 'bin' });
@@ -391,7 +299,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const player = getState().player;
     const dir = adjacentDirection(playerTile(player), target);
     if (!dir) return;
-    player.facing = dir;
+    faceDirection(player, dir);
     this.syncSprite(false);
     const obj = objectAt(this.objects, target.tx, target.ty);
     if (obj && ['bed', 'bin', 'shop'].includes(obj.type)) this.onInteract();

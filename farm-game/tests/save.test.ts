@@ -91,3 +91,103 @@ describe('save/load', () => {
     expect(migrate(old).settings).toBeDefined();
   });
 });
+
+describe('save sanitising (corrupt-but-parseable saves must never crash the game)', () => {
+  const base = () => JSON.parse(JSON.stringify(newState()));
+
+  it('fills missing nested objects instead of crashing later', () => {
+    const raw = base();
+    delete raw.farm.weeds;
+    delete raw.upgrades.stamina;
+    delete raw.settings.sfx;
+    delete raw.stats;
+    delete raw.shipping;
+    const s = migrate(raw);
+    expect(s.farm.weeds).toEqual({});
+    expect(s.upgrades.stamina).toBe(0);
+    expect(s.settings.sfx).toBeGreaterThan(0);
+    expect(s.stats).toEqual({});
+    expect(s.shipping).toEqual({});
+  });
+
+  it('drops unknown items and crops (content renamed in an update)', () => {
+    const raw = base();
+    raw.inventory.slots[5] = { item: 'moonfruit', qty: 3 };
+    raw.inventory.slots[6] = { item: 'parsnip', qty: 12 };
+    raw.farm.tiles['4,4'] = {
+      watered: true,
+      crop: { cropId: 'ghost_plant', stage: 2, daysInStage: 0, regrow: false },
+    };
+    raw.shipping = { moonfruit: 4, parsnip: 2, hoe: 1 };
+    const s = migrate(raw);
+    expect(s.inventory.slots[5]).toBeNull();
+    expect(s.inventory.slots[6]).toEqual({ item: 'parsnip', qty: 12 });
+    expect(s.farm.tiles['4,4']).toEqual({ watered: true, crop: null });
+    expect(s.shipping).toEqual({ parsnip: 2 });
+  });
+
+  it('restores tools, pads the inventory, and clamps wild numbers', () => {
+    const raw = base();
+    raw.inventory.slots = [null, { item: 'parsnip', qty: 99999 }];
+    raw.inventory.selected = 42;
+    raw.energy = 9999;
+    raw.water = -5;
+    raw.upgrades.can = 77;
+    raw.time.minutes = 99999;
+    raw.time.day = 400;
+    const s = migrate(raw);
+    expect(s.inventory.slots).toHaveLength(24);
+    expect(s.inventory.slots.slice(0, 3).map((x) => x?.item)).toEqual([
+      'hoe',
+      'watering_can',
+      'scythe',
+    ]);
+    expect(s.inventory.slots[1]?.item).toBe('watering_can');
+    expect(s.inventory.selected).toBe(7);
+    expect(s.energy).toBeLessThanOrEqual(100);
+    expect(s.water).toBe(0);
+    expect(s.upgrades.can).toBe(3);
+    expect(s.time.minutes).toBe(1560);
+    expect(s.time.day).toBe(28);
+  });
+
+  it('ignores junk farm keys and bad crop stages', () => {
+    const raw = base();
+    raw.farm.tiles['not,a,key'] = { watered: false, crop: null };
+    raw.farm.tiles['3,3'] = {
+      watered: false,
+      crop: { cropId: 'parsnip', stage: 99, daysInStage: -4, regrow: 'yes' },
+    };
+    const s = migrate(raw);
+    expect(Object.keys(s.farm.tiles)).toEqual(['3,3']);
+    expect(s.farm.tiles['3,3']!.crop).toEqual({
+      cropId: 'parsnip',
+      stage: 4,
+      daysInStage: 0,
+      regrow: false,
+    });
+  });
+});
+
+describe('saveNow ordering', () => {
+  it('a save requested during another save is not dropped and the newest state wins', async () => {
+    const slow = new MemoryStore();
+    const origWrite = slow.write.bind(slow);
+    slow.write = async (k, v) => {
+      await new Promise((r) => setTimeout(r, 15));
+      return origWrite(k, v);
+    };
+    const a = newState();
+    a.money = 1;
+    const b = newState();
+    b.money = 2;
+    // Mirrors persistence.saveNow: strictly sequential, each writes the snapshot it was given.
+    let chain: Promise<unknown> = Promise.resolve();
+    const enqueue = (st: typeof a) =>
+      (chain = chain.then(() => saveGame(slow, JSON.parse(JSON.stringify(st)))));
+    enqueue(a);
+    enqueue(b);
+    await chain;
+    expect((await loadGame(slow))?.state.money).toBe(2);
+  });
+});

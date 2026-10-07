@@ -16,6 +16,8 @@ export interface TileInfo {
   tillable: boolean;
   /** An object or solid tile occupies it (bed, bin, wall...). */
   blocked: boolean;
+  /** The current map holds the farm. Soil, crops and weeds only exist there. */
+  farmland: boolean;
 }
 
 export type ActionKind = 'till' | 'water' | 'refill' | 'clear' | 'plant' | 'harvest';
@@ -37,7 +39,7 @@ export const waterCapacity = (state: GameState): number =>
  */
 export function performAction(state: GameState, tile: TileInfo): ActionResult {
   const { tx, ty } = tile;
-  const soil = getSoil(state, tx, ty);
+  const soil = tile.farmland ? getSoil(state, tx, ty) : undefined;
 
   if (soil?.crop && isMature(soil.crop)) {
     const res = harvest(state, tx, ty);
@@ -52,6 +54,7 @@ export function performAction(state: GameState, tile: TileInfo): ActionResult {
   if (!def) throw new Error(`Unknown item "${stack.item}"`);
 
   if (def.type === 'seed') {
+    if (!tile.farmland) return refuse("Seeds need your farm's soil.");
     const cropId = def.plants as string;
     const res = plant(state, tx, ty, cropId);
     if (res === 'no_soil') return refuse('Till the soil first.');
@@ -70,8 +73,8 @@ export function performAction(state: GameState, tile: TileInfo): ActionResult {
   if (!tool) throw new Error(`Tool "${def.tool}" missing from tools.json`);
 
   if (tool.action === 'till') {
-    if (state.farm.tiles[tileKey(tx, ty)]) return refuse('Already tilled.');
-    if (!tile.tillable || tile.blocked) return refuse("Can't till here.");
+    if (tile.farmland && state.farm.tiles[tileKey(tx, ty)]) return refuse('Already tilled.');
+    if (!tile.farmland || !tile.tillable || tile.blocked) return refuse("Can't till here.");
     if (!spendEnergy(state, tool.energyCost)) return refuse('Too tired! Go to bed.');
     till(state, tx, ty);
     addStat(state, 'tilled');
@@ -98,7 +101,7 @@ export function performAction(state: GameState, tile: TileInfo): ActionResult {
 
   // clear weeds
   const key = tileKey(tx, ty);
-  if (!state.farm.weeds[key]) return refuse('Nothing to cut.');
+  if (!tile.farmland || !state.farm.weeds[key]) return refuse('Nothing to cut.');
   if (roomFor(state, 'fiber', 1) < 1) return refuse('Inventory full!');
   if (!spendEnergy(state, tool.energyCost)) return refuse('Too tired! Go to bed.');
   delete state.farm.weeds[key];

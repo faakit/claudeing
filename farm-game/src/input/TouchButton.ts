@@ -8,6 +8,7 @@ export class TouchButton {
   private readonly zone: Phaser.GameObjects.Zone;
   private readonly glow: Phaser.GameObjects.Graphics;
   private enabled = true;
+  private pressed = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -38,11 +39,16 @@ export class TouchButton {
     });
     this.zone.on('pointerdown', () => {
       if (!this.enabled) return;
+      this.pressed = true;
       this.press(true);
       onPress();
     });
+    // Only a button that was actually pressed may release, so a mouse merely crossing it
+    // can never cancel input held elsewhere (e.g. Space held for the tool).
     for (const ev of ['pointerup', 'pointerout']) {
       this.zone.on(ev, () => {
+        if (!this.pressed) return;
+        this.pressed = false;
         this.press(false);
         onRelease?.();
       });

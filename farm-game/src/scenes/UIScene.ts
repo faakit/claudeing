@@ -7,7 +7,7 @@ import {
   TAP_MAX_MS,
   UI_LAYOUT,
 } from '../config';
-import { mapsData } from '../data';
+import { game, mapsData } from '../data';
 import { weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
@@ -22,6 +22,7 @@ import { gameEvents } from '../systems/events';
 import { cycleSlot, selectSlot } from '../systems/inventory';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
+import { mixColor } from '../ui/color';
 import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
 import { RainLayer } from '../fx/RainLayer';
 import { Hud } from '../ui/Hud';
@@ -36,12 +37,6 @@ import {
 import { Button, type Modal } from '../ui/widgets';
 import { mapCacheKey } from './PreloadScene';
 import { WorldScene } from './WorldScene';
-
-function mixColor(a: number, b: number, t: number): number {
-  const ch = (shift: number) =>
-    Math.round(((a >> shift) & 255) * (1 - t) + ((b >> shift) & 255) * t);
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
-}
 
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
@@ -141,6 +136,11 @@ export class UIScene extends Phaser.Scene {
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       inputHub.on('menu', () => this.toggleMenu()),
+      inputHub.on('confirm', () =>
+        this.allModals()
+          .find((m) => m.isOpen)
+          ?.confirm(),
+      ),
       inputHub.on('slot', (i) => selectSlot(getState(), i)),
       inputHub.on('cycle', (d) => cycleSlot(getState(), d)),
     );
@@ -152,6 +152,9 @@ export class UIScene extends Phaser.Scene {
       this.cleanup.forEach((off) => off());
       this.game.events.off(EVT_INTERACT_TARGET, this.setInteractTarget, this);
       this.hud.destroy();
+      // Quitting to title must silence the world: rain and night music belong to the game scene.
+      audio.setRain(0);
+      audio.setNight(0);
     });
     this.setupTaps();
   }
@@ -167,7 +170,11 @@ export class UIScene extends Phaser.Scene {
     this.rain.setIntensity(raining && !indoors ? 1 : 0);
     this.rain.update(delta);
     audio.setRain(raining ? (indoors ? 0.35 : 1) : 0);
-    if (s.time.minutes >= 1500 && this.lateWarnedDay !== s.time.day && !runtime.busy) {
+    if (
+      s.time.minutes >= game.dayEndMinutes - 60 &&
+      this.lateWarnedDay !== s.time.day &&
+      !runtime.busy
+    ) {
       this.lateWarnedDay = s.time.day;
       this.hud.toast("It's getting late. Head to bed soon!", 'warn');
     }
@@ -253,6 +260,11 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
+  private allModals(): Modal[] {
+    return [this.menu, this.shop, this.bin, this.sleepPanel, this.summary, this.yearEnd];
+  }
+
+  /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
     return [this.menu, this.shop, this.bin, this.sleepPanel].find((m) => m.isOpen) ?? null;
   }

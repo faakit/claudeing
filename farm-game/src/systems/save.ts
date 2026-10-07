@@ -1,4 +1,5 @@
-import { mapsData } from '../data';
+import { crops, game, goals, items, mapsData, shops } from '../data';
+import { isDirection } from './direction';
 import type { SaveStore } from '../platform/SaveStore';
 import { createInitialState, STATE_VERSION, type GameState } from '../state/GameState';
 
@@ -44,26 +45,142 @@ export function migrate(input: unknown): GameState {
   return validateState(raw);
 }
 
+/** Core structure must be present; anything recoverable is repaired by `sanitize`. */
 function validateState(raw: Raw): GameState {
   const bad = (what: string): never => {
     throw new Error(`Invalid save: ${what}`);
   };
-  const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
-  const time = raw['time'] as Raw | undefined;
+  const time = raw['time'];
   if (!isObj(time) || !SEASON_IDS.includes(time['season'] as string)) bad('time');
-  if (!num((time as Raw)['day']) || !num((time as Raw)['minutes'])) bad('time values');
-  if (!num(raw['money']) || (raw['money'] as number) < 0) bad('money');
-  if (!num(raw['energy']) || !num(raw['water'])) bad('energy/water');
-  const inv = raw['inventory'] as Raw | undefined;
-  if (!isObj(inv) || !Array.isArray(inv['slots']) || !num(inv['selected'])) bad('inventory');
+  if (!isFiniteNum((time as Raw)['day']) || !isFiniteNum((time as Raw)['minutes']))
+    bad('time values');
+  if (!isFiniteNum(raw['money']) || (raw['money'] as number) < 0) bad('money');
+  const inv = raw['inventory'];
+  if (!isObj(inv) || !Array.isArray(inv['slots'])) bad('inventory');
   if (!isObj(raw['farm']) || !isObj((raw['farm'] as Raw)['tiles'])) bad('farm');
-  if (!isObj(raw['shipping']) || !isObj(raw['stats']) || !isObj(raw['upgrades'])) bad('tables');
-  const p = raw['player'] as Raw | undefined;
+  const p = raw['player'];
   if (!isObj(p) || typeof p['map'] !== 'string' || !mapsData.maps[p['map']]) bad('player map');
-  if (!num((p as Raw)['x']) || !num((p as Raw)['y'])) bad('player position');
-  // Fill anything added after the save was written without a version bump.
+  return sanitize(raw);
+}
+
+const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+const int = (v: unknown, fallback: number, lo: number, hi: number): number =>
+  isFiniteNum(v) ? clamp(Math.round(v), lo, hi) : fallback;
+const TILE_KEY = /^\d{1,3},\d{1,3}$/;
+
+/**
+ * Rebuild a complete, internally consistent state from whatever was saved. Missing nested
+ * fields get defaults, unknown items/crops (e.g. content renamed in an update) are dropped,
+ * and numbers are clamped, so one bad field can never crash the game later.
+ */
+export function sanitize(raw: Raw): GameState {
   const fresh = createInitialState();
-  return { ...fresh, ...(raw as unknown as GameState) };
+  const obj = (v: unknown): Raw => (isObj(v) ? v : {});
+
+  const t = obj(raw['time']);
+  const time: GameState['time'] = {
+    year: int(t['year'], fresh.time.year, 1, 9999),
+    season: t['season'] as GameState['time']['season'],
+    day: int(t['day'], 1, 1, game.seasonLength),
+    minutes: int(t['minutes'], game.dayStartMinutes, game.dayStartMinutes, game.dayEndMinutes),
+    acc: isFiniteNum(t['acc']) ? Math.max(0, t['acc']) : 0,
+  };
+
+  const u = obj(raw['upgrades']);
+  const staminaMax =
+    shops['town_general_store']?.upgrades.find((x) => x.id === 'stamina')?.levels.length ?? 0;
+  const upgrades = {
+    can: int(u['can'], 0, 0, game.canCapacity.length - 1),
+    stamina: int(u['stamina'], 0, 0, staminaMax),
+  };
+  const maxEnergy = game.baseEnergy + upgrades.stamina * game.energyPerUpgrade;
+  const canCap = game.canCapacity[upgrades.can] ?? 20;
+
+  // Inventory: fixed length, valid stacks only, tools always in their fixed slots.
+  const rawSlots = (obj(raw['inventory'])['slots'] as unknown[]) ?? [];
+  const toolIds = Object.entries(items)
+    .filter(([, it]) => it.type === 'tool')
+    .map(([id]) => id);
+  const slots: GameState['inventory']['slots'] = Array.from(
+    { length: game.inventorySlots },
+    (_, i) => {
+      if (i < toolIds.length) return { item: toolIds[i] as string, qty: 1 };
+      const st = rawSlots[i];
+      if (!isObj(st) || typeof st['item'] !== 'string') return null;
+      const def = items[st['item']];
+      if (!def || def.type === 'tool') return null;
+      return { item: st['item'], qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit) };
+    },
+  );
+
+  const farmRaw = obj(raw['farm']);
+  const tiles: GameState['farm']['tiles'] = {};
+  for (const [key, soil] of Object.entries(obj(farmRaw['tiles']))) {
+    if (!TILE_KEY.test(key) || !isObj(soil)) continue;
+    let crop: GameState['farm']['tiles'][string]['crop'] = null;
+    const c = soil['crop'];
+    if (isObj(c) && typeof c['cropId'] === 'string' && crops[c['cropId']]) {
+      const days = (crops[c['cropId']] as (typeof crops)[string]).stageDays.length;
+      crop = {
+        cropId: c['cropId'],
+        stage: int(c['stage'], 0, 0, days),
+        daysInStage: int(c['daysInStage'], 0, 0, 99),
+        regrow: c['regrow'] === true,
+      };
+    }
+    tiles[key] = { watered: soil['watered'] === true, crop };
+  }
+  const weeds: GameState['farm']['weeds'] = {};
+  for (const key of Object.keys(obj(farmRaw['weeds']))) if (TILE_KEY.test(key)) weeds[key] = true;
+
+  const shipping: GameState['shipping'] = {};
+  for (const [id, qty] of Object.entries(obj(raw['shipping']))) {
+    if (items[id] && items[id]?.type !== 'tool' && isFiniteNum(qty) && qty > 0)
+      shipping[id] = Math.floor(qty);
+  }
+
+  const p = obj(raw['player']);
+  const mapId = p['map'] as string;
+  const player: GameState['player'] = {
+    map: mapId,
+    x: isFiniteNum(p['x']) ? p['x'] : fresh.player.x,
+    y: isFiniteNum(p['y']) ? p['y'] : fresh.player.y,
+    facing: isDirection(p['facing']) ? p['facing'] : 'down',
+  };
+
+  const stats: Record<string, number> = {};
+  for (const [k, v] of Object.entries(obj(raw['stats'])))
+    if (isFiniteNum(v) && v >= 0) stats[k] = v;
+
+  const st = obj(raw['settings']);
+  const settings = {
+    music: isFiniteNum(st['music']) ? clamp(st['music'], 0, 1) : fresh.settings.music,
+    sfx: isFiniteNum(st['sfx']) ? clamp(st['sfx'], 0, 1) : fresh.settings.sfx,
+    muted: st['muted'] === true,
+  };
+
+  return {
+    version: STATE_VERSION,
+    time,
+    money: Math.floor(raw['money'] as number),
+    energy: int(raw['energy'], maxEnergy, 0, maxEnergy),
+    water: int(raw['water'], canCap, 0, canCap),
+    upgrades,
+    inventory: {
+      slots,
+      selected: int(obj(raw['inventory'])['selected'], 0, 0, game.hotbarSlots - 1),
+    },
+    farm: { tiles, weeds },
+    shipping,
+    player,
+    stats,
+    goalIndex: int(raw['goalIndex'], 0, 0, goals.length),
+    settings,
+    weather: raw['weather'] === 'rain' ? 'rain' : 'sunny',
+    lastSummary: null, // transient: only meaningful right after a rollover
+    rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
+  };
 }
 
 export async function saveGame(store: SaveStore, state: GameState): Promise<void> {

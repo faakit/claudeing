@@ -14,6 +14,8 @@ export interface InputEvents {
   /** Cycle the hotbar by +1 / -1 (wheel, Tab). */
   cycle: number;
   menu: undefined;
+  /** Enter: confirm the primary action of the open dialog. */
+  confirm: undefined;
 }
 
 type Listener<K extends keyof InputEvents> = (payload: InputEvents[K]) => void;

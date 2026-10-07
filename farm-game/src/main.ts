@@ -24,5 +24,13 @@ const game = new Phaser.Game({
   scene: [BootScene, PreloadScene, TitleScene, FarmScene, HouseScene, TownScene, UIScene],
 });
 
-// Debug/test hook: lets automated checks drive and inspect the running game.
-(window as unknown as { __farm: unknown }).__farm = { game, getState, gameEvents, inputHub, audio };
+// Debug/test hook for automated checks and tinkering. Enabled in dev builds, or with ?debug in the URL.
+if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
+  (window as unknown as { __farm: unknown }).__farm = {
+    game,
+    getState,
+    gameEvents,
+    inputHub,
+    audio,
+  };
+}

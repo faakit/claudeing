@@ -139,3 +139,8 @@ export function stepPlayer(
   }
   return { moving: player.x !== before.x || player.y !== before.y };
 }
+
+/** Turn the player in place (used when tapping an adjacent tile). */
+export function faceDirection(player: PlayerState, dir: Direction): void {
+  player.facing = dir;
+}

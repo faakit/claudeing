@@ -102,4 +102,28 @@ describe('performAction', () => {
     expect(performAction(s, grass(5, 5)).ok).toBe(false);
     expect(countItem(s, 'tomato_seed')).toBe(3);
   });
+
+  it('never touches farm soil, crops or weeds from another map', () => {
+    const s = newState();
+    performAction(s, grass(5, 5));
+    equip(s, 'parsnip_seed');
+    performAction(s, grass(5, 5));
+    s.farm.tiles['5,5']!.crop!.stage = 4; // mature
+    s.farm.weeds['6,6'] = true;
+    const away = (tx: number, ty: number) => ({ ...grass(tx, ty), farmland: false });
+    const energy = s.energy;
+    // harvest, plant, water, till, cut from the town at the same coordinates
+    s.inventory.selected = 0;
+    expect(performAction(s, away(5, 5)).ok).toBe(false);
+    equip(s, 'parsnip_seed');
+    expect(performAction(s, away(5, 5)).ok).toBe(false);
+    s.inventory.selected = 1;
+    expect(performAction(s, away(5, 5)).ok).toBe(false);
+    s.inventory.selected = 2;
+    expect(performAction(s, away(6, 6)).ok).toBe(false);
+    expect(s.energy).toBe(energy);
+    expect(s.farm.tiles['5,5']!.crop).not.toBeNull();
+    expect(s.farm.weeds['6,6']).toBe(true);
+    expect(countItem(s, 'parsnip')).toBe(0);
+  });
 });
