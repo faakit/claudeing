@@ -13,10 +13,10 @@ Run `npm run verify` (lint, typecheck, 140+ unit tests, build, three e2e suites,
 | Core loop on the production build | headless Chromium plays new game, till, plant, water, sleep, reload, continue                                                           | `npm run e2e`        |
 | Background / foreground           | `visibilitychange` freezes the clock, drops held input, resumes cleanly                                                                 | `npm run e2e`        |
 | Offline (airplane mode)           | service worker installs, network is cut, reload + new game still work                                                                   | `npm run e2e`        |
-| Installability                    | manifest is fullscreen + landscape, all icons load, maskable icon present                                                               | `npm run e2e`        |
+| Installability                    | manifest is fullscreen + portrait, all icons load, maskable icon present                                                                | `npm run e2e`        |
 | Notches / safe areas              | 5 phone profiles with injected `safe-area-inset-*` (iPhone 13/15 Pro Max, Pixel 7, punch-hole, SE): canvas never enters the unsafe area | `npm run e2e:mobile` |
 | Touch targets                     | real hit-area sizes measured per profile; every control >= 44 CSS px on phones >= 800px wide (smallest measured: 46)                    | `npm run e2e:mobile` |
-| Portrait                          | rotate-to-landscape overlay appears                                                                                                     | `npm run e2e:mobile` |
+| Landscape                         | "turn upright" overlay appears                                                                                                          | `npm run e2e:mobile` |
 | Native bridge                     | Capacitor plugins mocked: app state -> lifecycle, Android back button, haptics driver, Preferences save store, splash                   | `npm test`           |
 | Render cost                       | GL draw calls per frame and JS ms per frame, worst case = fully planted field. Budgets: <= 12 draws, <= 3.5 ms JS                       | `npm run perf`       |
 
@@ -32,7 +32,7 @@ years old) and one iPhone, once per release:
 - [ ] **30 FPS or better** for 10 minutes of play (Android: `adb shell dumpsys gfxinfo app.tinyacre.farm`; iOS: Xcode FPS gauge). Try battery-saver mode too.
 - [ ] **Kill the app mid-day**, relaunch, Continue: progress is there (saves happen on background, sleep, map change, and every minute).
 - [ ] **Audio resumes** after a phone call, Siri, and app switching. iOS: also test with the silent switch on (the PWA is muted by it, the native app should not be: see Known issues).
-- [ ] **Notch / punch-hole / rounded corners**: no control is hidden. Rotate both landscape directions.
+- [ ] **Notch / punch-hole / rounded corners**: no control is hidden. Check portrait with the notch at the top and at the bottom (home indicator).
 - [ ] **Two-thumb play** for 10 minutes: joystick + Action + Interact, no missed or stuck inputs.
 - [ ] **Airplane mode**: native app works fully (it has no network use at all).
 - [ ] **Haptics** feel right (light tick on tool use, double pulse on harvest/sale, buzz on errors) and the Options toggle turns them off.
@@ -70,7 +70,7 @@ be changed afterwards. Update it in three places, then `npm run cap:sync`:
 
 ## How the native shells are configured
 
-- **Landscape only**: `sensorLandscape` (Android manifest), landscape-only orientations plus `UIRequiresFullScreen` (iOS).
+- **Portrait only**: `portrait` (Android manifest), portrait-only orientations plus `UIRequiresFullScreen` (iOS).
 - **Fullscreen**: immersive system bars (`MainActivity`), hidden iOS status bar, dark window background (no white flash).
 - **Notch**: Android `shortEdges` cutout mode and iOS `contentInset: never`; the page keeps controls clear with CSS `env(safe-area-inset-*)`.
 - **Saves**: native key-value store (SharedPreferences / UserDefaults) via Capacitor Preferences, not IndexedDB. Android auto-backup includes it.
