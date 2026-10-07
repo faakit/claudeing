@@ -49,6 +49,55 @@
     "reward": 50
   },
   {
+    "id": "forage",
+    "text": "Pick up 3 wild goods off the ground",
+    "stat": "foraged",
+    "target": 3,
+    "reward": 40
+  },
+  {
+    "id": "fish",
+    "text": "Catch a fish with the rod",
+    "stat": "caught",
+    "target": 1,
+    "reward": 60
+  },
+  {
+    "id": "order",
+    "text": "Fill an order on the town board",
+    "stat": "ordersDone",
+    "target": 1,
+    "reward": 80
+  },
+  {
+    "id": "craft",
+    "text": "Craft something at the workbench",
+    "stat": "crafted",
+    "target": 1,
+    "reward": 60
+  },
+  {
+    "id": "place",
+    "text": "Place a sprinkler or a jar",
+    "stat": "placed",
+    "target": 1,
+    "reward": 100
+  },
+  {
+    "id": "preserve",
+    "text": "Make a jar of jam or pickles",
+    "stat": "preserved",
+    "target": 1,
+    "reward": 120
+  },
+  {
+    "id": "quality",
+    "text": "Harvest 5 silver or gold crops",
+    "stat": "qualityHarvested",
+    "target": 5,
+    "reward": 150
+  },
+  {
     "id": "earn1k",
     "text": "Earn 1,000g selling crops",
     "stat": "earned",

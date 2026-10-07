@@ -131,3 +131,22 @@ describe('collecting forage', () => {
     for (const e of forage.table) expect(items[e.item]!.sellPrice).toBeGreaterThan(0);
   });
 });
+
+describe('smart targeting priority', () => {
+  it('picking something up beats tilling the tile in front', async () => {
+    const { performBest } = await import('../src/systems/actions');
+    const s = newState();
+    s.forage['farm'] = { [tileKey(4, 5)]: 'wild_leek' };
+    const res = performBest(s, [grass(5, 5), grass(4, 5)]);
+    expect(res.ok && res.kind).toBe('forage');
+    expect(res.tile.tx).toBe(4);
+    expect(s.farm.tiles[tileKey(5, 5)]).toBeUndefined();
+  });
+  it('with nothing better, the faced tile wins', async () => {
+    const { performBest } = await import('../src/systems/actions');
+    const s = newState();
+    const res = performBest(s, [grass(5, 5), grass(4, 5)]);
+    expect(res.ok && res.kind).toBe('till');
+    expect(res.tile.tx).toBe(5);
+  });
+});

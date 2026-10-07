@@ -23,7 +23,7 @@ import { drawBar, drawPanel, Modal } from '../widgets';
 
 type Phase = 'wait' | 'bite' | 'reel' | 'done';
 
-const TRACK = { x: 78, y: 40, w: 24, h: 130 };
+const TRACK = { x: 78, y: 40, w: 24, h: 116 };
 
 /**
  * The reel mini-game, one thumb: wait for the bite, tap to hook, then hold to lift the bar and keep
@@ -38,6 +38,8 @@ export class FishingPanel extends Modal {
   private reel: Reel = newReel(0.3, 0.3);
   private pointerDown = false;
   private wasHolding = false;
+  /** A press happened since the last frame (a quick tap can start and end between two frames). */
+  private tapped = false;
   private gfx!: Phaser.GameObjects.Graphics;
   private fishIcon!: Phaser.GameObjects.Image;
   private status!: Label;
@@ -60,6 +62,7 @@ export class FishingPanel extends Modal {
     this.reel = newReel(reelSize(getState(), difficulty, bait), difficulty);
     this.pointerDown = false;
     this.wasHolding = true; // the cast press must be released first
+    this.tapped = false;
     this.open();
   }
 
@@ -88,7 +91,10 @@ export class FishingPanel extends Modal {
       .zone(0, 0, this.panelW, this.panelH)
       .setOrigin(0, 0)
       .setInteractive();
-    zone.on('pointerdown', () => (this.pointerDown = true));
+    zone.on('pointerdown', () => {
+      this.pointerDown = true;
+      this.tapped = true;
+    });
     zone.on('pointerup', () => this.onRelease());
     zone.on('pointerout', () => (this.pointerDown = false));
     this.content.add(zone);
@@ -109,7 +115,7 @@ export class FishingPanel extends Modal {
 
   private onRelease(): void {
     this.pointerDown = false;
-    if (this.phase === 'done') this.close();
+    if (this.phase === 'done' && this.clock > 0.6) this.close();
   }
 
   private holding(): boolean {
@@ -119,7 +125,8 @@ export class FishingPanel extends Modal {
   private tick(dt: number): void {
     if (!this.isOpen) return;
     const down = this.holding();
-    const pressed = down && !this.wasHolding;
+    const pressed = (down && !this.wasHolding) || this.tapped;
+    this.tapped = false;
     this.wasHolding = down;
     this.clock += dt;
     if (this.phase === 'wait' && this.clock >= this.delay) {

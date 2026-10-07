@@ -79,7 +79,7 @@ try {
     Object.keys(s.farm.tiles).length === 1 && s.energy === 98,
     JSON.stringify(s.farm.tiles),
   );
-  await page.keyboard.press('Digit4');
+  await page.keyboard.press('Digit5');
   await tap('Space');
   s = await state();
   check(
@@ -181,6 +181,90 @@ try {
   );
 
   check('no console errors during the whole run', errors.length === 0, errors.join(' | '));
+
+  // 6b. The mechanics layer, in a fresh game: forage, smart targeting, placeables, fishing
+  const mCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const mp = await mCtx.newPage();
+  const mErrors = [];
+  mp.on('console', (m) => m.type() === 'error' && mErrors.push(m.text()));
+  mp.on('pageerror', (e) => mErrors.push(String(e)));
+  const mState = () => mp.evaluate(() => JSON.parse(JSON.stringify(window.__farm.getState())));
+  const mPlace = (tx, ty, facing) =>
+    mp.evaluate(
+      ([tx, ty, facing]) => {
+        const p = window.__farm.getState().player;
+        p.x = tx * 16 + 8;
+        p.y = ty * 16 + 11;
+        p.facing = facing;
+      },
+      [tx, ty, facing],
+    );
+  const mTap = async (key) => {
+    await mp.keyboard.down(key);
+    await mp.waitForTimeout(120);
+    await mp.keyboard.up(key);
+    await mp.waitForTimeout(350);
+  };
+  await mp.goto(URL_);
+  await mp.waitForTimeout(1500);
+  await mp.keyboard.press('Enter');
+  await mp.waitForTimeout(1500);
+  await mPlace(13, 17, 'down');
+  await mp.evaluate(() => {
+    const f = window.__farm;
+    f.getState().forage.farm = { '13,18': 'wild_leek', '12,18': 'daffodil' };
+    f.gameEvents.emit('forageChanged', { map: 'farm' });
+  });
+  await mp.keyboard.press('Digit1');
+  await mTap('Space');
+  let m = await mState();
+  const held = (id) => m.inventory.slots.some((x) => x?.item === id);
+  check(
+    'Action picks up the wild good in front, whatever is equipped',
+    held('wild_leek') && !m.forage.farm?.['13,18'] && m.stats.foraged === 1,
+    JSON.stringify(m.forage),
+  );
+  await mTap('Space');
+  m = await mState();
+  check(
+    'smart targeting: Action then reaches the good beside the faced tile',
+    held('daffodil') && m.stats.foraged === 2,
+    JSON.stringify(m.forage),
+  );
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.inventory.slots[4] = { item: 'sprinkler', qty: 1 };
+  });
+  await mp.keyboard.press('Digit5');
+  await mTap('Space');
+  m = await mState();
+  check(
+    'a sprinkler can be placed on free ground',
+    m.placed.farm?.length === 1 && m.placed.farm[0].type === 'sprinkler',
+    JSON.stringify(m.placed),
+  );
+  await mTap('KeyE');
+  m = await mState();
+  check(
+    'Interact picks the sprinkler back up',
+    !m.placed.farm && m.inventory.slots.some((x) => x?.item === 'sprinkler'),
+    JSON.stringify(m.placed),
+  );
+  await mPlace(18, 31, 'right');
+  await mp.keyboard.press('Digit4'); // fishing rod
+  const energyBefore = (await mState()).energy;
+  await mTap('Space');
+  m = await mState();
+  const fishingOpen = await mp.evaluate(
+    () => window.__farm.game.scene.getScene('UI').panels.get('fishing').isOpen,
+  );
+  check(
+    'casting the rod at the pond opens the fishing game and costs energy',
+    fishingOpen && m.energy < energyBefore,
+    `open=${fishingOpen} energy ${energyBefore}->${m.energy}`,
+  );
+  check('mechanics run: no console errors', mErrors.length === 0, mErrors.join(' | '));
+  await mCtx.close();
 
   // 7. Offline: after the first visit the whole game works with the network cut
   const offCtx = await browser.newContext({

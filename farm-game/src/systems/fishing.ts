@@ -37,7 +37,7 @@ export const biteDelay = (rnd: number, bait: boolean): number =>
   (1.2 + rnd * 2.2) * (bait ? 0.55 : 1);
 
 /** The window (s) in which a tap hooks the fish. */
-export const HOOK_WINDOW = 1.0;
+export const HOOK_WINDOW = 1.5;
 
 export interface Reel {
   /** All positions are 0 (bottom) .. 1 (top). */

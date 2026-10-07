@@ -26,7 +26,7 @@ import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
-import { performBest, planAction, type TileInfo } from '../systems/actions';
+import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
 import { gameEvents, toast } from '../systems/events';
 import { getSoil, isMature } from '../systems/farming';
 import { forageAt } from '../systems/forage';
@@ -301,9 +301,11 @@ export abstract class WorldScene extends Phaser.Scene {
   private actionTile(): { tile: TileCoord; works: boolean } {
     const state = getState();
     const cands = this.candidates();
-    for (const tile of cands) {
-      if (planAction(state, this.tileInfo(tile)).ok) return { tile, works: true };
-    }
+    const best = pickBest(
+      state,
+      cands.map((t) => this.tileInfo(t)),
+    );
+    if (best) return { tile: { tx: best.tile.tx, ty: best.tile.ty }, works: true };
     return { tile: facingTile(state.player), works: false };
   }
 

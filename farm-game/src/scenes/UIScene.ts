@@ -310,7 +310,7 @@ export class UIScene extends Phaser.Scene {
           Math.sin(r - 0.35) * 28,
         );
     }
-    const label = new Label(this, 0, 40, 'Drag to walk', { align: 'center', color: 0xf4ead2 });
+    const label = new Label(this, 0, -44, 'Drag to walk', { align: 'center', color: 0xf4ead2 });
     this.dragHint = this.add.container(cx, cy, [ring, label]).setDepth(60);
     this.tweens.add({
       targets: this.dragHint,

@@ -11,26 +11,33 @@ npm run dev        # http://localhost:5173
 npm run build      # static site in dist/
 ```
 
-## Controls
+## Controls (portrait, one hand)
 
-| Action                               | Keyboard               | Touch                                             |
-| ------------------------------------ | ---------------------- | ------------------------------------------------- |
-| Move                                 | WASD / arrows          | floating joystick (left half)                     |
-| Use equipped item on the facing tile | Space (hold to repeat) | big button (right), or tap an adjacent tile       |
-| Interact (bed, bin, shop)            | E                      | round button (appears when something is in reach) |
-| Pick hotbar slot                     | 1-8, Tab, wheel        | tap a slot                                        |
-| Menu (items, goals, options)         | Esc / M                | menu button (top right)                           |
+The game is portrait-only and built for one thumb. The world fills the middle, the HUD (read-only) sits on top,
+and every control lives in the bottom dock where a resting thumb lands. Left-handed mode mirrors it (Menu > Opts).
+
+| Action                                  | Keyboard               | Touch                                                |
+| --------------------------------------- | ---------------------- | ---------------------------------------------------- |
+| Move                                    | WASD / arrows          | floating joystick: drag anywhere in the lower screen |
+| Use the equipped item (smart targeting) | Space (hold to repeat) | big Action button, or tap an adjacent tile           |
+| Interact (bed, bin, shop, board, jars)  | E                      | round button above Action (appears when in reach)    |
+| Pick hotbar slot                        | 1-8, Tab, wheel        | tap a slot                                           |
+| Menu (bag, goals, craft, skills, opts)  | Esc / M                | menu button (far corner, away from Action)           |
+
+Smart targeting: Action looks at the tile in front **and the two beside it** and does the most valuable thing
+available (pick up or harvest beats planting beats tilling), so you never have to line up exactly.
 
 ## How to play
 
-1. **Till** soil with the hoe, **plant** seeds on it, **water** with the can (refill at the pond).
-2. **Sleep** in the bed. Watered crops grow one day per night; unwatered crops wait.
-3. **Harvest** mature crops (Action on them), **ship** them in the bin by the house; gold arrives next morning.
-4. Walk east through the gate to **town** and buy seeds and upgrades at the General Store.
-5. Follow the goal tracker at the top. Summer 28 ends the first year with a results screen.
-
-The day lasts about 10 real minutes (06:00 to 02:00). Pass out at 02:00 and you only recover half your energy.
-The game autosaves when you sleep, change map, close the tab, and every minute.
+1. **Till** soil with the hoe, **plant** seeds, **water** with the can (refill at the pond). **Sleep** to grow crops.
+2. **Harvest** crops (quality is random: silver and gold sell for more; fertilizer improves the odds), **ship** them in the bin.
+3. **Forage**: wild goods appear on the ground each morning, on the farm, in town and in the woods. Just walk up and press Action.
+4. **Fish**: equip the rod, cast at water, tap when the bobber dips, then hold to lift the bar and keep the fish in the green.
+5. **Craft** (Menu > Craft): fertilizer, bait, sprinklers, preserve jars. Recipes unlock as your skills level up.
+6. **Preserve**: put fruit in a jar for jam or vegetables for pickles; collect after a few mornings. Worth far more than raw.
+7. **Orders**: the town board posts three requests every morning that pay well above the shipping bin.
+8. **Skills**: farming, foraging and fishing level up with use and grant perks (quality, energy, double finds, wider fishing zone).
+9. Follow the goal tracker at the top; each goal introduces a new mechanic. Summer 28 ends the first year.
 
 ## Project layout
 
@@ -38,13 +45,14 @@ The game autosaves when you sleep, change map, close the tab, and every minute.
 - `src/data/*.json` all content: items, crops, shops, tools, goals, maps, balance.
 - `src/scenes/`, `src/ui/`, `src/input/`, `src/fx/` rendering and input only.
 - `public/assets/maps/*.tmj` Tiled maps (regenerate the placeholders with `npm run gen:maps`).
+- `src/mechanics/` each gameplay mechanic registers itself (actions, day hooks, placeable behaviors). See [docs/EXTENDING.md](docs/EXTENDING.md) for how to add one.
 - `DECISIONS.md` every judgment call. `GOAL.md` the MVP definition.
 
 All art and audio are currently generated in code (placeholders). Real assets are the next step.
 
 ## Phones and stores
 
-The same code runs as a website, an installable PWA (fullscreen landscape, works offline once visited), and
+The same code runs as a website, an installable PWA (fullscreen portrait, works offline once visited), and
 Capacitor apps for Android and iOS (`android/`, `ios/`). `npm run cap:android` / `npm run cap:ios` build the web app,
 sync it, and open the native IDE. See [docs/MOBILE.md](docs/MOBILE.md) for build steps, the store checklist, what is
 verified automatically, and the manual device checklist.

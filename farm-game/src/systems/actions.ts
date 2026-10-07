@@ -23,7 +23,8 @@ function contextFor(state: GameState, tile: TileInfo): ActionContext {
   return { state, tile, stack, def };
 }
 
-export type PlanResult = { ok: true; plan: ActionPlan } | { ok: false; message: string };
+export type PlanResult =
+  { ok: true; plan: ActionPlan; priority: number } | { ok: false; message: string };
 
 /**
  * Decide what "use the equipped item on this tile" would do, without doing it. Handlers are asked
@@ -34,7 +35,7 @@ export function planAction(state: GameState, tile: TileInfo): PlanResult {
   for (const handler of orderedHandlers()) {
     const answer = handler.plan(ctx);
     if (!answer) continue;
-    if ('plan' in answer) return { ok: true, plan: answer.plan };
+    if ('plan' in answer) return { ok: true, plan: answer.plan, priority: handler.priority };
     return { ok: false, message: answer.refusal };
   }
   return { ok: false, message: ctx.def ? `Can't use ${ctx.def.name} here.` : 'Nothing equipped.' };
@@ -54,10 +55,25 @@ export function performAction(state: GameState, tile: TileInfo): ActionResult {
   return execute(planned.plan);
 }
 
+/** The candidate where the most valuable action can be done (ties go to the earlier tile), if any. */
+export function pickBest(
+  state: GameState,
+  candidates: TileInfo[],
+): { plan: ActionPlan; priority: number; tile: TileInfo } | null {
+  let best: { plan: ActionPlan; priority: number; tile: TileInfo } | null = null;
+  for (const tile of candidates) {
+    const planned = planAction(state, tile);
+    if (planned.ok && (!best || planned.priority > best.priority))
+      best = { plan: planned.plan, priority: planned.priority, tile };
+  }
+  return best;
+}
+
 /**
- * One-thumb targeting: try each candidate tile (facing tile first, then its neighbours) and act on
- * the first where the equipped item can actually do something. If none can, report the refusal for
- * the first candidate, which is the tile the player is looking at. Returns the tile chosen.
+ * One-thumb targeting: look at the facing tile and its neighbours and act where the most valuable
+ * thing can be done (picking up or harvesting beats planting beats tilling); on a tie the earlier
+ * candidate, i.e. the tile in front, wins. If nothing can be done, report the refusal for the first
+ * candidate, which is the tile the player is looking at. Returns the tile chosen.
  */
 export function performBest(
   state: GameState,
@@ -65,10 +81,8 @@ export function performBest(
 ): ActionResult & { tile: TileInfo } {
   const first = candidates[0];
   if (!first) throw new Error('performBest needs at least one candidate tile');
-  for (const tile of candidates) {
-    const planned = planAction(state, tile);
-    if (planned.ok) return { ...execute(planned.plan), tile };
-  }
+  const best = pickBest(state, candidates);
+  if (best) return { ...execute(best.plan), tile: best.tile };
   return { ...performAction(state, first), tile: first };
 }
 

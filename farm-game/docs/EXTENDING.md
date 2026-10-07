@@ -1,0 +1,100 @@
+# Extending Tiny Acre
+
+Every mechanic plugs into the core through a small registry, so adding one means adding a module and one
+import line, not editing the core. The built-in mechanics (farming, foraging, sprinklers, jars, orders,
+fishing) are written exactly this way and are the best examples.
+
+```
+src/mechanics/index.ts      <- one `import './yourMechanic';` line per mechanic
+src/mechanics/*.ts          <- registers handlers, hooks, behaviors (no Phaser)
+src/systems/*.ts            <- the pure rules a mechanic calls (unit tested)
+src/data/*.json             <- the content (validated at load by src/data/index.ts)
+src/ui/panels/*             <- the portrait sheets (Phaser only)
+```
+
+Rule of thumb: rules in `systems/`, wiring in `mechanics/`, drawing in `ui/` + `scenes/`. Scenes never change
+game state themselves; they call a system function.
+
+## 1. What does Action do? (action handlers)
+
+`registerActionHandler({ id, priority, plan })` in `systems/actionRegistry.ts`. `plan` looks at the faced tile
+and the equipped item and answers with a plan (`{ plan: { kind, tx, ty, run } }`), a refusal
+(`{ refusal: 'text' }`) or `null` ("not mine"). Planning changes nothing; `run` does the work. The first handler
+(highest priority first) with an answer wins.
+
+Priorities in use: harvest 100, forage 95, seed / fertilize / place 50, tool 40. One-thumb targeting asks every
+nearby tile and acts where the **highest priority** plan exists, so picking things up beats planting beats
+tilling without the player aiming.
+
+```ts
+registerActionHandler({
+  id: 'feed-chicken',
+  priority: 90,
+  plan({ state, tile, stack }) {
+    if (stack?.item !== 'chicken_feed' || !hasChickenAt(state, tile)) return null;
+    return { plan: { kind: 'feed', tx: tile.tx, ty: tile.ty, run: () => feed(state, tile) } };
+  },
+});
+```
+
+A new **tool** needs no handler: add it to `items.json` (type `tool`) and `tools.json` with an `action` name, then
+`registerToolAction('action-name', ({ state, tile, tool }) => plan | refusal)`. The fishing rod is the example.
+
+## 2. What happens overnight? (day hooks)
+
+`registerDayHook({ id, phase, order?, run })` in `systems/dayHooks.ts`. Phases run in order:
+`start, pre-growth, growth, payout, calendar, morning, end`. A hook receives the state and a context
+(`weedCandidates`, `forageSpots`, `notes` that appear in the morning summary, `scratch` for passing values to
+later hooks). Example: `mechanics/orders.ts` rewrites the town board in `morning`.
+
+## 3. Things placed in the world (placeable behaviors)
+
+1. Add the item to `items.json` with `"placeable": true`.
+2. Add an entry to `placeables.json`: `{ name, behavior, solid, sprite, params }`.
+3. `registerPlaceableBehavior('name', { beforeGrowth?, onMorning?, interact?, canPickUp? })`.
+4. Add the sprite texture in `art/gameArt.ts` (the world renderer draws every placed object from state).
+
+Per-object state lives in `obj.data` (plain JSON, saved automatically). `interact` returns `pickup`,
+`message`, or `panel` (open a sheet; see below). See `mechanics/sprinkler.ts` and `mechanics/jar.ts`.
+
+## 4. Items: quality and derived goods
+
+A stack is identified by `{ item, q?, of? }` (`systems/itemRef.ts`): quality tier 0/1/2 and, for goods made
+from something else (jam, pickles), the item they were made from. Use `addItem(state, ref, qty)`,
+`removeStack`, `keyOf`, `displayName`, `sellValue`; never compare item ids alone when quality can differ.
+`rollQuality(state, extra, perkKey)` rolls a tier for harvests, catches and finds.
+
+## 5. Skills and perks
+
+`skills.json` defines each skill's XP table and the perks gained at each level. Perk keys are free-form:
+a system reads `perk(state, 'yourKey')` and a data row grants it. `addXp(state, skill, n)` emits `levelUp`.
+Recipes unlock by skill level in `recipes.json`.
+
+## 6. Panels and menu tabs
+
+- A **menu tab** is a function: `registerMenuTab({ id, label, build(ctx) })` (label up to 6 characters; five or
+  six tabs share the width). `ctx.row`, `ctx.button`, `ctx.label` give portrait-safe layout. See `CraftTab.ts`.
+- A **sheet** extends `Modal` (bottom sheet, thumb reachable, dismissible). Open it with an event
+  (`gameEvents.emit('openPanel', ...)` or `'placedPanel'`).
+- Strings must fit: `fitText` / `measureText` are pure and tests use them, so long text fails a test, not a phone.
+- The Interact button's icon comes from `INTERACT_ICONS` in `UIScene.ts` (falls back to a hand).
+
+## 7. Content-only changes
+
+New crops, forageables, fish, recipes, orders, goals and shop stock are JSON edits. Load-time validation in
+`src/data/index.ts` fails loudly on dangling references.
+
+## 8. Save compatibility
+
+Add new state to `GameState`, give it a default in `createInitialState`, make `sanitize` in `systems/save.ts`
+accept it, and bump `STATE_VERSION` with a migration if old saves need transforming. Tests in
+`tests/save.test.ts` show the pattern.
+
+## Checklist for a new mechanic
+
+- [ ] Rules as pure functions in `systems/` with unit tests
+- [ ] One module in `mechanics/` registering into the registries, plus one import line in `mechanics/index.ts`
+- [ ] Data in JSON; validation added if it references other data
+- [ ] UI as a tab or sheet; text proven to fit
+- [ ] A goal in `goals.json` that introduces it
+- [ ] `npm run verify`

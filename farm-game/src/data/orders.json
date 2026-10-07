@@ -4,7 +4,7 @@
   "tiers": [
     {
       "maxValue": 60,
-      "qty": [4, 10]
+      "qty": [3, 6]
     },
     {
       "maxValue": 150,
