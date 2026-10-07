@@ -83,7 +83,7 @@ describe('sprinklers', () => {
       ].sort(),
     );
     expect(sprinklerTiles(5, 5, 1, true)).toHaveLength(8);
-    expect(sprinklerTiles(5, 5, 2, false)).toHaveLength(8 * 1 + 0 + 4 * 0 + 8 - 8 + 0 || 12 - 4);
+    expect(sprinklerTiles(5, 5, 2, false)).toHaveLength(8);
   });
 
   it('water tilled neighbours in the morning so crops grow with no watering by hand', () => {
