@@ -158,6 +158,7 @@ export function sanitize(raw: Raw): GameState {
     music: isFiniteNum(st['music']) ? clamp(st['music'], 0, 1) : fresh.settings.music,
     sfx: isFiniteNum(st['sfx']) ? clamp(st['sfx'], 0, 1) : fresh.settings.sfx,
     muted: st['muted'] === true,
+    vibrate: st['vibrate'] !== false, // default on, including for saves that predate the setting
   };
 
   return {

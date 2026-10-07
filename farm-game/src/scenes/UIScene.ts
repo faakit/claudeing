@@ -15,6 +15,7 @@ import { KeyboardInput } from '../input/KeyboardInput';
 import { TouchButton } from '../input/TouchButton';
 import { VirtualJoystick } from '../input/VirtualJoystick';
 import { audio } from '../platform/audio';
+import { lifecycle } from '../platform/lifecycle';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { endDay } from '../systems/day';
@@ -136,6 +137,8 @@ export class UIScene extends Phaser.Scene {
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       inputHub.on('menu', () => this.toggleMenu()),
+      // Android back: close the open dialog, otherwise open the menu (never kill the game by accident).
+      lifecycle.on('back', () => this.toggleMenu()),
       inputHub.on('confirm', () =>
         this.allModals()
           .find((m) => m.isOpen)
@@ -166,7 +169,9 @@ export class UIScene extends Phaser.Scene {
     const raining = s.weather === 'rain';
     let base = daylightColor(s.time.minutes);
     if (raining && !indoors) base = mixColor(base, 0x9db0cc, 0.4); // grey-blue overcast
-    this.tint.setFillStyle(indoors ? indoorColor(base) : base);
+    const grade = indoors ? indoorColor(base) : base;
+    // A white multiply overlay changes nothing but still costs a full-screen blend, so skip it.
+    this.tint.setVisible(grade !== 0xffffff).setFillStyle(grade);
     this.rain.setIntensity(raining && !indoors ? 1 : 0);
     this.rain.update(delta);
     audio.setRain(raining ? (indoors ? 0.35 : 1) : 0);
@@ -200,10 +205,11 @@ export class UIScene extends Phaser.Scene {
       () => (inputHub.actionHeld = true),
       () => (inputHub.actionHeld = false),
     );
+    // Stacked above Action, so the bottom edge stays free for a wide, comfortable hotbar.
     this.interactButton = new TouchButton(
       this,
-      ax - actionRadius - interactRadius - 6,
-      ay + 8,
+      ax,
+      ay - actionRadius - interactRadius - 8,
       interactRadius,
       () => undefined,
       () => inputHub.emit('interact', undefined),

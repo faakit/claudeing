@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { items, shops } from '../../data';
 import { audio } from '../../platform/audio';
+import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import { buyItem, buyPrice, buyUpgrade, nextUpgrade, stockFor } from '../../systems/economy';
 import { toast } from '../../systems/events';
@@ -81,6 +82,7 @@ export class ShopPanel extends Modal {
     const name = items[id]!.name;
     if (res === 'ok') {
       audio.play('buy');
+      haptic('success');
       toast(`Bought ${qty} ${name}`, 'good');
     } else {
       audio.play('error');
@@ -101,6 +103,7 @@ export class ShopPanel extends Modal {
     const res = buyUpgrade(getState(), up);
     if (res === 'ok') {
       audio.play('buy');
+      haptic('success');
       toast(`${up.name} upgraded!`, 'good');
     } else {
       audio.play('error');

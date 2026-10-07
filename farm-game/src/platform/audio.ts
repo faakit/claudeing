@@ -50,7 +50,10 @@ class AudioEngine {
   private bar = 0;
   private seed = 7;
 
-  /** Must run inside a user gesture (browsers block audio until the first tap). */
+  /**
+   * Create/resume the AudioContext. Must run inside a user gesture: browsers (iOS Safari
+   * especially) keep audio locked until then. Safe to call any number of times.
+   */
   unlock(): void {
     if (!this.ctx) {
       const Ctor =
@@ -59,14 +62,48 @@ class AudioEngine {
       if (!Ctor) return;
       this.ctx = new Ctor();
       this.build(this.ctx);
-      document.addEventListener('visibilitychange', () => {
-        if (!this.ctx) return;
-        if (document.hidden) void this.ctx.suspend();
-        else void this.ctx.resume();
-      });
+      this.primeSilently(this.ctx);
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume();
+    this.resume();
     this.applyVolumes();
+  }
+
+  /** Silence everything while the app is in the background (saves battery, honours phone calls). */
+  suspend(): void {
+    if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend().catch(() => undefined);
+  }
+
+  /** Bring audio back after a suspension or interruption. No-op when already running. */
+  resume(): void {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state === 'running') return;
+    void ctx.resume().catch(() => undefined);
+  }
+
+  /** True when audio was interrupted/suspended and a user gesture is needed to restart it. */
+  get needsGesture(): boolean {
+    return this.ctx !== null && this.ctx.state !== 'running';
+  }
+
+  /** iOS only fully unlocks after something actually plays inside the gesture. */
+  private primeSilently(ctx: AudioContext): void {
+    const src = ctx.createBufferSource();
+    src.buffer = ctx.createBuffer(1, 1, 22050);
+    src.connect(ctx.destination);
+    src.start(0);
+  }
+
+  /**
+   * Listen for any user gesture and unlock/resume on it. Uses release-type events as well as
+   * press events because older iOS only counts touchend/click as activation.
+   */
+  installAutoUnlock(): void {
+    const events = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
+    const handler = () => {
+      if (this.ctx?.state === 'running') return;
+      this.unlock();
+    };
+    for (const e of events) window.addEventListener(e, handler, { passive: true });
   }
 
   private build(ctx: AudioContext): void {

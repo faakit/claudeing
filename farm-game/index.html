@@ -6,6 +6,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
+    <meta name="theme-color" content="#1a1c2c" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tiny Acre" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="icon" href="data:," />
     <title>Tiny Acre</title>
     <style>
@@ -16,6 +22,9 @@
         background: #1a1c2c;
         overflow: hidden;
         touch-action: none;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
@@ -38,17 +47,23 @@
           display: flex;
         }
       }
-      #game {
+      /* The frame carries the safe-area padding; Phaser fits the canvas inside #game, whose size is
+         the padded content box. (Padding on the Phaser parent itself is ignored by its size maths.) */
+      #frame {
         position: fixed;
         inset: 0;
+        box-sizing: border-box;
         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
           env(safe-area-inset-left);
-        box-sizing: border-box;
+      }
+      #game {
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
   <body>
-    <div id="game"></div>
+    <div id="frame"><div id="game"></div></div>
     <div id="rotate">Please rotate your device to landscape to play Tiny Acre.</div>
     <script type="module" src="/src/main.ts"></script>
   </body>

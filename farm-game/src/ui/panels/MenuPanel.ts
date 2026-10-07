@@ -6,7 +6,9 @@ import { getState } from '../../state/store';
 import { waterCapacity } from '../../systems/actions';
 import { maxEnergy } from '../../systems/energy';
 import { toast } from '../../systems/events';
-import { adjustVolume, toggleMute } from '../../systems/settings';
+import { adjustVolume, toggleMute, toggleVibration } from '../../systems/settings';
+import { fullscreenSupported, isIosSafari, toggleFullscreen } from '../../platform/display';
+import { haptic, setHapticsEnabled } from '../../platform/haptics';
 import { goalProgress, stat } from '../../systems/goals';
 import { isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { C } from '../theme';
@@ -200,9 +202,16 @@ export class MenuPanel extends Modal {
       audio.setVolumes(s.settings.music, s.settings.sfx, s.settings.muted);
       this.rebuild();
     });
-    this.button(142, 104, 120, 24, 'Fullscreen', () => {
-      if (document.fullscreenElement) void document.exitFullscreen();
-      else void document.documentElement.requestFullscreen?.().catch(() => undefined);
+    if (fullscreenSupported()) {
+      this.button(142, 104, 120, 24, 'Fullscreen', () => void toggleFullscreen());
+    } else if (isIosSafari()) {
+      this.label(142, 104, 'For fullscreen: Share, then', C.creamDim);
+      this.label(142, 115, '"Add to Home Screen".', C.creamDim);
+    }
+    this.button(270, 104, 120, 24, s.settings.vibrate ? 'Vibration: ON' : 'Vibration: OFF', () => {
+      setHapticsEnabled(toggleVibration(s));
+      haptic('tick');
+      this.rebuild();
     });
     const saveBtn: Button = this.button(14, 138, 120, 24, 'Save now', () => {
       void saveNow().then((ok) => {

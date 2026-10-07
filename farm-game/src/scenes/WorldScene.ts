@@ -23,6 +23,7 @@ import { FarmRenderer } from '../game/FarmRenderer';
 import { saveNow } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
+import { haptic } from '../platform/haptics';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { performAction, type TileInfo } from '../systems/actions';
@@ -93,7 +94,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
 
-    if (mapsData.maps[this.mapId]?.outdoor) {
+    if (mapsData.maps[this.mapId]?.outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add
         .rectangle(0, 0, map.widthInPixels, map.heightInPixels, SEASON_TINT[state.time.season])
         .setOrigin(0)
@@ -275,6 +276,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;
       audio.play('error');
+      haptic('error');
       this.fx.shake(this.sprite);
     }
   }

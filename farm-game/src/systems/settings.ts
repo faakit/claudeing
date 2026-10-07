@@ -13,3 +13,8 @@ export function toggleMute(state: GameState): boolean {
   state.settings.muted = !state.settings.muted;
   return state.settings.muted;
 }
+
+export function toggleVibration(state: GameState): boolean {
+  state.settings.vibrate = !state.settings.vibrate;
+  return state.settings.vibrate;
+}

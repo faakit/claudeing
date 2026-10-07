@@ -14,7 +14,9 @@
     "gen:maps": "node scripts/generate-maps.mjs",
     "e2e": "node scripts/e2e.mjs",
     "coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "perf": "node scripts/perf.mjs",
+    "e2e:mobile": "node scripts/e2e-mobile.mjs"
   },
   "dependencies": {
     "phaser": "3.90.0"

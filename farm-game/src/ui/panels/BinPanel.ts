@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { items } from '../../data';
 import { audio } from '../../platform/audio';
+import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import { isShippable, sellPrice, shipItem, shippingValue, unshipItem } from '../../systems/economy';
 import { countItem } from '../../systems/inventory';
@@ -74,7 +75,10 @@ export class BinPanel extends Modal {
     const s = getState();
     const moved = delta > 0 ? shipItem(s, id, delta) : unshipItem(s, id, -delta);
     if (moved === 0) audio.play('error');
-    else audio.play('coin');
+    else {
+      audio.play('coin');
+      haptic('tick');
+    }
     this.rebuild();
   }
 }

@@ -31,3 +31,13 @@ describe('settings & facing', () => {
     expect(s.player).toMatchObject({ facing: 'left', x, y });
   });
 });
+
+describe('vibration setting', () => {
+  it('defaults on and toggles', async () => {
+    const { toggleVibration } = await import('../src/systems/settings');
+    const s = newState();
+    expect(s.settings.vibrate).toBe(true);
+    expect(toggleVibration(s)).toBe(false);
+    expect(toggleVibration(s)).toBe(true);
+  });
+});

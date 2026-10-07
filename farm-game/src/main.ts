@@ -9,8 +9,14 @@ import { TownScene } from './scenes/TownScene';
 import { UIScene } from './scenes/UIScene';
 import { getState } from './state/store';
 import { audio } from './platform/audio';
+import { wireLifecycle } from './game/lifecycleWiring';
+import { refreshOnRotate, suppressBrowserGestures } from './platform/display';
+import { installWebLifecycle, lifecycle } from './platform/lifecycle';
 import { gameEvents } from './systems/events';
 import { inputHub } from './input/InputHub';
+
+suppressBrowserGestures();
+audio.installAutoUnlock();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -23,6 +29,10 @@ const game = new Phaser.Game({
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [BootScene, PreloadScene, TitleScene, FarmScene, HouseScene, TownScene, UIScene],
 });
+
+refreshOnRotate(() => game.scale.refresh());
+wireLifecycle(game);
+installWebLifecycle(lifecycle, document, window);
 
 // Debug/test hook for automated checks and tinkering. Enabled in dev builds, or with ?debug in the URL.
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {

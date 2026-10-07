@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { goals, items } from '../../data';
 import { audio } from '../../platform/audio';
+import { haptic } from '../../platform/haptics';
 import type { DaySummary } from '../../state/GameState';
 import { getState } from '../../state/store';
 import { rankTitle } from '../../systems/day';
@@ -57,6 +58,7 @@ export class SummaryPanel extends WaitModal {
     this.summary = summary;
     if (summary.total > 0) {
       audio.play('coin');
+      haptic('success');
       this.scene.time.delayedCall(140, () => audio.play('coin'));
       this.scene.time.delayedCall(300, () => audio.play('buy'));
     }

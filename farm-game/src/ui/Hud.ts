@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { game, items } from '../data';
 import { audio } from '../platform/audio';
+import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
 import { waterCapacity } from '../systems/actions';
 import { maxEnergy } from '../systems/energy';
@@ -11,9 +12,11 @@ import { selectedStack, selectSlot, isToolSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
 import { C } from './theme';
+import { hitSize } from './hit';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 
-export const SLOT = 30;
+/** Slot size; 34 logical px keeps hotbar taps >= ~44 CSS px even on notched phones. */
+export const SLOT = 34;
 const SLOT_GAP = 1;
 export const HOTBAR_X = Math.round(
   (GAME_WIDTH - (game.hotbarSlots * (SLOT + SLOT_GAP) - SLOT_GAP)) / 2,
@@ -47,6 +50,7 @@ export class Hud {
 
   private readonly hotbarGfx: Phaser.GameObjects.Graphics;
   private hotbarIcons: Phaser.GameObjects.Image[] = [];
+  private hotbarZones: Phaser.GameObjects.Zone[] = [];
   private hotbarQty: Label[] = [];
   private readonly nameLabel: Label;
   private nameTween: Phaser.Tweens.Tween | null = null;
@@ -110,6 +114,7 @@ export class Hud {
         .setOrigin(0, 0)
         .setDepth(depth + 3)
         .setInteractive();
+      this.hotbarZones.push(zone);
       zone.on('pointerdown', () => {
         selectSlot(this.getState(), i);
         audio.play('select');
@@ -130,13 +135,27 @@ export class Hud {
       .setDepth(depth + 5)
       .setAlpha(0);
 
+    this.fitHotbarHits();
+    scene.scale.on('resize', this.fitHotbarHits, this);
     this.cleanup.push(
+      () => scene.scale.off('resize', this.fitHotbarHits, this),
       gameEvents.on('toast', (t) => this.toast(t.text, t.kind)),
       gameEvents.on('inventoryChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('energyChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('saved', () => this.flashSaved()),
       gameEvents.on('goalCompleted', (g) => this.goalBanner(g.reward)),
     );
+  }
+
+  /** Hotbar slots are 31px apart; grow each touch area up to that pitch to approach 44 CSS px. */
+  private fitHotbarHits(): void {
+    const size = hitSize(this.scene, SLOT, SLOT + SLOT_GAP);
+    const grow = (size - SLOT) / 2;
+    this.hotbarZones.forEach((zone, i) => {
+      const x = HOTBAR_X + i * (SLOT + SLOT_GAP);
+      zone.setPosition(x - grow, HOTBAR_Y - grow).setSize(size, size);
+      if (zone.input) zone.input.hitArea.setSize(size, size);
+    });
   }
 
   destroy(): void {
@@ -147,7 +166,8 @@ export class Hud {
     const s = this.getState();
     this.dateLabel.setText(`${seasonLabel(s.time.season)} ${s.time.day}  Y${s.time.year}`);
     this.timeLabel.setText(formatClock(s.time.minutes));
-    this.weatherIcon.setTexture(s.weather === 'rain' ? 'ui_rain' : 'ui_sun');
+    const weatherKey = s.weather === 'rain' ? 'ui_rain' : 'ui_sun';
+    if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
     // Late-night warning: the clock turns orange then red as 02:00 nears.
     this.timeLabel.setColor(
       s.time.minutes >= game.dayEndMinutes - 60
@@ -194,6 +214,7 @@ export class Hud {
 
   private goalBanner(reward: number): void {
     audio.play('goal');
+    haptic('success');
     this.banner.setText(`GOAL COMPLETE  +${reward}g`).setAlpha(0).setY(84);
     this.scene.tweens.killTweensOf(this.banner);
     this.scene.tweens.add({

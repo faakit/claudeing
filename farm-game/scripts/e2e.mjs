@@ -128,6 +128,38 @@ try {
       after.player.map === 'house',
   );
 
+  // 5. Backgrounding the app freezes the clock and drops held input; foregrounding resumes it
+  const setHidden = (hidden) =>
+    page.evaluate((hidden) => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, hidden);
+  await page.keyboard.down('ArrowLeft'); // a key held while the app is backgrounded...
+  await page.waitForTimeout(100);
+  await setHidden(true);
+  await page.keyboard.up('ArrowLeft'); // ...whose key-up the page never sees
+  await page.waitForTimeout(300); // let any in-flight frame finish
+  const t0 = (await state()).time;
+  await page.waitForTimeout(2500);
+  const t1 = (await state()).time;
+  check(
+    'backgrounded app: clock frozen',
+    t1.minutes === t0.minutes && t1.acc === t0.acc,
+    `${JSON.stringify(t0)} -> ${JSON.stringify(t1)}`,
+  );
+  check(
+    'backgrounded app: held input dropped',
+    await page.evaluate(() => window.__farm.inputHub.direction === null),
+  );
+  await setHidden(false);
+  await page.waitForTimeout(3000);
+  const t2 = (await state()).time;
+  check(
+    'foregrounded app: clock runs again',
+    t2.minutes > t1.minutes || t2.acc > t1.acc,
+    JSON.stringify(t2),
+  );
+
   check('no console errors during the whole run', errors.length === 0, errors.join(' | '));
 } finally {
   await browser.close();

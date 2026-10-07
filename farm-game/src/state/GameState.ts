@@ -60,6 +60,8 @@ export interface Settings {
   music: number;
   sfx: number;
   muted: boolean;
+  /** Haptic/vibration feedback on actions. */
+  vibrate: boolean;
 }
 
 /** Everything that must be saved lives here. Plain, serializable data only. */
@@ -116,7 +118,7 @@ export function createInitialState(): GameState {
     player: { map, ...spawnPosition(tx, ty), facing },
     stats: {},
     goalIndex: 0,
-    settings: { music: 0.6, sfx: 0.8, muted: false },
+    settings: { music: 0.6, sfx: 0.8, muted: false, vibrate: true },
     weather: 'sunny',
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,

@@ -196,11 +196,13 @@ export class Label extends Phaser.GameObjects.Container {
   private readonly main: Phaser.GameObjects.BitmapText;
   private readonly shade: Phaser.GameObjects.BitmapText | null;
   private readonly align: 'left' | 'center' | 'right';
+  private color: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number, text: string, style: LabelStyle = {}) {
     super(scene, x, y);
     const scale = style.scale ?? 1;
     this.align = style.align ?? 'left';
+    this.color = style.color ?? 0xf4ead2;
     const make = (color: number) => {
       const t = new Phaser.GameObjects.BitmapText(scene, 0, 0, FONT_KEY, text, H_SIZE)
         .setTint(color)
@@ -226,6 +228,8 @@ export class Label extends Phaser.GameObjects.Container {
   }
 
   setColor(color: number): this {
+    if (color === this.color) return this; // called every frame by the HUD; skip no-ops
+    this.color = color;
     this.main.setTint(color);
     return this;
   }

@@ -7,9 +7,11 @@ export const runtime = {
   modals: 0,
   /** A scripted flow (sleep, results) owns the screen. */
   busy: false,
+  /** The app is in the background: the world and the clock stay frozen even if frames still arrive. */
+  suspended: false,
   /** False on the title screen, so autosave never writes a half-initialised game. */
   inGame: false,
   get blocked(): boolean {
-    return this.modals > 0 || this.busy;
+    return this.modals > 0 || this.busy || this.suspended;
   },
 };

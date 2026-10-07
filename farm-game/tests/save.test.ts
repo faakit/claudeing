@@ -85,6 +85,14 @@ describe('save/load', () => {
     expect(s.farm.tiles).toEqual({});
   });
 
+  it('saves that predate the vibration setting get it switched on', () => {
+    const old = JSON.parse(JSON.stringify(createInitialState()));
+    delete old.settings.vibrate;
+    expect(migrate(old).settings.vibrate).toBe(true);
+    old.settings.vibrate = false;
+    expect(migrate(old).settings.vibrate).toBe(false);
+  });
+
   it('fills fields added after a save was written', () => {
     const old = JSON.parse(JSON.stringify(createInitialState()));
     delete old.settings;

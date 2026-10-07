@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { audio } from '../platform/audio';
+import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
 import { Label } from './font';
 import { C } from './theme';
@@ -101,9 +102,12 @@ export class Button extends Phaser.GameObjects.Container {
       scale: style.scale ?? 1,
     });
     this.label.setY(Math.round((bh - 7 * (style.scale ?? 1)) / 2));
-    const pad = 3;
+    // Grow the touch area to >= 44 CSS px, overlapping the visual edge but never by more than 4px
+    // a side so neighbouring rows stay distinguishable.
+    const padX = Math.min(4, Math.max(3, (hitSize(scene, bw) - bw) / 2));
+    const padY = Math.min(4, Math.max(3, (hitSize(scene, bh) - bh) / 2));
     this.zone = scene.add
-      .zone(-pad, -pad, bw + pad * 2, bh + pad * 2)
+      .zone(-padX, -padY, bw + padX * 2, bh + padY * 2)
       .setOrigin(0, 0)
       .setInteractive({ useHandCursor: true });
     this.add([this.bg, this.label, this.zone]);

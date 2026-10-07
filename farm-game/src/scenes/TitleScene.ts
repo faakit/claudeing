@@ -4,6 +4,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { crops, mapsData } from '../data';
 import { saveStore } from '../game/persistence';
 import { audio } from '../platform/audio';
+import { setHapticsEnabled } from '../platform/haptics';
 import { createInitialState, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { setState } from '../state/store';
@@ -117,6 +118,7 @@ export class TitleScene extends Phaser.Scene {
     audio.unlock();
     setState(state);
     audio.setVolumes(state.settings.music, state.settings.sfx, state.settings.muted);
+    setHapticsEnabled(state.settings.vibrate);
     audio.startMusic();
     runtime.inGame = true;
     runtime.busy = false;

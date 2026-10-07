@@ -1,3 +1,4 @@
+import { lifecycle } from '../platform/lifecycle';
 import { createWebStore } from '../platform/webStore';
 import { getState } from '../state/store';
 import { runtime } from '../state/runtime';
@@ -33,14 +34,11 @@ export function saveNow(quiet = false): Promise<boolean> {
 }
 
 let wired = false;
-/** Autosave on tab hide / page close, and every minute of play. */
+/** Autosave when the app is backgrounded or closed (via the shared lifecycle) and every minute of play. */
 export function wireAutosave(): void {
   if (wired) return;
   wired = true;
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) void saveNow(true);
-  });
-  window.addEventListener('pagehide', () => void saveNow(true));
+  lifecycle.on('pause', () => void saveNow(true));
   window.setInterval(() => {
     if (!runtime.blocked) void saveNow(true);
   }, 60_000);
