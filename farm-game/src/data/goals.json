@@ -1,0 +1,73 @@
+[
+  {
+    "id": "till",
+    "text": "Till 6 patches of soil with the hoe",
+    "stat": "tilled",
+    "target": 6,
+    "reward": 20
+  },
+  {
+    "id": "plant",
+    "text": "Plant 5 seeds (pick seeds, press Action on soil)",
+    "stat": "planted",
+    "target": 5,
+    "reward": 20
+  },
+  {
+    "id": "water",
+    "text": "Water 5 plants with the watering can",
+    "stat": "watered",
+    "target": 5,
+    "reward": 20
+  },
+  {
+    "id": "sleep",
+    "text": "Sleep in your bed to grow your crops",
+    "stat": "daysSlept",
+    "target": 1,
+    "reward": 30
+  },
+  { "id": "harvest", "text": "Harvest 5 crops", "stat": "harvested", "target": 5, "reward": 50 },
+  {
+    "id": "ship",
+    "text": "Ship 5 items in the bin by the house",
+    "stat": "shipped",
+    "target": 5,
+    "reward": 50
+  },
+  {
+    "id": "buy",
+    "text": "Walk east to town and buy 5 seeds",
+    "stat": "bought",
+    "target": 5,
+    "reward": 50
+  },
+  {
+    "id": "earn1k",
+    "text": "Earn 1,000g selling crops",
+    "stat": "earned",
+    "target": 1000,
+    "reward": 100
+  },
+  {
+    "id": "upgrade",
+    "text": "Buy an upgrade at the General Store",
+    "stat": "upgrades",
+    "target": 1,
+    "reward": 100
+  },
+  {
+    "id": "earn5k",
+    "text": "Earn 5,000g selling crops",
+    "stat": "earned",
+    "target": 5000,
+    "reward": 250
+  },
+  {
+    "id": "earn15k",
+    "text": "Earn 15,000g and become a Harvest Legend",
+    "stat": "earned",
+    "target": 15000,
+    "reward": 500
+  }
+]

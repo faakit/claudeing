@@ -24,7 +24,14 @@ export const PLACEHOLDER_TILES = [
   { name: 'wallin', color: '#6d5a78', accent: '#4f3f5a' },
   { name: 'bed', color: '#c4473a', accent: '#f4ead2' },
   { name: 'bin', color: '#8b5a2b', accent: '#c28a4a' },
+  { name: 'tree', color: '#5a9e4b', accent: '#2f7a3a' },
+  { name: 'flower', color: '#5a9e4b', accent: '#f2a6c0' },
+  { name: 'shopwall', color: '#d9c7a0', accent: '#b04a3a' },
+  { name: 'shopdoor', color: '#d9c7a0', accent: '#b04a3a' },
 ] as const;
+
+/** Tile kind by gid, for game rules (water refills the can, etc). */
+export const tileKind = (gid: number): string => PLACEHOLDER_TILES[gid - 1]?.name ?? 'none';
 
 // --- Player & movement (M1) ---
 export const PLAYER_SPEED = 64; // px/s
@@ -48,3 +55,9 @@ export const TAP_MAX_MS = 250;
 export const TAP_MAX_MOVE = 8;
 export const UI_LAYOUT = { margin: 14, actionRadius: 26, interactRadius: 20 } as const;
 export const EVT_INTERACT_TARGET = 'interact-target';
+
+// --- Time (M2) ---
+/** Real ms per in-game minute: 5s per 10 minutes, so a 20h game day lasts ~10 real minutes. */
+export const MS_PER_GAME_MINUTE = 500;
+/** Longest frame delta fed to the clock, so a backgrounded tab can't skip hours. */
+export const MAX_CLOCK_DT_MS = 100;

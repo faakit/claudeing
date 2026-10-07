@@ -20,6 +20,17 @@ describe('map content', () => {
     expect(isTileBlocked(buildCollisionGrid(maps[map]!), tx, ty)).toBe(false);
   });
 
+  it('wake spawn is walkable', () => {
+    const { map, tx, ty } = mapsData.wake;
+    expect(isTileBlocked(buildCollisionGrid(maps[map]!), tx, ty)).toBe(false);
+  });
+
+  it('the farm has a weed zone with plenty of tillable tiles', () => {
+    const raw = maps['farm']!;
+    const zone = parseMapObjects(raw).find((o) => o.type === 'weedzone')!;
+    expect(zone.tw * zone.th).toBeGreaterThan(100);
+  });
+
   it.each(Object.keys(mapsData.maps))('%s: doors are walkable and lead somewhere valid', (id) => {
     const grid = buildCollisionGrid(maps[id]!);
     const doors = parseMapObjects(maps[id]!).filter((o) => o.type === 'door');
@@ -38,10 +49,10 @@ describe('map content', () => {
     }
   });
 
-  it('interactables (bed, bin) are solid so the player stands beside them', () => {
+  it('interactables (bed, bin, shop) are solid so the player stands beside them', () => {
     for (const [id, map] of Object.entries(maps)) {
       const grid = buildCollisionGrid(map);
-      for (const o of parseMapObjects(map).filter((o) => o.type !== 'door')) {
+      for (const o of parseMapObjects(map).filter((o) => ['bed', 'bin', 'shop'].includes(o.type))) {
         expect(isTileBlocked(grid, o.tx, o.ty), `${id}:${o.type}`).toBe(true);
       }
     }

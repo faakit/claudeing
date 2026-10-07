@@ -1,0 +1,5 @@
+{
+  "hoe": { "energyCost": 2, "action": "till", "icon": "item_hoe" },
+  "watering_can": { "energyCost": 1, "action": "water", "icon": "item_watering_can" },
+  "scythe": { "energyCost": 1, "action": "clear", "icon": "item_scythe" }
+}

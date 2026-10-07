@@ -2,9 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { createInitialState } from '../src/state/GameState';
 
 describe('createInitialState', () => {
-  it('starts on spring day 1 with 500 gold and survives a JSON round trip', () => {
-    const state = createInitialState();
-    expect(state).toMatchObject({ day: 1, season: 'spring', money: 500 });
-    expect(JSON.parse(JSON.stringify(state))).toEqual(state);
+  it('starts on spring day 1 at 6:00 with starting gold, tools and seeds', () => {
+    const s = createInitialState();
+    expect(s.time).toMatchObject({ season: 'spring', day: 1, minutes: 360 });
+    expect(s.money).toBe(500);
+    expect(s.inventory.slots.slice(0, 3).map((x) => x?.item)).toEqual([
+      'hoe',
+      'watering_can',
+      'scythe',
+    ]);
+    expect(s.inventory.slots[3]).toEqual({ item: 'parsnip_seed', qty: 10 });
+  });
+
+  it('survives a JSON round trip', () => {
+    const s = createInitialState();
+    expect(JSON.parse(JSON.stringify(s))).toEqual(s);
   });
 });

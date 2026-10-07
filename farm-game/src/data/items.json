@@ -1,0 +1,181 @@
+{
+  "hoe": {
+    "name": "Hoe",
+    "type": "tool",
+    "icon": "item_hoe",
+    "color": "#9aa5b1",
+    "tool": "hoe",
+    "description": "Tills soil for planting."
+  },
+  "watering_can": {
+    "name": "Watering Can",
+    "type": "tool",
+    "icon": "item_watering_can",
+    "color": "#6fa3e0",
+    "tool": "watering_can",
+    "description": "Waters crops. Refill at the pond."
+  },
+  "scythe": {
+    "name": "Scythe",
+    "type": "tool",
+    "icon": "item_scythe",
+    "color": "#c9ced6",
+    "tool": "scythe",
+    "description": "Clears weeds."
+  },
+
+  "parsnip_seed": {
+    "name": "Parsnip Seeds",
+    "type": "seed",
+    "icon": "item_parsnip_seed",
+    "color": "#e8d9a8",
+    "buyPrice": 20,
+    "sellPrice": 10,
+    "plants": "parsnip",
+    "description": "Fast spring crop. 4 days."
+  },
+  "potato_seed": {
+    "name": "Potato Seeds",
+    "type": "seed",
+    "icon": "item_potato_seed",
+    "color": "#c49a6c",
+    "buyPrice": 50,
+    "sellPrice": 25,
+    "plants": "potato",
+    "description": "Spring crop. 7 days."
+  },
+  "cauliflower_seed": {
+    "name": "Cauliflower Seeds",
+    "type": "seed",
+    "icon": "item_cauliflower_seed",
+    "color": "#e9efe0",
+    "buyPrice": 80,
+    "sellPrice": 40,
+    "plants": "cauliflower",
+    "description": "Slow, valuable spring crop. 10 days."
+  },
+  "tomato_seed": {
+    "name": "Tomato Seeds",
+    "type": "seed",
+    "icon": "item_tomato_seed",
+    "color": "#e0574a",
+    "buyPrice": 40,
+    "sellPrice": 20,
+    "plants": "tomato",
+    "description": "Summer crop. 7 days."
+  },
+  "melon_seed": {
+    "name": "Melon Seeds",
+    "type": "seed",
+    "icon": "item_melon_seed",
+    "color": "#7fc96b",
+    "buyPrice": 100,
+    "sellPrice": 50,
+    "plants": "melon",
+    "description": "Pricey summer crop. 12 days."
+  },
+  "corn_seed": {
+    "name": "Corn Seeds",
+    "type": "seed",
+    "icon": "item_corn_seed",
+    "color": "#f2d04a",
+    "buyPrice": 120,
+    "sellPrice": 60,
+    "plants": "corn",
+    "description": "Summer crop that regrows every 3 days."
+  },
+  "pumpkin_seed": {
+    "name": "Pumpkin Seeds",
+    "type": "seed",
+    "icon": "item_pumpkin_seed",
+    "color": "#e8893a",
+    "buyPrice": 100,
+    "sellPrice": 50,
+    "plants": "pumpkin",
+    "description": "Big fall payout. 12 days."
+  },
+  "yam_seed": {
+    "name": "Yam Seeds",
+    "type": "seed",
+    "icon": "item_yam_seed",
+    "color": "#b5546e",
+    "buyPrice": 30,
+    "sellPrice": 15,
+    "plants": "yam",
+    "description": "Quick fall crop. 5 days."
+  },
+
+  "parsnip": {
+    "name": "Parsnip",
+    "type": "crop",
+    "icon": "item_parsnip",
+    "color": "#f2e6c9",
+    "sellPrice": 35,
+    "description": "Crunchy and sweet."
+  },
+  "potato": {
+    "name": "Potato",
+    "type": "crop",
+    "icon": "item_potato",
+    "color": "#c49a6c",
+    "sellPrice": 100,
+    "description": "A farm staple."
+  },
+  "cauliflower": {
+    "name": "Cauliflower",
+    "type": "crop",
+    "icon": "item_cauliflower",
+    "color": "#eef3e6",
+    "sellPrice": 230,
+    "description": "Worth the wait."
+  },
+  "tomato": {
+    "name": "Tomato",
+    "type": "crop",
+    "icon": "item_tomato",
+    "color": "#e0574a",
+    "sellPrice": 85,
+    "description": "Juicy summer red."
+  },
+  "melon": {
+    "name": "Melon",
+    "type": "crop",
+    "icon": "item_melon",
+    "color": "#7fc96b",
+    "sellPrice": 310,
+    "description": "Heavy and sweet."
+  },
+  "corn": {
+    "name": "Corn",
+    "type": "crop",
+    "icon": "item_corn",
+    "color": "#f2d04a",
+    "sellPrice": 80,
+    "description": "Keeps on giving."
+  },
+  "pumpkin": {
+    "name": "Pumpkin",
+    "type": "crop",
+    "icon": "item_pumpkin",
+    "color": "#e8893a",
+    "sellPrice": 330,
+    "description": "A fall favorite."
+  },
+  "yam": {
+    "name": "Yam",
+    "type": "crop",
+    "icon": "item_yam",
+    "color": "#b5546e",
+    "sellPrice": 65,
+    "description": "Earthy and filling."
+  },
+
+  "fiber": {
+    "name": "Fiber",
+    "type": "material",
+    "icon": "item_fiber",
+    "color": "#8fbf5a",
+    "sellPrice": 2,
+    "description": "Cut from weeds."
+  }
+}

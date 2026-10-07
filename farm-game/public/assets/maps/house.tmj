@@ -486,12 +486,12 @@
    "firstgid": 1,
    "name": "placeholder",
    "image": "../tilesets/placeholder.png",
-   "imagewidth": 208,
+   "imagewidth": 272,
    "imageheight": 16,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 13,
-   "columns": 13,
+   "tilecount": 17,
+   "columns": 17,
    "margin": 0,
    "spacing": 0
   }

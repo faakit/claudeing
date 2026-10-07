@@ -1,7 +1,29 @@
 {
-  "start": { "map": "farm", "tx": 7, "ty": 9, "facing": "down" },
+  "start": {
+    "map": "farm",
+    "tx": 7,
+    "ty": 9,
+    "facing": "down"
+  },
   "maps": {
-    "farm": { "scene": "Farm", "file": "assets/maps/farm.tmj" },
-    "house": { "scene": "House", "file": "assets/maps/house.tmj" }
+    "farm": {
+      "scene": "Farm",
+      "file": "assets/maps/farm.tmj",
+      "tillable": [1, 2]
+    },
+    "house": {
+      "scene": "House",
+      "file": "assets/maps/house.tmj"
+    },
+    "town": {
+      "scene": "Town",
+      "file": "assets/maps/town.tmj"
+    }
+  },
+  "wake": {
+    "map": "house",
+    "tx": 4,
+    "ty": 3,
+    "facing": "down"
   }
 }

@@ -16,8 +16,22 @@ const T = {
   wallin: 11,
   bed: 12,
   bin: 13,
+  tree: 14,
+  flower: 15,
+  shopwall: 16,
+  shopdoor: 17,
 };
-const SOLID = new Set([T.fence, T.water, T.wall, T.wallin, T.bed, T.bin]);
+const SOLID = new Set([
+  T.fence,
+  T.water,
+  T.wall,
+  T.wallin,
+  T.bed,
+  T.bin,
+  T.tree,
+  T.shopwall,
+  T.shopdoor,
+]);
 
 function makeMap(w, h, fill) {
   const ground = Array.from({ length: h }, () => Array(w).fill(fill));
@@ -97,12 +111,12 @@ function toTmj({ w, h, ground }, objects) {
         firstgid: 1,
         name: 'placeholder',
         image: '../tilesets/placeholder.png',
-        imagewidth: 208,
+        imagewidth: 272,
         imageheight: 16,
         tilewidth: 16,
         tileheight: 16,
-        tilecount: 13,
-        columns: 13,
+        tilecount: 17,
+        columns: 17,
         margin: 0,
         spacing: 0,
       },
@@ -116,6 +130,21 @@ function write(name, map, objects) {
   console.log(`wrote ${name}.tmj`);
 }
 
+// Deterministic scatter so regenerated maps are stable.
+function scatter(m, tile, n, seed, ok) {
+  let a = seed;
+  const rnd = () => (a = (a * 1664525 + 1013904223) >>> 0) / 4294967296;
+  let placed = 0;
+  for (let tries = 0; placed < n && tries < n * 50; tries++) {
+    const x = 1 + Math.floor(rnd() * (m.w - 2));
+    const y = 1 + Math.floor(rnd() * (m.h - 2));
+    if (m.ground[y][x] === T.grass && ok(x, y)) {
+      m.ground[y][x] = tile;
+      placed++;
+    }
+  }
+}
+
 // ---- Farm 40x30 ----
 {
   nextId = 1;
@@ -125,18 +154,36 @@ function write(name, map, objects) {
   rect(0, h - 1, w, 1, T.fence);
   rect(0, 0, 1, h, T.fence);
   rect(w - 1, 0, 1, h, T.fence);
-  rect(w - 1, 12, 1, 4, T.path); // gap east, leads to town in M5
-  rect(30, 3, 7, 6, T.water); // pond
+  rect(36, 12, 4, 4, T.path); // gate east, leads to town
   rect(4, 3, 7, 5, T.wall); // house
   rect(7, 7, 1, 1, T.door);
   rect(7, 8, 1, 8, T.path);
-  rect(7, 15, 32, 1, T.path);
+  rect(7, 15, 33, 1, T.path);
   rect(10, 9, 1, 1, T.bin); // shipping bin
-  rect(14, 18, 10, 7, T.dirt); // farmable plot
-  write('farm', m, [
-    door('house_door', 7, 7, 'house', 8, 10, 'up'),
+  rect(14, 18, 10, 7, T.dirt); // starter plot
+  rect(28, 19, 5, 5, T.water); // pond, close to the fields
+  for (const [x, y] of [
+    [2, 25],
+    [3, 27],
+    [2, 22],
+    [34, 3],
+    [36, 5],
+    [33, 27],
+    [36, 24],
+    [20, 2],
+    [27, 4],
+  ]) {
+    rect(x, y, 1, 1, T.tree);
+  }
+  scatter(m, T.flower, 28, 7, (x, y) => !(x > 11 && x < 27 && y > 16 && y < 28));
+  const objects = [
     obj('bin', 'shipping_bin', 10, 9, 1, 1),
-  ]);
+    obj('weedzone', 'field', 11, 17, 18, 11),
+    door('house_door', 7, 7, 'house', 8, 10, 'up'),
+  ];
+  for (let y = 12; y < 16; y++)
+    objects.push(door(`to_town_${y}`, 39, y, 'town', 1, y - 3, 'right'));
+  write('farm', m, objects);
 }
 
 // ---- House 16x12 ----
@@ -154,4 +201,29 @@ function write(name, map, objects) {
     door('front_door', 8, 11, 'farm', 7, 8, 'down'),
     obj('bed', 'bed', 2, 2, 2, 2),
   ]);
+}
+
+// ---- Town 30x20 ----
+{
+  nextId = 1;
+  const m = makeMap(30, 20, T.grass);
+  const { w, h, rect } = m;
+  rect(0, 0, w, 1, T.tree);
+  rect(0, h - 1, w, 1, T.tree);
+  rect(w - 1, 0, 1, h, T.tree);
+  rect(0, 0, 1, h, T.tree);
+  rect(0, 9, w - 1, 4, T.path); // main road, west gate to the farm
+  rect(11, 3, 9, 5, T.shopwall); // general store
+  rect(14, 7, 3, 1, T.shopdoor);
+  rect(14, 8, 3, 1, T.path);
+  rect(3, 3, 5, 4, T.wall); // neighbors (decor)
+  rect(23, 3, 4, 4, T.wall);
+  rect(6, 14, 5, 3, T.wall);
+  rect(20, 14, 6, 3, T.wall);
+  rect(5, 7, 1, 2, T.path);
+  scatter(m, T.flower, 34, 11, () => true);
+  scatter(m, T.tree, 10, 3, (x, y) => y < 8 || y > 13);
+  const objects = [obj('shop', 'general_store', 14, 7, 3, 1)];
+  for (let y = 9; y < 13; y++) objects.push(door(`to_farm_${y}`, 0, y, 'farm', 38, y + 3, 'left'));
+  write('town', m, objects);
 }
