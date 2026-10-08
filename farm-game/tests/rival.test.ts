@@ -71,6 +71,8 @@ describe('the rival farmer', () => {
     expect(rivalMinute(s)).toBe(game.rival.minute + 180);
     expect(rivalNotice(s)).toMatch(/5:00 PM/);
     hearts(s, 4);
+    expect(rivalNotice(s)).toMatch(/takes a small one at 5:00 PM/);
+    expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
     s.time.minutes = 1300;
     const cheapest = Math.min(...s.orders.list.map((o) => o.reward));
     expect(applyRival(s)?.reward).toBe(cheapest);

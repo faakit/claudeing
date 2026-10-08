@@ -41,7 +41,10 @@ export function rivalNotice(state: GameState): string {
   const took = state.orders.list.filter((o) => o.rival).length;
   const n = rivalTakes(state);
   if (took) return `${rivalName()} took ${NUMBER_WORDS[took] ?? took} today.`;
-  return `${rivalName()} takes the best ${NUMBER_WORDS[n] ?? n} at ${formatClock(rivalMinute(state))}.`;
+  const at = formatClock(rivalMinute(state));
+  // At 4 hearts he is polite (and takes one a day): the smallest request, leaving you the best.
+  if (perk(state, 'rivalPolite') >= 1) return `${rivalName()} takes a small one at ${at}.`;
+  return `${rivalName()} takes the best ${NUMBER_WORDS[n] ?? n} at ${at}.`;
 }
 
 /** If it is time, the rival fills his requests for the day. Returns the first order taken, if any. */
