@@ -12,7 +12,7 @@ import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
 import { hitSize } from './hit';
-import { C } from './theme';
+import { CH, GRAIN, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
 
@@ -76,21 +76,31 @@ export class Hud {
     const depth = 50;
     // Static panels drawn once.
     const panels = scene.add.graphics().setDepth(depth);
-    drawPanel(panels, 3, 2, 104, 32);
-    drawPanel(panels, 110, 2, 87, 32);
+    drawPanel(panels, 3, 2, 104, 32, undefined, undefined, 'chrome');
+    drawPanel(panels, 110, 2, 87, 32, undefined, undefined, 'chrome');
     // Dock: solid so the world never shows through behind controls.
-    panels.fillStyle(C.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
-    panels.fillStyle(C.cream, 0.55).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
-    panels.fillStyle(C.panelLight, 0.5).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
+    if (SKIN === 'plum') {
+      panels.fillStyle(CH.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
+      panels.fillStyle(CH.cream, 0.55).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
+      panels.fillStyle(CH.panelLight, 0.5).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
+    } else {
+      // Walnut dock: wood plate with an ink seam and a lit top edge, grain kept sparse behind the controls.
+      panels.fillStyle(CH.panel, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
+      panels.fillStyle(CH.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
+      panels.fillStyle(CH.rim, 1).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
+      if (GRAIN !== null)
+        for (let gy = DOCK_Y + 7; gy < GAME_HEIGHT - 2; gy += 9)
+          panels.fillStyle(GRAIN, 1).fillRect(((gy * 13) % 97) + 4, gy, 12 + ((gy * 7) % 20), 1);
+    }
     // Dark band above the world too, so the HUD reads as its own strip.
-    panels.fillStyle(C.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
+    panels.fillStyle(CH.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
 
-    this.dateLabel = new Label(scene, 10, 5, '', { color: C.creamDim }).setDepth(depth + 1);
+    this.dateLabel = new Label(scene, 10, 5, '', { color: CH.creamDim }).setDepth(depth + 1);
     this.timeLabel = new Label(scene, 10, 14, '', { scale: 2 }).setDepth(depth + 1);
     this.coin = scene.add.image(121, 10, 'ui_coin').setDepth(depth + 1);
-    this.goldLabel = new Label(scene, 130, 6, '', { color: C.gold }).setDepth(depth + 1);
+    this.goldLabel = new Label(scene, 130, 6, '', { color: CH.gold }).setDepth(depth + 1);
     this.weatherIcon = scene.add.image(121, 25, 'ui_sun').setDepth(depth + 1);
-    this.weatherLabel = new Label(scene, 130, 21, '', { color: C.creamDim }).setDepth(depth + 1);
+    this.weatherLabel = new Label(scene, 130, 21, '', { color: CH.creamDim }).setDepth(depth + 1);
 
     this.meters = scene.add.graphics().setDepth(depth);
     scene.add
@@ -103,8 +113,8 @@ export class Hud {
       .setDepth(depth + 1);
 
     this.goalGfx = scene.add.graphics().setDepth(depth);
-    this.goalLabel = new Label(scene, 9, 52, '', { color: C.cream }).setDepth(depth + 1);
-    this.goalCount = new Label(scene, 191, 63, '', { color: C.gold, align: 'right' }).setDepth(
+    this.goalLabel = new Label(scene, 9, 52, '', { color: CH.cream }).setDepth(depth + 1);
+    this.goalCount = new Label(scene, 191, 63, '', { color: CH.gold, align: 'right' }).setDepth(
       depth + 1,
     );
 
@@ -138,7 +148,7 @@ export class Hud {
           depth + 2,
         ),
       );
-      new Label(scene, x + 3, HOTBAR_Y + 2, String(i + 1), { color: C.creamDim, shadow: null })
+      new Label(scene, x + 3, HOTBAR_Y + 2, String(i + 1), { color: CH.creamDim, shadow: null })
         .setDepth(depth + 2)
         .setAlpha(0.6);
       const zone = scene.add
@@ -155,13 +165,13 @@ export class Hud {
     }
 
     this.savedLabel = new Label(scene, GAME_WIDTH - 5, HUD_H + 3, 'Saved', {
-      color: C.green,
+      color: CH.green,
       align: 'right',
     })
       .setDepth(depth + 1)
       .setAlpha(0);
     this.banner = new Label(scene, GAME_WIDTH / 2, HUD_H + 14, '', {
-      color: C.gold,
+      color: CH.gold,
       align: 'center',
       maxWidth: 190,
     })
@@ -205,10 +215,10 @@ export class Hud {
     // Late-night warning: the clock turns orange then red as pass-out nears.
     this.timeLabel.setColor(
       s.time.minutes >= game.dayEndMinutes - 60
-        ? C.red
+        ? CH.red
         : s.time.minutes >= game.dayEndMinutes - 180
-          ? C.warn
-          : C.cream,
+          ? CH.warn
+          : CH.cream,
     );
     const rainy = s.weather !== 'sunny';
     const weatherKey = rainy ? 'ui_rain' : 'ui_sun';
@@ -237,17 +247,17 @@ export class Hud {
     if (key === this.goalKey) return;
     this.goalKey = key;
     this.goalGfx.clear();
-    drawPanel(this.goalGfx, 3, 48, 194, 25);
+    drawPanel(this.goalGfx, 3, 48, 194, 25, undefined, undefined, 'chrome');
     if (!prog) {
-      this.goalLabel.setText('All goals complete!').setColor(C.green);
+      this.goalLabel.setText('All goals complete!').setColor(CH.green);
       this.goalCount.setText('');
       return;
     }
-    this.goalLabel.setText(prog.goal.text).setColor(C.cream);
+    this.goalLabel.setText(prog.goal.text).setColor(CH.cream);
     this.goalCount.setText(
       `${prog.value.toLocaleString('en-US')}/${prog.goal.target.toLocaleString('en-US')}`,
     );
-    drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, C.gold);
+    drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, CH.gold);
   }
 
   private goalBanner(text: string): void {
@@ -282,8 +292,8 @@ export class Hud {
     const e = s.energy / maxEnergy(s);
     const g = this.meters;
     g.clear();
-    drawBar(g, 17, 37, 80, 8, e, e > 0.5 ? C.green : e > 0.2 ? C.warn : C.red);
-    drawBar(g, 114, 37, 80, 8, s.water / waterCapacity(s), C.blue);
+    drawBar(g, 17, 37, 80, 8, e, e > 0.5 ? CH.green : e > 0.2 ? CH.warn : CH.red);
+    drawBar(g, 114, 37, 80, 8, s.water / waterCapacity(s), CH.blue);
   }
 
   // ---- hotbar ----
@@ -294,7 +304,7 @@ export class Hud {
     for (let i = 0; i < game.hotbarSlots; i++) {
       const x = HOTBAR_X + i * (SLOT + SLOT_GAP);
       const sel = i === s.inventory.selected;
-      drawSlot(g, x, HOTBAR_Y - (sel ? 2 : 0), SLOT, sel);
+      drawSlot(g, x, HOTBAR_Y - (sel ? 2 : 0), SLOT, sel, false, 'chrome');
       const stack = s.inventory.slots[i] ?? null;
       const icon = this.hotbarIcons[i]!;
       const qty = this.hotbarQty[i]!;
@@ -350,7 +360,7 @@ export class Hud {
       dup.born = now; // keep it alive instead of stacking spam
       return;
     }
-    const color = kind === 'warn' ? C.warn : kind === 'good' ? C.green : C.cream;
+    const color = kind === 'warn' ? CH.warn : kind === 'good' ? CH.green : CH.cream;
     const label = new Label(this.scene, GAME_WIDTH / 2, DOCK_Y - 14, text, {
       color,
       align: 'center',
@@ -358,8 +368,16 @@ export class Hud {
     }).setDepth(80);
     // A dark pill behind the text keeps it readable over grass, sand and snow.
     const bg = this.scene.add
-      .rectangle(label.x, label.y, label.textWidth + 10, label.textHeight + 5, C.ink, 0.72)
+      .rectangle(
+        label.x,
+        label.y,
+        label.textWidth + 10,
+        label.textHeight + 5,
+        SKIN === 'plum' ? CH.ink : CH.panel,
+        SKIN === 'plum' ? 0.72 : 0.95,
+      )
       .setDepth(79);
+    if (SKIN !== 'plum') bg.setStrokeStyle(1, CH.ink);
     this.toasts.push({ label, bg, text, born: now });
     if (this.toasts.length > 3) {
       const old = this.toasts.shift();

@@ -9,7 +9,7 @@ import { getState } from '../state/store';
 import { canChat } from '../systems/friendship';
 import { npcLocation, npcMaps } from '../systems/npcs';
 import { Label } from '../ui/font';
-import { C } from '../ui/theme';
+import { CH as C } from '../ui/theme';
 
 interface Shown {
   sprite: Phaser.GameObjects.Sprite;

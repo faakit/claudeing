@@ -4,28 +4,55 @@ import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
 import { fitRow, Label } from './font';
-import { C } from './theme';
+import { C, CH, GRAIN, SKIN } from './theme';
 
-/** Notched pixel-art panel: ink outline, cream rim, soft shadow. Drawn at (x, y). */
+/**
+ * Notched pixel-art panel drawn at (x, y). Plum skin: ink outline, cream rim, soft shadow. Walnut skin: a
+ * content sheet is parchment in a 2 px wood frame; chrome (`kind = 'chrome'`) is walnut with a wood top edge and
+ * plum-shadow grain.
+ */
 export function drawPanel(
   g: Phaser.GameObjects.Graphics,
   x: number,
   y: number,
   w: number,
   h: number,
-  fill: number = C.panel,
-  rim: number = C.cream,
+  fill?: number,
+  rim?: number,
+  kind: 'content' | 'chrome' = 'content',
 ): void {
+  const t = kind === 'chrome' ? CH : C;
+  const f = fill ?? t.panel;
+  const r = rim ?? t.rim;
   const notch = (c: number, a: number, ix: number, iy: number, iw: number, ih: number) => {
     g.fillStyle(c, a)
       .fillRect(ix + 1, iy, iw - 2, ih)
       .fillRect(ix, iy + 1, iw, ih - 2);
   };
-  g.fillStyle(C.ink, 0.4).fillRect(x + 3, y + 3, w - 1, h - 1);
-  notch(C.ink, 1, x, y, w, h);
-  notch(rim, 1, x + 1, y + 1, w - 2, h - 2);
-  notch(fill, 1, x + 2, y + 2, w - 4, h - 4);
-  g.fillStyle(0xffffff, 0.07).fillRect(x + 3, y + 3, w - 6, 1);
+  if (SKIN === 'plum') {
+    g.fillStyle(C.ink, 0.4).fillRect(x + 3, y + 3, w - 1, h - 1);
+    notch(C.ink, 1, x, y, w, h);
+    notch(r, 1, x + 1, y + 1, w - 2, h - 2);
+    notch(f, 1, x + 2, y + 2, w - 4, h - 4);
+    g.fillStyle(0xffffff, 0.07).fillRect(x + 3, y + 3, w - 6, 1);
+    return;
+  }
+  g.fillStyle(t.ink, 0.35).fillRect(x + 2, y + 2, w, h);
+  notch(t.ink, 1, x, y, w, h);
+  if (kind === 'chrome') {
+    notch(f, 1, x + 1, y + 1, w - 2, h - 2);
+    g.fillStyle(r, 1).fillRect(x + 2, y + 1, w - 4, 1); // lit top edge
+    if (GRAIN !== null)
+      for (let gy = y + 4; gy < y + h - 2; gy += 3) {
+        const off = ((gy * 7) % 11) + 2;
+        g.fillStyle(GRAIN, 1).fillRect(x + off, gy, Math.max(0, Math.min(w - off - 3, w / 3)), 1);
+      }
+    return;
+  }
+  notch(r, 1, x + 1, y + 1, w - 2, h - 2); // 2 px wood frame
+  g.fillStyle(C.panelLight, 1).fillRect(x + 2, y + 1, w - 4, 1); // frame highlight
+  notch(t.ink, 1, x + 3, y + 3, w - 6, h - 6);
+  notch(f, 1, x + 4, y + 4, w - 8, h - 8);
 }
 
 export function drawSlot(
@@ -35,14 +62,34 @@ export function drawSlot(
   size: number,
   selected: boolean,
   marked = false,
+  kind: 'content' | 'chrome' = 'content',
 ): void {
-  g.fillStyle(C.ink, 1).fillRect(x, y, size, size);
-  g.fillStyle(
-    selected ? C.gold : marked ? C.blue : C.creamDim,
-    selected || marked ? 1 : 0.55,
-  ).fillRect(x + 1, y + 1, size - 2, size - 2);
-  g.fillStyle(C.slot, 1).fillRect(x + 2, y + 2, size - 4, size - 4);
-  g.fillStyle(0xffffff, 0.05).fillRect(x + 2, y + 2, size - 4, 1);
+  const t = kind === 'chrome' ? CH : C;
+  g.fillStyle(t.ink, 1).fillRect(x, y, size, size);
+  if (SKIN === 'plum') {
+    g.fillStyle(
+      selected ? C.gold : marked ? C.blue : C.creamDim,
+      selected || marked ? 1 : 0.55,
+    ).fillRect(x + 1, y + 1, size - 2, size - 2);
+    g.fillStyle(C.slot, 1).fillRect(x + 2, y + 2, size - 4, size - 4);
+    g.fillStyle(0xffffff, 0.05).fillRect(x + 2, y + 2, size - 4, 1);
+    return;
+  }
+  const rimC = selected ? CH.gold : marked ? t.blue : t.slotRim;
+  g.fillStyle(rimC, 1).fillRect(x + 1, y + 1, size - 2, size - 2);
+  g.fillStyle(t.slot, 1).fillRect(x + 2, y + 2, size - 4, size - 4);
+  g.fillStyle(t.ink, 0.25).fillRect(x + 2, y + 2, size - 4, 1); // recessed: shadow under the top edge
+  if (selected) {
+    // Shape cue, not only colour: ink corner notches inside the gold ring plus a thicker bottom ledge.
+    for (const [cx, cy] of [
+      [x + 2, y + 2],
+      [x + size - 3, y + 2],
+      [x + 2, y + size - 3],
+      [x + size - 3, y + size - 3],
+    ] as const)
+      g.fillStyle(t.ink, 1).fillRect(cx, cy, 1, 1);
+    g.fillStyle(CH.gold, 1).fillRect(x + 1, y + size - 3, size - 2, 2);
+  }
 }
 
 export function drawBar(
@@ -56,7 +103,7 @@ export function drawBar(
   vertical = false,
 ): void {
   g.fillStyle(C.ink, 1).fillRect(x, y, w, h);
-  g.fillStyle(0x0c0914, 1).fillRect(x + 1, y + 1, w - 2, h - 2);
+  g.fillStyle(SKIN === 'plum' ? 0x0c0914 : 0x4a2a40, 1).fillRect(x + 1, y + 1, w - 2, h - 2);
   const r = Math.max(0, Math.min(1, ratio));
   if (vertical) {
     const fh = Math.round((h - 2) * r);
@@ -136,8 +183,8 @@ export class Button extends Phaser.GameObjects.Container {
   private draw(): void {
     const { bw: w, bh: h, style } = this;
     this.bg.clear();
-    const fill = this.enabled ? (style.fill ?? C.panelLight) : 0x241d33;
-    const rim = this.enabled ? (style.rim ?? C.cream) : C.creamDim;
+    const fill = this.enabled ? (style.fill ?? C.panelLight) : SKIN === 'plum' ? 0x241d33 : C.slot;
+    const rim = this.enabled ? (style.rim ?? C.rim) : C.creamDim;
     drawPanel(this.bg, 0, this.down ? 1 : 0, w, h, this.down ? C.ink : fill, rim);
     this.label.setY(Math.round((h - 7 * (style.scale ?? 1)) / 2) + (this.down ? 1 : 0));
     this.label.setAlpha(this.enabled ? 1 : 0.5);

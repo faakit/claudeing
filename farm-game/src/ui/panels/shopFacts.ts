@@ -13,9 +13,10 @@ export function shopFacts(itemId: string, own: number, day: number, greenhouse =
   const crop = def.plants ? crops[def.plants] : undefined;
   let base: string;
   if (crop)
-    base = !greenhouse && tooLate(itemId, day)
-      ? 'Too late now'
-      : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
+    base =
+      !greenhouse && tooLate(itemId, day)
+        ? 'Too late now'
+        : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
   else if (def.type === 'animal') base = 'Needs a home';
   else if (def.type === 'sapling') base = `${seasonName(trees[itemId]?.season ?? '')} fruit`;
   else if (def.type === 'feed') base = 'Daily food';

@@ -12,7 +12,7 @@ import { setState } from '../state/store';
 import { hasNewerSave, loadGame } from '../systems/save';
 import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
-import { C } from '../ui/theme';
+import { CH as C } from '../ui/theme';
 import { Button } from '../ui/widgets';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */

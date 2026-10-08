@@ -662,7 +662,8 @@ export function validateContent(): void {
       fail('mail', `"${l.id}" encloses unknown item "${l.gift.item}"`);
     const w = l.when;
     if (w.npc !== undefined && !npcs[w.npc]) fail('mail', `"${l.id}" waits on unknown villager`);
-    if ((w.stat === undefined) !== (w.min === undefined)) fail('mail', `"${l.id}" needs stat and min`);
+    if ((w.stat === undefined) !== (w.min === undefined))
+      fail('mail', `"${l.id}" needs stat and min`);
     if (w.season !== undefined && !SEASONS.includes(w.season))
       fail('mail', `"${l.id}" has a bad season`);
     if (Object.keys(w).length === 0) fail('mail', `"${l.id}" has no "when"`);
@@ -672,7 +673,8 @@ export function validateContent(): void {
     if (!j.id || jobIds.has(j.id)) fail('jobs', `job "${j.id}" needs a unique id`);
     jobIds.add(j.id);
     if (!npcs[j.giver]) fail('jobs', `"${j.id}" is given by unknown villager "${j.giver}"`);
-    if (!j.text.includes('{n}') || !j.stat) fail('jobs', `"${j.id}" needs a stat and {n} in its text`);
+    if (!j.text.includes('{n}') || !j.stat)
+      fail('jobs', `"${j.id}" needs a stat and {n} in its text`);
     if (j.qty[0] < 1 || j.qty[1] < j.qty[0] || j.weight <= 0)
       fail('jobs', `"${j.id}" has a bad quantity or weight`);
   }
