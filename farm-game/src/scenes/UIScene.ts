@@ -41,6 +41,7 @@ import {
   JarPanel,
   NpcPanel,
   PlotPanel,
+  ProjectPanel,
   MenuPanel,
   ShopPanel,
   SleepPanel,
@@ -461,6 +462,7 @@ export class UIScene extends Phaser.Scene {
     this.panels.set('bin', new BinPanel(this));
     this.panels.set('board', new BoardPanel(this));
     this.panels.set('festival', new FestivalPanel(this));
+    this.panels.set('projects', new ProjectPanel(this));
     this.jar = new JarPanel(this);
     this.npc = new NpcPanel(this);
     this.plot = new PlotPanel(this);

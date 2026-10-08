@@ -9,6 +9,9 @@ export const PERK_TEXT: Record<string, (v: number) => string> = {
   upgradeDiscount: (v) => `${Math.round(v * 100)}% off tool upgrades`,
   shopDiscount: (v) => `${Math.round(v * 100)}% off shop prices`,
   fishWindow: (v) => `+${Math.round(v * 100)}% catch zone`,
+  orderSlots: (v) => `+${v} board request a day`,
+  xpBonus: (v) => `+${Math.round(v * 100)}% skill XP`,
+  festivalPrize: (v) => `+${Math.round(v * 100)}% festival prizes`,
 };
 
 export const perkLine = (perks: Record<string, number>): string =>

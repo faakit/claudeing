@@ -133,6 +133,72 @@ function migrateV4(raw: Raw): Raw {
   return { ...raw, version: 5, plots: [...owned], upgrades: { ...up, hoe: 0, rod: 0 } };
 }
 
+/**
+ * The goal chain is a list and the save keeps an index into it, so a release that inserts goals must
+ * keep that index on the same goal. `oldIds` is the chain as the older release had it. Goals inserted
+ * before the player's current one are skipped (they are easy early goals a veteran has outgrown);
+ * a player who had finished every goal continues with the first goal added after the old last one.
+ */
+export function remapGoalIndex(raw: Raw, oldIds: readonly string[]): Raw {
+  const at = typeof raw['goalIndex'] === 'number' ? Math.max(0, Math.floor(raw['goalIndex'])) : 0;
+  const ids = goals.map((g) => g.id);
+  const current = oldIds[at];
+  let next = current === undefined ? -1 : ids.indexOf(current);
+  if (next < 0) {
+    const last = oldIds[oldIds.length - 1];
+    next = last === undefined ? 0 : ids.indexOf(last) + 1;
+  }
+  return { ...raw, goalIndex: Math.max(0, next) };
+}
+
+/** Goal ids of releases up to save version 7. */
+const GOALS_V7 = [
+  'till',
+  'plant',
+  'water',
+  'sleep',
+  'forage',
+  'buy',
+  'harvest',
+  'ship',
+  'fish',
+  'order',
+  'craft',
+  'place',
+  'preserve',
+  'quality',
+  'talk',
+  'chicken',
+  'eggs',
+  'tree',
+  'friend',
+  'earn1k',
+  'upgrade',
+  'earn5k',
+  'land',
+  'jars',
+  'fish20',
+  'orders10',
+  'heart5',
+  'event',
+  'craft10',
+  'mine10',
+  'smelt',
+  'toolbar',
+  'festival',
+  'book3',
+  'collect50',
+  'earn20k',
+  'earn50k',
+  'earn100k',
+  'collect200',
+] as const;
+
+/** v7 -> v8: town projects added goals to the chain (their progress lives in stats, no new state). */
+function migrateV7(raw: Raw): Raw {
+  return { ...remapGoalIndex(raw, GOALS_V7), version: 8 };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -140,6 +206,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   4: migrateV4,
   5: migrateV5,
   6: migrateV6,
+  7: migrateV7,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */

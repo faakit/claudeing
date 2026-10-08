@@ -372,6 +372,88 @@ try {
   check('mechanics run: no console errors', mErrors.length === 0, mErrors.join(' | '));
   await mCtx.close();
 
+  // 6c. Town projects: the board links to the fund; giving gold and goods finishes a project and
+  // its perk (a 4th request) shows on the next morning's board.
+  const pCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const pp = await pCtx.newPage();
+  const pErrors = [];
+  pp.on('console', (m) => m.type() === 'error' && pErrors.push(m.text()));
+  pp.on('pageerror', (e) => pErrors.push(String(e)));
+  const pState = () => pp.evaluate(() => JSON.parse(JSON.stringify(window.__farm.getState())));
+  await pp.goto(URL_);
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.press('Enter');
+  await pp.waitForTimeout(1500);
+  await pp.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.money = 3000;
+    s.inventory.slots[6] = { item: 'fiber', qty: 25 };
+    s.time.minutes = 600;
+    s.player.map = 'town';
+    s.player.x = 14 * 16 + 8;
+    s.player.y = 12 * 16 + 11;
+    s.player.facing = 'up';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key === 'Farm')
+      .scene.start('Town');
+  });
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.down('KeyE');
+  await pp.waitForTimeout(120);
+  await pp.keyboard.up('KeyE');
+  await pp.waitForTimeout(500);
+  const ui = (fn) => pp.evaluate(fn);
+  check(
+    'Interact at the town board opens the requests board',
+    await ui(() => window.__farm.game.scene.getScene('UI').panels.get('board').isOpen),
+  );
+  await ui(() => {
+    window.__farm.game.scene.getScene('UI').panels.get('board').close();
+    window.__farm.gameEvents.emit('openPanel', { type: 'projects' });
+    const panel = window.__farm.game.scene.getScene('UI').panels.get('projects');
+    panel.id = 'canopy';
+    panel.rebuild();
+  });
+  await pp.waitForTimeout(400);
+  const pBox = await pp.evaluate(() => {
+    const c = document.querySelector('canvas').getBoundingClientRect();
+    return { x: c.x, y: c.y, k: c.width / 200 };
+  });
+  const pClick = async (lx, ly) => {
+    await pp.mouse.click(pBox.x + lx * pBox.k, pBox.y + ly * pBox.k);
+    await pp.waitForTimeout(250);
+  };
+  await pClick(99, 150 + 168 + 11); // +1,000g
+  await pClick(99, 150 + 168 + 11); // +1,000g (gives only the 200 still needed)
+  let ps = await pState();
+  check(
+    'project page: the +1,000g button gives gold, never more than needed',
+    ps.money === 1800 && ps.stats['fund.canopy'] === 1200,
+    `money ${ps.money} given ${ps.stats['fund.canopy']}`,
+  );
+  await pClick(53, 150 + 194 + 11); // Give goods
+  ps = await pState();
+  check(
+    'giving the last goods finishes the project',
+    ps.stats['project.canopy'] === 1 && ps.inventory.slots[6]?.qty === 5,
+    JSON.stringify(ps.stats),
+  );
+  await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').close());
+  await pp.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
+  await pp.waitForTimeout(3200);
+  await pp.keyboard.press('Enter');
+  await pp.waitForTimeout(1500);
+  ps = await pState();
+  check(
+    'the Board Canopy posts a 4th request the next morning',
+    ps.orders.list.length === 4,
+    `orders ${ps.orders.list.length}`,
+  );
+  check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
+  await pCtx.close();
+
   // 7. Offline: after the first visit the whole game works with the network cut
   const offCtx = await browser.newContext({
     viewport: { width: 390, height: 844 },

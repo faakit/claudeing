@@ -10,6 +10,7 @@ export type PanelType =
   | 'skills'
   | 'book'
   | 'festival'
+  | 'projects'
   | 'fishing';
 
 export interface GameEvents {

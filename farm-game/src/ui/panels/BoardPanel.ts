@@ -19,6 +19,11 @@ export class BoardPanel extends Modal {
   protected build(): void {
     const s = getState();
     ensureOrders(s);
+    // Rows, then the festival and projects buttons, then Close: the sheet grows with the board.
+    const fest = festivalToday(s);
+    const festOpen = !!fest && !hasEntered(s, fest.id);
+    const rows = Math.max(1, s.orders.list.length);
+    this.setHeight(34 + rows * 26 + (festOpen ? 26 : 0) + 26 + 34);
     this.panel();
     this.label(8, 8, "Today's Requests", C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
@@ -49,13 +54,14 @@ export class BoardPanel extends Modal {
         ],
       });
     }
-    if (s.orders.list.length === 0)
-      this.label(8, 50, 'Nothing today. Check back tomorrow!', C.creamDim, 1, 'left', 184);
-    const fest = festivalToday(s);
-    if (fest && !hasEntered(s, fest.id)) {
+    if (s.orders.list.length === 0) {
+      this.label(8, 40, 'Nothing today. Check back tomorrow!', C.creamDim, 1, 'left', 184);
+      y += 26;
+    }
+    if (fest && festOpen) {
       this.button(
         8,
-        116,
+        y + 2,
         this.panelW - 16,
         22,
         `Enter the ${fest.def.name}!`,
@@ -65,7 +71,12 @@ export class BoardPanel extends Modal {
         },
         { textColor: C.gold, rim: C.gold },
       );
+      y += 26;
     }
+    this.button(8, y + 2, this.panelW - 16, 22, 'Town projects', () => {
+      this.close();
+      gameEvents.emit('openPanel', { type: 'projects' });
+    });
     this.closeButton();
   }
 }

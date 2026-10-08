@@ -6,6 +6,8 @@ import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
+import { landmarksOn } from '../systems/projects';
+import { ensureTexture } from './fallbackTexture';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -25,6 +27,7 @@ export class ObjectsRenderer {
   private nodeSprites = new Map<string, { sprite: Phaser.GameObjects.Image; id: string }>();
   private plotSig = '';
   private plotParts: Phaser.GameObjects.GameObject[] = [];
+  private landmarks = new Map<string, Phaser.GameObjects.Image>();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -35,7 +38,21 @@ export class ObjectsRenderer {
     this.syncForage(state, animate);
     this.syncPlaced(state, animate);
     this.syncNodes(state);
+    this.syncLandmarks(state);
     if (this.mapId === 'farm') this.syncPlots(state);
+  }
+
+  /** Buildings from finished town projects: one solid tile each, drawn like any placed object. */
+  private syncLandmarks(state: GameState): void {
+    for (const l of landmarksOn(state, this.mapId)) {
+      if (this.landmarks.has(l.id)) continue;
+      const y = (l.ty + 1) * TILE_SIZE;
+      const sprite = this.scene.add
+        .image(l.tx * TILE_SIZE + TILE_SIZE / 2, y, ensureTexture(this.scene, l.sprite, l.color))
+        .setOrigin(0.5, 1)
+        .setDepth(10 + y - 3);
+      this.landmarks.set(l.id, sprite);
+    }
   }
 
   /** Ore nodes: solid rocks with veins. They stay until broken. */
@@ -250,5 +267,7 @@ export class ObjectsRenderer {
     this.plotParts = [];
     this.nodeSprites.forEach((n) => n.sprite.destroy());
     this.nodeSprites.clear();
+    this.landmarks.forEach((l) => l.destroy());
+    this.landmarks.clear();
   }
 }

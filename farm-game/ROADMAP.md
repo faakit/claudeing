@@ -130,6 +130,14 @@ More people, more places, more to discover.
 - [ ] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
       scattered toasts for slower news.
 
+## Depth: a second act (game-depth agent, from critique 3)
+
+- [x] **D1 Town projects.** Six projects funded at the town board (`projects.json`), each granting a perk
+      for good and a landmark in town. About 103k gold of late-game sink plus mined and crafted goods.
+- [ ] **D2 Home upgrades and decorations.** Bigger bag tiers; cosmetic placeables (fences, paths, flowers).
+- [ ] **D3 Daily jobs.** Small daily requests from villagers that fill the idle hours of days 2 to 14.
+- [ ] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays.
+
 ## Later: production polish (R4)
 
 - [ ] **R4.1 Real art.** Replace generated placeholders with hand-made tilesets, character sheets, animal and item

@@ -5,6 +5,7 @@ export { FishingPanel } from './FishingPanel';
 export { JarPanel } from './JarPanel';
 export { NpcPanel } from './NpcPanel';
 export { PlotPanel } from './PlotPanel';
+export { ProjectPanel } from './ProjectPanel';
 export {
   installMenuTabs,
   MenuPanel,

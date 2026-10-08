@@ -228,6 +228,18 @@
     }
   },
   {
+    "id": "project1",
+    "text": "Finish a town project",
+    "stat": "projectsDone",
+    "target": 1,
+    "reward": 300,
+    "hint": "Town board > Town projects. Give gold and goods bit by bit.",
+    "where": {
+      "town": [14, 12],
+      "farm": [14, 42]
+    }
+  },
+  {
     "id": "jars",
     "text": "Make 10 jams, pickles or wines",
     "stat": "preserved",
@@ -338,6 +350,14 @@
     "hint": "Keep every field, jar and animal working each day."
   },
   {
+    "id": "project3",
+    "text": "Finish 3 town projects",
+    "stat": "projectsDone",
+    "target": 3,
+    "reward": 1500,
+    "hint": "They open one after another. Mine stone and smelt bars."
+  },
+  {
     "id": "earn50k",
     "text": "Earn 50,000g: Master Farmer",
     "stat": "earned",
@@ -360,5 +380,13 @@
     "target": 200,
     "reward": 2000,
     "hint": "Visit every house each morning."
+  },
+  {
+    "id": "projectAll",
+    "text": "Finish all 6 town projects",
+    "stat": "projectsDone",
+    "target": 6,
+    "reward": 5000,
+    "hint": "The Market Road comes last. It makes every sale worth more."
   }
 ]

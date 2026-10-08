@@ -21,6 +21,7 @@ import collectionsRaw from './collections.json';
 import nodesRaw from './nodes.json';
 import festivalsRaw from './festivals.json';
 import miningRaw from './mining.json';
+import projectsRaw from './projects.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -277,6 +278,22 @@ export interface MachineDef {
   /** Item family ("fruit", "veg") -> the derived good this machine makes of it. */
   recipes: Record<string, string>;
 }
+/** A town project the player funds with gold and goods; finishing it grants perks for good. */
+export interface ProjectDef {
+  name: string;
+  /** One or two short sentences about what it is. */
+  blurb: string;
+  /** Opens once this project is finished (omit for one of the first projects). */
+  after?: string;
+  gold: number;
+  items?: { item: string; qty: number }[];
+  /** Perk values granted once finished, summed into `perk(state, key)`. */
+  perks: Record<string, number>;
+  /** What finishing it does, in one line the player reads before funding it. */
+  reward: string;
+  /** Something that appears in the world once it is built (solid, one tile). */
+  landmark?: { map: string; tx: number; ty: number; sprite: string; color: string };
+}
 export interface PlotDef {
   name: string;
   /** [tx, ty, width, height] on the farm map. */
@@ -359,6 +376,7 @@ export const collections = collectionsRaw as unknown as Record<string, Collectio
 export const trees = treesRaw as unknown as Record<string, TreeDef>;
 export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
+export const projects = projectsRaw as unknown as Record<string, ProjectDef>;
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
@@ -542,6 +560,24 @@ export function validateContent(): void {
   for (const [id, pl] of Object.entries(plots))
     if (pl.sign && claimed.has(pl.sign.join(',')))
       fail('plots', `"${id}" sign stands inside a plot`);
+  for (const [id, p] of Object.entries(projects)) {
+    if (!p.name || !p.blurb || !p.reward) fail('projects', `"${id}" needs name, blurb and reward`);
+    if (!Number.isInteger(p.gold) || p.gold < 1) fail('projects', `"${id}" needs a gold price`);
+    if (p.after !== undefined && !projects[p.after])
+      fail('projects', `"${id}" comes after unknown project "${p.after}"`);
+    for (const need of p.items ?? [])
+      if (!items[need.item] || need.qty < 1)
+        fail('projects', `"${id}" needs unknown item "${need.item}" or a bad quantity`);
+    if (Object.keys(p.perks).length === 0) fail('projects', `"${id}" grants no perk`);
+    if (p.landmark && !mapIds.includes(p.landmark.map))
+      fail('projects', `"${id}" landmark is on unknown map "${p.landmark.map}"`);
+    // Every chain must lead back to a project that is open from the start (no loops).
+    const seen = new Set<string>();
+    for (let at: string | undefined = id; at; at = projects[at]?.after) {
+      if (seen.has(at)) fail('projects', `"${id}" is part of an "after" loop`);
+      seen.add(at);
+    }
+  }
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');

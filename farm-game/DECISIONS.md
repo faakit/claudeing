@@ -198,3 +198,11 @@
 - List rows abbreviate (`fitRow`: "(have 4)" to "x4", "Makes" to ">", Silver/Gold to Si./Au.) before cutting with "..".
 - A finger drifting 4 px on the Action button cancels the pending hold, so slow swipes never use the tool.
 - Flower Show rivals lowered to 24/33/42 so a plain flower can place third.
+
+## Town projects (gold sink, late game)
+
+- **A town fund is the late-game sink:** six projects in `projects.json` (1,200g to 50,000g, about 103k in all, plus mined and crafted goods) open one after another from the town board's "Town projects" button. Gold is given in +100 / +1,000 / +10,000 steps (never more than still needed), goods with one "Give goods" tap, so it fits a one-thumb, 5-minute session.
+- **Rewards are perks, not gold:** a finished project grants perk keys (`orderSlots`, `fishWindow`, `xpBonus`, `maxEnergy`, `festivalPrize`, `sellBonus`) through a new perk-source registry (`registerPerkSource`), the same way skills and hearts already do. A balance test checks a money perk needs over 100 late-game days to pay its project back.
+- **Visible:** each finished project puts a one-tile landmark in town (solid, Interact says what it did). Landmark textures are new keys with a generated fallback (`game/fallbackTexture.ts`) until the art agent draws them.
+- **No new state:** progress is stats (`fund.<id>`, `fund.<id>.<item>`, `project.<id>`). Save version 8 exists only because three goals were inserted: `remapGoalIndex` keeps a saved goal index on the same goal by id (goals inserted before the player's current goal are skipped).
+- **Threshold moved:** the side-income guard counts whole order rewards, so the canopy's 4th request moved the bound from 3,800 to 4,400.

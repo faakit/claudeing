@@ -8,6 +8,7 @@ import {
   machines,
   orders as ordersCfg,
   placeables,
+  projects,
   recipes,
   trees,
   tools,
@@ -104,10 +105,18 @@ describe('side income stays bounded', () => {
       animalPerDay += max * a.capacity * (price(a.product) - (items[a.feed]?.buyPrice ?? 0));
     }
     // Orders: the premium over selling, at the cap.
-    const orderPerDay = ordersCfg.perDay * Math.min(ordersCfg.maxReward, 600);
+    // Town projects (the board canopy) may post extra requests; count them all.
+    const extraOrders = Object.values(projects).reduce(
+      (n, p) => n + (p.perks['orderSlots'] ?? 0),
+      0,
+    );
+    expect(extraOrders).toBeLessThanOrEqual(1);
+    const orderPerDay = (ordersCfg.perDay + extraOrders) * Math.min(ordersCfg.maxReward, 600);
     expect(jarPerDay).toBeLessThan(900);
     expect(animalPerDay).toBeLessThan(1000);
-    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(3800);
+    // 4,400 (was 3,800 before the board canopy's 4th order): this bound counts whole order rewards, not
+    // the premium over the bin, so one more order moves it by up to 600 without making a money loop.
+    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(4400);
     expect(ordersCfg.rewardMultiplier[1]).toBeLessThanOrEqual(1.7);
   });
 });
@@ -122,5 +131,26 @@ describe('fruit trees', () => {
       expect(days, `${id} payback ${days.toFixed(0)} days`).toBeLessThan(game.seasonLength * 1.2);
       expect(days, id).toBeGreaterThan(8);
     }
+  });
+});
+
+describe('town projects', () => {
+  it('are sinks first: a money perk takes a long time to pay its project back', () => {
+    // A late-game player earns about 6,500 gold a day (critique 2's estimate for year two).
+    const lateIncome = 6500;
+    for (const [id, p] of Object.entries(projects)) {
+      const perDay = (p.perks['sellBonus'] ?? 0) * lateIncome;
+      if (perDay > 0) expect(p.gold / perDay, id).toBeGreaterThan(100);
+      // No project hands out gold directly.
+      expect(
+        Object.keys(p.perks).some((k) => /gold|money/i.test(k)),
+        id,
+      ).toBe(false);
+    }
+  });
+
+  it('cost more as the chain goes on, so late gold has somewhere to go', () => {
+    for (const p of Object.values(projects))
+      if (p.after) expect(p.gold, p.name).toBeGreaterThan(projects[p.after]!.gold);
   });
 });

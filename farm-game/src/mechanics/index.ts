@@ -17,3 +17,4 @@ import './fruitTree';
 import './villagers';
 import './mining';
 import './festivals';
+import './projects';

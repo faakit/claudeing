@@ -99,6 +99,20 @@ from something else (jam, pickles), the item they were made from. Use `addItem(s
 a system reads `perk(state, 'yourKey')` and a data row grants it. `addXp(state, skill, n)` emits `levelUp`.
 Recipes unlock by skill level in `recipes.json`.
 
+### Perk sources
+
+Anything that grants perks besides skills and hearts registers a source:
+`registerPerkSource('id', (state, key) => number)` in `systems/skills.ts`. `perk()` sums every source, so
+reading a new perk anywhere works the same no matter where it comes from. Town projects are the example
+(`mechanics/projects.ts`).
+
+### Town projects
+
+A project is one row in `projects.json`: `gold`, optional `items`, `after` (the project it waits for),
+`perks` (granted once finished), a one-line `reward` and an optional `landmark` (map, tile, texture key,
+placeholder colour). Progress is kept in stats, so a new project needs no save change. Rules live in
+`systems/projects.ts`; the sheet is `ui/panels/ProjectPanel.ts`, opened from the town board.
+
 ## 6. Panels and menu tabs
 
 - A **menu tab** is a function: `registerMenuTab({ id, label, build(ctx) })` (label up to 6 characters; five or
@@ -118,6 +132,10 @@ New crops, forageables, fish, recipes, orders, goals and shop stock are JSON edi
 Add new state to `GameState`, give it a default in `createInitialState`, make `sanitize` in `systems/save.ts`
 accept it, and bump `STATE_VERSION` with a migration if old saves need transforming. Tests in
 `tests/save.test.ts` show the pattern.
+
+Goals are a list and the save keeps an index into it. If you **insert** goals anywhere but the end, bump
+`STATE_VERSION` and migrate with `remapGoalIndex(raw, OLD_IDS)` (the goal ids of the previous release), so
+saved players stay on the same goal. Appending at the end needs nothing.
 
 ## Checklist for a new mechanic
 

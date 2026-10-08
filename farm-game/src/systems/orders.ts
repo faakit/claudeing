@@ -7,7 +7,7 @@ import { addItem, countItem, removeStack } from './inventory';
 import { displayName, keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 import { preserveOf } from './preserves';
 import { random } from './rng';
-import { addXp, isRecipeUnlocked } from './skills';
+import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
 
 /** Goods a town order may ask for today: what the season gives, what the player can make. */
@@ -40,7 +40,9 @@ export function generateOrders(state: GameState): Order[] {
   const pool = orderCandidates(state);
   const list: Order[] = [];
   let id = (state.orders.list.reduce((n, o) => Math.max(n, o.id), 0) || 0) + 1;
-  for (let i = 0; i < ordersCfg.perDay && pool.length > 0; i++) {
+  // Town projects (the board canopy) can post extra requests.
+  const perDay = ordersCfg.perDay + Math.max(0, Math.round(perk(state, 'orderSlots')));
+  for (let i = 0; i < perDay && pool.length > 0; i++) {
     const ref = pool.splice(Math.floor(random(state) * pool.length), 1)[0] as ItemRef;
     const value = sellValue(ref);
     const tier = ordersCfg.tiers.find((t) => value <= t.maxValue) ?? ordersCfg.tiers[0];
