@@ -1,0 +1,341 @@
+{
+ "profile": "iPhone 13/14",
+ "mmPerCssPx": 0.16565217391304346,
+ "fps": 88,
+ "cssPerLogical": 1.9075,
+ "joystick": {
+  "deadzoneLogical": 6,
+  "deadzoneMm": 1.9,
+  "radiusLogical": 24,
+  "radiusMm": 7.6,
+  "speedTilesPerS": 4,
+  "directions": 4,
+  "analogSpeed": false,
+  "moveThreshold": [
+   {
+    "dragLogical": 3,
+    "dragMm": 0.9,
+    "movedPx": 0
+   },
+   {
+    "dragLogical": 5,
+    "dragMm": 1.6,
+    "movedPx": 0
+   },
+   {
+    "dragLogical": 6,
+    "dragMm": 1.9,
+    "movedPx": 19.6
+   },
+   {
+    "dragLogical": 7,
+    "dragMm": 2.2,
+    "movedPx": 18.7
+   },
+   {
+    "dragLogical": 9,
+    "dragMm": 2.8,
+    "movedPx": 21.8
+   }
+  ]
+ },
+ "latencyJoystick": [
+  {
+   "name": "player moved",
+   "fromDownFrames": 2,
+   "fromUpFrames": -62,
+   "fromDownMs": 21
+  }
+ ],
+ "diagonal40deg": {
+  "dxPx": 47.1,
+  "dyPx": 0
+ },
+ "stopAndTurnFlicks": [
+  {
+   "holdMs": 60,
+   "startOffsetPx": -5,
+   "movedPx": 5.3,
+   "tileChanged": false,
+   "facing": "right"
+  },
+  {
+   "holdMs": 60,
+   "startOffsetPx": 0,
+   "movedPx": 4.9,
+   "tileChanged": false,
+   "facing": "right"
+  },
+  {
+   "holdMs": 60,
+   "startOffsetPx": 5,
+   "movedPx": 4.9,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 100,
+   "startOffsetPx": -5,
+   "movedPx": 7.6,
+   "tileChanged": false,
+   "facing": "right"
+  },
+  {
+   "holdMs": 100,
+   "startOffsetPx": 0,
+   "movedPx": 7.6,
+   "tileChanged": false,
+   "facing": "right"
+  },
+  {
+   "holdMs": 100,
+   "startOffsetPx": 5,
+   "movedPx": 7.6,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 140,
+   "startOffsetPx": -5,
+   "movedPx": 10.2,
+   "tileChanged": false,
+   "facing": "right"
+  },
+  {
+   "holdMs": 140,
+   "startOffsetPx": 0,
+   "movedPx": 10.2,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 140,
+   "startOffsetPx": 5,
+   "movedPx": 10.7,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 180,
+   "startOffsetPx": -5,
+   "movedPx": 12.9,
+   "tileChanged": false,
+   "facing": "right"
+  },
+  {
+   "holdMs": 180,
+   "startOffsetPx": 0,
+   "movedPx": 13.3,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 180,
+   "startOffsetPx": 5,
+   "movedPx": 12.9,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 250,
+   "startOffsetPx": -5,
+   "movedPx": 17.3,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 250,
+   "startOffsetPx": 0,
+   "movedPx": 17.8,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 250,
+   "startOffsetPx": 5,
+   "movedPx": 17.3,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 320,
+   "startOffsetPx": -5,
+   "movedPx": 22.2,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 320,
+   "startOffsetPx": 0,
+   "movedPx": 22.2,
+   "tileChanged": true,
+   "facing": "right"
+  },
+  {
+   "holdMs": 320,
+   "startOffsetPx": 5,
+   "movedPx": 21.8,
+   "tileChanged": true,
+   "facing": "right"
+  }
+ ],
+ "tapTile": {
+  "tapTwoTilesAway": {
+   "soilChanged": 0,
+   "feedback": "none (no sound, no marker)"
+  },
+  "tapAdjacent": {
+   "soil": 1,
+   "facing": "right",
+   "movedPx": 0
+  },
+  "tileOnScreenMm": 5.1
+ },
+ "tapWobble7": {
+  "soil": 1,
+  "movedPx": 7.1,
+  "facing": "right",
+  "note": "tap at the tile right of the player, finger rolls 7 logical px"
+ },
+ "latencyActionTap": [
+  {
+   "name": "action pressed (scaled)",
+   "fromDownFrames": 2,
+   "fromUpFrames": -13,
+   "fromDownMs": 21
+  },
+  {
+   "name": "tile tilled",
+   "fromDownFrames": 15,
+   "fromUpFrames": 0,
+   "fromDownMs": 112
+  }
+ ],
+ "latencyActionHold": [
+  {
+   "name": "first use",
+   "fromDownFrames": 15,
+   "fromUpFrames": -160,
+   "fromDownMs": 111
+  },
+  {
+   "name": "second use",
+   "fromDownFrames": 44,
+   "fromUpFrames": -131,
+   "fromDownMs": 313
+  },
+  {
+   "name": "third use",
+   "fromDownFrames": 73,
+   "fromUpFrames": -102,
+   "fromDownMs": 515
+  }
+ ],
+ "holdStill1200ms": {
+  "tilesWorked": 3
+ },
+ "holdJitter": [
+  {
+   "jitterLogical": 2,
+   "jitterMm": 0.6,
+   "tilesWorkedIn1200ms": 3,
+   "toolChanged": false
+  },
+  {
+   "jitterLogical": 3,
+   "jitterMm": 0.9,
+   "tilesWorkedIn1200ms": 3,
+   "toolChanged": false
+  },
+  {
+   "jitterLogical": 5,
+   "jitterMm": 1.6,
+   "tilesWorkedIn1200ms": 3,
+   "toolChanged": false
+  },
+  {
+   "jitterLogical": 8,
+   "jitterMm": 2.5,
+   "tilesWorkedIn1200ms": 1,
+   "toolChanged": false
+  }
+ ],
+ "swipe": [
+  {
+   "swipeMs": 60,
+   "toolUses": 0,
+   "selected": 1
+  },
+  {
+   "swipeMs": 150,
+   "toolUses": 0,
+   "selected": 1
+  },
+  {
+   "swipeMs": 300,
+   "toolUses": 0,
+   "selected": 1
+  },
+  {
+   "swipeMs": 500,
+   "toolUses": 0,
+   "selected": 1
+  }
+ ],
+ "swipeStep": {
+  "logical": 14,
+  "mm": 4.4,
+  "mmToGoFromSlot1To6": 22.1,
+  "note": "Action is ~36 logical px from the dock top edge: at most 2 steps up fit before the thumb leaves the dock"
+ },
+ "dragFromAction": {
+  "movedPx": 0,
+  "selected": 1
+ },
+ "joystickOntoAction": {
+  "keptWalking": true,
+  "soilAfterLiftOnAction": 0
+ },
+ "interactOverlap": {
+  "shareOfActionDiscGoingToInteract": 0.108,
+  "realTouch": {
+   "interactShowing": true,
+   "opened": [
+    "bin"
+   ]
+  }
+ },
+ "dragStartingOnMenu": {
+  "menuOpened": true
+ },
+ "latencyHotbar": [
+  {
+   "name": "slot 2 selected",
+   "fromDownFrames": 0,
+   "fromUpFrames": -14,
+   "fromDownMs": 7
+  }
+ ],
+ "latencySheetButton": [
+  {
+   "name": "sheet closed",
+   "fromDownFrames": 15,
+   "fromUpFrames": 0,
+   "fromDownMs": 111
+  }
+ ],
+ "walkHouseToTown": {
+  "seconds": 8.9,
+  "reached": "town",
+  "ledger": {
+   "taps": 0,
+   "holds": 0,
+   "drags": 1,
+   "gestures": 1,
+   "contactMm": 6,
+   "airMm": 0,
+   "travelMm": 6
+  },
+  "note": "straight down the farm path: one held drag, ~35 tiles"
+ }
+}

@@ -1,0 +1,122 @@
+[
+ {
+  "profile": "se",
+  "hand": "right",
+  "targets": 132,
+  "comfort": 116,
+  "stretch": 15,
+  "hard": 1,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "comfort",
+  "slots comfort": 7
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "targets": 132,
+  "comfort": 103,
+  "stretch": 26,
+  "hard": 3,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "comfort",
+  "slots comfort": 7
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "targets": 132,
+  "comfort": 99,
+  "stretch": 27,
+  "hard": 6,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "stretch",
+  "slots comfort": 6
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "targets": 132,
+  "comfort": 72,
+  "stretch": 49,
+  "hard": 11,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "stretch",
+  "slots comfort": 6
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "targets": 132,
+  "comfort": 91,
+  "stretch": 30,
+  "hard": 11,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "stretch",
+  "slots comfort": 5
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "targets": 132,
+  "comfort": 65,
+  "stretch": 45,
+  "hard": 22,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "stretch",
+  "slots comfort": 5
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "targets": 132,
+  "comfort": 97,
+  "stretch": 27,
+  "hard": 8,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "stretch",
+  "slots comfort": 6
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "targets": 132,
+  "comfort": 70,
+  "stretch": 46,
+  "hard": 16,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "stretch",
+  "slots comfort": 6
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "targets": 132,
+  "comfort": 111,
+  "stretch": 19,
+  "hard": 2,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "comfort",
+  "slots comfort": 6
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "targets": 132,
+  "comfort": 97,
+  "stretch": 30,
+  "hard": 5,
+  "action": "comfort",
+  "interact": "comfort",
+  "menu": "comfort",
+  "slots comfort": 6
+ }
+]
