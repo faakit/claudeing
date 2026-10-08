@@ -154,5 +154,17 @@
       "leaf": "#4f8f6a",
       "fruit": "#8fd07a"
     }
+  },
+  "tulip": {
+    "seasons": ["spring"],
+    "stageDays": [1, 2, 2, 1],
+    "sprite": "crop_tulip",
+    "harvestItem": "tulip",
+    "harvestQuantity": 1,
+    "regrowDays": null,
+    "placeholder": {
+      "leaf": "#5fae4e",
+      "fruit": "#e05a8a"
+    }
   }
 }

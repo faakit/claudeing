@@ -15,6 +15,10 @@
         "seasons": ["spring"]
       },
       {
+        "item": "tulip_seed",
+        "seasons": ["spring"]
+      },
+      {
         "item": "tomato_seed",
         "seasons": ["summer"]
       },

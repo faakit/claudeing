@@ -3,14 +3,15 @@
     "name": "Flower Show",
     "season": "spring",
     "day": 14,
-    "blurb": "Show your finest flower.",
+    "blurb": "Up to 3 different flowers. Mix them!",
     "accept": {
       "families": ["flower"]
     },
-    "rivals": [24, 33, 42],
+    "rivals": [40, 75, 120],
     "prizes": [600, 350, 200],
     "consolation": 60,
-    "mode": "single"
+    "mode": "basket",
+    "slots": 3
   },
   "fishing_derby": {
     "name": "Fishing Derby",

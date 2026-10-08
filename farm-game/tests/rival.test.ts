@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { festivals, game, npcs } from '../src/data';
-import { enterFestival } from '../src/systems/festivals';
+import { enterBasket } from '../src/systems/festivals';
 import { POINTS_PER_HEART } from '../src/systems/friendship';
 import { addItem } from '../src/systems/inventory';
 import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
@@ -99,7 +99,11 @@ describe('the rival farmer', () => {
     s.time.season = f.season;
     s.time.day = f.day;
     addItem(s, { item: 'daffodil', q: 2 }, 1);
-    const res = enterFestival(s, { item: 'daffodil', q: 2 });
+    addItem(s, { item: 'tulip', q: 2 }, 1);
+    const res = enterBasket(s, [
+      { item: 'daffodil', q: 2 },
+      { item: 'tulip', q: 2 },
+    ]);
     expect(res).toMatchObject({ ok: true, place: 1 });
     expect(s.mail.list.some((l) => l.from === game.rival.npc)).toBe(true);
     expect(id).toBeTruthy();

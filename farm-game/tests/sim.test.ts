@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { crops, items, plots, projects, shops } from '../src/data';
+import { crops, items, jobs as jobDefs, plots, projects, shops } from '../src/data';
+import { JOBS_PER_DAY, jobReward } from '../src/systems/jobs';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { craft } from '../src/systems/crafting';
 import { endDay } from '../src/systems/day';
@@ -207,10 +208,10 @@ function playDay(s: GameState, ledger: Ledger): void {
 
 /**
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
- * animal goods on the board, crows and scarecrows). Seed 42 alone earned 224,150. A balance change that
+ * animal goods on the board, crows and scarecrows, smaller jobs). Seed 42 alone earned 163,492. A balance change that
  * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 209_894;
+const SIM_EARNED = 177_686;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
@@ -267,6 +268,36 @@ describe('balance simulation (decent player, full year)', () => {
 });
 
 /**
+ * Jobs are a nudge, not a living (owner, depth round 2): over the first two weeks, three average jobs a
+ * day must pay less than the farm itself earns the tireless bot (median of five seeds).
+ */
+describe('balance: early jobs against early farming', () => {
+  it('days 2 to 14 of jobs pay at most three quarters of what the farm earns by day 14', () => {
+    const farm = [42, 7, 99, 1234, 2026]
+      .map((seed) => {
+        const s = createInitialState();
+        s.rng = seed;
+        const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+        for (let day = 1; day <= 14; day++) {
+          playDay(s, ledger);
+          endDay(s, { passedOut: false, weedCandidates: [] });
+        }
+        return s.stats['earned'] ?? 0;
+      })
+      .sort((a, b) => a - b)[2]!;
+    const early = jobDefs.filter((j) => !j.requires);
+    const weight = early.reduce((n, j) => n + j.weight, 0);
+    const mean =
+      early.reduce((n, j) => n + j.weight * jobReward(j, (j.qty[0] + j.qty[1]) / 2, 1), 0) / weight;
+    const jobsGold = 13 * JOBS_PER_DAY * mean;
+    console.log(`farm by day 14 (median): ${farm}; jobs days 2-14: ${Math.round(jobsGold)}`);
+    expect(jobsGold).toBeLessThan(farm * 0.75);
+    // ...but still worth doing: a day of jobs buys a row of seeds.
+    expect(JOBS_PER_DAY * mean).toBeGreaterThan(60);
+  });
+});
+
+/**
  * The same bot over two years, also funding town projects as soon as it can (it is handed the goods a
  * project asks for, standing in for the mine and the machines it does not play). This measures whether the
  * late-game sinks absorb a tireless farmer's gold.
@@ -290,10 +321,10 @@ describe('balance simulation (two years, funding projects)', () => {
     }
     console.log(log.join('\n'));
     // Without the repeatable statue this bot ended year two holding about 280k with nothing to buy
-    // (depth round 2). Now most of it goes into the statue, whose perk levels run out in year two.
-    expect(sunk).toBeGreaterThan(300_000);
+    // (depth round 2). Now most of it goes into the statue (level 3 or more by the end of year two).
+    expect(sunk).toBeGreaterThan(250_000);
     expect(s.money).toBeLessThan(100_000);
-    expect(projectLevel(s, 'statue')).toBeGreaterThanOrEqual(4);
+    expect(projectLevel(s, 'statue')).toBeGreaterThanOrEqual(3);
     expect(s.stats['projectsDone']).toBe(Object.values(projects).filter((p) => !p.repeat).length);
   });
 });

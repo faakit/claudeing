@@ -954,5 +954,24 @@
     "sellPrice": 20,
     "placeable": true,
     "description": "Keeps crows off the crops around it."
+  },
+  "tulip_seed": {
+    "name": "Tulip Bulbs",
+    "type": "seed",
+    "icon": "item_tulip_seed",
+    "color": "#d8a0c0",
+    "buyPrice": 25,
+    "sellPrice": 12,
+    "plants": "tulip",
+    "description": "Spring flower. 6 days. Show it off!"
+  },
+  "tulip": {
+    "name": "Tulip",
+    "type": "crop",
+    "icon": "item_tulip",
+    "color": "#e05a8a",
+    "sellPrice": 55,
+    "description": "A cheerful spring bloom.",
+    "family": "flower"
   }
 }

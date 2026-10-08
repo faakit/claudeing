@@ -66,8 +66,12 @@ describe('festivals', () => {
   it('pay a prize, take the item, and allow one entry per festival', () => {
     const s = onFestivalDay('flower_show');
     addItem(s, { item: 'daffodil', q: 2 }, 2);
+    addItem(s, { item: 'tulip', q: 2 }, 1);
     const money = s.money;
-    const res = enterFestival(s, { item: 'daffodil', q: 2 });
+    const res = enterBasket(s, [
+      { item: 'daffodil', q: 2 },
+      { item: 'tulip', q: 2 },
+    ]);
     expect(res.ok).toBe(true);
     if (res.ok) {
       expect(res.place).toBe(1);
@@ -272,5 +276,38 @@ describe('festival text', () => {
     expect(measureText('Basket 3/3  12,345 +30%  no podium')).toBeLessThanOrEqual(184);
     expect(measureText('3. Silver Catfish 1,000 points')).toBeLessThanOrEqual(184);
     expect(measureText('Sure? Tap to hand in')).toBeLessThanOrEqual(176);
+  });
+});
+
+describe('the Flower Show arrangement (handover goal 6)', () => {
+  it('takes up to three different flowers; a mixed pair beats a single bloom', () => {
+    const s = onFestivalDay('flower_show');
+    const def = festivals['flower_show']!;
+    expect(accepts(def, { item: 'tulip' })).toBe(true);
+    expect(accepts(def, { item: 'parsnip' })).toBe(false);
+    const single = basketScore(def, [{ item: 'tulip', q: 2 }]);
+    const pair = basketScore(def, [{ item: 'tulip' }, { item: 'daffodil' }]);
+    expect(pair).toBeGreaterThan(single);
+    // A plain pair reaches the podium, a gold pair wins, one daffodil alone does not place.
+    expect(placeFor(s, def, pair)).toBeLessThanOrEqual(3);
+    expect(
+      placeFor(
+        s,
+        def,
+        basketScore(def, [
+          { item: 'tulip', q: 2 },
+          { item: 'daffodil', q: 2 },
+        ]),
+      ),
+    ).toBe(1);
+    expect(placeFor(s, def, basketScore(def, [{ item: 'daffodil' }]))).toBe(4);
+  });
+
+  it('tulips are a spring crop you can buy before the show', async () => {
+    const { stockFor } = await import('../src/systems/economy');
+    const { crops } = await import('../src/data');
+    expect(stockFor('town_general_store', 'spring')).toContain('tulip_seed');
+    const grow = crops['tulip']!.stageDays.reduce((a, b) => a + b, 0);
+    expect(grow).toBeLessThan(festivals['flower_show']!.day - 1);
   });
 });

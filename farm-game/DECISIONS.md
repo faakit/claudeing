@@ -368,3 +368,15 @@ An independent critic played the build at `64eeb10` and wrote `agents/critiques/
 - **Mostly cosmetic still**, but two do a little: a **Garden Bench** gives +15 energy once a day when you sit (Interact; a full player keeps the sit for later), and a new **Scarecrow** (80g, Home tab, `radius` 4) keeps crows off the crops around it.
 - **Crows are the reason for the scarecrow, and they are mild:** from day 8, on a dry morning, a field with 12 or more crops no scarecrow watches has a 25% chance to lose one crop ("A crow ate a parsnip. Scarecrows keep them off."). Never under glass. Rosa's day-7 letter brings a scarecrow, so the first one is free and comes before the first crow. Auto tool: none (placeable / Interact).
 - **The sim bot stands scarecrows over every plot** and loses almost nothing; it now also runs five seeds and is judged on the median (critique 5, F9), pinned at 209,894 (seed 42 alone: 224,150; the spread of 149k to 224k is why one seed was not evidence).
+
+## Jobs are a nudge, not a living (owner's call, depth round 2)
+
+- **Measured:** over days 2 to 14 three average jobs a day paid about 1,800g, while the tireless sim bot's farm had earned 1,380g by day 14 (median of five seeds). Jobs outpaced crops.
+- **Job gold is now 55% of what it was** (each `base` and `perUnit` in `jobs.json`), so the same two weeks of jobs pay about 1,000g: still a useful start (three jobs buy a row of seeds) but less than the farm. A sim test keeps early jobs under three quarters of early farm income. Friendship from jobs is unchanged.
+- **Knock-on:** the bot completes some jobs passively (harvest and ship jobs), so its year fell; the five-seed median was repinned from 209,894 to 177,686, and the two-year statue check now expects level 3 and 250k sunk.
+- **Specials stay at 1.5x the goods' value** (about 750g over the bin for a week of planning): no change, nothing in the tests says they outpace crops.
+
+## The Flower Show is an arrangement (handover goal 6, depth round 2)
+
+- **A basket of up to three different flowers** (the basket mode, no new screen): each flower is its own kind, so a pair scores 15% more and three flowers 30%. Rivals rose to 40/75/120: a plain tulip and daffodil reach the podium, a gold pair wins, a lone daffodil does not place.
+- **Tulips, a spring flower crop** (bulbs 25g, 6 days, 55g; on the Crops page of the Book), so the show has something you grow for it, not only what you find. Per tile-day they earn less than potatoes, so they are for the show and variety, not a new best crop. A year-two player can add a summer sunflower or winter holly kept in the bag.
