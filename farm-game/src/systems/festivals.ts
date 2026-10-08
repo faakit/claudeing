@@ -7,6 +7,8 @@ import { addStat } from './goals';
 import { refOf, sellValue, type ItemRef } from './itemRef';
 import { removeStack } from './inventory';
 import { perk } from './skills';
+import { sendLetter } from './mail';
+import { game } from '../data';
 
 /** Today's festival, if the calendar says so. */
 export function festivalToday(state: GameState): { id: string; def: FestivalDef } | null {
@@ -73,7 +75,15 @@ export function enterFestival(state: GameState, ref: ItemRef): EnterResult {
   state.money += gold;
   gameEvents.emit('moneyChanged', { delta: gold });
   addStat(state, 'festivals');
-  if (place === 1) addStat(state, 'festivalWins');
+  if (place === 1) {
+    addStat(state, 'festivalWins');
+    // The rival farmer is the top score to beat; beating them earns a grudging letter.
+    sendLetter(state, {
+      from: game.rival.npc,
+      title: `About the ${today.def.name}`,
+      text: `First place at the ${today.def.name}. Fine, you earned it. Enjoy it while it lasts!`,
+    });
+  }
   toast(
     place <= 3
       ? `${today.def.name}: place ${place}! +${gold}g`

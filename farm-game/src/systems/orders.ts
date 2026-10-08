@@ -9,6 +9,7 @@ import { preserveOf } from './preserves';
 import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
+import { applyRival } from './rival';
 
 /** Goods a town order may ask for today: what the season gives, what the player can make. */
 export function orderCandidates(state: GameState): ItemRef[] {
@@ -93,6 +94,7 @@ export type DeliverResult = 'ok' | 'missing' | 'done' | 'unknown';
 
 /** Hand over the goods (lowest quality first) and collect the reward. Better quality earns a bonus. */
 export function deliverOrder(state: GameState, id: number): DeliverResult {
+  applyRival(state); // the rival may have been here first
   const order = state.orders.list.find((o) => o.id === id);
   if (!order) return 'unknown';
   if (order.done) return 'done';

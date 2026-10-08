@@ -9,6 +9,7 @@ import { Modal } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
+import { applyRival, rivalName, rivalNotice } from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
 export class BoardPanel extends Modal {
@@ -19,6 +20,7 @@ export class BoardPanel extends Modal {
   protected build(): void {
     const s = getState();
     ensureOrders(s);
+    applyRival(s);
     // Rows, then the festival and projects buttons, then Close: the sheet grows with the board.
     const fest = festivalToday(s);
     const festOpen = !!fest && !hasEntered(s, fest.id);
@@ -27,19 +29,23 @@ export class BoardPanel extends Modal {
     this.panel();
     this.label(8, 8, "Today's Requests", C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
-    this.label(8, 20, 'New requests every morning.', C.creamDim);
+    this.label(8, 20, rivalNotice(s), C.creamDim);
     let y = 34;
     for (const o of s.orders.list) {
       const have = haveFor(s, o);
       const ready = !o.done && have >= o.qty;
       y = this.row(y, {
         icon: iconKey(parseKey(o.item)),
-        title: o.done ? `${orderLabel(o)} (done)` : orderLabel(o),
-        sub: o.done ? 'Thank you!' : `Have ${Math.min(have, 99)}/${o.qty}  Pays ${fmt(o.reward)}g`,
-        subColor: o.done ? C.green : ready ? C.gold : C.creamDim,
+        title: o.done && !o.rival ? `${orderLabel(o)} (done)` : orderLabel(o),
+        sub: o.rival
+          ? `${rivalName()} filled this one.`
+          : o.done
+            ? 'Thank you!'
+            : `Have ${Math.min(have, 99)}/${o.qty}  Pays ${fmt(o.reward)}g`,
+        subColor: o.rival ? C.warn : o.done ? C.green : ready ? C.gold : C.creamDim,
         buttons: [
           {
-            label: o.done ? 'Done' : 'Give',
+            label: o.rival ? 'Gone' : o.done ? 'Done' : 'Give',
             width: 40,
             enabled: ready,
             color: ready ? C.green : C.creamDim,

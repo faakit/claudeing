@@ -239,6 +239,11 @@ function migrateV10(raw: Raw): Raw {
   return { ...raw, version: 11, mail: { next: 1, list: [] } };
 }
 
+/** v11 -> v12: orders may say the rival farmer took them (an optional flag; nothing to convert). */
+function migrateV11(raw: Raw): Raw {
+  return { ...raw, version: 12 };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -250,6 +255,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   8: migrateV8,
   9: migrateV9,
   10: migrateV10,
+  11: migrateV11,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -464,6 +470,7 @@ export function sanitize(raw: Raw): GameState {
         reward: int(o['reward'], 0, 0, 1e7),
         xp: int(o['xp'], 0, 0, 1e5),
         done: o['done'] === true,
+        ...(o['rival'] === true ? { rival: true } : {}),
       });
     }
   }

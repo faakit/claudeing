@@ -110,9 +110,10 @@ More people, more places, more to discover.
       recipe or a perk. _Plug in:_ `npcs.json` gains `schedule` and `events`; the NPC renderer reads them.
       _Done:_ daily schedules (home, town, farm, woods) and birthdays (double chat, triple gifts, morning note).
       Not done: per-heart friendship events that reward a recipe or perk.
-- [~] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
+- [x] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
   Each is a JSON entry plus a role.
-  _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts). Not done: a fisher and a rival farmer.
+  _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts); Finn is the fisher; Clay the rival farmer
+  takes one board request a day from day 8 and leads the festival rivals; friendship tames him.
 - [x] **R3.3 The mine.** A fifth map with ore and gems, a pickaxe tool, energy-versus-risk floors. Ore feeds the
       furnace and tool upgrades.
       _Done:_ a mine north of the woods trail, a pickaxe (the fifth tool; saves migrate), copper/iron veins, crystals and

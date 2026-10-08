@@ -67,6 +67,8 @@ export interface Order {
   reward: number;
   xp: number;
   done: boolean;
+  /** The rival farmer filled it before you did. */
+  rival?: boolean;
 }
 
 /** A daily job: gain `n` of a stat today (`base` is the stat's value when the job was posted). */
@@ -175,7 +177,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 11;
+export const STATE_VERSION = 12;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {

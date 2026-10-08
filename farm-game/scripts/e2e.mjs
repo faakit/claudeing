@@ -533,6 +533,22 @@ try {
     'Interact at the mailbox opens the mail sheet',
     await ui(() => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen),
   );
+  // From day 8 the rival farmer fills one open request every afternoon.
+  await ui(() => {
+    const f = window.__farm;
+    f.game.scene.getScene('UI').panels.get('mail').close();
+    const s = f.getState();
+    s.time.day = 9;
+    s.time.minutes = 900;
+    f.gameEvents.emit('openPanel', { type: 'board' });
+  });
+  await pp.waitForTimeout(500);
+  ps = await pState();
+  check(
+    'after 2 PM the rival has taken one of the requests',
+    ps.orders.list.filter((o) => o.rival).length === 1 && ps.orders.day === 9 + 0,
+    JSON.stringify(ps.orders),
+  );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();
 

@@ -234,3 +234,11 @@
 - **The post comes in the morning:** data letters (`mail.json`) are sent once when their `when` holds (a day, a stat milestone, a villager's hearts, a calendar date); code adds a festival notice and a birthday hint (one of the villager's favourites) the day before. A morning note says new mail arrived.
 - **Letters carry gifts:** taking one is all-or-nothing, so a full bag never loses it. The box keeps 24 letters and only drops read letters whose gift was taken.
 - **Save version 11** adds `mail`; old saves start with an empty box and receive any letter whose condition already holds the next morning (a short backlog of welcome and milestone letters).
+
+## The rival farmer (R3.2)
+
+- **Clay competes for the board, not for land:** from day 8 (announced by a letter on day 7) he fills the best-paying open request at 2 PM. The board says when he comes, and afterwards which one he took. It gives mornings a reason to visit town and turns orders into a small race, without any new screen.
+- **Resolved lazily:** the rival acts when the board is opened or an order is delivered after his time (`applyRival`), never on a clock hook, so it is exact in tests and cannot fire twice (the day is a `rival.day` stat).
+- **Friendship is the way out:** his perks are rivalry rules: at 2 hearts he comes 3 hours later, at 4 he leaves you the best request, at 5 he stops competing. His heart events reward 300 gold, Speed-Gro and iron bars.
+- **Festivals name him:** the best rival score at every festival is Clay's; beating the field brings a grudging letter.
+- **Save version 12:** orders carry an optional `rival` flag (no conversion needed).

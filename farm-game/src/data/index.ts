@@ -208,7 +208,8 @@ export interface NpcEvent {
 }
 export interface NpcDef {
   name: string;
-  role: 'shop' | 'friend';
+  /** 'shop' adds a Shop button; 'rival' competes for the town board's requests (see systems/rival.ts). */
+  role: 'shop' | 'friend' | 'rival';
   map: string;
   tx: number;
   ty: number;
@@ -383,6 +384,8 @@ export interface GameData {
   stormChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;
+  /** The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. */
+  rival: { npc: string; minute: number; startDay: number };
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];
@@ -635,6 +638,8 @@ export function validateContent(): void {
       seen.add(at);
     }
   }
+  if (!npcs[game.rival.npc] || npcs[game.rival.npc]?.role !== 'rival')
+    fail('game', '"rival.npc" must be a villager with role "rival"');
   if (!mapIds.includes(mail.mailbox.map)) fail('mail', 'mailbox stands on an unknown map');
   const letterIds = new Set<string>();
   for (const l of mail.letters) {

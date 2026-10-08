@@ -11,6 +11,9 @@ export const PERK_TEXT: Record<string, (v: number) => string> = {
   fishWindow: (v) => `+${Math.round(v * 100)}% catch zone`,
   orderSlots: (v) => `+${v} board request a day`,
   xpBonus: (v) => `+${Math.round(v * 100)}% skill XP`,
+  rivalLate: (v) => `Clay comes ${Math.round(v / 60)} hours later`,
+  rivalPolite: () => 'Clay leaves you the best request',
+  rivalOff: () => 'Clay stops taking requests',
   festivalPrize: (v) => `+${Math.round(v * 100)}% festival prizes`,
 };
 
