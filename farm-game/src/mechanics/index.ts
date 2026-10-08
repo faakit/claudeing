@@ -15,3 +15,4 @@ import './animalHouse';
 import './beeHouse';
 import './fruitTree';
 import './villagers';
+import './mining';

@@ -52,5 +52,11 @@
     "stat": "discoveries",
     "min": 1,
     "text": "New kinds of goods go in Menu > Book. Finish a page for gold."
+  },
+  {
+    "id": "mining",
+    "stat": "mined",
+    "min": 1,
+    "text": "Ore turns into bars in a furnace. Bars upgrade your tools."
   }
 ]

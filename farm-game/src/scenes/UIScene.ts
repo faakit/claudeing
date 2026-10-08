@@ -11,7 +11,7 @@ import {
 } from '../config';
 import { game, mapsData } from '../data';
 import { RainLayer } from '../fx/RainLayer';
-import { forageCandidates, weedCandidates } from '../game/farmInfo';
+import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
@@ -484,11 +484,20 @@ export class UIScene extends Phaser.Scene {
     const state = getState();
     const farm = this.cache.tilemap.get(mapCacheKey('farm')).data as TiledMapLike;
     const forageSpots: Record<string, [number, number][]> = {};
+    const oreSpots: Record<string, [number, number][]> = {};
     for (const id of Object.keys(mapsData.maps)) {
       const raw = this.cache.tilemap.get(mapCacheKey(id))?.data as TiledMapLike | undefined;
-      if (raw) forageSpots[id] = forageCandidates(raw);
+      if (raw) {
+        forageSpots[id] = forageCandidates(raw);
+        oreSpots[id] = oreCandidates(raw);
+      }
     }
-    const summary = endDay(state, { passedOut, weedCandidates: weedCandidates(farm), forageSpots });
+    const summary = endDay(state, {
+      passedOut,
+      weedCandidates: weedCandidates(farm),
+      forageSpots,
+      oreSpots,
+    });
     const wake = mapsData.wake;
     teleportPlayer(state, wake);
     await saveNow(true);

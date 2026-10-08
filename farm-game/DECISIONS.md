@@ -161,3 +161,12 @@
 - **Schedules are data and teleport-simple:** each villager lists "from this minute, be here" entries; `away` means at home and unreachable. The scene checks once per game minute, fades them in, and blocks their tile. A villager never steps onto the player's tile; they wait a minute and retry. Early morning and late evening mostly empty the world, which rewards exploring in the day.
 - **Birthdays are loud:** a morning note, a special line, double chat points and triple points for a liked gift. One per villager per year.
 - **Orin's perk is a tool discount, not a new shop:** friendship lowers hoe, can and rod upgrade prices by up to 15%; the stamina tonic is exempt so energy cannot be bought cheaper than designed.
+
+## The mine
+
+- **Ore is a node system modelled on forage:** `nodes.json` kinds (rock, copper, iron, crystal) spawn each morning on the mine's open floor up to a cap, stay until broken, and block their tile. Richer kinds wait for Mining levels, so early mining is rocks and copper and the cave gets better as you level.
+- **The pickaxe is a real tool slot, not an item:** the hotbar is where thumbs live, and a tool you swipe to (existing swipe gesture) beats a menu. Save version 7 inserts it as the fifth tool and shifts the rest of the bag, exactly like the fishing rod did.
+- **Mining is a side trip by design:** about 18 gold per energy at best against 50+ for a good crop (guarded by a test). Its real value is bars, which unlock tool tiers.
+- **Bars gate tool tiers:** hoe, rod and the can's upper tiers need 2 to 3 copper or iron bars on top of gold. The upgrade price discount from Orin still applies to gold only.
+- **The furnace is one more row in `machines.json`:** same behavior as the jar and keg, with ore families (`copper`, `iron`) mapped to bars.
+- **A node blocks until broken, and other tools are told why:** facing a vein with the hoe says "Break it with the pickaxe (swipe the Action button to switch)" instead of a generic refusal.

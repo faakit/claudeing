@@ -71,5 +71,26 @@
       }
     },
     "blurb": "Cast at water. A wider catch zone and better bites."
+  },
+  "mining": {
+    "name": "Mining",
+    "xpTable": [0, 40, 100, 190, 320, 500, 740, 1050, 1450, 2000],
+    "perks": {
+      "3": {
+        "mineDouble": 0.1
+      },
+      "5": {
+        "mineDouble": 0.1,
+        "maxEnergy": 5
+      },
+      "7": {
+        "mineDouble": 0.1
+      },
+      "9": {
+        "mineDouble": 0.1,
+        "maxEnergy": 5
+      }
+    },
+    "blurb": "Break rocks for ore and gems. Chance to find double."
   }
 }

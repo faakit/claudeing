@@ -1,11 +1,11 @@
 import { items, shops } from '../data';
-import type { UpgradeDef } from '../data';
+import type { UpgradeDef, UpgradeNeed } from '../data';
 import type { GameState, Season } from '../state/GameState';
 import { waterCapacity } from './actions';
 import { restoreEnergy } from './energy';
 import { gameEvents } from './events';
 import { addStat } from './goals';
-import { addItem, countStack, removeStack, roomFor } from './inventory';
+import { addItem, countItem, countStack, removeItem, removeStack, roomFor } from './inventory';
 import { perk } from './skills';
 import { keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 
@@ -88,7 +88,7 @@ export const upgradeLevel = (state: GameState, up: UpgradeDef): number =>
 export const nextUpgrade = (
   state: GameState,
   up: UpgradeDef,
-): { price: number; label: string } | null => {
+): { price: number; label: string; needs?: UpgradeNeed } | null => {
   const lvl = up.levels[upgradeLevel(state, up)];
   if (!lvl) return null;
   // The blacksmith's friendship takes a little off tool upgrades (not the stamina tonic).
@@ -96,10 +96,18 @@ export const nextUpgrade = (
   return { ...lvl, price: Math.round(lvl.price * (1 - off)) };
 };
 
-export function buyUpgrade(state: GameState, up: UpgradeDef): 'ok' | 'no_money' | 'maxed' {
+export function buyUpgrade(
+  state: GameState,
+  up: UpgradeDef,
+): 'ok' | 'no_money' | 'no_items' | 'maxed' {
   const next = nextUpgrade(state, up);
   if (!next) return 'maxed';
   if (state.money < next.price) return 'no_money';
+  if (next.needs && countItem(state, next.needs.item) < next.needs.qty) return 'no_items';
+  if (next.needs) {
+    removeItem(state, next.needs.item, next.needs.qty);
+    addStat(state, 'barUpgrades');
+  }
   state.money -= next.price;
   (state.upgrades as Record<string, number>)[up.id] = upgradeLevel(state, up) + 1;
   if (up.id === 'can') state.water = waterCapacity(state);

@@ -79,7 +79,7 @@ try {
     Object.keys(s.farm.tiles).length === 1 && s.energy === 98,
     JSON.stringify(s.farm.tiles),
   );
-  await page.keyboard.press('Digit5');
+  await page.keyboard.press('Digit6');
   await tap('Space');
   s = await state();
   check(
@@ -234,9 +234,9 @@ try {
   );
   await mp.evaluate(() => {
     const s = window.__farm.getState();
-    s.inventory.slots[4] = { item: 'sprinkler', qty: 1 };
+    s.inventory.slots[5] = { item: 'sprinkler', qty: 1 };
   });
-  await mp.keyboard.press('Digit5');
+  await mp.keyboard.press('Digit6');
   await mTap('Space');
   m = await mState();
   check(
@@ -315,6 +315,43 @@ try {
     m.inventory.selected === 1,
     `selected ${m.inventory.selected}`,
   );
+  // The mine: a pickaxe breaks a node and the ore lands in the bag.
+  await mp.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.nodes.mine = { '9,23': 'copper_node' };
+    s.player.map = 'mine';
+    s.player.x = 9 * 16 + 8;
+    s.player.y = 24 * 16 + 11;
+    s.player.facing = 'up';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key === 'Farm')
+      .scene.start('Mine');
+  });
+  await mp.waitForTimeout(1200);
+  await mp.keyboard.press('Digit5'); // pickaxe
+  await mTap('Space');
+  m = await mState();
+  check(
+    'the pickaxe breaks a node in the mine and yields ore',
+    !m.nodes.mine?.['9,23'] &&
+      m.inventory.slots.some((x) => x?.item === 'copper_ore') &&
+      m.stats.mined === 1,
+    JSON.stringify(m.nodes),
+  );
+  await mp.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.player.map = 'farm';
+    s.player.x = 13 * 16 + 8;
+    s.player.y = 17 * 16 + 11;
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key === 'Mine')
+      .scene.start('Farm');
+  });
+  await mp.waitForTimeout(1200);
   await mPlace(18, 31, 'right');
   await mp.keyboard.press('Digit4'); // fishing rod
   const energyBefore = (await mState()).energy;

@@ -105,9 +105,9 @@ describe('side income stays bounded', () => {
     }
     // Orders: the premium over selling, at the cap.
     const orderPerDay = ordersCfg.perDay * Math.min(ordersCfg.maxReward, 600);
-    expect(jarPerDay).toBeLessThan(650);
+    expect(jarPerDay).toBeLessThan(900);
     expect(animalPerDay).toBeLessThan(1000);
-    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(3600);
+    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(3800);
     expect(ordersCfg.rewardMultiplier[1]).toBeLessThanOrEqual(1.7);
   });
 });

@@ -31,6 +31,14 @@
     "tool": "fishing_rod",
     "description": "Cast at water, tap to hook, hold to reel."
   },
+  "pickaxe": {
+    "name": "Pickaxe",
+    "type": "tool",
+    "icon": "item_pickaxe",
+    "color": "#9aa3b4",
+    "tool": "pickaxe",
+    "description": "Break rocks in the mine for ore and gems."
+  },
   "parsnip_seed": {
     "name": "Parsnip Seeds",
     "type": "seed",
@@ -664,6 +672,87 @@
     "color": "#a8844a",
     "sellPrice": 160,
     "description": "Weaves wool into cloth in 4 days.",
+    "placeable": true
+  },
+  "stone": {
+    "name": "Stone",
+    "type": "material",
+    "icon": "item_stone",
+    "color": "#8a8694",
+    "sellPrice": 3,
+    "description": "Useful for building."
+  },
+  "copper_ore": {
+    "name": "Copper Ore",
+    "type": "ore",
+    "icon": "item_copper_ore",
+    "color": "#c9703a",
+    "sellPrice": 20,
+    "description": "Smelt it in a furnace.",
+    "family": "copper"
+  },
+  "iron_ore": {
+    "name": "Iron Ore",
+    "type": "ore",
+    "icon": "item_iron_ore",
+    "color": "#8d98ab",
+    "sellPrice": 40,
+    "description": "Smelt it in a furnace.",
+    "family": "iron"
+  },
+  "quartz": {
+    "name": "Quartz",
+    "type": "gem",
+    "icon": "item_quartz",
+    "color": "#e8f0f4",
+    "sellPrice": 45,
+    "description": "A clear crystal."
+  },
+  "amethyst": {
+    "name": "Amethyst",
+    "type": "gem",
+    "icon": "item_amethyst",
+    "color": "#a86ad0",
+    "sellPrice": 90,
+    "description": "Deep purple."
+  },
+  "ruby": {
+    "name": "Ruby",
+    "type": "gem",
+    "icon": "item_ruby",
+    "color": "#d8304a",
+    "sellPrice": 160,
+    "description": "Rare and bright."
+  },
+  "copper_bar": {
+    "name": "Copper Bar",
+    "type": "bar",
+    "icon": "item_copper_bar",
+    "color": "#d8803a",
+    "sellPrice": 30,
+    "description": "A bar of copper.",
+    "derived": true,
+    "sellMultiplier": 1.0,
+    "nameTemplate": "Copper Bar"
+  },
+  "iron_bar": {
+    "name": "Iron Bar",
+    "type": "bar",
+    "icon": "item_iron_bar",
+    "color": "#aab4c8",
+    "sellPrice": 55,
+    "description": "A bar of iron.",
+    "derived": true,
+    "sellMultiplier": 1.0,
+    "nameTemplate": "Iron Bar"
+  },
+  "furnace": {
+    "name": "Furnace",
+    "type": "placeable",
+    "icon": "item_furnace",
+    "color": "#7a6a6a",
+    "sellPrice": 160,
+    "description": "Smelts ore into bars in 2 days.",
     "placeable": true
   }
 }

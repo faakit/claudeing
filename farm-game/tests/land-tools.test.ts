@@ -17,6 +17,7 @@ import {
   starterPlots,
 } from '../src/systems/plots';
 import { tileKey } from '../src/systems/farming';
+import { addItem } from '../src/systems/inventory';
 import { equip, grass, newState } from './helpers';
 
 /** A little world where every tile is open farmland, so area tools can see their neighbours. */
@@ -186,6 +187,8 @@ describe('tool upgrades in the shop and on the water', () => {
   it('hoe and rod upgrades can be bought level by level', () => {
     const s = newState();
     s.money = 100000;
+    addItem(s, { item: 'copper_bar', of: 'copper_ore' }, 10);
+    addItem(s, { item: 'iron_bar', of: 'iron_ore' }, 20);
     const hoe = shops['town_general_store']!.upgrades.find((u) => u.id === 'hoe')!;
     expect(buyUpgrade(s, hoe)).toBe('ok');
     expect(s.upgrades.hoe).toBe(1);

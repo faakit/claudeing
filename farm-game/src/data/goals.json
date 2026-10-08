@@ -268,6 +268,36 @@
     "hint": "Build machines and houses to grow your income."
   },
   {
+    "id": "mine10",
+    "text": "Mine 10 rocks or ore veins",
+    "stat": "mined",
+    "target": 10,
+    "reward": 300,
+    "hint": "Go north on the woods trail to the mine. Use the pickaxe.",
+    "where": {
+      "woods": [9, 2],
+      "farm": [14, 42],
+      "town": [1, 24],
+      "mine": [9, 15]
+    }
+  },
+  {
+    "id": "smelt",
+    "text": "Smelt a bar in a furnace",
+    "stat": "made.furnace",
+    "target": 1,
+    "reward": 400,
+    "hint": "Craft a furnace (Mining 2), load ore and wait 2 days."
+  },
+  {
+    "id": "toolbar",
+    "text": "Upgrade a tool with metal bars",
+    "stat": "barUpgrades",
+    "target": 1,
+    "reward": 500,
+    "hint": "Bring bars to the shop and open the Upgrades tab."
+  },
+  {
     "id": "book3",
     "text": "Complete 3 almanac pages",
     "stat": "pagesDone",

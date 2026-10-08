@@ -106,11 +106,19 @@
           },
           {
             "price": 900,
-            "label": "Holds 60, 3 tiles"
+            "label": "Holds 60, 3 tiles",
+            "needs": {
+              "item": "copper_bar",
+              "qty": 2
+            }
           },
           {
             "price": 2500,
-            "label": "Holds 100, 4 tiles"
+            "label": "Holds 100, 4 tiles",
+            "needs": {
+              "item": "iron_bar",
+              "qty": 3
+            }
           }
         ]
       },
@@ -146,15 +154,27 @@
         "levels": [
           {
             "price": 500,
-            "label": "Tills 2 in a row"
+            "label": "Tills 2 in a row",
+            "needs": {
+              "item": "copper_bar",
+              "qty": 2
+            }
           },
           {
             "price": 1400,
-            "label": "Tills 3 in a row"
+            "label": "Tills 3 in a row",
+            "needs": {
+              "item": "iron_bar",
+              "qty": 3
+            }
           },
           {
             "price": 3500,
-            "label": "Tills 4 in a row"
+            "label": "Tills 4 in a row",
+            "needs": {
+              "item": "iron_bar",
+              "qty": 3
+            }
           }
         ]
       },
@@ -164,15 +184,27 @@
         "levels": [
           {
             "price": 450,
-            "label": "Wider zone"
+            "label": "Wider zone",
+            "needs": {
+              "item": "copper_bar",
+              "qty": 2
+            }
           },
           {
             "price": 1200,
-            "label": "Wider zone"
+            "label": "Wider zone",
+            "needs": {
+              "item": "iron_bar",
+              "qty": 3
+            }
           },
           {
             "price": 3000,
-            "label": "Wider zone"
+            "label": "Wider zone",
+            "needs": {
+              "item": "iron_bar",
+              "qty": 3
+            }
           }
         ]
       }

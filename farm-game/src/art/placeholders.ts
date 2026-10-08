@@ -142,6 +142,20 @@ function drawTile(ctx: Ctx, index: number): void {
       px(10, 5, '#d9544a', 1, 1);
       px(8, 11, '#d9544a', 1, 1);
       break;
+    case 'stone':
+      speckle(14, '#7a7684');
+      speckle(8, '#5e5a68');
+      px(3, 4, '#807c8a', 2, 1);
+      px(10, 11, '#807c8a', 3, 1);
+      break;
+    case 'rock':
+      px(0, 0, '#2a2730', 16, 16);
+      px(1, 1, tile.color, 14, 14);
+      px(2, 2, '#5e5a68', 12, 4); // lit top
+      px(3, 8, tile.accent, 5, 1);
+      px(9, 11, tile.accent, 4, 1);
+      px(5, 5, '#6e6a78', 2, 1);
+      break;
     case 'bin':
       px(1, 3, tile.color, 14, 12);
       px(0, 2, tile.accent, 16, 3);

@@ -26,6 +26,10 @@
       "scene": "Woods",
       "file": "assets/maps/woods.tmj",
       "outdoor": true
+    },
+    "mine": {
+      "scene": "Mine",
+      "file": "assets/maps/mine.tmj"
     }
   },
   "wake": {

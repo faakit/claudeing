@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { animals, crops, items, placeables, trees } from '../data';
+import { animals, crops, items, nodes, placeables, trees } from '../data';
 
 /** Code-generated gameplay art (soil, crops, items, UI glyphs). Replaced by atlases in M7. */
 export const SOIL_TEXTURE = { tilled: 'soil_tilled', watered: 'soil_watered' } as const;
@@ -201,6 +201,12 @@ function drawIcon(ctx: Ctx, id: string): void {
       r(4, 4, 6, 2, dk);
       r(1, 7, 2, 4, dk);
       r(5, 11, 4, 1, dk);
+    } else if (id === 'pickaxe') {
+      for (let i = 0; i < 11; i++) r(3 + i, 13 - i, 2, 2, '#9a6a3a'); // handle
+      r(5, 2, 9, 2, c); // head
+      r(4, 3, 2, 3, c);
+      r(13, 3, 2, 3, c);
+      r(5, 2, 9, 1, lt);
     } else if (id === 'fishing_rod') {
       for (let i = 0; i < 12; i++) r(2 + i, 14 - i, 2, 2, '#9a6a3a'); // rod
       r(13, 2, 2, 1, '#9a6a3a');
@@ -221,6 +227,11 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(5, 8, 6, 4, c); // colored label
     r(6, 9, 4, 1, lt);
     r(7, 6, 2, 1, dk);
+  } else if (it.type === 'material' && id === 'stone') {
+    r(3, 7, 10, 7, '#8a8694');
+    r(4, 5, 8, 3, '#a09cac');
+    r(5, 9, 3, 1, '#6a6672');
+    r(9, 11, 3, 1, '#6a6672');
   } else if (it.type === 'material') {
     for (const [x, h] of [
       [4, 9],
@@ -270,6 +281,24 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(3, 4, 10, 2, '#c9ad72'); // lid
     r(3, 4, 10, 1, '#efe0b0');
     if (id === 'pickles') r(7, 10, 1, 1, dk);
+  } else if (it.type === 'ore') {
+    r(3, 6, 10, 8, '#6a6672'); // rock chunk
+    r(4, 4, 8, 3, '#7a7684');
+    r(5, 8, 3, 2, c);
+    r(9, 10, 3, 2, c);
+    r(6, 9, 1, 1, '#ffffff');
+  } else if (it.type === 'gem') {
+    r(5, 5, 6, 7, c);
+    r(6, 4, 4, 1, lt);
+    r(7, 12, 2, 2, dk);
+    r(6, 6, 2, 3, '#ffffff');
+    r(4, 7, 1, 3, dk);
+    r(11, 7, 1, 3, dk);
+  } else if (it.type === 'bar') {
+    r(2, 8, 12, 5, c); // ingot
+    r(3, 6, 10, 3, lt);
+    r(2, 12, 12, 1, dk);
+    r(4, 7, 3, 1, '#ffffff');
   } else if (it.type === 'animal') {
     drawAnimal(ctx, id, 16, 16, 0, 0);
   } else if (it.type === 'feed') {
@@ -329,7 +358,16 @@ function drawPlaceable(ctx: Ctx, id: string, c: string, dk: string, lt: string):
     ctx.fillStyle = col;
     ctx.fillRect(x, y, w, h);
   };
-  if (id === 'shed') {
+  if (id === 'furnace') {
+    r(2, 5, 12, 10, '#6a6a78'); // brick body
+    r(2, 5, 12, 1, '#9a9aaa');
+    for (const y of [8, 11]) r(2, y, 12, 1, '#4a4a58');
+    r(5, 9, 6, 5, '#14101f'); // firebox
+    r(6, 11, 4, 3, '#f2a65a');
+    r(7, 12, 2, 2, '#f4d35e');
+    r(6, 1, 4, 5, '#5a5a68'); // chimney
+    r(6, 1, 4, 1, '#8a8a98');
+  } else if (id === 'shed') {
     r(2, 7, 12, 8, '#9a7a4a');
     r(2, 7, 12, 1, '#c0a070');
     for (let x = 4; x < 14; x += 3) r(x, 8, 1, 7, '#6a5030');
@@ -780,6 +818,44 @@ export function generateGameArt(scene: Phaser.Scene): void {
     ctx.fillRect(8, 5, 3, 1);
     outline(ctx, 0, 0, 16, 16);
     refresh(scene, 'obj_sapling');
+  }
+  // Ore nodes: a grey boulder with veins or crystals in the colour of what it drops.
+  for (const [id, n] of Object.entries(nodes)) {
+    const ctx = canvas(scene, `node_${id}`, 16, 16);
+    const r = (x: number, y: number, w: number, h: number, col: string) => {
+      ctx.fillStyle = col;
+      ctx.fillRect(x, y, w, h);
+    };
+    r(2, 5, 12, 9, '#6a6672');
+    r(3, 3, 10, 3, '#7a7684');
+    r(4, 2, 8, 2, '#8a8694');
+    r(2, 12, 12, 2, '#4a4652');
+    const vein = items[n.drops[0]?.item ?? 'stone']?.color ?? '#aaaaaa';
+    if (id === 'gem_node') {
+      for (const [x, y] of [
+        [5, 6],
+        [9, 5],
+        [7, 9],
+        [10, 9],
+      ] as const) {
+        r(x, y, 2, 3, '#e8f0f4');
+        r(x, y, 1, 3, '#a86ad0');
+      }
+    } else if (id !== 'rock_node') {
+      for (const [x, y, w] of [
+        [4, 6, 3],
+        [8, 7, 4],
+        [5, 10, 4],
+        [10, 10, 2],
+      ] as const)
+        r(x, y, w, 2, vein);
+      r(4, 6, 1, 1, '#ffffff');
+    } else {
+      r(5, 8, 3, 1, '#58545e');
+      r(9, 6, 3, 1, '#58545e');
+    }
+    outline(ctx, 0, 0, 16, 16);
+    refresh(scene, `node_${id}`);
   }
   // "For sale" sign for farm plots
   {

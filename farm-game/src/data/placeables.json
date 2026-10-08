@@ -123,5 +123,14 @@
     "params": {
       "max": 3
     }
+  },
+  "furnace": {
+    "name": "Furnace",
+    "behavior": "jar",
+    "solid": true,
+    "sprite": "obj_furnace",
+    "params": {
+      "max": 3
+    }
   }
 }

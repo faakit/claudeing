@@ -22,6 +22,7 @@ interface Shown {
 export class ObjectsRenderer {
   private forage = new Map<string, Shown>();
   private placed = new Map<number, Shown>();
+  private nodeSprites = new Map<string, { sprite: Phaser.GameObjects.Image; id: string }>();
   private plotSig = '';
   private plotParts: Phaser.GameObjects.GameObject[] = [];
 
@@ -33,7 +34,29 @@ export class ObjectsRenderer {
   sync(state: GameState, animate: boolean): void {
     this.syncForage(state, animate);
     this.syncPlaced(state, animate);
+    this.syncNodes(state);
     if (this.mapId === 'farm') this.syncPlots(state);
+  }
+
+  /** Ore nodes: solid rocks with veins. They stay until broken. */
+  private syncNodes(state: GameState): void {
+    const here = state.nodes[this.mapId] ?? {};
+    for (const [key, id] of Object.entries(here)) {
+      const shown = this.nodeSprites.get(key);
+      if (shown?.id === id) continue;
+      shown?.sprite.destroy();
+      const [tx, ty] = key.split(',').map(Number) as [number, number];
+      const sprite = this.scene.add
+        .image(tx * TILE_SIZE + TILE_SIZE / 2, (ty + 1) * TILE_SIZE, `node_${id}`)
+        .setOrigin(0.5, 1)
+        .setDepth(10 + (ty + 1) * TILE_SIZE - 3);
+      this.nodeSprites.set(key, { sprite, id });
+    }
+    for (const [key, shown] of this.nodeSprites) {
+      if (here[key]) continue;
+      shown.sprite.destroy();
+      this.nodeSprites.delete(key);
+    }
   }
 
   /** Land you have not bought yet is dimmed and fenced with a "for sale" sign showing its price. */
@@ -225,5 +248,7 @@ export class ObjectsRenderer {
     this.placed.clear();
     this.plotParts.forEach((p) => p.destroy());
     this.plotParts = [];
+    this.nodeSprites.forEach((n) => n.sprite.destroy());
+    this.nodeSprites.clear();
   }
 }

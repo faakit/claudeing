@@ -40,6 +40,8 @@ export const PLACEHOLDER_TILES = [
   { name: 'shopdoor', color: '#d9c7a0', accent: '#b04a3a' },
   { name: 'board', color: '#5a9e4b', accent: '#c9a26a' },
   { name: 'bush', color: '#5a9e4b', accent: '#2f8a45' },
+  { name: 'stone', color: '#6a6672', accent: '#56525e' },
+  { name: 'rock', color: '#4a4652', accent: '#2f2c36' },
 ] as const;
 
 /** Tile kind by gid, for game rules (water refills the can, etc). */

@@ -18,5 +18,10 @@
     "energyCost": 5,
     "action": "fish",
     "icon": "item_fishing_rod"
+  },
+  "pickaxe": {
+    "energyCost": 3,
+    "action": "mine",
+    "icon": "item_pickaxe"
   }
 }

@@ -4,6 +4,7 @@ import {
   goals,
   items,
   mapsData,
+  nodes,
   npcs,
   placeables,
   plots,
@@ -76,6 +77,32 @@ function migrateV3(raw: Raw): Raw {
   return { ...raw, version: 4, friends: {} };
 }
 
+/**
+ * v6 -> v7: the pickaxe becomes the fifth tool, so everything that sat in slot 4 and after shifts down one
+ * (trimming a spare empty slot), exactly like the fishing rod did in v3. Mines start empty.
+ */
+function migrateV6(raw: Raw): Raw {
+  const inv = isObj(raw['inventory']) ? raw['inventory'] : {};
+  const old = Array.isArray(inv['slots']) ? [...(inv['slots'] as unknown[])] : [];
+  const oldTools = 4;
+  const slots: unknown[] = [
+    ...old.slice(0, oldTools),
+    { item: 'pickaxe', qty: 1 },
+    ...old.slice(oldTools),
+  ];
+  while (slots.length > game.inventorySlots) {
+    const spare = slots.lastIndexOf(null);
+    slots.splice(spare > oldTools ? spare : slots.length - 1, 1);
+  }
+  const selected = typeof inv['selected'] === 'number' ? inv['selected'] : 0;
+  return {
+    ...raw,
+    version: 7,
+    inventory: { ...inv, slots, selected: selected >= oldTools ? selected + 1 : selected },
+    nodes: {},
+  };
+}
+
 /** v5 -> v6: tomorrow's forecast. Old saves simply get a calm forecast. */
 function migrateV5(raw: Raw): Raw {
   return { ...raw, version: 6, forecast: 'sunny' };
@@ -112,6 +139,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   3: migrateV3,
   4: migrateV4,
   5: migrateV5,
+  6: migrateV6,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -303,6 +331,16 @@ export function sanitize(raw: Raw): GameState {
     if (Object.keys(out).length) forageOut[mapId] = out;
   }
 
+  const nodesOut: GameState['nodes'] = {};
+  for (const [mapId, tilesRaw] of Object.entries(obj(raw['nodes']))) {
+    if (!mapsData.maps[mapId]) continue;
+    const out: Record<string, string> = {};
+    for (const [key, id] of Object.entries(obj(tilesRaw))) {
+      if (TILE_KEY.test(key) && typeof id === 'string' && nodes[id]) out[key] = id;
+    }
+    if (Object.keys(out).length) nodesOut[mapId] = out;
+  }
+
   const ordersRaw = obj(raw['orders']);
   const orderList: GameState['orders']['list'] = [];
   if (Array.isArray(ordersRaw['list'])) {
@@ -366,6 +404,7 @@ export function sanitize(raw: Raw): GameState {
     nextPlacedId: Math.max(int(raw['nextPlacedId'], 1, 1, 1e9), maxId + 1),
     skills: skillXp,
     forage: forageOut,
+    nodes: nodesOut,
     orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
     friends,
     lastSummary: null, // transient: only meaningful right after a rollover

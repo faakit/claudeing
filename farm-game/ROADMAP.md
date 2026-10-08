@@ -113,8 +113,10 @@ More people, more places, more to discover.
 - [~] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
   Each is a JSON entry plus a role.
   _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts). Not done: a fisher and a rival farmer.
-- [ ] **R3.3 The mine.** A fifth map with ore and gems, a pickaxe tool, energy-versus-risk floors. Ore feeds the
-      furnace and tool upgrades. _Plug in:_ map generator, tool action, forage-like spawn hook for ore nodes.
+- [x] **R3.3 The mine.** A fifth map with ore and gems, a pickaxe tool, energy-versus-risk floors. Ore feeds the
+      furnace and tool upgrades.
+      _Done:_ a mine north of the woods trail, a pickaxe (the fifth tool; saves migrate), copper/iron veins, crystals and
+      rocks that respawn each morning, a Mining skill, a furnace (ore -> bars in 2 days) and bar-gated tool upgrades. _Plug in:_ map generator, tool action, forage-like spawn hook for ore nodes.
 - [ ] **R3.4 Seasonal festivals.** One event per season on a fixed day: a fishing contest, a crop show, a winter
       feast. Orders, skills and friendship all feed into a score. _Plug in:_ a day hook that swaps in an event map
       state and a modal.

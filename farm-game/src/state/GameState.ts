@@ -133,6 +133,8 @@ export interface GameState {
   nextPlacedId: number;
   /** Total XP per skill id (levels are derived from skills.json). */
   skills: Record<string, number>;
+  /** Ore nodes in mine-like maps: map id -> tile key -> node id (see nodes.json). */
+  nodes: Record<string, Record<string, string>>;
   /** Forageables lying on the ground: map id -> tile key -> item id. */
   forage: Record<string, Record<string, string>>;
   /** Today's orders. `day` is the absolute day number they were generated for. */
@@ -143,7 +145,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -189,6 +191,7 @@ export function createInitialState(): GameState {
     nextPlacedId: 1,
     skills: {},
     forage: {},
+    nodes: {},
     orders: { day: 0, list: [] },
     friends: {},
     lastSummary: null,

@@ -7,6 +7,8 @@ import { gameEvents } from './events';
 export interface EndDayOptions {
   /** Tiles where forageables may appear, by map id (from each map's "forage" zones). */
   forageSpots?: Readonly<Record<string, readonly [number, number][]>>;
+  /** Tiles where ore nodes may appear, by map id. */
+  oreSpots?: Readonly<Record<string, readonly [number, number][]>>;
   /** True when the clock ran out (02:00) rather than the player choosing bed. */
   passedOut: boolean;
   /** Farmable tiles where weeds may appear. */
@@ -34,6 +36,7 @@ export function endDay(state: GameState, opts: EndDayOptions): DaySummary {
     passedOut: opts.passedOut,
     weedCandidates: opts.weedCandidates,
     forageSpots: opts.forageSpots ?? {},
+    oreSpots: opts.oreSpots ?? {},
     notes: summary.notes as string[],
     scratch: {},
     summary,

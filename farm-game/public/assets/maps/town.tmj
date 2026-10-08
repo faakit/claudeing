@@ -1869,12 +1869,12 @@
    "firstgid": 1,
    "name": "placeholder",
    "image": "../tilesets/placeholder.png",
-   "imagewidth": 304,
+   "imagewidth": 336,
    "imageheight": 16,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 19,
-   "columns": 19,
+   "tilecount": 21,
+   "columns": 21,
    "margin": 0,
    "spacing": 0
   }

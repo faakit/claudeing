@@ -47,5 +47,19 @@
     "name": "Preserves",
     "reward": 500,
     "items": ["jam", "pickles", "wine", "cloth"]
+  },
+  "mine": {
+    "name": "Mine",
+    "reward": 500,
+    "items": [
+      "stone",
+      "copper_ore",
+      "iron_ore",
+      "quartz",
+      "amethyst",
+      "ruby",
+      "copper_bar",
+      "iron_bar"
+    ]
   }
 }

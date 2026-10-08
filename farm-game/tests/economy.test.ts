@@ -67,6 +67,8 @@ describe('economy', () => {
     const s = newState();
     const can = shops[STORE]!.upgrades.find((u) => u.id === 'can')!;
     s.money = 10000;
+    addItem(s, { item: 'copper_bar', of: 'copper_ore' }, 10);
+    addItem(s, { item: 'iron_bar', of: 'iron_ore' }, 10);
     expect(buyUpgrade(s, can)).toBe('ok');
     expect(s.water).toBe(40);
     expect(buyUpgrade(s, can)).toBe('ok');

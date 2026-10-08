@@ -16,6 +16,8 @@ export interface GameEvents {
   levelUp: { skill: string; level: number };
   /** Objects were placed/removed/changed on a map: renderers should resync. */
   placedChanged: { map: string };
+  /** Ore nodes on a map changed (spawned or broken): renderers and collision resync. */
+  nodesChanged: { map: string };
   /** Forageables on a map changed (spawned or picked). */
   forageChanged: { map: string };
   /** Ask the UI to open a placed object's panel (jar picker...). */

@@ -28,6 +28,7 @@ import { haptic } from '../platform/haptics';
 import { spawnPosition, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
+import { nodeTiles } from '../systems/mining';
 import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
 import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
 import { gameEvents, toast } from '../systems/events';
@@ -168,6 +169,11 @@ export abstract class WorldScene extends Phaser.Scene {
       ),
       gameEvents.on('forageChanged', ({ map }) => {
         if (map === this.mapId) this.things?.sync(getState(), true);
+      }),
+      gameEvents.on('nodesChanged', ({ map }) => {
+        if (map !== this.mapId) return;
+        this.rebuildGrid();
+        this.things?.sync(getState(), true);
       }),
       gameEvents.on('placedChanged', ({ map }) => {
         if (map !== this.mapId) return;
@@ -359,6 +365,7 @@ export abstract class WorldScene extends Phaser.Scene {
       if (this.inMap({ tx, ty })) this.grid.blocked[ty * this.grid.width + tx] = 1;
     };
     this.npcs?.tiles().forEach(block);
+    nodeTiles(getState(), this.mapId).forEach(block);
     if (this.mapId === 'farm') signTiles(getState()).forEach(block);
   }
 

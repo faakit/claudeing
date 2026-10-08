@@ -6,6 +6,7 @@ import { FarmScene } from './scenes/FarmScene';
 import { HouseScene } from './scenes/HouseScene';
 import { TitleScene } from './scenes/TitleScene';
 import { TownScene } from './scenes/TownScene';
+import { MineScene } from './scenes/MineScene';
 import { WoodsScene } from './scenes/WoodsScene';
 import { UIScene } from './scenes/UIScene';
 import { getState } from './state/store';
@@ -37,6 +38,7 @@ const game = new Phaser.Game({
     HouseScene,
     TownScene,
     WoodsScene,
+    MineScene,
     UIScene,
   ],
 });

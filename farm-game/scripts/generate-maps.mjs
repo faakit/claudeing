@@ -23,6 +23,8 @@ const T = {
   shopdoor: 17,
   board: 18,
   bush: 19,
+  stone: 20,
+  rock: 21,
 };
 const SOLID = new Set([
   T.fence,
@@ -36,8 +38,9 @@ const SOLID = new Set([
   T.shopdoor,
   T.board,
   T.bush,
+  T.rock,
 ]);
-const TILE_COUNT = 19;
+const TILE_COUNT = 21;
 
 function makeMap(w, h, fill) {
   const ground = Array.from({ length: h }, () => Array(w).fill(fill));
@@ -271,6 +274,8 @@ const inside = (x, y, [rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && 
   const { w, rect } = m;
   border(m, T.tree);
   rect(w - 1, 14, 1, 2, T.path); // east gate
+  rect(9, 0, 2, 1, T.path); // north cave mouth
+  rect(9, 1, 2, 5, T.path); // trail up to it
   rect(10, 14, 9, 2, T.path); // trail west from the gate
   rect(9, 6, 2, 10, T.path); // trail north into the clearing
   rect(3, 18, 8, 7, T.water); // lake
@@ -307,7 +312,33 @@ const inside = (x, y, [rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && 
     zone('forage', 'clearing', 2, 3, 16, 11),
     zone('forage', 'lakeside', 11, 16, 7, 12),
     zone('forage', 'south_glade', 2, 25, 9, 4),
+    door('to_mine_9', 9, 0, 'mine', 9, 27, 'up'),
+    door('to_mine_10', 10, 0, 'mine', 10, 27, 'up'),
     door('to_town_14', w - 1, 14, 'town', 1, 24, 'right'),
     door('to_town_15', w - 1, 15, 'town', 1, 25, 'right'),
+  ]);
+}
+
+// ---- Mine 20x30: one cavern, ore spawns every morning, a single way out at the bottom ----
+{
+  nextId = 1;
+  const m = makeMap(20, 30, T.rock);
+  const { w, h, rect } = m;
+  rect(2, 2, w - 4, h - 4, T.stone); // the cavern
+  rect(9, h - 2, 2, 1, T.stone);
+  rect(9, h - 1, 2, 1, T.path); // exit
+  // Deterministic pillars so the cavern has some shape but stays fully connected.
+  let a = 11;
+  const rnd = () => (a = (a * 1664525 + 1013904223) >>> 0) / 4294967296;
+  for (let i = 0; i < 46; i++) {
+    const x = 3 + Math.floor(rnd() * (w - 6));
+    const y = 3 + Math.floor(rnd() * (h - 9));
+    if (x >= 8 && x <= 11 && y >= h - 8) continue; // keep the entrance hall clear
+    m.ground[y][x] = T.rock;
+  }
+  write('mine', m, [
+    zone('ore', 'cavern', 3, 3, w - 6, h - 9),
+    door('to_woods_9', 9, h - 1, 'woods', 9, 1, 'down'),
+    door('to_woods_10', 10, h - 1, 'woods', 10, 1, 'down'),
   ]);
 }

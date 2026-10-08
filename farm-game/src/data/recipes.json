@@ -238,5 +238,27 @@
       "skill": "farming",
       "level": 5
     }
+  },
+  "furnace": {
+    "name": "Furnace",
+    "output": {
+      "item": "furnace",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "stone",
+        "qty": 20
+      },
+      {
+        "item": "copper_ore",
+        "qty": 3
+      }
+    ],
+    "gold": 150,
+    "unlock": {
+      "skill": "mining",
+      "level": 2
+    }
   }
 }

@@ -29,6 +29,8 @@ export interface DayContext {
   readonly weedCandidates: readonly [number, number][];
   /** Tiles where forageables may appear, by map id (from the maps' "forage" zones). */
   readonly forageSpots: Readonly<Record<string, readonly [number, number][]>>;
+  /** Tiles where ore nodes may appear, by map id (from the maps' "ore" zones). */
+  readonly oreSpots?: Readonly<Record<string, readonly [number, number][]>>;
   /** Hooks add short lines here; they appear in the morning summary. */
   readonly notes: string[];
   /** Hooks may record values for other hooks / the summary. */

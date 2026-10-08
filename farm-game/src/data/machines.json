@@ -20,5 +20,13 @@
     "recipes": {
       "wool": "cloth"
     }
+  },
+  "furnace": {
+    "days": 2,
+    "xp": 12,
+    "recipes": {
+      "copper": "copper_bar",
+      "iron": "iron_bar"
+    }
   }
 }

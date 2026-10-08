@@ -18,6 +18,8 @@ import plotsRaw from './plots.json';
 import machinesRaw from './machines.json';
 import treesRaw from './trees.json';
 import collectionsRaw from './collections.json';
+import nodesRaw from './nodes.json';
+import miningRaw from './mining.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -55,6 +57,9 @@ export type ItemType =
   | 'placeable'
   | 'preserve'
   | 'animal'
+  | 'ore'
+  | 'gem'
+  | 'bar'
   | 'sapling'
   | 'feed'
   | 'product';
@@ -96,11 +101,15 @@ export interface ToolDef {
   action: string;
   icon: string;
 }
+export interface UpgradeNeed {
+  item: string;
+  qty: number;
+}
 export interface UpgradeDef {
   /** 'can', 'stamina', 'hoe', 'rod': the keys of `state.upgrades`. */
   id: string;
   name: string;
-  levels: { price: number; label: string }[];
+  levels: { price: number; label: string; needs?: UpgradeNeed }[];
 }
 export interface ShopDef {
   name: string;
@@ -204,6 +213,20 @@ export interface NpcDef {
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
 }
+export interface NodeDef {
+  name: string;
+  /** Relative chance to spawn. */
+  weight: number;
+  xp: number;
+  /** Mining level needed before it appears. */
+  minLevel?: number;
+  drops: { item: string; weight: number; qty: [number, number] }[];
+}
+export interface MiningDef {
+  perDay: number;
+  cap: number;
+  maps: string[];
+}
 export interface CollectionDef {
   name: string;
   /** Gold for finding every item on the page. */
@@ -305,6 +328,8 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const nodes = nodesRaw as unknown as Record<string, NodeDef>;
+export const mining = miningRaw as unknown as MiningDef;
 export const collections = collectionsRaw as unknown as Record<string, CollectionDef>;
 export const trees = treesRaw as unknown as Record<string, TreeDef>;
 export const machines = machinesRaw as unknown as Record<string, MachineDef>;
@@ -442,6 +467,17 @@ export function validateContent(): void {
       fail('trees', `"${id}" fruit "${t.fruit}" must be a fruit item`);
     if (t.growDays < 1 || t.every < 1 || t.cap < 1) fail('trees', `"${id}" has a bad number`);
   }
+  for (const [id, n] of Object.entries(nodes)) {
+    if (n.drops.length === 0 || n.weight <= 0) fail('nodes', `"${id}" needs drops and a weight`);
+    for (const dr of n.drops)
+      if (!items[dr.item]) fail('nodes', `"${id}" drops unknown item "${dr.item}"`);
+  }
+  for (const m of mining.maps) if (!mapIds.includes(m)) fail('mining', `unknown map "${m}"`);
+  for (const s of Object.values(shops))
+    for (const u of s.upgrades)
+      for (const lv of u.levels)
+        if (lv.needs && !items[lv.needs.item])
+          fail('shops', `upgrade needs unknown item "${lv.needs.item}"`);
   for (const [id, c] of Object.entries(collections)) {
     if (c.items.length === 0) fail('collections', `"${id}" is empty`);
     for (const it of c.items)

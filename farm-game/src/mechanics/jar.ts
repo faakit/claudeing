@@ -23,6 +23,7 @@ registerPlaceableBehavior('jar', {
     if (typeof res === 'string')
       return { kind: 'message', text: res === 'full' ? 'Inventory full!' : 'Nothing yet.' };
     addStat(state, 'preserved');
+    addStat(state, `made.${obj.type}`);
     addXp(state, 'farming', machines[obj.type]?.xp ?? 8);
     toast(`Got ${displayName(res)}`, 'good');
     return { kind: 'message', text: '' };

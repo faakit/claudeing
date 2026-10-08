@@ -126,8 +126,15 @@ export class ShopPanel extends Modal {
     for (const up of shop.upgrades) {
       const next = nextUpgrade(s, up);
       const lvl = upgradeLevel(s, up);
+      const have = next?.needs ? countItem(s, next.needs.item) : 0;
+      const missing = !!next?.needs && have < next.needs.qty;
       y = this.row(y, {
-        icon: up.id === 'can' ? 'ui_drop' : 'ui_bolt',
+        icon:
+          up.id === 'can'
+            ? 'ui_drop'
+            : up.id === 'stamina'
+              ? 'ui_bolt'
+              : items[up.id === 'hoe' ? 'hoe' : 'fishing_rod']!.icon,
         title: `${up.name} ${lvl + 1}/${up.levels.length + 1}`,
         sub: next ? next.label : 'Fully upgraded!',
         subColor: next ? C.creamDim : C.green,
@@ -137,11 +144,21 @@ export class ShopPanel extends Modal {
                 label: `${fmt(next.price)}g`,
                 width: 58,
                 onClick: () => this.buyUp(up.id),
-                color: s.money >= next.price ? C.gold : C.red,
+                color: s.money >= next.price && !missing ? C.gold : C.red,
               },
             ]
           : [],
       });
+      if (next?.needs) {
+        // Bars are part of the price: show them on their own line so the effect text stays readable.
+        this.label(
+          28,
+          y - 1,
+          `Needs ${next.needs.qty} ${items[next.needs.item]?.name} (have ${have})`,
+          missing ? C.red : C.green,
+        );
+        y += 10;
+      }
     }
     if (perkDiscount(s) > 0)
       this.label(
@@ -183,7 +200,14 @@ export class ShopPanel extends Modal {
       toast(`${up.name} upgraded!`, 'good');
     } else {
       audio.play('error');
-      toast(res === 'no_money' ? 'Not enough gold.' : 'Already maxed.', 'warn');
+      toast(
+        res === 'no_money'
+          ? 'Not enough gold.'
+          : res === 'no_items'
+            ? 'You need more bars.'
+            : 'Already maxed.',
+        'warn',
+      );
     }
     this.rebuild();
   }

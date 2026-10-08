@@ -1,0 +1,62 @@
+{
+  "rock_node": {
+    "name": "Rock",
+    "weight": 8,
+    "xp": 2,
+    "drops": [
+      {
+        "item": "stone",
+        "weight": 1,
+        "qty": [1, 3]
+      }
+    ]
+  },
+  "copper_node": {
+    "name": "Copper Vein",
+    "weight": 5,
+    "xp": 6,
+    "drops": [
+      {
+        "item": "copper_ore",
+        "weight": 1,
+        "qty": [1, 3]
+      }
+    ]
+  },
+  "iron_node": {
+    "name": "Iron Vein",
+    "weight": 3,
+    "xp": 10,
+    "minLevel": 2,
+    "drops": [
+      {
+        "item": "iron_ore",
+        "weight": 1,
+        "qty": [1, 2]
+      }
+    ]
+  },
+  "gem_node": {
+    "name": "Crystal",
+    "weight": 1.4,
+    "xp": 16,
+    "minLevel": 3,
+    "drops": [
+      {
+        "item": "quartz",
+        "weight": 5,
+        "qty": [1, 1]
+      },
+      {
+        "item": "amethyst",
+        "weight": 3,
+        "qty": [1, 1]
+      },
+      {
+        "item": "ruby",
+        "weight": 1,
+        "qty": [1, 1]
+      }
+    ]
+  }
+}
