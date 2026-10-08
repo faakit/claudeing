@@ -13,3 +13,4 @@ import './orders';
 import './fishing';
 import './animalHouse';
 import './beeHouse';
+import './fruitTree';

@@ -139,3 +139,13 @@
 - **Never lose progress we cannot read:** a save from a newer version is detected, explained on the title screen and protected behind the Erase confirmation.
 - **A bad saved position is repaired on load** by moving the player to the nearest open tile, instead of validating against maps at save time (the save layer does not know map sizes).
 - **Fiber is for sale (5 gold):** weeds were the only source, so building was capped by luck; now it is also a modest gold sink.
+
+## Trees, sheep, goal arrow, seasonal sound
+
+- **Fruit trees are placeables with a time component:** a sapling item grows for ten mornings (shown as a sapling sprite via a new `sprite()` behavior hook), then bears one fruit every third morning in its own season, at most 4 waiting, 3 per kind. One tree kind per season gives every season an orchard task; income per season is bounded by a balance test and the sapling pays back inside a season.
+- **Greenhouse deferred:** soil is keyed by tile only, so a second farmland map would collide with the farm. It needs per-map soil first.
+- **Sheep follow the animal-house pattern:** a shed (species sheep), fodder, wool, and a loom as one more row in `machines.json` (wool -> cloth). A daily pat raises happiness once per day, so a fed house still has something to do for the player.
+- **The goal arrow is data (`where` per map):** after 14 s without input it floats over the target when visible, or sits at the screen edge pointing toward it. Any input hides it, so it never nags an active player.
+- **Seasons sound different:** tempo, key and melody density per season, with minor chords in fall and winter. New cues for level-up, heart gain and finished orders.
+- **Soil is turned earth, not planks:** broken wavy furrows and clods, soft corners so tiles blend into one field.
+- **Shop paging:** five rows per page with a pager, since the Farm tab grew past one screen.

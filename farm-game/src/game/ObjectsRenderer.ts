@@ -5,7 +5,7 @@ import { Label } from '../ui/font';
 import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
-import { statusOf } from '../systems/placeables';
+import { spriteOf, statusOf } from '../systems/placeables';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -135,7 +135,7 @@ export class ObjectsRenderer {
       const house = def.behavior === 'animalHouse' ? houseOf(obj) : null;
       const sig = house
         ? `house${house.n}${house.ready > 0 ? 'r' : ''}${house.fed ? 'f' : ''}`
-        : statusOf(obj);
+        : `${statusOf(obj)}:${spriteOf(obj)}`;
       const shown = this.placed.get(obj.id);
       if (shown?.sig === sig) continue;
       shown?.sprite.destroy();
@@ -146,12 +146,12 @@ export class ObjectsRenderer {
       const x = obj.tx * TILE_SIZE + TILE_SIZE / 2;
       const y = (obj.ty + 1) * TILE_SIZE;
       const sprite = this.scene.add
-        .image(x, y, def.sprite)
+        .image(x, y, spriteOf(obj))
         .setOrigin(0.5, 1)
         .setDepth(10 + y - 3);
       const extra: Phaser.GameObjects.GameObject[] = [];
-      if (sig === 'busy') sprite.setTint(0xd9d9d9);
-      if (sig === 'ready') {
+      if (sig.startsWith('busy') && def.behavior === 'jar') sprite.setTint(0xd9d9d9);
+      if (sig.startsWith('ready')) {
         const mark = this.scene.add
           .image(x, y - 17, 'ui_star')
           .setTint(0xf4d35e)

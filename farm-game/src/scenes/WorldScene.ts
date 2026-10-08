@@ -31,6 +31,7 @@ import { getState } from '../state/store';
 import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
 import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
 import { gameEvents, toast } from '../systems/events';
+import { currentGoal } from '../systems/goals';
 import { getSoil, isMature } from '../systems/farming';
 import { forageAt } from '../systems/forage';
 import { addItem, roomFor, selectedStack } from '../systems/inventory';
@@ -53,6 +54,9 @@ import {
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
 
+/** Quiet time before the goal arrow appears. */
+const GUIDE_AFTER_MS = 14_000;
+
 /** Shared behavior for every walkable map: render, move, collide, doors, farming input. */
 export abstract class WorldScene extends Phaser.Scene {
   private grid!: CollisionGrid;
@@ -70,6 +74,8 @@ export abstract class WorldScene extends Phaser.Scene {
   /** After a door, ignore held input until it is released once, so doors never bounce. */
   private inputLocked = true;
   private actionLock = 0;
+  private idleMs = 0;
+  private arrow: Phaser.GameObjects.Graphics | null = null;
   private heldFailed = false;
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
@@ -134,6 +140,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.things = new ObjectsRenderer(this, this.mapId);
     this.things.sync(state, false);
     this.highlight = new TileHighlight(this);
+    this.idleMs = 0;
+    this.arrow = this.add.graphics().setScrollFactor(0).setDepth(9400).setVisible(false);
     this.shadow = this.add.image(0, 0, SHADOW_TEXTURE).setOrigin(0.5, 0.5);
     this.sprite = this.add
       .sprite(0, 0, PLAYER_TEXTURE, playerIdleFrame(state.player.facing))
@@ -219,6 +227,52 @@ export abstract class WorldScene extends Phaser.Scene {
 
     this.updateTarget();
     this.updateHighlight(time);
+    this.updateGuide(time, delta);
+  }
+
+  /**
+   * After a quiet spell, a bobbing arrow shows where the current goal wants you to go: over the spot when it is
+   * on screen, at the screen edge pointing toward it when it is not. Any input hides it again.
+   */
+  private updateGuide(time: number, delta: number): void {
+    const arrow = this.arrow;
+    if (!arrow) return;
+    if (inputHub.direction !== null || inputHub.actionHeld) this.idleMs = 0;
+    else this.idleMs += delta;
+    const where = currentGoal(getState())?.where?.[this.mapId];
+    if (!where || this.idleMs < GUIDE_AFTER_MS) {
+      arrow.setVisible(false);
+      return;
+    }
+    const cam = this.cameras.main;
+    const wx = where[0] * TILE_SIZE + TILE_SIZE / 2 - cam.scrollX;
+    const wy = where[1] * TILE_SIZE + TILE_SIZE / 2 - cam.scrollY;
+    const m = 10;
+    const cx = Math.max(m, Math.min(WORLD_VIEW.w - m, wx));
+    const cy = Math.max(m, Math.min(WORLD_VIEW.h - m, wy));
+    const onScreen = cx === wx && cy === wy;
+    const bob = Math.sin(time / 180) * 2;
+    arrow.clear().setVisible(true).setPosition(cx, cy);
+    arrow.fillStyle(0x14101f, 0.7);
+    arrow.fillStyle(0xf4d35e, 1);
+    if (onScreen) {
+      // a down arrow floating over the target tile
+      arrow.fillTriangle(-5, -18 + bob, 5, -18 + bob, 0, -9 + bob);
+      arrow.fillRect(-2, -26 + bob, 4, 8);
+    } else {
+      const ang = Math.atan2(wy - cy, wx - cx);
+      const tip = { x: Math.cos(ang) * (9 + bob), y: Math.sin(ang) * (9 + bob) };
+      const left = ang + 2.5;
+      const right = ang - 2.5;
+      arrow.fillTriangle(
+        tip.x,
+        tip.y,
+        tip.x + Math.cos(left) * 9,
+        tip.y + Math.sin(left) * 9,
+        tip.x + Math.cos(right) * 9,
+        tip.y + Math.sin(right) * 9,
+      );
+    }
   }
 
   // ---- setup ----

@@ -70,9 +70,9 @@ Still open (ranked):
 - [x] A saved player position inside a wall or outside the map is moved to the nearest open tile on load.
 - [ ] Placement undo for big placeables; confirm before placing a barn.
 - [x] Fiber is now sold in the General Store (5 gold), so crafting is no longer capped by weed supply.
-- [ ] Seasonal music and sounds for orders and hearts; one music loop for every season is flat.
-- [ ] Art: tilled soil reads as planks, the house is huge next to a 1-tile coop, animals do not roam (see R4.1).
-- [ ] The first day still needs a stronger push toward town (arrow or a first-day NPC visit).
+- [x] Seasonal music (tempo, key, chords, melody density per season) and sounds for level-ups, hearts and orders.
+- [~] Art: tilled soil now reads as earth (done); the house is huge next to a 1-tile coop, animals do not roam (see R4.1).
+- [x] A bobbing arrow now points at the current goal's target after 14 s of no input (per-map `where` in goals.json).
 
 ## Next: depth in the daily loop (R2)
 
@@ -86,8 +86,8 @@ Give players reasons to plan their day and their season.
       tiers (waits for the mine).
 - [x] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
       lasting purpose. _Plug in:_ `tillable` zones become state-driven; shop upgrade row.
-- [ ] **R2.3 Fruit trees and a greenhouse.** (Kale already gives winter one crop.) Trees that regrow seasonally, and a greenhouse that grows crops in
-      winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
+- [~] **R2.3 Fruit trees and a greenhouse.** Done: four fruit trees (cherry, peach, apple, frost plum), one per season, saplings bought in the shop, ten mornings to grow, fruit every third day in season. Kale also gives winter a crop. Not done: the greenhouse (needs soil per map). Trees that regrow seasonally, and a greenhouse that grows crops in
+  winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
 - [x] **R2.4 More machines.** Keg (juice, wine), loom (cloth from wool), bee house (honey), furnace (needs ore).
       Same shape as the preserve jar: a behavior, a recipe, derived goods keyed by `of`.
       _Done:_ `machines.json` now drives jar-like machines (days, XP, family -> product); added the keg (fruit -> wine,
@@ -95,8 +95,8 @@ Give players reasons to plan their day and their season.
       furnace (waits for sheep and the mine).
 - [ ] **R2.5 Weather with consequences.** Storms that can damage unwatered young crops, a rare rainbow day with a
       forage bonus, wind that scatters forage. Telegraphed the evening before so players can react.
-- [ ] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
-      order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
+- [~] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
+  order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
 
 ## Then: a living world (R3)
 

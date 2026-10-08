@@ -9,6 +9,7 @@ import {
   orders as ordersCfg,
   placeables,
   recipes,
+  trees,
   tools,
 } from '../src/data';
 import { forageTable } from '../src/systems/forage';
@@ -105,8 +106,21 @@ describe('side income stays bounded', () => {
     // Orders: the premium over selling, at the cap.
     const orderPerDay = ordersCfg.perDay * Math.min(ordersCfg.maxReward, 600);
     expect(jarPerDay).toBeLessThan(650);
-    expect(animalPerDay).toBeLessThan(900);
-    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(3200);
+    expect(animalPerDay).toBeLessThan(1000);
+    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(3600);
     expect(ordersCfg.rewardMultiplier[1]).toBeLessThanOrEqual(1.7);
+  });
+});
+
+describe('fruit trees', () => {
+  it('one season of trees stays a modest income and the sapling pays back within a season', () => {
+    for (const [id, t] of Object.entries(trees)) {
+      const perTree = Math.floor(game.seasonLength / t.every) * price(t.fruit);
+      const max = Number(placeables[id]?.params['max']);
+      expect(perTree * max, id).toBeLessThan(2600);
+      const days = (items[id]?.buyPrice ?? 0) / (price(t.fruit) / t.every);
+      expect(days, `${id} payback ${days.toFixed(0)} days`).toBeLessThan(game.seasonLength * 1.2);
+      expect(days, id).toBeGreaterThan(8);
+    }
   });
 });

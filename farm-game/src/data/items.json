@@ -533,5 +533,137 @@
     "sellPrice": 150,
     "description": "Makes honey every few days.",
     "placeable": true
+  },
+  "cherry": {
+    "name": "Cherry",
+    "type": "crop",
+    "icon": "item_cherry",
+    "color": "#c0273f",
+    "sellPrice": 55,
+    "description": "Fresh from the tree.",
+    "family": "fruit"
+  },
+  "cherry_sapling": {
+    "name": "Cherry Sapling",
+    "type": "sapling",
+    "icon": "item_cherry_sapling",
+    "color": "#c0273f",
+    "sellPrice": 50,
+    "buyPrice": 400,
+    "description": "Grows into a cherry tree.",
+    "placeable": true
+  },
+  "peach": {
+    "name": "Peach",
+    "type": "crop",
+    "icon": "item_peach",
+    "color": "#f2a65a",
+    "sellPrice": 70,
+    "description": "Fresh from the tree.",
+    "family": "fruit"
+  },
+  "peach_sapling": {
+    "name": "Peach Sapling",
+    "type": "sapling",
+    "icon": "item_peach_sapling",
+    "color": "#f2a65a",
+    "sellPrice": 50,
+    "buyPrice": 400,
+    "description": "Grows into a peach tree.",
+    "placeable": true
+  },
+  "apple": {
+    "name": "Apple",
+    "type": "crop",
+    "icon": "item_apple",
+    "color": "#d8483a",
+    "sellPrice": 65,
+    "description": "Fresh from the tree.",
+    "family": "fruit"
+  },
+  "apple_sapling": {
+    "name": "Apple Sapling",
+    "type": "sapling",
+    "icon": "item_apple_sapling",
+    "color": "#d8483a",
+    "sellPrice": 50,
+    "buyPrice": 400,
+    "description": "Grows into a apple tree.",
+    "placeable": true
+  },
+  "plum": {
+    "name": "Frost Plum",
+    "type": "crop",
+    "icon": "item_plum",
+    "color": "#6a5aa8",
+    "sellPrice": 80,
+    "description": "Fresh from the tree.",
+    "family": "fruit"
+  },
+  "plum_sapling": {
+    "name": "Frost Plum Sapling",
+    "type": "sapling",
+    "icon": "item_plum_sapling",
+    "color": "#6a5aa8",
+    "sellPrice": 50,
+    "buyPrice": 400,
+    "description": "Grows into a frost plum tree.",
+    "placeable": true
+  },
+  "sheep": {
+    "name": "Sheep",
+    "type": "animal",
+    "icon": "item_sheep",
+    "color": "#f0ece0",
+    "sellPrice": 0,
+    "buyPrice": 700,
+    "description": "Put it in a shed. Grows wool."
+  },
+  "feed_bale": {
+    "name": "Fodder",
+    "type": "feed",
+    "icon": "item_fodder",
+    "color": "#9ab04a",
+    "sellPrice": 2,
+    "buyPrice": 10,
+    "description": "One bundle per sheep, every day."
+  },
+  "wool": {
+    "name": "Wool",
+    "type": "product",
+    "icon": "item_wool",
+    "color": "#f4f0e6",
+    "sellPrice": 60,
+    "description": "Soft and warm.",
+    "family": "wool"
+  },
+  "cloth": {
+    "name": "Cloth",
+    "type": "preserve",
+    "icon": "item_cloth",
+    "color": "#6a8ad0",
+    "sellPrice": 50,
+    "description": "Woven from wool.",
+    "derived": true,
+    "sellMultiplier": 1.2,
+    "nameTemplate": "{of} Cloth"
+  },
+  "shed": {
+    "name": "Shed",
+    "type": "placeable",
+    "icon": "item_shed",
+    "color": "#9a7a4a",
+    "sellPrice": 180,
+    "description": "A home for up to 3 sheep.",
+    "placeable": true
+  },
+  "loom": {
+    "name": "Loom",
+    "type": "placeable",
+    "icon": "item_loom",
+    "color": "#a8844a",
+    "sellPrice": 160,
+    "description": "Weaves wool into cloth in 4 days.",
+    "placeable": true
   }
 }

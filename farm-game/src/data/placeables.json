@@ -68,5 +68,60 @@
       "days": 4,
       "cap": 3
     }
+  },
+  "cherry_sapling": {
+    "name": "Cherry Tree",
+    "behavior": "fruitTree",
+    "solid": true,
+    "sprite": "obj_tree_cherry_sapling",
+    "params": {
+      "max": 3
+    }
+  },
+  "peach_sapling": {
+    "name": "Peach Tree",
+    "behavior": "fruitTree",
+    "solid": true,
+    "sprite": "obj_tree_peach_sapling",
+    "params": {
+      "max": 3
+    }
+  },
+  "apple_sapling": {
+    "name": "Apple Tree",
+    "behavior": "fruitTree",
+    "solid": true,
+    "sprite": "obj_tree_apple_sapling",
+    "params": {
+      "max": 3
+    }
+  },
+  "plum_sapling": {
+    "name": "Frost Plum Tree",
+    "behavior": "fruitTree",
+    "solid": true,
+    "sprite": "obj_tree_plum_sapling",
+    "params": {
+      "max": 3
+    }
+  },
+  "shed": {
+    "name": "Shed",
+    "behavior": "animalHouse",
+    "solid": true,
+    "sprite": "obj_shed",
+    "params": {
+      "species": "sheep",
+      "max": 2
+    }
+  },
+  "loom": {
+    "name": "Loom",
+    "behavior": "jar",
+    "solid": true,
+    "sprite": "obj_loom",
+    "params": {
+      "max": 3
+    }
   }
 }

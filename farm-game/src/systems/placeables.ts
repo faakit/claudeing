@@ -28,6 +28,8 @@ export interface PlaceableBehavior {
   canPickUp?: (obj: PlacedObject) => boolean;
   /** How the world should draw it: nothing going on, working, or goods ready to collect. */
   status?: (obj: PlacedObject) => 'idle' | 'busy' | 'ready';
+  /** Texture to draw for this object right now (e.g. a sapling before it is a tree). Default: the placeable's sprite. */
+  sprite?: (obj: PlacedObject, def: PlaceableDef) => string;
 }
 
 const behaviors = new Map<string, PlaceableBehavior>();
@@ -107,6 +109,12 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
 export function statusOf(obj: PlacedObject): 'idle' | 'busy' | 'ready' {
   const def = placeables[obj.type];
   return def ? (behaviorOf(def).status?.(obj) ?? 'idle') : 'idle';
+}
+
+export function spriteOf(obj: PlacedObject): string {
+  const def = placeables[obj.type];
+  if (!def) return 'ui_coin';
+  return behaviorOf(def).sprite?.(obj, def) ?? def.sprite;
 }
 
 export function canPickUp(obj: PlacedObject): boolean {

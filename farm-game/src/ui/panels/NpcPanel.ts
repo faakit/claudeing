@@ -47,7 +47,10 @@ export class NpcPanel extends Modal {
     const res = chat(getState(), id);
     this.gained = res.gained;
     this.line = lineFor(getState(), id);
-    if (res.gained > 0) haptic('success');
+    if (res.gained > 0) {
+      haptic('success');
+      audio.play('heart');
+    }
     this.open();
   }
 
@@ -152,7 +155,7 @@ export class NpcPanel extends Modal {
             onClick: () => {
               const res = giveGift(getState(), this.id, ref);
               if (!res.ok) return audio.play('error');
-              audio.play(res.reaction === 'dislike' ? 'error' : 'coin');
+              audio.play(res.reaction === 'dislike' ? 'error' : 'heart');
               haptic(res.reaction === 'dislike' ? 'error' : 'success');
               this.mode = 'talk';
               this.gained = Math.max(0, res.points);

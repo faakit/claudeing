@@ -12,6 +12,8 @@ export interface HouseData {
   fed: boolean;
   /** Products waiting to be collected. */
   ready: number;
+  /** Petted today? Reset every morning. A daily pat makes them a little happier. */
+  petted: boolean;
   /** Happiness 0-5: grows with every day they are fed, shrinks when they go hungry. Better quality. */
   joy: number;
 }
@@ -33,6 +35,7 @@ export function houseOf(obj: PlacedObject): HouseData {
   const h: HouseData = {
     n: clamp(raw?.n, cap),
     fed: raw?.fed === true,
+    petted: raw?.petted === true,
     ready: clamp(raw?.ready, MAX_READY),
     joy: clamp(raw?.joy, MAX_JOY),
   };
@@ -70,6 +73,15 @@ export function feed(state: GameState, obj: PlacedObject): 'ok' | 'empty' | 'fed
   return 'ok';
 }
 
+/** A daily pat: friendlier animals give better goods. Once a day, only if someone lives here. */
+export function pet(obj: PlacedObject): boolean {
+  const h = houseOf(obj);
+  if (h.n === 0 || h.petted) return false;
+  h.petted = true;
+  h.joy = Math.min(MAX_JOY, h.joy + 1);
+  return true;
+}
+
 /** Collect what is waiting; happier animals give better quality. Returns how many were taken. */
 export function collect(state: GameState, obj: PlacedObject): number {
   const sp = speciesOf(obj);
@@ -94,6 +106,7 @@ export function morning(obj: PlacedObject): boolean {
     h.joy = Math.min(MAX_JOY, h.joy + 1);
   } else h.joy = Math.max(0, h.joy - 1);
   h.fed = false;
+  h.petted = false;
   return h.ready > 0;
 }
 

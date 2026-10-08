@@ -64,6 +64,12 @@ plus a `placeables.json` entry with `"behavior": "jar"`, a recipe and a sprite. 
 with its own rules (the bee house) registers a behavior and may implement `status(obj)` ('idle' | 'busy' | 'ready')
 so the world draws the "goods ready" marker with no renderer change.
 
+### Trees and other growing placeables
+
+`trees.json` rows (keyed by the sapling's placeable id) define a fruit tree. The `fruitTree` behavior ages it each
+morning and uses two optional hooks any placeable can implement: `status(obj)` (idle, busy, ready) and `sprite(obj)`
+(which texture to draw now, e.g. sapling versus tree).
+
 ### Animal houses
 
 A coop or barn is just a placeable whose behavior is `animalHouse` and whose `params.species` names a row in

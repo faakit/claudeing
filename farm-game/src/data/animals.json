@@ -16,5 +16,14 @@
     "capacity": 2,
     "sprite": "animal_cow",
     "perDay": 1
+  },
+  "sheep": {
+    "name": "Sheep",
+    "item": "sheep",
+    "feed": "feed_bale",
+    "product": "wool",
+    "capacity": 3,
+    "sprite": "animal_sheep",
+    "perDay": 1
   }
 }

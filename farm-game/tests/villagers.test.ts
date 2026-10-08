@@ -81,7 +81,7 @@ describe('animals', () => {
     const s = newState();
     const coop = placeObject(s, 'farm', 4, 4, 'coop');
     coop.data['house'] = { n: 999, fed: 'yes', ready: -4, joy: 'x' };
-    expect(houseOf(coop)).toEqual({ n: 3, fed: false, ready: 0, joy: 0 });
+    expect(houseOf(coop)).toEqual({ n: 3, fed: false, petted: false, ready: 0, joy: 0 });
   });
 });
 
@@ -168,5 +168,46 @@ describe('save v4', () => {
     const again = migrate(raw);
     expect(again.friends['mara']!.points).toBe(250);
     expect(again.friends['ghost']).toBeUndefined();
+  });
+});
+
+describe('sheep, looms and petting', () => {
+  it('a shed houses sheep that give wool; a loom weaves it into cloth', async () => {
+    const { tickJar, loadJar, collectJar } = await import('../src/systems/preserves');
+    const s = newState();
+    const shed = placeObject(s, 'farm', 4, 4, 'shed');
+    addItem(s, 'sheep', 1);
+    addItem(s, 'feed_bale', 2);
+    expect(moveIn(s, shed)).toBe(1);
+    expect(feed(s, shed)).toBe('ok');
+    morning(shed);
+    expect(collect(s, shed)).toBe(1);
+    expect(countItem(s, 'wool')).toBe(1);
+    const loom = placeObject(s, 'farm', 6, 4, 'loom');
+    expect(loadJar(s, loom, { item: 'wool' })).toBe('ok');
+    for (let i = 0; i < 4; i++) tickJar(loom);
+    expect(collectJar(s, loom)).toMatchObject({ item: 'cloth', of: 'wool' });
+  });
+  it('a daily pat makes animals happier, once', async () => {
+    const { pet } = await import('../src/systems/animals');
+    const s = newState();
+    const coop = placeObject(s, 'farm', 4, 4, 'coop');
+    expect(pet(coop)).toBe(false); // nobody home
+    addItem(s, 'chicken', 1);
+    moveIn(s, coop);
+    expect(pet(coop)).toBe(true);
+    expect(houseOf(coop).joy).toBe(1);
+    expect(pet(coop)).toBe(false);
+    morning(coop);
+    expect(pet(coop)).toBe(true);
+  });
+  it('Interact on a fed house pats the animals', () => {
+    const s = newState();
+    const coop = placeObject(s, 'farm', 4, 4, 'coop');
+    addItem(s, 'chicken', 1);
+    addItem(s, 'chicken_feed', 1);
+    interactWith(s, coop); // moves in and feeds
+    interactWith(s, coop); // already fed: pat
+    expect(houseOf(coop).petted).toBe(true);
   });
 });

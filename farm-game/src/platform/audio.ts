@@ -19,7 +19,10 @@ export type Sfx =
   | 'sleep'
   | 'goal'
   | 'swing'
-  | 'select';
+  | 'select'
+  | 'level'
+  | 'heart'
+  | 'order';
 
 // A major pentatonic keeps any random melody pleasant.
 const PENTA = [0, 2, 4, 7, 9];
@@ -32,7 +35,28 @@ const PROGRESSION: { root: number; chord: number[] }[] = [
   { root: 43, chord: [0, 4, 7, 9] },
 ];
 
+/** How the music feels in each season: tempo, key shift, how busy the melody is and the chord loop. */
+export interface SeasonMusic {
+  bpm: number;
+  transpose: number;
+  melody: number;
+  progression: { root: number; chord: number[] }[];
+}
+const MINOR_LOOP: { root: number; chord: number[] }[] = [
+  { root: 45, chord: [0, 3, 7, 10] },
+  { root: 41, chord: [0, 4, 7, 11] },
+  { root: 48, chord: [0, 4, 7, 11] },
+  { root: 43, chord: [0, 4, 7, 9] },
+];
+export const SEASON_MUSIC: Record<string, SeasonMusic> = {
+  spring: { bpm: 74, transpose: 0, melody: 0.55, progression: PROGRESSION },
+  summer: { bpm: 84, transpose: 2, melody: 0.7, progression: PROGRESSION },
+  fall: { bpm: 66, transpose: -2, melody: 0.45, progression: MINOR_LOOP },
+  winter: { bpm: 56, transpose: 5, melody: 0.28, progression: MINOR_LOOP },
+};
+
 class AudioEngine {
+  private season: SeasonMusic = SEASON_MUSIC['spring']!;
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   private sfxBus!: GainNode;
@@ -298,6 +322,21 @@ class AudioEngine {
           this.tone(f, 0.18, { gain: 0.2, type: 'square', delay: i * 0.08 }),
         );
         break;
+      case 'level':
+        [523, 659, 784, 1047, 1319, 1568].forEach((f, i) =>
+          this.tone(f, 0.22, { gain: 0.18, type: 'triangle', delay: i * 0.07 }),
+        );
+        break;
+      case 'heart':
+        this.tone(784, 0.12, { gain: 0.16, type: 'sine' });
+        this.tone(1175, 0.3, { gain: 0.16, type: 'sine', delay: 0.1 });
+        break;
+      case 'order':
+        this.tone(1047, 0.06, { gain: 0.16, type: 'square' });
+        this.tone(1319, 0.06, { gain: 0.16, type: 'square', delay: 0.06 });
+        this.tone(1568, 0.28, { gain: 0.18, type: 'square', delay: 0.12 });
+        this.hiss(0.08, { type: 'highpass', freq: 5000, gain: 0.1 });
+        break;
       case 'swing':
         this.hiss(0.1, { freq: 1800, to: 700, q: 1.2, gain: 0.12 });
         break;
@@ -305,6 +344,11 @@ class AudioEngine {
   }
 
   // ---- music ----
+  /** Change the music's mood to the season's; takes effect from the next bar. */
+  setSeason(season: string): void {
+    this.season = SEASON_MUSIC[season] ?? SEASON_MUSIC['spring']!;
+  }
+
   startMusic(): void {
     if (!this.ctx || this.timer !== null) return;
     this.nextBar = this.ctx.currentTime + 0.1;
@@ -324,9 +368,11 @@ class AudioEngine {
   private schedule(): void {
     const ctx = this.ctx;
     if (!ctx || ctx.state !== 'running') return;
-    const beat = 60 / 74;
+    const beat = 60 / this.season.bpm;
     while (this.nextBar < ctx.currentTime + 0.6) {
-      const { root, chord } = PROGRESSION[this.bar % PROGRESSION.length]!;
+      const prog = this.season.progression;
+      const { chord } = prog[this.bar % prog.length]!;
+      const root = prog[this.bar % prog.length]!.root + this.season.transpose;
       const t = this.nextBar;
       const barLen = beat * 4;
       // Pad: soft triangle chord, in both day and night buses.
@@ -344,7 +390,7 @@ class AudioEngine {
         });
       // Sparse pentatonic melody for the day; two bell notes for the night.
       for (let b = 0; b < 8; b++) {
-        if (this.rnd() < 0.55) {
+        if (this.rnd() < this.season.melody) {
           const note =
             72 + PENTA[Math.floor(this.rnd() * PENTA.length)]! + (this.rnd() < 0.25 ? 12 : 0);
           this.tone(midi(note), beat * 1.2, {

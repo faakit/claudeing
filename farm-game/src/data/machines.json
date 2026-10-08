@@ -13,5 +13,12 @@
     "recipes": {
       "fruit": "wine"
     }
+  },
+  "loom": {
+    "days": 4,
+    "xp": 14,
+    "recipes": {
+      "wool": "cloth"
+    }
   }
 }

@@ -19,12 +19,15 @@ import { fmt, SHOP_ID } from './format';
 import { shopFacts, tooLate } from './shopFacts';
 import Phaser from 'phaser';
 
+const ROWS = 5;
+
 export class ShopPanel extends Modal {
   constructor(scene: Phaser.Scene) {
     super(scene, 250);
   }
 
   private tab: 'seeds' | 'farm' | 'upgrades' = 'seeds';
+  private page = 0;
 
   protected build(): void {
     const s = getState();
@@ -35,7 +38,7 @@ export class ShopPanel extends Modal {
     this.label(this.panelW - 20, 8, fmt(s.money), C.gold, 1, 'right');
     const tabs: [typeof this.tab, string][] = [
       ['seeds', 'Seeds'],
-      ['farm', 'Animals'],
+      ['farm', 'Farm'],
       ['upgrades', 'Upgrades'],
     ];
     tabs.forEach(([id, text], i) =>
@@ -47,6 +50,7 @@ export class ShopPanel extends Modal {
         text,
         () => {
           this.tab = id;
+          this.page = 0;
           this.rebuild();
         },
         {
@@ -60,7 +64,7 @@ export class ShopPanel extends Modal {
     if (this.tab === 'upgrades') {
       this.buildUpgrades(y);
     } else {
-      const farmTypes = ['animal', 'feed'];
+      const farmTypes = ['animal', 'feed', 'sapling'];
       const stock = stockFor(SHOP_ID, s.time.season).filter(
         (id) => farmTypes.includes(items[id]!.type) === (this.tab === 'farm'),
       );
@@ -68,7 +72,22 @@ export class ShopPanel extends Modal {
         this.label(8, y + 6, 'Nothing grows in winter. Rest up!', C.creamDim);
         y += ROW_H;
       }
-      for (const id of stock) y = this.stockRow(y, id);
+      const pages = Math.max(1, Math.ceil(stock.length / ROWS));
+      this.page = Math.min(this.page, pages - 1);
+      for (const id of stock.slice(this.page * ROWS, (this.page + 1) * ROWS))
+        y = this.stockRow(y, id);
+      if (pages > 1) {
+        const by = this.panelH - 54;
+        this.button(8, by, 40, 20, '<', () => {
+          this.page = (this.page + pages - 1) % pages;
+          this.rebuild();
+        });
+        this.label(this.panelW / 2, by + 6, `${this.page + 1}/${pages}`, C.creamDim, 1, 'center');
+        this.button(152, by, 40, 20, '>', () => {
+          this.page = (this.page + 1) % pages;
+          this.rebuild();
+        });
+      }
     }
     this.closeButton();
   }

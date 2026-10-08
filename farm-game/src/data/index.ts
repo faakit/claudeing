@@ -16,6 +16,7 @@ import npcsRaw from './npcs.json';
 import tipsRaw from './tips.json';
 import plotsRaw from './plots.json';
 import machinesRaw from './machines.json';
+import treesRaw from './trees.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -53,6 +54,7 @@ export type ItemType =
   | 'placeable'
   | 'preserve'
   | 'animal'
+  | 'sapling'
   | 'feed'
   | 'product';
 export interface ItemDef {
@@ -112,6 +114,8 @@ export interface GoalDef {
   reward: number;
   /** One line telling a stuck player what to do next. */
   hint: string;
+  /** Where to look, per map id ([tx, ty]); an arrow points there when the player stalls. */
+  where?: Record<string, [number, number]>;
 }
 export interface TipDef {
   id: string;
@@ -195,6 +199,19 @@ export interface NpcDef {
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
 }
+export interface TreeDef {
+  name: string;
+  fruit: string;
+  season: Season;
+  /** Mornings until it bears fruit. */
+  growDays: number;
+  /** One fruit every this many mornings while in season. */
+  every: number;
+  /** Fruit that can wait on the tree. */
+  cap: number;
+  leaf: string;
+  trunk: string;
+}
 export interface MachineDef {
   /** Mornings until the output is ready. */
   days: number;
@@ -275,6 +292,7 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const trees = treesRaw as unknown as Record<string, TreeDef>;
 export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
 export const tips = tipsRaw as unknown as TipDef[];
@@ -321,6 +339,8 @@ export function validateContent(): void {
   for (const g of goals) {
     if (!g.id || !g.stat || g.target < 1) fail('goals', `bad goal "${g.id}"`);
     if (!g.hint) fail('goals', `goal "${g.id}" needs a hint`);
+    for (const m of Object.keys(g.where ?? {}))
+      if (!mapsData.maps[m]) fail('goals', `goal "${g.id}" points at unknown map "${m}"`);
   }
   for (const t of tips) if (!t.id || !t.stat || !t.text) fail('tips', `bad tip "${t.id}"`);
   const mapIds = Object.keys(mapsData.maps);
@@ -390,6 +410,13 @@ export function validateContent(): void {
     for (const out of Object.values(m.recipes))
       if (!items[out]?.derived)
         fail('machines', `"${id}" makes "${out}", which is not a derived item`);
+  }
+  for (const [id, t] of Object.entries(trees)) {
+    if (items[id]?.type !== 'sapling' || !placeables[id])
+      fail('trees', `"${id}" needs a sapling item and a placeable`);
+    if (items[t.fruit]?.family !== 'fruit')
+      fail('trees', `"${id}" fruit "${t.fruit}" must be a fruit item`);
+    if (t.growDays < 1 || t.every < 1 || t.cap < 1) fail('trees', `"${id}" has a bad number`);
   }
   const claimed = new Set<string>();
   for (const [id, pl] of Object.entries(plots)) {

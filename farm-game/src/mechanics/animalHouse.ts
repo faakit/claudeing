@@ -6,6 +6,7 @@ import {
   isFull,
   moveIn,
   morning,
+  pet,
   productName,
   speciesOf,
 } from '../systems/animals';
@@ -56,8 +57,13 @@ registerPlaceableBehavior('animalHouse', {
     if (fed === 'ok') said.push('Fed!');
     else if (fed === 'no_feed' && said.length === 0)
       return { kind: 'message', text: `Needs ${h.n} ${items[sp.feed]?.name}.` };
-    else if (fed === 'fed' && said.length === 0)
+    else if (fed === 'fed' && said.length === 0) {
+      if (pet(obj)) {
+        toast('You gave them a pat. They look happier!', 'good');
+        return { kind: 'message', text: '' };
+      }
       return { kind: 'message', text: `All fed. ${h.joy >= 3 ? 'Happy!' : 'Back tomorrow.'}` };
+    }
     if (!isFull(obj) && said.length > 0) said.push('Room for more.');
     const text = said.join(' ');
     if (text) toast(text, 'good');

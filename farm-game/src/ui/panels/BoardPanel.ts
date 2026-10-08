@@ -38,7 +38,7 @@ export class BoardPanel extends Modal {
             color: ready ? C.green : C.creamDim,
             onClick: () => {
               if (deliverOrder(getState(), o.id) === 'ok') {
-                audio.play('coin');
+                audio.play('order');
                 haptic('success');
               } else audio.play('error');
               this.rebuild();

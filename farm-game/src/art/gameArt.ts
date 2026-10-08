@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { animals, crops, items, placeables } from '../data';
+import { animals, crops, items, placeables, trees } from '../data';
 
 /** Code-generated gameplay art (soil, crops, items, UI glyphs). Replaced by atlases in M7. */
 export const SOIL_TEXTURE = { tilled: 'soil_tilled', watered: 'soil_watered' } as const;
@@ -64,17 +64,41 @@ function drawSoil(ctx: Ctx, watered: boolean): void {
   const light = watered ? '#5d4129' : '#93683c';
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, 16, 16);
-  for (let r = 1; r < 16; r += 4) {
-    ctx.fillStyle = dark;
-    ctx.fillRect(1, r + 2, 14, 1);
-    ctx.fillStyle = light;
-    ctx.fillRect(1, r, 14, 1);
+  // Furrows: broken, wavy dark lines with a lit ridge above them, so it reads as turned earth, not planks.
+  let seed = watered ? 7 : 3;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for (const row of [3, 7, 11, 14]) {
+    for (let x = 1; x < 15; x++) {
+      if (rnd() < 0.22) continue; // gaps break the line up
+      const wob = rnd() < 0.3 ? 1 : 0;
+      ctx.fillStyle = dark;
+      ctx.fillRect(x, row + wob, 1, 1);
+      if (rnd() < 0.7) {
+        ctx.fillStyle = light;
+        ctx.fillRect(x, row - 1 + wob, 1, 1);
+      }
+    }
   }
+  // Clods
+  for (let i = 0; i < 9; i++) {
+    const x = 1 + Math.floor(rnd() * 13);
+    const y = 1 + Math.floor(rnd() * 13);
+    ctx.fillStyle = rnd() < 0.5 ? light : dark;
+    ctx.fillRect(x, y, rnd() < 0.5 ? 2 : 1, 1);
+  }
+  // Soft corners instead of a hard frame, so neighbouring tiles blend into one field.
   ctx.fillStyle = dark;
-  ctx.fillRect(0, 0, 16, 1);
-  ctx.fillRect(0, 15, 16, 1);
-  ctx.fillRect(0, 0, 1, 16);
-  ctx.fillRect(15, 0, 1, 16);
+  for (const [x, y] of [
+    [0, 0],
+    [15, 0],
+    [0, 15],
+    [15, 15],
+    [1, 0],
+    [0, 1],
+    [14, 15],
+    [15, 14],
+  ] as const)
+    ctx.fillRect(x, y, 1, 1);
   if (watered) {
     ctx.fillStyle = 'rgba(111,163,224,0.35)';
     for (const [x, y] of [
@@ -232,6 +256,12 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(6, 5, 2, 3, '#e08a8a'); // worms
     r(9, 6, 2, 2, '#e08a8a');
     r(7, 4, 1, 1, '#e08a8a');
+  } else if (it.type === 'preserve' && id === 'cloth') {
+    r(3, 4, 10, 9, '#6a8ad0'); // folded cloth
+    r(3, 4, 10, 1, '#9ab4f0');
+    r(3, 8, 10, 1, '#4a68a8');
+    r(3, 12, 10, 1, '#4a68a8');
+    r(5, 5, 2, 1, '#ffffff');
   } else if (it.type === 'preserve') {
     r(4, 6, 8, 8, '#cfe6f0'); // glass jar
     r(4, 6, 8, 1, '#ffffff');
@@ -251,7 +281,12 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(6, 10, 1, 1, dk);
     r(9, 9, 1, 1, dk);
   } else if (it.type === 'product') {
-    if (id === 'honey') {
+    if (id === 'wool') {
+      disc(ctx, 6, 9, 4, '#f4f0e6');
+      disc(ctx, 10, 8, 4, '#ffffff');
+      disc(ctx, 8, 6, 3, '#f4f0e6');
+      r(5, 12, 7, 1, '#d8d0c0');
+    } else if (id === 'honey') {
       r(4, 6, 8, 8, '#e8b030'); // honey jar
       r(4, 6, 8, 1, '#f4d35e');
       r(5, 8, 2, 3, '#ffffff');
@@ -269,6 +304,15 @@ function drawIcon(ctx: Ctx, id: string): void {
       r(5, 7, 1, 2, '#ffffff');
       r(9, 12, 2, 1, dk);
     }
+  } else if (it.type === 'sapling') {
+    r(5, 10, 6, 5, '#8a5a32'); // pot
+    r(5, 10, 6, 1, '#b07a48');
+    r(7, 6, 2, 5, '#5a3a20');
+    r(4, 3, 4, 4, '#5fae4e');
+    r(8, 2, 4, 4, '#5fae4e');
+    r(4, 3, 4, 1, '#8fd07a');
+    r(10, 4, 1, 1, c);
+    r(5, 5, 1, 1, c);
   } else if (it.type === 'placeable') {
     drawPlaceable(ctx, id, c, dk, lt);
   } else if (it.type === 'forage') {
@@ -285,7 +329,23 @@ function drawPlaceable(ctx: Ctx, id: string, c: string, dk: string, lt: string):
     ctx.fillStyle = col;
     ctx.fillRect(x, y, w, h);
   };
-  if (id === 'keg') {
+  if (id === 'shed') {
+    r(2, 7, 12, 8, '#9a7a4a');
+    r(2, 7, 12, 1, '#c0a070');
+    for (let x = 4; x < 14; x += 3) r(x, 8, 1, 7, '#6a5030');
+    r(1, 4, 14, 4, '#6a6a78');
+    r(3, 2, 10, 3, '#6a6a78');
+    r(3, 2, 10, 1, '#9a9aaa');
+    r(6, 10, 4, 5, '#2a1a1a');
+    r(7, 10, 2, 1, '#f4d35e');
+  } else if (id === 'loom') {
+    r(2, 3, 2, 12, '#a8844a'); // frame
+    r(12, 3, 2, 12, '#a8844a');
+    r(2, 3, 12, 2, '#c0a070');
+    r(2, 12, 12, 2, '#a8844a');
+    for (let x = 4; x < 12; x += 2) r(x, 5, 1, 7, '#e8e0d0'); // warp threads
+    r(4, 8, 8, 2, '#6a8ad0'); // weaving
+  } else if (id === 'keg') {
     r(2, 4, 12, 10, '#8a5a32'); // barrel on its side
     r(2, 4, 12, 1, '#b07a48');
     r(2, 7, 12, 1, '#5a3a20');
@@ -345,7 +405,14 @@ function drawAnimal(ctx: Ctx, id: string, _w: number, _h: number, ox: number, oy
     ctx.fillStyle = col;
     ctx.fillRect(ox + x, oy + y, w, h);
   };
-  if (id === 'cow') {
+  if (id === 'sheep') {
+    disc(ctx, ox + 7, oy + 8, 5, '#f4f0e6'); // fluffy body
+    disc(ctx, ox + 5, oy + 7, 3, '#ffffff');
+    r(11, 6, 4, 4, '#4a3a33'); // face
+    r(12, 7, 1, 1, '#ffffff');
+    r(5, 12, 2, 3, '#4a3a33');
+    r(9, 12, 2, 3, '#4a3a33');
+  } else if (id === 'cow') {
     r(3, 5, 9, 6, '#f4f0e6');
     r(3, 5, 9, 1, '#ffffff');
     r(4, 6, 3, 3, '#4a3a33'); // spots
@@ -664,6 +731,7 @@ export function generateGameArt(scene: Phaser.Scene): void {
   }
   // In-world sprites for placed objects: the item icon drawn without the outline's tight crop.
   for (const [id, def] of Object.entries(placeables)) {
+    if (def.behavior === 'fruitTree') continue; // drawn per tree below
     const ctx = canvas(scene, def.sprite, 16, 16);
     const it = items[id];
     if (it) drawPlaceable(ctx, id, it.color, shade(it.color, -45), shade(it.color, 40));
@@ -675,6 +743,43 @@ export function generateGameArt(scene: Phaser.Scene): void {
     drawAnimal(ctx, a.item, 16, 16, 0, 0);
     outline(ctx, 0, 0, 16, 16);
     refresh(scene, a.sprite);
+  }
+  // Fruit trees: one canopy per tree (tinted by its leaf colour), plus a shared sapling.
+  for (const [id, t] of Object.entries(trees)) {
+    const ctx = canvas(scene, `obj_tree_${id}`, 16, 16);
+    const r = (x: number, y: number, w: number, h: number, col: string) => {
+      ctx.fillStyle = col;
+      ctx.fillRect(x, y, w, h);
+    };
+    r(7, 9, 2, 6, t.trunk);
+    r(6, 14, 4, 1, shade(t.trunk, -30));
+    disc(ctx, 8, 6, 5, t.leaf);
+    disc(ctx, 5, 8, 3, shade(t.leaf, -18));
+    disc(ctx, 11, 8, 3, shade(t.leaf, -18));
+    r(5, 3, 3, 1, shade(t.leaf, 40));
+    const fruitColor = items[t.fruit]?.color ?? '#d8483a';
+    for (const [x, y] of [
+      [5, 6],
+      [10, 5],
+      [8, 9],
+      [11, 8],
+    ] as const)
+      r(x, y, 1, 1, fruitColor);
+    outline(ctx, 0, 0, 16, 16);
+    refresh(scene, `obj_tree_${id}`);
+  }
+  {
+    const ctx = canvas(scene, 'obj_sapling', 16, 16);
+    ctx.fillStyle = '#7a4a28';
+    ctx.fillRect(7, 9, 2, 5);
+    ctx.fillStyle = '#5fae4e';
+    ctx.fillRect(5, 6, 3, 3);
+    ctx.fillRect(8, 5, 3, 3);
+    ctx.fillStyle = '#8fd07a';
+    ctx.fillRect(5, 6, 3, 1);
+    ctx.fillRect(8, 5, 3, 1);
+    outline(ctx, 0, 0, 16, 16);
+    refresh(scene, 'obj_sapling');
   }
   // "For sale" sign for farm plots
   {

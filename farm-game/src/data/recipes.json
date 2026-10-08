@@ -202,5 +202,41 @@
       "skill": "foraging",
       "level": 3
     }
+  },
+  "shed": {
+    "name": "Shed",
+    "output": {
+      "item": "shed",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 30
+      }
+    ],
+    "gold": 700,
+    "unlock": {
+      "skill": "farming",
+      "level": 4
+    }
+  },
+  "loom": {
+    "name": "Loom",
+    "output": {
+      "item": "loom",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 20
+      }
+    ],
+    "gold": 300,
+    "unlock": {
+      "skill": "farming",
+      "level": 5
+    }
   }
 }

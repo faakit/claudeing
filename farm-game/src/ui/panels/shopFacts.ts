@@ -1,4 +1,4 @@
-import { crops, game, items } from '../../data';
+import { crops, game, items, trees } from '../../data';
 
 /** True when a seed could not ripen before the season ends (so buying it now is a mistake). */
 export function tooLate(itemId: string, day: number): boolean {
@@ -17,6 +17,7 @@ export function shopFacts(itemId: string, own: number, day: number): string {
       ? 'Too late now'
       : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
   else if (def.type === 'animal') base = 'Needs a home';
+  else if (def.type === 'sapling') base = `${seasonName(trees[itemId]?.season ?? '')} fruit`;
   else if (def.type === 'feed') base = 'Daily food';
   else if (def.type === 'fertilizer')
     base = (def.fertilizer?.growth ?? 0) > 0 ? 'Grows fast' : 'Finer crops';
@@ -25,3 +26,5 @@ export function shopFacts(itemId: string, own: number, day: number): string {
   else base = def.description;
   return own > 0 ? `${base} (own ${own})` : base;
 }
+
+const seasonName = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);

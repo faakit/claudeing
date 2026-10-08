@@ -69,6 +69,30 @@
       {
         "item": "fiber",
         "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "cherry_sapling",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "peach_sapling",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "apple_sapling",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "plum_sapling",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "sheep",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "feed_bale",
+        "seasons": ["spring", "summer", "fall", "winter"]
       }
     ],
     "upgrades": [

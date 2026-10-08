@@ -127,6 +127,7 @@ export class UIScene extends Phaser.Scene {
   private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
   private lateWarnedDay = -1;
+  private lastSeason = '';
   /** Real ms since the player last touched anything; a long silence earns a hint about the goal. */
   private idleMs = 0;
   private rain!: RainLayer;
@@ -145,6 +146,7 @@ export class UIScene extends Phaser.Scene {
     this.interactButton = null;
     this.interactIcon = null;
     this.lastNight = -1;
+    this.lastSeason = '';
     this.sleeping = false;
     this.input.addPointer(2); // mouse + a thumb + a spare for multi-touch
     new KeyboardInput(this, inputHub);
@@ -188,7 +190,7 @@ export class UIScene extends Phaser.Scene {
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
-      gameEvents.on('levelUp', () => audio.play('goal')),
+      gameEvents.on('levelUp', () => audio.play('level')),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       gameEvents.on('settingsChanged', () => this.buildControls()),
       gameEvents.on('placedPanel', ({ panel, id }) => {
@@ -263,6 +265,10 @@ export class UIScene extends Phaser.Scene {
     ) {
       this.lateWarnedDay = s.time.day;
       this.hud.toast("It's getting late. Head to bed soon!", 'warn');
+    }
+    if (s.time.season !== this.lastSeason) {
+      this.lastSeason = s.time.season;
+      audio.setSeason(s.time.season);
     }
     const night = nightAmount(s.time.minutes);
     if (Math.abs(night - this.lastNight) > 0.02) {

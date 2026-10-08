@@ -152,6 +152,7 @@ registerActionHandler({
           removeFromSlot(state, state.inventory.selected, 1);
           placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
           addStat(state, 'placed');
+          if (def.type === 'sapling') addStat(state, 'treesPlanted');
           return { item: stack.item };
         },
       },
