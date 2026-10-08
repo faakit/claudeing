@@ -10,9 +10,13 @@ const URL_ = `http://localhost:${PORT}/?debug`;
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const throttles = (process.argv[2] ?? '1,4,6').split(',').map(Number);
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
-  stdio: 'ignore',
-});
+const server = spawn(
+  process.execPath,
+  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
+  {
+    stdio: 'ignore',
+  },
+);
 process.on('exit', () => server.kill());
 for (let i = 0; i < 50; i++) {
   try {

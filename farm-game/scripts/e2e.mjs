@@ -8,9 +8,13 @@ const PORT = 4173;
 const URL_ = `http://localhost:${PORT}/?debug`;
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
-  stdio: 'ignore',
-});
+const server = spawn(
+  process.execPath,
+  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
+  {
+    stdio: 'ignore',
+  },
+);
 const stop = () => server.kill();
 process.on('exit', stop);
 
