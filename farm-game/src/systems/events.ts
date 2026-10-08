@@ -28,6 +28,8 @@ export interface GameEvents {
   friendsChanged: undefined;
   /** The player wants to talk to a villager. */
   talkTo: { id: string };
+  /** The player used a land sign: ask whether to buy that plot. */
+  buyPlot: { id: string };
   saved: undefined;
   /** A setting that affects layout/behaviour changed (e.g. left-handed mode). */
   settingsChanged: undefined;

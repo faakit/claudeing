@@ -38,6 +38,7 @@ import {
   installMenuTabs,
   JarPanel,
   NpcPanel,
+  PlotPanel,
   MenuPanel,
   ShopPanel,
   SleepPanel,
@@ -118,6 +119,7 @@ export class UIScene extends Phaser.Scene {
   private yearEnd!: YearEndPanel;
   private jar!: JarPanel;
   private npc!: NpcPanel;
+  private plot!: PlotPanel;
   private fishing!: FishingPanel;
   /** Panels a placed object can open, by the name its behavior gives in `interact`. */
   private jarPanels: Record<string, { openFor(id: number): void }> = {};
@@ -193,6 +195,11 @@ export class UIScene extends Phaser.Scene {
           inputHub.clearHeld();
           this.jarPanels[panel]?.openFor(id);
         }
+      }),
+      gameEvents.on('buyPlot', ({ id }) => {
+        if (runtime.blocked) return;
+        inputHub.clearHeld();
+        this.plot.openFor(id);
       }),
       gameEvents.on('talkTo', ({ id }) => {
         if (runtime.blocked) return;
@@ -398,21 +405,22 @@ export class UIScene extends Phaser.Scene {
     this.panels.set('board', new BoardPanel(this));
     this.jar = new JarPanel(this);
     this.npc = new NpcPanel(this);
+    this.plot = new PlotPanel(this);
     this.fishing = new FishingPanel(this);
     this.panels.set('fishing', this.fishing);
     this.panels.set('sleep', new SleepPanel(this, () => void this.runSleep(false)));
     this.jarPanels = { jar: this.jar };
-    for (const m of [...this.panels.values(), this.jar, this.npc])
+    for (const m of [...this.panels.values(), this.jar, this.npc, this.plot])
       m.onClosed = () => void saveNow(true);
   }
 
   private allModals(): Modal[] {
-    return [...this.panels.values(), this.jar, this.npc, this.summary, this.yearEnd];
+    return [...this.panels.values(), this.jar, this.npc, this.plot, this.summary, this.yearEnd];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
-    return [...this.panels.values(), this.jar, this.npc].find((m) => m.isOpen) ?? null;
+    return [...this.panels.values(), this.jar, this.npc, this.plot].find((m) => m.isOpen) ?? null;
   }
 
   private openPanel(type: PanelType): void {

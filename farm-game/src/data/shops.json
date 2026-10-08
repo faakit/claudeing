@@ -70,15 +70,15 @@
         "levels": [
           {
             "price": 400,
-            "label": "Holds 40"
+            "label": "Holds 40, 2 tiles"
           },
           {
             "price": 900,
-            "label": "Holds 60"
+            "label": "Holds 60, 3 tiles"
           },
           {
             "price": 2500,
-            "label": "Holds 100"
+            "label": "Holds 100, 4 tiles"
           }
         ]
       },
@@ -105,6 +105,42 @@
           {
             "price": 12000,
             "label": "+20 energy"
+          }
+        ]
+      },
+      {
+        "id": "hoe",
+        "name": "Hoe",
+        "levels": [
+          {
+            "price": 500,
+            "label": "Tills 2 in a row"
+          },
+          {
+            "price": 1400,
+            "label": "Tills 3 in a row"
+          },
+          {
+            "price": 3500,
+            "label": "Tills 4 in a row"
+          }
+        ]
+      },
+      {
+        "id": "rod",
+        "name": "Fishing Rod",
+        "levels": [
+          {
+            "price": 450,
+            "label": "Wider zone"
+          },
+          {
+            "price": 1200,
+            "label": "Wider zone"
+          },
+          {
+            "price": 3000,
+            "label": "Wider zone"
           }
         ]
       }

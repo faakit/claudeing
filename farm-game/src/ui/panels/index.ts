@@ -3,6 +3,7 @@ export { BoardPanel } from './BoardPanel';
 export { FishingPanel } from './FishingPanel';
 export { JarPanel } from './JarPanel';
 export { NpcPanel } from './NpcPanel';
+export { PlotPanel } from './PlotPanel';
 export {
   installMenuTabs,
   MenuPanel,

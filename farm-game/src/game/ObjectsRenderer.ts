@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { TILE_SIZE } from '../config';
-import { items, placeables } from '../data';
+import { items, placeables, plots } from '../data';
+import { Label } from '../ui/font';
 import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
@@ -21,6 +22,8 @@ interface Shown {
 export class ObjectsRenderer {
   private forage = new Map<string, Shown>();
   private placed = new Map<number, Shown>();
+  private plotSig = '';
+  private plotParts: Phaser.GameObjects.GameObject[] = [];
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -30,6 +33,38 @@ export class ObjectsRenderer {
   sync(state: GameState, animate: boolean): void {
     this.syncForage(state, animate);
     this.syncPlaced(state, animate);
+    if (this.mapId === 'farm') this.syncPlots(state);
+  }
+
+  /** Land you have not bought yet is dimmed and fenced with a "for sale" sign showing its price. */
+  private syncPlots(state: GameState): void {
+    const sig = state.plots.join(',');
+    if (sig === this.plotSig) return;
+    this.plotSig = sig;
+    this.plotParts.forEach((p) => p.destroy());
+    this.plotParts = [];
+    for (const [id, p] of Object.entries(plots)) {
+      if (state.plots.includes(id) || !p.sign) continue;
+      const [x, y, w, h] = p.rect;
+      const area = this.scene.add
+        .rectangle(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, 0x14101f, 0.34)
+        .setOrigin(0)
+        .setStrokeStyle(1, 0xf4ead2, 0.45)
+        .setDepth(0.55);
+      const [sx, sy] = p.sign;
+      const sign = this.scene.add
+        .image(sx * TILE_SIZE + TILE_SIZE / 2, (sy + 1) * TILE_SIZE, 'obj_sign')
+        .setOrigin(0.5, 1)
+        .setDepth(10 + (sy + 1) * TILE_SIZE);
+      const price = new Label(
+        this.scene,
+        sx * TILE_SIZE + TILE_SIZE / 2,
+        sy * TILE_SIZE - 7,
+        `${p.price}g`,
+        { align: 'center', color: 0xf4d35e },
+      ).setDepth(9000);
+      this.plotParts.push(area, sign, price);
+    }
   }
 
   private syncForage(state: GameState, animate: boolean): void {
@@ -193,5 +228,7 @@ export class ObjectsRenderer {
     }
     this.forage.clear();
     this.placed.clear();
+    this.plotParts.forEach((p) => p.destroy());
+    this.plotParts = [];
   }
 }

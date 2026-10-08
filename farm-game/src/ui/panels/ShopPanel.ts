@@ -2,7 +2,14 @@ import { items, shops } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
-import { buyItem, buyUpgrade, nextUpgrade, priceFor, stockFor } from '../../systems/economy';
+import {
+  buyItem,
+  buyUpgrade,
+  nextUpgrade,
+  priceFor,
+  upgradeLevel,
+  stockFor,
+} from '../../systems/economy';
 import { toast } from '../../systems/events';
 import { countItem } from '../../systems/inventory';
 import { perk } from '../../systems/skills';
@@ -97,7 +104,7 @@ export class ShopPanel extends Modal {
     const shop = shops[SHOP_ID]!;
     for (const up of shop.upgrades) {
       const next = nextUpgrade(s, up);
-      const lvl = s.upgrades[up.id];
+      const lvl = upgradeLevel(s, up);
       y = this.row(y, {
         icon: up.id === 'can' ? 'ui_drop' : 'ui_bolt',
         title: `${up.name} ${lvl + 1}/${up.levels.length + 1}`,
@@ -146,7 +153,7 @@ export class ShopPanel extends Modal {
     this.rebuild();
   }
 
-  private buyUp(id: 'can' | 'stamina'): void {
+  private buyUp(id: string): void {
     const up = shops[SHOP_ID]!.upgrades.find((u) => u.id === id)!;
     const res = buyUpgrade(getState(), up);
     if (res === 'ok') {

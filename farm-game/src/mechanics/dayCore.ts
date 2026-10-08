@@ -5,6 +5,7 @@ import { growCrops, killOutOfSeason, spawnWeeds } from '../systems/farming';
 import { checkGoals } from '../systems/goals';
 import { parseKey, sellValue } from '../systems/itemRef';
 import { registerDayHook } from '../systems/dayHooks';
+import { ownsTile } from '../systems/plots';
 import { advanceCalendar } from '../systems/time';
 import { rollWeather, waterAllSoil } from '../systems/weather';
 
@@ -63,7 +64,10 @@ registerDayHook({
   phase: 'morning',
   order: -100, // first: later hooks (forage, jars...) want today's weather and weeds settled
   run(state, ctx) {
-    spawnWeeds(state, ctx.weedCandidates);
+    spawnWeeds(
+      state,
+      ctx.weedCandidates.filter(([x, y]) => ownsTile(state, x, y)),
+    );
     state.weather = rollWeather(state);
     if (state.weather === 'rain') waterAllSoil(state);
     restoreEnergy(state, ctx.passedOut ? game.passOutEnergyFraction : 1);

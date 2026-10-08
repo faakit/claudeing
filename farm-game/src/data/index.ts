@@ -14,6 +14,7 @@ import ordersRaw from './orders.json';
 import animalsRaw from './animals.json';
 import npcsRaw from './npcs.json';
 import tipsRaw from './tips.json';
+import plotsRaw from './plots.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -92,7 +93,8 @@ export interface ToolDef {
   icon: string;
 }
 export interface UpgradeDef {
-  id: 'can' | 'stamina';
+  /** 'can', 'stamina', 'hoe', 'rod': the keys of `state.upgrades`. */
+  id: string;
   name: string;
   levels: { price: number; label: string }[];
 }
@@ -190,6 +192,15 @@ export interface NpcDef {
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
 }
+export interface PlotDef {
+  name: string;
+  /** [tx, ty, width, height] on the farm map. */
+  rect: [number, number, number, number];
+  /** 0 = yours from the start. */
+  price: number;
+  /** Tile where the "for sale" sign stands (null for free plots). */
+  sign: [number, number] | null;
+}
 export interface GameData {
   startingMoney: number;
   startingItems: { item: string; qty: number }[];
@@ -254,6 +265,7 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const plots = plotsRaw as unknown as Record<string, PlotDef>;
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
@@ -361,6 +373,23 @@ export function validateContent(): void {
     for (const lvl of Object.keys(n.perks))
       if (Number(lvl) < 1 || Number(lvl) > 5) fail('npcs', `"${id}" perk at invalid hearts ${lvl}`);
   }
+  const claimed = new Set<string>();
+  for (const [id, pl] of Object.entries(plots)) {
+    const [x, y, w, h] = pl.rect;
+    if (w < 1 || h < 1) fail('plots', `"${id}" has an empty rect`);
+    if ((pl.price === 0) !== (pl.sign === null))
+      fail('plots', `"${id}": free plots have no sign, paid ones need one`);
+    for (let j = y; j < y + h; j++)
+      for (let i = x; i < x + w; i++) {
+        const k = `${i},${j}`;
+        if (claimed.has(k)) fail('plots', `"${id}" overlaps another plot at ${k}`);
+        claimed.add(k);
+      }
+  }
+  if (!Object.values(plots).some((p) => p.price === 0)) fail('plots', 'needs a free starter plot');
+  for (const [id, pl] of Object.entries(plots))
+    if (pl.sign && claimed.has(pl.sign.join(',')))
+      fail('plots', `"${id}" sign stands inside a plot`);
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');

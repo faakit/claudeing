@@ -27,6 +27,7 @@ import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
+import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
 import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
 import { gameEvents, toast } from '../systems/events';
 import { getSoil, isMature } from '../systems/farming';
@@ -249,7 +250,9 @@ export abstract class WorldScene extends Phaser.Scene {
 
   private tileInfo(t: TileCoord): TileInfo {
     const gid = this.ground.getTileAt(t.tx, t.ty)?.index ?? 0;
-    const tillable = mapsData.maps[this.mapId]?.tillable ?? [];
+    const def = mapsData.maps[this.mapId];
+    const tillable = def?.tillable ?? [];
+    const farmland = def?.farmland === true;
     return {
       map: this.mapId,
       tx: t.tx,
@@ -257,7 +260,9 @@ export abstract class WorldScene extends Phaser.Scene {
       kind: tileKind(gid),
       tillable: tillable.includes(gid),
       blocked: isTileBlocked(this.grid, t.tx, t.ty),
-      farmland: mapsData.maps[this.mapId]?.farmland === true,
+      farmland,
+      owned: farmland ? ownsTile(getState(), t.tx, t.ty) : undefined,
+      at: (tx, ty) => (this.inMap({ tx, ty }) ? this.tileInfo({ tx, ty }) : null),
     };
   }
 
@@ -272,8 +277,11 @@ export abstract class WorldScene extends Phaser.Scene {
       if (tx >= 0 && ty >= 0 && tx < this.grid.width && ty < this.grid.height)
         this.grid.blocked[ty * this.grid.width + tx] = 1;
     }
-    for (const [tx, ty] of this.npcs?.tiles() ?? [])
-      this.grid.blocked[ty * this.grid.width + tx] = 1;
+    const block = ([tx, ty]: [number, number]) => {
+      if (this.inMap({ tx, ty })) this.grid.blocked[ty * this.grid.width + tx] = 1;
+    };
+    this.npcs?.tiles().forEach(block);
+    if (this.mapId === 'farm') signTiles(getState()).forEach(block);
   }
 
   /**
@@ -293,6 +301,10 @@ export abstract class WorldScene extends Phaser.Scene {
 
   /** What Interact would do on a tile: a map object (bed, bin...) or a placed machine. */
   private interactableAt(t: TileCoord): string | null {
+    if (this.mapId === 'farm') {
+      const plot = plotForSaleAt(getState(), t.tx, t.ty);
+      if (plot) return `plot:${plot}`;
+    }
     const npc = this.npcs?.at(t.tx, t.ty);
     if (npc) return `npc:${npc}`;
     const obj = objectAt(this.objects, t.tx, t.ty);
@@ -376,6 +388,8 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!hit?.type) return;
     this.highlight.pulse();
     audio.play('ui');
+    if (hit.type.startsWith('plot:'))
+      return void gameEvents.emit('buyPlot', { id: hit.type.slice(5) });
     if (hit.type.startsWith('npc:')) {
       const id = hit.type.slice(4);
       const p = getState().player;

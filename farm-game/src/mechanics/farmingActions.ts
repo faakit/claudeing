@@ -4,7 +4,10 @@ import {
   registerToolAction,
   toolActionFor,
 } from '../systems/actionRegistry';
-import type { ToolActionContext } from '../systems/actionTypes';
+import type { TileInfo, ToolActionContext } from '../systems/actionTypes';
+import { DIR_VECTORS } from '../systems/direction';
+import type { Direction } from '../state/GameState';
+import type { GameState } from '../state/GameState';
 import { waterCapacity } from '../systems/actions';
 import { canAfford, spendEnergy } from '../systems/energy';
 import { gameEvents } from '../systems/events';
@@ -163,17 +166,42 @@ registerActionHandler({
   },
 });
 
+/** Tiles an area tool covers: the target tile plus `extra` more in a line away from the player. */
+function lineFrom(tile: TileInfo, facing: Direction, extra: number): TileInfo[] {
+  const v = DIR_VECTORS[facing];
+  const out = [tile];
+  for (let i = 1; i <= extra && tile.at; i++) {
+    const next = tile.at(tile.tx + v.x * i, tile.ty + v.y * i);
+    if (!next) break;
+    out.push(next);
+  }
+  return out;
+}
+
+const upgradeLvl = (state: GameState, id: 'hoe' | 'can' | 'rod'): number => state.upgrades[id];
+
+function canTill(state: GameState, t: TileInfo): boolean {
+  return (
+    t.farmland &&
+    t.tillable &&
+    !t.blocked &&
+    t.owned !== false &&
+    !state.farm.tiles[tileKey(t.tx, t.ty)] &&
+    !placedAt(state, t.map, t.tx, t.ty)
+  );
+}
+
 registerToolAction('till', ({ state, tile, tool }) => {
   if (tile.farmland && state.farm.tiles[tileKey(tile.tx, tile.ty)])
     return { refusal: 'Already tilled.' };
-  if (
-    !tile.farmland ||
-    !tile.tillable ||
-    tile.blocked ||
-    placedAt(state, tile.map, tile.tx, tile.ty)
-  )
-    return { refusal: "Can't till here." };
+  if (tile.farmland && tile.owned === false)
+    return { refusal: 'Not your land yet. Buy it at a sign.' };
+  if (!canTill(state, tile)) return { refusal: "Can't till here." };
   if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  // A better hoe breaks several tiles in a row for the same energy.
+  const targets = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe')).filter((t) =>
+    canTill(state, t),
+  );
   return {
     plan: {
       kind: 'till',
@@ -181,13 +209,18 @@ registerToolAction('till', ({ state, tile, tool }) => {
       ty: tile.ty,
       run: () => {
         spendEnergy(state, tool.energyCost);
-        till(state, tile.tx, tile.ty);
-        addStat(state, 'tilled');
-        return {};
+        for (const t of targets) till(state, t.tx, t.ty);
+        addStat(state, 'tilled', targets.length);
+        return { count: targets.length };
       },
     },
   };
 });
+
+function needsWater(state: GameState, t: TileInfo): boolean {
+  const soil = t.farmland ? getSoil(state, t.tx, t.ty) : undefined;
+  return !!soil && !soil.watered;
+}
 
 registerToolAction('water', ({ state, tile, tool }) => {
   const soil = tile.farmland ? getSoil(state, tile.tx, tile.ty) : undefined;
@@ -210,6 +243,10 @@ registerToolAction('water', ({ state, tile, tool }) => {
   if (soil.watered) return { refusal: 'Already watered.' };
   if (state.water <= 0) return { refusal: 'Can is empty. Refill at the pond.' };
   if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  // A bigger can waters a line of crops with one swing, as far as the water lasts.
+  const targets = lineFrom(tile, state.player.facing, upgradeLvl(state, 'can'))
+    .filter((t) => needsWater(state, t))
+    .slice(0, state.water);
   return {
     plan: {
       kind: 'water',
@@ -217,10 +254,10 @@ registerToolAction('water', ({ state, tile, tool }) => {
       ty: tile.ty,
       run: () => {
         spendEnergy(state, tool.energyCost);
-        state.water -= 1;
-        water(state, tile.tx, tile.ty);
-        addStat(state, 'watered');
-        return {};
+        state.water -= targets.length;
+        for (const t of targets) water(state, t.tx, t.ty);
+        addStat(state, 'watered', targets.length);
+        return { count: targets.length };
       },
     },
   };

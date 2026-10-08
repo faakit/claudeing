@@ -1,4 +1,16 @@
-import { crops, game, goals, items, mapsData, npcs, placeables, shops, skills } from '../data';
+import {
+  crops,
+  game,
+  goals,
+  items,
+  mapsData,
+  npcs,
+  placeables,
+  plots,
+  shops,
+  skills,
+} from '../data';
+import { plotAtTile, starterPlots } from './plots';
 import { isDirection } from './direction';
 import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
@@ -64,10 +76,33 @@ function migrateV3(raw: Raw): Raw {
   return { ...raw, version: 4, friends: {} };
 }
 
+/**
+ * v4 -> v5: land plots. Anyone who already farmed outside the starter plot keeps every plot they used
+ * (tilled soil or placed objects), so nothing they built becomes unreachable.
+ */
+function migrateV4(raw: Raw): Raw {
+  const obj = (v: unknown): Raw => (isObj(v) ? v : {});
+  const owned = new Set<string>(starterPlots());
+  const farm = obj(raw['farm']);
+  for (const key of Object.keys(obj(farm['tiles']))) {
+    const [tx, ty] = key.split(',').map(Number);
+    const id = plotAtTile(tx ?? -1, ty ?? -1);
+    if (id) owned.add(id);
+  }
+  for (const o of (obj(raw['placed'])['farm'] as unknown[]) ?? []) {
+    if (!isObj(o)) continue;
+    const id = plotAtTile(Number(o['tx']), Number(o['ty']));
+    if (id) owned.add(id);
+  }
+  const up = obj(raw['upgrades']);
+  return { ...raw, version: 5, plots: [...owned], upgrades: { ...up, hoe: 0, rod: 0 } };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
   3: migrateV3,
+  4: migrateV4,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -130,9 +165,13 @@ export function sanitize(raw: Raw): GameState {
   const u = obj(raw['upgrades']);
   const staminaMax =
     shops['town_general_store']?.upgrades.find((x) => x.id === 'stamina')?.levels.length ?? 0;
+  const upgradeMax = (id: string): number =>
+    shops['town_general_store']?.upgrades.find((x) => x.id === id)?.levels.length ?? 0;
   const upgrades = {
     can: int(u['can'], 0, 0, game.canCapacity.length - 1),
     stamina: int(u['stamina'], 0, 0, staminaMax),
+    hoe: int(u['hoe'], 0, 0, upgradeMax('hoe')),
+    rod: int(u['rod'], 0, 0, upgradeMax('rod')),
   };
   const maxEnergy = game.baseEnergy + upgrades.stamina * game.energyPerUpgrade;
   const canCap = game.canCapacity[upgrades.can] ?? 20;
@@ -283,6 +322,17 @@ export function sanitize(raw: Raw): GameState {
     };
   }
 
+  const ownedPlots = Array.isArray(raw['plots'])
+    ? [
+        ...new Set(
+          (raw['plots'] as unknown[]).filter(
+            (p): p is string => typeof p === 'string' && p in plots,
+          ),
+        ),
+      ]
+    : [];
+  for (const id of starterPlots()) if (!ownedPlots.includes(id)) ownedPlots.push(id);
+
   return {
     version: STATE_VERSION,
     time,
@@ -290,6 +340,7 @@ export function sanitize(raw: Raw): GameState {
     energy: int(raw['energy'], maxEnergy, 0, maxEnergy),
     water: int(raw['water'], canCap, 0, canCap),
     upgrades,
+    plots: ownedPlots,
     inventory: {
       slots,
       selected: int(obj(raw['inventory'])['selected'], 0, 0, game.hotbarSlots - 1),

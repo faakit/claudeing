@@ -56,7 +56,7 @@ export class FishingPanel extends Modal {
     this.bait = bait;
     this.phase = 'wait';
     this.clock = 0;
-    this.delay = biteDelay(random(getState()), bait);
+    this.delay = biteDelay(random(getState()), bait, getState().upgrades.rod);
     const def = fishTable.find((f) => f.item === fishId);
     const difficulty = def?.difficulty ?? 0.4;
     this.reel = newReel(reelSize(getState(), difficulty, bait), difficulty);

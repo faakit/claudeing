@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { crops, items, shops } from '../src/data';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { endDay } from '../src/systems/day';
-import { buyItem, buyUpgrade, shipItem, stockFor } from '../src/systems/economy';
+import { buyItem, buyUpgrade, shipItem, stockFor, upgradeLevel } from '../src/systems/economy';
 import { maxEnergy } from '../src/systems/energy';
 import { getSoil, isMature } from '../src/systems/farming';
 import { countItem } from '../src/systems/inventory';
@@ -68,8 +68,8 @@ function playDay(s: GameState): void {
       shipItem(s, id, 999);
   }
   // 3. upgrades when comfortably affordable
-  for (const up of shops[STORE]!.upgrades) {
-    const price = up.levels[s.upgrades[up.id]]?.price;
+  for (const up of shops[STORE]!.upgrades.filter((u) => u.id === 'can' || u.id === 'stamina')) {
+    const price = up.levels[upgradeLevel(s, up)]?.price;
     if (price !== undefined && s.money > price * 1.6) buyUpgrade(s, up);
   }
   // 4. water existing crops

@@ -115,3 +115,10 @@
 - **Fishing and foraging were runaway money (up to ~2700 and ~500 gold a day):** fish now sell for 25 to 100, forage 20 to 45, the rod costs 5 energy and spawns per day are 2/3/6. Rule encoded in `tests/balance.test.ts`: no side activity may pay more per energy than the best crop; animals pay back in 8 to 42 days; preserves multiply price by 1.3 to 3.2.
 - **Hints, not hand-holding:** each goal carries a one-line hint (Goals tab, plus a toast after 40 s idle, at most every 90 s). First-time tips are data (`tips.json`), keyed to stats, stored as `tip.<id>` stats so they are saved with no new state, and show one at a time.
 - **Quality reads by count as well as colour:** silver is one star, gold two. "Calm" mode removes shaking and ambient bobbing; it applies to newly drawn scenes.
+
+## Tool upgrades and land plots
+
+- **The real constraint on farming is energy, not tiles:** the old farm let you till any grass, so more land alone would be meaningless. Land is now sold in plots (`plots.json`): a 32-tile home plot is free; five more cost 700 to 2600 gold and each has a "for sale" sign. Tilling outside owned plots is refused with a reason; placing coops and sprinklers is still allowed on any open ground.
+- **Area tools make energy go further:** a hoe tier tills a line of 1 to 4 tiles for one use, the can tier waters a line (spending water per tile), so upgrades are efficiency, which suits one-thumb play. The can's capacity upgrade and line length share one level so there is a single can to understand.
+- **Area tools stay pure through `TileInfo.at()`:** scenes supply a neighbour lookup, unit tests that do not give one still behave as single-tile tools. `TileInfo.owned` is optional: undefined means "no land rules", so other maps and old tests are unaffected.
+- **Save version 5:** old saves keep every plot where they already had soil or objects, so nobody loses land.

@@ -33,8 +33,8 @@ export function pickFish(state: GameState, map: string): FishDef | null {
 export const hasBait = (state: GameState): boolean => countItem(state, 'bait') > 0;
 
 /** Seconds until the fish bites. Bait halves the wait. */
-export const biteDelay = (rnd: number, bait: boolean): number =>
-  (1.2 + rnd * 2.2) * (bait ? 0.55 : 1);
+export const biteDelay = (rnd: number, bait: boolean, rodTier = 0): number =>
+  (1.2 + rnd * 2.2) * (bait ? 0.55 : 1) * (1 - 0.12 * rodTier);
 
 /** The window (s) in which a tap hooks the fish. */
 export const HOOK_WINDOW = 1.5;
@@ -61,7 +61,14 @@ export const REEL_TIMEOUT = 24;
 export const reelSize = (state: GameState, difficulty: number, bait: boolean): number =>
   Math.min(
     0.6,
-    Math.max(0.16, 0.3 + perk(state, 'fishWindow') + (bait ? 0.06 : 0) - difficulty * 0.12),
+    Math.max(
+      0.16,
+      0.3 +
+        perk(state, 'fishWindow') +
+        state.upgrades.rod * 0.05 +
+        (bait ? 0.06 : 0) -
+        difficulty * 0.12,
+    ),
   );
 
 export function newReel(size: number, difficulty: number): Reel {

@@ -1,0 +1,38 @@
+{
+  "home": {
+    "name": "Home Plot",
+    "rect": [9, 16, 4, 8],
+    "price": 0,
+    "sign": null
+  },
+  "west": {
+    "name": "West Field",
+    "rect": [5, 16, 4, 10],
+    "price": 700,
+    "sign": [7, 26]
+  },
+  "east": {
+    "name": "East Field",
+    "rect": [17, 16, 8, 10],
+    "price": 1200,
+    "sign": [16, 20]
+  },
+  "lowland": {
+    "name": "Lowland",
+    "rect": [4, 27, 9, 7],
+    "price": 1800,
+    "sign": [13, 30]
+  },
+  "nwmeadow": {
+    "name": "North Meadow",
+    "rect": [3, 9, 6, 5],
+    "price": 2200,
+    "sign": [9, 10]
+  },
+  "nemeadow": {
+    "name": "Hilltop",
+    "rect": [18, 9, 7, 5],
+    "price": 2600,
+    "sign": [17, 10]
+  }
+}

@@ -70,7 +70,7 @@ try {
   check('new game enters the farm with the UI overlay', (await sceneKeys()).join() === 'Farm,UI');
 
   // 2. Till, plant, water on the farm
-  await placePlayer(8, 17, 'down');
+  await placePlayer(10, 17, 'down');
   await page.keyboard.press('Digit1');
   await tap('Space');
   let s = await state();

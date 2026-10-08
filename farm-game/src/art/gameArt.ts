@@ -652,5 +652,20 @@ export function generateGameArt(scene: Phaser.Scene): void {
     outline(ctx, 0, 0, 16, 16);
     refresh(scene, a.sprite);
   }
+  // "For sale" sign for farm plots
+  {
+    const ctx = canvas(scene, 'obj_sign', 16, 16);
+    ctx.fillStyle = '#7a4a28';
+    ctx.fillRect(7, 8, 2, 7);
+    ctx.fillStyle = '#c9a24a';
+    ctx.fillRect(2, 2, 12, 7);
+    ctx.fillStyle = '#e8cf7a';
+    ctx.fillRect(2, 2, 12, 1);
+    ctx.fillStyle = '#7a4a28';
+    ctx.fillRect(4, 4, 8, 1);
+    ctx.fillRect(4, 6, 6, 1);
+    outline(ctx, 0, 0, 16, 16);
+    refresh(scene, 'obj_sign');
+  }
   drawGlyphs(scene);
 }

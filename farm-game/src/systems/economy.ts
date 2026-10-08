@@ -80,7 +80,8 @@ export function buyItem(state: GameState, shopId: string, itemId: string, qty: n
   return 'ok';
 }
 
-export const upgradeLevel = (state: GameState, up: UpgradeDef): number => state.upgrades[up.id];
+export const upgradeLevel = (state: GameState, up: UpgradeDef): number =>
+  (state.upgrades as Record<string, number>)[up.id] ?? 0;
 
 /** Price of the next level, or null when maxed. */
 export const nextUpgrade = (
@@ -93,9 +94,9 @@ export function buyUpgrade(state: GameState, up: UpgradeDef): 'ok' | 'no_money' 
   if (!next) return 'maxed';
   if (state.money < next.price) return 'no_money';
   state.money -= next.price;
-  state.upgrades[up.id] += 1;
+  (state.upgrades as Record<string, number>)[up.id] = upgradeLevel(state, up) + 1;
   if (up.id === 'can') state.water = waterCapacity(state);
-  else restoreEnergy(state, 1);
+  else if (up.id === 'stamina') restoreEnergy(state, 1);
   gameEvents.emit('moneyChanged', { delta: -next.price });
   addStat(state, 'upgrades');
   return 'ok';

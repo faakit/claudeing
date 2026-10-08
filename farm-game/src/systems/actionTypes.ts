@@ -13,6 +13,13 @@ export interface TileInfo {
   blocked: boolean;
   /** The current map holds the farm. Soil, crops and weeds only exist there. */
   farmland: boolean;
+  /**
+   * False when this farm tile is land the player has not bought. Undefined means "no land rules here"
+   * (other maps, unit tests), which counts as allowed.
+   */
+  owned?: boolean;
+  /** Describe another tile of the same map (for area tools). Absent in unit tests: tools then act on one tile. */
+  at?: (tx: number, ty: number) => TileInfo | null;
 }
 
 /** Extra facts an action reports back (items gained, quality...). Free-form so mechanics can add fields. */

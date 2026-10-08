@@ -47,10 +47,13 @@ Highest value per effort. None of this adds a mechanic; it makes the current one
 
 Give players reasons to plan their day and their season.
 
-- [ ] **R2.1 Tool upgrades.** Copper and iron hoe, can and rod bought or crafted with ore/bars. Better hoe tills a
+- [x] **R2.1 Tool upgrades.** Copper and iron hoe, can and rod bought or crafted with ore/bars. Better hoe tills a
       line of tiles; better can waters an area; better rod widens the catch zone. _Plug in:_ tool actions read an
       upgrade level from state; recipes unlock by skill and friendship; one new data file for tiers.
-- [ ] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
+      _Done:_ hoe and can tiers act on a line of 1 to 4 tiles for the same energy (can tier reuses the capacity
+      upgrade); rod tiers widen the zone and shorten bites. Bought in the shop's Upgrades tab. Not done: iron/ore
+      tiers (waits for the mine).
+- [x] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
       lasting purpose. _Plug in:_ `tillable` zones become state-driven; shop upgrade row.
 - [ ] **R2.3 Fruit trees and a greenhouse.** Trees that regrow seasonally, and a greenhouse that grows crops in
       winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
