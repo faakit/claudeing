@@ -137,5 +137,25 @@ await ui(() => {
 });
 await page.waitForTimeout(400);
 await shot('r2-08-shop');
+await ui(() => {
+  const shop = window.__farm.game.scene.getScene('UI').panels.get('shop');
+  shop.tab = 'home';
+  shop.rebuild();
+});
+await page.waitForTimeout(300);
+await shot('r2-09-shop-home');
+await closeAll();
+// 7. The bag card for a dish.
+await ui(() => {
+  const f = window.__farm;
+  const s = f.getState();
+  s.energy = 40;
+  s.inventory.slots[14] = { item: 'pumpkin_pie', qty: 2 };
+  const u = f.game.scene.getScene('UI');
+  u.menu.open();
+  u.menu.tapSlot(14);
+});
+await page.waitForTimeout(400);
+await shot('r2-10-bag-dish');
 console.log('errors', errors.length, errors.join(' | '));
 await browser.close();

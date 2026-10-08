@@ -291,6 +291,18 @@
             }
           }
         ]
+      },
+      {
+        "id": "kitchen",
+        "name": "Kitchen",
+        "tab": "home",
+        "icon": "item_parsnip_soup",
+        "levels": [
+          {
+            "price": 2500,
+            "label": "Cook meals"
+          }
+        ]
       }
     ]
   }

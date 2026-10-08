@@ -422,6 +422,20 @@ try {
   await mTap('KeyE');
   m = await mState();
   check('Interact at a garden bench gives a little energy', m.energy === 55, `energy ${m.energy}`);
+  // A cooked dish in hand: Action eats it.
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.energy = 30;
+    s.inventory.slots[6] = { item: 'fish_stew', qty: 1 };
+  });
+  await mp.keyboard.press('Digit7');
+  await mTap('Space');
+  m = await mState();
+  check(
+    'Action with a dish in hand eats it for energy',
+    m.energy === 80 && !m.inventory.slots.some((x) => x?.item === 'fish_stew'),
+    `energy ${m.energy}`,
+  );
   // Swiping up on the Action button changes tool without reaching for the hotbar.
   await mp.keyboard.press('Digit1');
   const swipeBox = await mp.evaluate(() => {
@@ -574,7 +588,7 @@ try {
   });
   await pp.waitForTimeout(400);
   await pClick(163, 150 + 44 + 11); // Bigger Bag 1,500g
-  await pClick(170, 150 + 70 + 11); // Wood Fence 15g
+  await pClick(170, 150 + 96 + 11); // Wood Fence 15g (below the Bigger Bag and Kitchen rows)
   ps = await pState();
   check(
     'Home tab: the Bigger Bag adds 8 slots and a fence can be bought',

@@ -476,5 +476,13 @@
     "target": 3,
     "reward": 3000,
     "hint": "The Founder's Statue opens after the Market Road."
+  },
+  {
+    "id": "cook",
+    "text": "Cook a meal",
+    "stat": "cooked",
+    "target": 1,
+    "reward": 300,
+    "hint": "Buy a kitchen (shop, Home tab), then cook at the workbench."
   }
 ]

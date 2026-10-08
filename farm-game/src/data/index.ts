@@ -67,7 +67,8 @@ export type ItemType =
   | 'bar'
   | 'sapling'
   | 'feed'
-  | 'product';
+  | 'product'
+  | 'food';
 export interface ItemDef {
   name: string;
   type: ItemType;
@@ -90,6 +91,8 @@ export interface ItemDef {
   sellMultiplier?: number;
   /** Display name template; `{of}` is replaced by the source item's name. */
   nameTemplate?: string;
+  /** Food: energy restored when eaten. */
+  energy?: number;
 }
 export interface CropDef {
   seasons: Season[];
@@ -157,6 +160,8 @@ export interface RecipeDef {
   ingredients: { item: string; qty: number }[];
   gold: number;
   unlock: { skill: string; level: number } | null;
+  /** A dish: cooked at the workbench once the house has a kitchen (a Home upgrade). */
+  kitchen?: boolean;
 }
 export interface PlaceableDef {
   name: string;
@@ -511,6 +516,8 @@ export function validateContent(): void {
       fail('items', `"${id}" needs sellPrice`);
     if (it.type === 'seed' && typeof it.buyPrice !== 'number')
       fail('items', `seed "${id}" needs buyPrice`);
+    if (it.type === 'food' && !((it.energy ?? 0) > 0))
+      fail('items', `food "${id}" needs energy`);
   }
   for (const [id, c] of Object.entries(crops)) {
     if (!items[c.harvestItem]) fail('crops', `"${id}" harvests unknown item "${c.harvestItem}"`);

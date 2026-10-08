@@ -36,9 +36,11 @@ export function projectSub(
 export const kfmt = (n: number): string =>
   n < 10_000 ? fmt(n) : n < 1_000_000 ? `${Math.round(n / 1000)}k` : `${(n / 1e6).toFixed(1)}M`;
 
-/** A repeatable project's list line: "Level 2  1,200/45kg". */
-export const repeatSub = (level: number, given: number, price: number): string =>
-  `Level ${level}  ${kfmt(given)}/${kfmt(price)}g`;
+/** A repeatable project's list line: "Level 2  1,200/9,000g" or "Level 3  12k/68k" (never "68kg"). */
+export const repeatSub = (level: number, given: number, price: number): string => {
+  const p = kfmt(price);
+  return `Level ${level}  ${kfmt(given)}/${p}${/\d$/.test(p) ? 'g' : ''}`;
+};
 
 /** What a repeatable project's next level does once its perks have run out. */
 export const GLORY_LINE = 'Each level now is just for glory.';

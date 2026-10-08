@@ -395,3 +395,10 @@ An independent critic played the build at `5fd9943` (14 real-input days plus pro
 - **F7 the bench:** the sit is kept until it gives its full 15; right after sitting, Interact says "Rested. Back tomorrow." and never arms a pick-up (`arm: false` on a message).
 - **F8 text:** "Done!" for perk-less projects; "1 a day." beside Mara's Shop button; the silo's Move line no longer says "they"; Enter no longer presses "Move it"; the sleep title no longer touches the time; the season change says when regrowing crops under glass were spent; the scarecrow says its reach.
 - **F9:** dearer land signs appear at half their price earned (was a quarter). The long-press hotbar picker stays with the controls agent.
+
+## A kitchen and cooking (brief backlog 1: house upgrades)
+
+- **The Kitchen is a Home upgrade** (2,500g, shop Home tab). Its level is kept only as the `upgraded.kitchen` stat (`upgradeLevel` falls back to it), so no save change.
+- **Six dishes cooked at the workbench** (recipes with `kitchen: true`): Parsnip Soup, Baked Potato, Fish Stew, Berry Tart, Kale Salad, Pumpkin Pie. Each restores 30 to 80 energy. Eat from the bag card ("Eat +40") or with the dish in hand and Action (`eat` handler, priority 45; auto tool: none). A full player is refused, so a dish is never wasted.
+- **Energy, not money:** a dish sells for at most 15% over its ingredients (a test), so cooking makes a long day longer instead of being a second jar. Villagers like some dishes (Rosa loves pumpkin pie, Finn fish stew). A "Cook a meal" goal is appended.
+- New texture keys: `item_parsnip_soup`, `item_baked_potato`, `item_fish_stew`, `item_berry_tart`, `item_kale_salad`, `item_pumpkin_pie`.

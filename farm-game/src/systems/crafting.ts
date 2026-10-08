@@ -33,6 +33,7 @@ export function craft(state: GameState, id: string): CraftBlock | 'ok' {
   }
   addItem(state, r.output.item, r.output.qty);
   addStat(state, 'crafted');
+  if (r.kitchen) addStat(state, 'cooked');
   toast(
     `Made ${r.output.qty > 1 ? `${r.output.qty} ` : ''}${items[r.output.item]?.name ?? id}`,
     'good',

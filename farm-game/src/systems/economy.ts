@@ -117,8 +117,12 @@ export function buyItem(state: GameState, shopId: string, itemId: string, qty: n
   return 'ok';
 }
 
+/**
+ * Level of an upgrade. Tools, stamina and the bag live in `state.upgrades`; newer house upgrades (the
+ * kitchen) only in their `upgraded.<id>` stat, so they needed no save change.
+ */
 export const upgradeLevel = (state: GameState, up: UpgradeDef): number =>
-  (state.upgrades as Record<string, number>)[up.id] ?? 0;
+  (state.upgrades as Record<string, number>)[up.id] ?? state.stats[`upgraded.${up.id}`] ?? 0;
 
 /** Price of the next level, or null when maxed. */
 export const nextUpgrade = (
@@ -145,12 +149,13 @@ export function buyUpgrade(
     addStat(state, 'barUpgrades');
   }
   state.money -= next.price;
-  (state.upgrades as Record<string, number>)[up.id] = upgradeLevel(state, up) + 1;
+  const level = upgradeLevel(state, up) + 1;
+  if (up.id in state.upgrades) (state.upgrades as Record<string, number>)[up.id] = level;
   if (up.id === 'can') state.water = waterCapacity(state);
   else if (up.id === 'stamina') restoreEnergy(state, 1);
   else if (up.id === 'bag') growBag(state);
   gameEvents.emit('moneyChanged', { delta: -next.price });
-  state.stats[`upgraded.${up.id}`] = upgradeLevel(state, up);
+  state.stats[`upgraded.${up.id}`] = level;
   addStat(state, 'upgrades');
   return 'ok';
 }

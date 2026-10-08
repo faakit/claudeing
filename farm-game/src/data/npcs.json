@@ -9,7 +9,7 @@
     "tint": "#ffb08a",
     "blurb": "Runs the General Store.",
     "loves": ["daffodil", "jam", "wild_sunflower"],
-    "likes": ["tomato", "melon", "pickles", "egg", "milk"],
+    "likes": ["tomato", "melon", "pickles", "egg", "milk", "berry_tart"],
     "dislikes": ["fiber", "mushroom"],
     "lines": {
       "stranger": [
@@ -124,7 +124,7 @@
     "facing": "left",
     "tint": "#8fc7e8",
     "blurb": "Fishes the lake all day.",
-    "loves": ["catfish", "salmon", "trout"],
+    "loves": ["catfish", "salmon", "trout", "fish_stew"],
     "likes": ["carp", "bluegill", "perch", "blackberry"],
     "dislikes": ["parsnip", "potato"],
     "lines": {
@@ -250,7 +250,7 @@
     "facing": "left",
     "tint": "#c9a0e8",
     "blurb": "Neighbour. Knows soil.",
-    "loves": ["pumpkin", "wild_berry", "cauliflower"],
+    "loves": ["pumpkin", "wild_berry", "cauliflower", "pumpkin_pie"],
     "likes": ["parsnip", "corn", "yam", "jam", "pickles"],
     "dislikes": ["holly", "winter_root"],
     "lines": {
@@ -380,7 +380,7 @@
       "day": 10
     },
     "loves": ["mushroom", "salmon", "wine"],
-    "likes": ["catfish", "trout", "fiber", "potato"],
+    "likes": ["catfish", "trout", "fiber", "potato", "baked_potato"],
     "dislikes": ["daffodil", "jam"],
     "lines": {
       "stranger": [
@@ -493,7 +493,7 @@
     "tint": "#8ab0e0",
     "blurb": "Farmer down the road. Proud.",
     "loves": ["melon", "ruby", "wine"],
-    "likes": ["corn", "cauliflower", "iron_bar", "honey"],
+    "likes": ["corn", "cauliflower", "iron_bar", "honey", "kale_salad"],
     "dislikes": ["wild_leek", "fiber"],
     "lines": {
       "stranger": [

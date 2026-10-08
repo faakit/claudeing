@@ -14,6 +14,7 @@ import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { isShippable } from '../../systems/economy';
+import { eat, foodEnergy } from '../../systems/food';
 import { displayName, iconKey, refOf, sellValue } from '../../systems/itemRef';
 import {
   adjustVolume,
@@ -218,8 +219,26 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
 
   const dy = c.top - 4;
   const cur = cursor !== null ? s.inventory.slots[cursor] : null;
+  // A dish, wherever it sits: one tap eats it (cooking is how a long day gets longer).
+  const gain = foodEnergy(cur?.item);
+  if (cur && cursor !== null && gain > 0)
+    c.button(
+      110,
+      y0 - 26,
+      82,
+      22,
+      `Eat +${gain}`,
+      () => {
+        if (eat(getState(), cursor) === 'full') {
+          audio.play('error');
+          toast("You're not hungry.", 'info');
+        } else audio.play('select');
+        c.rebuild();
+      },
+      { textColor: C.green, rim: C.green },
+    );
   // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
-  if (cur && cursor !== null && cursor >= game.hotbarSlots)
+  else if (cur && cursor !== null && cursor >= game.hotbarSlots)
     c.button(
       110,
       y0 - 26,

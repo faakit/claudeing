@@ -973,5 +973,59 @@
     "sellPrice": 55,
     "description": "A cheerful spring bloom.",
     "family": "flower"
+  },
+  "parsnip_soup": {
+    "name": "Parsnip Soup",
+    "type": "food",
+    "icon": "item_parsnip_soup",
+    "color": "#e8d9a8",
+    "sellPrice": 80,
+    "energy": 30,
+    "description": "Warm and simple. Restores 30 energy."
+  },
+  "baked_potato": {
+    "name": "Baked Potato",
+    "type": "food",
+    "icon": "item_baked_potato",
+    "color": "#c49a6c",
+    "sellPrice": 220,
+    "energy": 40,
+    "description": "Crisp skin, soft middle. Restores 40 energy."
+  },
+  "fish_stew": {
+    "name": "Fish Stew",
+    "type": "food",
+    "icon": "item_fish_stew",
+    "color": "#c9a24a",
+    "sellPrice": 170,
+    "energy": 50,
+    "description": "Hearty and hot. Restores 50 energy."
+  },
+  "berry_tart": {
+    "name": "Berry Tart",
+    "type": "food",
+    "icon": "item_berry_tart",
+    "color": "#c0396a",
+    "sellPrice": 105,
+    "energy": 35,
+    "description": "Sweet summer treat. Restores 35 energy."
+  },
+  "kale_salad": {
+    "name": "Kale Salad",
+    "type": "food",
+    "icon": "item_kale_salad",
+    "color": "#4f8f6a",
+    "sellPrice": 210,
+    "energy": 35,
+    "description": "Crunchy winter greens. Restores 35 energy."
+  },
+  "pumpkin_pie": {
+    "name": "Pumpkin Pie",
+    "type": "food",
+    "icon": "item_pumpkin_pie",
+    "color": "#e8893a",
+    "sellPrice": 540,
+    "energy": 80,
+    "description": "The best of fall. Restores 80 energy."
   }
 }

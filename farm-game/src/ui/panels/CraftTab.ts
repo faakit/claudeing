@@ -1,15 +1,17 @@
-import { items, recipes, skills } from '../../data';
+import { items, recipes } from '../../data';
 import { getState } from '../../state/store';
 import { craft, craftBlock } from '../../systems/crafting';
 import { countItem } from '../../systems/inventory';
 import { audio } from '../../platform/audio';
-import { isRecipeUnlocked, levelOf } from '../../systems/skills';
+import { isRecipeUnlocked } from '../../systems/skills';
+import { lockedText } from './craftText';
 import { C } from '../theme';
 import { ROW_H } from '../widgets';
 import { fmt } from './format';
 import type { MenuTabContext } from './MenuPanel';
 
 const PER_PAGE = 8;
+
 let page = 0;
 
 /** Menu tab: everything you can make. Locked recipes stay visible so players know what to aim for. */
@@ -36,9 +38,7 @@ export function buildCraft(c: MenuTabContext): void {
     y = c.row(y, {
       icon: items[r.output.item]?.icon,
       title: `${r.name}${r.output.qty > 1 ? ` x${r.output.qty}` : ''}`,
-      sub: unlocked
-        ? need
-        : `${skills[r.unlock!.skill]?.name} Lv ${r.unlock!.level} (you: ${levelOf(s, r.unlock!.skill)})`,
+      sub: unlocked ? need : lockedText(s, r),
       subColor: !unlocked
         ? C.warn
         : block === 'no_items' || block === 'no_gold'

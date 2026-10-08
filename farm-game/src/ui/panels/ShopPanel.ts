@@ -68,8 +68,9 @@ export class ShopPanel extends Modal {
       // The Home tab starts with the house upgrades (a bigger bag), then decorations.
       let rows = ROWS;
       if (this.tab === 'home') {
-        for (const up of shop.upgrades.filter((u) => u.tab === 'home')) y = this.upgradeRow(y, up);
-        rows = ROWS - 1;
+        const home = shop.upgrades.filter((u) => u.tab === 'home');
+        for (const up of home) y = this.upgradeRow(y, up);
+        rows = ROWS - home.length; // the bag and the kitchen take two of the page's rows
       }
       const stock = stockFor(SHOP_ID, s.time.season, s).filter((id) => shopTabOf(id) === this.tab);
       if (stock.length === 0) {

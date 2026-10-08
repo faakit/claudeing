@@ -21,6 +21,7 @@ import './festivals';
 import './projects';
 import './decor';
 import './crows';
+import './food';
 import './jobs';
 import './mail';
 import './specials';
