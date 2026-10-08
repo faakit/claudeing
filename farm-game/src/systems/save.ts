@@ -234,6 +234,11 @@ function migrateV9(raw: Raw): Raw {
   return { ...remapGoalIndex(raw, GOALS_V9), version: 10, jobs: { day: 0, list: [] } };
 }
 
+/** v10 -> v11: the mailbox starts empty; letters whose time has passed arrive the next morning. */
+function migrateV10(raw: Raw): Raw {
+  return { ...raw, version: 11, mail: { next: 1, list: [] } };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -244,6 +249,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   7: migrateV7,
   8: migrateV8,
   9: migrateV9,
+  10: migrateV10,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -489,6 +495,33 @@ export function sanitize(raw: Raw): GameState {
       });
     }
 
+  const mailRaw = obj(raw['mail']);
+  const letters: GameState['mail']['list'] = [];
+  let maxLetter = 0;
+  if (Array.isArray(mailRaw['list']))
+    for (const l of mailRaw['list'].slice(-40)) {
+      if (!isObj(l) || typeof l['title'] !== 'string' || typeof l['text'] !== 'string') continue;
+      if (typeof l['from'] !== 'string' || !npcs[l['from']]) continue;
+      const id = int(l['id'], 0, 0, 1e9);
+      if (id === 0 || letters.some((x) => x.id === id)) continue;
+      maxLetter = Math.max(maxLetter, id);
+      const g = isObj(l['gift']) ? l['gift'] : null;
+      const gift =
+        g && typeof g['item'] === 'string' && items[g['item']]
+          ? { item: g['item'], qty: int(g['qty'], 1, 1, 999) }
+          : undefined;
+      letters.push({
+        id,
+        from: l['from'],
+        title: l['title'].slice(0, 80),
+        text: l['text'].slice(0, 400),
+        day: int(l['day'], 1, 1, 1e7),
+        read: l['read'] === true,
+        taken: l['taken'] === true,
+        ...(gift ? { gift } : {}),
+      });
+    }
+
   const ownedPlots = Array.isArray(raw['plots'])
     ? [
         ...new Set(
@@ -528,6 +561,7 @@ export function sanitize(raw: Raw): GameState {
     orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
     friends,
     jobs: { day: int(jobsRaw['day'], 0, 0, 1e7), list: jobList },
+    mail: { next: Math.max(int(mailRaw['next'], 1, 1, 1e9), maxLetter + 1), list: letters },
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
   };

@@ -506,6 +506,33 @@ try {
     ps.orders.list.length === 4,
     `orders ${ps.orders.list.length}`,
   );
+  // The post: a welcome letter arrived overnight; Interact at the mailbox by the house opens it.
+  check(
+    'a welcome letter is in the mailbox on day 2',
+    ps.mail.list.some((l) => l.title === 'Welcome to the valley' && !l.read),
+    JSON.stringify(ps.mail),
+  );
+  await pp.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.player.map = 'farm';
+    s.player.x = 14 * 16 + 8;
+    s.player.y = 9 * 16 + 11;
+    s.player.facing = 'left';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key === 'House')
+      .scene.start('Farm');
+  });
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.down('KeyE');
+  await pp.waitForTimeout(120);
+  await pp.keyboard.up('KeyE');
+  await pp.waitForTimeout(500);
+  check(
+    'Interact at the mailbox opens the mail sheet',
+    await ui(() => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen),
+  );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();
 

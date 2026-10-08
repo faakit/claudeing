@@ -23,6 +23,7 @@ import festivalsRaw from './festivals.json';
 import miningRaw from './mining.json';
 import projectsRaw from './projects.json';
 import jobsRaw from './jobs.json';
+import mailRaw from './mail.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -283,6 +284,34 @@ export interface MachineDef {
   /** Item family ("fruit", "veg") -> the derived good this machine makes of it. */
   recipes: Record<string, string>;
 }
+/** When a letter is sent: every field given must hold (checked each morning). */
+export interface LetterWhen {
+  /** On or after this absolute day. */
+  day?: number;
+  /** Once a lifetime stat reaches `min`. */
+  stat?: string;
+  min?: number;
+  /** Once this villager has `hearts` hearts. */
+  npc?: string;
+  hearts?: number;
+  /** On this date of the calendar (any year). */
+  season?: Season;
+  date?: number;
+}
+export interface LetterDef {
+  id: string;
+  /** Villager id who writes it. */
+  from: string;
+  title: string;
+  text: string;
+  when: LetterWhen;
+  gift?: { item: string; qty: number };
+}
+export interface MailData {
+  /** The farm's mailbox: a fixed, solid, one-tile fixture. */
+  mailbox: { map: string; tx: number; ty: number; sprite: string; color: string };
+  letters: LetterDef[];
+}
 /** A small daily job a villager asks for: reach `n` more of a stat today. */
 export interface JobDef {
   id: string;
@@ -404,6 +433,7 @@ export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
 export const projects = projectsRaw as unknown as Record<string, ProjectDef>;
 export const jobs = jobsRaw as unknown as JobDef[];
+export const mail = mailRaw as unknown as MailData;
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
@@ -604,6 +634,22 @@ export function validateContent(): void {
       if (seen.has(at)) fail('projects', `"${id}" is part of an "after" loop`);
       seen.add(at);
     }
+  }
+  if (!mapIds.includes(mail.mailbox.map)) fail('mail', 'mailbox stands on an unknown map');
+  const letterIds = new Set<string>();
+  for (const l of mail.letters) {
+    if (!l.id || letterIds.has(l.id)) fail('mail', `letter "${l.id}" needs a unique id`);
+    letterIds.add(l.id);
+    if (!npcs[l.from]) fail('mail', `"${l.id}" is from unknown villager "${l.from}"`);
+    if (!l.title || !l.text) fail('mail', `"${l.id}" needs a title and text`);
+    if (l.gift && (!items[l.gift.item] || l.gift.qty < 1))
+      fail('mail', `"${l.id}" encloses unknown item "${l.gift.item}"`);
+    const w = l.when;
+    if (w.npc !== undefined && !npcs[w.npc]) fail('mail', `"${l.id}" waits on unknown villager`);
+    if ((w.stat === undefined) !== (w.min === undefined)) fail('mail', `"${l.id}" needs stat and min`);
+    if (w.season !== undefined && !SEASONS.includes(w.season))
+      fail('mail', `"${l.id}" has a bad season`);
+    if (Object.keys(w).length === 0) fail('mail', `"${l.id}" has no "when"`);
   }
   const jobIds = new Set<string>();
   for (const j of jobs) {

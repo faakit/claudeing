@@ -127,8 +127,10 @@ More people, more places, more to discover.
       Doubles as a gentle hint system for what to try next.
       _Done:_ Menu > Book has six pages (crops, orchard, fish, wild goods, animal goods, preserves); unfound goods
       show as dark shapes, finishing a page pays gold.
-- [ ] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
+- [x] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
       scattered toasts for slower news.
+      _Done:_ a mailbox by the bin, data letters (milestones, hearts, seasons) with gifts, festival notices and
+      birthday hints the day before, a marker while mail waits.
 
 ## Depth: a second act (game-depth agent, from critique 3)
 

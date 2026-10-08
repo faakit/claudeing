@@ -5,7 +5,12 @@ import type Phaser from 'phaser';
  * building in the given colour. Real art loaded under the same key wins, because this only draws when the
  * key is missing.
  */
-export function ensureTexture(scene: Phaser.Scene, key: string, color: string): string {
+export function ensureTexture(
+  scene: Phaser.Scene,
+  key: string,
+  color: string,
+  shape: 'house' | 'post' = 'house',
+): string {
   if (scene.textures.exists(key)) return key;
   const t = scene.textures.createCanvas(key, 16, 16);
   if (!t) return key;
@@ -14,6 +19,17 @@ export function ensureTexture(scene: Phaser.Scene, key: string, color: string): 
     ctx.fillStyle = c;
     ctx.fillRect(x, y, w, h);
   };
+  if (shape === 'post') {
+    // a box on a post (a mailbox)
+    r(7, 8, 2, 8, '#241a2a');
+    r(7, 8, 2, 7, '#7a4a28');
+    r(2, 2, 12, 7, '#241a2a');
+    r(3, 3, 10, 5, color);
+    r(3, 3, 10, 1, '#f4ead2');
+    r(12, 1, 1, 4, '#241a2a');
+    t.refresh();
+    return key;
+  }
   r(1, 6, 14, 9, '#241a2a');
   r(2, 7, 12, 8, color);
   r(0, 3, 16, 4, '#241a2a');

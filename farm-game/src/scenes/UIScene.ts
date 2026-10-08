@@ -40,6 +40,7 @@ import {
   installMenuTabs,
   JarPanel,
   NpcPanel,
+  MailPanel,
   PlotPanel,
   ProjectPanel,
   MenuPanel,
@@ -95,7 +96,15 @@ function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
 }
 
 /** Interact-button icon by the kind of thing in reach. Mechanics add an entry for their objects. */
+function drawMailIcon(g: Phaser.GameObjects.Graphics): void {
+  g.fillStyle(INK, 0.6).fillRect(-11, -8, 22, 16);
+  g.fillStyle(CREAM, 1).fillRect(-10, -7, 20, 14);
+  g.fillStyle(INK, 0.8).fillTriangle(-10, -7, 10, -7, 0, 1);
+  g.fillStyle(CREAM, 1).fillTriangle(-8, -7, 8, -7, 0, -1);
+}
+
 export const INTERACT_ICONS: Record<string, (g: Phaser.GameObjects.Graphics) => void> = {
+  mailbox: drawMailIcon,
   bed: drawBedIcon,
   board: drawBoardIcon,
   npc: drawTalkIcon,
@@ -465,6 +474,7 @@ export class UIScene extends Phaser.Scene {
     this.panels.set('board', new BoardPanel(this));
     this.panels.set('festival', new FestivalPanel(this));
     this.panels.set('projects', new ProjectPanel(this));
+    this.panels.set('mail', new MailPanel(this));
     this.jar = new JarPanel(this);
     this.npc = new NpcPanel(this);
     this.plot = new PlotPanel(this);

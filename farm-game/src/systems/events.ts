@@ -11,6 +11,7 @@ export type PanelType =
   | 'book'
   | 'festival'
   | 'projects'
+  | 'mail'
   | 'fishing';
 
 export interface GameEvents {
@@ -43,6 +44,8 @@ export interface GameEvents {
   /** The player used a land sign: ask whether to buy that plot. */
   buyPlot: { id: string };
   saved: undefined;
+  /** A letter arrived, was read, or its gift was taken: the mailbox marker refreshes. */
+  mailChanged: undefined;
   /** A setting that affects layout/behaviour changed (e.g. left-handed mode). */
   settingsChanged: undefined;
 }

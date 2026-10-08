@@ -113,6 +113,12 @@ A job is a row in `jobs.json`: who asks (`giver`), the lifetime `stat` it counts
 (a stat that must be reached first). Any stat that `addStat` increments works, so a new job is data only.
 Code that should react to stat changes registers `registerStatWatcher(id, fn)` (see `mechanics/jobs.ts`).
 
+### Letters
+
+`mail.json` lists letters: `from` (a villager), `title`, `text`, an optional `gift`, and `when` (any of `day`,
+`stat` + `min`, `npc` + `hearts`, `season` + `date`; all given fields must hold). Each is sent once, the morning
+its condition holds. Code can send a letter any time with `sendLetter(state, {...})` in `systems/mail.ts`.
+
 ### Town projects
 
 A project is one row in `projects.json`: `gold`, optional `items`, `after` (the project it waits for),

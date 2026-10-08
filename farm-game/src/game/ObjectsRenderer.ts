@@ -7,6 +7,8 @@ import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
 import { landmarksOn } from '../systems/projects';
+import { unreadCount } from '../systems/mail';
+import { mail } from '../data';
 import { ensureTexture } from './fallbackTexture';
 
 const calm = (): boolean => getState().settings.reduceMotion;
@@ -28,6 +30,8 @@ export class ObjectsRenderer {
   private plotSig = '';
   private plotParts: Phaser.GameObjects.GameObject[] = [];
   private landmarks = new Map<string, Phaser.GameObjects.Image>();
+  private mailbox: Phaser.GameObjects.Image | null = null;
+  private mailMark: Phaser.GameObjects.Image | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -39,7 +43,39 @@ export class ObjectsRenderer {
     this.syncPlaced(state, animate);
     this.syncNodes(state);
     this.syncLandmarks(state);
+    this.syncMailbox(state);
     if (this.mapId === 'farm') this.syncPlots(state);
+  }
+
+  /** The mailbox, with a bouncing marker while a letter or gift waits. */
+  syncMailbox(state: GameState): void {
+    const box = mail.mailbox;
+    if (box.map !== this.mapId) return;
+    const x = box.tx * TILE_SIZE + TILE_SIZE / 2;
+    const y = (box.ty + 1) * TILE_SIZE;
+    this.mailbox ??= this.scene.add
+      .image(x, y, ensureTexture(this.scene, box.sprite, box.color, 'post'))
+      .setOrigin(0.5, 1)
+      .setDepth(10 + y - 3);
+    const waiting = unreadCount(state) > 0;
+    if (waiting && !this.mailMark) {
+      this.mailMark = this.scene.add
+        .image(x, y - 17, 'ui_star')
+        .setTint(0xf4d35e)
+        .setDepth(10 + y);
+      if (!calm())
+        this.scene.tweens.add({
+          targets: this.mailMark,
+          y: y - 20,
+          duration: 500,
+          yoyo: true,
+          repeat: -1,
+        });
+    } else if (!waiting && this.mailMark) {
+      this.scene.tweens.killTweensOf(this.mailMark);
+      this.mailMark.destroy();
+      this.mailMark = null;
+    }
   }
 
   /** Buildings from finished town projects: one solid tile each, drawn like any placed object. */
@@ -271,5 +307,10 @@ export class ObjectsRenderer {
     this.nodeSprites.clear();
     this.landmarks.forEach((l) => l.destroy());
     this.landmarks.clear();
+    this.mailbox?.destroy();
+    this.mailbox = null;
+    if (this.mailMark) this.scene.tweens.killTweensOf(this.mailMark);
+    this.mailMark?.destroy();
+    this.mailMark = null;
   }
 }

@@ -80,6 +80,21 @@ export interface Job {
   done: boolean;
 }
 
+/** A letter in the mailbox. */
+export interface Letter {
+  id: number;
+  /** Villager id who wrote it. */
+  from: string;
+  title: string;
+  text: string;
+  /** Absolute day it arrived. */
+  day: number;
+  gift?: { item: string; qty: number };
+  read: boolean;
+  /** The enclosed gift was taken. */
+  taken: boolean;
+}
+
 /** How a villager feels about the player. Days are absolute day numbers (0 = never). */
 export interface Friendship {
   points: number;
@@ -152,13 +167,15 @@ export interface GameState {
   orders: { day: number; list: Order[] };
   /** Friendship with villagers by npc id. */
   friends: Record<string, Friendship>;
+  /** Letters in the farm's mailbox, newest last. `next` is the next letter id. */
+  mail: { next: number; list: Letter[] };
   /** Today's small jobs from villagers. `day` is the absolute day they were posted for. */
   jobs: { day: number; list: Job[] };
   lastSummary: DaySummary | null;
   rng: number;
 }
 
-export const STATE_VERSION = 10;
+export const STATE_VERSION = 11;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -208,6 +225,7 @@ export function createInitialState(): GameState {
     orders: { day: 0, list: [] },
     friends: {},
     jobs: { day: 0, list: [] },
+    mail: { next: 1, list: [] },
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,
   };

@@ -20,3 +20,4 @@ import './festivals';
 import './projects';
 import './decor';
 import './jobs';
+import './mail';

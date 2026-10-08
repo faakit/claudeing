@@ -227,3 +227,10 @@
 - **Seeds follow the hoe:** a hoe that tills N tiles in a row also sows N seeds in a row with one press (only on tilled, empty soil, as far as the stack goes). No new upgrade to learn.
 - **"All" in machine sheets:** with two or more empty machines of the same kind on the map, one tap loads the item into all of them.
 - **Welcome toasts show once per game** (`tip.welcome` stat), not on every map change; the day-1 summary no longer gives a winter tip (tips can be limited to seasons), and a busy morning drops the tip instead of growing past the screen.
+
+## Mailbox (R3.6)
+
+- **A fixed mailbox beside the shipping bin** (`mail.json`: farm 13,9), not a placeable the player could lose or sell: a solid fixture drawn by the objects renderer (fallback texture until real art), with the same bouncing star as a machine while a letter is unread or a gift untaken.
+- **The post comes in the morning:** data letters (`mail.json`) are sent once when their `when` holds (a day, a stat milestone, a villager's hearts, a calendar date); code adds a festival notice and a birthday hint (one of the villager's favourites) the day before. A morning note says new mail arrived.
+- **Letters carry gifts:** taking one is all-or-nothing, so a full bag never loses it. The box keeps 24 letters and only drops read letters whose gift was taken.
+- **Save version 11** adds `mail`; old saves start with an empty box and receive any letter whose condition already holds the next morning (a short backlog of welcome and milestone letters).
