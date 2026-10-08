@@ -112,6 +112,11 @@ try {
     JSON.stringify(s.time),
   );
   check(
+    'the next morning villagers post three jobs, the first a fishing job',
+    s.jobs.list.length === 3 && s.jobs.list[0].id === 'fish' && s.jobs.day === 2,
+    JSON.stringify(s.jobs),
+  );
+  check(
     'player wakes up in the house with full energy',
     s.player.map === 'house' && s.energy === 100,
     `${s.player.map} ${s.energy}`,
@@ -302,6 +307,23 @@ try {
     m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
     JSON.stringify(m.placed.farm[0]),
   );
+  // A feed silo: one Interact pours the bag's feed into it.
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.inventory.slots[7] = { item: 'hay', qty: 20 };
+    s.placed.farm.push({ id: 11, type: 'silo', tx: 11, ty: 11, data: {} });
+    s.nextPlacedId = 12;
+    window.__farm.gameEvents.emit('placedChanged', { map: 'farm' });
+  });
+  await mPlace(11, 10, 'down');
+  await mTap('KeyE');
+  m = await mState();
+  check(
+    'Interact at a feed silo stores the feed from the bag',
+    m.placed.farm.find((o) => o.type === 'silo')?.data.stock?.hay === 20 &&
+      !m.inventory.slots.some((x) => x?.item === 'hay'),
+    JSON.stringify(m.placed.farm),
+  );
   // Swiping up on the Action button changes tool without reaching for the hotbar.
   await mp.keyboard.press('Digit1');
   const swipeBox = await mp.evaluate(() => {
@@ -371,6 +393,212 @@ try {
   );
   check('mechanics run: no console errors', mErrors.length === 0, mErrors.join(' | '));
   await mCtx.close();
+
+  // 6c. Town projects: the board links to the fund; giving gold and goods finishes a project and
+  // its perk (a 4th request) shows on the next morning's board.
+  const pCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const pp = await pCtx.newPage();
+  const pErrors = [];
+  pp.on('console', (m) => m.type() === 'error' && pErrors.push(m.text()));
+  pp.on('pageerror', (e) => pErrors.push(String(e)));
+  const pState = () => pp.evaluate(() => JSON.parse(JSON.stringify(window.__farm.getState())));
+  await pp.goto(URL_);
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.press('Enter');
+  await pp.waitForTimeout(1500);
+  await pp.evaluate(() => {
+    window.__toasts = [];
+    window.__farm.gameEvents.on('toast', (t) => window.__toasts.push(t.text));
+  });
+  await pp.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.money = 3000;
+    s.inventory.slots[6] = { item: 'fiber', qty: 25 };
+    s.time.minutes = 600;
+    s.player.map = 'town';
+    s.player.x = 14 * 16 + 8;
+    s.player.y = 12 * 16 + 11;
+    s.player.facing = 'up';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key === 'Farm')
+      .scene.start('Town');
+  });
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.down('KeyE');
+  await pp.waitForTimeout(120);
+  await pp.keyboard.up('KeyE');
+  await pp.waitForTimeout(500);
+  const ui = (fn) => pp.evaluate(fn);
+  check(
+    'Interact at the town board opens the requests board',
+    await ui(() => window.__farm.game.scene.getScene('UI').panels.get('board').isOpen),
+  );
+  await ui(() => {
+    window.__farm.game.scene.getScene('UI').panels.get('board').close();
+    window.__farm.gameEvents.emit('openPanel', { type: 'projects' });
+    const panel = window.__farm.game.scene.getScene('UI').panels.get('projects');
+    panel.id = 'canopy';
+    panel.rebuild();
+  });
+  await pp.waitForTimeout(400);
+  const pBox = await pp.evaluate(() => {
+    const c = document.querySelector('canvas').getBoundingClientRect();
+    return { x: c.x, y: c.y, k: c.width / 200 };
+  });
+  const pClick = async (lx, ly) => {
+    await pp.mouse.click(pBox.x + lx * pBox.k, pBox.y + ly * pBox.k);
+    await pp.waitForTimeout(250);
+  };
+  await pClick(99, 150 + 168 + 11); // +1,000g
+  await pClick(99, 150 + 168 + 11); // +1,000g (gives only the 200 still needed)
+  let ps = await pState();
+  check(
+    'project page: the +1,000g button gives gold, never more than needed',
+    ps.money === 1800 && ps.stats['fund.canopy'] === 1200,
+    `money ${ps.money} given ${ps.stats['fund.canopy']}`,
+  );
+  await pClick(53, 150 + 194 + 11); // Give goods
+  ps = await pState();
+  check(
+    'giving the last goods finishes the project',
+    ps.stats['project.canopy'] === 1 && ps.inventory.slots[6]?.qty === 5,
+    JSON.stringify(ps.stats),
+  );
+  await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').close());
+  // The shop's Home tab: a Bigger Bag adds a row of slots; decorations are bought like seeds.
+  await ui(() => {
+    window.__farm.gameEvents.emit('openPanel', { type: 'shop' });
+    const shop = window.__farm.game.scene.getScene('UI').panels.get('shop');
+    shop.tab = 'home';
+    shop.rebuild();
+  });
+  await pp.waitForTimeout(400);
+  await pClick(163, 150 + 44 + 11); // Bigger Bag 1,500g
+  await pClick(170, 150 + 70 + 11); // Wood Fence 15g
+  ps = await pState();
+  check(
+    'Home tab: the Bigger Bag adds 8 slots and a fence can be bought',
+    ps.inventory.slots.length === 32 &&
+      ps.upgrades.bag === 1 &&
+      ps.inventory.slots.some((x) => x?.item === 'fence'),
+    `slots ${ps.inventory.slots.length} money ${ps.money}`,
+  );
+  await ui(() => window.__farm.game.scene.getScene('UI').panels.get('shop').close());
+  check(
+    'the welcome tip does not replay after changing maps',
+    !(await ui(() => window.__toasts.some((t) => t.startsWith('Welcome')))),
+  );
+  // "All" in a machine sheet fills every empty machine of that kind on the map.
+  await ui(() => {
+    const s = window.__farm.getState();
+    s.placed.town = [1, 2, 3].map((i) => ({
+      id: 300 + i,
+      type: 'preserve_jar',
+      tx: 20,
+      ty: 4 + i,
+      data: {},
+    }));
+    s.nextPlacedId = 400;
+    s.inventory.slots[7] = { item: 'tomato', qty: 5 };
+    window.__farm.game.scene.getScene('UI').jar.openFor(301);
+  });
+  await pp.waitForTimeout(400);
+  await pClick(138, 150 + 34 + 11); // All
+  ps = await pState();
+  check(
+    'machine sheet: All loads every empty jar in one tap',
+    ps.placed.town.every((o) => o.data.jar) && ps.inventory.slots[7]?.qty === 2,
+    JSON.stringify(ps.placed.town),
+  );
+  await ui(() => (window.__farm.getState().placed.town = []));
+  await pp.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
+  await pp.waitForTimeout(3200);
+  await pp.keyboard.press('Enter');
+  await pp.waitForTimeout(1500);
+  ps = await pState();
+  check(
+    'the Board Canopy posts a 4th request the next morning',
+    ps.orders.list.length === 4,
+    `orders ${ps.orders.list.length}`,
+  );
+  // The post: a welcome letter arrived overnight; Interact at the mailbox by the house opens it.
+  check(
+    'a welcome letter is in the mailbox on day 2',
+    ps.mail.list.some((l) => l.title === 'Welcome to the valley' && !l.read),
+    JSON.stringify(ps.mail),
+  );
+  await pp.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.player.map = 'farm';
+    s.player.x = 14 * 16 + 8;
+    s.player.y = 9 * 16 + 11;
+    s.player.facing = 'left';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key === 'House')
+      .scene.start('Farm');
+  });
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.down('KeyE');
+  await pp.waitForTimeout(120);
+  await pp.keyboard.up('KeyE');
+  await pp.waitForTimeout(500);
+  check(
+    'Interact at the mailbox opens the mail sheet',
+    await ui(() => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen),
+  );
+  // From day 8 the rival farmer fills one open request every afternoon.
+  await ui(() => {
+    const f = window.__farm;
+    f.game.scene.getScene('UI').panels.get('mail').close();
+    const s = f.getState();
+    s.time.day = 9;
+    s.time.minutes = 900;
+    f.gameEvents.emit('openPanel', { type: 'board' });
+  });
+  await pp.waitForTimeout(500);
+  ps = await pState();
+  check(
+    'after 2 PM the rival has taken one of the requests',
+    ps.orders.list.filter((o) => o.rival).length === 1 && ps.orders.day === 9 + 0,
+    JSON.stringify(ps.orders),
+  );
+  // A finished Greenhouse project: melon seeds planted in winter under glass.
+  await ui(() => {
+    const f = window.__farm;
+    f.game.scene.getScene('UI').panels.get('board').close();
+    const s = f.getState();
+    s.stats['project.greenhouse'] = 1;
+    s.time.season = 'winter';
+    s.time.minutes = 600;
+    s.farm.tiles['17,27'] = { watered: false, crop: null };
+    s.inventory.slots[6] = { item: 'melon_seed', qty: 3 };
+    s.player.map = 'farm';
+    s.player.x = 17 * 16 + 8;
+    s.player.y = 26 * 16 + 11;
+    s.player.facing = 'down';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key !== 'UI')
+      .scene.restart();
+  });
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.press('Digit7');
+  await pp.keyboard.down('Space');
+  await pp.waitForTimeout(120);
+  await pp.keyboard.up('Space');
+  await pp.waitForTimeout(400);
+  ps = await pState();
+  check(
+    'in the greenhouse a summer seed grows in winter',
+    ps.farm.tiles['17,27']?.crop?.cropId === 'melon',
+    JSON.stringify(ps.farm.tiles['17,27']),
+  );
+  check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
+  await pCtx.close();
 
   // 7. Offline: after the first visit the whole game works with the network cut
   const offCtx = await browser.newContext({

@@ -35,15 +35,26 @@ export function levelProgress(
 export function addXp(state: GameState, skill: string, amount: number): void {
   if (!skills[skill] || amount <= 0) return;
   const before = levelOf(state, skill);
-  state.skills[skill] = xpOf(state, skill) + Math.round(amount);
+  // The town library (a project perk) makes every skill grow faster.
+  state.skills[skill] = xpOf(state, skill) + Math.round(amount * (1 + perk(state, 'xpBonus')));
   const after = levelOf(state, skill);
   state.stats[`level.${skill}`] = after;
   for (let lvl = before + 1; lvl <= after; lvl++) gameEvents.emit('levelUp', { skill, level: lvl });
 }
 
+/** Something besides skills and friendship that grants perks (town projects, house upgrades...). */
+export type PerkSource = (state: GameState, key: string) => number;
+const perkSources = new Map<string, PerkSource>();
+
+/** Add (or replace, by id) a perk source. Mechanics register theirs; `perk()` sums them all. */
+export function registerPerkSource(id: string, source: PerkSource): void {
+  perkSources.set(id, source);
+}
+
 /**
- * Sum of a perk across every skill level reached, e.g. perk(state, 'maxEnergy').
- * Perk keys are free-form strings: a system that wants a new perk just reads it and adds it to skills.json.
+ * Sum of a perk across every skill level reached, every villager's hearts and every registered perk
+ * source, e.g. perk(state, 'maxEnergy'). Perk keys are free-form strings: a system that wants a new perk
+ * just reads it, and a data row (skills.json, npcs.json, projects.json...) grants it.
  */
 export function perk(state: GameState, key: string): number {
   let total = 0;
@@ -53,6 +64,7 @@ export function perk(state: GameState, key: string): number {
       if (Number(lvl) <= level) total += perks[key] ?? 0;
     }
   }
+  for (const source of perkSources.values()) total += source(state, key);
   return total + friendPerk(state, key);
 }
 

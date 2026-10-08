@@ -13,6 +13,7 @@ import { toast } from '../systems/events';
 import { addStat } from '../systems/goals';
 import { registerPlaceableBehavior } from '../systems/placeables';
 import { addXp } from '../systems/skills';
+import { isWet } from '../systems/weather';
 
 /**
  * A coop or barn. One tap does the chores in order: move in animals you carry, collect what is
@@ -20,8 +21,10 @@ import { addXp } from '../systems/skills';
  */
 registerPlaceableBehavior('animalHouse', {
   canPickUp: (obj) => houseOf(obj).n === 0,
-  onMorning(_state, obj, _def, ctx) {
-    if (morning(obj)) ctx.notes.push('Animal goods are waiting on the farm.');
+  onMorning(state, obj, _def, ctx) {
+    // Today's weather is settled before placeables wake up, so pigs know whether they can dig.
+    const outdoorOk = !isWet(state.weather) && state.time.season !== 'winter';
+    if (morning(obj, outdoorOk)) ctx.notes.push('Animal goods are waiting on the farm.');
   },
   interact(state, obj) {
     const sp = speciesOf(obj);
@@ -36,6 +39,7 @@ registerPlaceableBehavior('animalHouse', {
     const got = collect(state, obj);
     if (got > 0) {
       addStat(state, 'collected', got);
+      addStat(state, `collected.${sp.product}`, got);
       addXp(state, 'farming', 4 * got);
       said.push(`+${got} ${items[sp.product]?.name}`);
     }

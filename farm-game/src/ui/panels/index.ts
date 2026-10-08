@@ -4,7 +4,9 @@ export { FestivalPanel } from './FestivalPanel';
 export { FishingPanel } from './FishingPanel';
 export { JarPanel } from './JarPanel';
 export { NpcPanel } from './NpcPanel';
+export { MailPanel } from './MailPanel';
 export { PlotPanel } from './PlotPanel';
+export { ProjectPanel } from './ProjectPanel';
 export {
   installMenuTabs,
   MenuPanel,

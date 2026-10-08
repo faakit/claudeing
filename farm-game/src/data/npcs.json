@@ -180,8 +180,8 @@
       {
         "from": 720,
         "map": "town",
-        "tx": 20,
-        "ty": 26
+        "tx": 16,
+        "ty": 22
       },
       {
         "from": 900,
@@ -479,6 +479,122 @@
         "reward": {
           "item": "ruby",
           "qty": 1
+        }
+      }
+    ]
+  },
+  "clay": {
+    "name": "Clay",
+    "role": "rival",
+    "map": "town",
+    "tx": 15,
+    "ty": 12,
+    "facing": "left",
+    "tint": "#8ab0e0",
+    "blurb": "Farmer down the road. Proud.",
+    "loves": ["melon", "ruby", "wine"],
+    "likes": ["corn", "cauliflower", "iron_bar", "honey"],
+    "dislikes": ["wild_leek", "fiber"],
+    "lines": {
+      "stranger": [
+        "Requests on that board? First come, first served.",
+        "I fill one every afternoon. Try to keep up.",
+        "Nice hoe. Mine is better."
+      ],
+      "friend": [
+        "Not bad, for a newcomer.",
+        "Your melons are almost as good as mine.",
+        "I saw your field. Respect."
+      ],
+      "close": [
+        "Best rival a farmer could ask for.",
+        "Race you to the Fair. Loser buys lunch.",
+        "Honestly? You made me a better farmer."
+      ],
+      "rain": ["Rain day. No excuses, though.", "Mud on my boots, gold in my pocket."]
+    },
+    "gifts": [
+      {
+        "item": "fertilizer",
+        "qty": 2
+      }
+    ],
+    "giftHearts": 3,
+    "perks": {
+      "2": {
+        "rivalLate": 180
+      },
+      "4": {
+        "rivalPolite": 1
+      },
+      "5": {
+        "rivalOff": 1
+      }
+    },
+    "birthday": {
+      "season": "summer",
+      "day": 9
+    },
+    "schedule": [
+      {
+        "from": 0,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      },
+      {
+        "from": 480,
+        "map": "town",
+        "tx": 15,
+        "ty": 12
+      },
+      {
+        "from": 900,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      }
+    ],
+    "events": [
+      {
+        "hearts": 2,
+        "id": "bet",
+        "title": "A friendly bet",
+        "lines": [
+          "You keep beating me to the board.",
+          "Fine. I will come by later in the day.",
+          "Here, winner's purse. For now."
+        ],
+        "reward": {
+          "gold": 300
+        }
+      },
+      {
+        "hearts": 4,
+        "id": "secret",
+        "title": "Clay's secret",
+        "lines": [
+          "Want to know my secret? Speed-Gro.",
+          "Sow it with the seeds. Faster crops.",
+          "Take some. I will leave you the big requests."
+        ],
+        "reward": {
+          "item": "speed_gro",
+          "qty": 5
+        }
+      },
+      {
+        "hearts": 5,
+        "id": "partners",
+        "title": "Partners",
+        "lines": [
+          "I am done racing you for the board.",
+          "The town needs both our farms.",
+          "Partners? Take these bars, partner."
+        ],
+        "reward": {
+          "item": "iron_bar",
+          "qty": 5
         }
       }
     ]

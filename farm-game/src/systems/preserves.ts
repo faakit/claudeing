@@ -39,6 +39,23 @@ export function loadJar(
   return 'ok';
 }
 
+/** Empty machines of one kind on a map (the ones "Load all" can fill). */
+export const idleMachines = (state: GameState, map: string, type: string): PlacedObject[] =>
+  (state.placed[map] ?? []).filter((o) => o.type === type && !jarContents(o));
+
+/**
+ * One tap fills every empty machine of this kind on the map with `ref`, as far as the stack goes.
+ * Returns how many were loaded.
+ */
+export function loadAll(state: GameState, map: string, type: string, ref: ItemRef): number {
+  let n = 0;
+  for (const obj of idleMachines(state, map, type)) {
+    if (loadJar(state, obj, ref) !== 'ok') break;
+    n += 1;
+  }
+  return n;
+}
+
 /** Take the finished good. */
 export function collectJar(
   state: GameState,

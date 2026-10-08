@@ -9,7 +9,11 @@ import { waterCapacity } from '../../systems/actions';
 import { maxEnergy } from '../../systems/energy';
 import { gameEvents, toast } from '../../systems/events';
 import { goalProgress, stat } from '../../systems/goals';
+import { jobLabel, jobProgress } from '../../systems/jobs';
+import { absoluteDay } from '../../systems/time';
+import { fitRow, measureText } from '../font';
 import { isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
+import { isShippable } from '../../systems/economy';
 import { displayName, iconKey, refOf, sellValue } from '../../systems/itemRef';
 import {
   adjustVolume,
@@ -184,7 +188,9 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   const pitch = 23;
   const x0 = 8;
   // The grid sits at the bottom of the sheet, right above the tabs, where the thumb already is.
-  const y0 = c.bottom - 3 * pitch - 2;
+  // A Bigger Bag adds whole rows; the grid grows upward so it stays next to the thumb.
+  const rows = Math.ceil(s.inventory.slots.length / 8);
+  const y0 = c.bottom - rows * pitch - 2;
   const g = c.scene.add.graphics();
   c.add(g);
   const cursor = menu.selectedCursor;
@@ -218,8 +224,9 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     c.icon(16, dy + 8, iconKey(ref));
     c.label(30, dy + 4, displayName(ref), C.gold, 1, 'left', 160);
     c.label(8, dy + 20, def.description, C.cream, 1, 'left', 184);
-    if (def.type !== 'tool') c.label(8, dy + 52, `Sells for ${fmt(sellValue(ref))}g`, C.creamDim);
-    if (def.buyPrice) c.label(8, dy + 64, `Costs ${def.buyPrice}g in town`, C.creamDim);
+    // Only say what the bin pays for things the bin takes (machines and decorations are kept, not sold).
+    if (isShippable(ref)) c.label(8, dy + 52, `Sells for ${fmt(sellValue(ref))}g`, C.creamDim);
+    if (def.buyPrice) c.label(8, dy + 64, `Costs ${fmt(def.buyPrice)}g in town`, C.creamDim);
   } else {
     c.label(8, dy + 2, 'Backpack', C.gold);
     c.label(
@@ -266,10 +273,30 @@ function buildGoals(c: MenuTabContext): void {
       184,
     );
   }
-  let y = c.top + 78;
+  let y = c.top + 82;
+  // Today's jobs: small requests that pay on the spot, whatever the goal chain says.
+  c.label(8, y, "TODAY'S JOBS", C.gold);
+  y += 12;
+  const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
+  if (today.length === 0) {
+    c.label(8, y, 'New jobs every morning.', C.creamDim);
+    y += 11;
+  }
+  for (const job of today) {
+    const right = job.done ? 'Done' : `${jobProgress(s, job)}/${job.n} +${job.reward}g`;
+    c.label(192, y, right, job.done ? C.green : C.gold, 1, 'right');
+    c.label(
+      8,
+      y,
+      fitRow(jobLabel(job), 184 - measureText(right) - 6),
+      job.done ? C.creamDim : C.cream,
+    );
+    y += 11;
+  }
+  y += 6;
   c.label(8, y, 'COMPLETED', C.gold);
   y += 12;
-  const done = goals.slice(Math.max(0, s.goalIndex - 4), s.goalIndex);
+  const done = goals.slice(Math.max(0, s.goalIndex - 2), s.goalIndex);
   if (done.length === 0) c.label(8, y, 'Nothing yet. You can do it!', C.creamDim);
   for (const d of done) {
     const row = c.label(8, y, `+ ${d.text}`, C.creamDim, 1, 'left', 184);

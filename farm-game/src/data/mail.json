@@ -1,0 +1,175 @@
+{
+  "mailbox": {
+    "map": "farm",
+    "tx": 13,
+    "ty": 9,
+    "sprite": "obj_mailbox",
+    "color": "#c0473a"
+  },
+  "letters": [
+    {
+      "id": "welcome",
+      "from": "mara",
+      "title": "Welcome to the valley",
+      "text": "So glad the old farm has a keeper again! The town board posts requests and little jobs every morning. Here are some seeds to get you going.",
+      "when": {
+        "day": 2
+      },
+      "gift": {
+        "item": "potato_seed",
+        "qty": 3
+      }
+    },
+    {
+      "id": "first_harvest",
+      "from": "rosa",
+      "title": "Your first harvest!",
+      "text": "I saw your first crops come in. Fertilizer on tilled soil makes silver and gold ones more likely. Have a few on me.",
+      "when": {
+        "stat": "harvested",
+        "min": 1
+      },
+      "gift": {
+        "item": "fertilizer",
+        "qty": 3
+      }
+    },
+    {
+      "id": "first_fish",
+      "from": "finn",
+      "title": "A fellow angler",
+      "text": "Word travels fast: you landed a fish! Bait makes them bite sooner. Rainy days bring out the catfish.",
+      "when": {
+        "stat": "caught",
+        "min": 1
+      },
+      "gift": {
+        "item": "bait",
+        "qty": 5
+      }
+    },
+    {
+      "id": "first_ore",
+      "from": "orin",
+      "title": "About that ore",
+      "text": "Copper and iron turn into bars in a furnace. Tool upgrades at the store need bars. Keep swinging!",
+      "when": {
+        "stat": "mined",
+        "min": 1
+      },
+      "gift": {
+        "item": "copper_ore",
+        "qty": 2
+      }
+    },
+    {
+      "id": "summer",
+      "from": "mara",
+      "title": "Summer stock is in",
+      "text": "Tomato, melon and corn seeds are on the shelf. Corn keeps giving after the first harvest. Crops wither when their season ends, so plan ahead.",
+      "when": {
+        "season": "summer",
+        "date": 1
+      }
+    },
+    {
+      "id": "fall",
+      "from": "mara",
+      "title": "Fall stock is in",
+      "text": "Pumpkin and yam seeds are on the shelf. Pumpkins are the best money in the valley, if you have the land.",
+      "when": {
+        "season": "fall",
+        "date": 1
+      }
+    },
+    {
+      "id": "winter",
+      "from": "rosa",
+      "title": "Winter on the farm",
+      "text": "Only kale grows in the cold. It is a good season to mine, fish, fill the jars and fund a town project.",
+      "when": {
+        "season": "winter",
+        "date": 1
+      },
+      "gift": {
+        "item": "kale_seed",
+        "qty": 5
+      }
+    },
+    {
+      "id": "projects",
+      "from": "mara",
+      "title": "A town fund",
+      "text": "The town is saving up for a roof over the board, a library and more. Any gold you can spare helps. Look for Town projects on the board.",
+      "when": {
+        "stat": "earned",
+        "min": 2000
+      }
+    },
+    {
+      "id": "rosa_friend",
+      "from": "rosa",
+      "title": "Thank you, neighbour",
+      "text": "You always stop to chat. It means a lot out here. These are from my own trees.",
+      "when": {
+        "npc": "rosa",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "cherry_sapling",
+        "qty": 1
+      }
+    },
+    {
+      "id": "finn_friend",
+      "from": "finn",
+      "title": "A spot by the lake",
+      "text": "Most folks find the lake boring. Not you. Here is my best bait. Do not tell anyone.",
+      "when": {
+        "npc": "finn",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "bait",
+        "qty": 15
+      }
+    },
+    {
+      "id": "mara_friend",
+      "from": "mara",
+      "title": "From the shop",
+      "text": "You are my best customer, and a good friend. A little something from the back room.",
+      "when": {
+        "npc": "mara",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "speed_gro",
+        "qty": 5
+      }
+    },
+    {
+      "id": "orin_friend",
+      "from": "orin",
+      "title": "Spare bars",
+      "text": "Had a few bars left over after a big job. They are better on your tools than on my shelf.",
+      "when": {
+        "npc": "orin",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "copper_bar",
+        "qty": 3
+      }
+    },
+    {
+      "id": "clay_intro",
+      "from": "clay",
+      "title": "Hello, neighbour",
+      "text": "Heard there is a new farmer in the valley. I fill requests on the town board too: from tomorrow I take one every day at 2 PM. May the best farmer win.",
+      "when": {
+        "day": 7
+      }
+    }
+  ]
+}

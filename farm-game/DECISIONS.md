@@ -206,3 +206,68 @@
 - **Atlas keys alias the atlas GPU texture:** each texture key the game asks for becomes a view onto one shared atlas texture (WebGL), so call sites are unchanged and everything in one atlas batches together. Partial coverage, or the Canvas renderer, paints atlas frames over the generated canvas instead. Any key the atlases lack keeps its generated placeholder; a missing key logs an error (e2e fails on it).
 - **Objects may be taller than their tile** (buildings 16x20, trees 16x24, tall crops 16x24), bottom-anchored like before; collision is unchanged. Villagers are 20x32 so a hat or a beard fits; the player stays 16x32.
 - **Villagers have their own sheets** (`npc_<id>`, 4 directions x 2-frame idle) instead of the tinted player; the non-integer breathing scale tween is gone (it smeared pixels).
+
+## Town projects (gold sink, late game)
+
+- **A town fund is the late-game sink:** six projects in `projects.json` (1,200g to 50,000g, about 103k in all, plus mined and crafted goods) open one after another from the town board's "Town projects" button. Gold is given in +100 / +1,000 / +10,000 steps (never more than still needed), goods with one "Give goods" tap, so it fits a one-thumb, 5-minute session.
+- **Rewards are perks, not gold:** a finished project grants perk keys (`orderSlots`, `fishWindow`, `xpBonus`, `maxEnergy`, `festivalPrize`, `sellBonus`) through a new perk-source registry (`registerPerkSource`), the same way skills and hearts already do. A balance test checks a money perk needs over 100 late-game days to pay its project back.
+- **Visible:** each finished project puts a one-tile landmark in town (solid, Interact says what it did). Landmark textures are new keys with a generated fallback (`game/fallbackTexture.ts`) until the art agent draws them.
+- **No new state:** progress is stats (`fund.<id>`, `fund.<id>.<item>`, `project.<id>`). Save version 8 exists only because three goals were inserted: `remapGoalIndex` keeps a saved goal index on the same goal by id (goals inserted before the player's current goal are skipped).
+- **Threshold moved:** the side-income guard counts whole order rewards, so the canopy's 4th request moved the bound from 3,800 to 4,400.
+
+## Home upgrades and decorations
+
+- **Bigger Bag is a house upgrade on a new Home tab of the shop:** two levels (1,500g, then 6,000g plus 3 cloth), each a whole row of 8 slots, so the bag grid stays rectangular and grows upward away from the tabs. Save version 9 adds `upgrades.bag` (0 keeps the old 24 slots) and remaps the goal index for two new goals.
+- **Decorations are plain placeables with a `decor` behavior:** fences, a stone path (flat: drawn under the player and walkable), pots, lamps, a bench, a statue and a fountain (10g to 12,000g, with per-kind limits). They do nothing but look nice; Interact names them and a second tap picks them up, like machines. They are type `placeable`, so the bin and gift list already refuse them and they land on the hotbar.
+- **No x5 on dear rows:** anything over 300g (and every animal) has only the single-buy button, so one tap can never spend thousands (critique 3, F3).
+- **Shop tabs are four buttons of different widths** (Seeds, Farm, Home, Upgrades) so "Upgrades" still fits; a pure `SHOP_TABS` table lets a test prove it.
+
+## Daily jobs (critique 3, F2 pacing)
+
+- **Three small jobs every morning from day 2:** villagers post requests from `jobs.json` ("Finn: catch 3 fish", "Orin: break 5 mine rocks"). A job counts what you do after it was posted (`base` is the stat's value at posting), pays on the spot (20 to 120 gold, 25% more each year) and gives the asker +15 friendship. They are listed in the morning summary and in Menu > Goal.
+- **Pointers, not chores:** `introDay` puts the fishing job on day 2, the mine on day 3 and the board on day 4, so the idle days 3 and 4 now point at the side activities critique 3 found nobody discovers. `requires` hides jobs that cannot be done yet (no animal goods before an animal).
+- **Stat watchers:** `registerStatWatcher` in `systems/goals.ts` runs on every stat change; jobs are the first user. No polling, no new events.
+- **Bounded:** a balance test keeps the three best jobs of a day under 300 gold, a modest early boost that is irrelevant late. Save version 10 adds `jobs` and two job goals (one right after "buy", so days 2 to 4 always have something to finish).
+
+## One-thumb conveniences (critique 3)
+
+- **Gifts are never blind twice:** a villager's reaction to an item is remembered as a stat (`gift.<npc>.<item>`), and from 3 hearts their favourites count as known. The gift list sorts known favourites first and known dislikes last and says "Loves it!", "Likes it", "Not fussed", "Dislikes it" or "Not tried yet".
+- **Seeds follow the hoe:** a hoe that tills N tiles in a row also sows N seeds in a row with one press (only on tilled, empty soil, as far as the stack goes). No new upgrade to learn.
+- **"All" in machine sheets:** with two or more empty machines of the same kind on the map, one tap loads the item into all of them.
+- **Welcome toasts show once per game** (`tip.welcome` stat), not on every map change; the day-1 summary no longer gives a winter tip (tips can be limited to seasons), and a busy morning drops the tip instead of growing past the screen.
+
+## Mailbox (R3.6)
+
+- **A fixed mailbox beside the shipping bin** (`mail.json`: farm 13,9), not a placeable the player could lose or sell: a solid fixture drawn by the objects renderer (fallback texture until real art), with the same bouncing star as a machine while a letter is unread or a gift untaken.
+- **The post comes in the morning:** data letters (`mail.json`) are sent once when their `when` holds (a day, a stat milestone, a villager's hearts, a calendar date); code adds a festival notice and a birthday hint (one of the villager's favourites) the day before. A morning note says new mail arrived.
+- **Letters carry gifts:** taking one is all-or-nothing, so a full bag never loses it. The box keeps 24 letters and only drops read letters whose gift was taken.
+- **Save version 11** adds `mail`; old saves start with an empty box and receive any letter whose condition already holds the next morning (a short backlog of welcome and milestone letters).
+
+## The rival farmer (R3.2)
+
+- **Clay competes for the board, not for land:** from day 8 (announced by a letter on day 7) he fills the best-paying open request at 2 PM. The board says when he comes, and afterwards which one he took. It gives mornings a reason to visit town and turns orders into a small race, without any new screen.
+- **Resolved lazily:** the rival acts when the board is opened or an order is delivered after his time (`applyRival`), never on a clock hook, so it is exact in tests and cannot fire twice (the day is a `rival.day` stat).
+- **Friendship is the way out:** his perks are rivalry rules: at 2 hearts he comes 3 hours later, at 4 he leaves you the best request, at 5 he stops competing. His heart events reward 300 gold, Speed-Gro and iron bars.
+- **Festivals name him:** the best rival score at every festival is Clay's; beating the field brings a grudging letter.
+- **Save version 12:** orders carry an optional `rival` flag (no conversion needed).
+
+## Greenhouse (R2.3)
+
+- **A plot, not a map:** the brief expected per-map soil, but soil is keyed by farm tile and a second farmland map would need a deep refactor of every farming rule and the save. Instead the greenhouse is a 32-tile plot on the farm (south of the east field) with `"greenhouse": true`, owned once the **Greenhouse town project** (20,000g, 10 quartz, 5 iron bars, after the Library) is finished. One flag, checked in three places: planting ignores the season and the ripen-in-time rule, and nothing there withers at a season change.
+- **Seeds all year:** with a greenhouse, the shop sells every season's seeds (`stockFor` takes the state). This is what makes winter income matter: about 800 gold a day from a full greenhouse of the best crop (guarded under 1,200 by a test).
+- **Visible before it exists:** the site is marked on the farm ("Greenhouse site") so the project has a place in the player's head; once built it is drawn as glass. Project plots cannot be bought at a sign.
+- Seven projects now (about 123k gold); the "all projects" goal moved to 7, and a capstone goal (20 greenhouse harvests) was appended at the end of the chain, so no save migration was needed.
+
+## Simulation fidelity (backlog 8)
+
+- **The bot now farms the real farm:** it plants only on plots it owns (`plots.json` rects, `ownsTile`), buys the next plot at 1.8x its price, fills board requests it can cover, crafts and keeps six preserve jars busy, and buys fiber. It still does not fish, mine, raise animals or fund projects, so it is a floor for a diligent player, not a ceiling.
+- **A tight band instead of 15k to 400k:** the full-year income is pinned to 208,549 (rng 42) with a band of -33% / +70%, so a real balance change fails the test and has to be explained here. Requests must stay under 35% of income and the bot must buy land.
+- **What it shows:** a tireless player who buys all the land earns about 5k in spring, 13k in summer, 110k in fall and 78k in winter (kale on 250 tiles). That is far above a human, but it confirms the late-game gold the projects, greenhouse and decorations are meant to absorb.
+- Also fixed while adding map tests: Finn's afternoon spot in town was in the river (now 16,22); a test checks every villager spot, landmark and the mailbox stand on open, reachable ground. The bag's item card no longer shows "Sells for" on things the bin refuses (machines, decorations).
+
+## Animal depth: pigs and the feed silo (R2.6)
+
+- **Pigs dig truffles, but only outdoors:** a new `outdoor` flag in `animals.json` means a fed pig cheers up every day but only finds a truffle (120g) on a dry day outside winter. Truffles are the best animal good per head, balanced by the weather, a 1,600g pig, a Farming 6 sty (one sty, two pigs) and slop.
+- **The feed silo makes daily feeding optional:** one Interact pours every feed in the bag into it (300 in all); overnight, before animals wake, every house nobody fed eats from it. Feeding by hand still works and is never doubled. This keeps animals a one-tap-a-day chore (collect) instead of two, which suits one thumb and five-minute sessions.
+- **Bounds moved:** the animal guard rail went from 1,000 to 1,200 gold a day and the side-income total from 4,400 to 4,600 (one sty adds at most 220 a day, less on wet days).
+- Not done: animals that roam beyond their house (visual; waits for real animal sprites).

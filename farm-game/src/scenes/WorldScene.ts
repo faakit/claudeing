@@ -31,6 +31,10 @@ import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { nodeTiles } from '../systems/mining';
 import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
+import { landmarkAt, landmarksOn } from '../systems/projects';
+import { mailboxAt } from '../systems/mail';
+import { mail } from '../data';
+import { projects } from '../data';
 import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
 import { gameEvents, toast } from '../systems/events';
 import { currentGoal } from '../systems/goals';
@@ -166,6 +170,7 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('interact', () => this.onInteract()),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
+      gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       gameEvents.on('friendsChanged', () =>
         this.npcs?.sync(getState(), playerTile(getState().player)),
       ),
@@ -368,6 +373,8 @@ export abstract class WorldScene extends Phaser.Scene {
     };
     this.npcs?.tiles().forEach(block);
     nodeTiles(getState(), this.mapId).forEach(block);
+    landmarksOn(getState(), this.mapId).forEach((l) => block([l.tx, l.ty]));
+    if (mail.mailbox.map === this.mapId) block([mail.mailbox.tx, mail.mailbox.ty]);
     if (this.mapId === 'farm') signTiles(getState()).forEach(block);
   }
 
@@ -394,6 +401,9 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     const npc = this.npcs?.at(t.tx, t.ty);
     if (npc) return `npc:${npc}`;
+    if (mailboxAt(this.mapId, t.tx, t.ty)) return 'mailbox';
+    const landmark = landmarkAt(getState(), this.mapId, t.tx, t.ty);
+    if (landmark) return `landmark:${landmark}`;
     const obj = objectAt(this.objects, t.tx, t.ty);
     if (obj && ['bed', 'bin', 'shop', 'board'].includes(obj.type)) return obj.type;
     return placedAt(getState(), this.mapId, t.tx, t.ty)?.type ?? null;
@@ -483,6 +493,11 @@ export abstract class WorldScene extends Phaser.Scene {
       this.npcs?.faceToward(id, p.x, p.y);
       return void gameEvents.emit('talkTo', { id });
     }
+    if (hit.type.startsWith('landmark:')) {
+      const p = projects[hit.type.slice(9)];
+      return void (p && toast(`${p.name}: funded by you! ${p.reward}`, 'good'));
+    }
+    if (hit.type === 'mailbox') return void gameEvents.emit('openPanel', { type: 'mail' });
     if (hit.type === 'bed') return void gameEvents.emit('openPanel', { type: 'sleep' });
     if (hit.type === 'bin') return void gameEvents.emit('openPanel', { type: 'bin' });
     if (hit.type === 'shop') return void gameEvents.emit('openPanel', { type: 'shop' });

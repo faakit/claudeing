@@ -152,3 +152,45 @@ describe('map content', () => {
     }
   });
 });
+
+describe('fixed spots on the maps', () => {
+  it('every villager stands on open ground, never in water or a wall', async () => {
+    const { npcs } = await import('../src/data');
+    for (const [id, n] of Object.entries(npcs))
+      for (const w of n.schedule ?? [{ map: n.map, tx: n.tx, ty: n.ty, from: 0 }]) {
+        if (w.map === 'away') continue;
+        expect(isTileBlocked(grids[w.map]!, w.tx, w.ty), `${id} at ${w.map} ${w.tx},${w.ty}`).toBe(
+          false,
+        );
+      }
+  });
+
+  it('landmarks, the mailbox and project plots sit on open ground you can walk up to', async () => {
+    const { mail, plots, projects } = await import('../src/data');
+    const spots: [string, number, number, string][] = [
+      [mail.mailbox.map, mail.mailbox.tx, mail.mailbox.ty, 'mailbox'],
+      ...Object.entries(projects).flatMap(([id, p]) =>
+        p.landmark
+          ? [[p.landmark.map, p.landmark.tx, p.landmark.ty, id] as [string, number, number, string]]
+          : [],
+      ),
+    ];
+    for (const [map, tx, ty, what] of spots) {
+      expect(isTileBlocked(grids[map]!, tx, ty), what).toBe(false);
+      const open = [
+        [tx + 1, ty],
+        [tx - 1, ty],
+        [tx, ty + 1],
+        [tx, ty - 1],
+      ].some(([x, y]) => !isTileBlocked(grids[map]!, x!, y!));
+      expect(open, `${what} can be reached`).toBe(true);
+    }
+    // Project plots (the greenhouse) must be fully usable; old plots may hold a tree or two.
+    for (const [id, p] of Object.entries(plots).filter(([, p]) => p.project)) {
+      const [x, y, w, h] = p.rect;
+      for (let j = y; j < y + h; j++)
+        for (let i = x; i < x + w; i++)
+          expect(isTileBlocked(grids['farm']!, i, j), `${id} ${i},${j}`).toBe(false);
+    }
+  });
+});

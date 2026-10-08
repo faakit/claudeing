@@ -15,6 +15,7 @@ import { displayName, iconKey, keyOf, refOf, type ItemRef } from '../../systems/
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
+import { rivalName } from '../../systems/rival';
 
 const ROWS = 5;
 
@@ -49,7 +50,17 @@ export class FestivalPanel extends Modal {
     this.label(8, 8, def.name, C.gold);
     this.label(8, 20, def.blurb, C.creamDim);
     const rivals = rivalScores(s, def);
-    this.label(8, 32, `Rivals score: ${rivals.map(fmt).join(', ')}`, C.warn, 1, 'left', 184);
+    // The best rival score is the rival farmer's.
+    const sorted = [...rivals].sort((a, b) => b - a);
+    this.label(
+      8,
+      32,
+      `Rivals: ${rivalName()} ${fmt(sorted[0] ?? 0)}, ${sorted.slice(1).map(fmt).join(', ')}`,
+      C.warn,
+      1,
+      'left',
+      184,
+    );
     if (this.result || hasEntered(s, id)) {
       this.label(
         8,

@@ -4,6 +4,17 @@ import { gameEvents } from './events';
 import { discover } from './almanac';
 import { keyOf, refOf, sameRef, type ItemRef } from './itemRef';
 
+/** Slots the player owns: the base bag plus a row per Bigger Bag level. */
+export const bagSize = (state: GameState): number =>
+  game.inventorySlots + (state.upgrades.bag ?? 0) * game.bagSlotsPerLevel;
+
+/** After a bag upgrade: add the new empty slots at the end. */
+export function growBag(state: GameState): void {
+  const slots = state.inventory.slots;
+  while (slots.length < bagSize(state)) slots.push(null);
+  changed();
+}
+
 export const stackLimit = (itemId: string): number => items[itemId]?.stackLimit ?? game.stackLimit;
 export const isToolSlot = (slot: number): boolean => slot < game.toolSlots;
 

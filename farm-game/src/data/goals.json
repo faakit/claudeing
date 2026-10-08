@@ -71,6 +71,14 @@
     }
   },
   {
+    "id": "job1",
+    "text": "Finish a job a villager posts",
+    "stat": "jobsDone",
+    "target": 1,
+    "reward": 60,
+    "hint": "Morning news lists today's jobs. Menu > Goal shows them too."
+  },
+  {
     "id": "harvest",
     "text": "Harvest 5 crops",
     "stat": "harvested",
@@ -209,6 +217,14 @@
     "hint": "Open the shop and check the Upgrades tab."
   },
   {
+    "id": "bag",
+    "text": "Buy a Bigger Bag",
+    "stat": "upgraded.bag",
+    "target": 1,
+    "reward": 200,
+    "hint": "Shop > Home tab. Eight more slots for your goods."
+  },
+  {
     "id": "earn5k",
     "text": "Earn 5,000g selling crops",
     "stat": "earned",
@@ -228,6 +244,26 @@
     }
   },
   {
+    "id": "project1",
+    "text": "Finish a town project",
+    "stat": "projectsDone",
+    "target": 1,
+    "reward": 300,
+    "hint": "Town board > Town projects. Give gold and goods bit by bit.",
+    "where": {
+      "town": [14, 12],
+      "farm": [14, 42]
+    }
+  },
+  {
+    "id": "decor10",
+    "text": "Place 10 decorations on the farm",
+    "stat": "decorPlaced",
+    "target": 10,
+    "reward": 300,
+    "hint": "Shop > Home tab. Place them like a sprinkler."
+  },
+  {
     "id": "jars",
     "text": "Make 10 jams, pickles or wines",
     "stat": "preserved",
@@ -242,6 +278,14 @@
     "target": 20,
     "reward": 500,
     "hint": "Cast at the pond, town river or woods lake."
+  },
+  {
+    "id": "jobs20",
+    "text": "Finish 20 daily jobs",
+    "stat": "jobsDone",
+    "target": 20,
+    "reward": 600,
+    "hint": "Three new jobs every morning. Menu > Goal shows today's."
   },
   {
     "id": "orders10",
@@ -338,6 +382,14 @@
     "hint": "Keep every field, jar and animal working each day."
   },
   {
+    "id": "project3",
+    "text": "Finish 3 town projects",
+    "stat": "projectsDone",
+    "target": 3,
+    "reward": 1500,
+    "hint": "They open one after another. Mine stone and smelt bars."
+  },
+  {
     "id": "earn50k",
     "text": "Earn 50,000g: Master Farmer",
     "stat": "earned",
@@ -360,5 +412,29 @@
     "target": 200,
     "reward": 2000,
     "hint": "Visit every house each morning."
+  },
+  {
+    "id": "projectAll",
+    "text": "Finish all 7 town projects",
+    "stat": "projectsDone",
+    "target": 7,
+    "reward": 5000,
+    "hint": "The Market Road comes last. It makes every sale worth more."
+  },
+  {
+    "id": "greenhouse20",
+    "text": "Harvest 20 greenhouse crops",
+    "stat": "greenhouseHarvested",
+    "target": 20,
+    "reward": 2000,
+    "hint": "Fund the Greenhouse project, then sow any seed in it."
+  },
+  {
+    "id": "truffles10",
+    "text": "Collect 10 truffles from pigs",
+    "stat": "collected.truffle",
+    "target": 10,
+    "reward": 1500,
+    "hint": "Craft a pig sty (Farming 6). Pigs dig only on dry days."
   }
 ]

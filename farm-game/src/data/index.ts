@@ -21,6 +21,9 @@ import collectionsRaw from './collections.json';
 import nodesRaw from './nodes.json';
 import festivalsRaw from './festivals.json';
 import miningRaw from './mining.json';
+import projectsRaw from './projects.json';
+import jobsRaw from './jobs.json';
+import mailRaw from './mail.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -107,9 +110,13 @@ export interface UpgradeNeed {
   qty: number;
 }
 export interface UpgradeDef {
-  /** 'can', 'stamina', 'hoe', 'rod': the keys of `state.upgrades`. */
+  /** 'can', 'stamina', 'hoe', 'rod', 'bag': the keys of `state.upgrades`. */
   id: string;
   name: string;
+  /** Shop tab it is sold on: the Upgrades tab unless it says "home". */
+  tab?: 'home';
+  /** Row icon texture (defaults per id). */
+  icon?: string;
   levels: { price: number; label: string; needs?: UpgradeNeed }[];
 }
 export interface ShopDef {
@@ -190,6 +197,8 @@ export interface AnimalDef {
   capacity: number;
   sprite: string;
   perDay: number;
+  /** Works outdoors (a pig digging truffles): nothing on wet days or in winter. */
+  outdoor?: boolean;
 }
 export interface NpcEvent {
   hearts: number;
@@ -201,7 +210,8 @@ export interface NpcEvent {
 }
 export interface NpcDef {
   name: string;
-  role: 'shop' | 'friend';
+  /** 'shop' adds a Shop button; 'rival' competes for the town board's requests (see systems/rival.ts). */
+  role: 'shop' | 'friend' | 'rival';
   map: string;
   tx: number;
   ty: number;
@@ -277,6 +287,69 @@ export interface MachineDef {
   /** Item family ("fruit", "veg") -> the derived good this machine makes of it. */
   recipes: Record<string, string>;
 }
+/** When a letter is sent: every field given must hold (checked each morning). */
+export interface LetterWhen {
+  /** On or after this absolute day. */
+  day?: number;
+  /** Once a lifetime stat reaches `min`. */
+  stat?: string;
+  min?: number;
+  /** Once this villager has `hearts` hearts. */
+  npc?: string;
+  hearts?: number;
+  /** On this date of the calendar (any year). */
+  season?: Season;
+  date?: number;
+}
+export interface LetterDef {
+  id: string;
+  /** Villager id who writes it. */
+  from: string;
+  title: string;
+  text: string;
+  when: LetterWhen;
+  gift?: { item: string; qty: number };
+}
+export interface MailData {
+  /** The farm's mailbox: a fixed, solid, one-tile fixture. */
+  mailbox: { map: string; tx: number; ty: number; sprite: string; color: string };
+  letters: LetterDef[];
+}
+/** A small daily job a villager asks for: reach `n` more of a stat today. */
+export interface JobDef {
+  id: string;
+  /** Villager id who asks (and whose friendship grows when it is done). */
+  giver: string;
+  /** Lower-case request with `{n}`, e.g. "catch {n} fish"; shown as "Finn: catch 2 fish". */
+  text: string;
+  /** Lifetime stat that counts progress (today's gain is what matters). */
+  stat: string;
+  qty: [number, number];
+  /** Gold = base + perUnit x n. */
+  base: number;
+  perUnit: number;
+  weight: number;
+  /** Always offered on this absolute day (an early pointer at a side activity). */
+  introDay?: number;
+  /** Only offered once a stat reached `min` (e.g. after the first animal). */
+  requires?: { stat: string; min: number };
+}
+/** A town project the player funds with gold and goods; finishing it grants perks for good. */
+export interface ProjectDef {
+  name: string;
+  /** One or two short sentences about what it is. */
+  blurb: string;
+  /** Opens once this project is finished (omit for one of the first projects). */
+  after?: string;
+  gold: number;
+  items?: { item: string; qty: number }[];
+  /** Perk values granted once finished, summed into `perk(state, key)`. */
+  perks: Record<string, number>;
+  /** What finishing it does, in one line the player reads before funding it. */
+  reward: string;
+  /** Something that appears in the world once it is built (solid, one tile). */
+  landmark?: { map: string; tx: number; ty: number; sprite: string; color: string };
+}
 export interface PlotDef {
   name: string;
   /** [tx, ty, width, height] on the farm map. */
@@ -285,11 +358,17 @@ export interface PlotDef {
   price: number;
   /** Tile where the "for sale" sign stands (null for free plots). */
   sign: [number, number] | null;
+  /** Owned once this town project is finished (instead of bought at a sign). */
+  project?: string;
+  /** Crops here ignore the season: plant anything, nothing withers. */
+  greenhouse?: boolean;
 }
 export interface GameData {
   startingMoney: number;
   startingItems: { item: string; qty: number }[];
   inventorySlots: number;
+  /** Extra slots each Bigger Bag level adds (a whole row of the bag grid). */
+  bagSlotsPerLevel: number;
   hotbarSlots: number;
   toolSlots: number;
   stackLimit: number;
@@ -311,6 +390,8 @@ export interface GameData {
   stormChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;
+  /** The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. */
+  rival: { npc: string; minute: number; startDay: number };
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];
@@ -359,6 +440,9 @@ export const collections = collectionsRaw as unknown as Record<string, Collectio
 export const trees = treesRaw as unknown as Record<string, TreeDef>;
 export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
+export const projects = projectsRaw as unknown as Record<string, ProjectDef>;
+export const jobs = jobsRaw as unknown as JobDef[];
+export const mail = mailRaw as unknown as MailData;
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
@@ -538,10 +622,65 @@ export function validateContent(): void {
         claimed.add(k);
       }
   }
-  if (!Object.values(plots).some((p) => p.price === 0)) fail('plots', 'needs a free starter plot');
+  if (!Object.values(plots).some((p) => p.price === 0 && !p.project))
+    fail('plots', 'needs a free starter plot');
+  for (const [id, pl] of Object.entries(plots))
+    if (pl.project && !projects[pl.project])
+      fail('plots', `"${id}" waits on unknown project "${pl.project}"`);
   for (const [id, pl] of Object.entries(plots))
     if (pl.sign && claimed.has(pl.sign.join(',')))
       fail('plots', `"${id}" sign stands inside a plot`);
+  for (const [id, p] of Object.entries(projects)) {
+    if (!p.name || !p.blurb || !p.reward) fail('projects', `"${id}" needs name, blurb and reward`);
+    if (!Number.isInteger(p.gold) || p.gold < 1) fail('projects', `"${id}" needs a gold price`);
+    if (p.after !== undefined && !projects[p.after])
+      fail('projects', `"${id}" comes after unknown project "${p.after}"`);
+    for (const need of p.items ?? [])
+      if (!items[need.item] || need.qty < 1)
+        fail('projects', `"${id}" needs unknown item "${need.item}" or a bad quantity`);
+    if (Object.keys(p.perks).length === 0 && !Object.values(plots).some((pl) => pl.project === id))
+      fail('projects', `"${id}" grants no perk and unlocks no plot`);
+    if (p.landmark && !mapIds.includes(p.landmark.map))
+      fail('projects', `"${id}" landmark is on unknown map "${p.landmark.map}"`);
+    // Every chain must lead back to a project that is open from the start (no loops).
+    const seen = new Set<string>();
+    for (let at: string | undefined = id; at; at = projects[at]?.after) {
+      if (seen.has(at)) fail('projects', `"${id}" is part of an "after" loop`);
+      seen.add(at);
+    }
+  }
+  if (!npcs[game.rival.npc] || npcs[game.rival.npc]?.role !== 'rival')
+    fail('game', '"rival.npc" must be a villager with role "rival"');
+  if (!mapIds.includes(mail.mailbox.map)) fail('mail', 'mailbox stands on an unknown map');
+  const letterIds = new Set<string>();
+  for (const l of mail.letters) {
+    if (!l.id || letterIds.has(l.id)) fail('mail', `letter "${l.id}" needs a unique id`);
+    letterIds.add(l.id);
+    if (!npcs[l.from]) fail('mail', `"${l.id}" is from unknown villager "${l.from}"`);
+    if (!l.title || !l.text) fail('mail', `"${l.id}" needs a title and text`);
+    if (l.gift && (!items[l.gift.item] || l.gift.qty < 1))
+      fail('mail', `"${l.id}" encloses unknown item "${l.gift.item}"`);
+    const w = l.when;
+    if (w.npc !== undefined && !npcs[w.npc]) fail('mail', `"${l.id}" waits on unknown villager`);
+    if ((w.stat === undefined) !== (w.min === undefined)) fail('mail', `"${l.id}" needs stat and min`);
+    if (w.season !== undefined && !SEASONS.includes(w.season))
+      fail('mail', `"${l.id}" has a bad season`);
+    if (Object.keys(w).length === 0) fail('mail', `"${l.id}" has no "when"`);
+  }
+  const jobIds = new Set<string>();
+  for (const j of jobs) {
+    if (!j.id || jobIds.has(j.id)) fail('jobs', `job "${j.id}" needs a unique id`);
+    jobIds.add(j.id);
+    if (!npcs[j.giver]) fail('jobs', `"${j.id}" is given by unknown villager "${j.giver}"`);
+    if (!j.text.includes('{n}') || !j.stat) fail('jobs', `"${j.id}" needs a stat and {n} in its text`);
+    if (j.qty[0] < 1 || j.qty[1] < j.qty[0] || j.weight <= 0)
+      fail('jobs', `"${j.id}" has a bad quantity or weight`);
+  }
+  for (const [id, pl] of Object.entries(placeables))
+    if (pl.behavior === 'decor' && !(Number(pl.params['max']) >= 1))
+      fail('placeables', `decoration "${id}" needs a "max" of at least 1`);
+  if (game.bagSlotsPerLevel % game.hotbarSlots !== 0)
+    fail('game', 'bagSlotsPerLevel must be whole rows of the bag grid');
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');
