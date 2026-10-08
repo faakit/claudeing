@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { addRoofs } from '../art/decor';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
   ACTION_LOCK_MS,
@@ -121,6 +122,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
+    addRoofs(this, layer);
 
     if (mapsData.maps[this.mapId]?.outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add

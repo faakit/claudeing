@@ -1739,5 +1739,45 @@
   ],
   "group": "ui",
   "anchor": "center"
+ },
+ "item_speed_gro": {
+  "src": "items5a/speed_gro",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_cherry_sapling": {
+  "src": "items5a/cherry_sapling",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_peach_sapling": {
+  "src": "items5a/peach_sapling",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_apple_sapling": {
+  "src": "items5a/apple_sapling",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_plum_sapling": {
+  "src": "items5a/plum_sapling",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
  }
 }

@@ -13,7 +13,7 @@ Each prompt is the shared preamble followed by the body below. Generated file: e
 
 > Pixel art game sprites for a cozy top-down farming game in the style of classic 16-bit farming RPGs. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark brown outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **11** prompts.
+Generations: **12** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -91,3 +91,10 @@ Generations: **11** prompts.
 
 - raw: animals1-a.jpg, animals1-b.jpg
 - used: a: animals (2 frames each), coin, bolt, drop; sun/rain/star/heart too small at 7-13 px, code-drawn kept
+
+## 12. `items5` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: green bottle of plant growth tonic with a cork, little cherry tree sapling in a clay pot, little peach tree sapling in a clay pot, little apple tree sapling in a clay pot, little plum tree sapling in a clay pot, old tree stump, cluster of small grey pebbles, wooden barrel, round hay bale, stack of two wooden crates, wooden wheelbarrow, scarecrow with a straw hat, wooden bench, wooden signpost with two arrows, small pile of firewood logs, clay flower pot with red flowers.
+
+- raw: items5-a.jpg, items5-b.jpg
+- used: a: speed-gro and sapling icons; decor sprites kept for map decor

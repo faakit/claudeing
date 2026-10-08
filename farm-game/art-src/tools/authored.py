@@ -105,14 +105,16 @@ def stone_floor(P: Pal, seed=6) -> np.ndarray:
 
 
 def bricks(P: Pal, base: str, mortar: str, lite: str) -> np.ndarray:
+    """Running-bond blocks 8x4: lit top edge, mortar line below and at the joints (wraps, so it tiles)."""
     t = fill(P(base))
     m, li = P(mortar), P(lite)
     for r0 in range(0, T, 4):
+        t[r0, :] = li
         t[r0 + 3, :] = m
-        t[r0, :] = np.where(np.arange(T) % 2 == 0, li, t[r0, :])
         off = 4 if (r0 // 4) % 2 else 0
         for c in range(off, T + off, 8):
             t[r0 : r0 + 3, c % T] = m
+            t[r0 + 1, (c + 1) % T] = li
     return t
 
 
@@ -175,6 +177,43 @@ def fence(P: Pal) -> np.ndarray:
     return t
 
 
+ROOF_STYLES = {
+    # base, shadow, highlight
+    "red": ("#b8503c", "#8a3a33", "#d9785a"),
+    "slate": ("#5f6f8a", "#45506a", "#8090a8"),
+}
+
+
+def roof(P: Pal, style: str, row: str, col: str) -> np.ndarray:
+    """One roof tile for a building drawn over its wall tiles (decor layer). row: t/m/b, col: l/c/r.
+
+    Overlapping shingle courses every 4 px, staggered; ridge on top, a dark eave line at the bottom,
+    outline on the outer sides. Wraps horizontally, so any building width tiles."""
+    b, d, h = (P(c) for c in ROOF_STYLES[style])
+    t = fill(b)
+    for r0 in range(0, T, 4):
+        t[r0 + 3, :] = d
+        off = 2 if (r0 // 4) % 2 else 0
+        for c in range(off, T, 4):
+            t[r0 : r0 + 3, c] = d if c % 8 == off else b
+            t[r0, (c + 1) % T] = h
+    if row == "t":
+        t[0, :] = P.outline
+        t[1, :] = h
+        t[2, :] = h
+    if row == "b":
+        t[13, :] = d
+        t[14, :] = P.outline
+        t[15, :] = -1  # a 1 px gap shows the facade top: the eave overhangs
+    if col == "l":
+        t[:, 0] = P.outline
+    if col == "r":
+        t[:, 15] = P.outline
+    if row == "b":
+        t[15, :] = -1
+    return t
+
+
 def overlay(base: np.ndarray, sprite: np.ndarray) -> np.ndarray:
     out = base.copy()
     out[sprite >= 0] = sprite[sprite >= 0]
@@ -195,7 +234,7 @@ def build(pal, outline, groups, specs, make):
         "water": water(P),
         "path": path(P),
         "fence": fence(P),
-        "wall": bricks(P, "#b3a594", "#7d7068", "#cfc2ad"),
+        "wall": bricks(P, "#a39d99", "#5e5a5b", "#cfc2ad"),
         "floor": planks(P),
         "wallin": wall_in(P),
         "bed": quilt(P),
@@ -210,6 +249,11 @@ def build(pal, outline, groups, specs, make):
     tiles["board"] = overlay(grass(P, 51), tile_sprite(make, "crops3b/tile_board", (15, 15)))
     tiles["bush"] = overlay(grass(P, 61), tile_sprite(make, "crops3b/tile_bush", (15, 14)))
     tiles["rock"] = overlay(stone_floor(P, 71), tile_sprite(make, "crops3a/node_rock_node", (16, 15)))
+
+    for style in ROOF_STYLES:
+        for row in "tmb":
+            for col in "lcr":
+                groups["world"][f"decor_roof_{style}_{row}{col}"] = px.idx_to_rgba(roof(P, style, row, col), pal)
 
     sheet = np.concatenate([tiles[n] for n in TILE_ORDER], axis=1)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)

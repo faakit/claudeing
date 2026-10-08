@@ -101,7 +101,7 @@ describe('art manifest', () => {
     for (const p of plans) {
       expect(p.rejected, `${p.texture} has atlas frames of the wrong size`).toEqual([]);
       for (const { entry, src } of p.frames) {
-        if (src) continue;
+        if (src || entry.optional) continue;
         const gen = generated.get(entry.texture);
         const ok = gen && (!entry.frame || gen.has(entry.frame));
         if (!ok) unresolved.push(atlasFrameName(entry));
@@ -123,5 +123,24 @@ describe('art manifest', () => {
     // PNG IHDR: width and height are big-endian at bytes 16 and 20.
     expect(png.readUInt32BE(16)).toBe(16 * PLACEHOLDER_TILES.length);
     expect(png.readUInt32BE(20) % 16).toBe(0);
+  });
+});
+
+describe('roof decor', () => {
+  it('roofs every wall block except its bottom (facade) row', async () => {
+    const { roofTiles } = await import('../src/art/decor');
+    // 4x3 map: grass border, a 2x3 wall block with a door in its bottom row.
+    const G = 1;
+    const W = 8;
+    const D = 9;
+    const data = [G, W, W, G, G, W, W, G, G, W, D, G];
+    const roofs = roofTiles(data, 4, 3);
+    expect(roofs.map((r) => `${r.tx},${r.ty}:${r.key}`).sort()).toEqual([
+      '1,0:decor_roof_red_tl',
+      '1,1:decor_roof_red_bl',
+      '2,0:decor_roof_red_tr',
+      '2,1:decor_roof_red_br',
+    ]);
+    expect(roofTiles([W, W, W], 3, 1)).toEqual([]);
   });
 });

@@ -6,6 +6,8 @@ import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
+import { hasArt } from '../art/registry';
+import { animalIdleKey } from '../art/manifest';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -187,11 +189,23 @@ export class ObjectsRenderer {
         // Residents mill about in front of the house; a bubble shows when goods are waiting.
         for (let i = 0; i < house.n; i++) {
           const home = x - 10 + i * 10;
+          // Real art is drawn at its own small size; the 16 px placeholder is shrunk.
+          const art = hasArt(species.sprite);
           const critter = this.scene.add
             .image(home, y + 6, species.sprite)
             .setOrigin(0.5, 1)
-            .setScale(0.62)
+            .setScale(art ? 1 : 0.62)
             .setDepth(10 + y + 4);
+          const idle2 = animalIdleKey(species.sprite);
+          if (!calm() && hasArt(idle2))
+            this.scene.tweens.add({
+              targets: critter,
+              alpha: 1,
+              duration: 700 + i * 130,
+              repeat: -1,
+              onRepeat: () =>
+                critter.setTexture(critter.texture.key === idle2 ? species.sprite : idle2),
+            });
           if (!calm())
             this.scene.tweens.add({
               targets: critter,

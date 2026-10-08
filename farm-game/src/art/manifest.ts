@@ -1,6 +1,7 @@
 import { PLACEHOLDER_TILES, TILESET_KEY } from '../config';
 import { animals, crops, items, nodes, npcs, placeables, tools, trees } from '../data';
 import { DIRECTIONS } from '../systems/direction';
+import { ROOF_KEYS } from './decor';
 
 /**
  * Every texture key (and frame) the game draws, derived from data wherever the data names it, so new
@@ -25,6 +26,8 @@ export interface ArtEntry {
   from: string;
   /** Exact size required (grid-locked art). Single-image objects may be taller and are bottom-anchored. */
   exact: boolean;
+  /** Decor drawn only when its art exists: no generated fallback, never reported missing. */
+  optional?: boolean;
 }
 
 /** Atlas files the loader looks for, by group (relative to the game's base URL). */
@@ -226,6 +229,16 @@ export function artManifest(): ArtEntry[] {
           from: 'npcs.json',
           exact: false,
         });
+  for (const k of ROOF_KEYS)
+    add({
+      texture: k,
+      w: 16,
+      h: 16,
+      group: 'world',
+      kind: 'roof decor (art only)',
+      from: 'art/decor.ts',
+      optional: true,
+    });
   return out;
 }
 

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TILESET_KEY } from '../config';
 import index from './atlases.json';
 import { atlasFrames, planArt, type AtlasFrame, type TexturePlan } from './artPlan';
+import { artKeys } from './registry';
 import { ATLAS_FILES, artManifest, manifestByTexture, TILESET_FILE } from './manifest';
 
 /**
@@ -100,12 +101,15 @@ export function applyArt(scene: Phaser.Scene): TexturePlan[] {
     loadedFrames(scene),
     canAlias,
   );
+  artKeys.clear();
   for (const p of plans) {
+    if (p.mode !== 'generated') artKeys.add(p.texture);
     if (p.rejected.length) console.warn(`[art] ${p.texture}: ${p.rejected.join('; ')}`);
     if (p.mode === 'alias') alias(scene, p);
     else if (p.mode === 'paint') paint(scene, p);
   }
   const missing = entries.filter((e) => {
+    if (e.optional) return false;
     if (!scene.textures.exists(e.texture)) return true;
     if (e.group === 'tiles' || !e.frame) return false;
     return !scene.textures.get(e.texture).has(e.frame);
