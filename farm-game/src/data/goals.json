@@ -298,6 +298,14 @@
     "hint": "Bring bars to the shop and open the Upgrades tab."
   },
   {
+    "id": "festival",
+    "text": "Take part in a festival",
+    "stat": "festivals",
+    "target": 1,
+    "reward": 300,
+    "hint": "On a festival day, open the town board and enter something."
+  },
+  {
     "id": "book3",
     "text": "Complete 3 almanac pages",
     "stat": "pagesDone",

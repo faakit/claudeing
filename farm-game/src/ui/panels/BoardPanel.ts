@@ -6,6 +6,8 @@ import { deliverOrder, ensureOrders, haveFor, orderLabel } from '../../systems/o
 import { iconKey, parseKey } from '../../systems/itemRef';
 import { C } from '../theme';
 import { Modal } from '../widgets';
+import { gameEvents } from '../../systems/events';
+import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
@@ -49,6 +51,21 @@ export class BoardPanel extends Modal {
     }
     if (s.orders.list.length === 0)
       this.label(8, 50, 'Nothing today. Check back tomorrow!', C.creamDim, 1, 'left', 184);
+    const fest = festivalToday(s);
+    if (fest && !hasEntered(s, fest.id)) {
+      this.button(
+        8,
+        116,
+        this.panelW - 16,
+        22,
+        `Enter the ${fest.def.name}!`,
+        () => {
+          this.close();
+          gameEvents.emit('openPanel', { type: 'festival' });
+        },
+        { textColor: C.gold, rim: C.gold },
+      );
+    }
     this.closeButton();
   }
 }

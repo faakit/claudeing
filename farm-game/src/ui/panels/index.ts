@@ -1,5 +1,6 @@
 export { BinPanel } from './BinPanel';
 export { BoardPanel } from './BoardPanel';
+export { FestivalPanel } from './FestivalPanel';
 export { FishingPanel } from './FishingPanel';
 export { JarPanel } from './JarPanel';
 export { NpcPanel } from './NpcPanel';

@@ -16,3 +16,4 @@ import './beeHouse';
 import './fruitTree';
 import './villagers';
 import './mining';
+import './festivals';

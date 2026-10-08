@@ -117,9 +117,12 @@ More people, more places, more to discover.
       furnace and tool upgrades.
       _Done:_ a mine north of the woods trail, a pickaxe (the fifth tool; saves migrate), copper/iron veins, crystals and
       rocks that respawn each morning, a Mining skill, a furnace (ore -> bars in 2 days) and bar-gated tool upgrades. _Plug in:_ map generator, tool action, forage-like spawn hook for ore nodes.
-- [ ] **R3.4 Seasonal festivals.** One event per season on a fixed day: a fishing contest, a crop show, a winter
+- [x] **R3.4 Seasonal festivals.** One event per season on a fixed day: a fishing contest, a crop show, a winter
       feast. Orders, skills and friendship all feed into a score. _Plug in:_ a day hook that swaps in an event map
       state and a modal.
+      _Done:_ four festivals (Flower Show spring 14, Fishing Derby summer 22, Harvest Fair fall 16, Winter Feast
+      winter 24): enter one item at the town board, ranked against three rivals that grow stronger each year, with
+      gold prizes. Not done: festival maps or minigames.
 - [x] **R3.5 Almanac and collections.** A log of every crop, fish, forageable and recipe found, with page rewards.
       Doubles as a gentle hint system for what to try next.
       _Done:_ Menu > Book has six pages (crops, orchard, fish, wild goods, animal goods, preserves); unfound goods

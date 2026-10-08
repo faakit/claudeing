@@ -170,3 +170,9 @@
 - **Bars gate tool tiers:** hoe, rod and the can's upper tiers need 2 to 3 copper or iron bars on top of gold. The upgrade price discount from Orin still applies to gold only.
 - **The furnace is one more row in `machines.json`:** same behavior as the jar and keg, with ore families (`copper`, `iron`) mapped to bars.
 - **A node blocks until broken, and other tools are told why:** facing a vein with the hoe says "Break it with the pickaxe (swipe the Action button to switch)" instead of a generic refusal.
+
+## Festivals
+
+- **One entry, ranked on the spot:** a festival is a shared goal on a fixed date, so it is a single decision (which of your goods to enter), not a minigame. The score is the item's sell value, so quality and rarity matter and a Gold pumpkin beats a pile of parsnips.
+- **Rivals are data and grow 20% a year:** three scores per festival, nudged deterministically by year so no two years feel the same without touching the random stream. Prizes grow 25% a year too.
+- **The entry point is the town board** (a gold banner button on festival days) and the morning notes announce the day, so nobody misses it and there is no new building or map.

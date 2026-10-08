@@ -1,0 +1,50 @@
+{
+  "flower_show": {
+    "name": "Flower Show",
+    "season": "spring",
+    "day": 14,
+    "blurb": "Show your finest flower.",
+    "accept": {
+      "families": ["flower"]
+    },
+    "rivals": [40, 60, 90],
+    "prizes": [600, 350, 200],
+    "consolation": 60
+  },
+  "fishing_derby": {
+    "name": "Fishing Derby",
+    "season": "summer",
+    "day": 22,
+    "blurb": "Enter your best catch.",
+    "accept": {
+      "types": ["fish"]
+    },
+    "rivals": [60, 85, 120],
+    "prizes": [800, 450, 250],
+    "consolation": 80
+  },
+  "harvest_fair": {
+    "name": "Harvest Fair",
+    "season": "fall",
+    "day": 16,
+    "blurb": "Bring your best crop.",
+    "accept": {
+      "types": ["crop"]
+    },
+    "rivals": [90, 180, 320],
+    "prizes": [1000, 600, 300],
+    "consolation": 100
+  },
+  "winter_feast": {
+    "name": "Winter Feast",
+    "season": "winter",
+    "day": 24,
+    "blurb": "Share your finest homemade good.",
+    "accept": {
+      "types": ["preserve", "product"]
+    },
+    "rivals": [80, 130, 200],
+    "prizes": [1000, 600, 300],
+    "consolation": 100
+  }
+}

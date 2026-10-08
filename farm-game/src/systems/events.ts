@@ -1,7 +1,16 @@
 import type { DaySummary } from '../state/GameState';
 
 export type PanelType =
-  'shop' | 'bin' | 'sleep' | 'menu' | 'board' | 'craft' | 'skills' | 'book' | 'fishing';
+  | 'shop'
+  | 'bin'
+  | 'sleep'
+  | 'menu'
+  | 'board'
+  | 'craft'
+  | 'skills'
+  | 'book'
+  | 'festival'
+  | 'fishing';
 
 export interface GameEvents {
   toast: { text: string; kind?: 'info' | 'warn' | 'good' };

@@ -19,6 +19,7 @@ import machinesRaw from './machines.json';
 import treesRaw from './trees.json';
 import collectionsRaw from './collections.json';
 import nodesRaw from './nodes.json';
+import festivalsRaw from './festivals.json';
 import miningRaw from './mining.json';
 import type { Direction, Season } from '../state/GameState';
 
@@ -213,6 +214,19 @@ export interface NpcDef {
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
 }
+export interface FestivalDef {
+  name: string;
+  season: Season;
+  day: number;
+  blurb: string;
+  /** What may be entered: item types and/or families and/or exact ids. */
+  accept: { types?: string[]; families?: string[]; items?: string[] };
+  /** Scores of the three rivals (a year-one baseline; they grow each year). */
+  rivals: [number, number, number];
+  /** Gold for 1st, 2nd and 3rd. */
+  prizes: [number, number, number];
+  consolation: number;
+}
 export interface NodeDef {
   name: string;
   /** Relative chance to spawn. */
@@ -328,6 +342,7 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const festivals = festivalsRaw as unknown as Record<string, FestivalDef>;
 export const nodes = nodesRaw as unknown as Record<string, NodeDef>;
 export const mining = miningRaw as unknown as MiningDef;
 export const collections = collectionsRaw as unknown as Record<string, CollectionDef>;
@@ -466,6 +481,15 @@ export function validateContent(): void {
     if (items[t.fruit]?.family !== 'fruit')
       fail('trees', `"${id}" fruit "${t.fruit}" must be a fruit item`);
     if (t.growDays < 1 || t.every < 1 || t.cap < 1) fail('trees', `"${id}" has a bad number`);
+  }
+  for (const [id, f] of Object.entries(festivals)) {
+    if (!SEASONS.includes(f.season) || f.day < 1 || f.day > game.seasonLength)
+      fail('festivals', `"${id}" has a bad date`);
+    for (const t of f.accept.types ?? [])
+      if (!Object.values(items).some((i) => i.type === t))
+        fail('festivals', `"${id}" accepts unknown type "${t}"`);
+    for (const i of f.accept.items ?? [])
+      if (!items[i]) fail('festivals', `"${id}" accepts unknown item "${i}"`);
   }
   for (const [id, n] of Object.entries(nodes)) {
     if (n.drops.length === 0 || n.weight <= 0) fail('nodes', `"${id}" needs drops and a weight`);
