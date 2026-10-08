@@ -65,7 +65,7 @@ Done in this round:
 Still open (ranked):
 
 - [x] Touch tool-cycle: swipe up or down on the Action button to change tool (with a one-time tip).
-- [~] Side income (machines, animals, orders) is now bounded by data-driven guard rails in `tests/balance.test.ts`; the bot simulation itself still models crops only.
+- [x] Side income (machines, animals, orders) is bounded by data-driven guard rails in `tests/balance.test.ts`; the bot simulation now farms real plots, fills orders and keeps jars busy, with a tight income band.
 - [x] A save from a newer version now shows a message on the title screen, and New Game asks before erasing it.
 - [x] A saved player position inside a wall or outside the map is moved to the nearest open tile on load.
 - [ ] Placement undo for big placeables; confirm before placing a barn.
