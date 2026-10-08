@@ -1,5 +1,25 @@
 {
  "frames": {
+  "fx_px": {
+   "frame": {
+    "h": 2,
+    "w": 2,
+    "x": 459,
+    "y": 35
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 2,
+    "w": 2
+   },
+   "spriteSourceSize": {
+    "h": 2,
+    "w": 2,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
   "item_amethyst": {
    "frame": {
     "h": 16,
@@ -1664,7 +1684,7 @@
    "frame": {
     "h": 9,
     "w": 9,
-    "x": 395,
+    "x": 421,
     "y": 35
    },
    "rotated": false,
@@ -1695,6 +1715,106 @@
    "spriteSourceSize": {
     "h": 11,
     "w": 9,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "ui_heart": {
+   "frame": {
+    "h": 6,
+    "w": 7,
+    "x": 451,
+    "y": 35
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 6,
+    "w": 7
+   },
+   "spriteSourceSize": {
+    "h": 6,
+    "w": 7,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "ui_menu": {
+   "frame": {
+    "h": 9,
+    "w": 11,
+    "x": 431,
+    "y": 35
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 9,
+    "w": 11
+   },
+   "spriteSourceSize": {
+    "h": 9,
+    "w": 11,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "ui_rain": {
+   "frame": {
+    "h": 11,
+    "w": 13,
+    "x": 395,
+    "y": 35
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 11,
+    "w": 13
+   },
+   "spriteSourceSize": {
+    "h": 11,
+    "w": 13,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "ui_star": {
+   "frame": {
+    "h": 7,
+    "w": 7,
+    "x": 443,
+    "y": 35
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 7,
+    "w": 7
+   },
+   "spriteSourceSize": {
+    "h": 7,
+    "w": 7,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "ui_sun": {
+   "frame": {
+    "h": 11,
+    "w": 11,
+    "x": 409,
+    "y": 35
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 11,
+    "w": 11
+   },
+   "spriteSourceSize": {
+    "h": 11,
+    "w": 11,
     "x": 0,
     "y": 0
    },

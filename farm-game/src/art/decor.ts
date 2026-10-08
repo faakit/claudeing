@@ -69,12 +69,7 @@ export function roofTiles(
   return out;
 }
 
-export const GROUND_DECOR_KEYS = [
-  'decor_grass_a',
-  'decor_grass_b',
-  'decor_flowers',
-  'decor_pebbles',
-];
+export const GROUND_DECOR_KEYS = ['decor_grass_a', 'decor_grass_b', 'decor_flowers'];
 
 /** Small deterministic hash of a tile (stable across sessions, no RNG state touched). */
 const hash = (x: number, y: number, salt: number): number => {

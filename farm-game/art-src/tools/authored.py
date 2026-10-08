@@ -270,6 +270,92 @@ def tuft(P: Pal, kind: str) -> np.ndarray:
     return t
 
 
+# Small UI glyphs, drawn as character grids: '.' clear, 'o' outline, other letters map to palette colours.
+GLYPHS = {
+    "ui_sun": (
+        {"y": "#f4d35e", "h": "#fff3b0", "r": "#e8a23a"},
+        [
+            ".....r.....",
+            ".r...r...r.",
+            "..r.ooo.r..",
+            "...oyyyo...",
+            "..oyhhyyo..",
+            "rroyhyyyorr",
+            "..oyyyyro..",
+            "...oyyro...",
+            "..r.ooo.r..",
+            ".r...r...r.",
+            ".....r.....",
+        ],
+    ),
+    "ui_rain": (
+        {"c": "#c9d3e4", "w": "#ece8e0", "s": "#8a94a8", "b": "#4f7fb8"},
+        [
+            "....oooo.....",
+            "..oowwwwoo...",
+            ".owwwccwwwoo.",
+            "owccccccccwwo",
+            "occcccccccsco",
+            ".osssssssssso",
+            "..oooooooooo.",
+            "..b...b...b..",
+            ".b...b...b...",
+            "..b...b...b..",
+            ".............",
+        ],
+    ),
+    "ui_star": (
+        {"w": "#ece8e0"},
+        [
+            "...o...",
+            "..owo..",
+            "oowwwoo",
+            ".owwwo.",
+            ".owwwo.",
+            "owo.owo",
+            "oo...oo",
+        ],
+    ),
+    "ui_heart": (
+        {"w": "#ece8e0"},
+        [
+            ".oo.oo.",
+            "owwowwo",
+            "owwwwwo",
+            ".owwwo.",
+            "..owo..",
+            "...o...",
+        ],
+    ),
+    "ui_menu": (
+        {"w": "#f2e6c9"},
+        [
+            "wwwwwwwwwww",
+            "wwwwwwwwwww",
+            "...........",
+            "wwwwwwwwwww",
+            "wwwwwwwwwww",
+            "...........",
+            "wwwwwwwwwww",
+            "wwwwwwwwwww",
+            "...........",
+        ],
+    ),
+    "fx_px": ({"w": "#ece8e0"}, ["ww", "ww"]),
+}
+
+
+def glyph(P: Pal, colours: dict, rows: list[str]) -> np.ndarray:
+    t = np.full((len(rows), len(rows[0])), -1, dtype=np.int32)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == "o":
+                t[y, x] = P.outline
+            elif ch != ".":
+                t[y, x] = P(colours[ch])
+    return t
+
+
 def overlay(base: np.ndarray, sprite: np.ndarray) -> np.ndarray:
     out = base.copy()
     out[sprite >= 0] = sprite[sprite >= 0]
@@ -314,6 +400,8 @@ def build(pal, outline, groups, specs, make):
     sheet = np.concatenate([tiles[n] for n in TILE_ORDER], axis=1)
     for kind in ("grass_a", "grass_b", "flowers"):
         groups["world"][f"decor_{kind}"] = px.idx_to_rgba(tuft(P, kind), pal)
+    for key, (colours, rows) in GLYPHS.items():
+        groups["ui"][key] = px.idx_to_rgba(glyph(P, colours, rows), pal)
     seed = px.idx_to_rgba(seed_mound(P), pal)
     for key, spec in specs.items():
         if spec.get("authored") == "seed_mound":
