@@ -95,6 +95,14 @@
         "seasons": ["spring", "summer", "fall", "winter"]
       },
       {
+        "item": "pig",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "slop",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
         "item": "fence",
         "seasons": ["spring", "summer", "fall", "winter"]
       },

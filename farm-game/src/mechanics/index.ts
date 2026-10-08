@@ -12,6 +12,7 @@ import './jar';
 import './orders';
 import './fishing';
 import './animalHouse';
+import './silo';
 import './beeHouse';
 import './fruitTree';
 import './villagers';

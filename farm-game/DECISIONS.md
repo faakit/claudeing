@@ -256,3 +256,10 @@
 - **A tight band instead of 15k to 400k:** the full-year income is pinned to 208,549 (rng 42) with a band of -33% / +70%, so a real balance change fails the test and has to be explained here. Requests must stay under 35% of income and the bot must buy land.
 - **What it shows:** a tireless player who buys all the land earns about 5k in spring, 13k in summer, 110k in fall and 78k in winter (kale on 250 tiles). That is far above a human, but it confirms the late-game gold the projects, greenhouse and decorations are meant to absorb.
 - Also fixed while adding map tests: Finn's afternoon spot in town was in the river (now 16,22); a test checks every villager spot, landmark and the mailbox stand on open, reachable ground. The bag's item card no longer shows "Sells for" on things the bin refuses (machines, decorations).
+
+## Animal depth: pigs and the feed silo (R2.6)
+
+- **Pigs dig truffles, but only outdoors:** a new `outdoor` flag in `animals.json` means a fed pig cheers up every day but only finds a truffle (120g) on a dry day outside winter. Truffles are the best animal good per head, balanced by the weather, a 1,600g pig, a Farming 6 sty (one sty, two pigs) and slop.
+- **The feed silo makes daily feeding optional:** one Interact pours every feed in the bag into it (300 in all); overnight, before animals wake, every house nobody fed eats from it. Feeding by hand still works and is never doubled. This keeps animals a one-tap-a-day chore (collect) instead of two, which suits one thumb and five-minute sessions.
+- **Bounds moved:** the animal guard rail went from 1,000 to 1,200 gold a day and the side-income total from 4,400 to 4,600 (one sty adds at most 220 a day, less on wet days).
+- Not done: animals that roam beyond their house (visual; waits for real animal sprites).

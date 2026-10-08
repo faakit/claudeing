@@ -113,10 +113,12 @@ describe('side income stays bounded', () => {
     expect(extraOrders).toBeLessThanOrEqual(1);
     const orderPerDay = (ordersCfg.perDay + extraOrders) * Math.min(ordersCfg.maxReward, 600);
     expect(jarPerDay).toBeLessThan(900);
-    expect(animalPerDay).toBeLessThan(1000);
-    // 4,400 (was 3,800 before the board canopy's 4th order): this bound counts whole order rewards, not
-    // the premium over the bin, so one more order moves it by up to 600 without making a money loop.
-    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(4400);
+    // 1,200 (was 1,000 before pigs): one sty of two pigs adds 220 a day at most, and pigs only dig on
+    // dry days outside winter, so the real average is well under this bound.
+    expect(animalPerDay).toBeLessThan(1200);
+    // 4,600 (3,800 before the board canopy's 4th order, 4,400 before pigs): this bound counts whole order
+    // rewards, not the premium over the bin, so one more order moves it by up to 600 without a money loop.
+    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(4600);
     expect(ordersCfg.rewardMultiplier[1]).toBeLessThanOrEqual(1.7);
   });
 });

@@ -428,5 +428,13 @@
     "target": 20,
     "reward": 2000,
     "hint": "Fund the Greenhouse project, then sow any seed in it."
+  },
+  {
+    "id": "truffles10",
+    "text": "Collect 10 truffles from pigs",
+    "stat": "collected.truffle",
+    "target": 10,
+    "reward": 1500,
+    "hint": "Craft a pig sty (Farming 6). Pigs dig only on dry days."
   }
 ]

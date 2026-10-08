@@ -197,6 +197,8 @@ export interface AnimalDef {
   capacity: number;
   sprite: string;
   perDay: number;
+  /** Works outdoors (a pig digging truffles): nothing on wet days or in winter. */
+  outdoor?: boolean;
 }
 export interface NpcEvent {
   hearts: number;

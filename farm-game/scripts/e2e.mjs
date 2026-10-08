@@ -307,6 +307,23 @@ try {
     m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
     JSON.stringify(m.placed.farm[0]),
   );
+  // A feed silo: one Interact pours the bag's feed into it.
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.inventory.slots[7] = { item: 'hay', qty: 20 };
+    s.placed.farm.push({ id: 11, type: 'silo', tx: 11, ty: 11, data: {} });
+    s.nextPlacedId = 12;
+    window.__farm.gameEvents.emit('placedChanged', { map: 'farm' });
+  });
+  await mPlace(11, 10, 'down');
+  await mTap('KeyE');
+  m = await mState();
+  check(
+    'Interact at a feed silo stores the feed from the bag',
+    m.placed.farm.find((o) => o.type === 'silo')?.data.stock?.hay === 20 &&
+      !m.inventory.slots.some((x) => x?.item === 'hay'),
+    JSON.stringify(m.placed.farm),
+  );
   // Swiping up on the Action button changes tool without reaching for the hotbar.
   await mp.keyboard.press('Digit1');
   const swipeBox = await mp.evaluate(() => {

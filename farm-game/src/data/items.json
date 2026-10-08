@@ -824,5 +824,49 @@
     "sellPrice": 3000,
     "placeable": true,
     "description": "A splashing fountain. The finest farms have one."
+  },
+  "pig": {
+    "name": "Pig",
+    "type": "animal",
+    "icon": "item_pig",
+    "color": "#e8a0a0",
+    "sellPrice": 0,
+    "buyPrice": 1600,
+    "description": "Put it in a sty. Digs up truffles on dry days."
+  },
+  "slop": {
+    "name": "Pig Slop",
+    "type": "feed",
+    "icon": "item_slop",
+    "color": "#9a7a5a",
+    "sellPrice": 2,
+    "buyPrice": 12,
+    "description": "One bucket per pig, every day."
+  },
+  "truffle": {
+    "name": "Truffle",
+    "type": "product",
+    "icon": "item_truffle",
+    "color": "#5a4030",
+    "sellPrice": 120,
+    "description": "A rare find. Pigs dig them up when it is dry."
+  },
+  "sty": {
+    "name": "Pig Sty",
+    "type": "placeable",
+    "icon": "item_sty",
+    "color": "#c08070",
+    "sellPrice": 200,
+    "placeable": true,
+    "description": "A home for up to 2 pigs."
+  },
+  "silo": {
+    "name": "Feed Silo",
+    "type": "placeable",
+    "icon": "item_silo",
+    "color": "#a85a3a",
+    "sellPrice": 150,
+    "placeable": true,
+    "description": "Holds feed and feeds every animal house overnight."
   }
 }

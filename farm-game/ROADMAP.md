@@ -100,6 +100,8 @@ Give players reasons to plan their day and their season.
       leave a rainbow morning with a second helping of wild goods.
 - [~] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
   order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
+  _Done:_ sheep, petting, pigs that dig truffles on dry days, a feed silo that feeds every house overnight.
+  Not done: animals roaming beyond their house, animal goods as order targets.
 
 ## Then: a living world (R3)
 

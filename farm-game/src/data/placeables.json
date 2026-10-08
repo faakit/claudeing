@@ -203,5 +203,25 @@
       "max": 1,
       "charm": 60
     }
+  },
+  "sty": {
+    "name": "Pig Sty",
+    "behavior": "animalHouse",
+    "solid": true,
+    "sprite": "obj_sty",
+    "params": {
+      "species": "pig",
+      "max": 1
+    }
+  },
+  "silo": {
+    "name": "Feed Silo",
+    "behavior": "silo",
+    "solid": true,
+    "sprite": "obj_silo",
+    "params": {
+      "cap": 300,
+      "max": 1
+    }
   }
 }

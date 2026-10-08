@@ -25,5 +25,15 @@
     "capacity": 3,
     "sprite": "animal_sheep",
     "perDay": 1
+  },
+  "pig": {
+    "name": "Pig",
+    "item": "pig",
+    "feed": "slop",
+    "product": "truffle",
+    "capacity": 2,
+    "sprite": "animal_pig",
+    "perDay": 1,
+    "outdoor": true
   }
 }
