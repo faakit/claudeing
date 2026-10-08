@@ -1,114 +1,121 @@
-# Audio (R4.2): state and next steps
+# Audio (R4.2, round 2): state and next steps
 
-Branch `audio/real-audio`. Last commits: `f9c0aae` (licence + loudness + held repeats), `f2397cc` (thunder,
-ducking), `9303729` (legato pads, jingles, residency), `8ee191f` (first working version). `npm run verify` green
-at `f9c0aae` (359 unit tests, e2e, mobile e2e, perf). **Nobody has listened to any of it**, by ear or on a phone.
+Branch `audio/round2` (from `integration/agents-2026-10-08`).
 
-## What is done
+Round-2 commits:
+- `716dbc7`: season harmonies, crickets, sfx calibration, touch cues.
+- `f633de0`: service-worker audio cache, perf storm scene.
+- `182ac74`: critic R5 fixes.
+- `6e935be`: title sting, festival trio, mine deep section, R6 fixes.
+- Later commits are docs and follow-ups.
 
-- **Engine** (`src/platform/audio.ts`, same public API as before): one AudioContext (Phaser audio is off), the
-  same unlock / interruption / lifecycle / volume / mute behaviour, one shared graph (`src/audio/graph.ts`).
-- **Sound effects** (`src/audio/sfx.ts`): 15 cues from recorded CC0 takes (2-4 takes each), pitch and volume
-  spread, never the same take twice in a row, per-cue voice cap, repeats within 350 ms 4 dB softer (held tools).
-  5 cues (level, goal, sleep, heart, order) are in-key jingles played on the music samples, with the music
-  ducked 6 dB under them.
-- **Music** (`src/audio/music.ts`, `sequencer.ts`, data in `src/audio/music.json` from
-  `audio-src/tools/music_src.py`): composed pieces played live on 94 CC0 instrument samples; four seasons with
-  day and night arrangements on one bar clock (crossfaded by the clock), title, mine, festival; house = the
-  season piece without percussion; pieces resume where they left off.
-- **Ambience** (`src/audio/ambience.ts`, chosen in `src/audio/director.ts`): rain bed, birds (scattered
-  one-shots), crickets (two loops of different lengths), winter/storm wind, thunder in storms, mine cave bed
-  and drips.
-- **Fallback**: any missing or undecodable file plays the original synth (per cue, per note, per piece, and
-  the noise rain bed). Unit-tested with a fake Web Audio (`tests/fakeAudio.ts`).
-- **Loading**: bytes fetched after the first frame (through the service worker's cache on a first visit),
-  decoded at the unlock tap (sfx and jingle instruments first); decoded samples not needed by the current or
-  home season are dropped after 2 minutes. Peak decoded memory measured 23-27 MB per scene.
-- **Payload**: 2.0 MB (`public/assets/audio/`: inst 1.3 MB, sfx 0.2 MB, amb 0.5 MB), mono MP3.
-- **Tools** (`audio-src/tools/`): `fetch.py` (sources with sha1 lock), `build.py` (trim, loops, loudness,
-  pitch check, report), `render.mjs` + `measure.py` (offline renders of the real engine and their loudness),
-  `sources_md.py`. Per-file data: `audio-src/prep-report.md`, `audio-src/SOURCES.md`, credits in `ASSETS.md`.
+`npm run verify` is green: 474 unit tests, e2e, mobile e2e and perf. **Nobody has listened to any of it**, by
+ear or on a phone. Every judgement so far comes from measuring offline renders of the real engine.
 
-## Coverage
+## What is done (round 1, still true)
 
-- Sound effect ids with real audio: **20 / 20** (15 recorded, 5 sampled jingles), synth fallback for all 20.
-- Music slots with real audio: **12 / 12** views: spring, summer, fall, winter x day/night (8), title, house
-  (season piece indoors), mine, festival. Synth music remains the fallback for each.
-- Ambience: rain, birds, crickets, wind, thunder, cave, drips (rain also has the synth fallback).
+- **Engine:** one AudioContext, the shared graph in `src/audio/graph.ts`, and the same public API in `src/platform/audio.ts`.
+- **Sound effects:** recorded CC0 takes with pitch and volume spread and voice caps. Repeats within 350 ms are
+  ducked. Five event jingles play on the music samples.
+- **Music:** composed pieces played live on 94 CC0 instrument samples. Each season has a day and a night
+  arrangement on one bar clock, plus title, mine and festival.
+- **Ambience:** rain, birds, crickets, wind, thunder, cave and drips.
+- **Synth fallback:** used per cue, per note and per piece.
+- **Loading:** files are fetched after the first frame and decoded at the unlock tap; unused seasons are evicted.
+- **Tools:** in `audio-src/tools/`. Per-file data is in `audio-src/prep-report.md` and `SOURCES.md`; credits are in `ASSETS.md`.
 
-## Open critic findings (round 2) and planned fixes
+## Round 2
 
-Critic notes and renders: `C:/Users/andre/dev/tiny-acre/audio-critique/` (`review-2.md`, `round-2/renders/`).
-Fixed at `f9c0aae`: the drips licence blocker (replaced by drips from the CC0 dungeon ambience), the Ted Kerr
-credit, the eviction bug (status checks no longer refresh use times; test added), cricket repetition (two
-loops of 9 s and 7.2 s), loudness scale (now K-weighted max momentary by role, see `prep-report.md`), held
-repeats (ducked repeats, water one voice), ui-3 fade, buy-2 true peak (now checked after MP3 encoding),
-string attack lag (zones carry a measured `lag`; notes start early), compressor make-up gain (documented).
-The pad dip got an overlap fix at `9303729` (dip went from -4..-6 dB to about -2..-3 dB in my measurement);
-the critic has not re-measured yet. **Re-render everything at `f9c0aae` before believing any number.**
+**Each piece has its own harmony and melody** (critic F20, resolved), written in `audio-src/tools/music_src.py`.
 
-| Severity | Finding | State / planned fix |
-|---|---|---|
-| Major | Seasons share one harmony (spring/summer/title/festival I-vi-IV-V with the same cadence; summer = spring a tone up; fall and winter both i-VI-iv-V) | **Open.** Rewrite in `music_src.py`: summer in D with I-II / I-bVII colour and tonic pedals; fall aeolian i-bVII-bVI-V; winter suspensions over a D pedal; a title hook of its own. Each needs new phrases written against the new chords (rule used so far: chord tones on strong beats, passing/neighbour tones between, cadence on the tonic). Tests catch bar lengths and sample ranges, not musical quality. |
-| Major | Effects loudness on the wrong scale | Fixed in files at `f9c0aae`; **not yet re-measured at the output**. Check: run `render.mjs`, then `measure.py`; harvest/coin/buy should read about -18 max momentary, tools -20, swing/plant -22, ui -25, steps -28. Harvest came out -19 (limited); maybe give it a softer limiter or a different pop take. Jingles target -19: currently about -21 (raise the 0.9 factor in `MusicPlayer.jingle`). |
-| Major | Held-button stacking (16 waters at 0.2 s = -14.6 LUFS) | Fixed in code (repeat duck -4 dB, water single voice); **prove it** with a rapid-repeat render (`cues` with 16 waters 0.2 s apart in `render.mjs`) and compare with the critic's `water-rapid.wav`. |
-| Major | Winter night pad dip at bar lines (median -3.2 dB) | Overlap fix in place; re-measure against the critic's bar: median dip < 1.5 dB, < 10% of bars over 3 dB. If not met: longer overlap (attack + 0.3 s) or a slower release for viola/cello. |
-| Major | Eviction bug | Fixed + test. Also verify in a render: farm, mine 60 s, farm: no wait at the return. |
-| Minor | Crickets repeat at 9 s | Two layers now; re-render 60 s and check the repeat is gone to the ear-proxy (critic's burst detector). |
-| Minor | SW cache version is global, so every release re-downloads 2 MB of audio | **Open.** In `scripts/sw-plugin.mjs`, put `assets/audio/*` in a separate cache named by a hash of the audio file names and sizes; install only adds missing files; activate keeps the current audio cache. |
-| Minor | Perf "holding Action" logs only 3 sfx | **Open.** Find why held Action plays so few sounds in that scene (probably the hoe on planted tiles fails silently); make the perf scene water a row instead, and assert `sfx.played >= 20` in `scripts/perf.mjs`. |
-| Minor | ROADMAP claimed done | Now `[~]` partial. |
-| Nit | ui-1 is 2 dB under its target (true-peak limited) | Swap the take or limit it. |
-| Nit | Birds one-shots read -18..-24 max momentary in the file (about -23..-29 at the output at full intensity) | Probably fine as foreground birdsong but may sit above the music; listen, and lower `birds.level` if so. |
+| piece    | key, tempo         | harmony and cadence                                                                                                        | melody and texture                                                                                        |
+| -------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| spring   | C major, 74, 4/4   | I-vi-IV-V, ii7-V7-I (unchanged reference)                                                                                  | recorder, steps and thirds on the beat; harp arpeggios                                                    |
+| summer   | D mixolydian, 92   | tonic pedal (D, C/D, G/D), no V, bVII-I; the bridge borrows from D minor (Fmaj7 C/E Bbmaj7 C), so it returns as bVI-bVII-I | syncopated ocarina (33% off-beat), higher; marimba and pizz in a 3+3+2 tresillo                           |
+| fall     | E minor, 70        | Andalusian i-bVII-bVI-V, dorian IV, aeolian bVI-bVII-i, Neapolitan bII in the bridge                                       | slow stepwise viola (24% leaps), harp triplets, bowed cello, no percussion; the cello takes the night tune |
+| winter   | D minor, 56, 3/4   | A over a D pedal (Dm, Bbmaj7/D, Gm/D, Dsus2), suspension cadence Gm/D-Dsus4-Dm, no leading tone; the bridge ends on Asus4  | sparse glock with appoggiaturas; four-note pads                                                           |
+| title    | Eb major, 76       | sting intro, a fixed hook over I-iii7-IVmaj7-V, then borrowing from Eb minor (Cbmaj7, Gb, Cb) and a minor plagal iv6-I     | low, syncopated piano; hook doubled on the glock                                                          |
+| festival | G major, 112 swung | ragtime I-VI7-ii7-V7 with a II7-V7-I cadence, a Cm6 bridge, and a trio in E minor                                          | recorder with chromatic notes; stride piano over an oom-pah bass                                          |
+| mine     | A minor, 60        | drone, plus a deep section D (phrygian Bb/A)                                                                               | vibes, marimba ostinato (silent in D)                                                                     |
 
-## Critic final round (on f305b87)
+**Measurements.** `python -I audio-src/tools/seasons.py [--renders DIR]` prints these numbers, and the tests in `tests/audio-music.test.ts` enforce most of them:
+- Data checks:
+  - Every piece has its own A progression and its own cadence.
+  - Chord-bigram Jaccard is at most 0.32.
+  - Melody 3-gram overlap is at most 22%.
+  - Each pair of seasons differs in at least two of: density, register, leaps, range, syncopation.
+  - Every on-beat melody note is a chord tone or resolves by step.
+- Renders, transposition-invariant bar-chroma similarity:
+  - Every day pair is 0.91 or lower. Spring-summer went from 0.955 to 0.910, and fall-winter from 0.953 to 0.870.
+  - Night pairs are 0.915 or lower.
+- Estimated keys match the declared key, except summer, which reads as G major: D mixolydian is G's scale, and the critic accepted this.
+- Levels: day -24.7 to -25.6 LUFS, night -27.4 to -28.8. Mine reads -28.9 (see Open).
 
-Confirmed fixed by the critic's own renders (`audio-critique/round-3/renders`, `final.md`): rapid water
-(16 cans at 0.2 s: -25.5 LUFS, was -14.6), winter-night pad dip (0% of 72 bars dip over 3 dB), eviction,
-drips licence and Ted Kerr credit, thunder licence. Rewards within 1.6 dB at the output (harvest -21.1,
-coin -21.0, buy -19.5), tools within 3.2 dB (water -19.9, cut -22.2, till -23.1).
-Still open, add to the list below:
-- Harmony shared across seasons (major, step 2 below).
-- Crickets: 9.0 s and 7.2 s layers realign every 36 s (correlation 0.998). Use 7.333 s (2200/300 s, a
-  198 s cycle) or another length with a long common multiple, in `recipes.json` `ambience.crickets.layers`.
-- Heart jingle overshoots (-16.8, now the loudest event): lower the heart part gains in `music_src.py`.
-- Output levels read 1-3 dB under the build targets (till lowest): nudge the family targets or K_SFX after a
-  render.
-- ui-1 about 2 dB short; perf plays only 3 sfx; SW cache version is global.
+**Other round-2 changes:**
+- **Crickets:** loops of 9 s and 7.333 s, which realign every 198 s (was 36 s).
+- **Sound-effect levels:** each recipe has a `trim` (dB), calibrated with `sfxlevels.py`: the median of 16 hits, K-weighted max momentary. Every cue is within about 1 dB of its role target at the output: rewards -18, tools -20, light -22, ui -25, steps -28, jingles -19. The heart jingle is -19.3, and the ui first take is replaced.
+- **Brick wall:** a soft clipper after the compressor: knee -3 dBFS, ceiling -1.4 dBFS, 2x oversampling. With every slider at maximum, festival, rain and 60 loud effects, the peak is -1.1 dBTP. Music mixes peak at -6 dBTP or lower.
+- **Service worker:** audio has its own cache, `tiny-acre-audio`, with one entry per file version (path plus content hash). A release downloads only the files that changed. `tests/audio-sw.test.ts` covers it.
+- **Perf:** a "20 sound effects a second" scene asserts that at least 20 cues play from files; about 99-110 do.
+- **Touch cues** for the one-thumb controls: `tick`, `target`, `ringOpen`, `ringClose` and `confirm`.
+  - They are Kenney CC0 recordings, 75 ms or shorter, about -28 at the output, and repeats are 8 dB softer.
+  - tick and target play at most one per 70 ms, and tick masks footsteps for 80 ms.
+  - Each has a synth fallback.
+  - They are documented in `docs/EXTENDING.md` with a haptics policy.
+  - **They are not wired**: the controls branch owns the call sites.
+- **Payload:** 1.75 MB of mono MP3 (instruments 1.08, sfx 0.18, ambience 0.49), up 23 KB from round 1.
 
-## What the owner should listen to first (on a phone speaker and on headphones)
+## Open
 
-1. A New Game on the farm in spring, daytime, walking and using the hoe, can and scythe: sound effects against
-   music. Critic renders: `audio-critique/round-2/renders/long-spring-day.wav`, `water-rapid.wav`,
-   `steps-rapid.wav`; or run `node audio-src/tools/render.mjs <dir>` (dev server on 5176) and listen to
-   `mix-farm-work.wav`.
-2. The title screen music (`music-title.wav`): first impression.
-3. Each season by day and by night (`music-<season>-day/night.wav`; critic's `long-*.wav`): do the melodies
-   sound composed and pleasant, is anything out of tune (pitch was measured per sample, but nobody heard it),
-   do the pads swell or click at bar lines (winter night)?
-4. Footsteps (grass uses crunchy snow footsteps from Kenney; wood uses Kenney RPG boots): right material?
-5. Rain, crickets, birds, thunder, mine (`amb-*.wav`): loops audible? birds too loud?
-6. The jingles: level up, goal, heart, order, sleep.
+- Nits from the critic:
+  - Swing sits about 1 dB under its target.
+  - The 20-sfx/s perf scene runs at 92 fps under 6x throttle, against 124-143 for the other scenes. Each hit creates its own nodes; pool gain nodes per cue if phones show it.
+  - Spiky effects (coin, buy) peak at about -1.3 dBTP at default volume, so the clipper shaves their spikes slightly.
+- The "holding Action" perf scene still plays only 3 sfx, because the hoe fails on planted tiles. The storm scene covers the sfx path.
+- The touch cues need wiring in the controls code:
+  - `tick` per painted tile
+  - `target` when a walk target is set
+  - `ringOpen` / `ringClose`
+  - `confirm` when a tool is picked or a row is committed
+- Mine music reads -28.9 LUFS, under the -25 day target. This is probably fine under the cave bed, but decide by ear.
+- Render speed is now 30-40x realtime (the soft clipper costs about 10%).
 
-Decide: keep the composed-sampler approach or commission music; palette per season (recorder, ocarina,
-marimba, harp, piano, glock); whether footsteps need different recordings.
+## What the owner should listen to first
+
+The order and file names are in `C:/Users/andre/dev/tiny-acre/audio-renders/round2/LISTEN.md`. It covers:
+- the four seasons by day;
+- the title, including the sting;
+- the festival, including the trio;
+- the mine;
+- the nights;
+- the touch cues at 10 taps a second;
+- single effects, crickets, farm work, the drag-row render and the stress render.
+
+The decisions it informs:
+- Keep the composed-sampler approach, or commission music?
+- Is summer's mixolydian bridge welcome, or too far from home?
+- Are the touch cues audible enough?
 
 ## Next steps, in order
 
-1. Re-render at `f9c0aae` (`render.mjs` + `measure.py`), add a rapid-water and a farm-mine-farm job, and
-   confirm the fixes above with numbers; send them to the critic.
-2. Season harmonies (the open major): rewrite summer, fall, winter and title sections and phrases in
-   `audio-src/tools/music_src.py`, run it, `npx vitest run tests/audio-music.test.ts`, render, check levels
-   (per-piece `level`/`nightLevel` may need retuning to keep day near -25 and night near -28 LUFS).
-3. Jingle loudness to about -19 (output momentary).
-4. Separate audio cache in the service worker; perf scene that really plays sfx plus a minimum-count assert.
-5. Human listening pass on a real iPhone and Android phone (also: unlock on first tap, phone call
-   interruption, silent switch on iOS web vs app, Bluetooth latency of footsteps).
-6. Optional: indoor ambience (house clock or fire), woods-specific ambience, more takes for coin/harvest,
-   2-3 more phrases per section to stretch the time before a melody repeats.
+1. A human listening pass on a real iPhone and an Android phone. Also check:
+   - unlock on the first tap;
+   - resuming after a phone call;
+   - the iOS silent switch;
+   - footstep latency over Bluetooth.
+2. Wire the touch cues once the controls branch merges, then render a real drag and tap session.
+3. Decide the mine level after listening with the cave ambience on top.
+4. Optional: indoor ambience (house clock or fire), woods ambience, more takes for coin and harvest, and
+   more phrases per section to stretch the time before a melody repeats.
 
-How to run things (Windows/Git Bash): raw sources live outside the repo, e.g. `C:/Users/andre/dev/tiny-acre/
-audio-raw/samples` (re-download with `python -I audio-src/tools/fetch.py <dir>`, sha1-checked). Rebuild all
-audio with `python -I audio-src/tools/build.py <dir>` (about 90 s), then `python -I audio-src/tools/sources_md.py`.
-`npm run verify` with `CHROMIUM_PATH` set; use `E2E_PORT`, `E2E_MOBILE_PORT`, `PERF_PORT` when another checkout
-is running its own checks.
+## How to run things
+
+All commands are for Windows with Git Bash.
+
+- **Raw sources:** they live outside the repo, in `C:/Users/andre/dev/tiny-acre/audio-raw/samples`. Re-download them with `python -I audio-src/tools/fetch.py <dir>`, which checks each sha1.
+- **Rebuild:** `python -I audio-src/tools/build.py <dir>` takes about 60 s and is deterministic. Then run `python -I audio-src/tools/sources_md.py`.
+- **Music:** `python -I audio-src/tools/music_src.py` writes `src/audio/music.json`.
+- **Renders:** `node audio-src/tools/render.mjs <out> http://localhost:5176/?debug [filter]`, with the dev server running. Then measure with:
+  - `measure.py <out>`
+  - `sfxlevels.py <out>`
+  - `seasons.py --renders <out>`
