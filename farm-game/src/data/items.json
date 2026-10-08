@@ -539,7 +539,7 @@
     "icon": "item_bee_house",
     "color": "#e8b030",
     "sellPrice": 150,
-    "description": "Makes honey every few days.",
+    "description": "Makes honey every few days, faster near flowers.",
     "placeable": true
   },
   "cherry": {
@@ -732,7 +732,7 @@
     "sellPrice": 30,
     "description": "A bar of copper.",
     "derived": true,
-    "sellMultiplier": 1.0,
+    "sellMultiplier": 1,
     "nameTemplate": "Copper Bar"
   },
   "iron_bar": {
@@ -743,7 +743,7 @@
     "sellPrice": 55,
     "description": "A bar of iron.",
     "derived": true,
-    "sellMultiplier": 1.0,
+    "sellMultiplier": 1,
     "nameTemplate": "Iron Bar"
   },
   "furnace": {
@@ -963,7 +963,7 @@
     "buyPrice": 25,
     "sellPrice": 12,
     "plants": "tulip",
-    "description": "Spring flower. 6 days. Show it off!"
+    "description": "Spring flower. 6 days. Bees love them."
   },
   "tulip": {
     "name": "Tulip",

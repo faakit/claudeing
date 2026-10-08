@@ -97,6 +97,32 @@ describe('bee house', () => {
     expect(countItem(s, 'honey')).toBe(1);
     expect(hiveOf(hive).ready).toBe(0);
   });
+  it('makes honey faster while flowers grow nearby (tulips are more than a show flower)', () => {
+    const s = newState();
+    const hive = placeObject(s, 'farm', 4, 4, 'bee_house');
+    s.farm.tiles['6,6'] = {
+      watered: false,
+      crop: { cropId: 'tulip', stage: 1, daysInStage: 0, regrow: false },
+    };
+    for (let i = 0; i < 3; i++) runDayPipeline(s, ctx(s));
+    expect(hiveOf(hive).ready).toBe(1);
+    expect(interactWith(s, placeObject(s, 'farm', 5, 7, 'bee_house'))).toMatchObject({
+      text: expect.stringContaining('bees love your flowers'),
+    });
+    // A flower too far away (or a vegetable close by) does not count.
+    const t = newState();
+    const far = placeObject(t, 'farm', 4, 4, 'bee_house');
+    t.farm.tiles['8,8'] = {
+      watered: false,
+      crop: { cropId: 'tulip', stage: 1, daysInStage: 0, regrow: false },
+    };
+    t.farm.tiles['5,5'] = {
+      watered: false,
+      crop: { cropId: 'parsnip', stage: 1, daysInStage: 0, regrow: false },
+    };
+    for (let i = 0; i < 3; i++) runDayPipeline(t, ctx(t));
+    expect(hiveOf(far).ready).toBe(0);
+  });
   it('repairs malformed hive data', () => {
     const s = newState();
     const hive = placeObject(s, 'farm', 4, 4, 'bee_house');
