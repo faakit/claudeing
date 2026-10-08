@@ -48,9 +48,13 @@ const PROFILES = [
   },
 ];
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
-  stdio: 'ignore',
-});
+const server = spawn(
+  process.execPath,
+  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
+  {
+    stdio: 'ignore',
+  },
+);
 process.on('exit', () => server.kill());
 for (let i = 0; i < 50; i++) {
   try {
