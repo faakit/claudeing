@@ -379,6 +379,11 @@ export interface ProjectDef {
   reward: string;
   /** Something that appears in the world once it is built (solid, one tile). */
   landmark?: { map: string; tx: number; ty: number; sprite: string; color: string };
+  /**
+   * A project that can be funded again and again (the late-game sink): each level costs `growth` times the
+   * last; its perks stack for the first `perkLevels` levels, after which a level is for show.
+   */
+  repeat?: { growth: number; perkLevels: number };
 }
 export interface PlotDef {
   name: string;
@@ -420,8 +425,18 @@ export interface GameData {
   stormChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;
-  /** The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. */
-  rival: { npc: string; minute: number; startDay: number };
+  /**
+   * The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. From year
+   * two he takes `perYear` more each year (at most `maxTakes`), unless he likes you (`calmHearts`).
+   */
+  rival: {
+    npc: string;
+    minute: number;
+    startDay: number;
+    perYear?: number;
+    maxTakes?: number;
+    calmHearts?: number;
+  };
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];

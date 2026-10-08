@@ -10,6 +10,7 @@ import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
 import { applyRival } from './rival';
+import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
 
@@ -32,6 +33,8 @@ export function orderCandidates(state: GameState): ItemRef[] {
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
   for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });
+  // Eggs, milk, wool, truffles and honey, once the farm makes them.
+  for (const item of animalOutput(state).keys()) add({ item });
   // Goods from any machine the player has unlocked (jam, pickles, wine...).
   for (const machine of Object.keys(machines)) {
     const recipe = recipes[machine];
@@ -67,12 +70,15 @@ export function generateOrders(
   const list: Order[] = [];
   let id = [...state.orders.list, ...standing].reduce((n, o) => Math.max(n, o.id), 0) + 1;
   const today = absoluteDay(state);
+  const made = animalOutput(state);
   for (let i = 0; i < count && pool.length > 0; i++) {
     const ref = pool.splice(Math.floor(random(state) * pool.length), 1)[0] as ItemRef;
     const value = sellValue(ref);
     const tier = ordersCfg.tiers.find((t) => value <= t.maxValue) ?? ordersCfg.tiers[0];
     if (!tier) break;
-    const qty = between(state, tier.qty);
+    // Animal goods: never more than about two days of what the farm makes.
+    const perDay = made.get(ref.item);
+    const qty = Math.min(between(state, tier.qty), perDay ? animalOrderCap(perDay) : 999);
     const [lo, hi] = ordersCfg.rewardMultiplier;
     const mult = lo + random(state) * (hi - lo);
     const reward = Math.min(

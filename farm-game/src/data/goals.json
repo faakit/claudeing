@@ -468,5 +468,13 @@
     "target": 1,
     "reward": 1000,
     "hint": "A big seasonal request on the board. Bring goods bit by bit."
+  },
+  {
+    "id": "statue3",
+    "text": "Raise your statue to level 3",
+    "stat": "projectLevels",
+    "target": 3,
+    "reward": 3000,
+    "hint": "The Founder's Statue opens after the Market Road."
   }
 ]

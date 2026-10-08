@@ -5,7 +5,13 @@ import { enterFestival } from '../src/systems/festivals';
 import { POINTS_PER_HEART } from '../src/systems/friendship';
 import { addItem } from '../src/systems/inventory';
 import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
-import { applyRival, rivalActive, rivalMinute, rivalNotice } from '../src/systems/rival';
+import {
+  applyRival,
+  rivalActive,
+  rivalMinute,
+  rivalNotice,
+  rivalTakes,
+} from '../src/systems/rival';
 import { migrate } from '../src/systems/save';
 import { absoluteDay } from '../src/systems/time';
 import { measureText } from '../src/ui/fontMetrics';
@@ -107,5 +113,38 @@ describe('the rival farmer', () => {
     const v11 = JSON.parse(JSON.stringify(newState())) as Record<string, unknown>;
     v11['version'] = 11;
     expect(migrate(v11).version).toBeGreaterThan(11);
+  });
+});
+
+describe('the rival in year two (handover goal 3)', () => {
+  it('takes two requests a day from year two, never the last open one', () => {
+    const s = boardDay();
+    s.time.year = 2;
+    s.orders.day = absoluteDay(s);
+    expect(rivalTakes(s)).toBe(2);
+    expect(rivalNotice(s)).toMatch(/best two at 2:00 PM/);
+    s.time.minutes = rivalMinute(s);
+    const sorted = [...s.orders.list].sort((a, b) => b.reward - a.reward);
+    applyRival(s);
+    const gone = s.orders.list.filter((o) => o.rival).map((o) => o.id);
+    expect(gone).toEqual(sorted.slice(0, 2).map((o) => o.id));
+    expect(rivalNotice(s)).toBe('Clay took two today.');
+    expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
+    // With one request left open he leaves it to you.
+    const t = boardDay();
+    t.time.year = 3;
+    t.orders.day = absoluteDay(t);
+    t.orders.list[0]!.done = true;
+    t.time.minutes = 1300;
+    applyRival(t);
+    expect(t.orders.list.filter((o) => !o.done)).toHaveLength(1);
+  });
+
+  it('a friend takes only one, however many years go by', () => {
+    const s = boardDay();
+    s.time.year = 4;
+    hearts(s, 2);
+    expect(rivalTakes(s)).toBe(1);
+    expect(rivalTakes({ ...s, friends: {} })).toBe(2); // capped at two
   });
 });

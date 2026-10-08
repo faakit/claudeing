@@ -8,6 +8,7 @@ import { countItem, removeItem } from './inventory';
 import { isProjectDone } from './projects';
 import { random } from './rng';
 import { absoluteDay } from './time';
+import { animalOutput } from './animals';
 
 /**
  * Special orders: one big seasonal request at a time on the town board ("10 Pumpkins for Rosa by Fall 28").
@@ -29,7 +30,9 @@ export const specialCandidates = (state: GameState): SpecialDef[] =>
     (sp) =>
       sp.seasons.includes(state.time.season) &&
       (!sp.project || isProjectDone(state, sp.project)) &&
-      (!sp.requires || stat(state, sp.requires.stat) >= sp.requires.min),
+      (!sp.requires || stat(state, sp.requires.stat) >= sp.requires.min) &&
+      // An animal good waits until the farm makes it (a cow alone never brings an egg special).
+      (items[sp.item]?.type !== 'product' || animalOutput(state).has(sp.item)),
   );
 
 /** Build a special for today: quantity from the yearly value target, due the season's last day. */

@@ -154,7 +154,8 @@ describe('town projects', () => {
   });
 
   it('cost more as the chain goes on, so late gold has somewhere to go', () => {
+    // A repeatable sink starts lower than the project before it, then grows each level.
     for (const p of Object.values(projects))
-      if (p.after) expect(p.gold, p.name).toBeGreaterThan(projects[p.after]!.gold);
+      if (p.after && !p.repeat) expect(p.gold, p.name).toBeGreaterThan(projects[p.after]!.gold);
   });
 });

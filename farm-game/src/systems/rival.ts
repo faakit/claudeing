@@ -1,6 +1,7 @@
 import { game, npcs } from '../data';
 import type { GameState, Order } from '../state/GameState';
 import { perk } from './skills';
+import { heartsOf } from './friendship';
 import { absoluteDay, formatClock } from './time';
 import { gameEvents } from './events';
 
@@ -21,15 +22,29 @@ export const rivalActive = (state: GameState): boolean =>
 export const rivalMinute = (state: GameState): number =>
   game.rival.minute + Math.max(0, perk(state, 'rivalLate'));
 
-/** "Clay takes one at 2:00 PM." or what already happened today. */
-export function rivalNotice(state: GameState): string {
-  if (!rivalActive(state)) return 'Requests stay two or three days.';
-  const took = state.orders.list.find((o) => o.rival);
-  if (took) return `${rivalName()} took one today.`;
-  return `${rivalName()} takes the best one at ${formatClock(rivalMinute(state))}.`;
+/**
+ * How many requests the rival takes a day: one in year one, then `perYear` more each year (up to
+ * `maxTakes`), back to one once he likes you (`calmHearts`). Never the whole board.
+ */
+export function rivalTakes(state: GameState): number {
+  const r = game.rival;
+  if (heartsOf(state, r.npc) >= (r.calmHearts ?? Infinity)) return 1;
+  const n = 1 + Math.floor((state.time.year - 1) * (r.perYear ?? 0));
+  return Math.max(1, Math.min(n, r.maxTakes ?? 1));
 }
 
-/** If it is time, the rival fills one open request. Returns the order taken, if any. */
+const NUMBER_WORDS = ['none', 'one', 'two', 'three'];
+
+/** "Clay takes the best one at 2:00 PM." or what already happened today. */
+export function rivalNotice(state: GameState): string {
+  if (!rivalActive(state)) return 'Requests stay two or three days.';
+  const took = state.orders.list.filter((o) => o.rival).length;
+  const n = rivalTakes(state);
+  if (took) return `${rivalName()} took ${NUMBER_WORDS[took] ?? took} today.`;
+  return `${rivalName()} takes the best ${NUMBER_WORDS[n] ?? n} at ${formatClock(rivalMinute(state))}.`;
+}
+
+/** If it is time, the rival fills his requests for the day. Returns the first order taken, if any. */
 export function applyRival(state: GameState): Order | null {
   const today = absoluteDay(state);
   if (!rivalActive(state) || state.orders.day !== today) return null;
@@ -39,10 +54,13 @@ export function applyRival(state: GameState): Order | null {
   if (open.length === 0) return null;
   const polite = perk(state, 'rivalPolite') >= 1;
   open.sort((a, b) => (polite ? a.reward - b.reward : b.reward - a.reward));
-  const order = open[0] as Order;
-  order.done = true;
-  order.rival = true;
-  state.stats['rivalTook'] = (state.stats['rivalTook'] ?? 0) + 1;
+  // Never the whole board: at least one open request is left for you.
+  const taken = open.slice(0, Math.min(rivalTakes(state), Math.max(1, open.length - 1)));
+  for (const order of taken) {
+    order.done = true;
+    order.rival = true;
+  }
+  state.stats['rivalTook'] = (state.stats['rivalTook'] ?? 0) + taken.length;
   gameEvents.emit('goalChanged', undefined);
-  return order;
+  return taken[0] ?? null;
 }

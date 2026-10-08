@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crops, items, plots, shops } from '../src/data';
+import { crops, items, plots, projects, shops } from '../src/data';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { craft } from '../src/systems/crafting';
 import { endDay } from '../src/systems/day';
@@ -7,7 +7,15 @@ import { buyItem, buyUpgrade, shipStack, stockFor, upgradeLevel } from '../src/s
 import { maxEnergy } from '../src/systems/energy';
 import { getSoil, isMature } from '../src/systems/farming';
 import { goalProgress } from '../src/systems/goals';
-import { countItem, countStack } from '../src/systems/inventory';
+import { addItem, countItem, countStack } from '../src/systems/inventory';
+import {
+  donateGold,
+  donateItems,
+  isProjectOpen,
+  itemNeeds,
+  projectLevel,
+  visibleProjects,
+} from '../src/systems/projects';
 import { keyOf, refOf, sellValue, type ItemRef } from '../src/systems/itemRef';
 import { deliverOrder, ensureOrders, haveFor } from '../src/systems/orders';
 import { interactWith, objectsOn } from '../src/systems/placeables';
@@ -212,3 +220,53 @@ describe('balance simulation (decent player, full year)', () => {
     expect(s.plots.length).toBeGreaterThan(2);
   });
 });
+
+/**
+ * The same bot over two years, also funding town projects as soon as it can (it is handed the goods a
+ * project asks for, standing in for the mine and the machines it does not play). This measures whether the
+ * late-game sinks absorb a tireless farmer's gold.
+ */
+describe('balance simulation (two years, funding projects)', () => {
+  it("the late-game sinks absorb a tireless farmer's second year", () => {
+    const s = createInitialState();
+    s.rng = 42;
+    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+    const log: string[] = [];
+    let sunk = 0;
+    for (let day = 1; day <= 224; day++) {
+      playDay(s, ledger);
+      sunk += fundProjects(s);
+      endDay(s, { passedOut: false, weedCandidates: [] });
+      if (day % 28 === 0)
+        log.push(
+          `day ${day} (y${s.time.year} ${s.time.season}): gold ${s.money}, earned ${s.stats['earned'] ?? 0}, ` +
+            `sunk ${sunk}, projects ${s.stats['projectsDone'] ?? 0}, statue ${projectLevel(s, 'statue')}`,
+        );
+    }
+    console.log(log.join('\n'));
+    // Without the repeatable statue this bot ended year two holding about 280k with nothing to buy
+    // (depth round 2). Now most of it goes into the statue, whose perk levels run out in year two.
+    expect(sunk).toBeGreaterThan(300_000);
+    expect(s.money).toBeLessThan(100_000);
+    expect(projectLevel(s, 'statue')).toBeGreaterThanOrEqual(4);
+    expect(s.stats['projectsDone']).toBe(Object.values(projects).filter((p) => !p.repeat).length);
+  });
+});
+
+/**
+ * Once all the land is bought, give gold (keeping a 30,000g float for a field of seeds) and the goods to the first open
+ * project. Returns the gold given.
+ */
+function fundProjects(s: GameState): number {
+  if (Object.entries(plots).some(([id, p]) => !p.project && !ownsPlot(s, id))) return 0;
+  let given = 0;
+  for (const id of visibleProjects(s)) {
+    if (!isProjectOpen(s, id)) continue; // a repeatable one (the statue) stays open
+    for (const n of itemNeeds(s, id)) if (n.given < n.need) addItem(s, n.item, n.need - n.given);
+    donateItems(s, id);
+    const res = donateGold(s, id, s.money - 30000);
+    if (res.ok) given += res.given;
+    break;
+  }
+  return given;
+}

@@ -14,6 +14,8 @@ import {
   itemNeeds,
   needLabel,
   nextLocked,
+  priceOf,
+  projectLevel,
   projectProgress,
   visibleProjects,
   type FundResult,
@@ -21,7 +23,7 @@ import {
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { fmt } from './format';
-import { GIVE_STEPS, PROJECTS_INTRO, projectSub } from './projectText';
+import { GIVE_STEPS, GLORY_LINE, PROJECTS_INTRO, projectSub, repeatSub } from './projectText';
 
 /** The town fund: a list of projects, and a page per project to give gold and goods to. */
 export class ProjectPanel extends Modal {
@@ -56,11 +58,14 @@ export class ProjectPanel extends Modal {
     let y = 34;
     for (const id of visibleProjects(s)) {
       const p = projects[id]!;
-      const done = isProjectDone(s, id);
+      // A repeatable project (the statue) is never "done": it shows its level and stays open.
+      const done = isProjectDone(s, id) && !p.repeat;
       y = this.row(y, {
         icon: this.landmarkIcon(id),
         title: p.name,
-        sub: projectSub(goldGiven(s, id), p.gold, done, p.perks),
+        sub: p.repeat
+          ? repeatSub(projectLevel(s, id), goldGiven(s, id), priceOf(s, id))
+          : projectSub(goldGiven(s, id), p.gold, done, p.perks),
         subColor: done ? C.green : C.creamDim,
         buttons: done
           ? []
@@ -94,18 +99,28 @@ export class ProjectPanel extends Modal {
     const s = getState();
     const p = projects[id]!;
     this.icon(15, 15, this.landmarkIcon(id));
-    this.label(28, 8, p.name, C.gold);
+    this.label(28, 8, p.repeat ? `${p.name} ${projectLevel(s, id) + 1}` : p.name, C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     const blurb = this.label(8, 26, p.blurb, C.cream, 1, 'left', 184);
     let y = 26 + blurb.textHeight + 4;
-    const reward = this.label(8, y, `When done: ${p.reward}`, C.green, 1, 'left', 184);
+    const glory = !!p.repeat && projectLevel(s, id) >= p.repeat.perkLevels;
+    const reward = this.label(
+      8,
+      y,
+      glory ? GLORY_LINE : `When done: ${p.reward}`,
+      C.green,
+      1,
+      'left',
+      184,
+    );
     y += reward.textHeight + 6;
     const g = this.scene.add.graphics();
     this.content.add(g);
     drawBar(g, 8, y, 184, 7, projectProgress(s, id), C.gold);
     y += 11;
-    const left = p.gold - goldGiven(s, id);
-    this.label(8, y, `Gold ${fmt(goldGiven(s, id))}/${fmt(p.gold)}`, left > 0 ? C.cream : C.green);
+    const price = priceOf(s, id);
+    const left = price - goldGiven(s, id);
+    this.label(8, y, `Gold ${fmt(goldGiven(s, id))}/${fmt(price)}`, left > 0 ? C.cream : C.green);
     y += 12;
     for (const n of itemNeeds(s, id)) {
       this.label(8, y, needLabel(s, n), n.given >= n.need ? C.green : C.creamDim);

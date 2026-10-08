@@ -61,7 +61,9 @@ export function feedFromSilos(state: GameState, hungry: string[] = []): number {
     const silo = silos.find((s) => (siloStock(s)[sp.feed] ?? 0) >= h.n);
     if (!silo) {
       // Say so: a silo with 1 hay for a barn of 2 looks stocked but feeds no one (critique 5, F7).
-      hungry.push(`The ${def.name.toLowerCase()} went hungry: the silo needs ${h.n} ${items[sp.feed]?.name ?? sp.feed}.`);
+      hungry.push(
+        `The ${def.name.toLowerCase()} went hungry: the silo needs ${h.n} ${items[sp.feed]?.name ?? sp.feed}.`,
+      );
       return;
     }
     siloStock(silo)[sp.feed] = (siloStock(silo)[sp.feed] ?? 0) - h.n;

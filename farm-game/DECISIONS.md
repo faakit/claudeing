@@ -347,3 +347,18 @@ An independent critic played the build at `64eeb10` and wrote `agents/critiques/
 - **F6 and the owner's call:** nothing can be placed on land for sale or on a project's site before it is yours ("Not your land yet. Buy it at a sign."). The yard outside every plot stays free for decorations and machines.
 - **F7** the morning summary names a house the silo could not feed ("The barn went hungry: the silo needs 2 Hay.").
 - **F8** a finished project's gold buttons give way to "All the gold is in!"; shop rows keep "own N" by shortening to "4d 35g, own 12" when the full line does not fit beside the buttons (the old test allowed 110 px where the row has 86); truffles join the Animal Goods page.
+
+## Animal goods on the board (depth round 2)
+
+- **Orders and specials ask for eggs, milk, wool, truffles and honey once the farm makes them** (`animalOutput`: a house with animals, a bee house; pigs not in winter). A request never asks for more than about two days of what the farm makes (`animalOrderCap`), so one hen never gets a request for six eggs. The egg special now waits for hens, not for any animal; milk (Rosa) and truffle (Mara) specials were added. No reward rule changed, so the order bound in `tests/balance.test.ts` still holds.
+
+## Clay in year two (depth round 2)
+
+- **From year two Clay takes two requests a day** (`game.rival.perYear`, capped by `maxTakes`), back to one once he likes you (`calmHearts`: 2 hearts, the same heart that makes him come later). He never takes the last open request. The board says "Clay takes the best two at 2:00 PM."
+
+## A repeatable late-game sink: the Founder's Statue (depth round 2)
+
+- **Evidence first:** a two-year run of the sim bot that buys all the land and then funds every project (it is handed the goods it does not mine) finished all eight projects by spring of year two and then ended the year holding about 280k gold with nothing to buy.
+- **A project can now repeat** (`repeat: { growth, perkLevels }` in `projects.json`): each level costs `growth` times the last, gold and goods start over, perks stack for `perkLevels` levels and later levels are for show. Levels are the stat `project.<id>.level`; no new state.
+- **The Founder's Statue** opens after the Market Road: 30,000g and 50 stone for level 1, half again each level; +1% on sales per level up to +5%. A level pays back 1% of a year's sales, so it is a sink, not an investment (a test keeps payback over ten tireless years). The same bot now ends year two at statue level 4 with about 30k in hand. Repeat levels never count toward "all projects"; a goal "statue level 3" is appended.
+- **Landmark** `obj_landmark_statue` at town 10,14 (fallback colour until art).

@@ -707,11 +707,40 @@ try {
     ps.stats['fest.harvest_fair.y1'] === 1 && ps.money > moneyBefore,
     `money ${moneyBefore} -> ${ps.money}`,
   );
-  // Fishing Derby: handing in early asks first, so one stray tap cannot end the derby (critique 5, F4).
+  // The Founder's Statue: once every project is done it stays open, a level at a time.
   await ui(() => {
     const f = window.__farm;
     const ui = f.game.scene.getScene('UI');
     ui.panels.get('festival').close();
+    const s = f.getState();
+    for (const id of [
+      'canopy',
+      'seedexchange',
+      'fishladder',
+      'library',
+      'bathhouse',
+      'fairhall',
+      'market',
+    ])
+      s.stats[`project.${id}`] = 1;
+    s.money = 50000;
+    f.gameEvents.emit('openPanel', { type: 'projects' });
+    const panel = ui.panels.get('projects');
+    panel.id = 'statue';
+    panel.rebuild();
+  });
+  await pp.waitForTimeout(400);
+  await pClick(161, 150 + 168 + 11); // +10,000g
+  ps = await pState();
+  check(
+    "the Founder's Statue takes gold once every project is done",
+    ps.stats['fund.statue'] === 10000 && ps.money === 40000,
+    `fund ${ps.stats['fund.statue']} money ${ps.money}`,
+  );
+  await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').close());
+  // Fishing Derby: handing in early asks first, so one stray tap cannot end the derby (critique 5, F4).
+  await ui(() => {
+    const f = window.__farm;
     const s = f.getState();
     s.time.season = 'summer';
     s.time.day = 22;

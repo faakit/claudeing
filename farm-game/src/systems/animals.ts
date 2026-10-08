@@ -115,3 +115,27 @@ export function morning(obj: PlacedObject, outdoorOk = true): boolean {
 
 export const productName = (obj: PlacedObject): string =>
   items[speciesOf(obj)?.product ?? '']?.name ?? 'goods';
+
+/**
+ * Animal goods the farm makes now, per day: eggs from hens, milk from cows, truffles from pigs (none in
+ * winter), honey from bee houses (one per `days` mornings). Orders and specials ask only for these, and
+ * never for more than a couple of days' worth.
+ */
+export function animalOutput(state: GameState): Map<string, number> {
+  const out = new Map<string, number>();
+  const add = (item: string, n: number) => n > 0 && out.set(item, (out.get(item) ?? 0) + n);
+  for (const list of Object.values(state.placed))
+    for (const obj of list) {
+      const def = placeables[obj.type];
+      if (def?.behavior === 'beeHouse')
+        add('honey', 1 / Math.max(1, Number(def.params['days'] ?? 4)));
+      const sp = speciesOf(obj);
+      if (def?.behavior !== 'animalHouse' || !sp) continue;
+      if (sp.outdoor && state.time.season === 'winter') continue;
+      add(sp.product, houseOf(obj).n * sp.perDay);
+    }
+  return out;
+}
+
+/** The most of an animal good a request may ask for: about two days of what the farm makes. */
+export const animalOrderCap = (perDay: number): number => Math.max(1, Math.ceil(perDay * 2));
