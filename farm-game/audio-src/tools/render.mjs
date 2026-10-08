@@ -27,7 +27,7 @@ for (const s of SEASONS) {
   jobs.push({ name: `long-${s}-day`, o: { seconds: 240, slot: s, night: 0 } });
   jobs.push({ name: `long-${s}-night`, o: { seconds: 240, slot: s, night: 1 } });
 }
-for (const s of ['title', 'festival']) jobs.push({ name: `long-${s}`, o: { seconds: 240, slot: s } });
+for (const s of ['title', 'festival', 'mine']) jobs.push({ name: `long-${s}`, o: { seconds: 240, slot: s } });
 // Held tools and the crickets' combined loop period (two layers, 9 s and 7.333 s: 198 s).
 jobs.push({ name: 'water-rapid', o: { seconds: 5, cues: Array.from({ length: 16 }, (_, i) => ({ cue: 'water', at: 0.2 + i * 0.2 })) } });
 // The critic's fatigue test for the one-thumb cues: ten taps a second for 5 s over spring music.

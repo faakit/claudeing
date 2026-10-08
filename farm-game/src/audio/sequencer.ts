@@ -62,6 +62,7 @@ export class PiecePlayer {
   private sections = new Map<string, ParsedSection>();
   private phrases = new Map<string, { bars: number; notes: PhraseNote[] }>();
   private formIndex = 0;
+  private introIndex = 0;
   private barInSection = 0;
   /** layer id -> phrase currently playing (null = resting) and the bar it started. */
   private current = new Map<string, { id: string | null; start: number }>();
@@ -90,13 +91,14 @@ export class PiecePlayer {
   }
 
   nextBar(rng: () => number, opt: BarOptions): BarOut {
-    const sectionId = this.piece.form[this.formIndex % this.piece.form.length]!;
+    const inIntro = this.introIndex < (this.piece.intro?.length ?? 0);
+    const sectionId = inIntro ? this.piece.intro![this.introIndex]! : this.piece.form[this.formIndex % this.piece.form.length]!;
     const section = this.sections.get(sectionId)!;
     const bar = this.barInSection;
     const events: NoteEvent[] = [];
     for (const layer of this.piece.layers) {
       // Always advance phrase choice so the rng sequence does not depend on day/night.
-      const melody = layer.phrases ? this.melodyFor(layer, sectionId, bar, rng) : null;
+      const melody = layer.phrases ? this.melodyFor(layer, sectionId, bar, rng, inIntro) : null;
       if (layer.tacet?.includes(sectionId)) continue;
       if (opt.indoor && layer.outdoorOnly) continue;
       if (layer.time === 'day' && !opt.day) continue;
@@ -108,17 +110,19 @@ export class PiecePlayer {
     this.barInSection += 1;
     if (this.barInSection >= section.bars) {
       this.barInSection = 0;
-      this.formIndex = (this.formIndex + 1) % this.piece.form.length;
+      if (inIntro) this.introIndex += 1;
+      else this.formIndex = (this.formIndex + 1) % this.piece.form.length;
     }
     return { section: sectionId, bar, events };
   }
 
-  private melodyFor(layer: Layer, sectionId: string, bar: number, rng: () => number): NoteEvent[] | null {
+  private melodyFor(layer: Layer, sectionId: string, bar: number, rng: () => number, always = false): NoteEvent[] | null {
     const slots = layer.phrases![sectionId];
     if (!slots || slots.length === 0) return [];
     // Decide once per section whether this melody rests, then pick a phrase at each slot start.
     if (bar === 0 || !this.current.has(layer.id)) {
-      this.resting.set(layer.id, rng() < (layer.rest ?? 0));
+      // An intro (the title sting) always plays; the rng is still drawn so the sequence stays the same.
+      this.resting.set(layer.id, rng() < (layer.rest ?? 0) && !always);
       this.current.delete(layer.id);
     }
     let start = 0;

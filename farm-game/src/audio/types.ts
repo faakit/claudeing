@@ -121,6 +121,8 @@ export interface Piece {
   /** Swing amount for off-beat eighths, 0..0.3 of an eighth. */
   swing?: number;
   sections: Record<string, Section>;
+  /** Sections played once, the first time the piece starts (a sting), before the form loops. */
+  intro?: string[];
   form: string[];
   layers: Layer[];
   /** Melody phrases in note:beats tokens, bars separated by '|'. */

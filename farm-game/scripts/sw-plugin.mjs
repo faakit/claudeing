@@ -28,6 +28,10 @@ const AUDIO_DIR = 'assets/audio/';
  * Audio (about 2 MB) is kept apart in `tiny-acre-audio`, which survives releases: each file is
  * stored under its path plus a hash of its content, a new version downloads only the files whose
  * hash changed (or that are new), and activation deletes entries no longer listed.
+ * Caveat: skipWaiting + clients.claim mean a page still running the previous build can be served a
+ * newer version of an audio file whose onset or loop points its own manifest describes differently.
+ * The risk is small (the sample bank fetches every file at startup, before an update can land), and
+ * a reload fixes it; keep file names versioned in the manifest if that ever matters.
  */
 /** @param {string} [publicDir] @returns {import('vite').Plugin} */
 export function offlineServiceWorker(publicDir = 'public') {

@@ -57,8 +57,8 @@ export function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
 }
 
 /** Soft-clip transfer curve: identity up to KNEE, then a tanh shoulder towards CEILING (linear). */
-export const CLIP_KNEE = 0.6;
-export const CLIP_CEILING = 0.89;
+export const CLIP_KNEE = 0.71;
+export const CLIP_CEILING = 0.85;
 export function softClipCurve(n = 4097): Float32Array<ArrayBuffer> {
   const curve = new Float32Array(new ArrayBuffer(n * 4));
   const span = CLIP_CEILING - CLIP_KNEE;
@@ -73,7 +73,7 @@ export function softClipCurve(n = 4097): Float32Array<ArrayBuffer> {
 function softClipper(ctx: BaseAudioContext): WaveShaperNode {
   const ws = ctx.createWaveShaper();
   ws.curve = softClipCurve();
-  ws.oversample = '4x';
+  ws.oversample = '2x';
   return ws;
 }
 
@@ -87,8 +87,10 @@ export function buildGraph(ctx: BaseAudioContext): Graph {
   limiter.attack.value = 0.003;
   limiter.release.value = 0.15;
   // The compressor's 3 ms attack lets the front of a transient through (max sliders, festival, rain and
-  // a burst of effects reached 0 dBTP). A soft clipper after it is the brick wall: linear up to
-  // -4.4 dBFS, then a tanh knee that never passes -1 dBFS. Normal mixes peak below the knee.
+  // a burst of effects reached 0 dBTP). A soft clipper after it is the brick wall: linear up to -3 dBFS
+  // (the compressor threshold), then a tanh knee that stays under -1.4 dBFS (-1 dBTP with 2x
+  // oversampling). Music mixes peak below the knee, so it only acts on spiky effects and at extreme
+  // settings. 4x oversampling cost a quarter of the offline render speed for no audible gain here.
   const out: AudioNode =
     typeof ctx.createWaveShaper === 'function' ? softClipper(ctx) : ctx.createGain();
   master.connect(limiter).connect(out).connect(ctx.destination);

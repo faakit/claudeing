@@ -239,7 +239,7 @@ PIECES["winter"] = {
          "tacet": ["R"], "gain": 0.8},
         {"id": "pad", "inst": "viola", "time": "night", "pattern": "pad3wide", "anchor": 57, "gain": 0.7},
         {"id": "nbass", "inst": "cello", "time": "night", "pattern": "bass3", "anchor": 38, "bass": True, "gain": 0.65},
-        {"id": "ntune", "inst": "piano", "time": "night", "rest": 0.3,
+        {"id": "ntune", "inst": "piano", "time": "night", "rest": 0.3, "gain": 0.85,
          "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]]}},
     ],
     "phrases": {
@@ -272,7 +272,10 @@ PIECES["title"] = {
         "A": {"chords": "Ebadd9 | Gm7 | Abmaj7 | Bbsus4 Bb | Eb/G | Cbmaj7 | Abmaj7 | Abm6"},
         "B": {"chords": "Abmaj7 | Gb | Cb | Bbsus4 Bb | Abmaj7 | Gb | Fm9 | Bbsus4 Bb"},
         "R": {"chords": "Cbmaj7 | Gb | Abm6 | Ebadd9"},
+        "I": {"chords": "Ebadd9 | Bb"},
     },
+    # A two-bar sting the first time the title appears: a rising arpeggio to the high Eb, doubled on the bell.
+    "intro": ["I"],
     "form": ["A", "A", "B", "A", "R"],
     "layers": [
         {"id": "comp", "inst": "harp", "time": "both", "pattern": "arpUp", "anchor": 51, "gain": 0.65},
@@ -280,11 +283,13 @@ PIECES["title"] = {
         {"id": "bass", "inst": "cello", "time": "both", "pattern": "bassLong", "anchor": 39, "bass": True,
          "gain": 0.5},
         {"id": "tune", "inst": "piano", "time": "both", "rest": 0.1,
-         "phrases": {"A": [["hook"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
-        {"id": "bell", "inst": "glock", "time": "both", "rest": 0.3, "gain": 0.8,
-         "phrases": {"A": [["hookHi"], ["bellEnd"]]}},
+         "phrases": {"I": [["sting"]], "A": [["hook"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
+        {"id": "bell", "inst": "glock", "time": "both", "rest": 0.3, "gain": 0.6,
+         "phrases": {"I": [["stingHi"]], "A": [["hookHi"], ["bellEnd"]]}},
     ],
     "phrases": {
+        "sting": "Bb4:.5 Eb5:.5 G5:.5 Bb5:.5 Eb6:2 | D6:1.5 Bb5:.5 F5:2",
+        "stingHi": "r:1 Eb6:.5 G6:.5 Bb6:2 | F6:2 r:2",
         "hook": "Bb4:1 G5:2 F5:.5 Eb5:.5 | D5:1.5 Bb4:.5 F5:2 | Eb5:1 C5:1 G5:1.5 Ab5:.5 | Bb5:3 r:1",
         "hookHi": "Bb5:1 G6:2 F6:.5 Eb6:.5 | D6:1.5 Bb5:.5 F6:2 | Eb6:1 C6:1 G6:1.5 Ab6:.5 | Bb6:3 r:1",
         "bellEnd": "r:4 | r:4 | r:2 G6:2 | Eb6:2 r:2",
@@ -304,15 +309,17 @@ PIECES["mine"] = {
         "A": {"chords": "Am | Am | Fmaj7 | G | Am | Am | Dm7 | Esus4 E"},
         "B": {"chords": "Dm7 | Am | Dm7 | Em | Fmaj7 | G | Am | Am"},
         "R": {"chords": "Am | Am | Am | Am"},
+        "D": {"chords": "Am | Bb/A | Am | Bb/A | Dm/A | Bb/A | Esus4 | Am"},
     },
-    "form": ["A", "B", "A", "R"],
+    # D goes deeper: the phrygian bII (Bb) over the A drone, no ostinato, a slower and lower tune.
+    "form": ["A", "B", "A", "R", "D"],
     "layers": [
         {"id": "drone", "inst": "cello", "time": "both", "pattern": "bassLong", "anchor": 33, "bass": True, "gain": 0.7},
         {"id": "pad", "inst": "viola", "time": "both", "pattern": "pad", "anchor": 57, "gain": 0.4},
         {"id": "ost", "inst": "marimba", "time": "both", "pattern": "mineOst", "anchor": 57, "gain": 0.55,
-         "tacet": ["R"]},
+         "tacet": ["R", "D"]},
         {"id": "tune", "inst": "vibes", "time": "both", "rest": 0.35,
-         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1"], ["b2"]]}},
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1"], ["b2"]], "D": [["d1"], ["d2"]]}},
     ],
     "phrases": {
         "a1": "r:2 E5:2 | C5:4 | r:2 A4:1 C5:1 | B4:4",
@@ -321,6 +328,8 @@ PIECES["mine"] = {
         "a2b": "r:2 A5:2 | C6:2 E5:2 | D5:2 A4:2 | E5:4",
         "b1": "F5:4 | E5:2 C5:2 | A4:2 C5:2 | B4:4",
         "b2": "E5:4 | D5:2 B4:2 | C5:4 | r:4",
+        "d1": "r:2 E5:2 | D5:4 | r:2 C5:2 | D5:2 F5:2",
+        "d2": "F5:4 | F5:2 D5:2 | E5:2 B4:2 | A4:4",
     },
 }
 
@@ -333,13 +342,16 @@ PIECES["festival"] = {
     "sections": {
         "A": {"chords": "G | E7 | Am7 | D7 | G | E7 | A7 D7 | G"},
         "B": {"chords": "C | Cm6 | G/B | E7 | Am7 | D7 | G | D7"},
+        "C": {"chords": "Em | B7 | Em | B7 | Am | Em/G | F#m7b5 B7 | Em"},
     },
-    "form": ["A", "A", "B", "A"],
+    # The trio (C) turns to the relative minor for eight bars: same dance, a different colour.
+    "form": ["A", "A", "B", "A", "C", "A"],
     "layers": [
         {"id": "comp", "inst": "piano", "time": "both", "pattern": "stride", "anchor": 55, "gain": 0.8},
         {"id": "bass", "inst": "pizz", "time": "both", "pattern": "bassOomPah", "anchor": 43, "bass": True},
         {"id": "tune", "inst": "recorder", "time": "both", "rest": 0.05,
-         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]],
+                     "C": [["c1", "c1b"], ["c2", "c2b"]]}},
         {"id": "tamb", "inst": "tamb", "time": "both", "pattern": "tamb24", "gain": 0.8},
         {"id": "shaker", "inst": "shaker", "time": "both", "pattern": "shaker8", "gain": 0.7},
         {"id": "tri", "inst": "triangle", "time": "both", "pattern": "triangle2bar", "gain": 0.7},
@@ -359,6 +371,12 @@ PIECES["festival"] = {
         "b2": "A5:.5 C6:.5 E6:1 C6:.5 A5:.5 E5:1 | F#5:.5 A5:.5 C6:1 A5:1 F#5:1 | G5:.5 B5:.5 D6:1 B5:1 G5:1"
               " | F#5:1 A5:1 C6:1 D6:1",
         "b2b": "E5:1 G5:1 C6:1 A5:1 | D6:1.5 C6:.5 A5:1 F#5:1 | G5:1 D5:1 B4:1 D5:1 | C5:1 E5:1 F#5:1 A5:1",
+        "c1": "E5:.5 F#5:.5 G5:.5 B5:.5 E6:1 B5:1 | A5:.5 F#5:.5 D#5:1 F#5:1 B5:1 | G5:.5 F#5:.5 E5:1 G5:1 B5:1"
+              " | A5:1 F#5:1 D#5:2",
+        "c1b": "B5:1 G5:.5 E5:.5 B4:1 E5:1 | D#5:1 F#5:.5 A5:.5 B5:2 | E6:1.5 B5:.5 G5:1 E5:1 | F#5:1 A5:1 B5:2",
+        "c2": "A5:.5 C6:.5 E6:1 C6:.5 A5:.5 E5:1 | G5:.5 B5:.5 E6:1 B5:1 G5:1 | F#5:.5 A5:.5 C6:1 B5:.5 A5:.5 F#5:1"
+              " | E5:3 r:1",
+        "c2b": "E6:1.5 C6:.5 A5:1 E5:1 | B5:1.5 G5:.5 E5:2 | C6:1 A5:1 D#5:1 F#5:1 | E5:4",
     },
 }
 

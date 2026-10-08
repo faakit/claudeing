@@ -679,7 +679,7 @@
     ]
    ],
    "repeatDb": 0,
-   "trim": 0.0
+   "trim": 1.0
   },
   "stepWood": {
    "family": "steps",
@@ -749,11 +749,7 @@
     ],
     [
      {
-      "src": "sfx/kenney-interface/tick_002"
-     },
-     {
       "src": "sfx/kenney-interface/tick_004",
-      "gain": -12,
       "shift": -2
      }
     ]

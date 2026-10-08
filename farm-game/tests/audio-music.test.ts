@@ -53,7 +53,7 @@ describe('composed music data', () => {
       expect(p.bpm, name).toBeLessThan(130);
       const bars: Record<string, number> = {};
       for (const [id, sec] of Object.entries(p.sections)) bars[id] = parseChords(sec.chords, p.meter).bars;
-      for (const s of p.form) expect(bars[s], `${name} form ${s}`).toBeDefined();
+      for (const s of [...(p.intro ?? []), ...p.form]) expect(bars[s], `${name} form ${s}`).toBeDefined();
       for (const l of p.layers) {
         expect(MANIFEST.instruments[l.inst], `${name}.${l.id} ${l.inst}`).toBeDefined();
         expect(MUSIC.instruments[l.inst], `${name}.${l.id} mix`).toBeDefined();
@@ -150,7 +150,7 @@ describe('sequencer', () => {
           expect(e.vel, slot).toBeLessThanOrEqual(1);
           expect(Math.abs(e.jitter), slot).toBeLessThanOrEqual(0.008);
         }
-      expect(new Set(out.map((b) => b.section)), slot).toEqual(new Set(piece.form));
+      expect(new Set(out.map((b) => b.section)), slot).toEqual(new Set([...(piece.intro ?? []), ...piece.form]));
     }
   });
 
@@ -179,6 +179,20 @@ describe('sequencer', () => {
     expect(count({ ...ALL, indoor: true }, 'shaker')).toBe(0);
     expect(count({ ...ALL, night: false }, 'pad')).toBe(0);
     expect(count({ ...ALL, day: false }, 'comp')).toBe(0);
+  });
+
+  it('plays an intro once, with every melody layer, then loops the form', () => {
+    const piece = MUSIC.pieces['title']!;
+    expect(piece.intro, 'the title has a sting').toBeDefined();
+    for (let seed = 1; seed < 12; seed++) {
+      const out = bars('title', 60, seed);
+      const introBars = piece.intro!.reduce((n, s) => n + parseChords(piece.sections[s]!.chords, piece.meter).bars, 0);
+      expect(out.slice(0, introBars).map((b) => b.section)).toEqual(
+        piece.intro!.flatMap((s) => Array(parseChords(piece.sections[s]!.chords, piece.meter).bars).fill(s)),
+      );
+      expect(out.slice(introBars).some((b) => piece.intro!.includes(b.section))).toBe(false);
+      expect(out[0]!.events.some((e) => e.layer === 'tune'), `seed ${seed}`).toBe(true);
+    }
   });
 
   it('skips ahead to the next bar boundary after a stall instead of bursting late notes', () => {
