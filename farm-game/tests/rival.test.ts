@@ -88,11 +88,12 @@ describe('the rival farmer', () => {
 
   it('beating the field at a festival brings a letter from the rival', () => {
     const s = newState();
-    const [id, f] = Object.entries(festivals).find(([, x]) => x.accept.types?.includes('fish'))!;
+    const id = 'flower_show';
+    const f = festivals[id]!;
     s.time.season = f.season;
     s.time.day = f.day;
-    addItem(s, { item: 'salmon', q: 2 }, 1);
-    const res = enterFestival(s, { item: 'salmon', q: 2 });
+    addItem(s, { item: 'daffodil', q: 2 }, 1);
+    const res = enterFestival(s, { item: 'daffodil', q: 2 });
     expect(res).toMatchObject({ ok: true, place: 1 });
     expect(s.mail.list.some((l) => l.from === game.rival.npc)).toBe(true);
     expect(id).toBeTruthy();

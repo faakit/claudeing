@@ -246,6 +246,12 @@ export interface FestivalDef {
   /** Gold for 1st, 2nd and 3rd. */
   prizes: [number, number, number];
   consolation: number;
+  /**
+   * How you take part: 'single' enters one item; 'basket' enters up to `slots` different items (variety
+   * scores extra); 'derby' counts your `slots` best catches of the day.
+   */
+  mode?: 'single' | 'basket' | 'derby';
+  slots?: number;
 }
 export interface NodeDef {
   name: string;

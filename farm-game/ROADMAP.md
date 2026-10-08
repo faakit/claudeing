@@ -125,7 +125,8 @@ More people, more places, more to discover.
       state and a modal.
       _Done:_ four festivals (Flower Show spring 14, Fishing Derby summer 22, Harvest Fair fall 16, Winter Feast
       winter 24): enter one item at the town board, ranked against three rivals that grow stronger each year, with
-      gold prizes. Not done: festival maps or minigames.
+      gold prizes. Since then: the Harvest Fair and Winter Feast take a basket of three goods (variety scores extra)
+  and the Fishing Derby counts the day's three best catches, fished anywhere. Not done: festival maps.
 - [x] **R3.5 Almanac and collections.** A log of every crop, fish, forageable and recipe found, with page rewards.
       Doubles as a gentle hint system for what to try next.
       _Done:_ Menu > Book has six pages (crops, orchard, fish, wild goods, animal goods, preserves); unfound goods

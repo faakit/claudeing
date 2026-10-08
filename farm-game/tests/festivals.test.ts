@@ -4,8 +4,13 @@ import { festivals } from '../src/data';
 import { runDayPipeline } from '../src/systems/dayHooks';
 import {
   accepts,
+  basketScore,
+  derbyCatches,
+  enterBasket,
   enterFestival,
   festivalToday,
+  finishDerby,
+  recordCatch,
   hasEntered,
   placeFor,
   rivalScores,
@@ -53,18 +58,18 @@ describe('festivals', () => {
   });
 
   it('pay a prize, take the item, and allow one entry per festival', () => {
-    const s = onFestivalDay('harvest_fair');
-    addItem(s, { item: 'pumpkin', q: 2 }, 2);
+    const s = onFestivalDay('flower_show');
+    addItem(s, { item: 'daffodil', q: 2 }, 2);
     const money = s.money;
-    const res = enterFestival(s, { item: 'pumpkin', q: 2 });
+    const res = enterFestival(s, { item: 'daffodil', q: 2 });
     expect(res.ok).toBe(true);
     if (res.ok) {
       expect(res.place).toBe(1);
       expect(s.money).toBe(money + res.gold);
     }
-    expect(countItem(s, 'pumpkin')).toBe(1);
-    expect(hasEntered(s, 'harvest_fair')).toBe(true);
-    expect(enterFestival(s, { item: 'pumpkin', q: 2 })).toEqual({ ok: false, reason: 'entered' });
+    expect(countItem(s, 'daffodil')).toBe(1);
+    expect(hasEntered(s, 'flower_show')).toBe(true);
+    expect(enterFestival(s, { item: 'daffodil', q: 2 })).toEqual({ ok: false, reason: 'entered' });
     expect(s.stats['festivals']).toBe(1);
     expect(s.stats['festivalWins']).toBe(1);
   });
@@ -94,8 +99,8 @@ describe('festivals', () => {
     y3.time.year = 3;
     const def = festivals['fishing_derby']!;
     expect(rivalScores(y3, def)[2]!).toBeGreaterThan(rivalScores(y1, def)[2]!);
-    addItem(y3, { item: 'catfish', q: 2 }, 1);
-    const res = enterFestival(y3, { item: 'catfish', q: 2 });
+    for (const fish of ['salmon', 'catfish', 'trout']) recordCatch(y3, { item: fish, q: 2 });
+    const res = finishDerby(y3);
     if (res.ok && res.place === 1) expect(res.gold).toBe(Math.round(def.prizes[0] * 1.5));
   });
 
@@ -122,5 +127,69 @@ describe('festivals', () => {
       },
     });
     expect(notes.some((n) => n.includes('Flower Show'))).toBe(true);
+  });
+});
+
+describe('festival minigames', () => {
+  it('a basket takes up to three different goods and rewards variety', () => {
+    const s = onFestivalDay('harvest_fair');
+    const same = basketScore([{ item: 'pumpkin' }, { item: 'yam' }]);
+    const mixed = basketScore([{ item: 'pumpkin' }, { item: 'apple' }]);
+    expect(mixed / (330 + 65)).toBeCloseTo(1.15, 2); // veg + fruit
+    expect(same).toBe(330 + 65);
+    addItem(s, { item: 'pumpkin', q: 2 }, 1);
+    addItem(s, { item: 'apple', q: 2 }, 1);
+    addItem(s, 'yam', 1);
+    addItem(s, 'corn', 1);
+    // too many, duplicates and missing goods are refused, changing nothing
+    const four = [
+      { item: 'pumpkin', q: 2 },
+      { item: 'apple', q: 2 },
+      { item: 'yam' },
+      { item: 'corn' },
+    ];
+    expect(enterBasket(s, four)).toEqual({ ok: false, reason: 'invalid' });
+    expect(enterBasket(s, [{ item: 'yam' }, { item: 'yam' }])).toEqual({
+      ok: false,
+      reason: 'invalid',
+    });
+    expect(enterBasket(s, [{ item: 'melon' }])).toEqual({ ok: false, reason: 'invalid' });
+    expect(countItem(s, 'yam')).toBe(1);
+    const res = enterBasket(s, four.slice(0, 3));
+    expect(res).toMatchObject({ ok: true });
+    expect(countItem(s, 'pumpkin') + countItem(s, 'apple') + countItem(s, 'yam')).toBe(0);
+    expect(countItem(s, 'corn')).toBe(1);
+  });
+
+  it('the derby keeps the best three catches of the day and the fish stay in the bag', () => {
+    const s = onFestivalDay('fishing_derby');
+    expect(finishDerby(s)).toEqual({ ok: false, reason: 'invalid' }); // nothing caught yet
+    for (const f of ['carp', 'trout', 'salmon', 'carp']) recordCatch(s, { item: f });
+    expect(derbyCatches(s)).toEqual([100, 55, 25]);
+    expect(recordCatch(s, { item: 'carp' })).toBe(false); // not better than the third
+    expect(recordCatch(s, { item: 'catfish' })).toBe(true);
+    expect(derbyCatches(s)).toEqual([100, 80, 55]);
+    const res = finishDerby(s);
+    expect(res).toMatchObject({ ok: true, score: 235 });
+    expect(recordCatch(s, { item: 'salmon' })).toBe(false); // handed in
+    expect(enterFestival(s, { item: 'salmon' })).toEqual({ ok: false, reason: 'entered' });
+  });
+
+  it('catching a fish on derby day counts it', async () => {
+    const { resolveCatch } = await import('../src/systems/fishing');
+    const s = onFestivalDay('fishing_derby');
+    resolveCatch(s, 'trout', { caught: true, perfect: false });
+    expect(derbyCatches(s)[0]).toBeGreaterThanOrEqual(55);
+    const other = newState();
+    resolveCatch(other, 'trout', { caught: true, perfect: false });
+    expect(derbyCatches(other)).toEqual([]);
+  });
+});
+
+describe('festival text', () => {
+  it('every blurb fits one line of the sheet', async () => {
+    const { measureText } = await import('../src/ui/fontMetrics');
+    for (const f of Object.values(festivals))
+      expect(measureText(f.blurb), f.name).toBeLessThanOrEqual(184);
   });
 });

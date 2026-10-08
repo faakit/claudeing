@@ -4,25 +4,39 @@ import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import {
   accepts,
-  enterFestival,
+  basketScore,
+  derbyCatches,
+  derbyScore,
+  enterBasket,
   festivalToday,
+  finishDerby,
   hasEntered,
+  modeOf,
   placeFor,
   rivalScores,
   scoreOf,
+  slotsOf,
+  type EnterResult,
 } from '../../systems/festivals';
 import { displayName, iconKey, keyOf, refOf, type ItemRef } from '../../systems/itemRef';
+import { rivalName } from '../../systems/rival';
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
-import { rivalName } from '../../systems/rival';
+import { placeText } from './festivalText';
 
-const ROWS = 5;
+const ROWS = 4;
 
-/** The day's festival: pick one thing to enter; it is ranked against three rivals on the spot. */
+/**
+ * The day's festival. A single-entry show takes one item; a basket festival takes up to three different
+ * goods (variety scores extra); the fishing derby counts the day's best catches, wherever you fish.
+ * Every entry is ranked against three rivals on the spot.
+ */
 export class FestivalPanel extends Modal {
   private page = 0;
   private result = '';
+  /** Keys of the stacks picked for the basket. */
+  private basket: string[] = [];
 
   constructor(scene: Phaser.Scene) {
     super(scene, 250);
@@ -49,9 +63,8 @@ export class FestivalPanel extends Modal {
     const { def, id } = today;
     this.label(8, 8, def.name, C.gold);
     this.label(8, 20, def.blurb, C.creamDim);
-    const rivals = rivalScores(s, def);
     // The best rival score is the rival farmer's.
-    const sorted = [...rivals].sort((a, b) => b - a);
+    const sorted = [...rivalScores(s, def)].sort((a, b) => b - a);
     this.label(
       8,
       32,
@@ -71,11 +84,52 @@ export class FestivalPanel extends Modal {
         'left',
         184,
       );
-      this.closeButton();
-      return;
-    }
+    } else if (modeOf(def) === 'derby') this.buildDerby();
+    else this.buildEntries();
+    this.closeButton();
+  }
+
+  /** The derby: the day's best catches so far, and a button to hand in the score. */
+  private buildDerby(): void {
+    const s = getState();
+    const today = festivalToday(s)!;
+    const best = derbyCatches(s);
+    const slots = slotsOf(today.def);
+    this.label(8, 50, 'Best catches so far:', C.cream);
+    for (let i = 0; i < slots; i++)
+      this.label(
+        8,
+        64 + i * 12,
+        `${i + 1}. ${best[i] ? `${fmt(best[i]!)} points` : '-'}`,
+        C.creamDim,
+      );
+    const score = derbyScore(s);
+    const place = placeFor(s, today.def, score);
+    this.label(8, 64 + slots * 12 + 6, `Score ${fmt(score)}  ${placeText(place)}`, C.gold);
+    this.label(
+      8,
+      64 + slots * 12 + 20,
+      'Cast anywhere: pond, river or lake. Hand in before bed.',
+      C.creamDim,
+      1,
+      'left',
+      184,
+    );
+    this.button(8, this.panelH - 56, this.panelW - 16, 24, 'Hand in my catches', () =>
+      this.after(finishDerby(getState())),
+    ).setEnabled(best.length > 0);
+  }
+
+  /** Single entry or basket: a list of goods to enter, and for a basket a Present button. */
+  private buildEntries(): void {
+    const s = getState();
+    const today = festivalToday(s)!;
+    const def = today.def;
+    const basketMode = modeOf(def) === 'basket';
+    const slots = slotsOf(def);
     const kinds = new Map<string, ItemRef>();
     for (const st of s.inventory.slots) if (st && accepts(def, st)) kinds.set(keyOf(st), refOf(st));
+    this.basket = this.basket.filter((k) => kinds.has(k));
     const list = [...kinds.values()].sort((a, b) => scoreOf(b) - scoreOf(a));
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
@@ -89,52 +143,94 @@ export class FestivalPanel extends Modal {
         'left',
         184,
       );
-    let y = 48;
+    let y = 46;
+    if (basketMode) {
+      const picked = this.basket.map((k) => kinds.get(k)!);
+      const score = basketScore(picked);
+      this.label(
+        8,
+        y,
+        `Basket ${picked.length}/${slots}  Score ${fmt(score)}  ${picked.length ? placeText(placeFor(s, def, score)) : ''}`,
+        C.gold,
+      );
+      y += 12;
+    }
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
+      const key = keyOf(ref);
       const score = scoreOf(ref);
-      const place = placeFor(s, def, score);
+      const inBasket = this.basket.includes(key);
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),
-        sub: `Score ${fmt(score)}  ${place <= 3 ? `place ${place}` : 'no podium'}`,
-        subColor: place === 1 ? C.gold : place <= 3 ? C.green : C.creamDim,
+        sub: basketMode
+          ? `Score ${fmt(score)}${inBasket ? '  in basket' : ''}`
+          : `Score ${fmt(score)}  ${placeText(placeFor(s, def, score))}`,
+        subColor: inBasket ? C.green : C.creamDim,
         buttons: [
-          {
-            label: 'Enter',
-            width: 40,
-            color: C.green,
-            onClick: () => {
-              const res = enterFestival(getState(), ref);
-              if (!res.ok) return audio.play('error');
-              audio.play(res.place <= 3 ? 'level' : 'coin');
-              haptic('success');
-              this.result =
-                res.place <= 3
-                  ? `Place ${res.place}! You won ${fmt(res.gold)}g.`
-                  : `Thanks for joining! ${fmt(res.gold)}g for taking part.`;
-              this.rebuild();
-            },
-          },
+          basketMode
+            ? {
+                label: inBasket ? 'Out' : 'Add',
+                width: 40,
+                color: inBasket ? C.warn : C.green,
+                enabled: inBasket || this.basket.length < slots,
+                onClick: () => {
+                  this.basket = inBasket
+                    ? this.basket.filter((k) => k !== key)
+                    : [...this.basket, key];
+                  audio.play('select');
+                  this.rebuild();
+                },
+              }
+            : {
+                label: 'Enter',
+                width: 40,
+                color: C.green,
+                onClick: () => this.after(enterBasket(getState(), [ref])),
+              },
         ],
       });
     }
+    const by = this.panelH - 56;
     if (pages > 1) {
-      const by = this.panelH - 52;
-      this.button(8, by, 40, 20, '<', () => {
+      this.button(8, by - 24, 40, 20, '<', () => {
         this.page = (this.page + pages - 1) % pages;
         this.rebuild();
       });
-      this.button(152, by, 40, 20, '>', () => {
+      this.button(152, by - 24, 40, 20, '>', () => {
         this.page = (this.page + 1) % pages;
         this.rebuild();
       });
     }
-    this.closeButton();
+    if (basketMode)
+      this.button(8, by, this.panelW - 16, 24, 'Present the basket', () =>
+        this.after(
+          enterBasket(
+            getState(),
+            this.basket.map((k) => kinds.get(k)!),
+          ),
+        ),
+      ).setEnabled(this.basket.length > 0);
+  }
+
+  private after(res: EnterResult): void {
+    if (!res.ok) {
+      audio.play('error');
+      return;
+    }
+    audio.play(res.place <= 3 ? 'level' : 'coin');
+    haptic('success');
+    this.result =
+      res.place <= 3
+        ? `Place ${res.place} with ${fmt(res.score)} points! You won ${fmt(res.gold)}g.`
+        : `Thanks for joining! ${fmt(res.gold)}g for taking part.`;
+    this.basket = [];
+    this.rebuild();
   }
 
   override open(): void {
     this.result = '';
     this.page = 0;
+    this.basket = [];
     super.open();
   }
 }

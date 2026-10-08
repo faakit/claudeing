@@ -9,42 +9,49 @@
     },
     "rivals": [24, 33, 42],
     "prizes": [600, 350, 200],
-    "consolation": 60
+    "consolation": 60,
+    "mode": "single"
   },
   "fishing_derby": {
     "name": "Fishing Derby",
     "season": "summer",
     "day": 22,
-    "blurb": "Enter your best catch.",
+    "blurb": "Your 3 best catches today count.",
     "accept": {
       "types": ["fish"]
     },
-    "rivals": [60, 85, 120],
+    "rivals": [110, 170, 240],
     "prizes": [800, 450, 250],
-    "consolation": 80
+    "consolation": 80,
+    "mode": "derby",
+    "slots": 3
   },
   "harvest_fair": {
     "name": "Harvest Fair",
     "season": "fall",
     "day": 16,
-    "blurb": "Bring your best crop.",
+    "blurb": "A basket of 3 crops. Mix it up!",
     "accept": {
       "types": ["crop"]
     },
-    "rivals": [90, 180, 320],
+    "rivals": [300, 600, 950],
     "prizes": [1000, 600, 300],
-    "consolation": 100
+    "consolation": 100,
+    "mode": "basket",
+    "slots": 3
   },
   "winter_feast": {
     "name": "Winter Feast",
     "season": "winter",
     "day": 24,
-    "blurb": "Share your finest homemade good.",
+    "blurb": "Bring 3 homemade goods.",
     "accept": {
       "types": ["preserve", "product"]
     },
-    "rivals": [80, 130, 200],
+    "rivals": [220, 380, 600],
     "prizes": [1000, 600, 300],
-    "consolation": 100
+    "consolation": 100,
+    "mode": "basket",
+    "slots": 3
   }
 }

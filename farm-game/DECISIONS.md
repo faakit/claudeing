@@ -281,3 +281,10 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 - **F11:** nothing can be placed on a villager's daily spot; weeds never sprout under placed things; the unused `charm` param is gone. Placing machines and decorations outside bought plots stays allowed (a recorded earlier decision).
 - **F12:** the gift list puts known favourites first, then unknown goods by value, then seeds, stone and bait, then known dislikes.
 - Not done: forage visibility (critique 3 F8), day-1 land signs (F9), joining fence art (art agent), a long-press hotbar picker.
+
+## Festival minigames (backlog 6)
+
+- **Three ways to take part, chosen in data (`mode` in `festivals.json`):** the Flower Show stays a single entry; the Harvest Fair and Winter Feast take a **basket** of up to three different goods, scored by value plus 15% per extra kind of good (veg, fruit, flower, or the item type); the Fishing Derby is a **derby**: every fish you catch that day, anywhere, can join your three best, and you hand the score in at the board (the fish stay yours).
+- **The derby reuses the real fishing game** rather than a new screen: `resolveCatch` reports each catch to `recordCatch`. That turns the derby into a day of play, which is what critique 3 asked for, at almost no UI cost.
+- **One-thumb:** baskets are built with Add/Out on each row and one "Present the basket" button low on the sheet; the derby page has one "Hand in my catches" button.
+- **Rivals rescaled** for three-item scores (fair 300/600/950, feast 220/380/600, derby 110/170/240) so a year-one player reaches the podium with good, varied goods and needs gold quality to win.

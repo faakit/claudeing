@@ -597,6 +597,25 @@ try {
     ps.farm.tiles['17,27']?.crop?.cropId === 'melon',
     JSON.stringify(ps.farm.tiles['17,27']),
   );
+  // Harvest Fair: a basket entry through the real Add and Present buttons.
+  await ui(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.time.season = 'fall';
+    s.time.day = 16;
+    s.inventory.slots[8] = { item: 'pumpkin', qty: 2 };
+    f.gameEvents.emit('openPanel', { type: 'festival' });
+  });
+  await pp.waitForTimeout(500);
+  const moneyBefore = (await pState()).money;
+  await pClick(172, 150 + 58 + 11); // Add (first row)
+  await pClick(100, 150 + 194 + 12); // Present the basket
+  ps = await pState();
+  check(
+    'Harvest Fair: a basket is presented with Add and Present',
+    ps.stats['fest.harvest_fair.y1'] === 1 && ps.money > moneyBefore,
+    `money ${moneyBefore} -> ${ps.money}`,
+  );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();
 

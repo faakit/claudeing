@@ -43,7 +43,8 @@ available (pick up or harvest beats planting beats tilling), so you never have t
 12. **Town projects**: the town board's "Town projects" button lists projects the whole town funds. Give gold and goods a little at a time; each finished one helps for good (more requests, faster skills, more energy, better prices) and adds a building to town. The Greenhouse project builds a glass house on your farm where any crop grows in any season.
 13. **Home**: the shop's Home tab sells a Bigger Bag (more slots) and decorations (fences, paths, pots, lamps, a fountain). Place them like a sprinkler; tap twice with Interact to pick one up.
 14. **Mail**: the mailbox beside the shipping bin gets letters in the morning (a star shows when one waits): tips, thank-yous with gifts, festival notices and birthday hints.
-15. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
+15. **Festivals**: one a season, entered at the town board: the Flower Show takes your best flower, the Harvest Fair and Winter Feast a basket of three different goods, and the Fishing Derby counts your three best catches of the day.
+16. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
 
 ## Project layout
 
