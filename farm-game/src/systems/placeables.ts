@@ -103,7 +103,20 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
   const def = placeables[obj.type];
   if (!def) return { kind: 'none' };
   const b = behaviorOf(def);
-  return b.interact ? b.interact(state, obj, def) : { kind: 'pickup' };
+  if (!b.interact) return { kind: 'pickup' };
+  const res = b.interact(state, obj, def);
+  // Machines, trees and houses have their own interactions, so picking one up is a deliberate second tap
+  // on a plain status message (never after something happened, and never while it is busy).
+  if (res.kind === 'message' && res.text !== '' && canPickUp(obj)) {
+    if (obj.data['armedPick'] === true) {
+      delete obj.data['armedPick'];
+      return { kind: 'pickup' };
+    }
+    obj.data['armedPick'] = true;
+    return { ...res, text: `${res.text} Tap again to pick up.` };
+  }
+  delete obj.data['armedPick'];
+  return res;
 }
 
 export function statusOf(obj: PlacedObject): 'idle' | 'busy' | 'ready' {

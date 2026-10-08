@@ -58,13 +58,13 @@ export class TouchButton {
         const dy = p.y - anchorY;
         if (Math.abs(dy) < SWIPE_STEP) return;
         anchorY = p.y;
+        onSwipe(dy < 0 ? 1 : -1); // first, so the release below knows it was a swipe
         if (this.pressed) {
           // A swipe is not a work press: let go of the held action first.
           this.pressed = false;
           this.press(false);
           onRelease?.();
         }
-        onSwipe(dy < 0 ? 1 : -1);
       });
       scene.input.on('pointerup', (p: Phaser.Input.Pointer) => {
         if (swipeId === p.id) swipeId = null;

@@ -132,8 +132,8 @@ registerActionHandler({
     if (!stack || !def?.placeable) return null;
     if (!tile.farmland || !tile.tillable || tile.blocked)
       return { refusal: "Can't place that here." };
-    if (state.farm.tiles[tileKey(tile.tx, tile.ty)])
-      return { refusal: "Can't place on tilled soil." };
+    const soil = state.farm.tiles[tileKey(tile.tx, tile.ty)];
+    if (soil?.crop) return { refusal: "Can't place on a growing crop." };
     if (placedAt(state, tile.map, tile.tx, tile.ty))
       return { refusal: 'Something is already here.' };
     const max = Number(placeables[stack.item]?.params['max'] ?? Infinity);
@@ -149,6 +149,7 @@ registerActionHandler({
         ty: tile.ty,
         run: () => {
           delete state.farm.weeds[tileKey(tile.tx, tile.ty)];
+          delete state.farm.tiles[tileKey(tile.tx, tile.ty)];
           removeFromSlot(state, state.inventory.selected, 1);
           placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
           addStat(state, 'placed');

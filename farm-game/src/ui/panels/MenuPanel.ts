@@ -183,7 +183,8 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   const size = 22;
   const pitch = 23;
   const x0 = 8;
-  const y0 = c.top;
+  // The grid sits at the bottom of the sheet, right above the tabs, where the thumb already is.
+  const y0 = c.bottom - 3 * pitch - 2;
   const g = c.scene.add.graphics();
   c.add(g);
   const cursor = menu.selectedCursor;
@@ -209,7 +210,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     c.add(zone);
   });
 
-  const dy = y0 + 3 * pitch + 6;
+  const dy = c.top - 4;
   const cur = cursor !== null ? s.inventory.slots[cursor] : null;
   if (cur) {
     const ref = refOf(cur);
@@ -231,7 +232,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       184,
     );
   }
-  const ly = c.bottom - 36;
+  const ly = c.top + 84;
   c.label(
     8,
     ly,

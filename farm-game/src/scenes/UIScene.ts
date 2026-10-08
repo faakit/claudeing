@@ -24,7 +24,8 @@ import { getState } from '../state/store';
 import { endDay } from '../systems/day';
 import { gameEvents, type PanelType } from '../systems/events';
 import { addStat, currentGoal, stat } from '../systems/goals';
-import { cycleSlot, selectSlot } from '../systems/inventory';
+import { cycleSlot, selectSlot, selectedStack } from '../systems/inventory';
+import { iconKey, refOf } from '../systems/itemRef';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { mixColor } from '../ui/color';
@@ -52,16 +53,10 @@ import { WorldScene } from './WorldScene';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
+/** How long Action must be held before it starts working (a swipe cancels it). */
+const HOLD_ACTION_MS = 110;
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
-
-/** Hoe silhouette: the placeholder for "use equipped item" until real tool icons arrive. */
-function drawActionIcon(g: Phaser.GameObjects.Graphics): void {
-  g.lineStyle(4, INK, 0.6).lineBetween(-9, 10, 8, -7);
-  g.lineStyle(2, CREAM, 1).lineBetween(-9, 10, 8, -7);
-  g.fillStyle(INK, 0.6).fillRect(2, -12, 11, 8);
-  g.fillStyle(CREAM, 1).fillRect(3, -11, 9, 6);
-}
 
 function drawHandIcon(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(INK, 0.6).fillCircle(0, 0, 10);
@@ -128,6 +123,10 @@ export class UIScene extends Phaser.Scene {
   private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
   private lateWarnedDay = -1;
+  private swiped = false;
+  private holdTimer: Phaser.Time.TimerEvent | null = null;
+  private actionIcon: Phaser.GameObjects.Image | null = null;
+  private actionIconKey = '';
   private lastSeason = '';
   /** Real ms since the player last touched anything; a long silence earns a hint about the goal. */
   private idleMs = 0;
@@ -248,6 +247,7 @@ export class UIScene extends Phaser.Scene {
       this.dragHint = null;
     }
     this.hud.update(time);
+    this.updateActionIcon();
     this.updateIdleHint(delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather !== 'sunny';
@@ -307,14 +307,21 @@ export class UIScene extends Phaser.Scene {
       x(GAME_WIDTH - edge - ar),
       DOCK_Y + 8 + ar,
       ar,
-      drawActionIcon,
-      () => (inputHub.actionHeld = true),
-      () => (inputHub.actionHeld = false),
+      () => undefined, // the icon is the equipped item, drawn below
+      () => this.pressAction(),
+      () => this.releaseAction(),
       (step) => {
+        this.swiped = true;
         cycleSlot(getState(), step);
         audio.play('select');
       },
     );
+    this.actionIcon?.destroy();
+    this.actionIcon = this.add
+      .image(action.view.x, action.view.y, 'ui_coin')
+      .setDepth(91)
+      .setScale(1.9);
+    this.actionIconKey = '';
     this.interactButton = new TouchButton(
       this,
       x(GAME_WIDTH - edge - ar - ir - 20),
@@ -335,6 +342,42 @@ export class UIScene extends Phaser.Scene {
     this.interactButton.setEnabled(false);
     this.interactIcon.setAlpha(0);
     this.setInteractTarget(this.interactType);
+  }
+
+  /**
+   * A press on Action only starts working after a beat, so a swipe to change tool never swings the old one.
+   * A quick tap still acts once, on release.
+   */
+  private pressAction(): void {
+    this.swiped = false;
+    this.holdTimer?.remove();
+    this.holdTimer = this.time.delayedCall(HOLD_ACTION_MS, () => {
+      if (!this.swiped) inputHub.actionHeld = true;
+    });
+  }
+
+  private releaseAction(): void {
+    const wasHeld = inputHub.actionHeld;
+    this.holdTimer?.remove();
+    this.holdTimer = null;
+    if (!this.swiped && !wasHeld) {
+      // a tap: one action, held for just long enough for the world to see it
+      inputHub.actionHeld = true;
+      this.time.delayedCall(70, () => (inputHub.actionHeld = false));
+      return;
+    }
+    inputHub.actionHeld = false;
+  }
+
+  /** Show the equipped item on the Action button, so the button says what it will do. */
+  private updateActionIcon(): void {
+    const s = getState();
+    const stack = selectedStack(s);
+    const key = stack ? iconKey(refOf(stack)) : '';
+    if (key === this.actionIconKey || !this.actionIcon) return;
+    this.actionIconKey = key;
+    this.actionIcon.setVisible(!!key);
+    if (key) this.actionIcon.setTexture(key);
   }
 
   /** A faint ring in the thumb zone on a fresh game: shows where to drag. Gone after the first step. */

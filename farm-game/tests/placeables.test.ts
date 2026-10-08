@@ -32,11 +32,21 @@ describe('placing objects', () => {
     expect(s.stats['placed']).toBe(1);
   });
 
+  it('a sprinkler can replace empty tilled soil', () => {
+    const s = newState();
+    addItem(s, 'sprinkler', 1);
+    equip(s, 'sprinkler');
+    till(s, 2, 2);
+    expect(performAction(s, grass(2, 2)).ok).toBe(true);
+    expect(getSoil(s, 2, 2)).toBeUndefined();
+  });
+
   it('refuses tilled soil, occupied tiles, non-farm maps, and solid tiles', () => {
     const s = newState();
     addItem(s, 'sprinkler', 5);
     equip(s, 'sprinkler');
     till(s, 2, 2);
+    plant(s, 2, 2, 'parsnip');
     expect(performAction(s, grass(2, 2)).ok).toBe(false);
     placeObject(s, 'farm', 3, 3, 'sprinkler');
     expect(performAction(s, grass(3, 3)).ok).toBe(false);

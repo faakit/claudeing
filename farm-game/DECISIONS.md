@@ -182,3 +182,11 @@
 - **Short scenes, one tap each:** at 2, 4 and 5 hearts a villager has a three-line scene (shown a line at a time with Next) that plays the next time you open their sheet and ends in a reward (items or gold). It is the narrative payoff for the daily chat habit and costs about ten seconds.
 - **Never lose a reward:** if the bag cannot hold the item the scene waits ("Make room in your bag first") and is not marked seen.
 - **No new state:** seen events are `event.<npc>.<id>` stats.
+
+## Critique 2 fixes (swipe, pickup, hotbar, sprinklers)
+
+- Action button: a press acts after 110 ms of holding, a quick tap acts once on release, a swipe changes tool and never acts.
+- Any placeable whose interaction is a plain status message can be picked up with a second tap (`armedPick`); behaviors opt out with `canPickUp` (fruit trees, busy machines, occupied houses).
+- Hotbar-first items are seeds, saplings, fertilizer and placeables; bait, feed and animals go to the bag.
+- Placeables may replace empty tilled soil (the soil tile is removed), but not a growing crop.
+- Bag grid sits at the bottom of the menu sheet, within thumb reach.

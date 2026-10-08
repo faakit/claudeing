@@ -8,15 +8,7 @@ export const stackLimit = (itemId: string): number => items[itemId]?.stackLimit 
 export const isToolSlot = (slot: number): boolean => slot < game.toolSlots;
 
 /** Item types you reach for while working; they claim hotbar slots before other goods do. */
-const HOTBAR_FIRST = new Set([
-  'seed',
-  'sapling',
-  'fertilizer',
-  'bait',
-  'placeable',
-  'feed',
-  'animal',
-]);
+const HOTBAR_FIRST = new Set(['seed', 'sapling', 'fertilizer', 'placeable']);
 
 const changed = () => gameEvents.emit('inventoryChanged', undefined);
 const asRef = (r: string | ItemRef): ItemRef => (typeof r === 'string' ? { item: r } : refOf(r));
