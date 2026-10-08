@@ -1,13 +1,13 @@
 {
   "perDay": {
-    "farm": 2,
-    "town": 3,
-    "woods": 6
+    "farm": 1,
+    "town": 2,
+    "woods": 4
   },
   "cap": {
-    "farm": 6,
-    "town": 8,
-    "woods": 14
+    "farm": 4,
+    "town": 6,
+    "woods": 10
   },
   "table": [
     {

@@ -393,7 +393,7 @@
     "sellPrice": 30,
     "description": "Sweet and valuable.",
     "derived": true,
-    "sellMultiplier": 2.0,
+    "sellMultiplier": 1.5,
     "nameTemplate": "{of} Jam"
   },
   "pickles": {
@@ -404,7 +404,7 @@
     "sellPrice": 25,
     "description": "Tangy and long-lasting.",
     "derived": true,
-    "sellMultiplier": 1.8,
+    "sellMultiplier": 1.3,
     "nameTemplate": "{of} Pickles"
   },
   "chicken": {
@@ -476,5 +476,24 @@
     "sellPrice": 250,
     "description": "A home for up to 2 cows.",
     "placeable": true
+  },
+  "kale_seed": {
+    "name": "Kale Seeds",
+    "type": "seed",
+    "icon": "item_kale_seed",
+    "color": "#4f8f6a",
+    "sellPrice": 12,
+    "buyPrice": 30,
+    "description": "Hardy. Grows in winter.",
+    "plants": "kale"
+  },
+  "kale": {
+    "name": "Kale",
+    "type": "crop",
+    "icon": "item_kale",
+    "color": "#4f8f6a",
+    "sellPrice": 95,
+    "description": "A winter green.",
+    "family": "veg"
   }
 }

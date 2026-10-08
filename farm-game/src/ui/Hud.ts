@@ -26,6 +26,7 @@ export const HOTBAR_Y = GAME_HEIGHT - SLOT - 5;
 
 interface Toast {
   label: Label;
+  bg: Phaser.GameObjects.Rectangle;
   text: string;
   born: number;
 }
@@ -355,8 +356,16 @@ export class Hud {
       align: 'center',
       maxWidth: 186,
     }).setDepth(80);
-    this.toasts.push({ label, text, born: now });
-    if (this.toasts.length > 3) this.toasts.shift()?.label.destroy();
+    // A dark pill behind the text keeps it readable over grass, sand and snow.
+    const bg = this.scene.add
+      .rectangle(label.x, label.y, label.textWidth + 10, label.textHeight + 5, C.ink, 0.72)
+      .setDepth(79);
+    this.toasts.push({ label, bg, text, born: now });
+    if (this.toasts.length > 3) {
+      const old = this.toasts.shift();
+      old?.label.destroy();
+      old?.bg.destroy();
+    }
   }
 
   private updateToasts(time: number): void {
@@ -364,9 +373,12 @@ export class Hud {
       const age = time - t.born;
       if (age > 2800) {
         t.label.destroy();
+        t.bg.destroy();
         return false;
       }
-      t.label.setAlpha(age > 2200 ? 1 - (age - 2200) / 600 : 1);
+      const a = age > 2200 ? 1 - (age - 2200) / 600 : 1;
+      t.label.setAlpha(a);
+      t.bg.setAlpha(0.72 * a);
       return true;
     });
     // Newest sits on the bottom; older ones stack upward by their real (wrapped) height.
@@ -375,6 +387,9 @@ export class Hud {
       const t = this.toasts[i]!;
       y -= t.label.textHeight + 2;
       t.label.y += (y - t.label.y) * 0.3;
+      t.bg
+        .setPosition(t.label.x, t.label.y + t.label.textHeight / 2)
+        .setSize(t.label.textWidth + 10, t.label.textHeight + 5);
     }
   }
 

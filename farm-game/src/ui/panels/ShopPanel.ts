@@ -16,6 +16,7 @@ import { perk } from '../../systems/skills';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
+import { shopFacts, tooLate } from './shopFacts';
 import Phaser from 'phaser';
 
 export class ShopPanel extends Modal {
@@ -81,7 +82,8 @@ export class ShopPanel extends Modal {
     return this.row(y, {
       icon: def.icon,
       title: def.name,
-      sub: own > 0 ? `${def.description}  (own ${own})` : def.description,
+      sub: shopFacts(id, own, s.time.day),
+      subColor: tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {
           label: `${fmt(price)}g`,

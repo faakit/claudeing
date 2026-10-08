@@ -6,6 +6,9 @@ import { keyOf, refOf, sameRef, type ItemRef } from './itemRef';
 export const stackLimit = (itemId: string): number => items[itemId]?.stackLimit ?? game.stackLimit;
 export const isToolSlot = (slot: number): boolean => slot < game.toolSlots;
 
+/** Item types you reach for while working; they claim hotbar slots before other goods do. */
+const HOTBAR_FIRST = new Set(['seed', 'fertilizer', 'bait', 'placeable', 'feed', 'animal']);
+
 const changed = () => gameEvents.emit('inventoryChanged', undefined);
 const asRef = (r: string | ItemRef): ItemRef => (typeof r === 'string' ? { item: r } : refOf(r));
 
@@ -46,13 +49,21 @@ export function addItem(state: GameState, ref: string | ItemRef, qty: number): n
     s.qty += add;
     left -= add;
   });
-  slots.forEach((s, i) => {
-    if (left <= 0 || isToolSlot(i) || s) return;
-    const add = Math.min(left, limit);
-    const stack: ItemStack = { ...r, qty: add };
-    slots[i] = stack;
-    left -= add;
+  // Things you use (seeds, fertilizer, machines) go to the hotbar first; produce goes to the bag first,
+  // so harvests never push your seeds out of reach of the thumb.
+  const toHotbar = items[r.item]?.type !== undefined && HOTBAR_FIRST.has(items[r.item]!.type);
+  const order = slots.map((_, i) => i).filter((i) => !isToolSlot(i));
+  order.sort((a, b) => {
+    const rank = (i: number) => (i < game.hotbarSlots === toHotbar ? 0 : 1);
+    return rank(a) - rank(b) || a - b;
   });
+  for (const i of order) {
+    if (left <= 0) break;
+    if (slots[i]) continue;
+    const add = Math.min(left, limit);
+    slots[i] = { ...r, qty: add } as ItemStack;
+    left -= add;
+  }
   if (left !== qty) changed();
   return left;
 }

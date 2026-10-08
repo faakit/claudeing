@@ -6,7 +6,10 @@
     "harvestItem": "parsnip",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#5fae4e", "fruit": "#f2e6c9" }
+    "placeholder": {
+      "leaf": "#5fae4e",
+      "fruit": "#f2e6c9"
+    }
   },
   "potato": {
     "seasons": ["spring"],
@@ -15,7 +18,10 @@
     "harvestItem": "potato",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#4f9a46", "fruit": "#c49a6c" }
+    "placeholder": {
+      "leaf": "#4f9a46",
+      "fruit": "#c49a6c"
+    }
   },
   "cauliflower": {
     "seasons": ["spring"],
@@ -24,7 +30,10 @@
     "harvestItem": "cauliflower",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#6fb45a", "fruit": "#eef3e6" }
+    "placeholder": {
+      "leaf": "#6fb45a",
+      "fruit": "#eef3e6"
+    }
   },
   "tomato": {
     "seasons": ["summer"],
@@ -33,7 +42,10 @@
     "harvestItem": "tomato",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#4a9a3f", "fruit": "#e0574a" }
+    "placeholder": {
+      "leaf": "#4a9a3f",
+      "fruit": "#e0574a"
+    }
   },
   "melon": {
     "seasons": ["summer"],
@@ -42,7 +54,10 @@
     "harvestItem": "melon",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#3f8f4a", "fruit": "#7fc96b" }
+    "placeholder": {
+      "leaf": "#3f8f4a",
+      "fruit": "#7fc96b"
+    }
   },
   "corn": {
     "seasons": ["summer"],
@@ -51,7 +66,10 @@
     "harvestItem": "corn",
     "harvestQuantity": 1,
     "regrowDays": 3,
-    "placeholder": { "leaf": "#5aa04a", "fruit": "#f2d04a" }
+    "placeholder": {
+      "leaf": "#5aa04a",
+      "fruit": "#f2d04a"
+    }
   },
   "pumpkin": {
     "seasons": ["fall"],
@@ -60,7 +78,10 @@
     "harvestItem": "pumpkin",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#6a9a3a", "fruit": "#e8893a" }
+    "placeholder": {
+      "leaf": "#6a9a3a",
+      "fruit": "#e8893a"
+    }
   },
   "yam": {
     "seasons": ["fall"],
@@ -69,6 +90,21 @@
     "harvestItem": "yam",
     "harvestQuantity": 1,
     "regrowDays": null,
-    "placeholder": { "leaf": "#7a9a3a", "fruit": "#b5546e" }
+    "placeholder": {
+      "leaf": "#7a9a3a",
+      "fruit": "#b5546e"
+    }
+  },
+  "kale": {
+    "seasons": ["winter"],
+    "stageDays": [1, 2, 2, 2],
+    "sprite": "crop_kale",
+    "harvestItem": "kale",
+    "harvestQuantity": 1,
+    "regrowDays": null,
+    "placeholder": {
+      "leaf": "#4f8f6a",
+      "fruit": "#6aa88a"
+    }
   }
 }

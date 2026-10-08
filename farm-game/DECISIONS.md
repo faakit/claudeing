@@ -122,3 +122,11 @@
 - **Area tools make energy go further:** a hoe tier tills a line of 1 to 4 tiles for one use, the can tier waters a line (spending water per tile), so upgrades are efficiency, which suits one-thumb play. The can's capacity upgrade and line length share one level so there is a single can to understand.
 - **Area tools stay pure through `TileInfo.at()`:** scenes supply a neighbour lookup, unit tests that do not give one still behave as single-tile tools. `TileInfo.owned` is optional: undefined means "no land rules", so other maps and old tests are unaffected.
 - **Save version 5:** old saves keep every plot where they already had soil or objects, so nobody loses land.
+
+## Changes from the first independent critique
+
+- **Critic agent:** a separate agent ran a clean copy of the game, scored it on fun, reach, clarity, economy, bugs, polish and code risk, and wrote `agents/critiques/critique-1.md`. We triaged it into the roadmap rather than taking it as orders; items fixed are ticked there.
+- **Produce no longer lands on the hotbar:** items are placed by type. Seeds, fertilizer, bait, machines, feed and animals prefer hotbar slots; everything else prefers the bag, and each overflows into the other region.
+- **Year-end moved to Winter 28:** the plan said Summer 28, but with four seasons that read as the end of the game. Tests and copy were updated.
+- **Winter crop added (kale):** the cheapest way to make the cold season playable before the greenhouse exists.
+- **Economy numbers tuned, not capped:** jam 1.5x and pickles 1.3x of the source, orders 1.2 to 1.6x with a 1,200 gold ceiling, jars max 6 and houses max 2 each. The simulation still models crops only, which is a known gap on the roadmap.

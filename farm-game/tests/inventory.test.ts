@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { game } from '../src/data';
 import {
   addItem,
   countItem,
@@ -63,9 +64,13 @@ describe('inventory', () => {
     const s = newState();
     addItem(s, 'tomato', 5);
     expect(swapSlots(s, 0, 5)).toBe(false);
-    swapSlots(s, TOOL_SLOTS, TOOL_SLOTS + 1);
+    // Produce lands in the bag, past the hotbar, so the seeds keep their hotbar slot.
+    const bag = game.hotbarSlots;
+    expect(s.inventory.slots[bag]?.item).toBe('tomato');
+    expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('parsnip_seed');
+    swapSlots(s, TOOL_SLOTS, bag);
     expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('tomato');
-    expect(s.inventory.slots[TOOL_SLOTS + 1]?.item).toBe('parsnip_seed');
+    expect(s.inventory.slots[bag]?.item).toBe('parsnip_seed');
   });
 
   it('selection clamps to the hotbar and cycles', () => {

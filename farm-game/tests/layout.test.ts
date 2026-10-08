@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { game, goals, items, shops, tips } from '../src/data';
 import { fitText, measureText } from '../src/ui/fontMetrics';
+import { shopFacts } from '../src/ui/panels/shopFacts';
 import { formatClock } from '../src/systems/time';
 import { HUD_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../src/config';
 
@@ -63,5 +64,14 @@ describe('portrait layout', () => {
     expect(measureText('abc')).toBeLessThan(measureText('abcd'));
     expect(measureText('Hello', 2)).toBe(measureText('Hello') * 2);
     expect(measureText('')).toBe(0);
+  });
+});
+
+describe('shop rows never truncate', () => {
+  it('every stock line fits the 110px sub-line, even owning 99 and late in the season', () => {
+    const all = Object.values(shops).flatMap((s) => s.stock.map((e) => e.item));
+    for (const id of all)
+      for (const day of [1, 27])
+        expect(measureText(shopFacts(id, 99, day)), `${id} day ${day}`).toBeLessThanOrEqual(110);
   });
 });

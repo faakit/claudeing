@@ -35,6 +35,10 @@
         "seasons": ["fall"]
       },
       {
+        "item": "kale_seed",
+        "seasons": ["winter"]
+      },
+      {
         "item": "fertilizer",
         "seasons": ["spring", "summer", "fall", "winter"]
       },

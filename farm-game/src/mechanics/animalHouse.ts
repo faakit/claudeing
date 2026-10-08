@@ -39,11 +39,19 @@ registerPlaceableBehavior('animalHouse', {
       addXp(state, 'farming', 4 * got);
       said.push(`+${got} ${items[sp.product]?.name}`);
     }
-    if (h.n === 0 && said.length === 0)
+    if (h.n === 0 && said.length === 0) {
+      // Empty houses can be picked up again, but only on a deliberate second tap.
+      if (obj.data['armed'] === true) {
+        delete obj.data['armed'];
+        return { kind: 'pickup' };
+      }
+      obj.data['armed'] = true;
       return {
         kind: 'message',
-        text: `Empty. Bring a ${sp.name.toLowerCase()} (buy one in town).`,
+        text: `Empty. Bring a ${sp.name.toLowerCase()}, or tap again to pick this up.`,
       };
+    }
+    delete obj.data['armed'];
     const fed = feed(state, obj);
     if (fed === 'ok') said.push('Fed!');
     else if (fed === 'no_feed' && said.length === 0)

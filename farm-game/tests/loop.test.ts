@@ -89,9 +89,9 @@ describe('full loop', () => {
     expect(s.time.season).toBe('summer');
   });
 
-  it('flags the year-end results on Summer 28', () => {
+  it('flags the year-end results on Winter 28', () => {
     const s = newState();
-    s.time.season = 'summer';
+    s.time.season = 'winter';
     s.time.day = 28;
     expect(endDay(s, { passedOut: false, weedCandidates: NO_WEEDS }).yearEnd).toBe(true);
   });

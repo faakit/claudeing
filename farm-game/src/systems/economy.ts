@@ -19,7 +19,8 @@ export const priceFor = (state: GameState, itemId: string): number =>
 
 export const isShippable = (ref: string | ItemRef): boolean => {
   const r = typeof ref === 'string' ? { item: ref } : ref;
-  return items[r.item]?.type !== 'tool' && sellValue(r) > 0;
+  const type = items[r.item]?.type;
+  return type !== 'tool' && type !== 'placeable' && sellValue(r) > 0;
 };
 
 /** Move exactly this kind of stack from the inventory into the shipping bin. Returns how many moved. */

@@ -102,7 +102,8 @@ export class MenuPanel extends Modal {
     const w = Math.floor((this.panelW - 8) / tabs.length);
     tabs.forEach((t, i) => {
       const active = t.id === this.tab;
-      this.button(4 + i * w, 5, w - 2, 20, t.label, () => this.openTab(t.id), {
+      // Tabs sit at the bottom, right above Close: the thumb's resting place on a tall phone.
+      this.button(4 + i * w, this.panelH - 58, w - 2, 22, t.label, () => this.openTab(t.id), {
         rim: active ? C.gold : C.creamDim,
         textColor: active ? C.gold : C.cream,
       });
@@ -110,8 +111,8 @@ export class MenuPanel extends Modal {
     const ctx: MenuTabContext = {
       width: this.panelW,
       height: this.panelH,
-      top: 32,
-      bottom: this.panelH - 32,
+      top: 8,
+      bottom: this.panelH - 64,
       scene: this.scene,
       label: (x, y, text, color, scale, align, maxWidth) =>
         this.label(x, y, text, color, scale, align, maxWidth),

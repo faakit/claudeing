@@ -17,7 +17,9 @@ describe('economy', () => {
   it('stock is filtered by season', () => {
     expect(stockFor(STORE, 'spring')).toContain('parsnip_seed');
     expect(stockFor(STORE, 'spring')).not.toContain('tomato_seed');
-    expect(stockFor(STORE, 'winter').filter((id) => items[id]?.type === 'seed')).toEqual([]);
+    expect(stockFor(STORE, 'winter').filter((id) => items[id]?.type === 'seed')).toEqual([
+      'kale_seed',
+    ]);
   });
 
   it('buys with exact gold, never below zero', () => {

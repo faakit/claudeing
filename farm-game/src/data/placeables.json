@@ -25,7 +25,8 @@
     "solid": true,
     "sprite": "obj_jar",
     "params": {
-      "days": 3
+      "days": 3,
+      "max": 6
     }
   },
   "coop": {
@@ -34,7 +35,8 @@
     "solid": true,
     "sprite": "obj_coop",
     "params": {
-      "species": "chicken"
+      "species": "chicken",
+      "max": 2
     }
   },
   "barn": {
@@ -43,7 +45,8 @@
     "solid": true,
     "sprite": "obj_barn",
     "params": {
-      "species": "cow"
+      "species": "cow",
+      "max": 2
     }
   }
 }

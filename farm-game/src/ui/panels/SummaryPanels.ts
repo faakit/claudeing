@@ -16,6 +16,7 @@ const TIPS = [
   'Water your crops every day. Unwatered crops do not grow.',
   'Seeds only grow in their season. Plan your next planting.',
   'Corn regrows after harvest. Great value in summer.',
+  'Winter has no wild crops, but kale grows in the cold. Plan ahead!',
   'Hold the Action button to work a whole row of tiles.',
   'Upgrade the watering can to spend less time at the pond.',
   'Passing out at 2 AM only restores half your energy. Sleep earlier!',
@@ -160,7 +161,7 @@ export class YearEndPanel extends WaitModal {
     const s = getState();
     const earned = stat(s, 'earned');
     this.panel();
-    this.label(this.panelW / 2, 10, 'END OF SUMMER', C.gold, 2, 'center');
+    this.label(this.panelW / 2, 10, 'END OF YEAR', C.gold, 2, 'center');
     this.label(this.panelW / 2, 30, `Year ${s.time.year} results`, C.creamDim, 1, 'center');
     const rows: [string, string][] = [
       ['Gold earned', `${fmt(earned)}g`],
@@ -174,7 +175,7 @@ export class YearEndPanel extends WaitModal {
     });
     this.label(this.panelW / 2, 112, 'Your rank', C.creamDim, 1, 'center');
     this.label(this.panelW / 2, 124, rankTitle(earned).toUpperCase(), C.green, 2, 'center');
-    this.label(this.panelW / 2, 150, 'Fall crops await. Keep farming!', C.cream, 1, 'center');
+    this.label(this.panelW / 2, 150, 'A new spring awaits. Keep farming!', C.cream, 1, 'center');
     this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Keep playing', () => this.finish(), {
       textColor: C.green,
       rim: C.green,

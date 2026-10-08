@@ -32,6 +32,22 @@
     "hint": "Walk into the house and use the bed with Interact."
   },
   {
+    "id": "forage",
+    "text": "Pick up 3 wild goods off the ground",
+    "stat": "foraged",
+    "target": 3,
+    "reward": 40,
+    "hint": "Look for sparkling goods on the ground and press Action."
+  },
+  {
+    "id": "buy",
+    "text": "Buy 5 items at the General Store",
+    "stat": "bought",
+    "target": 5,
+    "reward": 50,
+    "hint": "Walk south through the gate to town for more seeds."
+  },
+  {
     "id": "harvest",
     "text": "Harvest 5 crops",
     "stat": "harvested",
@@ -46,22 +62,6 @@
     "target": 5,
     "reward": 50,
     "hint": "Put crops in the bin beside the house with Interact."
-  },
-  {
-    "id": "buy",
-    "text": "Buy 5 seeds in town (south)",
-    "stat": "bought",
-    "target": 5,
-    "reward": 50,
-    "hint": "Walk south through the gate to town and use the shop door."
-  },
-  {
-    "id": "forage",
-    "text": "Pick up 3 wild goods off the ground",
-    "stat": "foraged",
-    "target": 3,
-    "reward": 40,
-    "hint": "Look for sparkling goods on the ground and press Action."
   },
   {
     "id": "fish",

@@ -43,6 +43,37 @@ Highest value per effort. None of this adds a mechanic; it makes the current one
 - [~] **R1.5 Accessibility basics.** Done: quality shown by star count (silver one, gold two) as well as tint, and a
   "Calm" reduce-motion toggle. Still open: text-size option, larger touch targets option.
 
+## Critique follow-ups (from `agents/critiques/critique-1.md`)
+
+An independent agent played the game and reviewed it. Its report is kept in `agents/critiques/`. Triage:
+
+Done in this round:
+
+- [x] First week had dead days: forage and "buy items" goals now come before "harvest 5".
+- [x] Shop rows were truncated and hid the facts: they now show days to grow and sell price, and warn "Too late now".
+- [x] Seeds that cannot ripen before the season ends are refused with a reason.
+- [x] Produce filled the hotbar: produce now goes to the bag first, seeds and machines to the hotbar.
+- [x] Menu tabs moved to the bottom of the sheet, next to the thumb.
+- [x] Empty coops and barns can be picked up (second deliberate tap); houses are capped at 2 each, jars at 6.
+- [x] Farming level 10 "+5% sell price" now works; the bin no longer accepts machines.
+- [x] Economy: jam and pickles multipliers lowered (jam 1.5x, pickles 1.3x), order rewards 1.2 to 1.6x with a 1,200 cap,
+      forage spawns trimmed further (about 150 to 280 gold a day if you walk all maps).
+- [x] Winter had no crops: added Kale (winter seed, 7 days, sells 95).
+- [x] The year-end screen fired on Summer 28; it now fires on Winter 28 ("END OF YEAR").
+- [x] Toasts have a dark backing so they read over grass; level-ups play a sound.
+
+Still open (ranked):
+
+- [ ] Touch tool-cycle (swipe or tap on the Action button) so changing tools never needs the hotbar reach.
+- [ ] Add jars, orders and animals to the balance simulation so the guard rails cover the biggest income.
+- [ ] A save from a newer version loads as "no save" silently: show a message and never overwrite it.
+- [ ] Validate the saved player position against the map (tamper-only soft-lock).
+- [ ] Placement undo for big placeables; confirm before placing a barn.
+- [ ] Fiber is the real throttle for sprinklers, jars and houses; add another source (e.g. cutting grass, a shop item).
+- [ ] Seasonal music and sounds for orders and hearts; one music loop for every season is flat.
+- [ ] Art: tilled soil reads as planks, the house is huge next to a 1-tile coop, animals do not roam (see R4.1).
+- [ ] The first day still needs a stronger push toward town (arrow or a first-day NPC visit).
+
 ## Next: depth in the daily loop (R2)
 
 Give players reasons to plan their day and their season.
@@ -55,7 +86,7 @@ Give players reasons to plan their day and their season.
       tiers (waits for the mine).
 - [x] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
       lasting purpose. _Plug in:_ `tillable` zones become state-driven; shop upgrade row.
-- [ ] **R2.3 Fruit trees and a greenhouse.** Trees that regrow seasonally, and a greenhouse that grows crops in
+- [ ] **R2.3 Fruit trees and a greenhouse.** (Kale already gives winter one crop.) Trees that regrow seasonally, and a greenhouse that grows crops in
       winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
 - [ ] **R2.4 More machines.** Keg (juice, wine), loom (cloth from wool), bee house (honey), furnace (needs ore).
       Same shape as the preserve jar: a behavior, a recipe, derived goods keyed by `of`.

@@ -46,7 +46,10 @@ export function generateOrders(state: GameState): Order[] {
     const qty = between(state, tier.qty);
     const [lo, hi] = ordersCfg.rewardMultiplier;
     const mult = lo + random(state) * (hi - lo);
-    const reward = Math.max(5, Math.round((value * qty * mult) / 5) * 5);
+    const reward = Math.min(
+      ordersCfg.maxReward,
+      Math.max(5, Math.round((value * qty * mult) / 5) * 5),
+    );
     list.push({
       id: id++,
       item: keyOf(ref),

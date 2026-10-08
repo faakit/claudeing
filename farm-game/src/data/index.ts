@@ -159,6 +159,8 @@ export interface FishDef {
 export interface OrdersDef {
   perDay: number;
   rewardMultiplier: [number, number];
+  /** No single order pays more than this. */
+  maxReward: number;
   tiers: { maxValue: number; qty: [number, number] }[];
   xpPerValue: number;
 }

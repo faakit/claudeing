@@ -1,4 +1,4 @@
-import { crops, tools } from '../data';
+import { crops, game, placeables, tools } from '../data';
 import {
   registerActionHandler,
   registerToolAction,
@@ -77,6 +77,9 @@ registerActionHandler({
       const when = (crops[cropId]?.seasons ?? []).join(' or ');
       return { refusal: `Won't grow in ${state.time.season}. Plant in ${when}.` };
     }
+    const grow = (crops[cropId]?.stageDays ?? []).reduce((a, b) => a + b, 0);
+    if (grow >= game.seasonLength - state.time.day + 1)
+      return { refusal: `Won't ripen in time (${grow} days). Save it for next season.` };
     return {
       plan: {
         kind: 'plant',
@@ -133,6 +136,12 @@ registerActionHandler({
       return { refusal: "Can't place on tilled soil." };
     if (placedAt(state, tile.map, tile.tx, tile.ty))
       return { refusal: 'Something is already here.' };
+    const max = Number(placeables[stack.item]?.params['max'] ?? Infinity);
+    const have = Object.values(state.placed).reduce(
+      (n, list) => n + list.filter((o) => o.type === stack.item).length,
+      0,
+    );
+    if (have >= max) return { refusal: `You can only have ${max} ${def.name.toLowerCase()}s.` };
     return {
       plan: {
         kind: 'place',

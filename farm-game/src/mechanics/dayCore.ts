@@ -5,6 +5,7 @@ import { growCrops, killOutOfSeason, spawnWeeds } from '../systems/farming';
 import { checkGoals } from '../systems/goals';
 import { parseKey, sellValue } from '../systems/itemRef';
 import { registerDayHook } from '../systems/dayHooks';
+import { perk } from '../systems/skills';
 import { ownsTile } from '../systems/plots';
 import { advanceCalendar } from '../systems/time';
 import { rollWeather, waterAllSoil } from '../systems/weather';
@@ -17,7 +18,7 @@ registerDayHook({
   phase: 'start',
   run(state, ctx) {
     // Summer's last day closes the year: the results screen is shown after this summary.
-    ctx.summary.yearEnd = state.time.season === 'summer' && state.time.day === game.seasonLength;
+    ctx.summary.yearEnd = state.time.season === 'winter' && state.time.day === game.seasonLength;
   },
 });
 
@@ -35,7 +36,7 @@ registerDayHook({
     const shipped = Object.entries(state.shipping).map(([key, qty]) => ({
       item: key,
       qty,
-      gold: sellValue(parseKey(key)) * qty,
+      gold: Math.round(sellValue(parseKey(key)) * qty * (1 + perk(state, 'sellBonus'))),
     }));
     const total = shipped.reduce((s, l) => s + l.gold, 0);
     state.money += total;

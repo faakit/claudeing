@@ -42,7 +42,7 @@ describe('balance guard rails', () => {
         const total = table.reduce((s, e) => s + e.weight, 0);
         potential += n * table.reduce((s, e) => s + (e.weight / total) * price(e.item), 0);
       }
-      expect(potential, season).toBeLessThan(450);
+      expect(potential, season).toBeLessThan(300);
     }
   });
 
