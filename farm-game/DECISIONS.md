@@ -263,3 +263,21 @@
 - **The feed silo makes daily feeding optional:** one Interact pours every feed in the bag into it (300 in all); overnight, before animals wake, every house nobody fed eats from it. Feeding by hand still works and is never doubled. This keeps animals a one-tap-a-day chore (collect) instead of two, which suits one thumb and five-minute sessions.
 - **Bounds moved:** the animal guard rail went from 1,000 to 1,200 gold a day and the side-income total from 4,400 to 4,600 (one sty adds at most 220 a day, less on wet days).
 - Not done: animals that roam beyond their house (visual; waits for real animal sprites).
+
+## Critique 4 fixes
+
+An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `agents/critiques/critique-4.md`. Fixed:
+
+- **F1 energy perks lost on load:** `sanitize` clamped energy to base plus tonics; it now clamps with `maxEnergy()` once the rest of the state (skills, hearts, projects) is rebuilt.
+- **F2 dead-money decorations:** the shop refuses to sell a capped placeable past its cap (placed plus carried), shows "Decor 1/1" and disables the button. The bag card no longer shows a sell price for things the bin refuses.
+- **F3 impossible jobs:** jobs can carry a live `check` (weeds that exist, ripe crops, goods to ship, a board request you hold some of) that caps `n` or skips the job. The board asks for preserves only once that machine stands somewhere, and the order goal moved after the jar goals (save version 13 remaps the goal index).
+- **F4 exploits:** shipping jobs pay at the night's payout (taking goods back out of the bin no longer keeps the reward); the decoration goal counts decorations standing at once; the gift job needs a gift the villager likes.
+- **F5:** Finn's town spot is on the riverbank (map test added).
+- **F6 summary overflow:** weather and the forecast come before the notes; routine lines are folded into one ("Fresh wild goods, ore and requests today.") and put last; if it still does not fit, the tip and then the last notes give way ("...and 3 more").
+- **F7 weak late projects:** the greenhouse became a project; Fair Hall costs 12,000g and doubles festival prizes; Market Road is 10% at 60,000g (payback bound moved from 100 to 80 late-game days); the canopy stands beside the board.
+- **F8 bag to hand:** a bag item's card has "Use now": one tap puts it in the hand and closes the menu.
+- **F9:** "tap again to pick up" is runtime memory for 4 seconds, never saved.
+- **F10:** job plurals, "+N g" buttons say what they give near the end, upgrade rows read "bought/levels", earn goals say "in all".
+- **F11:** nothing can be placed on a villager's daily spot; weeds never sprout under placed things; the unused `charm` param is gone. Placing machines and decorations outside bought plots stays allowed (a recorded earlier decision).
+- **F12:** the gift list puts known favourites first, then unknown goods by value, then seeds, stone and bait, then known dislikes.
+- Not done: forage visibility (critique 3 F8), day-1 land signs (F9), joining fence art (art agent), a long-press hotbar picker.

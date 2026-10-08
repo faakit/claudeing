@@ -12,7 +12,7 @@ import { goalProgress, stat } from '../../systems/goals';
 import { jobLabel, jobProgress } from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
-import { isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
+import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { isShippable } from '../../systems/economy';
 import { displayName, iconKey, refOf, sellValue } from '../../systems/itemRef';
 import {
@@ -218,6 +218,21 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
 
   const dy = c.top - 4;
   const cur = cursor !== null ? s.inventory.slots[cursor] : null;
+  // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
+  if (cur && cursor !== null && cursor >= game.hotbarSlots)
+    c.button(
+      110,
+      y0 - 26,
+      82,
+      22,
+      'Use now',
+      () => {
+        equipFromBag(getState(), cursor);
+        audio.play('select');
+        c.close();
+      },
+      { textColor: C.green, rim: C.green },
+    );
   if (cur) {
     const ref = refOf(cur);
     const def = items[cur.item]!;

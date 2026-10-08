@@ -333,6 +333,8 @@ export interface JobDef {
   introDay?: number;
   /** Only offered once a stat reached `min` (e.g. after the first animal). */
   requires?: { stat: string; min: number };
+  /** A live check that caps `n` by what can be done today (see JOB_CHECKS in systems/jobs.ts). */
+  check?: 'weeds' | 'ripe' | 'goods' | 'order';
 }
 /** A town project the player funds with gold and goods; finishing it grants perks for good. */
 export interface ProjectDef {
@@ -662,7 +664,8 @@ export function validateContent(): void {
       fail('mail', `"${l.id}" encloses unknown item "${l.gift.item}"`);
     const w = l.when;
     if (w.npc !== undefined && !npcs[w.npc]) fail('mail', `"${l.id}" waits on unknown villager`);
-    if ((w.stat === undefined) !== (w.min === undefined)) fail('mail', `"${l.id}" needs stat and min`);
+    if ((w.stat === undefined) !== (w.min === undefined))
+      fail('mail', `"${l.id}" needs stat and min`);
     if (w.season !== undefined && !SEASONS.includes(w.season))
       fail('mail', `"${l.id}" has a bad season`);
     if (Object.keys(w).length === 0) fail('mail', `"${l.id}" has no "when"`);
@@ -672,7 +675,8 @@ export function validateContent(): void {
     if (!j.id || jobIds.has(j.id)) fail('jobs', `job "${j.id}" needs a unique id`);
     jobIds.add(j.id);
     if (!npcs[j.giver]) fail('jobs', `"${j.id}" is given by unknown villager "${j.giver}"`);
-    if (!j.text.includes('{n}') || !j.stat) fail('jobs', `"${j.id}" needs a stat and {n} in its text`);
+    if (!j.stat || (!j.text.includes('{n}') && j.qty[1] > 1))
+      fail('jobs', `"${j.id}" needs a stat, and {n} in its text unless it is always one`);
     if (j.qty[0] < 1 || j.qty[1] < j.qty[0] || j.weight <= 0)
       fail('jobs', `"${j.id}" has a bad quantity or weight`);
   }

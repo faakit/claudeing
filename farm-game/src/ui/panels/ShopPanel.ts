@@ -9,6 +9,7 @@ import {
   nextUpgrade,
   priceFor,
   upgradeLevel,
+  placeLimit,
   stockFor,
 } from '../../systems/economy';
 import { toast } from '../../systems/events';
@@ -99,8 +100,9 @@ export class ShopPanel extends Modal {
     const s = getState();
     const def = items[id]!;
     const price = priceFor(s, id);
-    const own = countItem(s, id);
-    const gone = def.type === 'animal' && own > 0;
+    const lim = placeLimit(s, id);
+    const own = lim ? lim.have : countItem(s, id);
+    const gone = (def.type === 'animal' && own > 0) || (!!lim && lim.have >= lim.max);
     const greenhouse = ownsGreenhouse(s);
     return this.row(y, {
       icon: def.icon,
@@ -113,6 +115,7 @@ export class ShopPanel extends Modal {
           width: 44,
           onClick: () => this.buy(id, 1),
           color: s.money >= price ? C.gold : C.red,
+          enabled: !(lim && lim.have >= lim.max),
         },
         // No x5 on animals or anything dear: one tap must never spend thousands by accident.
         ...(def.type === 'animal' || price > X5_MAX_PRICE
@@ -123,6 +126,7 @@ export class ShopPanel extends Modal {
                 width: 26,
                 onClick: () => this.buy(id, 5),
                 color: s.money >= price * 5 && !gone ? C.cream : C.creamDim,
+                enabled: !lim || lim.have + 5 <= lim.max,
               },
             ]),
       ],
@@ -158,7 +162,7 @@ export class ShopPanel extends Modal {
             : up.id === 'stamina'
               ? 'ui_bolt'
               : items[up.id === 'hoe' ? 'hoe' : 'fishing_rod']!.icon),
-        title: `${up.name} ${lvl + 1}/${up.levels.length + 1}`,
+        title: `${up.name} ${lvl}/${up.levels.length}`,
         sub: next ? next.label : 'Fully upgraded!',
         subColor: next ? C.creamDim : C.green,
         buttons: next
@@ -201,7 +205,9 @@ export class ShopPanel extends Modal {
           ? 'Not enough gold.'
           : res === 'full'
             ? 'Inventory full!'
-            : "Can't buy that now.",
+            : res === 'limit'
+              ? 'You have as many as you can place.'
+              : "Can't buy that now.",
         'warn',
       );
     }

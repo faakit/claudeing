@@ -25,6 +25,8 @@ export function orderCandidates(state: GameState): ItemRef[] {
   for (const machine of Object.keys(machines)) {
     const recipe = recipes[machine];
     if (!recipe || !isRecipeUnlocked(state, recipe)) continue;
+    // Only once the player has one standing: a recipe alone does not make pickles.
+    if (!Object.values(state.placed).some((list) => list.some((o) => o.type === machine))) continue;
     for (const r of [...out.values()]) {
       const p = preserveOf(r, machine);
       if (p) add(p);

@@ -28,6 +28,7 @@ import { sellValue } from '../systems/itemRef';
 import { placedAt, placeObject } from '../systems/placeables';
 import { addXp } from '../systems/skills';
 import { inGreenhouse } from '../systems/plots';
+import { villagerSpot } from '../systems/npcs';
 
 const TIRED = 'Too tired! Go to bed.';
 
@@ -144,6 +145,8 @@ registerActionHandler({
     if (soil?.crop) return { refusal: "Can't place on a growing crop." };
     if (placedAt(state, tile.map, tile.tx, tile.ty))
       return { refusal: 'Something is already here.' };
+    if (villagerSpot(tile.map, tile.tx, tile.ty))
+      return { refusal: 'Someone stands here every day. Try another spot.' };
     const max = Number(placeables[stack.item]?.params['max'] ?? Infinity);
     const have = Object.values(state.placed).reduce(
       (n, list) => n + list.filter((o) => o.type === stack.item).length,
@@ -162,7 +165,14 @@ registerActionHandler({
           placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
           addStat(state, 'placed');
           if (def.type === 'sapling') addStat(state, 'treesPlanted');
-          if (placeables[stack.item]?.behavior === 'decor') addStat(state, 'decorPlaced');
+          // The decoration goal counts decorations standing at once, so moving one about earns nothing.
+          if (placeables[stack.item]?.behavior === 'decor') {
+            const standing = Object.values(state.placed)
+              .flat()
+              .filter((o) => placeables[o.type]?.behavior === 'decor').length;
+            const best = state.stats['decorPlaced'] ?? 0;
+            if (standing > best) addStat(state, 'decorPlaced', standing - best);
+          }
           return { item: stack.item };
         },
       },

@@ -113,18 +113,6 @@
     }
   },
   {
-    "id": "order",
-    "text": "Fill an order on the town board",
-    "stat": "ordersDone",
-    "target": 1,
-    "reward": 80,
-    "hint": "Go to the board in town and use Interact.",
-    "where": {
-      "town": [14, 12],
-      "farm": [14, 42]
-    }
-  },
-  {
     "id": "craft",
     "text": "Craft something at the workbench",
     "stat": "crafted",
@@ -147,6 +135,18 @@
     "target": 1,
     "reward": 120,
     "hint": "Load fruit or vegetables into a jar and collect in 3 days."
+  },
+  {
+    "id": "order",
+    "text": "Fill an order on the town board",
+    "stat": "ordersDone",
+    "target": 1,
+    "reward": 80,
+    "hint": "Go to the board in town and use Interact.",
+    "where": {
+      "town": [14, 12],
+      "farm": [14, 42]
+    }
   },
   {
     "id": "quality",
@@ -202,7 +202,7 @@
   },
   {
     "id": "earn1k",
-    "text": "Earn 1,000g selling crops",
+    "text": "Earn 1,000g in all",
     "stat": "earned",
     "target": 1000,
     "reward": 100,
@@ -226,7 +226,7 @@
   },
   {
     "id": "earn5k",
-    "text": "Earn 5,000g selling crops",
+    "text": "Earn 5,000g in all",
     "stat": "earned",
     "target": 5000,
     "reward": 250,

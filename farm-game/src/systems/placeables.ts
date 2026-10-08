@@ -98,6 +98,16 @@ export function solidTiles(state: GameState, map: string): [number, number][] {
     .map((o) => [o.tx, o.ty] as [number, number]);
 }
 
+/** How long a "Tap again to pick up" stays armed. */
+export const ARM_MS = 4000;
+let armed: { id: number; at: number } | null = null;
+let clock: () => number = () => Date.now();
+/** Tests can drive time. */
+export function setPickupClock(fn: () => number): void {
+  clock = fn;
+  armed = null;
+}
+
 /** Run an interaction through the object's behavior (default: pick up). */
 export function interactWith(state: GameState, obj: PlacedObject): InteractResult {
   const def = placeables[obj.type];
@@ -106,16 +116,19 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
   if (!b.interact) return { kind: 'pickup' };
   const res = b.interact(state, obj, def);
   // Machines, trees and houses have their own interactions, so picking one up is a deliberate second tap
-  // on a plain status message (never after something happened, and never while it is busy).
+  // on a plain status message (never after something happened, and never while it is busy). The arm is
+  // runtime memory with a time limit: it is never saved, and a tap minutes later starts over.
+  delete obj.data['armedPick']; // left by older versions, which saved it
   if (res.kind === 'message' && res.text !== '' && canPickUp(obj)) {
-    if (obj.data['armedPick'] === true) {
-      delete obj.data['armedPick'];
+    const now = clock();
+    if (armed && armed.id === obj.id && now - armed.at <= ARM_MS) {
+      armed = null;
       return { kind: 'pickup' };
     }
-    obj.data['armedPick'] = true;
+    armed = { id: obj.id, at: now };
     return { ...res, text: `${res.text} Tap again to pick up.` };
   }
-  delete obj.data['armedPick'];
+  armed = null;
   return res;
 }
 

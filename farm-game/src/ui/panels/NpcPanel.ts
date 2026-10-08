@@ -19,7 +19,7 @@ import {
   POINTS_PER_HEART,
   pointsOf,
 } from '../../systems/friendship';
-import { keyOf, displayName, iconKey, refOf, type ItemRef } from '../../systems/itemRef';
+import { keyOf, displayName, iconKey, refOf, sellValue, type ItemRef } from '../../systems/itemRef';
 import { countStack } from '../../systems/inventory';
 import { gameEvents, toast } from '../../systems/events';
 import { fitText } from '../font';
@@ -183,10 +183,13 @@ export class NpcPanel extends Modal {
     const kinds = new Map<string, ItemRef>();
     for (const st of s.inventory.slots) if (st && isGiftable(st)) kinds.set(keyOf(st), refOf(st));
     // Known favourites first, unknown next, known dislikes last: the list remembers past gifts.
+    const rank = (r: ItemRef): number => {
+      const known = knownReaction(s, this.id, r);
+      if (known) return GIFT_ORDER.indexOf(known) * 2;
+      return EVERYDAY.has(items[r.item]?.type ?? '') ? 5 : 3; // seeds, stone and bait go last
+    };
     const list = [...kinds.values()].sort(
-      (a, b) =>
-        GIFT_ORDER.indexOf(knownReaction(s, this.id, a)) -
-        GIFT_ORDER.indexOf(knownReaction(s, this.id, b)),
+      (a, b) => rank(a) - rank(b) || sellValue(b) - sellValue(a),
     );
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
@@ -241,7 +244,9 @@ export class NpcPanel extends Modal {
   }
 }
 
-const GIFT_ORDER = ['love', 'like', null, 'neutral', 'dislike'] as const;
+const GIFT_ORDER = ['love', 'like', 'neutral', 'dislike'] as const;
+/** Things nobody wants as a present; listed after real gifts. */
+const EVERYDAY = new Set(['seed', 'material', 'fertilizer', 'bait', 'feed']);
 const KNOWN_COLOR = { love: C.gold, like: C.green, neutral: C.creamDim, dislike: C.red } as const;
 
 const REPLIES = {

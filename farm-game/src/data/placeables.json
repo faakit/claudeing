@@ -139,8 +139,7 @@
     "solid": true,
     "sprite": "obj_fence",
     "params": {
-      "max": 60,
-      "charm": 1
+      "max": 60
     }
   },
   "stone_path": {
@@ -150,7 +149,6 @@
     "sprite": "obj_stone_path",
     "params": {
       "max": 80,
-      "charm": 1,
       "flat": true
     }
   },
@@ -160,8 +158,7 @@
     "solid": true,
     "sprite": "obj_flower_pot",
     "params": {
-      "max": 12,
-      "charm": 3
+      "max": 12
     }
   },
   "garden_lamp": {
@@ -170,8 +167,7 @@
     "solid": true,
     "sprite": "obj_garden_lamp",
     "params": {
-      "max": 8,
-      "charm": 5
+      "max": 8
     }
   },
   "garden_bench": {
@@ -180,8 +176,7 @@
     "solid": true,
     "sprite": "obj_garden_bench",
     "params": {
-      "max": 6,
-      "charm": 6
+      "max": 6
     }
   },
   "farm_statue": {
@@ -190,8 +185,7 @@
     "solid": true,
     "sprite": "obj_farm_statue",
     "params": {
-      "max": 2,
-      "charm": 25
+      "max": 2
     }
   },
   "garden_fountain": {
@@ -200,8 +194,7 @@
     "solid": true,
     "sprite": "obj_garden_fountain",
     "params": {
-      "max": 1,
-      "charm": 60
+      "max": 1
     }
   },
   "sty": {

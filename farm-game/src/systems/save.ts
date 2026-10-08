@@ -12,6 +12,7 @@ import {
   skills,
 } from '../data';
 import { plotAtTile, starterPlots } from './plots';
+import { maxEnergy as maxEnergyOf } from './energy';
 import { isDirection } from './direction';
 import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
@@ -231,7 +232,11 @@ const GOALS_V9 = [
 
 /** v9 -> v10: daily jobs (posted from the next morning on) and two job goals. */
 function migrateV9(raw: Raw): Raw {
-  return { ...remapGoalIndex(raw, GOALS_V9), version: 10, jobs: { day: 0, list: [] } };
+  return {
+    ...remapGoalIndex(raw, GOALS_V9, GOALS_V12.slice(0, -2)),
+    version: 10,
+    jobs: { day: 0, list: [] },
+  };
 }
 
 /** v10 -> v11: the mailbox starts empty; letters whose time has passed arrive the next morning. */
@@ -242,6 +247,17 @@ function migrateV10(raw: Raw): Raw {
 /** v11 -> v12: orders may say the rival farmer took them (an optional flag; nothing to convert). */
 function migrateV11(raw: Raw): Raw {
   return { ...raw, version: 12 };
+}
+
+/** Goal ids of the save-version-10 to 12 releases (jobs, mail, rival, greenhouse, pigs). */
+// prettier-ignore
+const GOALS_V12 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'job1', 'harvest', 'ship', 'fish', 'order', 'craft', 'place', 'preserve', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'jobs20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll', 'greenhouse20', 'truffles10',
+] as const;
+
+/** v12 -> v13: the order goal moved after the jar goals; keep each save on the goal it was on. */
+function migrateV12(raw: Raw): Raw {
+  return { ...remapGoalIndex(raw, GOALS_V12), version: 13 };
 }
 
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
@@ -256,6 +272,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   9: migrateV9,
   10: migrateV10,
   11: migrateV11,
+  12: migrateV12,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -328,7 +345,6 @@ export function sanitize(raw: Raw): GameState {
     bag: int(u['bag'], 0, 0, upgradeMax('bag')),
   };
   const bagSlots = game.inventorySlots + upgrades.bag * game.bagSlotsPerLevel;
-  const maxEnergy = game.baseEnergy + upgrades.stamina * game.energyPerUpgrade;
   const canCap = game.canCapacity[upgrades.can] ?? 20;
 
   // Inventory: fixed length, valid stacks only, tools always in their fixed slots.
@@ -540,11 +556,11 @@ export function sanitize(raw: Raw): GameState {
     : [];
   for (const id of starterPlots()) if (!ownedPlots.includes(id)) ownedPlots.push(id);
 
-  return {
+  const out: GameState = {
     version: STATE_VERSION,
     time,
     money: Math.floor(raw['money'] as number),
-    energy: int(raw['energy'], maxEnergy, 0, maxEnergy),
+    energy: 0, // set below, once perks can be read
     water: int(raw['water'], canCap, 0, canCap),
     upgrades,
     plots: ownedPlots,
@@ -572,6 +588,11 @@ export function sanitize(raw: Raw): GameState {
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
   };
+  // Energy is capped by everything that raises it (skills, hearts, town projects), which is only known
+  // once the rest of the state is rebuilt. Clamping to the tonic level alone used to drop perks on load.
+  const cap = maxEnergyOf(out);
+  out.energy = int(raw['energy'], cap, 0, cap);
+  return out;
 }
 
 export async function saveGame(store: SaveStore, state: GameState): Promise<void> {

@@ -148,6 +148,7 @@ export function giveGift(state: GameState, id: string, ref: ItemRef): GiftResult
   state.stats[giftKey(id, ref.item)] = REACTION_CODE[reaction];
   addPoints(state, id, points);
   addStat(state, 'gifted');
+  if (reaction === 'love' || reaction === 'like') addStat(state, 'likedGifts');
   toast(
     `${npcs[id]?.name}: ${REACTION_TEXT[reaction](displayName(ref))}`,
     reaction === 'dislike' ? 'warn' : 'good',

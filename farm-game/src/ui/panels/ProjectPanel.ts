@@ -113,11 +113,13 @@ export class ProjectPanel extends Modal {
     }
     // Give buttons sit low, next to the thumb: three gold steps, then goods.
     const by = this.panelH - 82;
+    // Each button says what it really gives: near the end, "+10,000g" becomes the amount still needed.
     GIVE_STEPS.forEach((step, i) => {
       const amount = Math.min(step, left);
-      this.button(8 + i * 62, by, 58, 22, `+${fmt(step)}g`, () =>
+      const repeat = i > 0 && Math.min(GIVE_STEPS[i - 1]!, left) === amount;
+      this.button(8 + i * 62, by, 58, 22, `+${fmt(amount)}g`, () =>
         this.after(donateGold(getState(), id, step)),
-      ).setEnabled(amount > 0 && s.money >= amount);
+      ).setEnabled(amount > 0 && !repeat && s.money >= amount);
     });
     const needsItems = itemNeeds(s, id).some((n) => n.given < n.need);
     this.button(8, by + 26, 90, 22, 'Give goods', () =>

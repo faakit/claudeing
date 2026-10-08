@@ -15,8 +15,8 @@
     "reward": "The board posts 4 requests a day.",
     "landmark": {
       "map": "town",
-      "tx": 16,
-      "ty": 13,
+      "tx": 15,
+      "ty": 11,
       "sprite": "obj_landmark_canopy",
       "color": "#c9a26a"
     }
@@ -120,7 +120,7 @@
     "name": "Fair Hall",
     "blurb": "A real hall for the four festivals, with bigger prizes.",
     "after": "fishladder",
-    "gold": 25000,
+    "gold": 12000,
     "items": [
       {
         "item": "cloth",
@@ -128,9 +128,9 @@
       }
     ],
     "perks": {
-      "festivalPrize": 0.5
+      "festivalPrize": 1
     },
-    "reward": "Festival prizes pay 50% more.",
+    "reward": "Festival prizes are doubled.",
     "landmark": {
       "map": "town",
       "tx": 21,
@@ -143,7 +143,7 @@
     "name": "Market Road",
     "blurb": "A paved road to the city. Buyers pay more for fresh goods.",
     "after": "bathhouse",
-    "gold": 50000,
+    "gold": 60000,
     "items": [
       {
         "item": "iron_bar",
@@ -155,9 +155,9 @@
       }
     ],
     "perks": {
-      "sellBonus": 0.05
+      "sellBonus": 0.1
     },
-    "reward": "Everything you ship sells for 5% more.",
+    "reward": "Everything you ship sells for 10% more.",
     "landmark": {
       "map": "town",
       "tx": 16,

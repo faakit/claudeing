@@ -62,11 +62,13 @@ describe('keg', () => {
     for (let i = 0; i < 5; i++) tickJar(keg);
     expect(statusOf(keg)).toBe('ready');
   });
-  it('wine becomes an order candidate once kegs are unlocked', () => {
+  it('wine becomes an order candidate once a keg is unlocked and placed', () => {
     const s = newState();
     s.time.season = 'summer';
     expect(orderCandidates(s).some((r) => r.item === 'wine')).toBe(false);
     addXp(s, 'farming', 300);
+    expect(orderCandidates(s).some((r) => r.item === 'wine')).toBe(false); // a recipe is not a keg
+    placeObject(s, 'farm', 3, 3, 'keg');
     expect(orderCandidates(s).some((r) => r.item === 'wine')).toBe(true);
   });
 });

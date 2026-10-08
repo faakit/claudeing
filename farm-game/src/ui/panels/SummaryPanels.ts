@@ -12,6 +12,7 @@ import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
 import { summaryTip } from './summaryTips';
+import { arrangeNotes } from './summaryNotes';
 
 /** A modal the player must acknowledge: no tap-outside dismiss. */
 abstract class WaitModal extends Modal {
@@ -66,16 +67,21 @@ export class SummaryPanel extends WaitModal {
     // Text wraps to a length we cannot know up front, so lay it out once to measure the real height,
     // then again at that height. Nothing is placed at a fixed y, so lines can never overlap.
     this.setHeight(400);
-    let end = this.draw(this.summary);
-    // A busy morning (jobs, notes, many sales) drops the tip rather than run off the top.
-    const withTip = end + 40 <= MAX_SUMMARY_H;
-    if (!withTip) {
+    // A busy morning (jobs, letters, a festival, many sales) first drops the tip, then the last notes,
+    // rather than run under the Wake up button. Weather and the forecast come before the notes, so
+    // they are never the part that is cut.
+    let withTip = true;
+    let maxNotes = arrangeNotes(this.summary.notes ?? []).length;
+    let end = this.draw(this.summary, withTip, maxNotes);
+    while (end + 40 > MAX_SUMMARY_H && (withTip || maxNotes > 0)) {
+      if (withTip) withTip = false;
+      else maxNotes -= 1;
       this.content.removeAll(true);
-      end = this.draw(this.summary, false);
+      end = this.draw(this.summary, withTip, maxNotes);
     }
     this.content.removeAll(true);
     this.setHeight(end + 40);
-    this.draw(this.summary, withTip);
+    this.draw(this.summary, withTip, maxNotes);
     this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Wake up', () => this.finish(), {
       textColor: C.green,
       rim: C.green,
@@ -83,7 +89,7 @@ export class SummaryPanel extends WaitModal {
   }
 
   /** Draw the summary top to bottom; returns the y just below the last line. */
-  private draw(sum: DaySummary, withTip = true): number {
+  private draw(sum: DaySummary, withTip = true, maxNotes = Infinity): number {
     const s = getState();
     const lines = sum.shipped.slice(0, 6);
     const extra = sum.shipped.length - lines.length;
@@ -129,7 +135,6 @@ export class SummaryPanel extends WaitModal {
         C.warn,
         { wrap: 184, gap: 4 },
       );
-    for (const note of sum.notes ?? []) y += text(note, C.cream, { wrap: 184, gap: 4 });
     y += text(`Now: ${seasonLabel(s.time.season)} ${s.time.day}. Gold: ${fmt(s.money)}`, C.cream, {
       wrap: 184,
     });
@@ -149,6 +154,10 @@ export class SummaryPanel extends WaitModal {
         gap: 8,
       },
     );
+    const notes = arrangeNotes(sum.notes ?? []);
+    for (const note of notes.slice(0, maxNotes)) y += text(note, C.cream, { wrap: 184, gap: 4 });
+    if (notes.length > maxNotes)
+      y += text(`...and ${notes.length - maxNotes} more`, C.creamDim, { gap: 4 });
     if (withTip)
       y += text(`Tip: ${summaryTip(s.time.season, s.time.day, s.time.year)}`, C.creamDim, {
         wrap: 184,

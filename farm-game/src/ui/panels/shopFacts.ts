@@ -13,9 +13,10 @@ export function shopFacts(itemId: string, own: number, day: number, greenhouse =
   const crop = def.plants ? crops[def.plants] : undefined;
   let base: string;
   if (crop)
-    base = !greenhouse && tooLate(itemId, day)
-      ? 'Too late now'
-      : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
+    base =
+      !greenhouse && tooLate(itemId, day)
+        ? 'Too late now'
+        : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
   else if (def.type === 'animal') base = 'Needs a home';
   else if (def.type === 'sapling') base = `${seasonName(trees[itemId]?.season ?? '')} fruit`;
   else if (def.type === 'feed') base = 'Daily food';
@@ -24,7 +25,8 @@ export function shopFacts(itemId: string, own: number, day: number, greenhouse =
   else if (def.type === 'bait') base = 'Faster bites';
   else if (def.type === 'material') base = 'For crafting';
   else if (placeables[itemId]?.behavior === 'decor')
-    base = `Decor max ${String(placeables[itemId]?.params['max'] ?? 1)}`;
+    // For decorations `own` counts placed ones too, against the cap: "Decor 1/1".
+    return `Decor ${own}/${String(placeables[itemId]?.params['max'] ?? 1)}`;
   else base = def.description;
   return own > 0 ? `${base} (own ${own})` : base;
 }

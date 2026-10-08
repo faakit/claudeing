@@ -142,7 +142,9 @@ describe('town projects', () => {
     const lateIncome = 6500;
     for (const [id, p] of Object.entries(projects)) {
       const perDay = (p.perks['sellBonus'] ?? 0) * lateIncome;
-      if (perDay > 0) expect(p.gold / perDay, id).toBeGreaterThan(100);
+      // 80 days (was 100): critique 4 found the 5% Market Road took about 1M gold of shipping to pay back,
+      // so it is now 10% at 60,000g; still more than three seasons of late-game income.
+      if (perDay > 0) expect(p.gold / perDay, id).toBeGreaterThan(80);
       // No project hands out gold directly.
       expect(
         Object.keys(p.perks).some((k) => /gold|money/i.test(k)),

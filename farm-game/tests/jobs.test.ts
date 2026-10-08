@@ -3,6 +3,9 @@ import '../src/mechanics';
 import { goals, jobs as jobDefs } from '../src/data';
 import { endDay } from '../src/systems/day';
 import { addStat } from '../src/systems/goals';
+import { shipItem, unshipItem } from '../src/systems/economy';
+import { addItem } from '../src/systems/inventory';
+import { giveGift } from '../src/systems/friendship';
 import { pointsOf } from '../src/systems/friendship';
 import {
   checkJobs,
@@ -29,7 +32,7 @@ describe('daily jobs', () => {
     const sum = sleep(s);
     expect(s.jobs.list).toHaveLength(JOBS_PER_DAY);
     expect(s.jobs.list[0]?.id).toBe('fish');
-    expect(sum.notes?.filter((n) => n.startsWith('Job: '))).toHaveLength(JOBS_PER_DAY);
+    expect(sum.notes?.filter((n) => n.startsWith('New jobs from '))).toHaveLength(1);
     sleep(s);
     expect(s.jobs.list.map((j) => j.id)).toContain('mine');
   });
@@ -119,5 +122,97 @@ describe('daily jobs', () => {
     const m = migrate(v9);
     expect(m.jobs).toEqual({ day: 0, list: [] });
     expect(goals[m.goalIndex]?.id).toBe('harvest');
+  });
+});
+
+describe('jobs are always doable (critique 4)', () => {
+  it('no weeds, no weed job; no ripe crops, no harvest job', () => {
+    const s = newState();
+    s.stats['harvested'] = 5;
+    s.farm.weeds = {};
+    const ids = jobCandidates(s).map((j) => j.id);
+    expect(ids).not.toContain('weeds');
+    expect(ids).not.toContain('harvest');
+    s.farm.weeds = { '10,17': true, '11,17': true };
+    expect(jobCandidates(s).map((j) => j.id)).toContain('weeds');
+  });
+
+  it('a request job is posted only if you hold some of what the board wants', () => {
+    const s = newState();
+    s.time.day = 4;
+    s.orders = {
+      day: 4,
+      list: [{ id: 1, item: 'parsnip|0|', qty: 5, reward: 100, xp: 4, done: false }],
+    };
+    expect(jobCandidates(s).map((j) => j.id)).not.toContain('order');
+    addItem(s, 'parsnip', 1);
+    expect(jobCandidates(s).map((j) => j.id)).toContain('order');
+  });
+
+  it('a shipping job pays at night for goods that stayed in the bin, not for a ship-and-take-back', () => {
+    const s = newState();
+    s.stats['harvested'] = 1;
+    addItem(s, 'parsnip', 20);
+    s.jobs = {
+      day: 1,
+      list: [
+        { id: 'ship', giver: 'mara', stat: 'shipped', base: 0, n: 10, reward: 40, done: false },
+      ],
+    };
+    shipItem(s, 'parsnip', 10);
+    expect(s.jobs.list[0]!.done).toBe(false); // not on the spot
+    unshipItem(s, 'parsnip', 10);
+    sleep(s);
+    expect(s.stats['jobsDone'] ?? 0).toBe(0);
+    s.jobs = {
+      day: s.jobs.day,
+      list: [
+        {
+          id: 'ship',
+          giver: 'mara',
+          stat: 'shipped',
+          base: s.stats['shipped'] ?? 0,
+          n: 10,
+          reward: 40,
+          done: false,
+        },
+      ],
+    };
+    shipItem(s, 'parsnip', 10);
+    const money = s.money;
+    sleep(s);
+    expect(s.stats['jobsDone']).toBe(1);
+    expect(s.money).toBeGreaterThan(money + 40);
+  });
+
+  it('the gift job needs a gift they like, not a stone', () => {
+    const s = newState();
+    s.jobs = {
+      day: 1,
+      list: [
+        { id: 'gift', giver: 'rosa', stat: 'likedGifts', base: 0, n: 1, reward: 35, done: false },
+      ],
+    };
+    addItem(s, 'stone', 1);
+    giveGift(s, 'rosa', { item: 'stone' });
+    expect(s.jobs.list[0]!.done).toBe(false);
+    s.friends['rosa']!.giftedDay = 0;
+    addItem(s, 'pumpkin', 1);
+    giveGift(s, 'rosa', { item: 'pumpkin' });
+    expect(s.jobs.list[0]!.done).toBe(true);
+  });
+
+  it('labels use the right plural', () => {
+    const job = {
+      id: 'machines',
+      giver: 'mara',
+      stat: 'jarsLoaded',
+      base: 0,
+      n: 1,
+      reward: 1,
+      done: false,
+    };
+    expect(jobLabel(job)).toBe('Mara: load 1 machine');
+    expect(jobLabel({ ...job, n: 2 })).toBe('Mara: load 2 machines');
   });
 });

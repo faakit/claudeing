@@ -177,7 +177,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 12;
+export const STATE_VERSION = 13;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {

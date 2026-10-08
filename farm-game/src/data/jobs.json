@@ -13,7 +13,7 @@
   {
     "id": "mine",
     "giver": "orin",
-    "text": "break {n} mine rocks",
+    "text": "break {n} mine rock{s}",
     "stat": "mined",
     "qty": [3, 6],
     "base": 10,
@@ -24,18 +24,19 @@
   {
     "id": "order",
     "giver": "mara",
-    "text": "fill {n} board request",
+    "text": "fill {n} board request{s}",
     "stat": "ordersDone",
     "qty": [1, 1],
     "base": 20,
     "perUnit": 30,
     "weight": 2,
-    "introDay": 4
+    "introDay": 4,
+    "check": "order"
   },
   {
     "id": "forage",
     "giver": "rosa",
-    "text": "pick {n} wild goods",
+    "text": "pick {n} wild good{s}",
     "stat": "foraged",
     "qty": [2, 4],
     "base": 10,
@@ -45,7 +46,7 @@
   {
     "id": "chat",
     "giver": "mara",
-    "text": "greet {n} villagers",
+    "text": "greet {n} villager{s}",
     "stat": "talked",
     "qty": [2, 3],
     "base": 10,
@@ -55,8 +56,8 @@
   {
     "id": "gift",
     "giver": "rosa",
-    "text": "give {n} gift",
-    "stat": "gifted",
+    "text": "give a gift they like",
+    "stat": "likedGifts",
     "qty": [1, 1],
     "base": 15,
     "perUnit": 20,
@@ -65,66 +66,84 @@
   {
     "id": "ship",
     "giver": "mara",
-    "text": "ship {n} goods",
+    "text": "ship {n} good{s}",
     "stat": "shipped",
     "qty": [6, 15],
     "base": 10,
     "perUnit": 3,
     "weight": 2,
-    "requires": { "stat": "harvested", "min": 1 }
+    "requires": {
+      "stat": "harvested",
+      "min": 1
+    },
+    "check": "goods"
   },
   {
     "id": "harvest",
     "giver": "rosa",
-    "text": "harvest {n} crops",
+    "text": "harvest {n} crop{s}",
     "stat": "harvested",
     "qty": [4, 10],
     "base": 10,
     "perUnit": 4,
     "weight": 2,
-    "requires": { "stat": "harvested", "min": 1 }
+    "requires": {
+      "stat": "harvested",
+      "min": 1
+    },
+    "check": "ripe"
   },
   {
     "id": "weeds",
     "giver": "rosa",
-    "text": "cut {n} weeds",
+    "text": "cut {n} weed{s}",
     "stat": "cleared",
     "qty": [2, 4],
     "base": 10,
     "perUnit": 8,
-    "weight": 1
+    "weight": 1,
+    "check": "weeds"
   },
   {
     "id": "collect",
     "giver": "rosa",
-    "text": "get {n} animal goods",
+    "text": "get {n} animal good{s}",
     "stat": "collected",
     "qty": [3, 6],
     "base": 15,
     "perUnit": 6,
     "weight": 2,
-    "requires": { "stat": "animalsAdded", "min": 1 }
+    "requires": {
+      "stat": "animalsAdded",
+      "min": 1
+    }
   },
   {
     "id": "machines",
     "giver": "mara",
-    "text": "load {n} machines",
+    "text": "load {n} machine{s}",
     "stat": "jarsLoaded",
     "qty": [1, 3],
     "base": 10,
     "perUnit": 15,
     "weight": 2,
-    "requires": { "stat": "jarsLoaded", "min": 1 }
+    "requires": {
+      "stat": "jarsLoaded",
+      "min": 1
+    }
   },
   {
     "id": "craft",
     "giver": "orin",
-    "text": "craft {n} things",
+    "text": "craft {n} thing{s}",
     "stat": "crafted",
     "qty": [1, 2],
     "base": 15,
     "perUnit": 15,
     "weight": 1,
-    "requires": { "stat": "crafted", "min": 1 }
+    "requires": {
+      "stat": "crafted",
+      "min": 1
+    }
   }
 ]

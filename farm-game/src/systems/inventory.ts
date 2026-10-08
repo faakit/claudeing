@@ -144,6 +144,29 @@ export function cycleSlot(state: GameState, step: number): void {
   selectSlot(state, (state.inventory.selected + step + game.hotbarSlots) % game.hotbarSlots);
 }
 
+/**
+ * Put a bag item in the hand: it goes to the selected hotbar slot (swapping what was there into the bag),
+ * or to the first free hotbar slot when a tool is selected, or to the last hotbar slot. Then it is selected.
+ */
+export function equipFromBag(state: GameState, slot: number): boolean {
+  if (slot < game.hotbarSlots || !state.inventory.slots[slot]) return false;
+  const sel = state.inventory.selected;
+  let target = sel;
+  if (isToolSlot(sel)) {
+    const free = state.inventory.slots.findIndex(
+      (s, i) => !s && i < game.hotbarSlots && !isToolSlot(i),
+    );
+    target = free >= 0 ? free : game.hotbarSlots - 1;
+  }
+  const slots = state.inventory.slots;
+  const moving = slots[slot] ?? null;
+  slots[slot] = slots[target] ?? null;
+  slots[target] = moving;
+  state.inventory.selected = target;
+  changed();
+  return true;
+}
+
 /** Swap two non-tool slots (inventory rearranging). Merges stacks of the same kind. */
 export function swapSlots(state: GameState, a: number, b: number): boolean {
   if (a === b || isToolSlot(a) || isToolSlot(b)) return false;

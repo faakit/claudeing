@@ -137,6 +137,9 @@ More people, more places, more to discover.
 
 ## Depth: a second act (game-depth agent, from critique 3)
 
+Critique 4 (`agents/critiques/critique-4.md`) was triaged: F1 to F12 fixed except forage visibility, day-1
+land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
+
 - [x] **D1 Town projects.** Six projects funded at the town board (`projects.json`), each granting a perk
       for good and a landmark in town. About 103k gold of late-game sink plus mined and crafted goods.
 - [x] **D2 Home upgrades and decorations.** Bigger Bag (two rows of 8 slots) and seven decorations on the

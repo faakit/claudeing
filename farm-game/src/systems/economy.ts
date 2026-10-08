@@ -1,4 +1,4 @@
-import { items, shops } from '../data';
+import { items, placeables, shops } from '../data';
 import type { UpgradeDef, UpgradeNeed } from '../data';
 import type { GameState, Season } from '../state/GameState';
 import { waterCapacity } from './actions';
@@ -70,7 +70,18 @@ export function shippingValue(state: GameState): number {
   );
 }
 
-export type BuyResult = 'ok' | 'no_money' | 'full' | 'out_of_season' | 'unknown';
+export type BuyResult = 'ok' | 'no_money' | 'full' | 'out_of_season' | 'unknown' | 'limit';
+
+/** For things with a placement cap: how many you have (placed plus carried) and the cap, else null. */
+export function placeLimit(state: GameState, itemId: string): { have: number; max: number } | null {
+  const max = Number(placeables[itemId]?.params['max']);
+  if (!Number.isFinite(max)) return null;
+  const placed = Object.values(state.placed).reduce(
+    (n, list) => n + list.filter((o) => o.type === itemId).length,
+    0,
+  );
+  return { have: placed + countItem(state, itemId), max };
+}
 
 /** What a shop sells today. With a greenhouse (pass `state`), seeds of every season are on the shelf. */
 export function stockFor(shopId: string, season: Season, state?: GameState): string[] {
@@ -84,6 +95,9 @@ export function buyItem(state: GameState, shopId: string, itemId: string, qty: n
   if (!stockFor(shopId, state.time.season, state).includes(itemId)) {
     return shops[shopId]?.stock.some((s) => s.item === itemId) ? 'out_of_season' : 'unknown';
   }
+  // Never sell more of a capped placeable than can be put down (a second fountain would be dead money).
+  const lim = placeLimit(state, itemId);
+  if (lim && lim.have + qty > lim.max) return 'limit';
   const cost = priceFor(state, itemId) * qty;
   if (state.money < cost) return 'no_money';
   if (roomFor(state, itemId, qty) < qty) return 'full';
