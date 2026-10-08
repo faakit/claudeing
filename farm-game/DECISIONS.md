@@ -155,3 +155,9 @@
 - **A forecast makes weather a decision, not a coin flip:** tomorrow's weather is rolled the morning before and shown on the bed sheet and the morning summary ("Tomorrow: rain. No watering needed"). Storms only exist in summer and fall, are rarer than rain, and trade a risk (ripe tree fruit is shaken off) for rewards (wet-weather fish bite 3x as often, a rainbow morning doubles wild goods). Save version 6 adds `forecast`.
 - **The almanac costs no new state:** discoveries are `got.<item>` stats set by `addItem` the first time you hold something, finished pages are `page.<id>` stats. Pages are data (`collections.json`) and finishing one pays gold once. Items you held before this update are discovered the next time you pick one up.
 - **Menu tab labels shortened (Goal, Make, Skill, Book) and tested for fit:** six tabs share the sheet width; a pure `tabLabels.ts` lets a test prove every label fits its button.
+
+## Schedules, birthdays and the blacksmith
+
+- **Schedules are data and teleport-simple:** each villager lists "from this minute, be here" entries; `away` means at home and unreachable. The scene checks once per game minute, fades them in, and blocks their tile. A villager never steps onto the player's tile; they wait a minute and retry. Early morning and late evening mostly empty the world, which rewards exploring in the day.
+- **Birthdays are loud:** a morning note, a special line, double chat points and triple points for a liked gift. One per villager per year.
+- **Orin's perk is a tool discount, not a new shop:** friendship lowers hoe, can and rod upgrade prices by up to 15%; the stamina tonic is exempt so energy cannot be bought cheaper than designed.

@@ -105,11 +105,14 @@ Give players reasons to plan their day and their season.
 
 More people, more places, more to discover.
 
-- [ ] **R3.1 Villager schedules and events.** Villagers move between spots by time of day and weather; a birthday
-      each with a bonus gift reaction; one short friendship event per villager at 2, 4 and 5 hearts that rewards a
-      recipe or a perk. _Plug in:_ `npcs.json` gains `schedule` and `events`; the NPC renderer reads them.
-- [ ] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
-      Each is a JSON entry plus a role.
+- [~] **R3.1 Villager schedules and events.** Villagers move between spots by time of day and weather; a birthday
+  each with a bonus gift reaction; one short friendship event per villager at 2, 4 and 5 hearts that rewards a
+  recipe or a perk. _Plug in:_ `npcs.json` gains `schedule` and `events`; the NPC renderer reads them.
+  _Done:_ daily schedules (home, town, farm, woods) and birthdays (double chat, triple gifts, morning note).
+  Not done: per-heart friendship events that reward a recipe or perk.
+- [~] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
+  Each is a JSON entry plus a role.
+  _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts). Not done: a fisher and a rival farmer.
 - [ ] **R3.3 The mine.** A fifth map with ore and gems, a pickaxe tool, energy-versus-risk floors. Ore feeds the
       furnace and tool upgrades. _Plug in:_ map generator, tool action, forage-like spawn hook for ore nodes.
 - [ ] **R3.4 Seasonal festivals.** One event per season on a fixed day: a fishing contest, a crop show, a winter

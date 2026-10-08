@@ -6,6 +6,7 @@ export const PERK_TEXT: Record<string, (v: number) => string> = {
   sellBonus: (v) => `+${Math.round(v * 100)}% sell price`,
   forageDouble: (v) => `+${Math.round(v * 100)}% double finds`,
   forageQuality: (v) => `+${Math.round(v * 100)}% forage quality`,
+  upgradeDiscount: (v) => `${Math.round(v * 100)}% off tool upgrades`,
   shopDiscount: (v) => `${Math.round(v * 100)}% off shop prices`,
   fishWindow: (v) => `+${Math.round(v * 100)}% catch zone`,
 };

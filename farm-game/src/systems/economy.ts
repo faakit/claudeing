@@ -88,7 +88,13 @@ export const upgradeLevel = (state: GameState, up: UpgradeDef): number =>
 export const nextUpgrade = (
   state: GameState,
   up: UpgradeDef,
-): { price: number; label: string } | null => up.levels[upgradeLevel(state, up)] ?? null;
+): { price: number; label: string } | null => {
+  const lvl = up.levels[upgradeLevel(state, up)];
+  if (!lvl) return null;
+  // The blacksmith's friendship takes a little off tool upgrades (not the stamina tonic).
+  const off = up.id === 'stamina' ? 0 : Math.min(0.25, perk(state, 'upgradeDiscount'));
+  return { ...lvl, price: Math.round(lvl.price * (1 - off)) };
+};
 
 export function buyUpgrade(state: GameState, up: UpgradeDef): 'ok' | 'no_money' | 'maxed' {
   const next = nextUpgrade(state, up);

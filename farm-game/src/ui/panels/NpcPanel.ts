@@ -8,6 +8,7 @@ import {
   chat,
   giveGift,
   heartsOf,
+  isBirthday,
   isGiftable,
   lineFor,
   MAX_HEARTS,
@@ -59,7 +60,12 @@ export class NpcPanel extends Modal {
     const def = npcs[this.id]!;
     this.panel();
     this.label(8, 8, def.name, C.gold);
-    this.label(8, 20, fitText(def.blurb, 136), C.creamDim);
+    this.label(
+      8,
+      20,
+      isBirthday(s, this.id) ? 'Birthday today!' : fitText(def.blurb, 136),
+      isBirthday(s, this.id) ? C.gold : C.creamDim,
+    );
     const hearts = heartsOf(s, this.id);
     for (let i = 0; i < MAX_HEARTS; i++)
       this.icon(150 + i * 9, 13, 'ui_heart').setTint(i < hearts ? 0xe0574a : 0x4a4560);

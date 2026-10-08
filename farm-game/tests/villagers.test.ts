@@ -211,3 +211,45 @@ describe('sheep, looms and petting', () => {
     expect(houseOf(coop).petted).toBe(true);
   });
 });
+
+describe('schedules and birthdays', () => {
+  it('villagers follow their day: at home early, out and about later', async () => {
+    const { npcLocation, npcMaps } = await import('../src/systems/npcs');
+    expect(npcLocation('mara', 6 * 60)).toBeNull();
+    expect(npcLocation('mara', 10 * 60)).toMatchObject({ map: 'town' });
+    expect(npcLocation('mara', 19 * 60)).toBeNull();
+    expect(npcLocation('rosa', 8 * 60)).toMatchObject({ map: 'farm' });
+    expect(npcLocation('rosa', 13 * 60)).toMatchObject({ map: 'town' });
+    expect(npcMaps('finn')).toEqual(['woods', 'town']);
+    expect(npcLocation('nobody', 600)).toBeNull();
+  });
+  it('a birthday doubles a chat and triples a good gift, and shows in the morning notes', async () => {
+    const { isBirthday } = await import('../src/systems/friendship');
+    const s = newState();
+    s.time.season = 'spring';
+    s.time.day = 12;
+    expect(isBirthday(s, 'mara')).toBe(true);
+    expect(lineFor(s, 'mara')).toMatch(/birthday/i);
+    expect(chat(s, 'mara').gained).toBe(20);
+    addItem(s, 'daffodil', 1);
+    const res = giveGift(s, 'mara', { item: 'daffodil' });
+    expect(res).toMatchObject({ ok: true, points: 240 });
+    s.time.day = 13;
+    expect(isBirthday(s, 'mara')).toBe(false);
+  });
+});
+
+describe('the blacksmith', () => {
+  it('friendship takes up to 15% off tool upgrades, but never off the stamina tonic', async () => {
+    const { nextUpgrade } = await import('../src/systems/economy');
+    const { shops } = await import('../src/data');
+    const ups = shops['town_general_store']!.upgrades;
+    const hoe = ups.find((u) => u.id === 'hoe')!;
+    const tonic = ups.find((u) => u.id === 'stamina')!;
+    const s = newState();
+    const full = nextUpgrade(s, hoe)!.price;
+    s.friends['orin'] = { points: 250, talkedDay: 0, giftedDay: 0 };
+    expect(nextUpgrade(s, hoe)!.price).toBe(Math.round(full * 0.85));
+    expect(nextUpgrade(s, tonic)!.price).toBe(tonic.levels[0]!.price);
+  });
+});

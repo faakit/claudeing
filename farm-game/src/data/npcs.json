@@ -46,7 +46,31 @@
       "5": {
         "shopDiscount": 0.05
       }
-    }
+    },
+    "birthday": {
+      "season": "spring",
+      "day": 12
+    },
+    "schedule": [
+      {
+        "from": 0,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      },
+      {
+        "from": 480,
+        "map": "town",
+        "tx": 8,
+        "ty": 10
+      },
+      {
+        "from": 1080,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      }
+    ]
   },
   "finn": {
     "name": "Finn",
@@ -92,7 +116,43 @@
       "5": {
         "fishWindow": 0.04
       }
-    }
+    },
+    "birthday": {
+      "season": "fall",
+      "day": 5
+    },
+    "schedule": [
+      {
+        "from": 0,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      },
+      {
+        "from": 420,
+        "map": "woods",
+        "tx": 11,
+        "ty": 17
+      },
+      {
+        "from": 720,
+        "map": "town",
+        "tx": 20,
+        "ty": 26
+      },
+      {
+        "from": 900,
+        "map": "woods",
+        "tx": 11,
+        "ty": 17
+      },
+      {
+        "from": 1200,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      }
+    ]
   },
   "rosa": {
     "name": "Rosa",
@@ -138,6 +198,115 @@
       "5": {
         "qualityBonus": 0.03
       }
-    }
+    },
+    "birthday": {
+      "season": "summer",
+      "day": 20
+    },
+    "schedule": [
+      {
+        "from": 0,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      },
+      {
+        "from": 420,
+        "map": "farm",
+        "tx": 16,
+        "ty": 12
+      },
+      {
+        "from": 720,
+        "map": "town",
+        "tx": 13,
+        "ty": 13
+      },
+      {
+        "from": 960,
+        "map": "farm",
+        "tx": 16,
+        "ty": 12
+      },
+      {
+        "from": 1260,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      }
+    ]
+  },
+  "orin": {
+    "name": "Orin",
+    "role": "friend",
+    "map": "town",
+    "tx": 9,
+    "ty": 17,
+    "facing": "right",
+    "tint": "#d0905a",
+    "blurb": "The town blacksmith.",
+    "birthday": {
+      "season": "winter",
+      "day": 10
+    },
+    "loves": ["mushroom", "salmon", "wine"],
+    "likes": ["catfish", "trout", "fiber", "potato"],
+    "dislikes": ["daffodil", "jam"],
+    "lines": {
+      "stranger": [
+        "Mind the sparks.",
+        "A good tool is half the harvest.",
+        "You need something mended?"
+      ],
+      "friend": [
+        "Your hoe could use an upgrade.",
+        "Iron takes patience.",
+        "I hear you are fishing more."
+      ],
+      "close": [
+        "For you, I'll sharpen it free.",
+        "A hardworking farmer, that's you.",
+        "Come by anytime, friend."
+      ],
+      "rain": ["Rain on the roof, forge nice and warm.", "Wet weather, slow business."]
+    },
+    "gifts": [
+      {
+        "item": "fiber",
+        "qty": 5
+      }
+    ],
+    "giftHearts": 3,
+    "perks": {
+      "2": {
+        "upgradeDiscount": 0.05
+      },
+      "4": {
+        "upgradeDiscount": 0.05
+      },
+      "5": {
+        "upgradeDiscount": 0.05
+      }
+    },
+    "schedule": [
+      {
+        "from": 0,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      },
+      {
+        "from": 480,
+        "map": "town",
+        "tx": 9,
+        "ty": 17
+      },
+      {
+        "from": 1140,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      }
+    ]
   }
 }

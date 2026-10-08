@@ -25,7 +25,7 @@ import { saveNow } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
-import { spawnPosition } from '../state/GameState';
+import { spawnPosition, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
@@ -75,6 +75,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private inputLocked = true;
   private actionLock = 0;
   private idleMs = 0;
+  private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
   private heldFailed = false;
   private lastTarget: string | null | undefined;
@@ -135,12 +136,13 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.npcs = new NpcRenderer(this, this.mapId);
-    this.npcs.sync(state);
+    this.npcs.sync(state, playerTile(state.player));
     this.rebuildGrid();
     this.things = new ObjectsRenderer(this, this.mapId);
     this.things.sync(state, false);
     this.highlight = new TileHighlight(this);
     this.idleMs = 0;
+    this.lastNpcMinute = state.time.minutes;
     this.arrow = this.add.graphics().setScrollFactor(0).setDepth(9400).setVisible(false);
     this.shadow = this.add.image(0, 0, SHADOW_TEXTURE).setOrigin(0.5, 0.5);
     this.sprite = this.add
@@ -161,7 +163,9 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('interact', () => this.onInteract()),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
-      gameEvents.on('friendsChanged', () => this.npcs?.sync(getState())),
+      gameEvents.on('friendsChanged', () =>
+        this.npcs?.sync(getState(), playerTile(getState().player)),
+      ),
       gameEvents.on('forageChanged', ({ map }) => {
         if (map === this.mapId) this.things?.sync(getState(), true);
       }),
@@ -225,9 +229,17 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!inputHub.actionHeld) this.heldFailed = false;
     else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
 
+    this.updateNpcs(state);
     this.updateTarget();
     this.updateHighlight(time);
     this.updateGuide(time, delta);
+  }
+
+  /** Villagers move on their schedule: check once per game minute and re-block tiles when someone moved. */
+  private updateNpcs(state: GameState): void {
+    if (state.time.minutes === this.lastNpcMinute) return;
+    this.lastNpcMinute = state.time.minutes;
+    if (this.npcs?.sync(state, playerTile(state.player))) this.rebuildGrid();
   }
 
   /**

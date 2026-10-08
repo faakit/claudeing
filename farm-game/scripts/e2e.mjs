@@ -209,6 +209,7 @@ try {
   await mp.waitForTimeout(1500);
   await mp.keyboard.press('Enter');
   await mp.waitForTimeout(1500);
+  await mp.evaluate(() => (window.__farm.getState().time.minutes = 600)); // villagers are out by 10:00
   await mPlace(13, 17, 'down');
   await mp.evaluate(() => {
     const f = window.__farm;

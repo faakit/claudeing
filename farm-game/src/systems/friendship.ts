@@ -31,6 +31,12 @@ export const pointsOf = (state: GameState, id: string): number => friendOf(state
 export const heartsOf = (state: GameState, id: string): number =>
   Math.min(MAX_HEARTS, Math.floor(pointsOf(state, id) / POINTS_PER_HEART));
 
+/** Is it this villager's birthday today? Chats and gifts count extra. */
+export const isBirthday = (state: GameState, id: string): boolean => {
+  const b = npcs[id]?.birthday;
+  return !!b && b.season === state.time.season && b.day === state.time.day;
+};
+
 export const canChat = (state: GameState, id: string): boolean =>
   friendOf(state, id).talkedDay !== absoluteDay(state);
 export const canGift = (state: GameState, id: string): boolean =>
@@ -46,6 +52,7 @@ function addPoints(state: GameState, id: string, delta: number): void {
 /** Same line all day, a different one tomorrow, without touching the random stream. */
 export function lineFor(state: GameState, id: string): string {
   const def = npcs[id] as NpcDef;
+  if (isBirthday(state, id)) return 'Today is my birthday! A gift would make it perfect.';
   const hearts = heartsOf(state, id);
   const pool =
     isWet(state.weather) && absoluteDay(state) % 3 === 0
@@ -86,7 +93,8 @@ export function chat(state: GameState, id: string): ChatResult {
   const def = npcs[id] as NpcDef;
   const f = (state.friends[id] ??= blank());
   f.talkedDay = absoluteDay(state);
-  addPoints(state, id, CHAT_POINTS);
+  const chatPoints = isBirthday(state, id) ? CHAT_POINTS * 2 : CHAT_POINTS;
+  addPoints(state, id, chatPoints);
   addStat(state, 'talked');
   let gift: ChatResult['gift'] = null;
   if (heartsOf(state, id) >= def.giftHearts) {
@@ -99,7 +107,7 @@ export function chat(state: GameState, id: string): ChatResult {
   }
   gameEvents.emit('friendsChanged', undefined);
   checkGoals(state);
-  return { gained: CHAT_POINTS, gift };
+  return { gained: chatPoints, gift };
 }
 
 export type GiftResult =
@@ -110,7 +118,8 @@ export function giveGift(state: GameState, id: string, ref: ItemRef): GiftResult
   if (!canGift(state, id)) return { ok: false, reason: 'today' };
   if (!isGiftable(ref) || !removeStack(state, ref, 1)) return { ok: false, reason: 'invalid' };
   const reaction = reactionTo(id, ref);
-  const points = GIFT_POINTS[reaction];
+  const base = GIFT_POINTS[reaction];
+  const points = isBirthday(state, id) && base > 0 ? base * 3 : base;
   (state.friends[id] ??= blank()).giftedDay = absoluteDay(state);
   addPoints(state, id, points);
   addStat(state, 'gifted');

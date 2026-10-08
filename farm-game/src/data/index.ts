@@ -195,6 +195,9 @@ export interface NpcDef {
   dislikes: string[];
   /** Lines by friendship tier (stranger 0-1 hearts, friend 2-3, close 4-5) plus rainy-day lines. */
   lines: Record<'stranger' | 'friend' | 'close' | 'rain', string[]>;
+  /** Where they are through the day: from this minute on. Map "away" means at home (nowhere you can reach). Optional: no schedule means always at map/tx/ty. */
+  schedule?: { from: number; map: string; tx: number; ty: number }[];
+  birthday?: { season: Season; day: number };
   /** Handed over after the first chat of a day once friendship reaches `giftHearts`. */
   gifts: { item: string; qty: number }[];
   giftHearts: number;
@@ -407,6 +410,16 @@ export function validateContent(): void {
       fail('placeables', `"${id}" houses unknown species "${pl.params['species']}"`);
   for (const [id, n] of Object.entries(npcs)) {
     if (!mapIds.includes(n.map)) fail('npcs', `"${id}" lives on unknown map "${n.map}"`);
+    for (const w of n.schedule ?? []) {
+      if (w.map !== 'away' && !mapIds.includes(w.map))
+        fail('npcs', `"${id}" schedule uses unknown map "${w.map}"`);
+    }
+    if (
+      n.schedule &&
+      (n.schedule[0]?.from !== 0 ||
+        n.schedule.some((w, i) => i > 0 && w.from <= (n.schedule?.[i - 1]?.from ?? 0)))
+    )
+      fail('npcs', `"${id}" schedule must start at minute 0 and increase`);
     if (!/^#[0-9a-f]{6}$/i.test(n.tint)) fail('npcs', `"${id}" needs a #rrggbb tint`);
     for (const ref of [...n.loves, ...n.likes, ...n.dislikes, ...n.gifts.map((g) => g.item)])
       if (!items[ref]) fail('npcs', `"${id}" mentions unknown item "${ref}"`);
