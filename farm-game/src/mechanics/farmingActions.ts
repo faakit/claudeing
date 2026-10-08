@@ -1,4 +1,4 @@
-import { crops, game, placeables, tools } from '../data';
+import { crops, game, placeables, plots, tools } from '../data';
 import {
   registerActionHandler,
   registerToolAction,
@@ -17,6 +17,7 @@ import {
   getSoil,
   harvest,
   isMature,
+  lastsOneSeason,
   plant,
   till,
   tileKey,
@@ -27,7 +28,7 @@ import { addItem, removeFromSlot, roomFor } from '../systems/inventory';
 import { sellValue } from '../systems/itemRef';
 import { placedAt, placeObject, restoreStored } from '../systems/placeables';
 import { addXp } from '../systems/skills';
-import { inGreenhouse } from '../systems/plots';
+import { inGreenhouse, ownsPlot, plotAtTile } from '../systems/plots';
 import { villagerSpot } from '../systems/npcs';
 
 const TIRED = 'Too tired! Go to bed.';
@@ -81,8 +82,12 @@ registerActionHandler({
       return { refusal: `Won't grow in ${state.time.season}. Plant in ${when}.` };
     }
     const grow = (crops[cropId]?.stageDays ?? []).reduce((a, b) => a + b, 0);
-    if (!inGreenhouse(state, tile.tx, tile.ty) && grow >= game.seasonLength - state.time.day + 1)
+    const late = grow >= game.seasonLength - state.time.day + 1;
+    if (late && !inGreenhouse(state, tile.tx, tile.ty))
       return { refusal: `Won't ripen in time (${grow} days). Save it for next season.` };
+    // Under glass the season does not matter, except that regrowing plants are spent when it ends.
+    if (late && lastsOneSeason(cropId))
+      return { refusal: `Too late (${grow} days). Regrowing crops last one season, even here.` };
     // Seeds follow the hoe: a hoe that tills N in a row lets you sow the same row in one press.
     const row = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe'))
       .filter((t) => t.farmland && checkPlant(state, t.tx, t.ty, cropId) === 'ok')
@@ -147,6 +152,14 @@ registerActionHandler({
       return { refusal: 'Something is already here.' };
     if (villagerSpot(tile.map, tile.tx, tile.ty))
       return { refusal: 'Someone stands here every day. Try another spot.' };
+    // Land for sale (or a project's site) is not yours yet: placing is refused just like tilling.
+    const plot = tile.map === 'farm' ? plotAtTile(tile.tx, tile.ty) : null;
+    if (plot && !ownsPlot(state, plot))
+      return {
+        refusal: plots[plot]?.project
+          ? `The ${plots[plot]?.name} will stand here. Fund it at the town board.`
+          : 'Not your land yet. Buy it at a sign.',
+      };
     const max = Number(placeables[stack.item]?.params['max'] ?? Infinity);
     const have = Object.values(state.placed).reduce(
       (n, list) => n + list.filter((o) => o.type === stack.item).length,

@@ -4,8 +4,14 @@ import { festivals } from '../src/data';
 import { runDayPipeline } from '../src/systems/dayHooks';
 import {
   accepts,
+  basketKinds,
   basketScore,
+  derbyBest,
   derbyCatches,
+  derbyHint,
+  goodOf,
+  kindOf,
+  varietyBonus,
   enterBasket,
   enterFestival,
   festivalToday,
@@ -133,8 +139,9 @@ describe('festivals', () => {
 describe('festival minigames', () => {
   it('a basket takes up to three different goods and rewards variety', () => {
     const s = onFestivalDay('harvest_fair');
-    const same = basketScore([{ item: 'pumpkin' }, { item: 'yam' }]);
-    const mixed = basketScore([{ item: 'pumpkin' }, { item: 'apple' }]);
+    const fair = festivals['harvest_fair']!;
+    const same = basketScore(fair, [{ item: 'pumpkin' }, { item: 'yam' }]);
+    const mixed = basketScore(fair, [{ item: 'pumpkin' }, { item: 'apple' }]);
     expect(mixed / (330 + 65)).toBeCloseTo(1.15, 2); // veg + fruit
     expect(same).toBe(330 + 65);
     addItem(s, { item: 'pumpkin', q: 2 }, 1);
@@ -161,6 +168,51 @@ describe('festival minigames', () => {
     expect(countItem(s, 'corn')).toBe(1);
   });
 
+  it('three qualities of one crop are one good, not a basket (critique 5, F2)', () => {
+    const s = onFestivalDay('harvest_fair');
+    for (const q of [0, 1, 2]) addItem(s, { item: 'pumpkin', q }, 1);
+    const three = [{ item: 'pumpkin' }, { item: 'pumpkin', q: 1 }, { item: 'pumpkin', q: 2 }];
+    expect(enterBasket(s, three)).toEqual({ ok: false, reason: 'invalid' });
+    expect(countItem(s, 'pumpkin')).toBe(3);
+    // Jams of different fruit are different goods (and one kind).
+    const feast = festivals['winter_feast']!;
+    const jams = [
+      { item: 'jam', of: 'melon' },
+      { item: 'jam', of: 'tomato' },
+    ];
+    expect(goodOf(jams[0]!)).not.toBe(goodOf(jams[1]!));
+    expect(varietyBonus(feast, jams)).toBe(0);
+  });
+
+  it('variety is real: three kinds score 30% more at the Fair and the Feast', () => {
+    const fair = festivals['harvest_fair']!;
+    expect(kindOf(fair, { item: 'pumpkin', q: 2 })).toBe('Veg');
+    expect(kindOf(fair, { item: 'cranberry' })).toBe('Fruit');
+    expect(kindOf(fair, { item: 'blackberry' })).toBe('Wild'); // forage first, though it is a fruit
+    expect(accepts(fair, { item: 'mushroom' })).toBe(true);
+    const fairBasket = [{ item: 'pumpkin' }, { item: 'cranberry' }, { item: 'blackberry' }];
+    expect(basketKinds(fair, fairBasket)).toEqual(['Veg', 'Fruit', 'Wild']);
+    expect(varietyBonus(fair, fairBasket)).toBeCloseTo(0.3);
+    const feast = festivals['winter_feast']!;
+    const mixed = [{ item: 'wine', of: 'melon' }, { item: 'jam', of: 'tomato' }, { item: 'egg' }];
+    expect(basketKinds(feast, mixed)).toEqual(['Wine', 'Jam', 'Animal']);
+    expect(basketKinds(feast, [{ item: 'egg' }, { item: 'milk' }])).toEqual(['Animal']);
+    // A single gold wine no longer wins the Feast on its own; a varied basket with it does.
+    const s = onFestivalDay('winter_feast');
+    const alone = basketScore(feast, [{ item: 'wine', of: 'melon', q: 2 }]);
+    expect(placeFor(s, feast, alone)).toBeGreaterThan(1);
+    expect(
+      placeFor(s, feast, basketScore(feast, [{ ...mixed[0]!, q: 2 }, ...mixed.slice(1)])),
+    ).toBe(1);
+    // A modest varied basket (tomato jam, kale pickles, an egg) still reaches the podium.
+    const modest = [
+      { item: 'jam', of: 'tomato' },
+      { item: 'pickles', of: 'kale' },
+      { item: 'egg' },
+    ];
+    expect(placeFor(s, feast, basketScore(feast, modest))).toBeLessThanOrEqual(3);
+  });
+
   it('the derby keeps the best three catches of the day and the fish stay in the bag', () => {
     const s = onFestivalDay('fishing_derby');
     expect(finishDerby(s)).toEqual({ ok: false, reason: 'invalid' }); // nothing caught yet
@@ -173,6 +225,31 @@ describe('festival minigames', () => {
     expect(res).toMatchObject({ ok: true, score: 235 });
     expect(recordCatch(s, { item: 'salmon' })).toBe(false); // handed in
     expect(enterFestival(s, { item: 'salmon' })).toEqual({ ok: false, reason: 'entered' });
+  });
+
+  it('the derby page knows which fish each catch was', () => {
+    const s = onFestivalDay('fishing_derby');
+    recordCatch(s, { item: 'catfish', q: 1 });
+    recordCatch(s, { item: 'carp' });
+    expect(derbyBest(s).map((c) => c.ref)).toEqual([{ item: 'catfish', q: 1 }, { item: 'carp' }]);
+  });
+
+  it('the farm pond can reach the podium, and the stocked river can win (critique 5, F4)', async () => {
+    const { fishFor } = await import('../src/systems/fishing');
+    const s = onFestivalDay('fishing_derby');
+    const def = festivals['fishing_derby']!;
+    s.weather = 'sunny';
+    // Three plain bluegill from the pond take third place.
+    expect(placeFor(s, def, 3 * 35)).toBe(3);
+    // Catfish bite in town on derby day whatever the weather, and three silver ones win.
+    expect(fishFor(s, 'town').map((f) => f.item)).toContain('catfish');
+    expect(fishFor(s, 'farm').map((f) => f.item)).not.toContain('catfish');
+    expect(placeFor(s, def, 3 * 100)).toBe(1);
+    const other = newState();
+    other.time.season = 'summer';
+    other.weather = 'sunny';
+    expect(fishFor(other, 'town').map((f) => f.item)).not.toContain('catfish');
+    expect(derbyHint(def)).toContain('Catfish');
   });
 
   it('catching a fish on derby day counts it', async () => {
@@ -191,5 +268,9 @@ describe('festival text', () => {
     const { measureText } = await import('../src/ui/fontMetrics');
     for (const f of Object.values(festivals))
       expect(measureText(f.blurb), f.name).toBeLessThanOrEqual(184);
+    // The widest basket line and derby row the sheet can show.
+    expect(measureText('Basket 3/3  12,345 +30%  no podium')).toBeLessThanOrEqual(184);
+    expect(measureText('3. Silver Catfish 1,000 points')).toBeLessThanOrEqual(184);
+    expect(measureText('Sure? Tap to hand in')).toBeLessThanOrEqual(176);
   });
 });

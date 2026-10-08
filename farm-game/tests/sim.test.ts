@@ -178,10 +178,10 @@ function playDay(s: GameState, ledger: Ledger): void {
 }
 
 /**
- * What the bot earned in a full year when the band was last set (depth session, 2026-10-08). A balance
+ * What the bot earned in a full year when the band was last set (depth round 2: multi-day requests). A balance
  * change that moves it by a third down or 70% up fails this test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 208_549;
+const SIM_EARNED = 230_261;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {

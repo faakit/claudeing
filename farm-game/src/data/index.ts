@@ -189,6 +189,8 @@ export interface OrdersDef {
   maxReward: number;
   tiers: { maxValue: number; qty: [number, number] }[];
   xpPerValue: number;
+  /** How many days a request stays on the board (the posting day counts). Default one. */
+  days?: [number, number];
 }
 export interface AnimalDef {
   name: string;
@@ -254,6 +256,13 @@ export interface FestivalDef {
    */
   mode?: 'single' | 'basket' | 'derby';
   slots?: number;
+  /**
+   * Basket variety: the kinds of good a basket can mix (first match wins). A good that matches no kind is
+   * its own kind, named after the item. Each kind beyond the first adds `VARIETY_BONUS` to the score.
+   */
+  kinds?: { name: string; types?: string[]; families?: string[]; items?: string[] }[];
+  /** Derby day: this fish bites on these maps whatever the weather ("the river is stocked"). */
+  stocked?: { fish: string; maps: string[] };
 }
 export interface NodeDef {
   name: string;
@@ -616,6 +625,11 @@ export function validateContent(): void {
         fail('festivals', `"${id}" accepts unknown type "${t}"`);
     for (const i of f.accept.items ?? [])
       if (!items[i]) fail('festivals', `"${id}" accepts unknown item "${i}"`);
+    for (const k of f.kinds ?? [])
+      for (const i of k.items ?? [])
+        if (!items[i]) fail('festivals', `"${id}" kind "${k.name}" lists unknown item "${i}"`);
+    if (f.stocked && !fish.some((x) => x.item === f.stocked?.fish))
+      fail('festivals', `"${id}" stocks unknown fish "${f.stocked.fish}"`);
   }
   for (const [id, n] of Object.entries(nodes)) {
     if (n.drops.length === 0 || n.weight <= 0) fail('nodes', `"${id}" needs drops and a weight`);

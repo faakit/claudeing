@@ -3,8 +3,9 @@ import type { FishDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { toast } from './events';
 import { addStat } from './goals';
-import { recordCatch } from './festivals';
+import { derbyScore, festivalToday, recordCatch } from './festivals';
 import { addItem, countItem, removeItem, roomFor } from './inventory';
+import { displayName } from './itemRef';
 import { rollQuality } from './quality';
 import { isWet } from './weather';
 import { random } from './rng';
@@ -12,11 +13,16 @@ import { addXp, perk } from './skills';
 
 /** Fish that can bite on `map` today. */
 export function fishFor(state: GameState, map: string): FishDef[] {
+  // Derby day: the organisers stock a big fish that bites whatever the weather.
+  const stocked = festivalToday(state)?.def.stocked;
   return fishTable.filter(
     (f) =>
-      f.maps.includes(map) &&
-      f.seasons.includes(state.time.season) &&
-      (!f.weather || (f.weather === 'rain' && isWet(state.weather)) || f.weather === state.weather),
+      (stocked?.fish === f.item && stocked.maps.includes(map)) ||
+      (f.maps.includes(map) &&
+        f.seasons.includes(state.time.season) &&
+        (!f.weather ||
+          (f.weather === 'rain' && isWet(state.weather)) ||
+          f.weather === state.weather)),
   );
 }
 
@@ -157,7 +163,9 @@ export function resolveCatch(
   }
   const q = rollQuality(state, outcome.perfect ? 0.15 : 0);
   addItem(state, q > 0 ? { item: fishId, q } : fishId, 1);
-  recordCatch(state, { item: fishId, q }); // the Fishing Derby counts the day's best catches
+  // The Fishing Derby counts the day's best catches; say so when this one improves the score.
+  if (recordCatch(state, { item: fishId, q }))
+    toast(`Derby best! ${displayName({ item: fishId, q })}. Score ${derbyScore(state)}.`, 'good');
   addStat(state, 'caught');
   if (q > 0) addStat(state, 'qualityCaught');
   if (outcome.perfect) addStat(state, 'perfectCatch');

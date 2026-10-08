@@ -511,6 +511,7 @@ export function sanitize(raw: Raw): GameState {
         xp: int(o['xp'], 0, 0, 1e5),
         done: o['done'] === true,
         ...(o['rival'] === true ? { rival: true } : {}),
+        ...(typeof o['until'] === 'number' ? { until: int(o['until'], 0, 0, 1e7) } : {}),
       });
     }
   }

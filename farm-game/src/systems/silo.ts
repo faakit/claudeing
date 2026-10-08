@@ -43,9 +43,10 @@ export function depositFeed(state: GameState, obj: PlacedObject): number {
 
 /**
  * Overnight, before animals wake: every house nobody fed today eats from a silo that holds its feed.
- * Returns how many houses were fed. Feed in the player's bag is never touched.
+ * Returns how many houses were fed; houses no silo could feed are described in `hungry`.
+ * Feed in the player's bag is never touched.
  */
-export function feedFromSilos(state: GameState): number {
+export function feedFromSilos(state: GameState, hungry: string[] = []): number {
   const silos: PlacedObject[] = [];
   forEachPlaced(state, (obj, def) => {
     if (def.behavior === 'silo') silos.push(obj);
@@ -58,7 +59,11 @@ export function feedFromSilos(state: GameState): number {
     const h = houseOf(obj);
     if (!sp || h.n === 0 || h.fed) return;
     const silo = silos.find((s) => (siloStock(s)[sp.feed] ?? 0) >= h.n);
-    if (!silo) return;
+    if (!silo) {
+      // Say so: a silo with 1 hay for a barn of 2 looks stocked but feeds no one (critique 5, F7).
+      hungry.push(`The ${def.name.toLowerCase()} went hungry: the silo needs ${h.n} ${items[sp.feed]?.name ?? sp.feed}.`);
+      return;
+    }
     siloStock(silo)[sp.feed] = (siloStock(silo)[sp.feed] ?? 0) - h.n;
     h.fed = true;
     fed += 1;

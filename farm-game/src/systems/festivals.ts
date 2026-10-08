@@ -1,4 +1,4 @@
-import { festivals, game, items } from '../data';
+import { festivals, fish as fishTable, game, items } from '../data';
 import type { FestivalDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
@@ -39,14 +39,38 @@ export function accepts(def: FestivalDef, ref: ItemRef): boolean {
 /** What an entry scores: its sell value, so quality and rarity count. */
 export const scoreOf = (ref: ItemRef): number => sellValue(ref);
 
-/** Variety bonus of a basket: +15% for each kind of good (family, or type) beyond the first. */
+/** Variety bonus of a basket: +15% for each kind of good beyond the first. */
 export const VARIETY_BONUS = 0.15;
 
-/** A basket's score: the sum of its goods, raised for variety (three different kinds score 30% more). */
-export function basketScore(refs: readonly ItemRef[]): number {
-  const kinds = new Set(refs.map((r) => items[r.item]?.family ?? items[r.item]?.type ?? r.item));
+/** Two goods are "different" when the item differs (or what it was made from): quality does not count. */
+export const goodOf = (ref: ItemRef): string => `${ref.item}|${ref.of ?? ''}`;
+
+/** The kind of good a basket counts for variety: the festival's first matching kind, else the item's name. */
+export function kindOf(def: FestivalDef, ref: ItemRef): string {
+  const it = items[ref.item];
+  for (const k of def.kinds ?? [])
+    if (
+      k.items?.includes(ref.item) ||
+      (!!it && k.types?.includes(it.type)) ||
+      (!!it?.family && k.families?.includes(it.family))
+    )
+      return k.name;
+  return it?.name ?? ref.item;
+}
+
+/** The distinct kinds in a basket, in the order they were added. */
+export const basketKinds = (def: FestivalDef, refs: readonly ItemRef[]): string[] => [
+  ...new Set(refs.map((r) => kindOf(def, r))),
+];
+
+/** The variety bonus a basket earns, as a fraction (0.3 = +30%). */
+export const varietyBonus = (def: FestivalDef, refs: readonly ItemRef[]): number =>
+  VARIETY_BONUS * Math.max(0, basketKinds(def, refs).length - 1);
+
+/** A basket's score: the sum of its goods, raised for variety (three kinds score 30% more). */
+export function basketScore(def: FestivalDef, refs: readonly ItemRef[]): number {
   const sum = refs.reduce((n, r) => n + scoreOf(r), 0);
-  return Math.round(sum * (1 + VARIETY_BONUS * Math.max(0, kinds.size - 1)));
+  return Math.round(sum * (1 + varietyBonus(def, refs)));
 }
 
 /** The rivals' scores this year: a baseline that grows 20% a year, nudged a little by season so years differ. */
@@ -112,7 +136,8 @@ export function enterBasket(state: GameState, refs: readonly ItemRef[]): EnterRe
   if (!today) return { ok: false, reason: 'no_festival' };
   if (hasEntered(state, today.id)) return { ok: false, reason: 'entered' };
   const list = refs.map(refOf);
-  const distinct = new Set(list.map(keyOf)).size === list.length;
+  // Different goods, not different qualities: three pumpkins of three qualities are one good.
+  const distinct = new Set(list.map(goodOf)).size === list.length;
   const mode = modeOf(today.def);
   if (
     mode === 'derby' ||
@@ -127,7 +152,7 @@ export function enterBasket(state: GameState, refs: readonly ItemRef[]): EnterRe
     state.inventory.slots.some((s) => !!s && keyOf(refOf(s)) === keyOf(r) && s.qty > 0);
   if (!list.every(have)) return { ok: false, reason: 'invalid' };
   for (const r of list) removeStack(state, r, 1);
-  return award(state, today, mode === 'single' ? scoreOf(list[0]!) : basketScore(list));
+  return award(state, today, mode === 'single' ? scoreOf(list[0]!) : basketScore(today.def, list));
 }
 
 /** Enter a single item (a one-item basket at a basket festival). */
@@ -138,18 +163,39 @@ export const enterFestival = (state: GameState, ref: ItemRef): EnterResult =>
 
 const catchKey = (state: GameState, id: string, i: number): string =>
   `${yearKey(state, id)}.catch${i}`;
+/** Which fish a kept catch was, as 1 + (index in fish.json) * 3 + quality (stats hold numbers only). */
+const fishKey = (state: GameState, id: string, i: number): string =>
+  `${yearKey(state, id)}.fish${i}`;
 
-/** Values of today's best derby catches, best first. */
-export function derbyCatches(state: GameState): number[] {
+const fishCode = (ref: ItemRef): number => {
+  const i = fishTable.findIndex((f) => f.item === ref.item);
+  return i < 0 ? 0 : 1 + i * 3 + (ref.q ?? 0);
+};
+const fishOfCode = (code: number): ItemRef | null => {
+  const f = code > 0 ? fishTable[Math.floor((code - 1) / 3)] : undefined;
+  return f ? refOf({ item: f.item, q: (code - 1) % 3 }) : null;
+};
+
+export interface DerbyCatch {
+  value: number;
+  /** The fish, when known (catches kept by older versions only have a value). */
+  ref: ItemRef | null;
+}
+
+/** Today's best derby catches, best first. */
+export function derbyBest(state: GameState): DerbyCatch[] {
   const today = festivalToday(state);
   if (!today || modeOf(today.def) !== 'derby') return [];
-  const out: number[] = [];
+  const out: DerbyCatch[] = [];
   for (let i = 0; i < slotsOf(today.def); i++) {
     const v = state.stats[catchKey(state, today.id, i)];
-    if (v) out.push(v);
+    if (v) out.push({ value: v, ref: fishOfCode(state.stats[fishKey(state, today.id, i)] ?? 0) });
   }
   return out;
 }
+
+/** Values of today's best derby catches, best first. */
+export const derbyCatches = (state: GameState): number[] => derbyBest(state).map((c) => c.value);
 
 export const derbyScore = (state: GameState): number =>
   derbyCatches(state).reduce((a, b) => a + b, 0);
@@ -160,12 +206,25 @@ export function recordCatch(state: GameState, ref: ItemRef): boolean {
   if (!today || modeOf(today.def) !== 'derby' || hasEntered(state, today.id)) return false;
   if (!accepts(today.def, ref)) return false;
   const before = derbyScore(state);
-  const kept = [...derbyCatches(state), scoreOf(ref)]
-    .sort((a, b) => b - a)
+  const kept = [...derbyBest(state), { value: scoreOf(ref), ref: refOf(ref) }]
+    .sort((a, b) => b.value - a.value)
     .slice(0, slotsOf(today.def));
-  kept.forEach((v, i) => (state.stats[catchKey(state, today.id, i)] = v));
+  kept.forEach((c, i) => {
+    state.stats[catchKey(state, today.id, i)] = c.value;
+    state.stats[fishKey(state, today.id, i)] = c.ref ? fishCode(c.ref) : 0;
+  });
   return derbyScore(state) > before;
 }
+
+/** Where today's derby fish are biggest, for the derby page ("Catfish bite in town today."). */
+export function derbyHint(def: FestivalDef): string {
+  if (!def.stocked) return 'Cast anywhere: pond, river or lake.';
+  const name = items[def.stocked.fish]?.name ?? def.stocked.fish;
+  return `${name} stocked in the ${def.stocked.maps.join(' and ')} river today!`;
+}
+
+/** Handing in ends the derby for the year; before this hour the sheet asks first. */
+export const DERBY_SURE_BEFORE = 18 * 60;
 
 /** Hand in the derby score (at least one catch). */
 export function finishDerby(state: GameState): EnterResult {

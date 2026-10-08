@@ -1,5 +1,6 @@
 {
   "perDay": 3,
+  "days": [2, 3],
   "rewardMultiplier": [1.2, 1.6],
   "tiers": [
     {

@@ -23,10 +23,10 @@ export const rivalMinute = (state: GameState): number =>
 
 /** "Clay takes one at 2:00 PM." or what already happened today. */
 export function rivalNotice(state: GameState): string {
-  if (!rivalActive(state)) return 'New requests every morning.';
+  if (!rivalActive(state)) return 'Requests stay two or three days.';
   const took = state.orders.list.find((o) => o.rival);
   if (took) return `${rivalName()} took one today.`;
-  return `${rivalName()} takes one at ${formatClock(rivalMinute(state))}.`;
+  return `${rivalName()} takes the best one at ${formatClock(rivalMinute(state))}.`;
 }
 
 /** If it is time, the rival fills one open request. Returns the order taken, if any. */

@@ -19,7 +19,7 @@ import { ownsGreenhouse } from '../../systems/plots';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
-import { SHOP_TABS, shopFacts, shopTabOf, tooLate, type ShopTab } from './shopFacts';
+import { SHOP_TABS, shopFacts, shopFactsRoom, shopTabOf, tooLate, type ShopTab } from './shopFacts';
 import Phaser from 'phaser';
 
 const ROWS = 5;
@@ -104,10 +104,11 @@ export class ShopPanel extends Modal {
     const own = lim ? lim.have : countItem(s, id);
     const gone = (def.type === 'animal' && own > 0) || (!!lim && lim.have >= lim.max);
     const greenhouse = ownsGreenhouse(s);
+    const x5 = !(def.type === 'animal' || price > X5_MAX_PRICE);
     return this.row(y, {
       icon: def.icon,
       title: def.name,
-      sub: shopFacts(id, own, s.time.day, greenhouse),
+      sub: shopFacts(id, own, s.time.day, greenhouse, shopFactsRoom(x5)),
       subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {
@@ -118,7 +119,7 @@ export class ShopPanel extends Modal {
           enabled: !(lim && lim.have >= lim.max),
         },
         // No x5 on animals or anything dear: one tap must never spend thousands by accident.
-        ...(def.type === 'animal' || price > X5_MAX_PRICE
+        ...(!x5
           ? []
           : [
               {

@@ -31,6 +31,7 @@ import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { mixColor } from '../ui/color';
 import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
 import { Label } from '../ui/font';
+import { MOVE_PANEL } from '../systems/placeables';
 import { Hud } from '../ui/Hud';
 import {
   BinPanel,
@@ -39,6 +40,7 @@ import {
   FishingPanel,
   installMenuTabs,
   JarPanel,
+  MovePanel,
   NpcPanel,
   MailPanel,
   PlotPanel,
@@ -124,6 +126,7 @@ export class UIScene extends Phaser.Scene {
   private summary!: SummaryPanel;
   private yearEnd!: YearEndPanel;
   private jar!: JarPanel;
+  private move!: MovePanel;
   private npc!: NpcPanel;
   private plot!: PlotPanel;
   private fishing!: FishingPanel;
@@ -481,18 +484,30 @@ export class UIScene extends Phaser.Scene {
     this.fishing = new FishingPanel(this);
     this.panels.set('fishing', this.fishing);
     this.panels.set('sleep', new SleepPanel(this, () => void this.runSleep(false)));
-    this.jarPanels = { jar: this.jar };
-    for (const m of [...this.panels.values(), this.jar, this.npc, this.plot])
+    this.move = new MovePanel(this);
+    this.jarPanels = { jar: this.jar, [MOVE_PANEL]: this.move };
+    for (const m of [...this.panels.values(), this.jar, this.move, this.npc, this.plot])
       m.onClosed = () => void saveNow(true);
   }
 
   private allModals(): Modal[] {
-    return [...this.panels.values(), this.jar, this.npc, this.plot, this.summary, this.yearEnd];
+    return [
+      ...this.panels.values(),
+      this.jar,
+      this.move,
+      this.npc,
+      this.plot,
+      this.summary,
+      this.yearEnd,
+    ];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
-    return [...this.panels.values(), this.jar, this.npc, this.plot].find((m) => m.isOpen) ?? null;
+    return (
+      [...this.panels.values(), this.jar, this.move, this.npc, this.plot].find((m) => m.isOpen) ??
+      null
+    );
   }
 
   private openPanel(type: PanelType): void {

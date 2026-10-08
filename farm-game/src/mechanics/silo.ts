@@ -7,6 +7,7 @@ import { toast } from '../systems/events';
 registerPlaceableBehavior('silo', {
   canPickUp: () => true,
   keepsData: true,
+  occupants: (obj) => (siloTotal(obj) > 0 ? `${siloTotal(obj)} feed` : null),
   interact(state, obj) {
     const n = depositFeed(state, obj);
     if (n > 0) {
@@ -23,7 +24,9 @@ registerDayHook({
   phase: 'morning',
   order: 25,
   run(state, ctx) {
-    const n = feedFromSilos(state);
+    const hungry: string[] = [];
+    const n = feedFromSilos(state, hungry);
     if (n > 0) ctx.notes.push(`The silo fed ${n} animal house${n > 1 ? 's' : ''}.`);
+    ctx.notes.push(...hungry);
   },
 });

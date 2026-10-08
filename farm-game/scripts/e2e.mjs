@@ -367,10 +367,24 @@ try {
     m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
     JSON.stringify(m.placed.farm[0]),
   );
-  // Moving a building: pat, then two more taps pick the coop up with its hen parked for the next coop.
+  // Moving a building: chore taps never lift a coop with hens; the second tap opens the Move sheet and
+  // its real "Move it" button picks the coop up with its hen parked for the next coop (critique 5, F3).
   await mTap('KeyE'); // a pat
-  await mTap('KeyE'); // "All fed. ... Tap again to pick up."
-  await mTap('KeyE'); // picked up
+  await mTap('KeyE'); // "All fed. ... Tap again to move it."
+  await mTap('KeyE'); // the Move sheet
+  m = await mState();
+  const moveOpen = await mp.evaluate(() => window.__farm.game.scene.getScene('UI').move.isOpen);
+  check(
+    'a chore tap never lifts a coop with a hen: the Move sheet asks first',
+    moveOpen && m.placed.farm.some((o) => o.type === 'coop'),
+    JSON.stringify(m.placed.farm),
+  );
+  const moveBox = await mp.evaluate(() => {
+    const c = document.querySelector('canvas').getBoundingClientRect();
+    return { x: c.x, y: c.y, k: c.width / 200 };
+  });
+  await mp.mouse.click(moveBox.x + 100 * moveBox.k, moveBox.y + (400 - 130 + 74 + 12) * moveBox.k);
+  await mp.waitForTimeout(400);
   m = await mState();
   check(
     'a coop with a hen can be picked up to move it, keeping the hen',
@@ -692,6 +706,30 @@ try {
     'Harvest Fair: a basket is presented with Add and Present',
     ps.stats['fest.harvest_fair.y1'] === 1 && ps.money > moneyBefore,
     `money ${moneyBefore} -> ${ps.money}`,
+  );
+  // Fishing Derby: handing in early asks first, so one stray tap cannot end the derby (critique 5, F4).
+  await ui(() => {
+    const f = window.__farm;
+    const ui = f.game.scene.getScene('UI');
+    ui.panels.get('festival').close();
+    const s = f.getState();
+    s.time.season = 'summer';
+    s.time.day = 22;
+    s.time.minutes = 600;
+    s.stats['fest.fishing_derby.y1.catch0'] = 80;
+    s.stats['fest.fishing_derby.y1.fish0'] = 13; // a catfish
+    f.gameEvents.emit('openPanel', { type: 'festival' });
+  });
+  await pp.waitForTimeout(500);
+  await pClick(100, 150 + 194 + 12); // Hand in my catches
+  ps = await pState();
+  const asked = !ps.stats['fest.fishing_derby.y1'];
+  await pClick(100, 150 + 194 + 12); // Sure? Tap to hand in
+  ps = await pState();
+  check(
+    'Fishing Derby: an early hand-in asks first, the second tap hands in',
+    asked && ps.stats['fest.fishing_derby.y1'] === 1,
+    JSON.stringify(ps.stats),
   );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();

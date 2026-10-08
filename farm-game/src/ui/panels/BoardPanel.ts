@@ -3,6 +3,7 @@ import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import { deliverOrder, ensureOrders, haveFor, orderLabel } from '../../systems/orders';
+import { orderSub } from './boardText';
 import { iconKey, parseKey } from '../../systems/itemRef';
 import { C } from '../theme';
 import { Modal } from '../widgets';
@@ -31,7 +32,7 @@ export class BoardPanel extends Modal {
     const sp = s.special;
     this.setHeight(34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + 26 + 34);
     this.panel();
-    this.label(8, 8, "Today's Requests", C.gold);
+    this.label(8, 8, 'Requests', C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     this.label(8, 20, rivalNotice(s), C.creamDim);
     let y = 34;
@@ -71,12 +72,12 @@ export class BoardPanel extends Modal {
           ? `${rivalName()} filled this one.`
           : o.done
             ? 'Thank you!'
-            : `Have ${Math.min(have, 99)}/${o.qty}  Pays ${fmt(o.reward)}g`,
+            : orderSub(s, o, have),
         subColor: o.rival ? C.warn : o.done ? C.green : ready ? C.gold : C.creamDim,
         buttons: [
           {
             label: o.rival ? 'Gone' : o.done ? 'Done' : 'Give',
-            width: 40,
+            width: 36,
             enabled: ready,
             color: ready ? C.green : C.creamDim,
             onClick: () => {

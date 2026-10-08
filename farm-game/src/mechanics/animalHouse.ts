@@ -23,6 +23,15 @@ registerPlaceableBehavior('animalHouse', {
   // Moving a house moves its animals (and what they made): the state is kept for the next one placed.
   canPickUp: () => true,
   keepsData: true,
+  occupants(obj) {
+    const sp = speciesOf(obj);
+    const h = houseOf(obj);
+    if (!sp || (h.n === 0 && h.ready === 0)) return null;
+    const parts: string[] = [];
+    if (h.n > 0) parts.push(`${h.n} ${sp.name.toLowerCase()}${h.n > 1 ? 's' : ''}`);
+    if (h.ready > 0) parts.push(`${h.ready} ${items[sp.product]?.name.toLowerCase()} waiting`);
+    return parts.join(', ');
+  },
   onMorning(state, obj, _def, ctx) {
     // Today's weather is settled before placeables wake up, so pigs know whether they can dig.
     const outdoorOk = !isWet(state.weather) && state.time.season !== 'winter';
