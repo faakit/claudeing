@@ -122,7 +122,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
-    addRoofs(this, layer);
+    addRoofs(this, layer, !!mapsData.maps[this.mapId]?.farmland);
 
     if (mapsData.maps[this.mapId]?.outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add

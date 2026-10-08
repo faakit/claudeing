@@ -69,14 +69,60 @@ export function roofTiles(
   return out;
 }
 
+export const GROUND_DECOR_KEYS = [
+  'decor_grass_a',
+  'decor_grass_b',
+  'decor_flowers',
+  'decor_pebbles',
+];
+
+/** Small deterministic hash of a tile (stable across sessions, no RNG state touched). */
+const hash = (x: number, y: number, salt: number): number => {
+  let h = (x * 374761393 + y * 668265263 + salt * 2246822519) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0;
+};
+
+/**
+ * Flat ground decor (grass sprigs, tiny flowers) on about 1 in 12 grass tiles, so large
+ * fields do not look like one repeated tile. Nothing tall on the farm, where a tuft could pass for a weed.
+ */
+export function groundDecor(
+  data: number[],
+  w: number,
+  h: number,
+  farm: boolean,
+): { tx: number; ty: number; key: string }[] {
+  const grass = gid('grass');
+  const onGrass = farm
+    ? ['decor_grass_b', 'decor_flowers']
+    : ['decor_grass_a', 'decor_grass_b', 'decor_flowers'];
+  const out: { tx: number; ty: number; key: string }[] = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const g = data[y * w + x];
+      const r = hash(x, y, w * 31 + h);
+      if (r % 12 !== 0) continue;
+      if (g === grass) out.push({ tx: x, ty: y, key: onGrass[(r >>> 8) % onGrass.length]! });
+    }
+  return out;
+}
+
 /** Add the roofs of a map's ground layer to a scene (just above the ground, under the season tint). */
-export function addRoofs(scene: Phaser.Scene, layer: Phaser.Tilemaps.TilemapLayer): void {
-  if (!ROOF_KEYS.every(hasArt)) return;
+export function addRoofs(
+  scene: Phaser.Scene,
+  layer: Phaser.Tilemaps.TilemapLayer,
+  farm = false,
+): void {
   const { width: w, height: h } = layer.layer;
   const data: number[] = [];
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) data.push(layer.getTileAt(x, y)?.index ?? 0);
-  for (const r of roofTiles(data, w, h))
+  const list = [
+    ...(GROUND_DECOR_KEYS.every(hasArt) ? groundDecor(data, w, h, farm) : []),
+    ...(ROOF_KEYS.every(hasArt) ? roofTiles(data, w, h) : []),
+  ];
+  for (const r of list)
     scene.add
       .image(r.tx * TILE_SIZE, r.ty * TILE_SIZE, r.key)
       .setOrigin(0)

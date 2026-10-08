@@ -513,11 +513,7 @@
   "group": "ui"
  },
  "crop_parsnip_0": {
-  "src": "crops1b/crop_parsnip_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_parsnip_1": {
@@ -553,11 +549,7 @@
   "group": "world"
  },
  "crop_potato_0": {
-  "src": "crops1b/crop_potato_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_potato_1": {
@@ -593,11 +585,7 @@
   "group": "world"
  },
  "crop_cauliflower_0": {
-  "src": "crops1b/crop_cauliflower_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_cauliflower_1": {
@@ -633,11 +621,7 @@
   "group": "world"
  },
  "crop_tomato_0": {
-  "src": "crops1b/crop_tomato_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_tomato_1": {
@@ -673,11 +657,7 @@
   "group": "world"
  },
  "crop_melon_0": {
-  "src": "crops2b/crop_melon_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_melon_1": {
@@ -713,11 +693,7 @@
   "group": "world"
  },
  "crop_corn_0": {
-  "src": "crops2b/crop_corn_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_corn_1": {
@@ -753,11 +729,7 @@
   "group": "world"
  },
  "crop_pumpkin_0": {
-  "src": "crops2b/crop_pumpkin_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_pumpkin_1": {
@@ -793,11 +765,7 @@
   "group": "world"
  },
  "crop_kale_0": {
-  "src": "crops2b/crop_kale_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_kale_1": {
@@ -833,11 +801,7 @@
   "group": "world"
  },
  "crop_yam_0": {
-  "src": "crops3b/crop_yam_0",
-  "size": [
-   16,
-   16
-  ],
+  "authored": "seed_mound",
   "group": "world"
  },
  "crop_yam_1": {

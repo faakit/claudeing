@@ -69,20 +69,47 @@ def path(P: Pal, seed=3) -> np.ndarray:
 
 
 def soil(P: Pal, watered: bool) -> np.ndarray:
+    """Tilled rows: soft ridges every 4 px with broken, wobbling furrow shadows (reads as earth, not planks)."""
     base = P("#6b4329") if watered else P("#8e5f37")
     dark = P("#4a2c22") if watered else P("#6b4329")
     lite = P("#83582f") if watered else P("#b07c48")
     t = fill(base)
-    for row in (3, 7, 11, 15):
-        t[row, :] = dark
-        t[row - 1, :] = lite
     r = np.random.default_rng(11 if watered else 5)
-    for row in (1, 5, 9, 13):
-        for _ in range(3):
-            t[row, r.integers(0, T)] = dark
+    for row in (0, 4, 8, 12):
+        x = 0
+        while x < T:
+            seg = int(r.integers(3, 7))
+            wob = int(r.integers(0, 2))
+            for k in range(seg):
+                c = (x + k) % T
+                t[(row + 3 + wob) % T, c] = dark
+                if k and k < seg - 1:
+                    t[(row + 1 + wob) % T, c] = lite
+            x += seg + int(r.integers(0, 2))
+    for _ in range(6):
+        y, x = r.integers(0, T, 2)
+        t[y, x] = lite if r.integers(0, 2) else dark
     if watered:
-        for x, y in ((3, 5), (10, 9), (6, 13), (13, 1)):
+        for x, y in ((3, 6), (10, 10), (6, 14), (13, 2)):
             t[y, x] = P("#4f7fb8")
+    return t
+
+
+def seed_mound(P: Pal) -> np.ndarray:
+    """Crop stage 0 for every crop: a small light mound with a green tip, clear on dark soil."""
+    t = np.full((T, T), -1, dtype=np.int32)
+    o, f, h, g = P.outline, P("#c99a62"), P("#e8c48a"), P("#6aa84f")
+    rows = {10: (6, 10), 11: (5, 11), 12: (4, 12), 13: (3, 13), 14: (3, 13)}
+    for y, (a, b) in rows.items():
+        t[y, a:b] = f
+    t[11, 6:9] = h
+    t[12, 5] = h
+    t = px.clean_and_outline(t, o, 0)
+    # a two-leaf tip poking out of the top, outlined
+    for y, x in ((9, 7), (8, 8), (9, 8), (7, 9)):
+        t[y, x] = g
+    for y, x in ((8, 7), (9, 6), (7, 8), (6, 9), (7, 10), (8, 9), (9, 9)):
+        t[y, x] = o
     return t
 
 
@@ -192,11 +219,12 @@ def roof(P: Pal, style: str, row: str, col: str) -> np.ndarray:
     b, d, h = (P(c) for c in ROOF_STYLES[style])
     t = fill(b)
     for r0 in range(0, T, 4):
-        t[r0 + 3, :] = d
-        off = 2 if (r0 // 4) % 2 else 0
-        for c in range(off, T, 4):
-            t[r0 : r0 + 3, c] = d if c % 8 == off else b
-            t[r0, (c + 1) % T] = h
+        t[r0, :] = h  # lit top of each course
+        t[r0 + 3, :] = d  # shadow under it
+        off = 4 if (r0 // 4) % 2 else 0
+        for c in range(off, T + off, 8):  # short, staggered seams between shingles
+            t[r0 + 2 : r0 + 4, c % T] = d
+            t[r0 + 3, (c + 1) % T] = P.outline
     if row == "t":
         t[0, :] = P.outline
         t[1, :] = h
@@ -211,6 +239,34 @@ def roof(P: Pal, style: str, row: str, col: str) -> np.ndarray:
         t[:, 15] = P.outline
     if row == "b":
         t[15, :] = -1
+    return t
+
+
+def tuft(P: Pal, kind: str) -> np.ndarray:
+    """Ground decor overlays scattered over grass and paths (no outline: they sit flat in the ground)."""
+    t = np.full((T, T), -1, dtype=np.int32)
+    g, d, li = P("#4f8a3c"), P("#3c6e35"), P("#8cc265")
+    if kind == "grass_a":  # a tall-grass tuft
+        for x, h in ((5, 3), (6, 5), (7, 4), (8, 6), (9, 4), (10, 3)):
+            t[13 - h : 13, x] = g
+            t[13 - h, x] = li
+        t[12, 5:11] = d
+    elif kind == "grass_b":  # two small sprigs
+        for x0, y0 in ((3, 6), (10, 11)):
+            t[y0 : y0 + 3, x0] = g
+            t[y0 + 1 : y0 + 3, x0 + 2] = g
+            t[y0, x0] = li
+            t[y0 + 1, x0 + 1] = d
+    elif kind == "flowers":  # three tiny flowers
+        for (x, y), c in zip(((4, 5), (11, 8), (6, 12)), ("#f2e6c9", "#f4d35e", "#d9785a")):
+            t[y, x] = P(c)
+            t[y - 1, x] = t[y + 1, x] = t[y, x - 1] = t[y, x + 1] = P("#f2e6c9") if c != "#f2e6c9" else P("#f4d35e")
+            t[y, x] = P(c)
+            t[y + 2, x] = g
+    elif kind == "pebbles":
+        for x, y in ((4, 6), (11, 4), (8, 11)):
+            t[y, x : x + 2] = P("#a39d99")
+            t[y + 1, x : x + 2] = P("#6e6a6b")
     return t
 
 
@@ -256,6 +312,12 @@ def build(pal, outline, groups, specs, make):
                 groups["world"][f"decor_roof_{style}_{row}{col}"] = px.idx_to_rgba(roof(P, style, row, col), pal)
 
     sheet = np.concatenate([tiles[n] for n in TILE_ORDER], axis=1)
+    for kind in ("grass_a", "grass_b", "flowers"):
+        groups["world"][f"decor_{kind}"] = px.idx_to_rgba(tuft(P, kind), pal)
+    seed = px.idx_to_rgba(seed_mound(P), pal)
+    for key, spec in specs.items():
+        if spec.get("authored") == "seed_mound":
+            groups["world"][key] = seed
     groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(tiles["watered"], pal)
     return {"tileset": px.idx_to_rgba(sheet, pal)}

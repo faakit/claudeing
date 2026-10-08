@@ -1,7 +1,7 @@
 import { PLACEHOLDER_TILES, TILESET_KEY } from '../config';
 import { animals, crops, items, nodes, npcs, placeables, tools, trees } from '../data';
 import { DIRECTIONS } from '../systems/direction';
-import { ROOF_KEYS } from './decor';
+import { GROUND_DECOR_KEYS, ROOF_KEYS } from './decor';
 
 /**
  * Every texture key (and frame) the game draws, derived from data wherever the data names it, so new
@@ -229,13 +229,13 @@ export function artManifest(): ArtEntry[] {
           from: 'npcs.json',
           exact: false,
         });
-  for (const k of ROOF_KEYS)
+  for (const k of [...ROOF_KEYS, ...GROUND_DECOR_KEYS])
     add({
       texture: k,
       w: 16,
       h: 16,
       group: 'world',
-      kind: 'roof decor (art only)',
+      kind: 'decor (art only)',
       from: 'art/decor.ts',
       optional: true,
     });
