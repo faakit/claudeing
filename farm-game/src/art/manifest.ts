@@ -1,5 +1,16 @@
 import { PLACEHOLDER_TILES, TILESET_KEY } from '../config';
-import { animals, crops, items, nodes, npcs, placeables, tools, trees } from '../data';
+import {
+  animals,
+  crops,
+  items,
+  mail,
+  nodes,
+  npcs,
+  placeables,
+  projects,
+  tools,
+  trees,
+} from '../data';
 import { DIRECTIONS } from '../systems/direction';
 import { GROUND_DECOR_KEYS, ROOF_KEYS } from './decor';
 
@@ -229,6 +240,29 @@ export function artManifest(): ArtEntry[] {
           from: 'npcs.json',
           exact: false,
         });
+  // Drawn on demand by game/fallbackTexture.ts when no art exists, so they count as optional here.
+  for (const [id, p] of Object.entries(projects))
+    if (p.landmark)
+      add({
+        texture: p.landmark.sprite,
+        w: 16,
+        h: 16,
+        group: 'world',
+        kind: `town landmark ${id}`,
+        from: 'projects.json',
+        exact: false,
+        optional: true,
+      });
+  add({
+    texture: mail.mailbox.sprite,
+    w: 16,
+    h: 16,
+    group: 'world',
+    kind: 'mailbox',
+    from: 'mail.json',
+    exact: false,
+    optional: true,
+  });
   for (const k of [...ROOF_KEYS, ...GROUND_DECOR_KEYS])
     add({
       texture: k,

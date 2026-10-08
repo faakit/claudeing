@@ -24,6 +24,15 @@ def load_gpl(path: str) -> list[tuple[int, int, int]]:
     return cols
 
 
+def load_gpl_names(path: str) -> list[str]:
+    names = []
+    for line in open(path, encoding="utf8"):
+        parts = line.split(None, 3)
+        if len(parts) >= 3 and all(p.isdigit() for p in parts[:3]):
+            names.append(parts[3].strip() if len(parts) > 3 else "")
+    return names
+
+
 def write_gpl(path: str, cols, names=None) -> None:
     with open(path, "w", encoding="utf8", newline="\n") as f:
         f.write("GIMP Palette\nName: Tiny Acre\nColumns: 8\n#\n")

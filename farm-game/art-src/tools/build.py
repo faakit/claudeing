@@ -1,7 +1,6 @@
 """Build every shipped sprite, the packed atlases and the tileset from committed sources.
 
     python art-src/tools/build.py            # rebuild everything
-    python art-src/tools/build.py --palette  # (re)derive public/assets/palette.gpl from the Flow crops first
 
 Sources:
   art-src/flow/crops/<sheet>/<name>.png   per-sprite crops of Google Flow output (see art-src/flow/prompts.md)
@@ -9,7 +8,8 @@ Sources:
   art-src/tools/authored.py                palette-indexed sprites written in code (terrain tiles, soil, fx...)
 Outputs:
   art-src/sprites/<group>/<key>.png        every finished sprite, for review
-  public/assets/sprites/{world,ui,chars}.{png,json}, public/assets/tilesets/tiles.png, public/assets/palette.gpl
+  public/assets/sprites/{world,ui,chars}.{png,json}, public/assets/tilesets/tiles.png
+  (public/assets/palette.gpl is an input: the authored 32-colour palette, slot 0 = outline ink)
   src/art/atlases.json                     which of those files exist (the loader requests only these)
 """
 from __future__ import annotations
@@ -55,57 +55,6 @@ def crop_native(src: str) -> np.ndarray:
 # ---------------------------------------------------------------- palette
 
 
-def derive_palette(specs: dict, n: int = 32) -> list[tuple[int, int, int]]:
-    """Weighted k-means (Lab) over the colours of every Flow crop in use.
-
-    Each crop gets the same total weight and each of its colours sqrt(count), so small accents (a blue fish,
-    a red berry) still win a palette slot. `art-src/palette-extra.json` lists colours that are always kept
-    (the outline brown)."""
-    cols_w: dict[tuple, float] = {}
-    seen_src = set()
-    for s in specs.values():
-        src = s.get("src")
-        if not src or src in seen_src:
-            continue
-        seen_src.add(src)
-        nat = crop_native(src)
-        pix = nat[..., :3][nat[..., 3] > 0].astype(np.int32)
-        q = (pix // 8) * 8 + 4
-        u, c = np.unique(q, axis=0, return_counts=True)
-        w = np.sqrt(c)
-        w = w / w.sum()
-        for col, wt in zip(map(tuple, u), w):
-            cols_w[col] = cols_w.get(col, 0.0) + wt
-    extra = os.path.join(ART, "palette-extra.json")
-    fixed = [tuple(c) for c in json.load(open(extra))] if os.path.exists(extra) else []
-    allpx = np.array(list(cols_w.keys()), dtype=np.float64)
-    wts = np.array(list(cols_w.values()))
-    lab = px.to_lab(allpx)
-    k = n - len(fixed)
-    rng = np.random.default_rng(7)
-    cent = [lab[np.argmax(wts)]]
-    for _ in range(k - 1):
-        d = np.min([((lab - c) ** 2).sum(-1) for c in cent], axis=0) * wts
-        cent.append(lab[rng.choice(len(lab), p=d / d.sum())])
-    cent = np.array(cent)
-    for _ in range(40):
-        lab_idx = ((lab[:, None, :] - cent[None]) ** 2).sum(-1).argmin(1)
-        for i in range(k):
-            m = lab_idx == i
-            if m.any():
-                cent[i] = (lab[m] * wts[m, None]).sum(0) / wts[m].sum()
-    cols = []
-    for i in range(k):
-        m = lab_idx == i
-        if m.any():
-            # the member colour nearest the weighted centre (a real colour, not an average)
-            j = np.argmin(((lab[m] - cent[i]) ** 2).sum(-1))
-            cols.append(tuple(int(v) for v in allpx[m][j]))
-    cols += fixed
-    cols = sorted(set(cols), key=lambda c: px.to_lab(np.array(c, dtype=np.float64))[0])
-    return cols
-
-
 # ---------------------------------------------------------------- sprites from crops
 
 
@@ -116,6 +65,12 @@ def build_crop_sprite(spec: dict, pal, pal_lab, outline: int) -> np.ndarray:
     idx = px.quantize(nat, pal, pal_lab)
     w, h = spec["size"]
     fit = spec.get("fit", [w, h])
+    drop = spec.get("drop_rows", 0)
+    if drop:  # shorten a figure on its native grid: remove rows spread over the body below the waist
+        h0 = idx.shape[0]
+        a, b = int(h0 * 0.55), int(h0 * 0.9)
+        rows = sorted({int(a + (b - a) * (k + 0.5) / drop) for k in range(drop)})
+        idx = np.delete(idx, rows, axis=0)
     if not spec.get("noscale"):
         idx = px.downscale_idx(idx, fit[0], fit[1], outline)
     else:  # keep the native scale (consistent animation frames); trim the sides to the frame width
@@ -182,15 +137,14 @@ def save_png(arr: np.ndarray, path: str) -> None:
 def main() -> None:
     specs = json.load(open(os.path.join(ART, "sprites.json")))
     specs = {k: v for k, v in specs.items() if not k.startswith("//")}
-    if "--palette" in sys.argv or not os.path.exists(PALETTE):
-        cols = derive_palette(specs)
-        px.write_gpl(PALETTE, cols)
-        print(f"palette: {len(cols)} colours -> {PALETTE}")
+    # The palette is authored (v2 ramps, chosen with the art director); slot 0 is the outline ink.
     pal = px.load_gpl(PALETTE)
+    names = px.load_gpl_names(PALETTE)
     assert len(pal) <= 32, "palette over 32 colours"
+    assert names[0] == "ink", "palette slot 0 must be the outline ink"
     pal_arr = np.array(pal, dtype=np.float64)
     pal_lab = px.to_lab(pal_arr)
-    outline = int(np.argmin(pal_lab[:, 0]))
+    outline = 0
 
     import authored  # noqa: E402  (needs the palette)
 
@@ -201,7 +155,7 @@ def main() -> None:
         idx = build_crop_sprite(spec, pal, pal_lab, outline)
         groups[spec["group"]][key] = px.idx_to_rgba(idx, pal)
     extra = authored.build(
-        pal, outline, groups, specs, lambda sp: build_crop_sprite(sp, pal, pal_lab, outline)
+        pal, outline, groups, specs, lambda sp: build_crop_sprite(sp, pal, pal_lab, outline), names
     )
     for g, sprites in groups.items():
         for k, arr in sprites.items():

@@ -5,6 +5,9 @@ owner's account, 2 outputs per prompt (`-a`, `-b`). Raw downloads are kept outsi
 (`flow-raw/<id>-a.jpg`); the per-sprite crops that feed the pipeline are in `crops/<id><variant>/`.
 Each prompt is the shared preamble followed by the body below. Generated file: edit `prompts.json`.
 
+The first prompts named a generic genre style; from `npcs4` on, the preamble describes Tiny Acre's own style
+and never names games, studios or artists (art director's request).
+
 ## Preamble: standard
 
 > Pixel art game sprites for a cozy top-down farming game in the style of classic 16-bit farming RPGs. Every sprite is a tiny 16x16 pixel sprite drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark brown outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Every object is opaque (no see-through glass) and contains no magenta or hot pink.
@@ -13,7 +16,15 @@ Each prompt is the shared preamble followed by the body below. Generated file: e
 
 > Pixel art game sprites for a cozy top-down farming game in the style of classic 16-bit farming RPGs. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark brown outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **12** prompts.
+## Preamble: tinyacre
+
+> Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is a tiny 16x16 pixel sprite drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Every object is opaque and contains no magenta or hot pink.
+
+## Preamble: tinyacre-character
+
+> Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
+
+Generations: **19** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -98,3 +109,55 @@ Generations: **12** prompts.
 
 - raw: items5-a.jpg, items5-b.jpg
 - used: a: speed-gro and sapling icons; decor sprites kept for map decor
+
+## 13. `items6` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, in this order, left to right, top to bottom: garden lamp post with a glowing yellow lantern, small grey stone statue of a farmer on a pedestal, small round stone fountain with blue water, small wooden pig sty pen with a little roof, tall wooden feed silo with a cone roof, pink pig in side view facing right standing, the same pink pig rooting with its snout down, wooden bucket of brown slop, black truffle, short wooden fence section, flat round grey stepping stones seen from above, iron street lamp post with a lantern, wooden window flower box with red flowers, wooden water trough, small pile of rubble with a glowing blue crystal, burning wall torch on a wooden bracket.
+
+- raw: items6-a.jpg, items6-b.jpg
+- used: a: garden decor placeables, sty, silo, pig (2 frames), slop, truffle, fence; map decor (lamp, flower box, trough, crystal, torch). Stepping stones were too weak at 16 px: authored in code instead.
+
+## 14. `land1` (1:1, preamble: standard (without the 16x16 sentence))
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 16 pixels wide and 24 pixels tall, in this order, left to right, top to bottom: wooden notice board under a small shingled roof, stone steps in a little waterfall with a fish jumping, tiny stone library with a book emblem, small wooden hot spring bathhouse with steam, small festive hall with colorful bunting flags, market stall with a striped awning and crates of vegetables, small greenhouse with pale blue opaque glass panes and a white frame, big round oak tree, tall dark green pine tree, white birch tree, dense dark green bush, hanging lantern on a wooden pole, laundry line with clothes between two posts, stack of crates with apples, mine cart full of ore, wooden mine support beams with a lantern.
+
+- raw: land1-a.jpg, land1-b.jpg
+- used: a: the six town-project landmarks; trees, props and mine decor for the maps pass
+
+## 15. `npcs2` (1:1, preamble: character)
+
+> Character sprite sheet of five village characters, full body, cute proportions with a big head, each figure about 18 pixels wide and 30 pixels tall, as tall as a grown-up farmer, each with a clearly different silhouette. A grid of 5 rows and 3 columns with wide even spacing; columns: facing the viewer, seen from behind, facing right in side view, all standing. Row 1: Mara the shopkeeper, a woman with red hair in a bun, peach blouse and a long cream apron. Row 2: Finn the fisherman, a young man in a light blue raincoat and a yellow bucket hat. Row 3: Rosa the gardener, an older woman with grey hair, a wide straw hat and a lavender dress. Row 4: Orin the blacksmith, the tallest and widest, a big burly bald man with a bushy brown beard and a dark leather apron. Row 5: Clay the rival farmer, a proud young man with slicked blond hair, a light blue denim jacket and a red neckerchief.
+
+- raw: npcs2-a.jpg, npcs2-b.jpg
+- used: not used: figures came out about 20 px tall (too small); superseded by npcs3/npcs4
+
+## 16. `npcs3` (1:1, preamble: character)
+
+> Character sprite sheet of three village characters, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head, each with a clearly different silhouette. A grid of 3 rows and 3 columns with wide even spacing; columns: facing the viewer, seen from behind, facing right in side view, all standing. Row 1: Mara the shopkeeper, a woman with red hair in a bun, peach blouse and a long cream apron. Row 2: Finn the fisherman, a young man in a light blue raincoat and a yellow bucket hat. Row 3: Rosa the gardener, an older woman with grey hair, a wide straw hat and a lavender dress.
+
+- raw: npcs3-a.jpg, npcs3-b.jpg
+- used: b: Mara, Finn, Rosa (native grid, rows trimmed to the target heights)
+- note: 3 rows per image keeps figures about 30 native px tall
+
+## 17. `npcs4` (1:1, preamble: tinyacre-character)
+
+> Character sprite sheet, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head. A grid of 3 rows and 3 columns with wide even spacing. Row 1, Orin the blacksmith, the tallest and widest villager, a big burly bald man with a bushy brown beard, a barrel chest and a dark leather apron: facing the viewer, seen from behind, facing right in side view. Row 2, Clay the rival farmer, a proud young man with slicked blond hair, a light blue denim jacket and a red neckerchief: facing the viewer, seen from behind, facing right in side view. Row 3, a young farmer with short brown hair, a blue shirt, dark blue trousers and brown boots, facing the viewer: raising a hoe overhead, pouring a watering can, casting a fishing rod.
+
+- raw: npcs4-a.jpg, npcs4-b.jpg
+- used: b: Orin (a drew him shirtless); a: Clay (hands on hips); tool poses kept for later
+
+## 18. `interior1` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate cottage furniture sprites with wide even spacing, seen in three-quarter top-down view, in this order, left to right, top to bottom: small wooden table, wooden chair, tall bookshelf with colorful books, stone fireplace with a warm fire, wood cooking stove with a pot, potted leafy house plant, wooden dresser, round braided rug in warm red and cream, small window with curtains, wall clock, framed landscape painting, wooden storage chest, standing lamp with a warm shade, basket of yarn, wooden barrel of apples, cozy armchair.
+
+- raw: interior1-a.jpg, interior1-b.jpg
+- used: house interior decor (maps pass)
+- note: submitted while npcs4 was running
+
+## 19. `ambient1` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate small sprites with wide even spacing, in this order, left to right, top to bottom: white butterfly with wings open, the same butterfly with wings closed, orange butterfly with wings open, the same orange butterfly with wings closed, single rose-pink flower petal, single falling orange autumn leaf, single falling red autumn leaf, white snowflake, small glowing yellow firefly, small dandelion seed puff, rose-pink wildflower with five petals, small clump of rose-pink wildflowers, mossy fallen log, small grey rock, shallow rain puddle seen from above, clump of tall grass.
+
+- raw: ambient1-a.jpg, ambient1-b.jpg
+- used: ambient particles and map decor (atmosphere and maps passes)
+- note: submitted while interior1 was running

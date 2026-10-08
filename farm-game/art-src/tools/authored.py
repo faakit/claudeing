@@ -26,6 +26,12 @@ class Pal:
         self.lab = px.to_lab(self.rgb)
         self.outline = outline
 
+    names: list[str] = []
+
+    def name(self, n: str) -> int:
+        """Palette slot by name (see public/assets/palette.gpl)."""
+        return self.names.index(n)
+
     def __call__(self, hexcol: str) -> int:
         """Nearest palette index to a colour, so authored art can never leave the palette."""
         rgb = np.array([int(hexcol[i : i + 2], 16) for i in (1, 3, 5)], dtype=np.float64)
@@ -70,10 +76,15 @@ def path(P: Pal, seed=3) -> np.ndarray:
 
 def soil(P: Pal, watered: bool) -> np.ndarray:
     """Tilled rows: soft ridges every 4 px with broken, wobbling furrow shadows (reads as earth, not planks)."""
-    base = P("#6b4329") if watered else P("#8e5f37")
-    dark = P("#4a2c22") if watered else P("#6b4329")
-    lite = P("#83582f") if watered else P("#b07c48")
+    # Both on the soil base so seed mounds and seedlings keep contrast; watered = dithered earth-dark wetness.
+    base, dark, lite = P.name("soil"), P.name("earth dark"), P.name("wood")
     t = fill(base)
+    if watered:
+        lite = base
+        for y in range(T):
+            for x in range(T):
+                if (x + 2 * y) % 3 == 0:
+                    t[y, x] = dark
     r = np.random.default_rng(11 if watered else 5)
     for row in (0, 4, 8, 12):
         x = 0
@@ -91,7 +102,7 @@ def soil(P: Pal, watered: bool) -> np.ndarray:
         t[y, x] = lite if r.integers(0, 2) else dark
     if watered:
         for x, y in ((3, 6), (10, 10), (6, 14), (13, 2)):
-            t[y, x] = P("#4f7fb8")
+            t[y, x] = P.name("water")
     return t
 
 
@@ -345,6 +356,19 @@ GLYPHS = {
 }
 
 
+def stepping_stones(P: Pal) -> np.ndarray:
+    """Flat stone path piece: four worn slabs that line up with the neighbouring tiles."""
+    t = np.full((T, T), -1, dtype=np.int32)
+    base, lite, dark = P("#a39d99"), P("#cfc2ad"), P("#6e6a6b")
+    for x0, y0, w, h in ((1, 1, 6, 5), (9, 2, 6, 5), (2, 9, 5, 6), (9, 10, 6, 5)):
+        t[y0 : y0 + h, x0 : x0 + w] = base
+        t[y0, x0 + 1 : x0 + w - 1] = lite
+        t[y0 + h - 1, x0 + 1 : x0 + w] = dark
+        for cx, cy in ((x0, y0), (x0 + w - 1, y0), (x0, y0 + h - 1), (x0 + w - 1, y0 + h - 1)):
+            t[cy, cx] = -1
+    return px.clean_and_outline(t, P.outline, 0)
+
+
 def glyph(P: Pal, colours: dict, rows: list[str]) -> np.ndarray:
     t = np.full((len(rows), len(rows[0])), -1, dtype=np.int32)
     for y, row in enumerate(rows):
@@ -366,8 +390,9 @@ def tile_sprite(make, src: str, fit=(16, 16), anchor="bottom") -> np.ndarray:
     return make({"src": src, "size": [T, T], "fit": list(fit), "anchor": anchor})
 
 
-def build(pal, outline, groups, specs, make):
+def build(pal, outline, groups, specs, make, names=None):
     P = Pal(pal, outline)
+    P.names = list(names or [])
     tiles: dict[str, np.ndarray] = {
         "grass": grass(P),
         "dirt": dirt(P),
@@ -406,6 +431,8 @@ def build(pal, outline, groups, specs, make):
     for key, spec in specs.items():
         if spec.get("authored") == "seed_mound":
             groups["world"][key] = seed
+        if spec.get("authored") == "stepping_stones":
+            groups[spec["group"]][key] = px.idx_to_rgba(stepping_stones(P), pal)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(tiles["watered"], pal)
     return {"tileset": px.idx_to_rgba(sheet, pal)}

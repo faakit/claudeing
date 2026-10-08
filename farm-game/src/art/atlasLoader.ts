@@ -45,7 +45,7 @@ function alias(scene: Phaser.Scene, plan: TexturePlan): void {
   const source = atlas.source[0]!;
   const gl = source.glTexture;
   if (!gl) return paint(scene, plan);
-  scene.textures.remove(plan.texture);
+  if (scene.textures.exists(plan.texture)) scene.textures.remove(plan.texture);
   const tex = scene.textures.create(plan.texture, gl, source.width, source.height);
   if (!tex) return;
   const single = plan.frames.length === 1 && !plan.frames[0]!.entry.frame;
@@ -61,9 +61,14 @@ function alias(scene: Phaser.Scene, plan: TexturePlan): void {
 
 /** Paint atlas frames over the generated canvas texture (partial coverage, or the Canvas renderer). */
 function paint(scene: Phaser.Scene, plan: TexturePlan): void {
+  const single = plan.frames.length === 1 && !plan.frames[0]!.entry.frame;
+  // Keys drawn lazily (landmarks, the mailbox) have no canvas yet: make one for the art.
+  if (single && !scene.textures.exists(plan.texture)) {
+    const src = plan.frames[0]!.src!;
+    scene.textures.createCanvas(plan.texture, src.w, src.h);
+  }
   let tex = scene.textures.get(plan.texture) as Phaser.Textures.CanvasTexture;
   if (!(tex instanceof Phaser.Textures.CanvasTexture)) return;
-  const single = plan.frames.length === 1 && !plan.frames[0]!.entry.frame;
   for (const { entry, src } of plan.frames) {
     if (!src) continue;
     const img = scene.textures.get(src.atlas).getSourceImage() as CanvasImageSource;

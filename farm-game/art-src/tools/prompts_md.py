@@ -7,6 +7,8 @@ P = json.load(open(os.path.join(D, "prompts.json")))
 pre = {
     "standard": open(os.path.join(D, "preamble.txt")).read().strip(),
     "character": open(os.path.join(D, "preamble-character.txt")).read().strip(),
+    "tinyacre": open(os.path.join(D, "preamble-tinyacre.txt")).read().strip(),
+    "tinyacre-character": open(os.path.join(D, "preamble-tinyacre-character.txt")).read().strip(),
 }
 out = [
     "# Google Flow prompts",
@@ -15,6 +17,11 @@ out = [
     "owner's account, 2 outputs per prompt (`-a`, `-b`). Raw downloads are kept outside the repo",
     "(`flow-raw/<id>-a.jpg`); the per-sprite crops that feed the pipeline are in `crops/<id><variant>/`.",
     "Each prompt is the shared preamble followed by the body below. Generated file: edit `prompts.json`.",
+    "",
+]
+out += [
+    "The first prompts named a generic genre style; from `npcs4` on, the preamble describes Tiny Acre's own style",
+    "and never names games, studios or artists (art director's request).",
     "",
 ]
 for k, v in pre.items():
