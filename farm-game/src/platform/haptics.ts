@@ -27,7 +27,12 @@ export const HAPTIC_GAP_MS: Record<HapticKind | 'repeat', number> = {
   repeat: 450,
 };
 
+/** Any two pulses this close merge: the later one only plays if it is stronger (it replaces the first). */
+export const HAPTIC_MERGE_MS = 80;
+const RANK: Record<HapticKind, number> = { tick: 0, medium: 1, success: 2, error: 3 };
+
 let enabled = true;
+let lastPulse: { t: number; kind: HapticKind } | null = null;
 let driver: Driver | null = null;
 const lastAt = new Map<string, number>();
 
@@ -44,7 +49,10 @@ export const registerHapticsDriver = (d: Driver): void => {
 };
 
 /** Forget throttle history (tests, and a new game). */
-export const resetHapticGate = (): void => lastAt.clear();
+export const resetHapticGate = (): void => {
+  lastAt.clear();
+  lastPulse = null;
+};
 
 /**
  * Pulse once, unless vibration is off or the same kind pulsed too recently. `repeat` marks a pulse that
@@ -58,6 +66,10 @@ export function haptic(kind: HapticKind, opts: { repeat?: boolean; at?: number }
   const gap = HAPTIC_GAP_MS[opts.repeat ? 'repeat' : kind];
   const prev = lastAt.get(key);
   if (prev !== undefined && t - prev < gap) return false;
+  // Two events in the same instant (a tile worked and a goal completed) never buzz twice.
+  if (lastPulse && t - lastPulse.t < HAPTIC_MERGE_MS && RANK[kind] <= RANK[lastPulse.kind])
+    return false;
+  lastPulse = { t, kind };
   lastAt.set(key, t);
   // A first tick also starts the repeat gate, so a held action never pulses faster than its rule.
   if (kind === 'tick' && !opts.repeat) lastAt.set('repeat', t);

@@ -19,21 +19,15 @@ export class VirtualJoystick {
   /** The stick passed its deadzone during the current touch (so that touch can never be a tap). */
   private engaged = false;
   private last: { id: number; engaged: boolean } | null = null;
+  /** Rim radius (Options > Controls > Stick size). */
+  private radius: number = JOYSTICK.radius;
 
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly hub: InputHub,
   ) {
-    const { radius } = JOYSTICK;
     this.gfx = scene.add.graphics().setDepth(100).setAlpha(0);
-    this.gfx.fillStyle(CH.ink, 0.28).fillCircle(0, 0, radius + 6);
-    this.gfx.lineStyle(2, CH.cream, 0.55).strokeCircle(0, 0, radius + 6);
-    for (const a of [0, 90, 180, 270]) {
-      const rad = Phaser.Math.DegToRad(a);
-      this.gfx
-        .fillStyle(CH.cream, 0.5)
-        .fillCircle(Math.cos(rad) * (radius - 4), Math.sin(rad) * (radius - 4), 1.5);
-    }
+    this.drawRim();
     this.thumb = scene.add.graphics().setDepth(101).setAlpha(0);
     this.thumb.fillStyle(CH.cream, 0.8).fillCircle(0, 0, 11);
     this.thumb.lineStyle(2, CH.ink, 0.5).strokeCircle(0, 0, 11);
@@ -48,6 +42,26 @@ export class VirtualJoystick {
   /** The whole lower part of the screen is a joystick: a thumb never has to find a fixed spot. */
   private inZone(y: number): boolean {
     return y >= THUMB_ZONE_Y;
+  }
+
+  /** Change the rim radius (stick size setting). */
+  setRadius(r: number): void {
+    if (r === this.radius) return;
+    this.radius = r;
+    this.drawRim();
+  }
+
+  private drawRim(): void {
+    const radius = this.radius;
+    this.gfx.clear();
+    this.gfx.fillStyle(CH.ink, 0.28).fillCircle(0, 0, radius + 6);
+    this.gfx.lineStyle(2, CH.cream, 0.55).strokeCircle(0, 0, radius + 6);
+    for (const a of [0, 90, 180, 270]) {
+      const rad = Phaser.Math.DegToRad(a);
+      this.gfx
+        .fillStyle(CH.cream, 0.5)
+        .fillCircle(Math.cos(rad) * (radius - 4), Math.sin(rad) * (radius - 4), 1.5);
+    }
   }
 
   /** Did this pointer's touch (current, or the one that just ended) move the stick past its deadzone? */
@@ -70,7 +84,8 @@ export class VirtualJoystick {
 
   private onMove(p: Phaser.Input.Pointer): void {
     if (p.id !== this.pointerId) return;
-    const { radius, axisBias } = JOYSTICK;
+    const { axisBias } = JOYSTICK;
+    const radius = this.radius;
     const deadzone = GESTURE.stickDeadzone;
     let dx = p.x - this.origin.x;
     let dy = p.y - this.origin.y;

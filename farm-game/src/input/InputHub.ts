@@ -29,6 +29,11 @@ export class InputHub {
   private stick: Direction | null = null;
   /** True while the Action button or Space is held, so tools repeat. */
   actionHeld = false;
+  /**
+   * The hotbar slot Action would use right now (auto tool may pick another than the selected one), set
+   * by the world each frame so the Action button can show it. Null when Action has nothing to do.
+   */
+  actionSlot: number | null = null;
   private listeners = new Map<keyof InputEvents, Set<Listener<never>>>();
 
   /** Joystick wins over keyboard; among keys the most recently pressed wins. */

@@ -395,3 +395,28 @@ iPhone 13/14 and Pixel 7 are the primary phones, the SE must pass; right-handed 
 - **Joystick axis hysteresis 1.25 -> 1.6:** a thumb held at 40 to 50 degrees with about 1 mm of drift
   flipped axis 2.0 to 2.4 times a second; now about 0.7 to 1.0 (unit-tested model). Choosing a new axis now
   needs a push about 58 degrees off the old one.
+
+### M3 auto tool and control settings
+
+- **Auto tool is a mode, not an override:** with a farm item in hand (hoe, can, scythe, pickaxe, seeds) or an
+  empty hand, Action uses whichever hotbar farm item does the most valuable thing on the tiles in reach (the
+  action handlers' priorities: harvest beats planting beats tools; then the tile in front; then the item:
+  seeds, can, scythe, pickaxe, hoe). Holding anything else (the rod, a placeable, fertilizer, goods) is an
+  explicit choice and Action does exactly what that item does, as before (owner decision 2: fishing and placing
+  stay deliberate). Off in Options > Controls means "the item in hand only".
+- **The hotbar selection never changes:** the Action icon shows what will be used (and pops when it changes);
+  the marker shows where. Handlers read the selected slot, so a choice is planned and run with its slot
+  selected for that instant (`withSelected`): no action handler changed, the registry API is unchanged.
+- **One seed kind at a time:** the seed in hand, else the last seed planted (remembered in the save), else the
+  first seed on the hotbar. A mixed hotbar never plants a surprise kind.
+- **A held Action on grass now finishes the tile in front** (till, plant, water) before the sides, because
+  planting outranks tilling. One hold prepares a tile completely.
+- **Registry:** `registerAutoItem({ id, priority, eligible })` so a mechanic can make its tool auto-pickable
+  without touching core files (docs/EXTENDING.md).
+- **Save version 16:** `settings.controls` (autoTool, tapToMove, paint: on; stickSize 'm'; twoSpeed off) and
+  `controls.lastSeed`; the migration adds the owner defaults, `sanitize` clamps each field (a real v15 save is a
+  test fixture). All later control options ride in this block, so M4 to M7 need no further bump.
+- **Options > Controls** (a page behind a "Controls..." button, laid out from the bottom up near the tabs):
+  Auto tool, Stick size S/M/L (radius 18/24/32), Left hand, Vibrate. Switches appear as their milestones ship.
+- **Haptic merge:** two pulses within 80 ms merge (a tile worked and a goal completed in the same frame buzz
+  once); a stronger pulse replaces a weaker one, never the reverse.

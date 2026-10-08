@@ -141,6 +141,23 @@ export interface Settings {
   leftHanded: boolean;
   /** Calmer visuals: no shaking, bobbing or wandering animation. */
   reduceMotion: boolean;
+  /** One-thumb control options (Options > Controls). */
+  controls: ControlSettings;
+}
+
+/** Stick size names (radius in logical px: 18 / 24 / 32). */
+export type StickSize = 's' | 'm' | 'l';
+
+export interface ControlSettings {
+  /** Action picks the hoe, seeds, can, scythe or pickaxe for the tile (never the rod or placeables). */
+  autoTool: boolean;
+  /** Tap a tile to walk there and do the obvious thing. */
+  tapToMove: boolean;
+  /** Long-press a tile, then drag, to work a whole row. */
+  paint: boolean;
+  stickSize: StickSize;
+  /** Half speed while the stick is pushed less than halfway (finer walking). */
+  twoSpeed: boolean;
 }
 
 /** Everything that must be saved lives here. Plain, serializable data only. */
@@ -164,6 +181,8 @@ export interface GameState {
   /** Index into goals.json; equals goals.length when all are done. */
   goalIndex: number;
   settings: Settings;
+  /** Remembered control context: the seed last planted, which auto tool sows next. */
+  controls: { lastSeed: string | null };
   weather: Weather;
   /** Tomorrow's weather, known tonight so the player can plan (rain means no watering, a storm shakes fruit down). */
   forecast: Weather;
@@ -192,7 +211,16 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 15;
+export const STATE_VERSION = 16;
+
+/** Owner defaults: tap-to-move, auto tool and painting on; medium stick; one speed. */
+export const defaultControlSettings = (): ControlSettings => ({
+  autoTool: true,
+  tapToMove: true,
+  paint: true,
+  stickSize: 'm',
+  twoSpeed: false,
+});
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -231,7 +259,9 @@ export function createInitialState(): GameState {
       vibrate: true,
       leftHanded: false,
       reduceMotion: false,
+      controls: defaultControlSettings(),
     },
+    controls: { lastSeed: null },
     weather: 'sunny',
     forecast: 'sunny',
     placed: {},

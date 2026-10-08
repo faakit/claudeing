@@ -5,9 +5,9 @@
 //   npm run build && npm run bench:thumb
 //   PROFILES=i13,pixel7,se,promax,fold HANDS=right,left REACTION_MS=0,180 STOP=center LABEL=m1 npm run bench:thumb
 //
-// The "thumb" is a bot that steers from the game state: a perfect player with REACTION_MS=0. With STOP=center
-// it lets go when the farmer looks centred on the target tile (what a person sees), plus REACTION_MS, then
-// corrects with short nudges; the extra gestures are the cost of imprecision. State is only set up (items,
+// The "thumb" is a bot that steers from the game state. It lets go when the farmer looks centred on the target
+// tile (what a person sees), plus REACTION_MS (0 = a perfect player), then corrects with nudges; the extra
+// gestures are the cost of imprecision. STOP=tile releases on the hidden tile index instead (pre-M2 baseline). State is only set up (items,
 // crop growth, villager time); every action in a loop is a real touch.
 //
 // Pass/fail: scripts/bench-thresholds.json, by milestone (MILESTONE, default: the last one). A row over its
@@ -35,7 +35,9 @@ const only = process.env.TASKS ? process.env.TASKS.split(',') : null;
 const allThresholds = JSON.parse(readFileSync('scripts/bench-thresholds.json', 'utf8'));
 const milestone = process.env.MILESTONE ?? Object.keys(allThresholds).at(-1);
 const thresholds = allThresholds[milestone] ?? {};
-const centreStop = process.env.STOP === 'center';
+// Since M2 the farmer settles onto the tile centre it was last near, so even a perfect player aims at the
+// sprite's centre (STOP=center, the default). STOP=tile releases on the hidden tile index (the old perfect bot).
+const centreStop = (process.env.STOP ?? 'center') === 'center';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
@@ -181,7 +183,8 @@ function makeWorld(page, thumb, L, reactionMs) {
       const [ndx, ndy] = DIRS[dir];
       await thumb.down(JOY.x, JOY.y);
       await thumb.move(JOY.x + ndx * 18, JOY.y + ndy * 18);
-      if (t.tx === tx && t.ty === ty) await sleep(60); // a flick to turn
+      if (t.tx === tx && t.ty === ty)
+        await sleep(60); // a flick to turn
       else {
         // a nudge: push until the farmer is visibly on the next tile (sprite centred), then let go
         const goal = { tx: t.tx + ndx, ty: t.ty + ndy };
@@ -323,13 +326,17 @@ const TASKS = {
         await w.holdAction(750);
       }
     };
+    // With auto tool (M3+) Action picks the hoe, seeds and can itself: no tool changes at all.
+    const auto = await page.evaluate(
+      () => window.__farm.getState().settings.controls?.autoTool === true,
+    );
     const t0 = Date.now();
     await pass(); // hoe in hand
     const tilled = await farmCount(page, 'tilled');
-    await w.tapSlot(5); // seeds
+    if (!auto) await w.tapSlot(5); // seeds
     await pass();
     const planted = await farmCount(page, 'planted');
-    await w.tapSlot(1); // can
+    if (!auto) await w.tapSlot(1); // can
     await pass();
     const watered = await farmCount(page, 'watered');
     await ripen(page);
@@ -337,6 +344,7 @@ const TASKS = {
     const harvested = await farmCount(page, 'harvested');
     return {
       ok: tilled === 9 && planted === 9 && watered === 9 && harvested >= 9,
+      auto,
       tilled,
       planted,
       watered,
@@ -490,8 +498,9 @@ function judge(row) {
   const fails = [];
   if (row.detail?.error) fails.push(`error: ${row.detail.error}`);
   else if (row.detail?.ok === false) fails.push('task did not complete');
-  // Human-like stops (STOP=center) have their own thresholds ("task@center"); without one, only success counts.
-  const th = row.stop === 'center' ? thresholds[`${row.task}@center`] : thresholds[row.task];
+  // Rows with a reaction delay (a human-like stop) have their own thresholds ("task@human"); without one,
+  // only success counts.
+  const th = row.reactionMs > 0 ? thresholds[`${row.task}@human`] : thresholds[row.task];
   if (!th || row.detail?.error) return fails;
   for (const [k, max] of Object.entries(th)) {
     if (k.startsWith('_')) continue;
@@ -504,7 +513,12 @@ function judge(row) {
 const results = [];
 const base =
   process.env.URL ??
-  (await startPreview(Number(process.env.BENCH_PORT ?? 5180), { snapshot: true })).url;
+  (
+    await startPreview(Number(process.env.BENCH_PORT ?? 5180), {
+      snapshot: true,
+      from: process.env.BENCH_DIST ?? 'dist',
+    })
+  ).url;
 const browser = await launch();
 try {
   for (const p of profiles)
@@ -544,6 +558,7 @@ try {
           });
           await sleep(900);
           thumb.reset();
+          await page.evaluate(() => window.__farm.controls?.clear());
           let detail;
           try {
             detail = await run(w, page);
@@ -559,6 +574,16 @@ try {
             ...thumb.ledger(),
             detail,
           };
+          // Did every act match what the marker and the Action icon showed the frame before?
+          Object.assign(
+            row,
+            await page.evaluate(() => {
+              const c = window.__farm.controls;
+              if (!c) return {};
+              const acts = c.entries.filter((e) => e.kind === 'act' && e.ok).length;
+              return { acts, markMismatches: c.mismatches().length };
+            }),
+          );
           row.fails = judge(row);
           results.push(row);
           console.log(

@@ -96,12 +96,12 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  * Start `vite preview` on a port (strict), resolve when it answers. Returns { url, stop }. With `snapshot`, it
  * serves a private copy of dist/ so a long benchmark is not disturbed by a rebuild meanwhile.
  */
-export async function startPreview(port, { snapshot = false } = {}) {
+export async function startPreview(port, { snapshot = false, from = 'dist' } = {}) {
   const args = ['node_modules/vite/bin/vite.js', 'preview', '--port', String(port), '--strictPort'];
   if (snapshot) {
     const dir = `.bench-dist/${port}`;
     rmSync(dir, { recursive: true, force: true });
-    cpSync('dist', dir, { recursive: true });
+    cpSync(from, dir, { recursive: true });
     args.push('--outDir', dir);
   }
   const server = spawn(process.execPath, args, { stdio: 'ignore' });

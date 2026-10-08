@@ -24,6 +24,7 @@ import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
+import { controlsLog } from '../input/controlsLog';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
@@ -36,10 +37,10 @@ import { landmarkAt, landmarksOn } from '../systems/projects';
 import { mailboxAt } from '../systems/mail';
 import { mail } from '../data';
 import { projects } from '../data';
-import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
+import { type TileInfo } from '../systems/actions';
+import { actOn, chooseAction } from '../systems/autoTool';
 import { gameEvents, toast } from '../systems/events';
 import { currentGoal } from '../systems/goals';
-import { selectedStack } from '../systems/inventory';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
 import {
   createMoveState,
@@ -92,6 +93,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private heldFailed = false;
   /** Uses so far in the current Action hold: later ones tick the haptic less often. */
   private holdUses = 0;
+  /** What the marker and Action icon showed last frame (debug log: did the act match?). */
+  private lastMark: { slot: number | null; plan: string | null; tx: number; ty: number } | null = null;
   /** Turn-in-place and settle-on-release state (runtime only). */
   private move: MoveState = createMoveState();
   private lastTarget: string | null | undefined;
@@ -440,16 +443,24 @@ export abstract class WorldScene extends Phaser.Scene {
     return null;
   }
 
-  /** The tile the equipped item would act on right now (first that works), else the one faced. */
-  private actionTile(): { tile: TileCoord; plan: string | null } {
+  /**
+   * The tile Action would act on right now and with which hotbar slot (auto tool may pick another item than
+   * the one in hand), else the tile faced.
+   */
+  private actionTile(): { tile: TileCoord; plan: string | null; slot: number | null } {
     const state = getState();
     const cands = this.candidates();
-    const best = pickBest(
+    const best = chooseAction(
       state,
       cands.map((t) => this.tileInfo(t)),
     );
-    if (best) return { tile: { tx: best.tile.tx, ty: best.tile.ty }, plan: best.plan.kind };
-    return { tile: facingTile(state.player), plan: null };
+    if (best)
+      return {
+        tile: { tx: best.tile.tx, ty: best.tile.ty },
+        plan: best.plan.kind,
+        slot: best.slot,
+      };
+    return { tile: facingTile(state.player), plan: null, slot: null };
   }
 
   private updateTarget(): void {
@@ -465,6 +476,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const interact = this.interactTile();
     const act = this.actionTile();
     const t = interact && !act.plan ? interact.tile : act.tile;
+    inputHub.actionSlot = act.slot;
+    this.lastMark = { slot: act.slot, plan: act.plan, tx: act.tile.tx, ty: act.tile.ty };
     const kind: MarkerKind = markerKind({
       planKind: act.plan,
       interactable: !act.plan && interact !== null,
@@ -478,11 +491,24 @@ export abstract class WorldScene extends Phaser.Scene {
     const state = getState();
     const tiles = only ? [only] : this.candidates();
     if (tiles.length === 0) return;
-    const stack = selectedStack(state);
-    const res = performBest(
+    const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
     );
+    const stack = state.inventory.slots[res.slot] ?? null;
+    if (!only && this.lastMark)
+      controlsLog.push({
+        kind: 'act',
+        t: this.time.now,
+        ok: res.ok,
+        marked: this.lastMark,
+        used: {
+          slot: res.slot,
+          plan: res.ok ? res.kind : null,
+          tx: res.tile.tx,
+          ty: res.tile.ty,
+        },
+      });
     this.highlight.pulse();
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
@@ -570,7 +596,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     faceDirection(player, dir);
     this.syncSprite(false);
-    if (this.interactableAt(target) && !planAction(getState(), this.tileInfo(target)).ok)
+    if (this.interactableAt(target) && !chooseAction(getState(), [this.tileInfo(target)]))
       this.onInteract(target);
     else this.tryAction(target);
   }

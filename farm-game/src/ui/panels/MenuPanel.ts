@@ -30,6 +30,7 @@ import { buildAlmanac } from './AlmanacTab';
 import { TAB_LABELS } from './tabLabels';
 import { buildCraft } from './CraftTab';
 import { buildSkills } from './SkillsTab';
+import { buildControlsPage, controlsPage } from './ControlsTab';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -332,6 +333,11 @@ function buildGoals(c: MenuTabContext): void {
 }
 
 function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
+  if (controlsPage.open)
+    return buildControlsPage(c, () => {
+      controlsPage.open = false;
+      c.rebuild();
+    });
   const s = getState();
   const apply = () => audio.setVolumes(s.settings.music, s.settings.sfx, s.settings.muted);
   const volumeRow = (y: number, name: string, key: 'music' | 'sfx') => {
@@ -400,14 +406,25 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     c.label(100, y + 12, 'Home Screen', C.creamDim);
   }
   y += 26;
-  pair(y, [
-    s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
-    () => {
-      toggleReduceMotion(s);
-      gameEvents.emit('settingsChanged', undefined);
-      c.rebuild();
-    },
-  ]);
+  pair(
+    y,
+    [
+      s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
+      () => {
+        toggleReduceMotion(s);
+        gameEvents.emit('settingsChanged', undefined);
+        c.rebuild();
+      },
+    ],
+    [
+      'Controls...',
+      () => {
+        controlsPage.open = true;
+        c.rebuild();
+      },
+      C.gold,
+    ],
+  );
   y += 26;
   const saveBtn: Button = c.button(8, y, half, 22, 'Save now', () => {
     void saveNow().then((ok) => {

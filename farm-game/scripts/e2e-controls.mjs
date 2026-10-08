@@ -255,15 +255,53 @@ try {
       const hoeMark = await page.evaluate(
         () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).highlight.shown,
       );
-      await page.evaluate(() => (window.__farm.getState().inventory.selected = 5));
+      // The rod in hand is an explicit choice: on grass it can do nothing, and the marker says so.
+      await page.evaluate(() => (window.__farm.getState().inventory.selected = 3));
       await sleep(200);
-      const seedMark = await page.evaluate(
+      const rodMark = await page.evaluate(
         () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).highlight.shown,
       );
       check(
-        `${tag}: marker shows "work" for the hoe on grass and "none" for seeds on grass`,
-        hoeMark === 'work' && seedMark === 'none',
-        `${hoeMark} / ${seedMark}`,
+        `${tag}: marker shows "work" for the hoe on grass and "none" for the rod on grass`,
+        hoeMark === 'work' && rodMark === 'none',
+        `${hoeMark} / ${rodMark}`,
+      );
+      await t.tap(L.action.x, L.action.y, 60);
+      await sleep(350);
+      check(
+        `${tag}: Action with the rod on grass never swings the hoe`,
+        (await soil(page)) === 0 && (await selected(page)) === 3,
+        `soil ${await soil(page)}`,
+      );
+
+      // --- Auto tool (M3): hoe in hand, tilled soil in front -> Action shows and uses the seeds.
+      await place(
+        page,
+        10,
+        17,
+        'down',
+        "s.farm.tiles = { '10,18': { watered: false, crop: null } };",
+      );
+      await sleep(250);
+      const icon = await page.evaluate(() => {
+        const ui = window.__farm.game.scene.getScene('UI');
+        return ui.actionIcon.texture.key;
+      });
+      const seedIcon = await page.evaluate(() => {
+        const s = window.__farm.getState();
+        return window.__farm.game.textures.exists('item_parsnip_seed')
+          ? 'item_parsnip_seed'
+          : s.inventory.slots[5]?.item;
+      });
+      await t.tap(L.action.x, L.action.y, 60);
+      await sleep(350);
+      const planted = await page.evaluate(
+        () => !!window.__farm.getState().farm.tiles['10,18']?.crop,
+      );
+      check(
+        `${tag}: auto tool shows the seeds on Action and plants with the hoe still selected`,
+        planted && (await selected(page)) === 0 && icon !== 'item_hoe',
+        `icon ${icon} (seed icon ${seedIcon}), planted ${planted}, slot ${await selected(page)}`,
       );
 
       // --- Hold under a rolling pad works 3 tiles in 1.2 s.
@@ -273,14 +311,23 @@ try {
       ]) {
         await place(page, 10, 17, 'down');
         await sleep(200);
+        await page.evaluate(() => window.__farm.controls.clear());
         await t.down(L.action.x, L.action.y);
         await sleep(40);
         await t.move(L.action.x + dx, L.action.y + dy);
         await sleep(1160);
         await t.up();
         await sleep(250);
-        const n = await soil(page);
-        check(`${tag}: holding Action with a ${label} works 3 tiles`, n === 3, `${n} tiles`);
+        // Uses at 110, 310 ... 1110 ms. (Auto tool works the front tile through till, plant and water before
+        // the sides, so count uses, not tiles.) A cancelled hold would give 1.
+        const n = await page.evaluate(
+          () => window.__farm.controls.entries.filter((e) => e.kind === 'act' && e.ok).length,
+        );
+        check(
+          `${tag}: holding Action 1.2 s with a ${label} keeps working (>= 5 uses)`,
+          n >= 5,
+          `${n} uses`,
+        );
       }
 
       // --- Swipes never use the old tool; hoe -> seeds is one swipe down (empty slots skipped).
@@ -331,12 +378,16 @@ try {
       await page.evaluate(() => (window.__vibrations = []));
       await t.hold(L.action.x, L.action.y, 1300);
       await sleep(200);
-      const vib = await page.evaluate(() => window.__vibrations.map((v) => v.t));
+      const vibs = await page.evaluate(() => window.__vibrations);
+      // Ticks (8 ms) at most 1 per 120 ms; any other pulse within 80 ms must be a stronger one replacing it.
+      const vib = vibs.filter((v) => v.pattern === 8).map((v) => v.t);
       const gaps = vib.slice(1).map((v, i) => v - vib[i]);
+      const all = vibs.map((v) => v.t);
+      const close = all.slice(1).filter((v, i) => v - all[i] < 79 && vibs[i + 1].pattern === 8);
       check(
-        `${tag}: a held action pulses, never faster than 1 per 120 ms`,
-        vib.length >= 1 && gaps.every((g) => g >= 119),
-        `${vib.length} pulses, gaps ${gaps.map(Math.round).join(',')}`,
+        `${tag}: a held action ticks at most 1 per 120 ms and never doubles up`,
+        vib.length >= 1 && gaps.every((g) => g >= 119) && close.length === 0,
+        `${vib.length} pulses, gaps ${gaps.map(Math.round).join(',')}, patterns ${vibs.map((v) => JSON.stringify(v.pattern)).join(' ')}`,
       );
       await place(page, 10, 17, 'down');
       await page.evaluate(() => {

@@ -61,6 +61,15 @@ describe('haptics', () => {
     expect(sent).toEqual([true, false, false, true, false, false, true]);
   });
 
+  it('pulses in the same instant merge: a weaker one is dropped, a stronger one replaces', () => {
+    const driver = vi.fn();
+    registerHapticsDriver(driver);
+    expect(haptic('success', { at: 100 })).toBe(true);
+    expect(haptic('tick', { at: 130 })).toBe(false);
+    expect(haptic('error', { at: 140 })).toBe(true);
+    expect(haptic('tick', { at: 300 })).toBe(true);
+  });
+
   it('vibrate off means zero calls to the driver or navigator.vibrate', () => {
     const vibrate = vi.fn();
     vi.stubGlobal('navigator', { vibrate });

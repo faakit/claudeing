@@ -40,6 +40,18 @@ registerActionHandler({
 A new **tool** needs no handler: add it to `items.json` (type `tool`) and `tools.json` with an `action` name, then
 `registerToolAction('action-name', ({ state, tile, tool }) => plan | refusal)`. The fishing rod is the example.
 
+### Auto tool (which hotbar item Action uses)
+
+With auto tool on (the default) and a farm item in hand, Action asks every item registered with
+`registerAutoItem({ id, priority, eligible(stack, def) })` (`systems/autoTool.ts`) and runs the most valuable
+plan any of them has for the nearby tiles (handler priority first, then the tile in front, then the auto item's
+`priority`). Built-ins: seeds 50, can 40, scythe 35, pickaxe 30, hoe 20. Only one seed kind is a candidate: the
+one in hand, else the last one planted, else the first on the hotbar. Holding anything that is not an auto item
+(the rod, a placeable, fertilizer, goods) is an explicit choice and Action uses only that. Handlers still read
+the selected slot: auto tool plans and runs a choice with that slot selected for that instant, so a handler
+needs no change. A new tool that should be picked automatically registers an auto item; one that must stay a
+deliberate choice (like the rod) does nothing.
+
 ## 2. What happens overnight? (day hooks)
 
 `registerDayHook({ id, phase, order?, run })` in `systems/dayHooks.ts`. Phases run in order:

@@ -19,6 +19,7 @@ import { gameEvents, type PanelType } from '../systems/events';
 import { addStat, currentGoal, stat } from '../systems/goals';
 import { cycleSlot, selectSlot, selectedStack } from '../systems/inventory';
 import { iconKey, refOf } from '../systems/itemRef';
+import { STICK_RADIUS } from '../systems/settings';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { mixColor } from '../ui/color';
@@ -185,7 +186,12 @@ export class UIScene extends Phaser.Scene {
     ) {
       fresh.stats['tip.welcome'] = 1;
       this.time.delayedCall(900, () =>
-        this.hud.toast('Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.', 'good'),
+        this.hud.toast(
+          getState().settings.controls.autoTool
+            ? 'Welcome to Tiny Acre! Face the grass and tap Action to till soil.'
+            : 'Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.',
+          'good',
+        ),
       );
       this.time.delayedCall(4200, () =>
         this.hud.toast(
@@ -306,6 +312,7 @@ export class UIScene extends Phaser.Scene {
     this.controls = [];
     this.interactIcon?.destroy();
     this.layout = dockLayout(getState().settings.leftHanded);
+    this.joystick.setRadius(STICK_RADIUS[getState().settings.controls.stickSize]);
     const L = this.layout;
     // Touch circles overlap at their margins; a touch always goes to the button it is drawn on, else to
     // the relatively nearest one (so Interact can never steal any of Action's disc).
@@ -414,15 +421,29 @@ export class UIScene extends Phaser.Scene {
     inputHub.actionHeld = false;
   }
 
-  /** Show the equipped item on the Action button, so the button says what it will do. */
+  /** Show the item Action will use on the Action button, so the button says what it will do. */
   private updateActionIcon(): void {
     const s = getState();
-    const stack = selectedStack(s);
+    // What Action will use on the marked tile (auto tool may pick another item), else what is in hand.
+    const slot = inputHub.actionSlot ?? s.inventory.selected;
+    const stack = s.inventory.slots[slot] ?? selectedStack(s);
     const key = stack ? iconKey(refOf(stack)) : '';
     if (key === this.actionIconKey || !this.actionIcon) return;
+    const changed = this.actionIconKey !== '';
     this.actionIconKey = key;
     this.actionIcon.setVisible(!!key);
     if (key) this.actionIcon.setTexture(key);
+    // A tool swap (yours or auto tool's) pops the icon, so the change is seen, not only felt.
+    if (changed && key && !s.settings.reduceMotion) {
+      this.tweens.killTweensOf(this.actionIcon);
+      this.actionIcon.setScale(2.3);
+      this.tweens.add({
+        targets: this.actionIcon,
+        scale: 1.9,
+        duration: 140,
+        ease: 'Back.easeOut',
+      });
+    }
   }
 
   /** A faint ring in the thumb zone on a fresh game: shows where to drag. Gone after the first step. */

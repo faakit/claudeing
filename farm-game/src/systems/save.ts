@@ -16,7 +16,13 @@ import { maxEnergy as maxEnergyOf } from './energy';
 import { isDirection } from './direction';
 import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
-import { createInitialState, STATE_VERSION, type GameState } from '../state/GameState';
+import {
+  createInitialState,
+  defaultControlSettings,
+  STATE_VERSION,
+  type GameState,
+} from '../state/GameState';
+import { sanitizeControlSettings, sanitizeLastSeed } from './settings';
 
 export const SAVE_KEY = 'farm.save';
 export const BACKUP_KEY = 'farm.save.bak';
@@ -270,6 +276,17 @@ function migrateV14(raw: Raw): Raw {
   return { ...raw, version: 15, special: null };
 }
 
+/** v15 -> v16: one-thumb control settings (owner defaults: tap-to-move and auto tool on). */
+function migrateV15(raw: Raw): Raw {
+  const settings = isObj(raw['settings']) ? raw['settings'] : {};
+  return {
+    ...raw,
+    version: 16,
+    settings: { ...settings, controls: defaultControlSettings() },
+    controls: { lastSeed: null },
+  };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -285,6 +302,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   12: migrateV12,
   13: migrateV13,
   14: migrateV14,
+  15: migrateV15,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -435,6 +453,7 @@ export function sanitize(raw: Raw): GameState {
     vibrate: st['vibrate'] !== false, // default on, including for saves that predate the setting
     leftHanded: st['leftHanded'] === true,
     reduceMotion: st['reduceMotion'] === true,
+    controls: sanitizeControlSettings(st['controls']),
   };
 
   // Placed objects: known types, real tiles, unique ids.
@@ -616,6 +635,7 @@ export function sanitize(raw: Raw): GameState {
     stats,
     goalIndex: int(raw['goalIndex'], 0, 0, goals.length),
     settings,
+    controls: { lastSeed: sanitizeLastSeed(obj(raw['controls'])['lastSeed']) },
     weather: toWeather(raw['weather']),
     forecast: toWeather(raw['forecast']),
     placed,
