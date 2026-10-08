@@ -7,9 +7,9 @@ Round-2 commits:
 - `f633de0`: service-worker audio cache, perf storm scene.
 - `182ac74`: critic R5 fixes.
 - `6e935be`: title sting, festival trio, mine deep section, R6 fixes.
-- The next commit caps sfx peaks at the source (R7) and records the mine level in DECISIONS.
+- `1127690`: sfx peaks capped at the source (R7), plus decisions.
 
-`npm run verify` is green: 474 unit tests, e2e, mobile e2e and perf. **Nobody has listened to any of it**, by
+`npm run verify` is green at `1127690`: 475 unit tests, e2e, mobile e2e and perf. **Nobody has listened to any of it**, by
 ear or on a phone. Every judgement so far comes from measuring offline renders of the real engine.
 
 ## What is done (round 1, still true)
@@ -49,7 +49,7 @@ ear or on a phone. Every judgement so far comes from measuring offline renders o
   - Every day pair is 0.91 or lower. Spring-summer went from 0.955 to 0.910, and fall-winter from 0.953 to 0.870.
   - Night pairs are 0.915 or lower.
 - Estimated keys match the declared key, except summer, which reads as G major: D mixolydian is G's scale, and the critic accepted this.
-- Levels: day -24.7 to -25.6 LUFS, night -27.4 to -28.8. Mine reads -28.9 (see Open).
+- Levels: day -24.7 to -25.6 LUFS, night -27.4 to -28.8. Mine music reads -28.9 on purpose: a step down into the cave, decided in DECISIONS.md. Do not go below about -30.
 
 **Other round-2 changes:**
 - **Crickets:** loops of 9 s and 7.333 s, which realign every 198 s (was 36 s).
@@ -69,15 +69,14 @@ ear or on a phone. Every judgement so far comes from measuring offline renders o
 ## Open
 
 - Nits from the critic:
-  - Swing sits about 1 dB under its target.
-  - The 20-sfx/s perf scene runs at 92 fps under 6x throttle, against 124-143 for the other scenes. Each hit creates its own nodes; pool gain nodes per cue if phones show it.
+  - Select, at -26.6, sits about 1.5 dB under its ui target.
+  - Each sfx hit creates its own nodes. The 20-sfx/s perf scene is fine in headless Chrome (141.6 fps at 6x); pool gain nodes per cue only if phones show a cost.
 - The "holding Action" perf scene still plays only 3 sfx, because the hoe fails on planted tiles. The storm scene covers the sfx path.
 - The touch cues need wiring in the controls code:
   - `tick` per painted tile
   - `target` when a walk target is set
   - `ringOpen` / `ringClose`
   - `confirm` when a tool is picked or a row is committed
-- Mine music reads -28.9 LUFS on purpose: a step down into the cave, recorded in DECISIONS.md. Do not go below about -30.
 - Render speed is now 30-40x realtime (the soft clipper costs about 10%).
 
 ## What the owner should listen to first
