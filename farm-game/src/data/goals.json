@@ -336,5 +336,29 @@
     "target": 20000,
     "reward": 1000,
     "hint": "Keep every field, jar and animal working each day."
+  },
+  {
+    "id": "earn50k",
+    "text": "Earn 50,000g: Master Farmer",
+    "stat": "earned",
+    "target": 50000,
+    "reward": 2500,
+    "hint": "Keep every machine and house busy."
+  },
+  {
+    "id": "earn100k",
+    "text": "Earn 100,000g: Tiny Tycoon",
+    "stat": "earned",
+    "target": 100000,
+    "reward": 5000,
+    "hint": "Full fields, orchards and mines in year two."
+  },
+  {
+    "id": "collect200",
+    "text": "Collect 200 animal products",
+    "stat": "collected",
+    "target": 200,
+    "reward": 2000,
+    "hint": "Visit every house each morning."
   }
 ]
