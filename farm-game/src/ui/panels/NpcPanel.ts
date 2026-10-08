@@ -6,6 +6,7 @@ import { getState } from '../../state/store';
 import {
   canGift,
   chat,
+  completeEvent,
   giveGift,
   heartsOf,
   isBirthday,
@@ -13,12 +14,13 @@ import {
   lineFor,
   MAX_HEARTS,
   nextPerk,
+  pendingEvent,
   POINTS_PER_HEART,
   pointsOf,
 } from '../../systems/friendship';
 import { keyOf, displayName, iconKey, refOf, type ItemRef } from '../../systems/itemRef';
 import { countStack } from '../../systems/inventory';
-import { gameEvents } from '../../systems/events';
+import { gameEvents, toast } from '../../systems/events';
 import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
@@ -29,7 +31,8 @@ const ROWS = 5;
 /** A villager's sheet: friendship hearts, today's line, gifts, and (for the shopkeeper) a Shop button. */
 export class NpcPanel extends Modal {
   private id = 'mara';
-  private mode: 'talk' | 'gift' = 'talk';
+  private mode: 'talk' | 'gift' | 'event' = 'talk';
+  private evLine = 0;
   private page = 0;
   private line = '';
   private gained = 0;
@@ -48,6 +51,8 @@ export class NpcPanel extends Modal {
     const res = chat(getState(), id);
     this.gained = res.gained;
     this.line = lineFor(getState(), id);
+    this.evLine = 0;
+    if (pendingEvent(getState(), id)) this.mode = 'event';
     if (res.gained > 0) {
       haptic('success');
       audio.play('heart');
@@ -74,9 +79,50 @@ export class NpcPanel extends Modal {
     const into = pointsOf(s, this.id) % POINTS_PER_HEART;
     drawBar(g, 148, 20, 48, 5, hearts >= MAX_HEARTS ? 1 : into / POINTS_PER_HEART, C.red);
 
-    if (this.mode === 'talk') this.buildTalk(hearts);
+    if (this.mode === 'event') this.buildEvent();
+    else if (this.mode === 'talk') this.buildTalk(hearts);
     else this.buildGift();
     this.closeButton();
+  }
+
+  /** A heart event: a short scene, one line at a time, ending in a reward. */
+  private buildEvent(): void {
+    const s = getState();
+    const ev = pendingEvent(s, this.id);
+    if (!ev) {
+      this.mode = 'talk';
+      return this.buildTalk(heartsOf(s, this.id));
+    }
+    const last = this.evLine >= ev.lines.length - 1;
+    this.label(8, 38, ev.title.toUpperCase(), C.warn);
+    this.label(8, 56, `"${ev.lines[this.evLine]}"`, C.cream, 1, 'left', 184);
+    this.label(8, 120, `${this.evLine + 1}/${ev.lines.length}`, C.creamDim);
+    this.button(
+      8,
+      this.panelH - 62,
+      this.panelW - 16,
+      24,
+      last ? 'Accept' : 'Next',
+      () => {
+        if (!last) {
+          this.evLine += 1;
+          return this.rebuild();
+        }
+        const res = completeEvent(getState(), this.id);
+        if (!res.ok) {
+          audio.play('error');
+          toast('Make room in your bag first.', 'warn');
+          return;
+        }
+        audio.play('level');
+        haptic('success');
+        this.mode = 'talk';
+        this.gained = 0;
+        this.reply = res.gold > 0 ? `Take this: ${res.gold} gold.` : 'I hope you like it!';
+        this.rebuild();
+      },
+      { textColor: C.green, rim: C.green },
+    );
   }
 
   private buildTalk(hearts: number): void {

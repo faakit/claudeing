@@ -19,7 +19,7 @@ import { canPickUp, interactWith, placeObject } from '../src/systems/placeables'
 import { migrate } from '../src/systems/save';
 import { perk } from '../src/systems/skills';
 import { absoluteDay } from '../src/systems/time';
-import { newState } from './helpers';
+import { FULL_INVENTORY, newState } from './helpers';
 
 describe('animals', () => {
   it('a coop houses chickens, which need feed to lay and get happier', () => {
@@ -251,5 +251,41 @@ describe('the blacksmith', () => {
     s.friends['orin'] = { points: 250, talkedDay: 0, giftedDay: 0 };
     expect(nextUpgrade(s, hoe)!.price).toBe(Math.round(full * 0.85));
     expect(nextUpgrade(s, tonic)!.price).toBe(tonic.levels[0]!.price);
+  });
+});
+
+describe('heart events', () => {
+  it('unlock at their heart level, once, and only the next in order', async () => {
+    const { pendingEvent, completeEvent } = await import('../src/systems/friendship');
+    const s = newState();
+    expect(pendingEvent(s, 'mara')).toBeNull();
+    s.friends['mara'] = { points: 100, talkedDay: 0, giftedDay: 0 };
+    expect(pendingEvent(s, 'mara')?.id).toBe('shelf');
+    const res = completeEvent(s, 'mara');
+    expect(res).toMatchObject({ ok: true, item: 'cauliflower_seed', qty: 5 });
+    expect(countItem(s, 'cauliflower_seed')).toBe(5);
+    expect(pendingEvent(s, 'mara')).toBeNull();
+    s.friends['mara']!.points = 250;
+    expect(pendingEvent(s, 'mara')?.id).toBe('ledger');
+    const gold = s.money;
+    completeEvent(s, 'mara');
+    expect(s.money).toBe(gold + 400);
+    expect(pendingEvent(s, 'mara')?.id).toBe('best');
+    expect(s.stats['friendEvents']).toBe(2);
+  });
+  it('wait for room in the bag instead of losing the reward', async () => {
+    const { pendingEvent, completeEvent } = await import('../src/systems/friendship');
+    const s = newState();
+    s.friends['finn'] = { points: 100, talkedDay: 0, giftedDay: 0 };
+    addItem(s, 'carp', FULL_INVENTORY);
+    expect(completeEvent(s, 'finn')).toEqual({ ok: false, reason: 'full' });
+    expect(pendingEvent(s, 'finn')?.id).toBe('lake');
+  });
+  it('every event line fits the scene box', async () => {
+    const { npcs: all } = await import('../src/data');
+    for (const [id, def] of Object.entries(all))
+      for (const ev of def.events ?? [])
+        for (const l of ev.lines)
+          expect(measureText(`"${l}"`), `${id}/${ev.id}`).toBeLessThanOrEqual(184 * 3);
   });
 });

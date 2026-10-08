@@ -176,3 +176,9 @@
 - **One entry, ranked on the spot:** a festival is a shared goal on a fixed date, so it is a single decision (which of your goods to enter), not a minigame. The score is the item's sell value, so quality and rarity matter and a Gold pumpkin beats a pile of parsnips.
 - **Rivals are data and grow 20% a year:** three scores per festival, nudged deterministically by year so no two years feel the same without touching the random stream. Prizes grow 25% a year too.
 - **The entry point is the town board** (a gold banner button on festival days) and the morning notes announce the day, so nobody misses it and there is no new building or map.
+
+## Heart events
+
+- **Short scenes, one tap each:** at 2, 4 and 5 hearts a villager has a three-line scene (shown a line at a time with Next) that plays the next time you open their sheet and ends in a reward (items or gold). It is the narrative payoff for the daily chat habit and costs about ten seconds.
+- **Never lose a reward:** if the bag cannot hold the item the scene waits ("Make room in your bag first") and is not marked seen.
+- **No new state:** seen events are `event.<npc>.<id>` stats.

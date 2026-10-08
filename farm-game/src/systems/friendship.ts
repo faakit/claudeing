@@ -1,5 +1,5 @@
 import { npcs } from '../data';
-import type { NpcDef } from '../data';
+import type { NpcDef, NpcEvent } from '../data';
 import type { Friendship, GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
 import { addStat, checkGoals } from './goals';
@@ -161,4 +161,38 @@ export function friendPerk(state: GameState, key: string): number {
       if (Number(h) <= hearts) total += perks[key] ?? 0;
   }
   return total;
+}
+
+const eventKey = (id: string, ev: string): string => `event.${id}.${ev}`;
+
+/** The next heart event this villager has for you (earned, not yet seen), if any. */
+export function pendingEvent(state: GameState, id: string): NpcEvent | null {
+  const hearts = heartsOf(state, id);
+  for (const ev of (npcs[id] as NpcDef).events ?? [])
+    if (ev.hearts <= hearts && !state.stats[eventKey(id, ev.id)]) return ev;
+  return null;
+}
+
+export type EventResult =
+  | { ok: true; gold: number; item: string | null; qty: number }
+  | { ok: false; reason: 'none' | 'full' };
+
+/** Finish an event: mark it seen and hand over its reward. If the bag cannot hold it, nothing happens. */
+export function completeEvent(state: GameState, id: string): EventResult {
+  const ev = pendingEvent(state, id);
+  if (!ev) return { ok: false, reason: 'none' };
+  const qty = ev.reward.qty ?? 1;
+  if (ev.reward.item && roomFor(state, ev.reward.item, qty) < qty)
+    return { ok: false, reason: 'full' };
+  state.stats[eventKey(id, ev.id)] = 1;
+  if (ev.reward.item) addItem(state, ev.reward.item, qty);
+  const gold = ev.reward.gold ?? 0;
+  if (gold > 0) {
+    state.money += gold;
+    gameEvents.emit('moneyChanged', { delta: gold });
+  }
+  addStat(state, 'friendEvents');
+  toast(`${(npcs[id] as NpcDef).name}: ${ev.title}`, 'good');
+  gameEvents.emit('friendsChanged', undefined);
+  return { ok: true, gold, item: ev.reward.item ?? null, qty: ev.reward.item ? qty : 0 };
 }

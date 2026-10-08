@@ -191,6 +191,14 @@ export interface AnimalDef {
   sprite: string;
   perDay: number;
 }
+export interface NpcEvent {
+  hearts: number;
+  id: string;
+  title: string;
+  /** Up to three short lines, shown one at a time. */
+  lines: string[];
+  reward: { item?: string; qty?: number; gold?: number };
+}
 export interface NpcDef {
   name: string;
   role: 'shop' | 'friend';
@@ -208,6 +216,8 @@ export interface NpcDef {
   /** Where they are through the day: from this minute on. Map "away" means at home (nowhere you can reach). Optional: no schedule means always at map/tx/ty. */
   schedule?: { from: number; map: string; tx: number; ty: number }[];
   birthday?: { season: Season; day: number };
+  /** Short scenes that play once when friendship first reaches `hearts`, ending in a reward. */
+  events?: NpcEvent[];
   /** Handed over after the first chat of a day once friendship reaches `giftHearts`. */
   gifts: { item: string; qty: number }[];
   giftHearts: number;
@@ -460,6 +470,14 @@ export function validateContent(): void {
         n.schedule.some((w, i) => i > 0 && w.from <= (n.schedule?.[i - 1]?.from ?? 0)))
     )
       fail('npcs', `"${id}" schedule must start at minute 0 and increase`);
+    for (const ev of n.events ?? []) {
+      if (ev.hearts < 1 || ev.hearts > 5 || ev.lines.length === 0 || ev.lines.length > 3)
+        fail('npcs', `"${id}" event "${ev.id}" needs 1-3 lines and hearts 1-5`);
+      if (ev.reward.item && !items[ev.reward.item])
+        fail('npcs', `"${id}" event "${ev.id}" rewards unknown item`);
+      if (!ev.reward.item && !ev.reward.gold)
+        fail('npcs', `"${id}" event "${ev.id}" needs a reward`);
+    }
     if (!/^#[0-9a-f]{6}$/i.test(n.tint)) fail('npcs', `"${id}" needs a #rrggbb tint`);
     for (const ref of [...n.loves, ...n.likes, ...n.dislikes, ...n.gifts.map((g) => g.item)])
       if (!items[ref]) fail('npcs', `"${id}" mentions unknown item "${ref}"`);

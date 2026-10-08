@@ -260,6 +260,14 @@
     "hint": "Chat every day and give gifts they love."
   },
   {
+    "id": "event",
+    "text": "Watch a villager heart event",
+    "stat": "friendEvents",
+    "target": 1,
+    "reward": 300,
+    "hint": "Reach 2 hearts with someone, then talk to them again."
+  },
+  {
     "id": "craft10",
     "text": "Craft 10 things at the workbench",
     "stat": "crafted",

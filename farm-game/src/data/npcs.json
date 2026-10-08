@@ -70,6 +70,49 @@
         "tx": 0,
         "ty": 0
       }
+    ],
+    "events": [
+      {
+        "hearts": 2,
+        "id": "shelf",
+        "title": "The back shelf",
+        "lines": [
+          "Come here, I want to show you something.",
+          "I always keep the best seeds on the back shelf.",
+          "Take these. Consider it a welcome gift."
+        ],
+        "reward": {
+          "item": "cauliflower_seed",
+          "qty": 5
+        }
+      },
+      {
+        "hearts": 4,
+        "id": "ledger",
+        "title": "Mara's ledger",
+        "lines": [
+          "Business is booming, thanks to farmers like you.",
+          "I started this store with one crate of turnips.",
+          "Here, a little something for your hard work."
+        ],
+        "reward": {
+          "gold": 400
+        }
+      },
+      {
+        "hearts": 5,
+        "id": "best",
+        "title": "Best customer",
+        "lines": [
+          "Five hearts! I made you something.",
+          "It is a keg, from my own workshop. Use it well.",
+          "You have made this valley feel like home."
+        ],
+        "reward": {
+          "item": "keg",
+          "qty": 1
+        }
+      }
     ]
   },
   "finn": {
@@ -151,6 +194,50 @@
         "map": "away",
         "tx": 0,
         "ty": 0
+      }
+    ],
+    "events": [
+      {
+        "hearts": 2,
+        "id": "lake",
+        "title": "The quiet lake",
+        "lines": [
+          "Do you hear that? Nothing. That is the point.",
+          "Fishing is listening. The fish tell you when.",
+          "Here, a few baits. Pay attention, friend."
+        ],
+        "reward": {
+          "item": "bait",
+          "qty": 8
+        }
+      },
+      {
+        "hearts": 4,
+        "id": "secret",
+        "title": "A secret spot",
+        "lines": [
+          "There is a deep spot behind the reeds.",
+          "Big fish rest there when it rains.",
+          "Take these. They were biting yesterday."
+        ],
+        "reward": {
+          "item": "catfish",
+          "qty": 2
+        }
+      },
+      {
+        "hearts": 5,
+        "id": "legend",
+        "title": "The golden salmon",
+        "lines": [
+          "They say a golden salmon swims in these waters.",
+          "I never caught it. Maybe you will.",
+          "Keep these, you earned them."
+        ],
+        "reward": {
+          "item": "salmon",
+          "qty": 2
+        }
       }
     ]
   },
@@ -234,6 +321,49 @@
         "tx": 0,
         "ty": 0
       }
+    ],
+    "events": [
+      {
+        "hearts": 2,
+        "id": "soil",
+        "title": "Know your soil",
+        "lines": [
+          "Most people rush the soil. Do not.",
+          "A little fertilizer in spring pays off by fall.",
+          "Here, a few sacks to get you started."
+        ],
+        "reward": {
+          "item": "fertilizer",
+          "qty": 6
+        }
+      },
+      {
+        "hearts": 4,
+        "id": "orchard",
+        "title": "Grandmother's orchard",
+        "lines": [
+          "My grandmother planted these trees by hand.",
+          "She said patience is the only real fertilizer.",
+          "I want you to have this sapling."
+        ],
+        "reward": {
+          "item": "apple_sapling",
+          "qty": 1
+        }
+      },
+      {
+        "hearts": 5,
+        "id": "harvest",
+        "title": "Harvest thanks",
+        "lines": [
+          "I have never seen a farm thrive like yours.",
+          "The whole valley is talking about it.",
+          "This is for you. You have earned it."
+        ],
+        "reward": {
+          "gold": 900
+        }
+      }
     ]
   },
   "orin": {
@@ -306,6 +436,50 @@
         "map": "away",
         "tx": 0,
         "ty": 0
+      }
+    ],
+    "events": [
+      {
+        "hearts": 2,
+        "id": "forge",
+        "title": "The forge",
+        "lines": [
+          "Heat, hammer, patience. That is all of it.",
+          "Iron remembers every strike.",
+          "Here, some stone for your furnace."
+        ],
+        "reward": {
+          "item": "stone",
+          "qty": 25
+        }
+      },
+      {
+        "hearts": 4,
+        "id": "tools",
+        "title": "Tools that last",
+        "lines": [
+          "A tool is a promise to the field.",
+          "I made these bars from my best ore.",
+          "Upgrade something good with them."
+        ],
+        "reward": {
+          "item": "iron_bar",
+          "qty": 3
+        }
+      },
+      {
+        "hearts": 5,
+        "id": "apprentice",
+        "title": "Almost an apprentice",
+        "lines": [
+          "You work harder than my last apprentice.",
+          "And you ask fewer questions, too.",
+          "Take this ruby. I found it years ago."
+        ],
+        "reward": {
+          "item": "ruby",
+          "qty": 1
+        }
       }
     ]
   }
