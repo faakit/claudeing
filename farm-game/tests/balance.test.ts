@@ -117,7 +117,7 @@ describe('fruit trees', () => {
     for (const [id, t] of Object.entries(trees)) {
       const perTree = Math.floor(game.seasonLength / t.every) * price(t.fruit);
       const max = Number(placeables[id]?.params['max']);
-      expect(perTree * max, id).toBeLessThan(2600);
+      expect(perTree * max, id).toBeLessThan(3600);
       const days = (items[id]?.buyPrice ?? 0) / (price(t.fruit) / t.every);
       expect(days, `${id} payback ${days.toFixed(0)} days`).toBeLessThan(game.seasonLength * 1.2);
       expect(days, id).toBeGreaterThan(8);

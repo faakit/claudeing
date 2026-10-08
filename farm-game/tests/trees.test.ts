@@ -33,7 +33,7 @@ describe('fruit trees', () => {
     const tree = placeObject(s, 'farm', 4, 4, 'cherry_sapling');
     grow(tree, 10, 'winter'); // grown, but the wrong season
     expect(treeOf(tree).fruit).toBe(0);
-    grow(tree, 3, 'spring');
+    grow(tree, 2, 'spring');
     expect(treeOf(tree).fruit).toBe(1);
     expect(statusOf(tree)).toBe('ready');
     grow(tree, 40, 'spring');
@@ -46,7 +46,7 @@ describe('fruit trees', () => {
     const s = newState();
     const tree = placeObject(s, 'farm', 4, 4, 'peach_sapling');
     grow(tree, 10, 'summer');
-    grow(tree, 9, 'summer');
+    grow(tree, 6, 'summer');
     expect(treeOf(tree).fruit).toBe(3);
     expect(pickFruit(s, tree)).toBe(3);
     expect(countItem(s, 'peach')).toBe(3);
@@ -66,7 +66,7 @@ describe('fruit trees', () => {
       kind: 'message',
       text: expect.stringContaining('No fruit'),
     });
-    grow(tree, 3, 'fall');
+    grow(tree, 2, 'fall');
     interactWith(s, tree);
     expect(countItem(s, 'apple')).toBe(1);
     s.time.season = 'spring';

@@ -4,7 +4,7 @@
     "fruit": "cherry",
     "season": "spring",
     "growDays": 10,
-    "every": 3,
+    "every": 2,
     "cap": 4,
     "leaf": "#e8a0b8",
     "trunk": "#7a4a28"
@@ -14,7 +14,7 @@
     "fruit": "peach",
     "season": "summer",
     "growDays": 10,
-    "every": 3,
+    "every": 2,
     "cap": 4,
     "leaf": "#4f9a4a",
     "trunk": "#7a4a28"
@@ -24,7 +24,7 @@
     "fruit": "apple",
     "season": "fall",
     "growDays": 10,
-    "every": 3,
+    "every": 2,
     "cap": 4,
     "leaf": "#c9702a",
     "trunk": "#6a4020"
@@ -34,7 +34,7 @@
     "fruit": "plum",
     "season": "winter",
     "growDays": 10,
-    "every": 3,
+    "every": 2,
     "cap": 4,
     "leaf": "#8aa0c8",
     "trunk": "#5a4a50"

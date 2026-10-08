@@ -7,7 +7,6 @@ import {
   moveIn,
   morning,
   pet,
-  productName,
   speciesOf,
 } from '../systems/animals';
 import { toast } from '../systems/events';
@@ -22,7 +21,7 @@ import { addXp } from '../systems/skills';
 registerPlaceableBehavior('animalHouse', {
   canPickUp: (obj) => houseOf(obj).n === 0,
   onMorning(_state, obj, _def, ctx) {
-    if (morning(obj)) ctx.notes.push(`${productName(obj)}s are waiting on the farm.`);
+    if (morning(obj)) ctx.notes.push('Animal goods are waiting on the farm.');
   },
   interact(state, obj) {
     const sp = speciesOf(obj);
