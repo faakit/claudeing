@@ -1,0 +1,326 @@
+{
+ "sfx/kenney-rpg/footstep01": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/footstep01.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/footstep03": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/footstep03.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/footstep06": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/footstep06.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/footstep08": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/footstep08.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/handleCoins": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/handleCoins.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/handleCoins2": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/handleCoins2.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/doorOpen_1": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/doorOpen_1.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/doorOpen_2": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/doorOpen_2.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/cloth1": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/cloth1.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/cloth2": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/cloth2.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-impact/footstep_snow_000": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/footstep_snow_000.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/footstep_snow_001": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/footstep_snow_001.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/footstep_snow_002": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/footstep_snow_002.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/footstep_snow_003": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/footstep_snow_003.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/footstep_snow_004": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/footstep_snow_004.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-interface/select_001": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/select_001.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/select_007": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/select_007.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/error_007": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/error_007.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/error_008": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/error_008.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/drop_002": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/drop_002.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/drop_003": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/drop_003.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/drop_004": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/drop_004.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-ui/click3": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/click3.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/click4": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/click4.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/click5": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/click5.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/oga-shovel": {
+  "url": "https://opengameart.org/sites/default/files/shovel_0.ogg",
+  "page": "https://opengameart.org/content/shovel-sound",
+  "author": "themightyglider",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: shovel-sound",
+  "note": "Derived from freesound.org/people/RavenWolfProds/sounds/503672 (CC0 on that page too)."
+ },
+ "sfx/oga-swishes/swish-10": {
+  "url": "https://opengameart.org/sites/default/files/swishes.zip",
+  "page": "https://opengameart.org/content/swishes-sound-pack",
+  "author": "artisticdude",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: swishes-sound-pack",
+  "member": "swishes/swish-10.wav"
+ },
+ "sfx/oga-swishes/swish-11": {
+  "url": "https://opengameart.org/sites/default/files/swishes.zip",
+  "page": "https://opengameart.org/content/swishes-sound-pack",
+  "author": "artisticdude",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: swishes-sound-pack",
+  "member": "swishes/swish-11.wav"
+ },
+ "sfx/oga-swishes/swish-12": {
+  "url": "https://opengameart.org/sites/default/files/swishes.zip",
+  "page": "https://opengameart.org/content/swishes-sound-pack",
+  "author": "artisticdude",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: swishes-sound-pack",
+  "member": "swishes/swish-12.wav"
+ },
+ "sfx/oga-swishes/swish-13": {
+  "url": "https://opengameart.org/sites/default/files/swishes.zip",
+  "page": "https://opengameart.org/content/swishes-sound-pack",
+  "author": "artisticdude",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: swishes-sound-pack",
+  "member": "swishes/swish-13.wav"
+ },
+ "sfx/oga-rubberduck-100/bell_02": {
+  "url": "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx",
+  "member": "bell_02.ogg"
+ },
+ "sfx/oga-rubberduck-water/loop_water_01": {
+  "url": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+  "page": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 40-cc0-water-splash-slime-sfx",
+  "member": "loop_water_01.ogg"
+ },
+ "sfx/oga-rubberduck-water/loop_bubbles_02": {
+  "url": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+  "page": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 40-cc0-water-splash-slime-sfx",
+  "member": "loop_bubbles_02.ogg"
+ },
+ "sfx/oga-rubberduck-water/splash_06": {
+  "url": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+  "page": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 40-cc0-water-splash-slime-sfx",
+  "member": "splash_06.ogg"
+ },
+ "amb/oga-rain-1": {
+  "url": "https://opengameart.org/sites/default/files/Rain%20OGG.zip",
+  "page": "https://opengameart.org/content/rain-loopable",
+  "author": "Ylmir",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: rain-loopable",
+  "member": "1.ogg"
+ },
+ "amb/oga-crickets": {
+  "url": "https://opengameart.org/sites/default/files/crickets_1.mp3",
+  "page": "https://opengameart.org/content/crickets-ambient-noise-loopable",
+  "author": "Wolfgang_ (wolfgang); attribution notice: Ted Kerr",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: crickets-ambient-noise-loopable"
+ },
+ "amb/oga-birds-isaiah658": {
+  "url": "https://opengameart.org/sites/default/files/birds-isaiah658_0.ogg",
+  "page": "https://opengameart.org/content/ambient-bird-sounds",
+  "author": "isaiah658",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: ambient-bird-sounds"
+ },
+ "amb/oga-birds-syncopika": {
+  "url": "https://opengameart.org/sites/default/files/birdchirping071414.wav",
+  "page": "https://opengameart.org/content/bird-chirping-sounds",
+  "author": "syncopika",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: bird-chirping-sounds"
+ },
+ "amb/oga-dungeon": {
+  "url": "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg",
+  "page": "https://opengameart.org/content/loopable-dungeon-ambience",
+  "author": "jaggedstone",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: loopable-dungeon-ambience"
+ },
+ "amb/oga-wind1": {
+  "url": "https://opengameart.org/sites/default/files/wind1.wav",
+  "page": "https://opengameart.org/content/wind1",
+  "author": "lukerustltd",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: wind1",
+  "note": "Synthesized wind (PureData)."
+ },
+ "amb/oga-rubberduck-thunder": {
+  "url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx-2",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx-2",
+  "member": "sfx100v2_thunder_01.ogg"
+ }
+}

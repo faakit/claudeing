@@ -1,0 +1,863 @@
+{
+ "instruments": {
+  "piano": {
+   "kind": "decay",
+   "maxLen": 2.4,
+   "zones": {
+    "41": "vsco/piano_41",
+    "45": "vsco/piano_45",
+    "49": "vsco/piano_49",
+    "53": "vsco/piano_53",
+    "57": "vsco/piano_57",
+    "61": "vsco/piano_61",
+    "65": "vsco/piano_65",
+    "69": "vsco/piano_69",
+    "73": "vsco/piano_73",
+    "77": "vsco/piano_77",
+    "81": "vsco/piano_81",
+    "85": "vsco/piano_85"
+   }
+  },
+  "harp": {
+   "kind": "decay",
+   "maxLen": 2.2,
+   "zones": {
+    "38": "vsco/harp_D2",
+    "41": "vsco/harp_F2",
+    "45": "vsco/harp_A2",
+    "48": "vsco/harp_C3",
+    "52": "vsco/harp_E3",
+    "55": "vsco/harp_G3",
+    "59": "vsco/harp_B3",
+    "62": "vsco/harp_D4",
+    "65": "vsco/harp_F4",
+    "69": "vsco/harp_A4",
+    "72": "vsco/harp_C5",
+    "76": "vsco/harp_E5",
+    "79": "vsco/harp_G5",
+    "83": "vsco/harp_B5"
+   }
+  },
+  "marimba": {
+   "kind": "decay",
+   "maxLen": 1.6,
+   "zones": {
+    "55": "vcsl/marimba_G2",
+    "59": "vcsl/marimba_B2",
+    "65": "vcsl/marimba_F3",
+    "72": "vcsl/marimba_C4",
+    "79": "vcsl/marimba_G4",
+    "83": "vcsl/marimba_B4",
+    "89": "vcsl/marimba_F5",
+    "96": "vcsl/marimba_C6"
+   }
+  },
+  "glock": {
+   "kind": "decay",
+   "maxLen": 1.8,
+   "zones": {
+    "79": "vsco/glock_G4",
+    "84": "vsco/glock_C5",
+    "91": "vsco/glock_G5",
+    "96": "vsco/glock_C6",
+    "103": "vsco/glock_G6",
+    "108": "vsco/glock_C7"
+   }
+  },
+  "vibes": {
+   "kind": "decay",
+   "maxLen": 2.2,
+   "zones": {
+    "60": "vcsl/vibes_C3",
+    "64": "vcsl/vibes_E3",
+    "67": "vcsl/vibes_G3",
+    "71": "vcsl/vibes_B3",
+    "74": "vcsl/vibes_D4",
+    "77": "vcsl/vibes_F4",
+    "81": "vcsl/vibes_A4",
+    "84": "vcsl/vibes_C5",
+    "88": "vcsl/vibes_E5"
+   }
+  },
+  "pizz": {
+   "kind": "decay",
+   "maxLen": 1.3,
+   "zones": {
+    "40": "vsco/pizz_E1",
+    "47": "vsco/pizz_B1",
+    "50": "vsco/pizz_D2",
+    "53": "vsco/pizz_F2",
+    "57": "vsco/pizz_A2",
+    "60": "vsco/pizz_C3",
+    "64": "vsco/pizz_E3"
+   }
+  },
+  "recorder": {
+   "kind": "sustain",
+   "maxLen": 2.4,
+   "zones": {
+    "68": "vcsl/recorder_G#3",
+    "72": "vcsl/recorder_C4",
+    "76": "vcsl/recorder_E4",
+    "80": "vcsl/recorder_G#4",
+    "84": "vcsl/recorder_C5",
+    "88": "vcsl/recorder_E5"
+   }
+  },
+  "ocarina": {
+   "kind": "sustain",
+   "maxLen": 2.4,
+   "zones": {
+    "69": "vcsl/ocarina_A3",
+    "73": "vcsl/ocarina_C#4",
+    "78": "vcsl/ocarina_F#4",
+    "81": "vcsl/ocarina_A4",
+    "85": "vcsl/ocarina_C#5"
+   }
+  },
+  "viola": {
+   "kind": "sustain",
+   "maxLen": 2.8,
+   "zones": {
+    "52": "vsco/viola_E2",
+    "55": "vsco/viola_G2",
+    "59": "vsco/viola_B2",
+    "62": "vsco/viola_D3",
+    "65": "vsco/viola_F3",
+    "69": "vsco/viola_A3",
+    "72": "vsco/viola_C4",
+    "76": "vsco/viola_E4"
+   }
+  },
+  "cello": {
+   "kind": "sustain",
+   "maxLen": 2.8,
+   "zones": {
+    "36": "vsco/cello_C1",
+    "40": "vsco/cello_E1",
+    "43": "vsco/cello_G1",
+    "47": "vsco/cello_B1",
+    "50": "vsco/cello_D2",
+    "53": "vsco/cello_F2",
+    "57": "vsco/cello_A2",
+    "60": "vsco/cello_C3"
+   }
+  },
+  "shaker": {
+   "kind": "perc",
+   "maxLen": 0.5,
+   "hits": [
+    "vcsl/shaker_Mid_ShakerDouble_Down_rr1",
+    "vcsl/shaker_Mid_ShakerDouble_Down_rr2",
+    "vcsl/shaker_Mid_ShakerDouble_Up_rr1",
+    "vcsl/shaker_Mid_ShakerDouble_Up_rr2"
+   ]
+  },
+  "tamb": {
+   "kind": "perc",
+   "maxLen": 0.9,
+   "hits": [
+    "vsco/perc_Tamb1-Hit_v1_rr1_Sum",
+    "vsco/perc_Tamb1-Hit_v1_rr2_Sum",
+    "vsco/perc_Tamb1-Hit_v2_rr1_Sum"
+   ]
+  },
+  "sleigh": {
+   "kind": "perc",
+   "maxLen": 1.2,
+   "hits": [
+    "vsco/perc_Sleighbells_Hit_v1_rr1_Mid",
+    "vsco/perc_Sleighbells_Hit_v1_rr2_Mid"
+   ]
+  },
+  "triangle": {
+   "kind": "perc",
+   "maxLen": 2.0,
+   "hits": [
+    "vsco/perc_Triangle3-Hit_v1_rr1_Sum",
+    "vsco/perc_Triangle3-Hit_v1_rr2_Sum"
+   ]
+  }
+ },
+ "families": {
+  "rewards": {
+   "lufs": -18,
+   "hp": 120
+  },
+  "tools": {
+   "lufs": -20,
+   "hp": 80
+  },
+  "light": {
+   "lufs": -22,
+   "hp": 80
+  },
+  "door": {
+   "lufs": -21,
+   "hp": 60
+  },
+  "ui": {
+   "lufs": -25,
+   "hp": 150
+  },
+  "steps": {
+   "lufs": -28,
+   "hp": 200
+  },
+  "error": {
+   "lufs": -23,
+   "hp": 120
+  }
+ },
+ "sfx": {
+  "till": {
+   "family": "tools",
+   "pitch": 1.2,
+   "vol": 1.5,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/oga-shovel",
+      "from": 0,
+      "to": 0.3
+     },
+     {
+      "src": "sfx/kenney-impact/footstep_snow_001",
+      "from": 0,
+      "to": 0.2,
+      "gain": -8
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-shovel",
+      "from": 0.5,
+      "to": 0.8,
+      "gain": 6
+     },
+     {
+      "src": "sfx/kenney-impact/footstep_snow_003",
+      "from": 0,
+      "to": 0.2,
+      "gain": -6
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-shovel",
+      "from": 0,
+      "to": 0.3,
+      "shift": -2
+     },
+     {
+      "src": "sfx/kenney-impact/footstep_snow_002",
+      "from": 0,
+      "to": 0.2,
+      "gain": -8
+     }
+    ]
+   ]
+  },
+  "water": {
+   "family": "tools",
+   "pitch": 1.0,
+   "vol": 1.5,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/oga-rubberduck-water/loop_water_01",
+      "from": 0.2,
+      "to": 0.62
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-rubberduck-water/loop_water_01",
+      "from": 1.1,
+      "to": 1.52
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-rubberduck-water/loop_water_01",
+      "from": 2.3,
+      "to": 2.72
+     }
+    ]
+   ]
+  },
+  "refill": {
+   "family": "tools",
+   "pitch": 0.8,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/oga-rubberduck-water/loop_bubbles_02",
+      "from": 0.5,
+      "to": 1.2
+     },
+     {
+      "src": "sfx/oga-rubberduck-water/splash_06",
+      "gain": -4
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-rubberduck-water/loop_bubbles_02",
+      "from": 2.0,
+      "to": 2.7
+     },
+     {
+      "src": "sfx/oga-rubberduck-water/splash_06",
+      "gain": -6,
+      "shift": -2
+     }
+    ]
+   ]
+  },
+  "plant": {
+   "family": "light",
+   "pitch": 1.5,
+   "vol": 1.5,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_000",
+      "from": 0,
+      "to": 0.16,
+      "shift": 3
+     },
+     {
+      "src": "sfx/kenney-interface/drop_004",
+      "from": 0,
+      "to": 0.12,
+      "gain": -8
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_002",
+      "from": 0,
+      "to": 0.16,
+      "shift": 3
+     },
+     {
+      "src": "sfx/kenney-interface/drop_004",
+      "from": 0,
+      "to": 0.12,
+      "gain": -8,
+      "shift": 2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_004",
+      "from": 0,
+      "to": 0.16,
+      "shift": 4
+     },
+     {
+      "src": "sfx/kenney-interface/drop_004",
+      "from": 0,
+      "to": 0.12,
+      "gain": -8,
+      "shift": -2
+     }
+    ]
+   ],
+   "hp": 300
+  },
+  "harvest": {
+   "family": "rewards",
+   "pitch": 1.5,
+   "vol": 1,
+   "voices": 3,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-interface/drop_002"
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth2",
+      "from": 0,
+      "to": 0.3,
+      "gain": -6
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/drop_003"
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth1",
+      "from": 0.03,
+      "to": 0.33,
+      "gain": -8
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/drop_002",
+      "shift": 2
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth2",
+      "from": 0.05,
+      "to": 0.35,
+      "gain": -7
+     }
+    ]
+   ]
+  },
+  "cut": {
+   "family": "tools",
+   "pitch": 1.5,
+   "vol": 1.5,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/oga-swishes/swish-10"
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth1",
+      "from": 0.03,
+      "to": 0.3,
+      "gain": -4,
+      "at": 0.02
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-swishes/swish-11"
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth2",
+      "from": 0.04,
+      "to": 0.3,
+      "gain": -4,
+      "at": 0.02
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-swishes/swish-12"
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth1",
+      "from": 0.1,
+      "to": 0.35,
+      "gain": -5,
+      "at": 0.02
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-swishes/swish-13"
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth2",
+      "from": 0.1,
+      "to": 0.35,
+      "gain": -5,
+      "at": 0.02
+     }
+    ]
+   ]
+  },
+  "swing": {
+   "family": "light",
+   "pitch": 1.5,
+   "vol": 1.5,
+   "voices": 2,
+   "hp": 300,
+   "variants": [
+    [
+     {
+      "src": "sfx/oga-swishes/swish-10",
+      "shift": -3
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-swishes/swish-11",
+      "shift": -3
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-swishes/swish-12",
+      "shift": -4
+     }
+    ],
+    [
+     {
+      "src": "sfx/oga-swishes/swish-13",
+      "shift": -4
+     }
+    ]
+   ]
+  },
+  "coin": {
+   "family": "rewards",
+   "pitch": 1.0,
+   "vol": 1,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-rpg/handleCoins",
+      "from": 0.12,
+      "to": 0.42
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/handleCoins",
+      "from": 0.43,
+      "to": 0.8,
+      "gain": 6
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/handleCoins2"
+     }
+    ]
+   ]
+  },
+  "buy": {
+   "family": "rewards",
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-rpg/handleCoins2"
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/bell_02",
+      "gain": -5,
+      "at": 0.06
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/handleCoins",
+      "from": 0.12,
+      "to": 0.42
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/bell_02",
+      "gain": -6,
+      "at": 0.08
+     }
+    ]
+   ]
+  },
+  "ui": {
+   "family": "ui",
+   "pitch": 1.0,
+   "vol": 1,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-ui/click3"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/click4"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/click5"
+     }
+    ]
+   ],
+   "repeatDb": 0
+  },
+  "select": {
+   "family": "ui",
+   "pitch": 1.0,
+   "vol": 1,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-interface/select_001"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/select_007"
+     }
+    ]
+   ],
+   "repeatDb": 0
+  },
+  "door": {
+   "family": "door",
+   "pitch": 0.8,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-rpg/doorOpen_1",
+      "from": 0,
+      "to": 0.75
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/doorOpen_2",
+      "from": 0,
+      "to": 0.9
+     }
+    ]
+   ]
+  },
+  "stepGrass": {
+   "family": "steps",
+   "pitch": 1.5,
+   "vol": 2,
+   "voices": 3,
+   "hp": 250,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_000",
+      "from": 0,
+      "to": 0.2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_001",
+      "from": 0,
+      "to": 0.2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_002",
+      "from": 0,
+      "to": 0.2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/footstep_snow_003",
+      "from": 0,
+      "to": 0.2
+     }
+    ]
+   ],
+   "repeatDb": 0
+  },
+  "stepWood": {
+   "family": "steps",
+   "pitch": 1.2,
+   "vol": 2,
+   "voices": 3,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-rpg/footstep01"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/footstep03"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/footstep06"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/footstep08"
+     }
+    ]
+   ],
+   "repeatDb": 0
+  },
+  "error": {
+   "family": "error",
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-interface/error_007"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/error_008"
+     }
+    ]
+   ]
+  }
+ },
+ "ambience": {
+  "rain": {
+   "mode": "loop",
+   "src": "amb/oga-rain-1",
+   "from": 3.0,
+   "body": 12.0,
+   "level": -30,
+   "hp": 120
+  },
+  "crickets": {
+   "mode": "loop",
+   "src": "amb/oga-crickets",
+   "level": -36,
+   "hp": 1500,
+   "layers": [
+    {
+     "from": 1.2,
+     "body": 9.0
+    },
+    {
+     "from": 3.2,
+     "body": 7.2
+    }
+   ]
+  },
+  "wind": {
+   "mode": "loop",
+   "src": "amb/oga-wind1",
+   "from": 6.0,
+   "body": 15.0,
+   "level": -33,
+   "hp": 150
+  },
+  "cave": {
+   "mode": "loop",
+   "src": "amb/oga-dungeon",
+   "from": 30.0,
+   "body": 16.0,
+   "level": -31,
+   "hp": 40
+  },
+  "birds": {
+   "mode": "shots",
+   "every": 4.5,
+   "level": -28,
+   "hp": 900,
+   "shots": [
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 11.41,
+     "to": 12.4
+    },
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 14.87,
+     "to": 15.35
+    },
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 16.22,
+     "to": 16.85
+    },
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 3.57,
+     "to": 4.4
+    },
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 25.32,
+     "to": 26.6
+    },
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 21.53,
+     "to": 22.1
+    },
+    {
+     "src": "amb/oga-birds-isaiah658",
+     "from": 19.04,
+     "to": 20.2
+    },
+    {
+     "src": "amb/oga-birds-syncopika",
+     "from": 1.95,
+     "to": 2.75
+    },
+    {
+     "src": "amb/oga-birds-syncopika",
+     "from": 0.7,
+     "to": 1.4
+    }
+   ]
+  },
+  "drips": {
+   "mode": "shots",
+   "every": 2.5,
+   "level": -26,
+   "hp": 400,
+   "shots": [
+    {
+     "src": "amb/oga-dungeon",
+     "from": 72.46,
+     "to": 72.85
+    },
+    {
+     "src": "amb/oga-dungeon",
+     "from": 77.25,
+     "to": 77.6
+    },
+    {
+     "src": "amb/oga-dungeon",
+     "from": 31.13,
+     "to": 31.45
+    },
+    {
+     "src": "amb/oga-dungeon",
+     "from": 69.73,
+     "to": 70.1
+    },
+    {
+     "src": "amb/oga-dungeon",
+     "from": 21.74,
+     "to": 22.05
+    }
+   ]
+  },
+  "thunder": {
+   "mode": "shots",
+   "every": 28,
+   "level": -27,
+   "hp": 60,
+   "shots": [
+    {
+     "src": "amb/oga-rubberduck-thunder",
+     "from": 0.75,
+     "to": 5.2
+    },
+    {
+     "src": "amb/oga-rubberduck-thunder",
+     "from": 0.75,
+     "to": 5.2,
+     "shift": -3
+    }
+   ],
+   "maxLen": 4.4
+  }
+ }
+}

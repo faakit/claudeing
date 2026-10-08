@@ -152,6 +152,25 @@ Goals are a list and the save keeps an index into it. If you **insert** goals an
 `STATE_VERSION` and migrate with `remapGoalIndex(raw, OLD_IDS)` (the goal ids of the previous release), so
 saved players stay on the same goal. Appending at the end needs nothing.
 
+## 9. Sounds and music
+
+Game code only calls `audio.play('<cue>')` with an id from the `Sfx` union in `src/platform/audio.ts`.
+
+- **Reuse a cue** where one fits (`ui`, `select`, `coin`, `error`...): no audio work at all.
+- **Add a sound:** add the id to the `Sfx` union and `SFX_IDS`, and a synthesized version in `playSynth`
+  (the fallback, also what plays before files load). Then, for a recorded take, add the source file to
+  `audio-src/sfx-sources.json` (page, author, licence: CC0 or CC-BY only) and a recipe in
+  `audio-src/recipes.json` (`sfx.<id>`: family, 2-4 variants cut from sources, pitch/volume spread, voice
+  cap). Run `python -I audio-src/tools/fetch.py <raw-dir> --lock`, `python -I audio-src/tools/build.py
+  <raw-dir>` and `python -I audio-src/tools/sources_md.py`; credit it in `ASSETS.md`. A short musical
+  cue can instead be a jingle in `audio-src/tools/music_src.py` (`JINGLES`, written in C, played in the key
+  of the current piece). `tests/audio-assets.test.ts` checks every id resolves.
+- **Music** lives in `audio-src/tools/music_src.py` (regenerate `src/audio/music.json` with it): chords
+  per section, accompaniment patterns, composed phrase pools. Which piece plays is decided in
+  `src/audio/director.ts`. Tests reject phrases whose bars do not add up and notes no sample can reach.
+- **Check the mix** with `node audio-src/tools/render.mjs <dir>` (against a running dev server) and
+  `python -I audio-src/tools/measure.py <dir>`, then listen on a phone.
+
 ## Checklist for a new mechanic
 
 - [ ] Rules as pure functions in `systems/` with unit tests

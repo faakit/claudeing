@@ -18,6 +18,13 @@ const server = spawn(
     stdio: 'ignore',
   },
 );
+// With strictPort a busy port makes the preview exit: fail instead of testing someone else's server.
+server.on('exit', (code) => {
+  if (code) {
+    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
+    process.exit(1);
+  }
+});
 process.on('exit', () => server.kill());
 for (let i = 0; i < 50; i++) {
   try {
@@ -132,6 +139,9 @@ try {
       });
     });
     await page.evaluate(() => (window.__farm.inputHub.actionHeld = false));
+    // The budget above includes the audio engine's scheduling: report that music really was playing.
+    const au = await page.evaluate(() => window.__farm.audio.debugInfo());
+    console.log(`${rate}x audio during the run: ${JSON.stringify({ state: au.state, synth: au.synthMusic, music: au.music, sfx: au.sfx })}`);
     await ctx.close();
   }
 } finally {

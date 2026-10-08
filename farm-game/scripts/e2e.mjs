@@ -16,6 +16,13 @@ const server = spawn(
     stdio: 'ignore',
   },
 );
+// With strictPort a busy port makes the preview exit: fail instead of testing someone else's server.
+server.on('exit', (code) => {
+  if (code) {
+    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
+    process.exit(1);
+  }
+});
 const stop = () => server.kill();
 process.on('exit', stop);
 
@@ -41,10 +48,32 @@ await waitForServer();
 const browser = await chromium.launch({ executablePath: CHROMIUM });
 try {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  // Count AudioContexts the page creates: Phaser must not make its own next to ours.
+  await ctx.addInitScript(() => {
+    const Orig = window.AudioContext;
+    if (!Orig) return;
+    window.__audioContexts = 0;
+    window.AudioContext = class extends Orig {
+      constructor(...args) {
+        super(...args);
+        window.__audioContexts++;
+      }
+    };
+  });
   const page = await ctx.newPage();
   const errors = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(String(e)));
+  const audioFiles = { ok: 0, bad: [] };
+  page.on('requestfinished', async (req) => {
+    if (!req.url().includes('/assets/audio/')) return;
+    const res = await req.response();
+    if (res?.ok()) audioFiles.ok++;
+    else audioFiles.bad.push(`${res?.status()} ${req.url()}`);
+  });
+  page.on('requestfailed', (req) => {
+    if (req.url().includes('/assets/audio/')) audioFiles.bad.push(`failed ${req.url()}`);
+  });
 
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(window.__farm.getState())));
   const sceneKeys = () =>
@@ -121,6 +150,27 @@ try {
     'player wakes up in the house with full energy',
     s.player.map === 'house' && s.energy === 100,
     `${s.player.map} ${s.energy}`,
+  );
+
+  // 3b. Real audio: files are fetched and decoded, sounds and music play from samples, one context.
+  await page.waitForFunction(() => (window.__farm.audio.debugInfo().decoded ?? 0) > 40, null, {
+    timeout: 15000,
+  }).catch(() => undefined);
+  await page.keyboard.press('Digit1');
+  await tap('Space'); // hoe swing: a recorded take, not the synth
+  await page.waitForTimeout(2500);
+  const au = await page.evaluate(() => ({ ...window.__farm.audio.debugInfo(), contexts: window.__audioContexts }));
+  check('audio: exactly one AudioContext (Phaser has none)', au.contexts === 1, JSON.stringify(au));
+  check(
+    'audio: sound and music files are fetched without errors',
+    audioFiles.ok >= 40 && audioFiles.bad.length === 0,
+    `${audioFiles.ok} ok, bad: ${audioFiles.bad.slice(0, 3).join(' | ')}`,
+  );
+  check('audio: files decode and the context runs', au.decoded > 40 && au.state === 'running', JSON.stringify(au));
+  check(
+    'audio: sound effects play recorded takes and music plays sampled notes',
+    au.sfx?.played > 0 && au.music?.sampled > 0 && !au.synthMusic,
+    JSON.stringify(au),
   );
 
   // 4. Persistence: reload -> Continue restores the same world

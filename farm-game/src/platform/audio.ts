@@ -1,7 +1,23 @@
 /**
- * Procedural audio: every sound effect and the music are synthesized with Web Audio,
- * so the prototype ships with zero audio files. Real assets (M7) can replace `play`.
+ * Audio engine. Real audio first, synthesized audio as the fallback that never goes silent:
+ *  - sound effects play recorded takes from public/assets/audio (src/audio/sfx.ts);
+ *  - music is composed note data played live on sampled instruments (src/audio/music.ts);
+ *  - ambience beds and one-shots follow the place, time and weather (src/audio/ambience.ts).
+ * Any cue, instrument or bed whose file is missing or fails to load or decode plays the original
+ * Web Audio synthesis instead (`playSynth`, the synth music scheduler, the noise rain bed).
+ * Unlock, interruption, lifecycle pause, volume and mute work the same for both paths because
+ * everything goes through the same gain buses.
  */
+import { Ambience } from '../audio/ambience';
+import { JINGLE_CUES, allFiles, instrumentFiles, jingleInstruments, slotInstruments, MANIFEST } from '../audio/assets';
+import { SampleBank } from '../audio/bank';
+import type { AmbienceTargets } from '../audio/director';
+import { MusicPlayer } from '../audio/music';
+import { K_MUSIC, K_SFX, buildGraph } from '../audio/graph';
+import { SfxPlayer } from '../audio/sfx';
+import { midiToHz } from '../audio/theory';
+import type { MusicSlot } from '../audio/types';
+
 export type Sfx =
   | 'till'
   | 'water'
@@ -24,6 +40,30 @@ export type Sfx =
   | 'heart'
   | 'order';
 
+/** Every cue id, for tests and tooling (keep in sync with the union above; a test checks it). */
+export const SFX_IDS: readonly Sfx[] = [
+  'till',
+  'water',
+  'refill',
+  'plant',
+  'harvest',
+  'cut',
+  'coin',
+  'buy',
+  'ui',
+  'door',
+  'stepGrass',
+  'stepWood',
+  'error',
+  'sleep',
+  'goal',
+  'swing',
+  'select',
+  'level',
+  'heart',
+  'order',
+];
+
 // A major pentatonic keeps any random melody pleasant.
 const PENTA = [0, 2, 4, 7, 9];
 const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
@@ -35,7 +75,7 @@ const PROGRESSION: { root: number; chord: number[] }[] = [
   { root: 43, chord: [0, 4, 7, 9] },
 ];
 
-/** How the music feels in each season: tempo, key shift, how busy the melody is and the chord loop. */
+/** How the synth fallback music feels in each season: tempo, key shift, melody density, chord loop. */
 export interface SeasonMusic {
   bpm: number;
   transpose: number;
@@ -55,14 +95,27 @@ export const SEASON_MUSIC: Record<string, SeasonMusic> = {
   winter: { bpm: 56, transpose: 5, melody: 0.28, progression: MINOR_LOOP },
 };
 
+const TICK_MS = 100;
+const SEASON_SLOTS = new Set<string>(['spring', 'summer', 'fall', 'winter']);
+
+/** Where audio files are served from (relative, like the rest of the build). */
+const AUDIO_BASE = `${import.meta.env.BASE_URL ?? './'}assets/audio/`;
+
 class AudioEngine {
   private season: SeasonMusic = SEASON_MUSIC['spring']!;
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   private sfxBus!: GainNode;
+  private synthBus!: GainNode;
+  private ambienceBus!: GainNode;
   private musicBus!: GainNode;
+  private duck!: GainNode;
   private dayBus!: GainNode;
   private nightBus!: GainNode;
+  private bothBus!: GainNode;
+  private dayWet!: GainNode;
+  private nightWet!: GainNode;
+  private bothWet!: GainNode;
   private noise!: AudioBuffer;
   private music = 0.6;
   private sfx = 0.8;
@@ -73,6 +126,19 @@ class AudioEngine {
   private nextBar = 0;
   private bar = 0;
   private seed = 7;
+  private synthMusicOn = false;
+  private musicStopped = false;
+  private slot: MusicSlot | null = null;
+  /** The season piece to come back to (kept decoded while in the mine, house or festival). */
+  private homeSlot: MusicSlot = 'spring';
+  private indoor = false;
+  private ambienceTargets: Partial<AmbienceTargets> = {};
+  private lastEvict = 0;
+  readonly bank = new SampleBank(AUDIO_BASE);
+  private sfxPlayer: SfxPlayer | null = null;
+  private musicPlayer: MusicPlayer | null = null;
+  private ambience: Ambience | null = null;
+  private fetchStarted = false;
 
   /**
    * Create/resume the AudioContext. Must run inside a user gesture: browsers (iOS Safari
@@ -87,6 +153,7 @@ class AudioEngine {
       this.ctx = new Ctor();
       this.build(this.ctx);
       this.primeSilently(this.ctx);
+      this.startLoop();
     }
     this.resume();
     this.applyVolumes();
@@ -130,21 +197,62 @@ class AudioEngine {
     for (const e of events) window.addEventListener(e, handler, { passive: true });
   }
 
+  /**
+   * Start downloading the audio files (compressed bytes only; decoding waits for the unlock).
+   * `afterServiceWorker` lets a first visit's offline worker fetch and cache them once instead of
+   * the page downloading the same files in parallel.
+   */
+  preload(afterServiceWorker: Promise<unknown> = Promise.resolve()): void {
+    if (this.fetchStarted) return;
+    this.fetchStarted = true;
+    void afterServiceWorker.then(() => this.bank.fetchAll(allFiles().map((z) => z.file)));
+  }
+
   private build(ctx: AudioContext): void {
-    this.master = ctx.createGain();
-    this.master.connect(ctx.destination);
-    this.sfxBus = ctx.createGain();
-    this.sfxBus.connect(this.master);
-    this.musicBus = ctx.createGain();
-    this.musicBus.connect(this.master);
-    this.dayBus = ctx.createGain();
-    this.dayBus.connect(this.musicBus);
-    this.nightBus = ctx.createGain();
-    this.nightBus.connect(this.musicBus);
+    const g = buildGraph(ctx);
+    this.master = g.master;
+    this.sfxBus = g.sfxBus;
+    this.synthBus = g.synthBus;
+    this.ambienceBus = g.ambienceBus;
+    this.musicBus = g.musicBus;
+    this.duck = g.duck;
+    this.dayBus = g.dayBus;
+    this.nightBus = g.nightBus;
+    this.bothBus = g.bothBus;
+    this.dayWet = g.dayWet;
+    this.nightWet = g.nightWet;
+    this.bothWet = g.bothWet;
     const len = ctx.sampleRate;
     this.noise = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+
+    this.sfxPlayer = new SfxPlayer(ctx, this.bank, this.sfxBus);
+    this.ambience = new Ambience(ctx, this.bank, this.ambienceBus);
+    this.musicPlayer = new MusicPlayer(
+      ctx,
+      this.bank,
+      {
+        dry: { day: this.dayBus, night: this.nightBus, both: this.bothBus },
+        wet: { day: this.dayWet, night: this.nightWet, both: this.bothWet },
+        sfx: this.sfxBus,
+      },
+      (m, when, dur, vel, dest) => this.tone(midiToHz(m), Math.max(0.15, dur), {
+        type: 'triangle',
+        gain: 0.12 * vel,
+        bus: dest,
+        delay: when - ctx.currentTime,
+        attack: 0.01,
+      }),
+    );
+    this.setNight(this.night);
+    // Decode in priority order: sound effects and jingles first, then the music being played.
+    void this.sfxPlayer.preload();
+    jingleInstruments().forEach((i) =>
+      instrumentFiles(i).forEach((z) => void this.bank.load(ctx, z.file, z.onset)),
+    );
+    if (this.slot) this.musicPlayer.setSlot(this.slot, this.indoor, ctx.currentTime);
+    for (const [k, v] of Object.entries(this.ambienceTargets)) this.ambience.set(k, v ?? 0);
   }
 
   setVolumes(music: number, sfx: number, muted: boolean): void {
@@ -158,8 +266,8 @@ class AudioEngine {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.master.gain.setTargetAtTime(this.muted ? 0 : 1, t, 0.03);
-    this.sfxBus.gain.setTargetAtTime(this.sfx * 0.9, t, 0.03);
-    this.musicBus.gain.setTargetAtTime(this.music * 0.32, t, 0.05);
+    this.sfxBus.gain.setTargetAtTime(this.sfx * K_SFX, t, 0.03);
+    this.musicBus.gain.setTargetAtTime(this.music * K_MUSIC, t, 0.05);
   }
 
   /** 0 = full day music, 1 = full night music. */
@@ -169,13 +277,25 @@ class AudioEngine {
     const t = this.ctx.currentTime;
     this.dayBus.gain.setTargetAtTime(1 - this.night, t, 0.6);
     this.nightBus.gain.setTargetAtTime(this.night, t, 0.6);
+    this.dayWet.gain.setTargetAtTime(1 - this.night, t, 0.6);
+    this.nightWet.gain.setTargetAtTime(this.night, t, 0.6);
   }
 
-  /** Continuous soft rain bed. 0 = silent. Created lazily on first use. */
+  /** Rain bed. 0 = silent. The recorded loop when it can play, else the synthesized noise bed. */
   setRain(amount: number): void {
+    const v = Math.max(0, Math.min(1, amount));
+    const ctx = this.ctx;
+    if (!ctx || !this.ambience) return;
+    if (!this.ambience.failed('rain')) this.ambience.set('rain', v);
+    // The synthesized bed covers while the recording loads, and for good if it cannot load.
+    this.synthRain(this.ambience.available('rain') ? 0 : v);
+  }
+
+  private synthRain(amount: number): void {
     const ctx = this.ctx;
     if (!ctx) return;
     if (!this.rainGain) {
+      if (amount <= 0) return;
       const src = ctx.createBufferSource();
       src.buffer = this.noise;
       src.loop = true;
@@ -185,17 +305,20 @@ class AudioEngine {
       f.Q.value = 0.4;
       this.rainGain = ctx.createGain();
       this.rainGain.gain.value = 0;
-      src.connect(f).connect(this.rainGain).connect(this.sfxBus);
+      src.connect(f).connect(this.rainGain).connect(this.synthBus);
       src.start();
     }
-    this.rainGain.gain.setTargetAtTime(
-      Math.max(0, Math.min(1, amount)) * 0.22,
-      ctx.currentTime,
-      0.4,
-    );
+    this.rainGain.gain.setTargetAtTime(amount * 0.22, ctx.currentTime, 0.4);
   }
 
-  // ---- synth helpers ----
+  /** Birds, crickets, wind, cave, drips (0..1 each), as chosen by the director. */
+  setAmbience(t: Partial<AmbienceTargets>): void {
+    this.ambienceTargets = { ...this.ambienceTargets, ...t };
+    if (!this.ambience) return;
+    for (const [k, v] of Object.entries(t)) this.ambience.set(k, v ?? 0);
+  }
+
+  // ---- synth helpers (the fallback sounds) ----
   private tone(
     freq: number,
     dur: number,
@@ -210,18 +333,18 @@ class AudioEngine {
   ): void {
     const ctx = this.ctx;
     if (!ctx) return;
-    const t0 = ctx.currentTime + (opts.delay ?? 0);
+    const t0 = ctx.currentTime + Math.max(0, opts.delay ?? 0);
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = opts.type ?? 'sine';
     osc.frequency.setValueAtTime(freq, t0);
     if (opts.to) osc.frequency.exponentialRampToValueAtTime(opts.to, t0 + dur);
-    const peak = opts.gain ?? 0.3;
+    const peak = Math.max(0.0002, opts.gain ?? 0.3);
     const attack = opts.attack ?? 0.005;
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(peak, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    osc.connect(g).connect(opts.bus ?? this.sfxBus);
+    osc.connect(g).connect(opts.bus ?? this.synthBus);
     osc.start(t0);
     osc.stop(t0 + dur + 0.05);
   }
@@ -252,12 +375,28 @@ class AudioEngine {
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(opts.gain ?? 0.3, t0 + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    src.connect(f).connect(g).connect(this.sfxBus);
+    src.connect(f).connect(g).connect(this.synthBus);
     src.start(t0, Math.random() * 0.5);
     src.stop(t0 + dur + 0.05);
   }
 
+  /** Play a cue: the recorded take or sampled jingle when available, else the synthesized sound. */
   play(name: Sfx): void {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    const now = ctx.currentTime;
+    if (JINGLE_CUES.has(name)) {
+      // Let a fanfare through: dip the music for a moment (-6 dB, back over about a second).
+      this.duck.gain.cancelScheduledValues(now);
+      this.duck.gain.setTargetAtTime(0.5, now, 0.05);
+      this.duck.gain.setTargetAtTime(1, now + 0.9, 0.35);
+      if (this.musicPlayer?.jingle(name, now)) return;
+    } else if (this.sfxPlayer?.play(name, now)) return;
+    this.playSynth(name);
+  }
+
+  /** The original synthesized sound for a cue (the fallback). */
+  playSynth(name: Sfx): void {
     if (!this.ctx || this.muted) return;
     switch (name) {
       case 'till':
@@ -344,22 +483,104 @@ class AudioEngine {
   }
 
   // ---- music ----
-  /** Change the music's mood to the season's; takes effect from the next bar. */
+  /** Season mood for the synth fallback; also follows the season if a season piece is playing. */
   setSeason(season: string): void {
     this.season = SEASON_MUSIC[season] ?? SEASON_MUSIC['spring']!;
+    if (SEASON_SLOTS.has(season)) this.homeSlot = season as MusicSlot;
+    if (this.slot && SEASON_SLOTS.has(this.slot) && SEASON_SLOTS.has(season))
+      this.setMusic(season as MusicSlot, this.indoor);
   }
 
+  /** Choose the piece (title, a season, mine, festival) and whether we are indoors. */
+  setMusic(slot: MusicSlot, indoor: boolean): void {
+    this.slot = slot;
+    this.indoor = indoor;
+    if (SEASON_SLOTS.has(slot)) {
+      this.season = SEASON_MUSIC[slot] ?? this.season;
+      this.homeSlot = slot;
+    }
+    if (this.ctx && this.musicPlayer) this.musicPlayer.setSlot(slot, indoor, this.ctx.currentTime);
+  }
+
+  /** Music on (it plays whenever audio is unlocked, a slot is chosen and music is not stopped). */
   startMusic(): void {
-    if (!this.ctx || this.timer !== null) return;
-    this.nextBar = this.ctx.currentTime + 0.1;
-    this.timer = window.setInterval(() => this.schedule(), 120);
+    this.musicStopped = false;
+    if (!this.slot) this.setMusic('spring', false);
   }
 
   stopMusic(): void {
-    if (this.timer !== null) window.clearInterval(this.timer);
-    this.timer = null;
+    this.musicStopped = true;
+    if (this.ctx && this.musicPlayer) this.musicPlayer.stop(this.ctx.currentTime);
   }
 
+  private startLoop(): void {
+    if (this.timer !== null) return;
+    this.timer = window.setInterval(() => this.tick(), TICK_MS);
+  }
+
+  private tick(): void {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running' || !this.musicPlayer || !this.ambience) return;
+    const now = ctx.currentTime;
+    const musicOn = !this.muted && this.music > 0 && !this.musicStopped && this.slot !== null;
+    if (this.slot && this.musicPlayer.slot !== this.slot && !this.musicStopped)
+      this.musicPlayer.setSlot(this.slot, this.indoor, now);
+    // No instrument of this piece can play at all: the synthesized music takes over.
+    const synth = musicOn && this.slot !== null && this.musicPlayer.status(this.slot) === 'none';
+    if (synth !== this.synthMusicOn) {
+      this.synthMusicOn = synth;
+      this.nextBar = now + 0.1;
+    }
+    this.musicPlayer.tick(now, {
+      enabled: musicOn && !synth,
+      day: this.night < 0.99,
+      night: this.night > 0.01,
+    });
+    if (this.synthMusicOn) this.schedule();
+    this.ambience.tick(now, !this.muted && this.sfx > 0);
+    if (now - this.lastEvict > 30) {
+      this.lastEvict = now;
+      this.evict(now);
+    }
+  }
+
+  /** Drop decoded audio nobody needs right now (kept compressed; decoding again takes ms). */
+  private evict(now: number): void {
+    const keep = new Set<string>();
+    Object.values(MANIFEST.sfx).forEach((s) => s.files.forEach((z) => keep.add(z.file)));
+    jingleInstruments().forEach((i) => instrumentFiles(i).forEach((z) => keep.add(z.file)));
+    for (const s of [this.slot, this.homeSlot])
+      if (s) slotInstruments(s).forEach((i) => instrumentFiles(i).forEach((z) => keep.add(z.file)));
+    for (const [k, v] of Object.entries(this.ambienceTargets))
+      if ((v ?? 0) > 0 || k === 'rain') MANIFEST.ambience[k]?.files.forEach((z) => keep.add(z.file));
+    const others = allFiles()
+      .map((z) => z.file)
+      .filter((f) => !keep.has(f));
+    this.bank.evict(others, now - 120);
+  }
+
+  /** Debug: render the real mix offline (see src/audio/render.ts and audio-src/tools/render.mjs). */
+  async renderOffline(o: import('../audio/render').RenderOptions): Promise<import('../audio/render').RenderResult> {
+    const m = await import('../audio/render');
+    return m.renderOffline(AUDIO_BASE, o);
+  }
+
+  /** Numbers for tests and the debug hook. */
+  debugInfo(): Record<string, unknown> {
+    return {
+      state: this.ctx?.state ?? 'none',
+      sampleRate: this.ctx?.sampleRate ?? 0,
+      slot: this.slot,
+      indoor: this.indoor,
+      synthMusic: this.synthMusicOn,
+      decoded: this.bank.decodedCount,
+      residentMB: Math.round((this.bank.residentBytes() / 1e6) * 10) / 10,
+      music: this.musicPlayer?.stats,
+      sfx: this.sfxPlayer?.stats,
+    };
+  }
+
+  // ---- synth fallback music ----
   private rnd(): number {
     this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
     return this.seed / 4294967296;
@@ -369,6 +590,7 @@ class AudioEngine {
     const ctx = this.ctx;
     if (!ctx || ctx.state !== 'running') return;
     const beat = 60 / this.season.bpm;
+    if (this.nextBar < ctx.currentTime - 0.05) this.nextBar = ctx.currentTime + 0.05; // never burst late bars
     while (this.nextBar < ctx.currentTime + 0.6) {
       const prog = this.season.progression;
       const { chord } = prog[this.bar % prog.length]!;
