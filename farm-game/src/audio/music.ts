@@ -162,7 +162,7 @@ export class MusicPlayer {
     let ok = 0;
     let pending = 0;
     for (const z of files) {
-      if (this.bank.get(z.file)) ok++;
+      if (this.bank.has(z.file)) ok++;
       else if (!this.bank.failed(z.file)) pending++;
     }
     if (pending > 0) return 'loading';
@@ -246,15 +246,17 @@ export class MusicPlayer {
         this.stats.dropped++;
         continue;
       }
-      this.playNote(a, s, Math.max(s.t, now));
+      this.playNote(a, s, now);
     }
   }
 
-  private playNote(a: ActivePiece, s: Scheduled, when: number): void {
+  private playNote(a: ActivePiece, s: Scheduled, now: number): void {
     const { ev } = s;
     const strip = a.strip(ev.layer, ev.inst, ev.time);
     const mix = MUSIC.instruments[ev.inst];
     const pick = sampleFor(ev.inst, ev.midi, ev.perc);
+    // Slow attacks start a little early so they speak on the beat.
+    const when = Math.max(now, s.t - (pick?.zone.lag ?? 0));
     const d = pick ? this.bank.get(pick.zone.file, when) : undefined;
     const gain = velGain(ev.vel);
     if (pick && d) {

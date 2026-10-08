@@ -282,7 +282,7 @@
  "amb/oga-crickets": {
   "url": "https://opengameart.org/sites/default/files/crickets_1.mp3",
   "page": "https://opengameart.org/content/crickets-ambient-noise-loopable",
-  "author": "Wolfgang_ (wolfgang)",
+  "author": "Wolfgang_ (wolfgang); attribution notice: Ted Kerr",
   "licence": "CC0-1.0",
   "pack": "OpenGameArt: crickets-ambient-noise-loopable"
  },
@@ -299,13 +299,6 @@
   "author": "syncopika",
   "licence": "CC0-1.0",
   "pack": "OpenGameArt: bird-chirping-sounds"
- },
- "amb/oga-drip": {
-  "url": "https://opengameart.org/sites/default/files/atmosbasement.mp3_.flac",
-  "page": "https://opengameart.org/content/dripping-water-loop",
-  "author": "qubodup",
-  "licence": "CC0-1.0",
-  "pack": "OpenGameArt: dripping-water-loop"
  },
  "amb/oga-dungeon": {
   "url": "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg",

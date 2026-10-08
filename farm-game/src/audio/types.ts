@@ -12,6 +12,8 @@ export interface Zone {
   /** Where the attack starts in the source (decoders may add a few ms of priming silence before it). */
   onset: number;
   dur: number;
+  /** Seconds a slow (bowed, blown) attack needs to speak; the note is started this much early. */
+  lag?: number;
   /** Sustain loop [start, end]; the region after `end` repeats the loop start, so small shifts stay seamless. */
   loop?: [number, number];
 }
@@ -33,6 +35,8 @@ export interface SfxAsset {
   vol: number;
   /** At most this many copies of the cue sound at once; the oldest is faded out to make room. */
   voices: number;
+  /** Level change (dB) for a repeat within 350 ms of the last one (held tools). Default -4; steps 0. */
+  repeatDb?: number;
 }
 
 /** A looping ambience bed or a pool of one-shots (birds, drips). */

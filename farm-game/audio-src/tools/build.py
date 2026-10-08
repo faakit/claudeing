@@ -205,6 +205,13 @@ def build_instruments(raw: str, recipes: dict) -> dict:
             z = {"file": fname, "onset": round(onset_s, 5), "dur": round(len(y) / SR, 4)}
             if p["root"] is not None:
                 z["root"] = round(float(p["root"]), 2)
+            # Bowed and blown attacks take a while to speak: how long until -20 dB re peak (5 ms RMS),
+            # so the engine can start the note that much early and keep it on the beat.
+            env5 = dsp.envelope(y, 220)
+            reach = int(np.argmax(env5 >= env5.max() * 0.1)) * 220 / SR
+            lag = reach - onset_s
+            if kind == "sustain" and lag > 0.02:
+                z["lag"] = round(min(lag, 0.15), 4)
             seam = ("", "")
             if p["loop"]:
                 a, e = p["loop"]
@@ -264,49 +271,64 @@ def mix_parts(raw: str, parts: list, hp: float) -> np.ndarray:
     return out
 
 
-def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0) -> np.ndarray:
-    """Start at the attack, drop the silent tail, fade out, and match the family loudness."""
+def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0, by: str = "rms") -> np.ndarray:
+    """Start at the attack, drop the silent tail, fade out, and match the target loudness:
+    by="lufs": max momentary loudness (K-weighted, 400 ms) as played on the stereo bus;
+    by="rms": RMS over the active region (used for ambience one-shots)."""
     y = trim_start(y, -40)
     end = decay_end(y, max_len, -50)
-    y = dsp.fade(y[:end], fade_out=min(int(0.03 * SR), end // 3))
-    for _ in range(3):
-        y = y * (dsp.undb(level_db) / max(dsp.active_rms(y), 1e-9))
-        if dsp.true_peak(y) <= dsp.undb(TP_CEIL_DB):
+    y = dsp.fade(y[:end], fade_out=min(int(0.03 * SR), max(end // 3, 1)))
+
+    def loud(v: np.ndarray) -> float:
+        return dsp.momentary_lufs(v) if by == "lufs" else dsp.db(dsp.active_rms(v))
+
+    for _ in range(4):
+        y = y * dsp.undb(level_db - loud(y))
+        if dsp.true_peak(y) <= dsp.undb(TP_CEIL_DB - 0.5):
             break
-        # Spiky sounds (coins) reach the ceiling long before the family loudness: limit the spikes
-        # (a few ms each) instead of turning the whole sound down by 4-5 dB.
-        y = dsp.limit(y, dsp.undb(TP_CEIL_DB - 1.0))
+        # Spiky sounds (coins) reach the ceiling long before the target loudness: limit the spikes
+        # (a few ms each) instead of turning the whole sound down by several dB.
+        y = dsp.limit(y, dsp.undb(TP_CEIL_DB - 1.5))
     tp = dsp.true_peak(y)
-    if tp > dsp.undb(TP_CEIL_DB):
-        y = y * (dsp.undb(TP_CEIL_DB) / tp)
+    # leave 0.5 dB for MP3 encoding overshoot
+    if tp > dsp.undb(TP_CEIL_DB - 0.5):
+        y = y * (dsp.undb(TP_CEIL_DB - 0.5) / tp)
     return y
 
 
-def shot_row(name: str, i: int, y: np.ndarray, target: float) -> str:
+def encoded_tp(path: str) -> float:
+    return dsp.db(dsp.true_peak(dsp.load(path)))
+
+
+def shot_row(name: str, i: int, y: np.ndarray, target: float, path: str) -> str:
     return (
         f"| {name} | {i} | {len(y) / SR * 1000:.0f} | {dsp.onset(y, -40) / SR * 1000:.1f} |"
-        f" {dsp.db(dsp.active_rms(y)):.1f} | {target:.0f} | {dsp.max_momentary(y):.1f} | {dsp.db(dsp.true_peak(y)):.1f} |"
+        f" {dsp.momentary_lufs(y):.1f} | {dsp.db(dsp.active_rms(y)):.1f} | {target:.0f} | {encoded_tp(path):.1f} |"
     )
 
 
 def build_sfx(raw: str, recipes: dict) -> dict:
     out = {}
     report.append("## Sound effects")
-    report.append("Loudness is RMS over the active region (10 ms blocks within 30 dB of the loudest), the")
-    report.append("family target is in the next column; max momentary is the loudest 400 ms window.")
-    report.append("| cue | take | length ms | onset ms | active RMS dB | target | max momentary dB | TP dBTP |")
+    report.append("Sound effects are matched on max momentary loudness (K-weighted, 400 ms, as played on the")
+    report.append("stereo sfx bus); the target is set by role. TP is measured on the decoded MP3, 4x oversampled.")
+    report.append("Add the sfx bus gain at default settings (-2.9 dB) for the in-game level.")
+    report.append("")
+    report.append("| cue | take | length ms | onset ms | max momentary LUFS | active RMS dB | target LUFS | TP dBTP (MP3) |")
     report.append("|---|---|---|---|---|---|---|---|")
     for cue, r in recipes["sfx"].items():
         fam = recipes["families"][r["family"]]
         hp = r.get("hp", fam["hp"])
         files = []
         for i, parts in enumerate(r["variants"]):
-            y = finish_shot(mix_parts(raw, parts, hp), fam["level"])
+            y = finish_shot(mix_parts(raw, parts, hp), fam["lufs"], by="lufs")
             fname = f"sfx/{cue}-{i + 1}.mp3"
             dsp.encode_mp3(y, os.path.join(OUT, fname), quality=5)
             files.append({"file": fname, "onset": round(dsp.onset(y, -40) / SR, 5), "dur": round(len(y) / SR, 4)})
-            report.append(shot_row(cue, i + 1, y, fam["level"]))
+            report.append(shot_row(cue, i + 1, y, fam["lufs"], os.path.join(OUT, fname)))
         out[cue] = {"files": files, "gain": 1, "pitch": r["pitch"], "vol": r["vol"], "voices": r["voices"]}
+        if "repeatDb" in r:
+            out[cue]["repeatDb"] = r["repeatDb"]
     report.append("")
     return out
 
@@ -314,37 +336,48 @@ def build_sfx(raw: str, recipes: dict) -> dict:
 def build_ambience(raw: str, recipes: dict) -> dict:
     out = {}
     report.append("## Ambience")
-    report.append("| bed | take | length ms | onset ms | active RMS dB | target | max momentary dB | TP dBTP | loop seam |")
+    report.append("Beds are matched on RMS over the loop, one-shots on active-region RMS (target column).")
+    report.append("")
+    report.append("| bed | take | length ms | onset ms | max momentary LUFS | RMS dB | target dB | TP dBTP | loop seam |")
     report.append("|---|---|---|---|---|---|---|---|---|")
     for name, r in recipes["ambience"].items():
         if r["mode"] == "loop":
             x = dsp.highpass(load_src(raw, r["src"]), r["hp"])
-            body = int(round(r["body"] * SR))
-            assert abs(r["body"] * 300 - round(r["body"] * 300)) < 1e-9, "loop body must be a multiple of 1/300 s"
-            xfade = int(min(1.0, r["body"] / 4) * SR)
-            pre = max(xfade, int(0.5 * SR))
-            start = int(r["from"] * SR) - pre
-            assert start >= 0, f"{name}: 'from' must leave {pre / SR:.2f} s of pre-roll for the crossfade"
-            seg = x[start : start + pre + body + int(0.1 * SR) + xfade].copy()
-            # Equal-power crossfade: ambience is noise-like, the two ends are uncorrelated.
-            e = pre + body
-            t = np.linspace(0, np.pi / 2, xfade)
-            y = seg[: e + int(0.1 * SR)].copy()
-            y[e - xfade : e] = seg[e - xfade : e] * np.cos(t) + seg[pre - xfade : pre] * np.sin(t)
-            y[e : e + int(0.1 * SR)] = seg[pre : pre + int(0.1 * SR)]
-            y = y * (dsp.undb(r["level"]) / np.sqrt(np.mean(y[pre:e] ** 2)))
-            tp = dsp.true_peak(y)
-            if tp > dsp.undb(TP_CEIL_DB):
-                y = y * (dsp.undb(TP_CEIL_DB) / tp)
-            fname = f"amb/{name}.mp3"
-            dsp.encode_mp3(y, os.path.join(OUT, fname), quality=6)
-            j, rat = seam_stats(y, pre, e)
-            files = [{"file": fname, "onset": 0, "dur": round(len(y) / SR, 4), "loop": [round(pre / SR, 5), round(e / SR, 5)]}]
-            report.append(
-                f"| {name} | loop | {len(y) / SR * 1000:.0f} | - | {dsp.db(np.sqrt(np.mean(y[pre:e] ** 2))):.1f} | {r['level']} |"
-                f" {dsp.max_momentary(y):.1f} | {dsp.db(dsp.true_peak(y)):.1f} | jump/RMS {j:.3f} (body p95 {natural_jump(y, pre, e):.3f}),"
-                f" step {rat:+.2f} dB (body p95 {internal_steps(y, pre, e):.2f}) |"
-            )
+            # Several layers of different lengths play together, so the combined pattern repeats
+            # only after their least common multiple (each layer alone is a seamless loop).
+            layers = r["layers"] if "layers" in r else [{"from": r["from"], "body": r["body"]}]
+            level = r["level"] - 10 * np.log10(len(layers))
+            files = []
+            for li, lay in enumerate(layers):
+                body = int(round(lay["body"] * SR))
+                assert abs(lay["body"] * 300 - round(lay["body"] * 300)) < 1e-6, "loop body must be a multiple of 1/300 s"
+                xfade = int(min(1.0, lay["body"] / 4) * SR)
+                pre = max(xfade, int(0.5 * SR))
+                start = int(lay["from"] * SR) - pre
+                assert start >= 0, f"{name}: 'from' must leave {pre / SR:.2f} s of pre-roll for the crossfade"
+                seg = x[start : start + pre + body + int(0.1 * SR)].copy()
+                assert len(seg) == pre + body + int(0.1 * SR), f"{name}: source too short for this layer"
+                # Equal-power crossfade: ambience is noise-like, the two ends are uncorrelated.
+                e = pre + body
+                t = np.linspace(0, np.pi / 2, xfade)
+                y = seg.copy()
+                y[e - xfade : e] = seg[e - xfade : e] * np.cos(t) + seg[pre - xfade : pre] * np.sin(t)
+                y[e : e + int(0.1 * SR)] = seg[pre : pre + int(0.1 * SR)]
+                y = y * (dsp.undb(level) / np.sqrt(np.mean(y[pre:e] ** 2)))
+                tp = dsp.true_peak(y)
+                if tp > dsp.undb(TP_CEIL_DB):
+                    y = y * (dsp.undb(TP_CEIL_DB) / tp)
+                fname = f"amb/{name}.mp3" if li == 0 else f"amb/{name}-{li + 1}.mp3"
+                dsp.encode_mp3(y, os.path.join(OUT, fname), quality=6)
+                j, rat = seam_stats(y, pre, e)
+                files.append({"file": fname, "onset": 0, "dur": round(len(y) / SR, 4),
+                              "loop": [round(pre / SR, 5), round(e / SR, 5)]})
+                report.append(
+                    f"| {name} | loop {li + 1} ({lay['body']} s) | {len(y) / SR * 1000:.0f} | - |"
+                    f" {dsp.momentary_lufs(y):.1f} | {dsp.db(np.sqrt(np.mean(y[pre:e] ** 2))):.1f} | {level:.0f} |"
+                    f" {encoded_tp(os.path.join(OUT, fname)):.1f} | jump/RMS {j:.3f}"
+                    f" (body p95 {natural_jump(y, pre, e):.3f}), step {rat:+.2f} dB (body p95 {internal_steps(y, pre, e):.2f}) |"
+                )
             out[name] = {"files": files, "gain": 1, "mode": "loop"}
         else:
             files = []
@@ -353,7 +386,7 @@ def build_ambience(raw: str, recipes: dict) -> dict:
                 fname = f"amb/{name}-{i + 1}.mp3"
                 dsp.encode_mp3(y, os.path.join(OUT, fname), quality=6)
                 files.append({"file": fname, "onset": round(dsp.onset(y, -40) / SR, 5), "dur": round(len(y) / SR, 4)})
-                report.append(shot_row(name, i + 1, y, r["level"]) + " - |")
+                report.append(shot_row(name, i + 1, y, r["level"], os.path.join(OUT, fname)) + " - |")
             out[name] = {"files": files, "gain": 1, "mode": "shots", "every": r["every"]}
     report.append("")
     return out

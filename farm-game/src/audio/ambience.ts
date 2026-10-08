@@ -3,7 +3,8 @@ import type { SampleBank } from './bank';
 import { glide, playSample } from './voice';
 
 interface Bed {
-  src: AudioBufferSourceNode | null;
+  /** One looping source per layer file (layers of different lengths hide the repeat). */
+  srcs: (AudioBufferSourceNode | null)[];
   gain: GainNode;
   target: number;
   quietSince: number;
@@ -32,7 +33,7 @@ export class Ambience {
   /** Can this bed or pool play from files (decoded now)? */
   available(name: string): boolean {
     const a = MANIFEST.ambience[name];
-    return !!a && a.files.some((z) => this.bank.get(z.file));
+    return !!a && a.files.some((z) => this.bank.has(z.file));
   }
 
   /** Has every file of this bed or pool failed to load? */
@@ -67,23 +68,24 @@ export class Ambience {
       const gain = this.ctx.createGain();
       gain.gain.value = 0;
       gain.connect(this.dest);
-      bed = { src: null, gain, target: 0, quietSince: now, drift: 1 };
+      bed = { srcs: [], gain, target: 0, quietSince: now, drift: 1 };
       this.beds.set(name, bed);
     }
-    if (!bed.src && target > 0) {
-      const zone = MANIFEST.ambience[name]!.files[0]!;
-      const d = this.bank.get(zone.file, now);
-      if (d && zone.loop) {
+    if (target > 0) {
+      MANIFEST.ambience[name]!.files.forEach((zone, i) => {
+        if (bed!.srcs[i]) return;
+        const d = this.bank.get(zone.file, now);
+        if (!d || !zone.loop) return;
         const src = this.ctx.createBufferSource();
         src.buffer = d.buffer;
         src.loop = true;
         src.loopStart = zone.loop[0] + d.offset;
         src.loopEnd = zone.loop[1] + d.offset;
-        // Start somewhere random in the loop so two sessions never line up the same way.
+        // Start somewhere random in the loop so layers and sessions never line up the same way.
         src.start(now, zone.loop[0] + d.offset + this.rng() * (zone.loop[1] - zone.loop[0]));
-        src.connect(bed.gain);
-        bed.src = src;
-      }
+        src.connect(bed!.gain);
+        bed!.srcs[i] = src;
+      });
     }
     bed.drift = Math.max(0.7, Math.min(1.1, bed.drift + (this.rng() - 0.5) * 0.04));
     const level = target * bed.drift;
@@ -92,10 +94,12 @@ export class Ambience {
       bed.target = level;
     }
     if (target > 0) bed.quietSince = now;
-    else if (now - bed.quietSince > 8 && bed.src) {
-      bed.src.stop();
-      bed.src.disconnect();
-      bed.src = null;
+    else if (now - bed.quietSince > 8 && bed.srcs.some(Boolean)) {
+      for (const s of bed.srcs) {
+        s?.stop();
+        s?.disconnect();
+      }
+      bed.srcs = [];
     }
   }
 

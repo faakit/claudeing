@@ -3,6 +3,9 @@ import type { SampleBank } from './bank';
 import { playSample } from './voice';
 import type { Voice } from './voice';
 
+/** Repeats of one cue closer than this (seconds) count as a held tool. */
+export const REPEAT_WINDOW = 0.35;
+
 /** Random spread helper: uniform in [-1, 1]. */
 const spread = (rng: () => number) => rng() * 2 - 1;
 
@@ -14,6 +17,7 @@ const spread = (rng: () => number) => rng() * 2 - 1;
 export class SfxPlayer {
   private voices = new Map<string, Voice[]>();
   private last = new Map<string, number>();
+  private lastAt = new Map<string, number>();
   readonly stats = { played: 0, fallback: 0 };
 
   constructor(
@@ -47,7 +51,12 @@ export class SfxPlayer {
     const live = (this.voices.get(cue) ?? []).filter((v) => v.end > now);
     while (live.length >= Math.max(1, a.voices)) live.shift()!.stop(now, 0.03);
     const rate = Math.pow(2, (spread(this.rng) * a.pitch) / 12);
-    const gain = a.gain * Math.pow(10, (spread(this.rng) * a.vol) / 20);
+    // A held Action repeats a tool every ~200 ms: repeats that close are played 4 dB softer, so a
+    // row of watering is a steady pour at the level of one can, not a pile-up.
+    const prevAt = this.lastAt.get(cue);
+    const repeatDuck = prevAt !== undefined && now - prevAt < REPEAT_WINDOW ? Math.pow(10, (a.repeatDb ?? -4) / 20) : 1;
+    this.lastAt.set(cue, now);
+    const gain = a.gain * repeatDuck * Math.pow(10, (spread(this.rng) * a.vol) / 20);
     live.push(playSample(this.ctx, pick.d!, pick.z, this.dest, { when: now, rate, gain }));
     this.voices.set(cue, live);
     this.stats.played++;

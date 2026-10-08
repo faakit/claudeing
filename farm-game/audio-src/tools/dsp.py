@@ -182,3 +182,35 @@ def limit(x: np.ndarray, ceiling: float, lookahead: float = 0.0015, release: flo
     w = max(1, int(0.001 * sr))
     out = np.convolve(np.pad(out, (w, w), mode="edge"), np.ones(2 * w + 1) / (2 * w + 1), mode="same")[w:-w]
     return x * np.minimum(out, g)
+
+
+# ITU-R BS.1770 K-weighting (pre-filter shelf + RLB high-pass), coefficients for 48 kHz. Applied as a
+# magnitude response in the FFT domain (evaluated at the same physical frequencies), which is exact
+# enough below 20 kHz for loudness measurement at 44.1 kHz.
+_K1 = ([1.53512485958697, -2.69169618940638, 1.19839281085285], [1.0, -1.69065929318241, 0.73248077421585])
+_K2 = ([1.0, -2.0, 1.0], [1.0, -1.99004745483398, 0.99007225036621])
+
+
+def _biquad_mag(b, a, f):
+    z = np.exp(-1j * 2 * np.pi * f / 48000.0)
+    return np.abs((b[0] + b[1] * z + b[2] * z * z) / (a[0] + a[1] * z + a[2] * z * z))
+
+
+def k_weight(x: np.ndarray, sr: int = SR) -> np.ndarray:
+    n = len(x)
+    nfft = 1 << int(np.ceil(np.log2(max(n, 2) * 2)))
+    f = np.fft.rfftfreq(nfft, 1 / sr)
+    h = _biquad_mag(*_K1, f) * _biquad_mag(*_K2, f)
+    return np.fft.irfft(np.fft.rfft(x, nfft) * h, nfft)[:n]
+
+
+def momentary_lufs(x: np.ndarray, sr: int = SR, channels: int = 2) -> float:
+    """Max momentary loudness (400 ms windows, 100 ms hop) of a mono signal as it plays on a stereo
+    bus (both channels equal, so +3 dB over one channel). Short sounds are padded with silence."""
+    w = int(0.4 * sr)
+    y = k_weight(np.concatenate([x, np.zeros(w)]), sr)
+    c = np.concatenate([[0.0], np.cumsum(y**2)])
+    hop = int(0.1 * sr)
+    starts = np.arange(0, max(1, len(y) - w + 1), hop)
+    ms = (c[starts + w] - c[starts]) / w
+    return float(-0.691 + 10 * np.log10(max(ms.max() * channels, 1e-12)))

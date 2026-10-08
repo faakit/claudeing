@@ -129,6 +129,8 @@ class AudioEngine {
   private synthMusicOn = false;
   private musicStopped = false;
   private slot: MusicSlot | null = null;
+  /** The season piece to come back to (kept decoded while in the mine, house or festival). */
+  private homeSlot: MusicSlot = 'spring';
   private indoor = false;
   private ambienceTargets: Partial<AmbienceTargets> = {};
   private lastEvict = 0;
@@ -484,6 +486,7 @@ class AudioEngine {
   /** Season mood for the synth fallback; also follows the season if a season piece is playing. */
   setSeason(season: string): void {
     this.season = SEASON_MUSIC[season] ?? SEASON_MUSIC['spring']!;
+    if (SEASON_SLOTS.has(season)) this.homeSlot = season as MusicSlot;
     if (this.slot && SEASON_SLOTS.has(this.slot) && SEASON_SLOTS.has(season))
       this.setMusic(season as MusicSlot, this.indoor);
   }
@@ -492,7 +495,10 @@ class AudioEngine {
   setMusic(slot: MusicSlot, indoor: boolean): void {
     this.slot = slot;
     this.indoor = indoor;
-    if (SEASON_SLOTS.has(slot)) this.season = SEASON_MUSIC[slot] ?? this.season;
+    if (SEASON_SLOTS.has(slot)) {
+      this.season = SEASON_MUSIC[slot] ?? this.season;
+      this.homeSlot = slot;
+    }
     if (this.ctx && this.musicPlayer) this.musicPlayer.setSlot(slot, indoor, this.ctx.currentTime);
   }
 
@@ -543,7 +549,8 @@ class AudioEngine {
     const keep = new Set<string>();
     Object.values(MANIFEST.sfx).forEach((s) => s.files.forEach((z) => keep.add(z.file)));
     jingleInstruments().forEach((i) => instrumentFiles(i).forEach((z) => keep.add(z.file)));
-    if (this.slot) slotInstruments(this.slot).forEach((i) => instrumentFiles(i).forEach((z) => keep.add(z.file)));
+    for (const s of [this.slot, this.homeSlot])
+      if (s) slotInstruments(s).forEach((i) => instrumentFiles(i).forEach((z) => keep.add(z.file)));
     for (const [k, v] of Object.entries(this.ambienceTargets))
       if ((v ?? 0) > 0 || k === 'rain') MANIFEST.ambience[k]?.files.forEach((z) => keep.add(z.file));
     const others = allFiles()

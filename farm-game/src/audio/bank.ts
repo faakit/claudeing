@@ -141,6 +141,11 @@ export class SampleBank {
     return d;
   }
 
+  /** Is it decoded? Does not count as a use (status checks must not keep samples resident). */
+  has(file: string): boolean {
+    return this.decoded.has(file);
+  }
+
   /** True once the file can never play (fetch or decode failed). */
   failed(file: string): boolean {
     return this.state.get(file) === 'failed' || this.failedDecode.has(file);

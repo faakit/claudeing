@@ -180,28 +180,32 @@
   }
  },
  "families": {
+  "rewards": {
+   "lufs": -18,
+   "hp": 120
+  },
+  "tools": {
+   "lufs": -20,
+   "hp": 80
+  },
+  "light": {
+   "lufs": -22,
+   "hp": 80
+  },
+  "door": {
+   "lufs": -21,
+   "hp": 60
+  },
   "ui": {
-   "level": -22,
+   "lufs": -25,
    "hp": 150
   },
   "steps": {
-   "level": -27,
+   "lufs": -28,
    "hp": 200
   },
-  "tools": {
-   "level": -21,
-   "hp": 80
-  },
-  "rewards": {
-   "level": -18.5,
-   "hp": 120
-  },
-  "door": {
-   "level": -22,
-   "hp": 60
-  },
   "error": {
-   "level": -22,
+   "lufs": -23,
    "hp": 120
   }
  },
@@ -259,7 +263,7 @@
    "family": "tools",
    "pitch": 1.0,
    "vol": 1.5,
-   "voices": 2,
+   "voices": 1,
    "variants": [
     [
      {
@@ -316,7 +320,7 @@
    ]
   },
   "plant": {
-   "family": "tools",
+   "family": "light",
    "pitch": 1.5,
    "vol": 1.5,
    "voices": 2,
@@ -467,7 +471,7 @@
    ]
   },
   "swing": {
-   "family": "tools",
+   "family": "light",
    "pitch": 1.5,
    "vol": 1.5,
    "voices": 2,
@@ -578,7 +582,8 @@
       "src": "sfx/kenney-ui/click5"
      }
     ]
-   ]
+   ],
+   "repeatDb": 0
   },
   "select": {
    "family": "ui",
@@ -596,7 +601,8 @@
       "src": "sfx/kenney-interface/select_007"
      }
     ]
-   ]
+   ],
+   "repeatDb": 0
   },
   "door": {
    "family": "door",
@@ -655,7 +661,8 @@
       "to": 0.2
      }
     ]
-   ]
+   ],
+   "repeatDb": 0
   },
   "stepWood": {
    "family": "steps",
@@ -683,7 +690,8 @@
       "src": "sfx/kenney-rpg/footstep08"
      }
     ]
-   ]
+   ],
+   "repeatDb": 0
   },
   "error": {
    "family": "error",
@@ -716,10 +724,18 @@
   "crickets": {
    "mode": "loop",
    "src": "amb/oga-crickets",
-   "from": 1.2,
-   "body": 9.0,
    "level": -36,
-   "hp": 1500
+   "hp": 1500,
+   "layers": [
+    {
+     "from": 1.2,
+     "body": 9.0
+    },
+    {
+     "from": 3.2,
+     "body": 7.2
+    }
+   ]
   },
   "wind": {
    "mode": "loop",
@@ -794,37 +810,32 @@
    "mode": "shots",
    "every": 2.5,
    "level": -26,
-   "hp": 250,
+   "hp": 400,
    "shots": [
     {
-     "src": "amb/oga-drip",
-     "from": 8.29,
-     "to": 8.8
+     "src": "amb/oga-dungeon",
+     "from": 72.46,
+     "to": 72.85
     },
     {
-     "src": "amb/oga-drip",
-     "from": 1.5,
-     "to": 1.95
+     "src": "amb/oga-dungeon",
+     "from": 77.25,
+     "to": 77.6
     },
     {
-     "src": "amb/oga-drip",
-     "from": 2.27,
-     "to": 2.75
+     "src": "amb/oga-dungeon",
+     "from": 31.13,
+     "to": 31.45
     },
     {
-     "src": "amb/oga-drip",
-     "from": 18.85,
-     "to": 19.4
+     "src": "amb/oga-dungeon",
+     "from": 69.73,
+     "to": 70.1
     },
     {
-     "src": "amb/oga-drip",
-     "from": 5.54,
-     "to": 5.9
-    },
-    {
-     "src": "amb/oga-drip",
-     "from": 1.14,
-     "to": 1.45
+     "src": "amb/oga-dungeon",
+     "from": 21.74,
+     "to": 22.05
     }
    ]
   },

@@ -64,6 +64,20 @@ describe('sample bank', () => {
   });
 });
 
+describe('sample residency', () => {
+  it("status checks do not count as use, so a piece left for the mine is not kept or dropped by mistake", async () => {
+    const ctx = new FakeAudioContext();
+    const bank = new SampleBank('x/', async () => GOOD_BYTES());
+    const m = new MusicPlayer(asCtx(ctx), bank, { dry: { day: ctx.destination, night: ctx.destination, both: ctx.destination }, wet: { day: ctx.destination, night: ctx.destination, both: ctx.destination }, sfx: ctx.destination } as unknown as ConstructorParameters<typeof MusicPlayer>[2], () => undefined);
+    await m.preload('spring');
+    const files = slotInstruments('spring').flatMap(instrumentFiles).map((z) => z.file);
+    for (const f of files) bank.get(f, 100); // last real use at t=100
+    for (let i = 0; i < 50; i++) m.status('spring'); // polled every tick by the engine
+    expect(bank.evict(files, 50)).toBe(0); // used at 100: kept
+    expect(bank.evict(files, 101)).toBe(files.length); // unused since 100: dropped
+  });
+});
+
 describe('sound effect player', () => {
   it('caps voices per cue, stealing the oldest, and never repeats a take back to back', async () => {
     const ctx = new FakeAudioContext();
