@@ -189,7 +189,8 @@
     "icon": "item_fiber",
     "color": "#8fbf5a",
     "sellPrice": 2,
-    "description": "Cut from weeds."
+    "description": "Cut from weeds.",
+    "buyPrice": 5
   },
   "wild_leek": {
     "name": "Wild Leek",
@@ -495,5 +496,42 @@
     "sellPrice": 95,
     "description": "A winter green.",
     "family": "veg"
+  },
+  "wine": {
+    "name": "Wine",
+    "type": "preserve",
+    "icon": "item_wine",
+    "color": "#8a2a5a",
+    "sellPrice": 40,
+    "description": "Aged to perfection.",
+    "derived": true,
+    "sellMultiplier": 1.8,
+    "nameTemplate": "{of} Wine"
+  },
+  "honey": {
+    "name": "Honey",
+    "type": "product",
+    "icon": "item_honey",
+    "color": "#e8b030",
+    "sellPrice": 70,
+    "description": "Sweet and golden."
+  },
+  "keg": {
+    "name": "Keg",
+    "type": "placeable",
+    "icon": "item_keg",
+    "color": "#8a5a32",
+    "sellPrice": 120,
+    "description": "Turns fruit into wine in 5 days.",
+    "placeable": true
+  },
+  "bee_house": {
+    "name": "Bee House",
+    "type": "placeable",
+    "icon": "item_bee_house",
+    "color": "#e8b030",
+    "sellPrice": 150,
+    "description": "Makes honey every few days.",
+    "placeable": true
   }
 }

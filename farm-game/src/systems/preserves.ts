@@ -1,10 +1,15 @@
-import { items, placeables } from '../data';
+import { items, machines } from '../data';
 import type { GameState, PlacedObject } from '../state/GameState';
 import { addItem, removeStack, roomFor } from './inventory';
 import { refOf, type ItemRef } from './itemRef';
 
-/** What a jar makes from an item, by the item's `family`. Data-driven so new families just add a row. */
-export const JAR_RECIPES: Record<string, string> = { fruit: 'jam', veg: 'pickles' };
+/** What `ref` would become in a machine (default: the preserve jar), or null if it can't be made. */
+export function preserveOf(ref: ItemRef, machine = 'preserve_jar'): ItemRef | null {
+  const family = items[ref.item]?.family;
+  const out = family ? machines[machine]?.recipes[family] : undefined;
+  if (!out || ref.of) return null;
+  return refOf({ item: out, of: ref.item, q: ref.q });
+}
 
 export interface JarContents {
   /** The finished good, already worked out when loaded. */
@@ -13,21 +18,12 @@ export interface JarContents {
   days: number;
 }
 
-/** What `ref` would become in a jar, or null if it can't be preserved. */
-export function preserveOf(ref: ItemRef): ItemRef | null {
-  const family = items[ref.item]?.family;
-  const out = family ? JAR_RECIPES[family] : undefined;
-  if (!out || ref.of) return null;
-  return refOf({ item: out, of: ref.item, q: ref.q });
-}
-
 export const jarContents = (obj: PlacedObject): JarContents | null =>
   (obj.data['jar'] as JarContents | undefined) ?? null;
 
 export const jarReady = (obj: PlacedObject): boolean => (jarContents(obj)?.days ?? 1) <= 0;
 
-export const jarDays = (obj: PlacedObject): number =>
-  Number(placeables[obj.type]?.params['days'] ?? 3);
+export const jarDays = (obj: PlacedObject): number => machines[obj.type]?.days ?? 3;
 
 /** Put one item into an empty jar. */
 export function loadJar(
@@ -36,7 +32,7 @@ export function loadJar(
   ref: ItemRef,
 ): 'ok' | 'busy' | 'invalid' {
   if (jarContents(obj)) return 'busy';
-  const out = preserveOf(ref);
+  const out = preserveOf(ref, obj.type);
   if (!out) return 'invalid';
   if (!removeStack(state, ref, 1)) return 'invalid';
   obj.data['jar'] = { out, days: jarDays(obj) } satisfies JarContents;

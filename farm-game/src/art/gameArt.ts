@@ -251,7 +251,13 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(6, 10, 1, 1, dk);
     r(9, 9, 1, 1, dk);
   } else if (it.type === 'product') {
-    if (id === 'milk') {
+    if (id === 'honey') {
+      r(4, 6, 8, 8, '#e8b030'); // honey jar
+      r(4, 6, 8, 1, '#f4d35e');
+      r(5, 8, 2, 3, '#ffffff');
+      r(3, 4, 10, 2, '#b9783c'); // lid
+      r(3, 4, 10, 1, '#d8a060');
+    } else if (id === 'milk') {
       r(5, 6, 6, 8, '#f4f4f8'); // bottle
       r(5, 6, 6, 1, '#ffffff');
       r(6, 3, 4, 3, '#dfe6f0');
@@ -279,7 +285,25 @@ function drawPlaceable(ctx: Ctx, id: string, c: string, dk: string, lt: string):
     ctx.fillStyle = col;
     ctx.fillRect(x, y, w, h);
   };
-  if (id === 'coop' || id === 'barn') {
+  if (id === 'keg') {
+    r(2, 4, 12, 10, '#8a5a32'); // barrel on its side
+    r(2, 4, 12, 1, '#b07a48');
+    r(2, 7, 12, 1, '#5a3a20');
+    r(2, 11, 12, 1, '#5a3a20');
+    r(1, 5, 1, 8, '#5a3a20');
+    r(14, 5, 1, 8, '#5a3a20');
+    r(7, 9, 2, 2, '#e8cf7a'); // tap
+    r(7, 11, 2, 2, '#8d98ab');
+  } else if (id === 'bee_house') {
+    r(3, 6, 10, 8, '#e8b030'); // hive box
+    r(3, 6, 10, 1, '#f4d35e');
+    for (const y of [8, 10, 12]) r(3, y, 10, 1, '#b8841c');
+    r(2, 4, 12, 3, '#b9783c'); // roof
+    r(2, 4, 12, 1, '#d8a060');
+    r(6, 9, 4, 2, '#2a1a1a'); // entrance
+    r(12, 3, 1, 1, '#14101f'); // bee
+    r(13, 3, 1, 1, '#f4d35e');
+  } else if (id === 'coop' || id === 'barn') {
     const wall = id === 'coop' ? '#b9783c' : '#a8443a';
     const roof = id === 'coop' ? '#7a4a28' : '#5a2a28';
     r(2, 7, 12, 8, wall);

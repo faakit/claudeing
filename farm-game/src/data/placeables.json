@@ -48,5 +48,25 @@
       "species": "cow",
       "max": 2
     }
+  },
+  "keg": {
+    "name": "Keg",
+    "behavior": "jar",
+    "solid": true,
+    "sprite": "obj_keg",
+    "params": {
+      "max": 4
+    }
+  },
+  "bee_house": {
+    "name": "Bee House",
+    "behavior": "beeHouse",
+    "solid": true,
+    "sprite": "obj_bee_house",
+    "params": {
+      "max": 5,
+      "days": 4,
+      "cap": 3
+    }
   }
 }

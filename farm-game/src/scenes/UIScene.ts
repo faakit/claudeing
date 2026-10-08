@@ -302,6 +302,10 @@ export class UIScene extends Phaser.Scene {
       drawActionIcon,
       () => (inputHub.actionHeld = true),
       () => (inputHub.actionHeld = false),
+      (step) => {
+        cycleSlot(getState(), step);
+        audio.play('select');
+      },
     );
     this.interactButton = new TouchButton(
       this,

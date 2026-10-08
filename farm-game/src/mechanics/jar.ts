@@ -1,3 +1,4 @@
+import { machines } from '../data';
 import { addStat } from '../systems/goals';
 import { displayName } from '../systems/itemRef';
 import { addXp } from '../systems/skills';
@@ -9,6 +10,7 @@ import { toast } from '../systems/events';
 registerPlaceableBehavior('jar', {
   onMorning: (_state, obj) => tickJar(obj),
   canPickUp: (obj) => !jarContents(obj),
+  status: (obj) => (!jarContents(obj) ? 'idle' : jarReady(obj) ? 'ready' : 'busy'),
   interact(state, obj) {
     const c = jarContents(obj);
     if (!c) return { kind: 'panel', panel: 'jar', id: obj.id };
@@ -21,7 +23,7 @@ registerPlaceableBehavior('jar', {
     if (typeof res === 'string')
       return { kind: 'message', text: res === 'full' ? 'Inventory full!' : 'Nothing yet.' };
     addStat(state, 'preserved');
-    addXp(state, 'farming', 8);
+    addXp(state, 'farming', machines[obj.type]?.xp ?? 8);
     toast(`Got ${displayName(res)}`, 'good');
     return { kind: 'message', text: '' };
   },

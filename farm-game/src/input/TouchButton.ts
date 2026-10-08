@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
 
+/** Logical pixels of vertical travel per tool change. */
+const SWIPE_STEP = 14;
+
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
 
 /** Round on-screen button with a generous hit area and press feedback. */
@@ -18,6 +21,8 @@ export class TouchButton {
     icon: IconDrawer,
     onPress: () => void,
     onRelease?: () => void,
+    /** Called with +1 / -1 when the finger slides up / down while pressing (e.g. change tool). */
+    onSwipe?: (step: number) => void,
   ) {
     const body = scene.add.graphics();
     body.fillStyle(0x14101f, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
@@ -37,12 +42,34 @@ export class TouchButton {
       hitArea: new Phaser.Geom.Circle(hit, hit, hit),
       hitAreaCallback: Phaser.Geom.Circle.Contains,
     });
-    this.zone.on('pointerdown', () => {
+    let swipeId: number | null = null;
+    let anchorY = 0;
+    this.zone.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!this.enabled) return;
+      swipeId = p.id;
+      anchorY = p.y;
       this.pressed = true;
       this.press(true);
       onPress();
     });
+    if (onSwipe) {
+      scene.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+        if (swipeId !== p.id) return;
+        const dy = p.y - anchorY;
+        if (Math.abs(dy) < SWIPE_STEP) return;
+        anchorY = p.y;
+        if (this.pressed) {
+          // A swipe is not a work press: let go of the held action first.
+          this.pressed = false;
+          this.press(false);
+          onRelease?.();
+        }
+        onSwipe(dy < 0 ? 1 : -1);
+      });
+      scene.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+        if (swipeId === p.id) swipeId = null;
+      });
+    }
     // Only a button that was actually pressed may release, so a mouse merely crossing it
     // can never cancel input held elsewhere (e.g. Space held for the tool).
     for (const ev of ['pointerup', 'pointerout']) {

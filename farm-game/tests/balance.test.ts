@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { animals, crops, fish, forage, items, placeables, recipes, tools } from '../src/data';
+import {
+  animals,
+  crops,
+  fish,
+  forage,
+  items,
+  machines,
+  orders as ordersCfg,
+  placeables,
+  recipes,
+  tools,
+} from '../src/data';
 import { forageTable } from '../src/systems/forage';
 import { sellValue } from '../src/systems/itemRef';
 import { SEASONS } from '../src/state/GameState';
@@ -60,13 +71,42 @@ describe('balance guard rails', () => {
     }
   });
 
-  it('preserving beats raw selling but not wildly', () => {
-    for (const [id, def] of Object.entries(items)) {
-      if (!def.family || def.family === 'flower') continue;
-      const out = def.family === 'fruit' ? 'jam' : 'pickles';
-      const ratio = sellValue({ item: out, of: id }) / price(id);
-      expect(ratio, id).toBeGreaterThan(1.3);
-      expect(ratio, id).toBeLessThan(3.2);
+  it('processing beats raw selling but not wildly', () => {
+    for (const [machine, m] of Object.entries(machines))
+      for (const [id, def] of Object.entries(items)) {
+        const out = def.family ? m.recipes[def.family] : undefined;
+        if (!out) continue;
+        const ratio = sellValue({ item: out, of: id }) / price(id);
+        expect(ratio, `${machine}: ${id}`).toBeGreaterThan(1.3);
+        expect(ratio, `${machine}: ${id}`).toBeLessThan(3.2);
+      }
+  });
+});
+
+describe('side income stays bounded', () => {
+  it('jars, houses and orders together cannot outgrow the economy', () => {
+    // Machines (jar, keg...): best gain per machine-day, times the cap.
+    let jarPerDay = 0;
+    for (const [id, m] of Object.entries(machines)) {
+      const max = Number(placeables[id]?.params['max']);
+      const gains = Object.entries(items).flatMap(([src, d]) => {
+        const out = d.family ? m.recipes[d.family] : undefined;
+        return out ? [sellValue({ item: out, of: src }) - price(src)] : [];
+      });
+      jarPerDay += (max * Math.max(...gains)) / m.days;
     }
+    // Animal houses at their caps.
+    let animalPerDay = 0;
+    for (const [id, a] of Object.entries(animals)) {
+      const house = Object.entries(placeables).find(([, p]) => p.params['species'] === id)?.[1];
+      const max = Number(house?.params['max'] ?? 1);
+      animalPerDay += max * a.capacity * (price(a.product) - (items[a.feed]?.buyPrice ?? 0));
+    }
+    // Orders: the premium over selling, at the cap.
+    const orderPerDay = ordersCfg.perDay * Math.min(ordersCfg.maxReward, 600);
+    expect(jarPerDay).toBeLessThan(650);
+    expect(animalPerDay).toBeLessThan(900);
+    expect(jarPerDay + animalPerDay + orderPerDay).toBeLessThan(3200);
+    expect(ordersCfg.rewardMultiplier[1]).toBeLessThanOrEqual(1.7);
   });
 });

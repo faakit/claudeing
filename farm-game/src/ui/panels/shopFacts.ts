@@ -21,6 +21,7 @@ export function shopFacts(itemId: string, own: number, day: number): string {
   else if (def.type === 'fertilizer')
     base = (def.fertilizer?.growth ?? 0) > 0 ? 'Grows fast' : 'Finer crops';
   else if (def.type === 'bait') base = 'Faster bites';
+  else if (def.type === 'material') base = 'For crafting';
   else base = def.description;
   return own > 0 ? `${base} (own ${own})` : base;
 }

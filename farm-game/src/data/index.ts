@@ -15,6 +15,7 @@ import animalsRaw from './animals.json';
 import npcsRaw from './npcs.json';
 import tipsRaw from './tips.json';
 import plotsRaw from './plots.json';
+import machinesRaw from './machines.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -194,6 +195,13 @@ export interface NpcDef {
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
 }
+export interface MachineDef {
+  /** Mornings until the output is ready. */
+  days: number;
+  xp: number;
+  /** Item family ("fruit", "veg") -> the derived good this machine makes of it. */
+  recipes: Record<string, string>;
+}
 export interface PlotDef {
   name: string;
   /** [tx, ty, width, height] on the farm map. */
@@ -267,6 +275,7 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
@@ -374,6 +383,13 @@ export function validateContent(): void {
       if (n.lines[tier].length === 0) fail('npcs', `"${id}" needs "${tier}" lines`);
     for (const lvl of Object.keys(n.perks))
       if (Number(lvl) < 1 || Number(lvl) > 5) fail('npcs', `"${id}" perk at invalid hearts ${lvl}`);
+  }
+  for (const [id, m] of Object.entries(machines)) {
+    if (!placeables[id]) fail('machines', `"${id}" is not a placeable`);
+    if (m.days < 1) fail('machines', `"${id}" needs days >= 1`);
+    for (const out of Object.values(m.recipes))
+      if (!items[out]?.derived)
+        fail('machines', `"${id}" makes "${out}", which is not a derived item`);
   }
   const claimed = new Set<string>();
   for (const [id, pl] of Object.entries(plots)) {

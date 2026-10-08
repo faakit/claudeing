@@ -25,6 +25,7 @@ import { saveNow } from '../game/persistence';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
+import { spawnPosition } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
@@ -39,6 +40,7 @@ import { tickTime } from '../systems/time';
 import {
   adjacentDirection,
   buildCollisionGrid,
+  nearestFreeTile,
   doorTarget,
   facingTile,
   objectAt,
@@ -94,6 +96,16 @@ export abstract class WorldScene extends Phaser.Scene {
     this.raw = raw;
     this.rebuildGrid();
     this.objects = parseMapObjects(raw);
+    // A saved position can be damaged (out of the map, inside a wall): step out to the nearest open tile.
+    {
+      const here = playerTile(state.player);
+      if (isTileBlocked(this.grid, here.tx, here.ty)) {
+        const free = nearestFreeTile(this.grid, here.tx, here.ty);
+        const pos = spawnPosition(free.tx, free.ty);
+        state.player.x = pos.x;
+        state.player.y = pos.y;
+      }
+    }
 
     const map = this.make.tilemap({ key: mapCacheKey(this.mapId) });
     const tileset = map.addTilesetImage('placeholder', TILESET_KEY, TILE_SIZE, TILE_SIZE, 0, 0);

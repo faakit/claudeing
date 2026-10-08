@@ -1,0 +1,17 @@
+{
+  "preserve_jar": {
+    "days": 3,
+    "xp": 8,
+    "recipes": {
+      "fruit": "jam",
+      "veg": "pickles"
+    }
+  },
+  "keg": {
+    "days": 5,
+    "xp": 12,
+    "recipes": {
+      "fruit": "wine"
+    }
+  }
+}

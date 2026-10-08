@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { placeables } from '../../data';
 import { audio } from '../../platform/audio';
 import { getState } from '../../state/store';
 import { gameEvents } from '../../systems/events';
@@ -31,7 +32,7 @@ export class JarPanel extends Modal {
     const s = getState();
     this.panel();
     const found = findPlaced(s, this.id);
-    this.label(8, 8, 'Preserve Jar', C.gold);
+    this.label(8, 8, found ? (placeables[found.obj.type]?.name ?? 'Machine') : 'Machine', C.gold);
     this.label(
       8,
       20,
@@ -39,7 +40,8 @@ export class JarPanel extends Modal {
       C.creamDim,
     );
     const kinds = new Map<string, ItemRef>();
-    for (const st of s.inventory.slots) if (st && preserveOf(st)) kinds.set(keyOf(st), refOf(st));
+    for (const st of s.inventory.slots)
+      if (st && preserveOf(st, found?.obj.type)) kinds.set(keyOf(st), refOf(st));
     const list = [...kinds.values()];
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
@@ -55,7 +57,7 @@ export class JarPanel extends Modal {
       );
     let y = 34;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
-      const out = preserveOf(ref) as ItemRef;
+      const out = preserveOf(ref, found?.obj.type) as ItemRef;
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),

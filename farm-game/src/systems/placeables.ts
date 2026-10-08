@@ -26,6 +26,8 @@ export interface PlaceableBehavior {
   interact?: (state: GameState, obj: PlacedObject, def: PlaceableDef) => InteractResult;
   /** May this object be picked up right now? (A working jar may not.) */
   canPickUp?: (obj: PlacedObject) => boolean;
+  /** How the world should draw it: nothing going on, working, or goods ready to collect. */
+  status?: (obj: PlacedObject) => 'idle' | 'busy' | 'ready';
 }
 
 const behaviors = new Map<string, PlaceableBehavior>();
@@ -100,6 +102,11 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
   if (!def) return { kind: 'none' };
   const b = behaviorOf(def);
   return b.interact ? b.interact(state, obj, def) : { kind: 'pickup' };
+}
+
+export function statusOf(obj: PlacedObject): 'idle' | 'busy' | 'ready' {
+  const def = placeables[obj.type];
+  return def ? (behaviorOf(def).status?.(obj) ?? 'idle') : 'idle';
 }
 
 export function canPickUp(obj: PlacedObject): boolean {

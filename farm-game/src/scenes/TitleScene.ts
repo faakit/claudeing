@@ -9,7 +9,7 @@ import { setHapticsEnabled } from '../platform/haptics';
 import { createInitialState, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { setState } from '../state/store';
-import { loadGame } from '../systems/save';
+import { hasNewerSave, loadGame } from '../systems/save';
 import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
 import { C } from '../ui/theme';
@@ -19,6 +19,7 @@ import { Button } from '../ui/widgets';
 export class TitleScene extends Phaser.Scene {
   private loaded: GameState | null = null;
   private confirmNew = false;
+  private newerSave = false;
   private buttons: Button[] = [];
   private note!: Label;
   /** Enter on the title runs the main button (Continue if there is a save, else New Game). */
@@ -70,8 +71,13 @@ export class TitleScene extends Phaser.Scene {
       maxWidth: 180,
     });
 
-    void loadGame(saveStore).then((res) => {
+    void loadGame(saveStore).then(async (res) => {
       this.loaded = res?.state ?? null;
+      if (!this.loaded && (await hasNewerSave(saveStore))) {
+        // Never silently overwrite progress we cannot read: say so and make New Game ask first.
+        this.newerSave = true;
+        this.note.setText('Your save is from a newer version. Update the game to continue it.');
+      }
       if (res?.fromBackup) this.note.setText('Recovered from your backup save.');
       this.buildButtons();
     });
@@ -85,7 +91,9 @@ export class TitleScene extends Phaser.Scene {
     this.buttons = [];
     this.primary = this.loaded
       ? () => this.start(this.loaded as GameState)
-      : () => this.start(createInitialState());
+      : this.newerSave
+        ? null
+        : () => this.start(createInitialState());
     let y = 200;
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;
@@ -115,7 +123,7 @@ export class TitleScene extends Phaser.Scene {
         30,
         this.confirmNew ? 'Erase save? Tap again' : 'New Game',
         () => {
-          if (this.loaded && !this.confirmNew) {
+          if ((this.loaded || this.newerSave) && !this.confirmNew) {
             this.confirmNew = true;
             this.buildButtons();
             return;

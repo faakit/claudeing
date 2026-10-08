@@ -65,6 +65,10 @@
       {
         "item": "hay",
         "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "fiber",
+        "seasons": ["spring", "summer", "fall", "winter"]
       }
     ],
     "upgrades": [

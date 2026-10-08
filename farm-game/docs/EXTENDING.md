@@ -57,6 +57,13 @@ later hooks). Example: `mechanics/orders.ts` rewrites the town board in `morning
 Per-object state lives in `obj.data` (plain JSON, saved automatically). `interact` returns `pickup`,
 `message`, or `panel` (open a sheet; see below). See `mechanics/sprinkler.ts` and `mechanics/jar.ts`.
 
+### Processing machines
+
+A jar-like machine is data: add a row to `machines.json` (`days`, `xp`, `recipes: family -> derived item`), an item
+plus a `placeables.json` entry with `"behavior": "jar"`, a recipe and a sprite. The keg is exactly this. A machine
+with its own rules (the bee house) registers a behavior and may implement `status(obj)` ('idle' | 'busy' | 'ready')
+so the world draws the "goods ready" marker with no renderer change.
+
 ### Animal houses
 
 A coop or barn is just a placeable whose behavior is `animalHouse` and whose `params.species` names a row in

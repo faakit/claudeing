@@ -1,5 +1,11 @@
 [
   {
+    "id": "swipe",
+    "stat": "tilled",
+    "min": 2,
+    "text": "Tip: swipe up or down on the Action button to change tool."
+  },
+  {
     "id": "quality",
     "stat": "qualityHarvested",
     "min": 1,

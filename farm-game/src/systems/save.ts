@@ -389,6 +389,21 @@ async function tryLoad(store: SaveStore, key: string): Promise<GameState | null>
 }
 
 /** Load the main save, falling back to the backup if it is missing or corrupt. */
+/** True when the stored save was written by a newer version of the game than this one. */
+export async function hasNewerSave(store: SaveStore): Promise<boolean> {
+  for (const key of [SAVE_KEY, BACKUP_KEY]) {
+    const text = await store.read(key);
+    if (!text) continue;
+    try {
+      const v = (JSON.parse(text) as { version?: unknown }).version;
+      if (typeof v === 'number' && v > STATE_VERSION) return true;
+    } catch {
+      /* unreadable text is handled by loadGame */
+    }
+  }
+  return false;
+}
+
 export async function loadGame(
   store: SaveStore,
 ): Promise<{ state: GameState; fromBackup: boolean } | null> {

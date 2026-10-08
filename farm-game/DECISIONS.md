@@ -130,3 +130,12 @@
 - **Year-end moved to Winter 28:** the plan said Summer 28, but with four seasons that read as the end of the game. Tests and copy were updated.
 - **Winter crop added (kale):** the cheapest way to make the cold season playable before the greenhouse exists.
 - **Economy numbers tuned, not capped:** jam 1.5x and pickles 1.3x of the source, orders 1.2 to 1.6x with a 1,200 gold ceiling, jars max 6 and houses max 2 each. The simulation still models crops only, which is a known gap on the roadmap.
+
+## Machines, swipe tools and robustness
+
+- **Machines are data:** `machines.json` replaced the hard-coded jar table, so the keg (fruit -> wine) is a data row plus art. Order candidates, the picker and the balance guard rails all read the same table. A behavior can report `status()` so renderers need no per-machine code.
+- **Bee house has no input on purpose:** one honey every 4 days, up to 3 waiting, max 5 houses. It is the low-effort, low-income machine that rewards players who just walk past; it cannot outgrow the economy (guarded by test).
+- **Swipe on Action to change tool:** vertical travel of 14 logical px per step, up for next, down for previous; the swipe releases the held action first so it never works a tile by accident. A one-time tip teaches it after two tilled tiles.
+- **Never lose progress we cannot read:** a save from a newer version is detected, explained on the title screen and protected behind the Erase confirmation.
+- **A bad saved position is repaired on load** by moving the player to the nearest open tile, instead of validating against maps at save time (the save layer does not know map sizes).
+- **Fiber is for sale (5 gold):** weeds were the only source, so building was capped by luck; now it is also a modest gold sink.

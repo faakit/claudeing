@@ -297,6 +297,23 @@ try {
     m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
     JSON.stringify(m.placed.farm[0]),
   );
+  // Swiping up on the Action button changes tool without reaching for the hotbar.
+  await mp.keyboard.press('Digit1');
+  const swipeBox = await mp.evaluate(() => {
+    const c = document.querySelector('canvas').getBoundingClientRect();
+    return { x: c.x, y: c.y, k: c.width / 200 };
+  });
+  await mp.mouse.move(swipeBox.x + 166 * swipeBox.k, swipeBox.y + 324 * swipeBox.k);
+  await mp.mouse.down();
+  await mp.mouse.move(swipeBox.x + 166 * swipeBox.k, swipeBox.y + 300 * swipeBox.k, { steps: 6 });
+  await mp.mouse.up();
+  await mp.waitForTimeout(200);
+  m = await mState();
+  check(
+    'swiping up on the Action button selects the next tool',
+    m.inventory.selected === 1,
+    `selected ${m.inventory.selected}`,
+  );
   await mPlace(18, 31, 'right');
   await mp.keyboard.press('Digit4'); // fishing rod
   const energyBefore = (await mState()).energy;

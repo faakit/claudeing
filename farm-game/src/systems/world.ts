@@ -147,3 +147,25 @@ export function teleportPlayer(state: GameState, target: DoorTarget): void {
 }
 
 export const isTileBlockedAt = isTileBlocked;
+
+/**
+ * A free tile close to (tx, ty): the tile itself if open, else the nearest open one (clamped into the map).
+ * Used to rescue a saved position that is out of bounds or inside a wall.
+ */
+export function nearestFreeTile(grid: CollisionGrid, tx: number, ty: number): TileCoord {
+  const cx = Math.max(0, Math.min(grid.width - 1, Math.round(tx)));
+  const cy = Math.max(0, Math.min(grid.height - 1, Math.round(ty)));
+  const maxR = Math.max(grid.width, grid.height);
+  for (let r = 0; r <= maxR; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const x = cx + dx;
+        const y = cy + dy;
+        if (x >= 0 && y >= 0 && x < grid.width && y < grid.height && !isTileBlocked(grid, x, y))
+          return { tx: x, ty: y };
+      }
+    }
+  }
+  return { tx: cx, ty: cy };
+}

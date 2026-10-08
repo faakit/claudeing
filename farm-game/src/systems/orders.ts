@@ -1,4 +1,4 @@
-import { crops, fish as fishTable, items, orders as ordersCfg, recipes } from '../data';
+import { crops, fish as fishTable, items, machines, orders as ordersCfg, recipes } from '../data';
 import type { GameState, Order } from '../state/GameState';
 import { forageTable } from './forage';
 import { gameEvents, toast } from './events';
@@ -20,10 +20,12 @@ export function orderCandidates(state: GameState): ItemRef[] {
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
   for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });
-  const jar = recipes['preserve_jar'];
-  if (jar && isRecipeUnlocked(state, jar)) {
+  // Goods from any machine the player has unlocked (jam, pickles, wine...).
+  for (const machine of Object.keys(machines)) {
+    const recipe = recipes[machine];
+    if (!recipe || !isRecipeUnlocked(state, recipe)) continue;
     for (const r of [...out.values()]) {
-      const p = preserveOf(r);
+      const p = preserveOf(r, machine);
       if (p) add(p);
     }
   }

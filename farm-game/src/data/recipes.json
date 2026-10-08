@@ -166,5 +166,41 @@
       "skill": "farming",
       "level": 5
     }
+  },
+  "keg": {
+    "name": "Keg",
+    "output": {
+      "item": "keg",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 15
+      }
+    ],
+    "gold": 180,
+    "unlock": {
+      "skill": "farming",
+      "level": 4
+    }
+  },
+  "bee_house": {
+    "name": "Bee House",
+    "output": {
+      "item": "bee_house",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 10
+      }
+    ],
+    "gold": 250,
+    "unlock": {
+      "skill": "foraging",
+      "level": 3
+    }
   }
 }

@@ -5,7 +5,7 @@ import { Label } from '../ui/font';
 import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
-import { jarContents, jarReady } from '../systems/preserves';
+import { statusOf } from '../systems/placeables';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -132,15 +132,10 @@ export class ObjectsRenderer {
       live.add(obj.id);
       const def = placeables[obj.type];
       if (!def) continue;
-      const jar = jarContents(obj);
       const house = def.behavior === 'animalHouse' ? houseOf(obj) : null;
       const sig = house
         ? `house${house.n}${house.ready > 0 ? 'r' : ''}${house.fed ? 'f' : ''}`
-        : jar
-          ? jarReady(obj)
-            ? 'ready'
-            : 'busy'
-          : 'idle';
+        : statusOf(obj);
       const shown = this.placed.get(obj.id);
       if (shown?.sig === sig) continue;
       shown?.sprite.destroy();
