@@ -39,6 +39,26 @@
         "seasons": ["winter"]
       },
       {
+        "item": "strawberry_seed",
+        "seasons": ["spring"],
+        "project": "seedexchange"
+      },
+      {
+        "item": "blueberry_seed",
+        "seasons": ["summer"],
+        "project": "seedexchange"
+      },
+      {
+        "item": "cranberry_seed",
+        "seasons": ["fall"],
+        "project": "seedexchange"
+      },
+      {
+        "item": "snowpea_seed",
+        "seasons": ["winter"],
+        "project": "seedexchange"
+      },
+      {
         "item": "fertilizer",
         "seasons": ["spring", "summer", "fall", "winter"]
       },

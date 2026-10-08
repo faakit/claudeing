@@ -10,14 +10,25 @@ import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
 import { applyRival } from './rival';
+import { isProjectDone } from './projects';
+import { shops } from '../data';
+
+/** Is this crop's seed on a shelf the player can buy from (not waiting on a town project)? */
+function seedOnSale(state: GameState, cropId: string): boolean {
+  const seed = Object.entries(items).find(([, d]) => d.plants === cropId)?.[0];
+  const entry = Object.values(shops)
+    .flatMap((s) => s.stock)
+    .find((e) => e.item === seed);
+  return !entry?.project || isProjectDone(state, entry.project);
+}
 
 /** Goods a town order may ask for today: what the season gives, what the player can make. */
 export function orderCandidates(state: GameState): ItemRef[] {
   const season = state.time.season;
   const out = new Map<string, ItemRef>();
   const add = (r: ItemRef) => out.set(keyOf(r), r);
-  for (const c of Object.values(crops))
-    if (c.seasons.includes(season)) add({ item: c.harvestItem });
+  for (const [id, c] of Object.entries(crops))
+    if (c.seasons.includes(season) && seedOnSale(state, id)) add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
   for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });

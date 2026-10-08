@@ -61,5 +61,10 @@
       "copper_bar",
       "iron_bar"
     ]
+  },
+  "rare": {
+    "name": "Rare Crops",
+    "reward": 1000,
+    "items": ["strawberry", "blueberry", "cranberry", "snowpea"]
   }
 }

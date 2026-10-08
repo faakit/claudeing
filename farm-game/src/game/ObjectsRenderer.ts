@@ -155,14 +155,17 @@ export class ObjectsRenderer {
           );
         continue;
       }
-      if (!signVisible(state, id)) continue; // bought, or not up for sale yet
+      if (ownsPlot(state, id) || !p.sign) continue;
+      // Land you do not own is always dimmed; its sign and price go up once it is within reach.
       const [x, y, w, h] = p.rect;
       const area = this.scene.add
         .rectangle(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, 0x14101f, 0.34)
         .setOrigin(0)
         .setStrokeStyle(1, 0xf4ead2, 0.45)
         .setDepth(0.55);
-      const [sx, sy] = p.sign as [number, number];
+      this.plotParts.push(area);
+      if (!signVisible(state, id)) continue;
+      const [sx, sy] = p.sign;
       const sign = this.scene.add
         .image(sx * TILE_SIZE + TILE_SIZE / 2, (sy + 1) * TILE_SIZE, 'obj_sign')
         .setOrigin(0.5, 1)
@@ -174,7 +177,7 @@ export class ObjectsRenderer {
         `${p.price}g`,
         { align: 'center', color: 0xf4d35e },
       ).setDepth(9000);
-      this.plotParts.push(area, sign, price);
+      this.plotParts.push(sign, price);
     }
   }
 

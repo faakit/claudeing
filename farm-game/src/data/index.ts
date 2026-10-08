@@ -121,7 +121,8 @@ export interface UpgradeDef {
 }
 export interface ShopDef {
   name: string;
-  stock: { item: string; seasons: Season[] }[];
+  /** `project`: only on the shelf once that town project is finished. */
+  stock: { item: string; seasons: Season[]; project?: string }[];
   upgrades: UpgradeDef[];
 }
 export interface GoalDef {
@@ -483,6 +484,8 @@ export function validateContent(): void {
   for (const [id, s] of Object.entries(shops)) {
     for (const e of s.stock) {
       if (!items[e.item]) fail('shops', `"${id}" stocks unknown item "${e.item}"`);
+      if (e.project !== undefined && !projects[e.project])
+        fail('shops', `"${id}" waits on unknown project "${e.project}"`);
     }
     for (const u of s.upgrades) {
       if (u.id === 'can' && u.levels.length !== game.canCapacity.length - 1) {
@@ -646,8 +649,11 @@ export function validateContent(): void {
     for (const need of p.items ?? [])
       if (!items[need.item] || need.qty < 1)
         fail('projects', `"${id}" needs unknown item "${need.item}" or a bad quantity`);
-    if (Object.keys(p.perks).length === 0 && !Object.values(plots).some((pl) => pl.project === id))
-      fail('projects', `"${id}" grants no perk and unlocks no plot`);
+    const unlocks =
+      Object.values(plots).some((pl) => pl.project === id) ||
+      Object.values(shops).some((sh) => sh.stock.some((e) => e.project === id));
+    if (Object.keys(p.perks).length === 0 && !unlocks)
+      fail('projects', `"${id}" grants no perk and unlocks nothing`);
     if (p.landmark && !mapIds.includes(p.landmark.map))
       fail('projects', `"${id}" landmark is on unknown map "${p.landmark.map}"`);
     // Every chain must lead back to a project that is open from the start (no loops).

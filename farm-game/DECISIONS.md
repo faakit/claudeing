@@ -293,5 +293,12 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 
 - **Move, don't undo:** an occupied coop, barn, shed, sty or a stocked silo can now be picked up with the same deliberate second tap as a machine; its state (animals, goods waiting, happiness, feed) is parked in `state.stored` and the next one of that type placed takes it back. Placement confirm was dropped: a confirm on Action would fire on a held press, and with pick-up-anything a misplaced building is two taps to fix. Save version 14 adds `stored` (sanitised to never hold more than the buildings you carry).
 - **Trees stay put:** checking a tree for fruit is a natural double tap, so trees are not movable.
-- **Land signs appear as they become relevant:** the cheapest unbought plot always shows its sign; dearer ones once you have earned a quarter of the price or hold half of it. Day one no longer greets you with 2,200g and 2,600g signs.
+- **Land signs appear as they become relevant:** the cheapest unbought plot always shows its sign; dearer ones once you have earned a quarter of the price or hold half of it. Day one no longer greets you with 2,200g and 2,600g signs (the land is still dimmed, so it never looks like yours).
 - **Forage reads from afar:** a golden ring pulses under every wild good (still under Calm mode, static) and the twinkle is larger.
+
+## Second-year content: rare crops and mastery goals (backlog 9)
+
+- **An eighth project, the Seed Exchange** (6,000g, 40 fiber, 2 copper bars, after the canopy), unlocks four rare seeds, one per season: strawberry, blueberry, cranberry and snow pea. All regrow, so a field of them is planted once a season; per tile-day they earn 9 to 14, under melon and pumpkin, so they are variety and less replanting, not a new best crop (guarded by a test). Shop entries carry a `project`, so any future shelf unlock is data.
+- **The board only asks for what you can grow:** orders skip crops whose seed is still behind a project.
+- **A Rare Crops Book page** (1,000g); the Book now pages six sections at a time.
+- **Mastery goals at the end of the chain:** grow all four rare crops, sell 50 gold-quality goods (counted at payout, so a ship-and-take-back does not count), finish every Book page. Appended, so no save migration.

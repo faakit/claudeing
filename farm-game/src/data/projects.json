@@ -21,6 +21,31 @@
       "color": "#c9a26a"
     }
   },
+  "seedexchange": {
+    "name": "Seed Exchange",
+    "blurb": "A shelf of rare seeds from over the hills, traded through the shop.",
+    "after": "canopy",
+    "gold": 6000,
+    "items": [
+      {
+        "item": "fiber",
+        "qty": 40
+      },
+      {
+        "item": "copper_bar",
+        "qty": 2
+      }
+    ],
+    "perks": {},
+    "reward": "The shop sells rare berry and pea seeds that keep giving.",
+    "landmark": {
+      "map": "town",
+      "tx": 6,
+      "ty": 12,
+      "sprite": "obj_landmark_seedexchange",
+      "color": "#7fc96b"
+    }
+  },
   "fishladder": {
     "name": "Fish Ladder",
     "blurb": "Stone steps in the river let big fish swim up to town.",

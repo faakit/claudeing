@@ -16,6 +16,7 @@ import {
 } from './inventory';
 import { perk } from './skills';
 import { ownsGreenhouse } from './plots';
+import { isProjectDone } from './projects';
 import { keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 
 /** Base price of an item id (normal quality, not derived). */
@@ -87,6 +88,7 @@ export function placeLimit(state: GameState, itemId: string): { have: number; ma
 export function stockFor(shopId: string, season: Season, state?: GameState): string[] {
   const allSeeds = !!state && ownsGreenhouse(state);
   return (shops[shopId]?.stock ?? [])
+    .filter((s) => !s.project || (!!state && isProjectDone(state, s.project)))
     .filter((s) => s.seasons.includes(season) || (allSeeds && items[s.item]?.type === 'seed'))
     .map((s) => s.item);
 }

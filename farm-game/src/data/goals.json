@@ -415,9 +415,9 @@
   },
   {
     "id": "projectAll",
-    "text": "Finish all 7 town projects",
+    "text": "Finish all 8 town projects",
     "stat": "projectsDone",
-    "target": 7,
+    "target": 8,
     "reward": 5000,
     "hint": "The Market Road comes last. It makes every sale worth more."
   },
@@ -436,5 +436,29 @@
     "target": 10,
     "reward": 1500,
     "hint": "Craft a pig sty (Farming 6). Pigs dig only on dry days."
+  },
+  {
+    "id": "rare",
+    "text": "Grow all four rare crops",
+    "stat": "page.rare",
+    "target": 1,
+    "reward": 1500,
+    "hint": "Fund the Seed Exchange. One rare seed for each season."
+  },
+  {
+    "id": "gold50",
+    "text": "Sell 50 gold-quality goods",
+    "stat": "goldShipped",
+    "target": 50,
+    "reward": 2500,
+    "hint": "Fertilizer, happy animals and perfect catches roll gold."
+  },
+  {
+    "id": "book8",
+    "text": "Finish every page of the Book",
+    "stat": "pagesDone",
+    "target": 8,
+    "reward": 5000,
+    "hint": "Menu > Book shows what is still missing on each page."
   }
 ]

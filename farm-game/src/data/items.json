@@ -868,5 +868,81 @@
     "sellPrice": 150,
     "placeable": true,
     "description": "Holds feed and feeds every animal house overnight."
+  },
+  "strawberry_seed": {
+    "name": "Strawberry Seeds",
+    "type": "seed",
+    "icon": "item_strawberry_seed",
+    "color": "#e0304a",
+    "buyPrice": 100,
+    "sellPrice": 50,
+    "plants": "strawberry",
+    "description": "Rare spring crop. 8 days, then every 4."
+  },
+  "strawberry": {
+    "name": "Strawberry",
+    "type": "crop",
+    "icon": "item_strawberry",
+    "color": "#e0304a",
+    "sellPrice": 80,
+    "family": "fruit",
+    "description": "A rare spring berry. Keeps giving."
+  },
+  "blueberry_seed": {
+    "name": "Blueberry Seeds",
+    "type": "seed",
+    "icon": "item_blueberry_seed",
+    "color": "#4a6ad0",
+    "buyPrice": 120,
+    "sellPrice": 60,
+    "plants": "blueberry",
+    "description": "Rare summer crop. 11 days, then every 3."
+  },
+  "blueberry": {
+    "name": "Blueberry",
+    "type": "crop",
+    "icon": "item_blueberry",
+    "color": "#4a6ad0",
+    "sellPrice": 70,
+    "family": "fruit",
+    "description": "A rare summer berry. Keeps giving."
+  },
+  "cranberry_seed": {
+    "name": "Cranberry Seeds",
+    "type": "seed",
+    "icon": "item_cranberry_seed",
+    "color": "#b02040",
+    "buyPrice": 130,
+    "sellPrice": 65,
+    "plants": "cranberry",
+    "description": "Rare fall crop. 10 days, then every 3."
+  },
+  "cranberry": {
+    "name": "Cranberry",
+    "type": "crop",
+    "icon": "item_cranberry",
+    "color": "#b02040",
+    "sellPrice": 75,
+    "family": "fruit",
+    "description": "A rare fall berry. Keeps giving."
+  },
+  "snowpea_seed": {
+    "name": "Snow Pea Seeds",
+    "type": "seed",
+    "icon": "item_snowpea_seed",
+    "color": "#8fd07a",
+    "buyPrice": 60,
+    "sellPrice": 30,
+    "plants": "snowpea",
+    "description": "Rare winter crop. 7 days, then every 3."
+  },
+  "snowpea": {
+    "name": "Snow Pea",
+    "type": "crop",
+    "icon": "item_snowpea",
+    "color": "#8fd07a",
+    "sellPrice": 55,
+    "family": "veg",
+    "description": "A rare winter crop. Keeps giving."
   }
 }

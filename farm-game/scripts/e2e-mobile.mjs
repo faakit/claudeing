@@ -3,7 +3,8 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 
-const PORT = 4178;
+// Override with E2E_MOBILE_PORT when another checkout runs its checks at the same time.
+const PORT = Number(process.env.E2E_MOBILE_PORT ?? 4178);
 const BASE = `http://localhost:${PORT}/`;
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const MIN_TOUCH_CSS = 44;

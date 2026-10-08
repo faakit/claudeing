@@ -5,7 +5,8 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 
-const PORT = 4174;
+// Override with PERF_PORT when another checkout runs its checks at the same time.
+const PORT = Number(process.env.PERF_PORT ?? 4174);
 const URL_ = `http://localhost:${PORT}/?debug`;
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const throttles = (process.argv[2] ?? '1,4,6').split(',').map(Number);

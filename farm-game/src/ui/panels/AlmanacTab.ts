@@ -6,10 +6,29 @@ import { fmt } from './format';
 import type { MenuTabContext } from './MenuPanel';
 
 /** Menu tab: every good you have found, page by page. Unfound items show as dark shapes. */
+/** Book pages shown per screen; more pages get < and > buttons. */
+export const BOOK_PER_SCREEN = 6;
+let screen = 0;
+
 export function buildAlmanac(c: MenuTabContext): void {
   const s = getState();
   let y = c.top;
-  for (const [id, page] of Object.entries(collections)) {
+  const all = Object.entries(collections);
+  const screens = Math.max(1, Math.ceil(all.length / BOOK_PER_SCREEN));
+  screen = Math.min(screen, screens - 1);
+  if (screens > 1) {
+    const by = c.bottom - 22;
+    c.button(8, by, 40, 20, '<', () => {
+      screen = (screen + screens - 1) % screens;
+      c.rebuild();
+    });
+    c.label(100, by + 6, `${screen + 1}/${screens}`, C.creamDim, 1, 'center');
+    c.button(152, by, 40, 20, '>', () => {
+      screen = (screen + 1) % screens;
+      c.rebuild();
+    });
+  }
+  for (const [id, page] of all.slice(screen * BOOK_PER_SCREEN, (screen + 1) * BOOK_PER_SCREEN)) {
     const { have, total } = pageProgress(s, id);
     const done = pageDone(s, id);
     c.label(8, y, page.name.toUpperCase(), done ? C.green : C.gold);
