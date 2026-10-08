@@ -37,6 +37,8 @@ export interface GameEvents {
   startFishing: { map: string; fish: string; bait: boolean };
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
   sleepRequest: { passedOut: boolean };
+  /** A villager's friendship reached a new heart (for a flourish). */
+  heartUp: { id: string; hearts: number };
   /** Friendship changed (a chat, a gift): villager markers and panels refresh. */
   friendsChanged: undefined;
   /** The player wants to talk to a villager. */

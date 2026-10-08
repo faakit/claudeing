@@ -308,3 +308,8 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 - **One big seasonal request at a time** (`specials.json`): "15 Potatoes for Rosa", due the season's last day, posted in the morning whenever the board is free and at least 10 days of the season are left. Quantity comes from a value target (1,500g of goods in year one, +50% a year), the reward is 1.5x the goods' value plus 60 friendship.
 - **A bit at a time, never lost:** "Give" hands over whatever you carry (any quality); if time runs out, the goods given are paid at bin price. Specials for rare crops, eggs or iron bars wait for the project or the first animal or smelt.
 - **Why:** orders are a daily lottery; a special is a week-long plan for a field (critique 2's "make orders the planning game"). Save version 15 adds `special`. A goal is appended at the end of the chain.
+
+## Juice (R1.4 leftovers)
+
+- **Hearts and levels are celebrated where you stand:** a new heart sends pink sparks up from the player and a banner ("ROSA: 2 HEARTS!"); a skill level-up bursts gold sparks (the banner and sound existed). Friendship emits a `heartUp` event only when the heart count rises.
+- **Collected goods pop out of what made them:** after an Interact, if the bag gained anything (eggs from a coop, jam from a jar, honey, fruit), its icon pops from the object with a sparkle. Done by comparing the bag before and after in the world scene, so no mechanic had to change.

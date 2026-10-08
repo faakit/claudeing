@@ -51,7 +51,10 @@ export function befriend(state: GameState, id: string, points: number): void {
 
 function addPoints(state: GameState, id: string, delta: number): void {
   const f = (state.friends[id] ??= blank());
+  const before = heartsOf(state, id);
   f.points = Math.max(0, Math.min(MAX_POINTS, f.points + delta));
+  const after = heartsOf(state, id);
+  if (after > before) gameEvents.emit('heartUp', { id, hearts: after });
   const best = Math.max(0, ...npcIds().map((n) => heartsOf(state, n)));
   state.stats['maxHearts'] = best;
 }

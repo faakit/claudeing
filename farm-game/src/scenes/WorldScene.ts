@@ -14,7 +14,7 @@ import {
   VOID_COLOR,
   WORLD_VIEW,
 } from '../config';
-import { mapsData } from '../data';
+import { items, mapsData } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
@@ -169,6 +169,15 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
+      // Flourishes: a heart gained and a level reached are celebrated where the player stands.
+      gameEvents.on('heartUp', () => {
+        const p = getState().player;
+        this.fx.hearts(p.x, p.y - 14);
+      }),
+      gameEvents.on('levelUp', () => {
+        const p = getState().player;
+        this.fx.celebrate(p.x, p.y - 10);
+      }),
       gameEvents.on('friendsChanged', () =>
         this.npcs?.sync(getState(), playerTile(getState().player)),
       ),
@@ -503,7 +512,19 @@ export abstract class WorldScene extends Phaser.Scene {
     const state = getState();
     const obj = placedAt(state, this.mapId, hit.tile.tx, hit.tile.ty);
     if (!obj) return;
+    // Snapshot the bag so goods collected from a coop, jar, hive or tree can pop out of it.
+    const before = new Map<string, number>();
+    for (const st of state.inventory.slots)
+      if (st) before.set(st.item, (before.get(st.item) ?? 0) + st.qty);
     const res = interactWith(state, obj);
+    const gained = state.inventory.slots.find(
+      (st) => st && st.item !== obj.type && st.qty > (before.get(st.item) ?? 0),
+    );
+    if (gained) {
+      const at = FarmRenderer.center(obj.tx, obj.ty);
+      this.fx.itemPop(at.x, at.y - 10, items[gained.item]?.icon ?? 'ui_coin');
+      this.fx.sparkle(at.x, at.y - 6, 0xf4d35e);
+    }
     if (res.kind === 'panel') gameEvents.emit('placedPanel', { panel: res.panel, id: res.id });
     else if (res.kind === 'message' && res.text) toast(res.text, 'info');
     else if (res.kind === 'pickup') {

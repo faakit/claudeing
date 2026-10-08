@@ -39,7 +39,7 @@ Highest value per effort. None of this adds a mechanic; it makes the current one
 - [x] **R1.4 Juice and feedback.** Sparkles and sounds for quality drops, level-ups, heart gains and order
       completion; a satisfying collect animation for eggs and jam; screen-edge toasts that never cover the thumb zone.
       _Done:_ quality sparkles and "Silver/Gold quality!" text on harvest, forage pick-up effects, a cast splash.
-      Not done: heart-gain and level-up flourishes, egg/jam collect animation.
+      Since then: heart-gain and level-up flourishes, and goods pop out of coops, jars, hives and trees.
 - [~] **R1.5 Accessibility basics.** Done: quality shown by star count (silver one, gold two) as well as tint, and a
   "Calm" reduce-motion toggle. Still open: text-size option, larger touch targets option.
 
