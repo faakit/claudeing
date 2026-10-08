@@ -176,7 +176,8 @@
     "solid": true,
     "sprite": "obj_garden_bench",
     "params": {
-      "max": 6
+      "max": 6,
+      "rest": 15
     }
   },
   "farm_statue": {
@@ -215,6 +216,16 @@
     "params": {
       "cap": 300,
       "max": 1
+    }
+  },
+  "scarecrow": {
+    "name": "Scarecrow",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_scarecrow",
+    "params": {
+      "max": 8,
+      "radius": 4
     }
   }
 }

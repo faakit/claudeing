@@ -170,6 +170,19 @@
       "when": {
         "day": 7
       }
+    },
+    {
+      "id": "crows",
+      "from": "rosa",
+      "title": "Mind the crows",
+      "text": "Crows come down to the fields after the first week. A scarecrow keeps them off the crops around it. Here, take my spare one!",
+      "when": {
+        "day": 7
+      },
+      "gift": {
+        "item": "scarecrow",
+        "qty": 1
+      }
     }
   ]
 }

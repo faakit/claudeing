@@ -58,6 +58,19 @@ function field(s: GameState): [number, number][] {
   return out;
 }
 
+/** Where the bot stands its scarecrows: the middle of each 9x9 block of every plot it owns. */
+function scarecrowSpots(s: GameState): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [id, p] of Object.entries(plots)) {
+    if (!ownsPlot(s, id) || p.greenhouse) continue;
+    const [x0, y0, w, h] = p.rect;
+    for (let y = y0 + Math.min(4, h - 1); y < y0 + h + 4; y += 9)
+      for (let x = x0 + Math.min(4, w - 1); x < x0 + w + 4; x += 9)
+        out.push([Math.min(x, x0 + w - 1), Math.min(y, y0 + h - 1)]);
+  }
+  return out;
+}
+
 /** Select an item, moving it onto the hotbar first if it sits in the bag. */
 function equipItem(s: GameState, id: string): boolean {
   const i = s.inventory.slots.findIndex((x) => x?.item === id);
@@ -129,7 +142,14 @@ function playDay(s: GameState, ledger: Ledger): void {
     if (st && ['crop', 'preserve', 'material', 'forage'].includes(items[st.item]!.type))
       kinds.set(keyOf(st), refOf(st));
   for (const ref of kinds.values()) shipStack(s, ref, countStack(s, ref));
-  // 5. craft and place jars once unlocked (it buys the fiber), then land and upgrades when comfortable
+  // 5. a scarecrow in the middle of every block of 9x9 of each plot it owns (crows take the odd crop)
+  for (const [x, y] of scarecrowSpots(s))
+    if (!objectsOn(s, 'farm').some((o) => o.tx === x && o.ty === y) && !getSoil(s, x, y)?.crop) {
+      if (countItem(s, 'scarecrow') === 0 && buyItem(s, STORE, 'scarecrow', 1) !== 'ok') break;
+      if (getSoil(s, x, y)) delete s.farm.tiles[`${x},${y}`]; // an empty tilled tile gives way
+      if (equipItem(s, 'scarecrow')) performAction(s, tile(s, x, y));
+    }
+  // 6. craft and place jars once unlocked (it buys the fiber), then land and upgrades when comfortable
   const jars = objectsOn(s, 'farm').filter((o) => o.type === 'preserve_jar').length;
   if (jars < JAR_SPOTS.length && s.money > 600) {
     buyItem(s, STORE, 'fiber', 10);
@@ -146,7 +166,7 @@ function playDay(s: GameState, ledger: Ledger): void {
     const price = up.levels[upgradeLevel(s, up)]?.price;
     if (price !== undefined && s.money > price * 1.6) buyUpgrade(s, up);
   }
-  // 6. water existing crops
+  // 7. water existing crops
   for (const [x, y] of FIELD) {
     const soil = getSoil(s, x, y);
     if (soil?.crop && !isMature(soil.crop) && !soil.watered && s.energy > 0) {
@@ -155,7 +175,7 @@ function playDay(s: GameState, ledger: Ledger): void {
       performAction(s, tile(s, x, y));
     }
   }
-  // 7. buy and plant the best in-season seed with spare energy
+  // 8. buy and plant the best in-season seed with spare energy
   const best = stockFor(STORE, s.time.season, s)
     .filter((id) => items[id]?.type === 'seed')
     .map((id) => ({ id, sc: score(s, id) }))
@@ -186,10 +206,11 @@ function playDay(s: GameState, ledger: Ledger): void {
 }
 
 /**
- * What the bot earned in a full year when the band was last set (depth round 2: multi-day requests). A balance
- * change that moves it by a third down or 70% up fails this test and needs a DECISIONS.md note.
+ * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
+ * animal goods on the board, crows and scarecrows). Seed 42 alone earned 224,150. A balance change that
+ * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 230_261;
+const SIM_EARNED = 209_894;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
@@ -218,6 +239,30 @@ describe('balance simulation (decent player, full year)', () => {
     expect(ledger.jarsLoaded).toBeGreaterThan(20);
     // Gold has somewhere to go: the bot bought land.
     expect(s.plots.length).toBeGreaterThan(2);
+    // Scarecrows over every plot: the crows get next to nothing.
+    expect(s.stats['crowsAte'] ?? 0).toBeLessThan(10);
+  });
+
+  // One seed is a tripwire, not evidence (critique 5, F9): the same bot on five seeds, judged on the median.
+  it('five seeds agree: the median year sits near the pinned one and none runs away', () => {
+    const years = [42, 7, 99, 1234, 2026].map((seed) => {
+      const s = createInitialState();
+      s.rng = seed;
+      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+      for (let day = 1; day <= 112; day++) {
+        playDay(s, ledger);
+        endDay(s, { passedOut: false, weedCandidates: [] });
+      }
+      return s.stats['earned'] ?? 0;
+    });
+    const median = [...years].sort((a, b) => a - b)[2]!;
+    console.log(`five seeds: ${years.join(', ')} (median ${median})`);
+    expect(median).toBeGreaterThan(SIM_EARNED * 0.8);
+    expect(median).toBeLessThan(SIM_EARNED * 1.25);
+    for (const y of years) {
+      expect(y).toBeGreaterThan(SIM_EARNED * 0.6);
+      expect(y).toBeLessThan(SIM_EARNED * 1.6);
+    }
   });
 });
 

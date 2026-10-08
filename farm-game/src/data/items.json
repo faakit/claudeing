@@ -803,7 +803,7 @@
     "buyPrice": 600,
     "sellPrice": 150,
     "placeable": true,
-    "description": "A bench to rest on after a long day."
+    "description": "A bench to rest on. Sit once a day for a little energy."
   },
   "farm_statue": {
     "name": "Farm Statue",
@@ -944,5 +944,15 @@
     "sellPrice": 55,
     "family": "veg",
     "description": "A rare winter crop. Keeps giving."
+  },
+  "scarecrow": {
+    "name": "Scarecrow",
+    "type": "placeable",
+    "icon": "item_scarecrow",
+    "color": "#c9a24a",
+    "buyPrice": 80,
+    "sellPrice": 20,
+    "placeable": true,
+    "description": "Keeps crows off the crops around it."
   }
 }

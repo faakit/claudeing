@@ -362,3 +362,9 @@ An independent critic played the build at `64eeb10` and wrote `agents/critiques/
 - **A project can now repeat** (`repeat: { growth, perkLevels }` in `projects.json`): each level costs `growth` times the last, gold and goods start over, perks stack for `perkLevels` levels and later levels are for show. Levels are the stat `project.<id>.level`; no new state.
 - **The Founder's Statue** opens after the Market Road: 30,000g and 50 stone for level 1, half again each level; +1% on sales per level up to +5%. A level pays back 1% of a year's sales, so it is a sink, not an investment (a test keeps payback over ten tireless years). The same bot now ends year two at statue level 4 with about 30k in hand. Repeat levels never count toward "all projects"; a goal "statue level 3" is appended.
 - **Landmark** `obj_landmark_statue` at town 10,14 (fallback colour until art).
+
+## Decorations with a small use (owner's call, depth round 2)
+
+- **Mostly cosmetic still**, but two do a little: a **Garden Bench** gives +15 energy once a day when you sit (Interact; a full player keeps the sit for later), and a new **Scarecrow** (80g, Home tab, `radius` 4) keeps crows off the crops around it.
+- **Crows are the reason for the scarecrow, and they are mild:** from day 8, on a dry morning, a field with 12 or more crops no scarecrow watches has a 25% chance to lose one crop ("A crow ate a parsnip. Scarecrows keep them off."). Never under glass. Rosa's day-7 letter brings a scarecrow, so the first one is free and comes before the first crow. Auto tool: none (placeable / Interact).
+- **The sim bot stands scarecrows over every plot** and loses almost nothing; it now also runs five seeds and is judged on the median (critique 5, F9), pinned at 209,894 (seed 42 alone: 224,150; the spread of 149k to 224k is why one seed was not evidence).

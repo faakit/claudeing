@@ -139,6 +139,10 @@
         "seasons": ["spring", "summer", "fall", "winter"]
       },
       {
+        "item": "scarecrow",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
         "item": "garden_bench",
         "seasons": ["spring", "summer", "fall", "winter"]
       },

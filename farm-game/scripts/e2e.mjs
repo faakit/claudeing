@@ -410,6 +410,18 @@ try {
       !m.inventory.slots.some((x) => x?.item === 'hay'),
     JSON.stringify(m.placed.farm),
   );
+  // A garden bench: Interact sits down for a little energy, once a day.
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.energy = 40;
+    s.placed.farm.push({ id: 12, type: 'garden_bench', tx: 12, ty: 10, data: {} });
+    s.nextPlacedId = 13;
+    window.__farm.gameEvents.emit('placedChanged', { map: 'farm' });
+  });
+  await mPlace(11, 10, 'right');
+  await mTap('KeyE');
+  m = await mState();
+  check('Interact at a garden bench gives a little energy', m.energy === 55, `energy ${m.energy}`);
   // Swiping up on the Action button changes tool without reaching for the hotbar.
   await mp.keyboard.press('Digit1');
   const swipeBox = await mp.evaluate(() => {

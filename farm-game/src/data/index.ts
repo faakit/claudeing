@@ -437,6 +437,11 @@ export interface GameData {
     maxTakes?: number;
     calmHearts?: number;
   };
+  /**
+   * Crows: from absolute day `startDay`, on a dry morning, with at least `minCrops` crops no scarecrow
+   * watches, there is a `chance` that one crop is eaten. Never in the greenhouse.
+   */
+  crows?: { startDay: number; minCrops: number; chance: number };
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];

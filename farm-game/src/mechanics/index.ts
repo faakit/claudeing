@@ -20,6 +20,7 @@ import './mining';
 import './festivals';
 import './projects';
 import './decor';
+import './crows';
 import './jobs';
 import './mail';
 import './specials';
