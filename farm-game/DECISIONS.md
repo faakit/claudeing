@@ -408,3 +408,7 @@ An independent critic played the build at `5fd9943` (14 real-input days plus pro
 - **Four legends, one a season** (`legend: true` in `fish.json`, appended so derby fish codes keep their meaning): Glimmer Trout (town river, rainy spring), Sun Carp (the farm pond, summer), Old Whiskers (woods, rainy fall), Ice Pike (town, winter). Each is rare (weight 0.4), hard (0.8 to 0.9) and bites only until you catch it once (`legend.<id>` stat). They are never board requests.
 - **Found through Finn:** a letter after your tenth catch says where each hides; a "Catch a legendary fish" goal is appended. Not on a Book page, so finishing the Book stays reachable.
 - New texture keys: `item_glimmer_trout`, `item_sun_carp`, `item_old_whiskers`, `item_ice_pike`.
+
+## A human-paced sim (critique 5, F9: "no clock")
+
+- The bot can now be given a number of Action presses a day. At 150 presses (three seeds) it earns a median of about 148k in year one, 76% of the tireless bot; at 60 presses about 87k. Upgraded tools and plant-a-row make each press count, which is why the gap is smaller than the press count suggests. A test keeps the 150-press year under the tireless median and above the first statue level, so a steady human reaches the late sinks in year two rather than drowning in gold in year one.

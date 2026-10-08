@@ -99,6 +99,18 @@ function score(s: GameState, seedId: string): number {
   return (revenue - items[seedId]!.buyPrice!) / days;
 }
 
+/**
+ * Tile actions left today. A tireless bot has no limit; the human-paced run gives it a fixed number of
+ * Action presses a day (critique 5, F9: the sim had no clock).
+ */
+const actions = { left: Infinity };
+function act(s: GameState, t: TileInfo): ReturnType<typeof performAction> {
+  if (actions.left <= 0)
+    return { ok: false, message: 'out of time' } as ReturnType<typeof performAction>;
+  actions.left -= 1;
+  return performAction(s, t);
+}
+
 /** Where the gold came from, for the log and the bounds. */
 interface Ledger {
   shipped: number;
@@ -111,16 +123,17 @@ interface Ledger {
  * six preserve jars busy, ships the rest, buys land and upgrades when comfortably affordable. It does not fish,
  * mine, raise animals, do jobs on purpose or fund projects, so it is a floor for a diligent farmer.
  */
-function playDay(s: GameState, ledger: Ledger): void {
+function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
+  actions.left = budget;
   const FIELD = field(s);
   const refill = () => {
     equipItem(s, 'watering_can');
-    if (s.water < 3) performAction(s, POND);
+    if (s.water < 3) act(s, POND);
   };
   // 1. harvest
   for (const [x, y] of FIELD) {
     const soil = getSoil(s, x, y);
-    if (soil?.crop && isMature(soil.crop)) performAction(s, tile(s, x, y));
+    if (soil?.crop && isMature(soil.crop)) act(s, tile(s, x, y));
   }
   // 2. collect finished jars, then fill the board requests the bag can cover (before the rival comes)
   for (const obj of objectsOn(s, 'farm')) if (obj.type === 'preserve_jar') interactWith(s, obj);
@@ -150,7 +163,7 @@ function playDay(s: GameState, ledger: Ledger): void {
     if (!objectsOn(s, 'farm').some((o) => o.tx === x && o.ty === y) && !getSoil(s, x, y)?.crop) {
       if (countItem(s, 'scarecrow') === 0 && buyItem(s, STORE, 'scarecrow', 1) !== 'ok') break;
       if (getSoil(s, x, y)) delete s.farm.tiles[`${x},${y}`]; // an empty tilled tile gives way
-      if (equipItem(s, 'scarecrow')) performAction(s, tile(s, x, y));
+      if (equipItem(s, 'scarecrow')) act(s, tile(s, x, y));
     }
   // 6. craft and place jars once unlocked (it buys the fiber), then land and upgrades when comfortable
   const jars = objectsOn(s, 'farm').filter((o) => o.type === 'preserve_jar').length;
@@ -158,7 +171,7 @@ function playDay(s: GameState, ledger: Ledger): void {
     buyItem(s, STORE, 'fiber', 10);
     if (craft(s, 'preserve_jar') === 'ok' && equipItem(s, 'preserve_jar')) {
       const [x, y] = JAR_SPOTS[jars]!;
-      performAction(s, tile(s, x, y));
+      act(s, tile(s, x, y));
     }
   }
   const nextPlot = Object.entries(plots)
@@ -175,7 +188,7 @@ function playDay(s: GameState, ledger: Ledger): void {
     if (soil?.crop && !isMature(soil.crop) && !soil.watered && s.energy > 0) {
       refill();
       equipItem(s, 'watering_can');
-      performAction(s, tile(s, x, y));
+      act(s, tile(s, x, y));
     }
   }
   // 8. buy and plant the best in-season seed with spare energy
@@ -198,13 +211,13 @@ function playDay(s: GameState, ledger: Ledger): void {
       break;
     if (!soil) {
       equipItem(s, 'hoe');
-      if (!performAction(s, tile(s, x, y)).ok) continue;
+      if (!act(s, tile(s, x, y)).ok) continue;
     }
     equipItem(s, best.id);
-    if (!performAction(s, tile(s, x, y)).ok) continue;
+    if (!act(s, tile(s, x, y)).ok) continue;
     refill();
     equipItem(s, 'watering_can');
-    performAction(s, tile(s, x, y));
+    act(s, tile(s, x, y));
   }
 }
 
@@ -274,6 +287,30 @@ describe('balance simulation (decent player, full year)', () => {
  * Jobs are a nudge, not a living (owner, depth round 2): over the first two weeks, three average jobs a
  * day must pay less than the farm itself earns the tireless bot (median of five seeds).
  */
+/**
+ * A human-paced bot: 150 Action presses a day (about what a 15-minute session allows; the hoe, can and
+ * seeds still cover several tiles per press once upgraded). Not pinned, but it must earn a real living
+ * and reach the first statue level's price within its first year.
+ */
+describe('balance simulation (human-paced)', () => {
+  it('earns a satisfying year without being a tireless bot', () => {
+    const years = [42, 7, 99].map((seed) => {
+      const s = createInitialState();
+      s.rng = seed;
+      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+      for (let day = 1; day <= 112; day++) {
+        playDay(s, ledger, 150);
+        endDay(s, { passedOut: false, weedCandidates: [] });
+      }
+      return s.stats['earned'] ?? 0;
+    });
+    const median = [...years].sort((a, b) => a - b)[1]!;
+    console.log(`human-paced years: ${years.join(', ')} (median ${median})`);
+    expect(median).toBeLessThan(SIM_EARNED);
+    expect(median).toBeGreaterThan(projects['statue']!.gold);
+  });
+});
+
 describe('balance: early jobs against early farming', () => {
   it('days 2 to 14 of jobs pay at most three quarters of what the farm earns by day 14', () => {
     const farm = [42, 7, 99, 1234, 2026]
