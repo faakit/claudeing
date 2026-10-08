@@ -5,7 +5,8 @@ import { toast } from '../systems/events';
 
 /** A feed silo: one tap pours every feed in the bag into it; overnight it feeds any hungry house. */
 registerPlaceableBehavior('silo', {
-  canPickUp: (obj) => siloTotal(obj) === 0,
+  canPickUp: () => true,
+  keepsData: true,
   interact(state, obj) {
     const n = depositFeed(state, obj);
     if (n > 0) {

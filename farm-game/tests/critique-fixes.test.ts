@@ -71,12 +71,12 @@ describe('placeable limits and mistakes', () => {
     expect(interactWith(s, coop).kind).toBe('pickup');
     expect(canPickUp(coop)).toBe(true);
   });
-  it('a coop with chickens is never picked up', () => {
+  it('a coop with chickens can be moved, and its chickens come along', () => {
     const s = newState();
     const coop = placeObject(s, 'farm', 4, 4, 'coop');
     addItem(s, 'chicken', 1);
     interactWith(s, coop);
-    expect(canPickUp(coop)).toBe(false);
+    expect(canPickUp(coop)).toBe(true);
   });
   it('the bin does not take machines', () => {
     expect(isShippable({ item: 'coop' })).toBe(false);

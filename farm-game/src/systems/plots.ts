@@ -40,17 +40,31 @@ export function ownsTile(state: GameState, tx: number, ty: number): boolean {
   return id !== null && ownsPlot(state, id);
 }
 
-/** The plot whose "for sale" sign stands on this tile, if it is still for sale. */
+/**
+ * Is a plot's "for sale" sign up yet? The cheapest unbought plot always is; a dearer one appears once the
+ * player has earned a quarter of its price or holds half of it, so day one is not two 2,000g signs at the door.
+ */
+export function signVisible(state: GameState, id: string): boolean {
+  const p = plots[id];
+  if (!p?.sign || ownsPlot(state, id)) return false;
+  const forSale = Object.entries(plots).filter(([pid, x]) => x.sign && !ownsPlot(state, pid));
+  const cheapest = Math.min(...forSale.map(([, x]) => x.price));
+  return (
+    p.price <= cheapest || (state.stats['earned'] ?? 0) >= p.price / 4 || state.money >= p.price / 2
+  );
+}
+
+/** The plot whose "for sale" sign stands on this tile, if it is up. */
 export function plotForSaleAt(state: GameState, tx: number, ty: number): string | null {
   for (const [id, p] of Object.entries(plots))
-    if (p.sign && p.sign[0] === tx && p.sign[1] === ty && !ownsPlot(state, id)) return id;
+    if (p.sign && p.sign[0] === tx && p.sign[1] === ty && signVisible(state, id)) return id;
   return null;
 }
 
-/** Signs that should be drawn and block movement: those of plots not yet bought. */
+/** Signs that should be drawn and block movement: those that are up. */
 export const signTiles = (state: GameState): [number, number][] =>
   Object.entries(plots)
-    .filter(([id, p]) => p.sign && !ownsPlot(state, id))
+    .filter(([id]) => signVisible(state, id))
     .map(([, p]) => p.sign as [number, number]);
 
 export const plotSize = (id: string): number => {

@@ -5,9 +5,9 @@ import { getState } from '../../state/store';
 import { gameEvents } from '../../systems/events';
 import { addStat } from '../../systems/goals';
 import { displayName, iconKey, keyOf, refOf, type ItemRef } from '../../systems/itemRef';
-import { canPickUp, findPlaced, removePlaced } from '../../systems/placeables';
+import { canPickUp, findPlaced, pickUpPlaced } from '../../systems/placeables';
 import { idleMachines, jarDays, loadAll, loadJar, preserveOf } from '../../systems/preserves';
-import { addItem, countStack, roomFor } from '../../systems/inventory';
+import { countStack } from '../../systems/inventory';
 import { toast } from '../../systems/events';
 import { C } from '../theme';
 import { Modal } from '../widgets';
@@ -118,9 +118,8 @@ export class JarPanel extends Modal {
     if (found && canPickUp(found.obj))
       this.button(60, this.panelH - 52, 80, 20, 'Pick up', () => {
         const st = getState();
-        if (roomFor(st, found.obj.type, 1) < 1) return void toast('Inventory full!', 'warn');
-        removePlaced(st, found.map, found.obj.id);
-        addItem(st, found.obj.type, 1);
+        if (pickUpPlaced(st, found.map, found.obj) === 'full')
+          return void toast('Inventory full!', 'warn');
         gameEvents.emit('placedChanged', { map: found.map });
         this.close();
       });

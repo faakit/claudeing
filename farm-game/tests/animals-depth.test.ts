@@ -97,13 +97,11 @@ describe('feed silo', () => {
     expect(siloStock(silo)['chicken_feed']).toBe(27);
   });
 
-  it('an empty silo can be picked up; a stocked one cannot', () => {
+  it('a silo can be picked up with a second tap (its feed moves with it)', () => {
     const s = newState();
     const silo = placeObject(s, 'farm', 5, 5, 'silo');
+    siloStock(silo)['hay'] = 5;
     expect(interactWith(s, silo)).toMatchObject({ kind: 'message' });
     expect(interactWith(s, silo)).toEqual({ kind: 'pickup' });
-    siloStock(silo)['hay'] = 5;
-    interactWith(s, silo);
-    expect(interactWith(s, silo)).toMatchObject({ kind: 'message' });
   });
 });

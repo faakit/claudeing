@@ -260,6 +260,11 @@ function migrateV12(raw: Raw): Raw {
   return { ...remapGoalIndex(raw, GOALS_V12), version: 13 };
 }
 
+/** v13 -> v14: buildings can be moved with their contents (nothing is being moved in an old save). */
+function migrateV13(raw: Raw): Raw {
+  return { ...raw, version: 14, stored: {} };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -273,6 +278,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   10: migrateV10,
   11: migrateV11,
   12: migrateV12,
+  13: migrateV13,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -446,6 +452,18 @@ export function sanitize(raw: Raw): GameState {
     if (out.length) placed[mapId] = out;
   }
 
+  // Parked state of buildings being moved: only for known placeables, never more than you carry.
+  const stored: GameState['stored'] = {};
+  for (const [type, list] of Object.entries(obj(raw['stored']))) {
+    if (!placeables[type] || !Array.isArray(list)) continue;
+    const carried = slots.reduce((n, st) => (st?.item === type ? n + st.qty : n), 0);
+    const keep = list
+      .filter(isObj)
+      .slice(0, carried)
+      .map((d) => ({ ...d }));
+    if (keep.length) stored[type] = keep;
+  }
+
   const skillXp: Record<string, number> = {};
   for (const [id, xp] of Object.entries(obj(raw['skills']))) {
     if (skills[id] && isFiniteNum(xp) && xp >= 0) skillXp[id] = Math.floor(xp);
@@ -577,6 +595,7 @@ export function sanitize(raw: Raw): GameState {
     weather: toWeather(raw['weather']),
     forecast: toWeather(raw['forecast']),
     placed,
+    stored,
     nextPlacedId: Math.max(int(raw['nextPlacedId'], 1, 1, 1e9), maxId + 1),
     skills: skillXp,
     forage: forageOut,

@@ -307,11 +307,23 @@ try {
     m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
     JSON.stringify(m.placed.farm[0]),
   );
+  // Moving a building: pat, then two more taps pick the coop up with its hen parked for the next coop.
+  await mTap('KeyE'); // a pat
+  await mTap('KeyE'); // "All fed. ... Tap again to pick up."
+  await mTap('KeyE'); // picked up
+  m = await mState();
+  check(
+    'a coop with a hen can be picked up to move it, keeping the hen',
+    !(m.placed.farm ?? []).some((o) => o.type === 'coop') &&
+      m.inventory.slots.some((x) => x?.item === 'coop') &&
+      m.stored.coop?.[0]?.house?.n === 1,
+    JSON.stringify(m.stored),
+  );
   // A feed silo: one Interact pours the bag's feed into it.
   await mp.evaluate(() => {
     const s = window.__farm.getState();
     s.inventory.slots[7] = { item: 'hay', qty: 20 };
-    s.placed.farm.push({ id: 11, type: 'silo', tx: 11, ty: 11, data: {} });
+    (s.placed.farm ??= []).push({ id: 11, type: 'silo', tx: 11, ty: 11, data: {} });
     s.nextPlacedId = 12;
     window.__farm.gameEvents.emit('placedChanged', { map: 'farm' });
   });

@@ -69,12 +69,12 @@ describe('animals', () => {
     expect(s.stats['collected']).toBe(1);
     expect(s.stats['animalsAdded']).toBe(1);
   });
-  it('a house with animals cannot be picked up', () => {
+  it('a house with animals can be picked up to move it (see tests/move.test.ts)', () => {
     const s = newState();
     const coop = placeObject(s, 'farm', 4, 4, 'coop');
     addItem(s, 'chicken', 1);
     moveIn(s, coop);
-    expect(canPickUp(coop)).toBe(false);
+    expect(canPickUp(coop)).toBe(true);
     expect(canPickUp(placeObject(s, 'farm', 6, 4, 'coop'))).toBe(true);
   });
   it('repairs a malformed house in a hand-edited save', () => {

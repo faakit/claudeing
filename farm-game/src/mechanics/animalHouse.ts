@@ -20,7 +20,9 @@ import { isWet } from '../systems/weather';
  * waiting, then feed. The species (chicken, cow...) comes from the placeable's params and animals.json.
  */
 registerPlaceableBehavior('animalHouse', {
-  canPickUp: (obj) => houseOf(obj).n === 0,
+  // Moving a house moves its animals (and what they made): the state is kept for the next one placed.
+  canPickUp: () => true,
+  keepsData: true,
   onMorning(state, obj, _def, ctx) {
     // Today's weather is settled before placeables wake up, so pigs know whether they can dig.
     const outdoorOk = !isWet(state.weather) && state.time.season !== 'winter';

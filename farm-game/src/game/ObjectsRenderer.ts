@@ -7,7 +7,7 @@ import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
 import { landmarksOn } from '../systems/projects';
-import { ownsPlot } from '../systems/plots';
+import { ownsPlot, signVisible } from '../systems/plots';
 import { unreadCount } from '../systems/mail';
 import { mail } from '../data';
 import { ensureTexture } from './fallbackTexture';
@@ -116,7 +116,7 @@ export class ObjectsRenderer {
   /** Land you have not bought yet is dimmed and fenced with a "for sale" sign showing its price. */
   private syncPlots(state: GameState): void {
     const sig = Object.keys(plots)
-      .map((id) => (ownsPlot(state, id) ? '1' : '0'))
+      .map((id) => (ownsPlot(state, id) ? '1' : signVisible(state, id) ? 's' : '0'))
       .join('');
     if (sig === this.plotSig) return;
     this.plotSig = sig;
@@ -155,14 +155,14 @@ export class ObjectsRenderer {
           );
         continue;
       }
-      if (state.plots.includes(id) || !p.sign) continue;
+      if (!signVisible(state, id)) continue; // bought, or not up for sale yet
       const [x, y, w, h] = p.rect;
       const area = this.scene.add
         .rectangle(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, 0x14101f, 0.34)
         .setOrigin(0)
         .setStrokeStyle(1, 0xf4ead2, 0.45)
         .setDepth(0.55);
-      const [sx, sy] = p.sign;
+      const [sx, sy] = p.sign as [number, number];
       const sign = this.scene.add
         .image(sx * TILE_SIZE + TILE_SIZE / 2, (sy + 1) * TILE_SIZE, 'obj_sign')
         .setOrigin(0.5, 1)
@@ -203,9 +203,24 @@ export class ObjectsRenderer {
           repeat: -1,
           ease: 'Sine.easeInOut',
         });
+      // A soft golden ring under it pulses, so goods read as "pick me" from across a field.
+      const ring = this.scene.add
+        .ellipse(x, y + 4, 14, 6)
+        .setStrokeStyle(1, 0xf4d35e, 0.9)
+        .setDepth(0.71);
+      if (!calm())
+        this.scene.tweens.add({
+          targets: ring,
+          scaleX: 1.35,
+          scaleY: 1.35,
+          alpha: { from: 0.9, to: 0.15 },
+          duration: 1100,
+          repeat: -1,
+          delay: (tx * 97 + ty * 53) % 1100,
+        });
       const twinkle = this.scene.add
         .image(x + 4, y - 5, 'ui_star')
-        .setScale(0.6)
+        .setScale(0.8)
         .setDepth(0.9);
       twinkle.setTint(0xfff1b0);
       if (calm()) twinkle.setAlpha(0.8);
@@ -222,7 +237,7 @@ export class ObjectsRenderer {
         sprite.setScale(0.3);
         this.scene.tweens.add({ targets: sprite, scale: 0.8, duration: 260, ease: 'Back.easeOut' });
       }
-      this.forage.set(key, { sprite, extra: [shadow, twinkle], sig: item });
+      this.forage.set(key, { sprite, extra: [shadow, ring, twinkle], sig: item });
     }
     for (const [key, shown] of this.forage) {
       if (here[key]) continue;

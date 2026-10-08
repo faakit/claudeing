@@ -39,8 +39,8 @@ import { gameEvents, toast } from '../systems/events';
 import { currentGoal } from '../systems/goals';
 import { getSoil, isMature } from '../systems/farming';
 import { forageAt } from '../systems/forage';
-import { addItem, roomFor, selectedStack } from '../systems/inventory';
-import { canPickUp, interactWith, placedAt, removePlaced, solidTiles } from '../systems/placeables';
+import { selectedStack } from '../systems/inventory';
+import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
 import { faceDirection, isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
 import { tickTime } from '../systems/time';
 import {
@@ -507,12 +507,9 @@ export abstract class WorldScene extends Phaser.Scene {
     if (res.kind === 'panel') gameEvents.emit('placedPanel', { panel: res.panel, id: res.id });
     else if (res.kind === 'message' && res.text) toast(res.text, 'info');
     else if (res.kind === 'pickup') {
-      if (!canPickUp(obj)) toast("It's busy. Wait until it's done.", 'warn');
-      else if (roomFor(state, obj.type, 1) < 1) toast('Inventory full!', 'warn');
-      else {
-        removePlaced(state, this.mapId, obj.id);
-        addItem(state, obj.type, 1);
-      }
+      const got = pickUpPlaced(state, this.mapId, obj);
+      if (got === 'busy') toast("It's busy. Wait until it's done.", 'warn');
+      else if (got === 'full') toast('Inventory full!', 'warn');
     }
     this.things?.sync(state, true);
   }

@@ -68,7 +68,8 @@ Still open (ranked):
 - [x] Side income (machines, animals, orders) is bounded by data-driven guard rails in `tests/balance.test.ts`; the bot simulation now farms real plots, fills orders and keeps jars busy, with a tight income band.
 - [x] A save from a newer version now shows a message on the title screen, and New Game asks before erasing it.
 - [x] A saved player position inside a wall or outside the map is moved to the nearest open tile on load.
-- [ ] Placement undo for big placeables; confirm before placing a barn.
+- [x] Placement undo for big placeables; confirm before placing a barn. _Done as:_ every building can be picked up
+      with a second tap and moved with its animals and goods (no confirm step; see DECISIONS).
 - [x] Fiber is now sold in the General Store (5 gold), so crafting is no longer capped by weed supply.
 - [x] Seasonal music (tempo, key, chords, melody density per season) and sounds for level-ups, hearts and orders.
 - [~] Art: tilled soil now reads as earth (done); the house is huge next to a 1-tile coop, animals do not roam (see R4.1).

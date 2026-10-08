@@ -25,7 +25,7 @@ import {
 import { addStat } from '../systems/goals';
 import { addItem, removeFromSlot, roomFor } from '../systems/inventory';
 import { sellValue } from '../systems/itemRef';
-import { placedAt, placeObject } from '../systems/placeables';
+import { placedAt, placeObject, restoreStored } from '../systems/placeables';
 import { addXp } from '../systems/skills';
 import { inGreenhouse } from '../systems/plots';
 import { villagerSpot } from '../systems/npcs';
@@ -162,7 +162,8 @@ registerActionHandler({
           delete state.farm.weeds[tileKey(tile.tx, tile.ty)];
           delete state.farm.tiles[tileKey(tile.tx, tile.ty)];
           removeFromSlot(state, state.inventory.selected, 1);
-          placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
+          const obj = placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
+          if (restoreStored(state, obj)) gameEvents.emit('placedChanged', { map: tile.map });
           addStat(state, 'placed');
           if (def.type === 'sapling') addStat(state, 'treesPlanted');
           // The decoration goal counts decorations standing at once, so moving one about earns nothing.

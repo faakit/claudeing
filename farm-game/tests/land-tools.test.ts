@@ -110,6 +110,10 @@ describe('land plots', () => {
   it('signs belong to plots still for sale and disappear once bought', () => {
     const s = newState();
     const sign = plots['east']!.sign!;
+    // Day one shows only the cheapest plot's sign; dearer ones go up as the player earns.
+    expect(plotForSaleAt(s, sign[0], sign[1])).toBeNull();
+    expect(signTiles(s)).toHaveLength(1);
+    s.stats['earned'] = 100000;
     expect(plotForSaleAt(s, sign[0], sign[1])).toBe('east');
     expect(signTiles(s)).toHaveLength(Object.values(plots).filter((p) => p.sign).length);
     s.money = 9999;

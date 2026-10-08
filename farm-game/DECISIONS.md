@@ -288,3 +288,10 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 - **The derby reuses the real fishing game** rather than a new screen: `resolveCatch` reports each catch to `recordCatch`. That turns the derby into a day of play, which is what critique 3 asked for, at almost no UI cost.
 - **One-thumb:** baskets are built with Add/Out on each row and one "Present the basket" button low on the sheet; the derby page has one "Hand in my catches" button.
 - **Rivals rescaled** for three-item scores (fair 300/600/950, feast 220/380/600, derby 110/170/240) so a year-one player reaches the podium with good, varied goods and needs gold quality to win.
+
+## Moving buildings, quieter land signs, easier forage (backlog 7, critique 3 F8/F9)
+
+- **Move, don't undo:** an occupied coop, barn, shed, sty or a stocked silo can now be picked up with the same deliberate second tap as a machine; its state (animals, goods waiting, happiness, feed) is parked in `state.stored` and the next one of that type placed takes it back. Placement confirm was dropped: a confirm on Action would fire on a held press, and with pick-up-anything a misplaced building is two taps to fix. Save version 14 adds `stored` (sanitised to never hold more than the buildings you carry).
+- **Trees stay put:** checking a tree for fruit is a natural double tap, so trees are not movable.
+- **Land signs appear as they become relevant:** the cheapest unbought plot always shows its sign; dearer ones once you have earned a quarter of the price or hold half of it. Day one no longer greets you with 2,200g and 2,600g signs.
+- **Forage reads from afar:** a golden ring pulses under every wild good (still under Calm mode, static) and the twinkle is larger.

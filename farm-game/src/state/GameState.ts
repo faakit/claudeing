@@ -158,6 +158,8 @@ export interface GameState {
   forecast: Weather;
   /** Placed objects by map id. */
   placed: Record<string, PlacedObject[]>;
+  /** State of buildings picked up to be moved (animals, a tree's growth), by type, oldest first. */
+  stored: Record<string, Record<string, unknown>[]>;
   nextPlacedId: number;
   /** Total XP per skill id (levels are derived from skills.json). */
   skills: Record<string, number>;
@@ -177,7 +179,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 13;
+export const STATE_VERSION = 14;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -220,6 +222,7 @@ export function createInitialState(): GameState {
     weather: 'sunny',
     forecast: 'sunny',
     placed: {},
+    stored: {},
     nextPlacedId: 1,
     skills: {},
     forage: {},
