@@ -106,6 +106,13 @@ Anything that grants perks besides skills and hearts registers a source:
 reading a new perk anywhere works the same no matter where it comes from. Town projects are the example
 (`mechanics/projects.ts`).
 
+### Daily jobs and stat watchers
+
+A job is a row in `jobs.json`: who asks (`giver`), the lifetime `stat` it counts, a `qty` range, gold
+(`base + perUnit x n`), a `weight`, and optionally `introDay` (always posted that day) and `requires`
+(a stat that must be reached first). Any stat that `addStat` increments works, so a new job is data only.
+Code that should react to stat changes registers `registerStatWatcher(id, fn)` (see `mechanics/jobs.ts`).
+
 ### Town projects
 
 A project is one row in `projects.json`: `gold`, optional `items`, `after` (the project it waits for),

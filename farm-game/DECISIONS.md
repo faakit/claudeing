@@ -213,3 +213,10 @@
 - **Decorations are plain placeables with a `decor` behavior:** fences, a stone path (flat: drawn under the player and walkable), pots, lamps, a bench, a statue and a fountain (10g to 12,000g, with per-kind limits). They do nothing but look nice; Interact names them and a second tap picks them up, like machines. They are type `placeable`, so the bin and gift list already refuse them and they land on the hotbar.
 - **No x5 on dear rows:** anything over 300g (and every animal) has only the single-buy button, so one tap can never spend thousands (critique 3, F3).
 - **Shop tabs are four buttons of different widths** (Seeds, Farm, Home, Upgrades) so "Upgrades" still fits; a pure `SHOP_TABS` table lets a test prove it.
+
+## Daily jobs (critique 3, F2 pacing)
+
+- **Three small jobs every morning from day 2:** villagers post requests from `jobs.json` ("Finn: catch 3 fish", "Orin: break 5 mine rocks"). A job counts what you do after it was posted (`base` is the stat's value at posting), pays on the spot (20 to 120 gold, 25% more each year) and gives the asker +15 friendship. They are listed in the morning summary and in Menu > Goal.
+- **Pointers, not chores:** `introDay` puts the fishing job on day 2, the mine on day 3 and the board on day 4, so the idle days 3 and 4 now point at the side activities critique 3 found nobody discovers. `requires` hides jobs that cannot be done yet (no animal goods before an animal).
+- **Stat watchers:** `registerStatWatcher` in `systems/goals.ts` runs on every stat change; jobs are the first user. No polling, no new events.
+- **Bounded:** a balance test keeps the three best jobs of a day under 300 gold, a modest early boost that is irrelevant late. Save version 10 adds `jobs` and two job goals (one right after "buy", so days 2 to 4 always have something to finish).

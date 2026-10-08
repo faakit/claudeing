@@ -71,6 +71,14 @@
     }
   },
   {
+    "id": "job1",
+    "text": "Finish a job a villager posts",
+    "stat": "jobsDone",
+    "target": 1,
+    "reward": 60,
+    "hint": "Morning news lists today's jobs. Menu > Goal shows them too."
+  },
+  {
     "id": "harvest",
     "text": "Harvest 5 crops",
     "stat": "harvested",
@@ -270,6 +278,14 @@
     "target": 20,
     "reward": 500,
     "hint": "Cast at the pond, town river or woods lake."
+  },
+  {
+    "id": "jobs20",
+    "text": "Finish 20 daily jobs",
+    "stat": "jobsDone",
+    "target": 20,
+    "reward": 600,
+    "hint": "Three new jobs every morning. Menu > Goal shows today's."
   },
   {
     "id": "orders10",

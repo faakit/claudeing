@@ -19,3 +19,4 @@ import './mining';
 import './festivals';
 import './projects';
 import './decor';
+import './jobs';

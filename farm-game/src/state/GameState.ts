@@ -69,6 +69,17 @@ export interface Order {
   done: boolean;
 }
 
+/** A daily job: gain `n` of a stat today (`base` is the stat's value when the job was posted). */
+export interface Job {
+  id: string;
+  giver: string;
+  stat: string;
+  base: number;
+  n: number;
+  reward: number;
+  done: boolean;
+}
+
 /** How a villager feels about the player. Days are absolute day numbers (0 = never). */
 export interface Friendship {
   points: number;
@@ -141,11 +152,13 @@ export interface GameState {
   orders: { day: number; list: Order[] };
   /** Friendship with villagers by npc id. */
   friends: Record<string, Friendship>;
+  /** Today's small jobs from villagers. `day` is the absolute day they were posted for. */
+  jobs: { day: number; list: Job[] };
   lastSummary: DaySummary | null;
   rng: number;
 }
 
-export const STATE_VERSION = 9;
+export const STATE_VERSION = 10;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -194,6 +207,7 @@ export function createInitialState(): GameState {
     nodes: {},
     orders: { day: 0, list: [] },
     friends: {},
+    jobs: { day: 0, list: [] },
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,
   };

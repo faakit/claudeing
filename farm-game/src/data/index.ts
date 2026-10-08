@@ -22,6 +22,7 @@ import nodesRaw from './nodes.json';
 import festivalsRaw from './festivals.json';
 import miningRaw from './mining.json';
 import projectsRaw from './projects.json';
+import jobsRaw from './jobs.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -282,6 +283,25 @@ export interface MachineDef {
   /** Item family ("fruit", "veg") -> the derived good this machine makes of it. */
   recipes: Record<string, string>;
 }
+/** A small daily job a villager asks for: reach `n` more of a stat today. */
+export interface JobDef {
+  id: string;
+  /** Villager id who asks (and whose friendship grows when it is done). */
+  giver: string;
+  /** Lower-case request with `{n}`, e.g. "catch {n} fish"; shown as "Finn: catch 2 fish". */
+  text: string;
+  /** Lifetime stat that counts progress (today's gain is what matters). */
+  stat: string;
+  qty: [number, number];
+  /** Gold = base + perUnit x n. */
+  base: number;
+  perUnit: number;
+  weight: number;
+  /** Always offered on this absolute day (an early pointer at a side activity). */
+  introDay?: number;
+  /** Only offered once a stat reached `min` (e.g. after the first animal). */
+  requires?: { stat: string; min: number };
+}
 /** A town project the player funds with gold and goods; finishing it grants perks for good. */
 export interface ProjectDef {
   name: string;
@@ -383,6 +403,7 @@ export const trees = treesRaw as unknown as Record<string, TreeDef>;
 export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
 export const projects = projectsRaw as unknown as Record<string, ProjectDef>;
+export const jobs = jobsRaw as unknown as JobDef[];
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
@@ -583,6 +604,15 @@ export function validateContent(): void {
       if (seen.has(at)) fail('projects', `"${id}" is part of an "after" loop`);
       seen.add(at);
     }
+  }
+  const jobIds = new Set<string>();
+  for (const j of jobs) {
+    if (!j.id || jobIds.has(j.id)) fail('jobs', `job "${j.id}" needs a unique id`);
+    jobIds.add(j.id);
+    if (!npcs[j.giver]) fail('jobs', `"${j.id}" is given by unknown villager "${j.giver}"`);
+    if (!j.text.includes('{n}') || !j.stat) fail('jobs', `"${j.id}" needs a stat and {n} in its text`);
+    if (j.qty[0] < 1 || j.qty[1] < j.qty[0] || j.weight <= 0)
+      fail('jobs', `"${j.id}" has a bad quantity or weight`);
   }
   for (const [id, pl] of Object.entries(placeables))
     if (pl.behavior === 'decor' && !(Number(pl.params['max']) >= 1))

@@ -42,6 +42,13 @@ export const canChat = (state: GameState, id: string): boolean =>
 export const canGift = (state: GameState, id: string): boolean =>
   friendOf(state, id).giftedDay !== absoluteDay(state);
 
+/** Friendship from outside chats and gifts (a finished job, an event). */
+export function befriend(state: GameState, id: string, points: number): void {
+  if (!npcs[id]) return;
+  addPoints(state, id, points);
+  gameEvents.emit('friendsChanged', undefined);
+}
+
 function addPoints(state: GameState, id: string, delta: number): void {
   const f = (state.friends[id] ??= blank());
   f.points = Math.max(0, Math.min(MAX_POINTS, f.points + delta));

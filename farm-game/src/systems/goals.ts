@@ -12,8 +12,18 @@ export function goalProgress(state: GameState): { goal: GoalDef; value: number }
   return goal ? { goal, value: Math.min(goal.target, stat(state, goal.stat)) } : null;
 }
 
+/** Called after any stat may have moved (daily jobs watch their stats this way). */
+export type StatWatcher = (state: GameState) => void;
+const watchers = new Map<string, StatWatcher>();
+
+/** Add (or replace, by id) something that reacts to stat changes. Mechanics register theirs. */
+export function registerStatWatcher(id: string, fn: StatWatcher): void {
+  watchers.set(id, fn);
+}
+
 /** Complete every goal that is already satisfied, paying rewards and announcing each. */
 export function checkGoals(state: GameState): void {
+  for (const fn of watchers.values()) fn(state);
   let goal = currentGoal(state);
   while (goal && stat(state, goal.stat) >= goal.target) {
     state.money += goal.reward;

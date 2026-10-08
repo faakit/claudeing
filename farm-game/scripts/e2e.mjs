@@ -112,6 +112,11 @@ try {
     JSON.stringify(s.time),
   );
   check(
+    'the next morning villagers post three jobs, the first a fishing job',
+    s.jobs.list.length === 3 && s.jobs.list[0].id === 'fish' && s.jobs.day === 2,
+    JSON.stringify(s.jobs),
+  );
+  check(
     'player wakes up in the house with full energy',
     s.player.map === 'house' && s.energy === 100,
     `${s.player.map} ${s.energy}`,

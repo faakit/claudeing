@@ -39,9 +39,10 @@ available (pick up or harvest beats planting beats tilling), so you never have t
 8. **Animals**: craft a coop (and later a barn), buy chickens and feed in town. One tap on the coop moves animals in, collects eggs and feeds them. Fed animals get happier and lay better-quality eggs; hungry ones sulk.
 9. **Villagers**: Mara (shop), Finn (woods) and Rosa (farm) greet you with a "!" each day. Chat once a day and give gifts to grow hearts; hearts unlock discounts, daily presents and perks.
 10. **Skills**: farming, foraging and fishing level up with use and grant perks (quality, energy, double finds, wider fishing zone).
-11. **Town projects**: the town board's "Town projects" button lists projects the whole town funds. Give gold and goods a little at a time; each finished one helps for good (more requests, faster skills, more energy, better prices) and adds a building to town.
-12. **Home**: the shop's Home tab sells a Bigger Bag (more slots) and decorations (fences, paths, pots, lamps, a fountain). Place them like a sprinkler; tap twice with Interact to pick one up.
-13. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
+11. **Daily jobs**: from day 2, villagers post three small jobs each morning (catch fish, break rocks, fill a request...). They pay on the spot and build friendship. See them in the morning news and Menu > Goal.
+12. **Town projects**: the town board's "Town projects" button lists projects the whole town funds. Give gold and goods a little at a time; each finished one helps for good (more requests, faster skills, more energy, better prices) and adds a building to town.
+13. **Home**: the shop's Home tab sells a Bigger Bag (more slots) and decorations (fences, paths, pots, lamps, a fountain). Place them like a sprinkler; tap twice with Interact to pick one up.
+14. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
 
 ## Project layout
 

@@ -216,7 +216,22 @@ const GOALS_V8 = [
 /** v8 -> v9: the Bigger Bag upgrade (a level of 0 keeps the old slot count) and two home goals. */
 function migrateV8(raw: Raw): Raw {
   const up = isObj(raw['upgrades']) ? raw['upgrades'] : {};
-  return { ...remapGoalIndex(raw, GOALS_V8), version: 9, upgrades: { ...up, bag: 0 } };
+  return {
+    ...remapGoalIndex(raw, GOALS_V8, GOALS_V9),
+    version: 9,
+    upgrades: { ...up, bag: 0 },
+  };
+}
+
+/** Goal ids of the save-version-9 release (home upgrades). */
+// prettier-ignore
+const GOALS_V9 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'harvest', 'ship', 'fish', 'order', 'craft', 'place', 'preserve', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll',
+] as const;
+
+/** v9 -> v10: daily jobs (posted from the next morning on) and two job goals. */
+function migrateV9(raw: Raw): Raw {
+  return { ...remapGoalIndex(raw, GOALS_V9), version: 10, jobs: { day: 0, list: [] } };
 }
 
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
@@ -228,6 +243,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   6: migrateV6,
   7: migrateV7,
   8: migrateV8,
+  9: migrateV9,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -456,6 +472,23 @@ export function sanitize(raw: Raw): GameState {
     };
   }
 
+  const jobsRaw = obj(raw['jobs']);
+  const jobList: GameState['jobs']['list'] = [];
+  if (Array.isArray(jobsRaw['list']))
+    for (const j of jobsRaw['list'].slice(0, 6)) {
+      if (!isObj(j) || typeof j['id'] !== 'string' || typeof j['stat'] !== 'string') continue;
+      if (typeof j['giver'] !== 'string' || !npcs[j['giver']]) continue;
+      jobList.push({
+        id: j['id'],
+        giver: j['giver'],
+        stat: j['stat'],
+        base: int(j['base'], 0, 0, 1e9),
+        n: int(j['n'], 1, 1, 999),
+        reward: int(j['reward'], 0, 0, 1e5),
+        done: j['done'] === true,
+      });
+    }
+
   const ownedPlots = Array.isArray(raw['plots'])
     ? [
         ...new Set(
@@ -494,6 +527,7 @@ export function sanitize(raw: Raw): GameState {
     nodes: nodesOut,
     orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
     friends,
+    jobs: { day: int(jobsRaw['day'], 0, 0, 1e7), list: jobList },
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
   };

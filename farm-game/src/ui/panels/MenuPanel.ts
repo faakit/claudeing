@@ -9,6 +9,9 @@ import { waterCapacity } from '../../systems/actions';
 import { maxEnergy } from '../../systems/energy';
 import { gameEvents, toast } from '../../systems/events';
 import { goalProgress, stat } from '../../systems/goals';
+import { jobLabel, jobProgress } from '../../systems/jobs';
+import { absoluteDay } from '../../systems/time';
+import { fitRow, measureText } from '../font';
 import { isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { displayName, iconKey, refOf, sellValue } from '../../systems/itemRef';
 import {
@@ -268,10 +271,30 @@ function buildGoals(c: MenuTabContext): void {
       184,
     );
   }
-  let y = c.top + 78;
+  let y = c.top + 82;
+  // Today's jobs: small requests that pay on the spot, whatever the goal chain says.
+  c.label(8, y, "TODAY'S JOBS", C.gold);
+  y += 12;
+  const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
+  if (today.length === 0) {
+    c.label(8, y, 'New jobs every morning.', C.creamDim);
+    y += 11;
+  }
+  for (const job of today) {
+    const right = job.done ? 'Done' : `${jobProgress(s, job)}/${job.n} +${job.reward}g`;
+    c.label(192, y, right, job.done ? C.green : C.gold, 1, 'right');
+    c.label(
+      8,
+      y,
+      fitRow(jobLabel(job), 184 - measureText(right) - 6),
+      job.done ? C.creamDim : C.cream,
+    );
+    y += 11;
+  }
+  y += 6;
   c.label(8, y, 'COMPLETED', C.gold);
   y += 12;
-  const done = goals.slice(Math.max(0, s.goalIndex - 4), s.goalIndex);
+  const done = goals.slice(Math.max(0, s.goalIndex - 2), s.goalIndex);
   if (done.length === 0) c.label(8, y, 'Nothing yet. You can do it!', C.creamDim);
   for (const d of done) {
     const row = c.label(8, y, `+ ${d.text}`, C.creamDim, 1, 'left', 184);
