@@ -1,3 +1,4 @@
+import { tiredText } from '../systems/food';
 import { registerToolAction } from '../systems/actionRegistry';
 import { canAfford, spendEnergy } from '../systems/energy';
 import { gameEvents } from '../systems/events';
@@ -7,7 +8,7 @@ import { roomFor } from '../systems/inventory';
 /** Casting the rod at water starts the reel mini-game (the UI scene runs it and pays out the catch). */
 registerToolAction('fish', ({ state, tile, tool }) => {
   if (tile.kind !== 'water') return { refusal: 'Cast at the water.' };
-  if (!canAfford(state, tool.energyCost)) return { refusal: 'Too tired! Go to bed.' };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   const fish = pickFish(state, tile.map);
   if (!fish) return { refusal: 'Nothing bites here right now.' };
   if (roomFor(state, fish.item, 1) < 1) return { refusal: 'Inventory full!' };

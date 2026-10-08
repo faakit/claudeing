@@ -23,21 +23,40 @@ function seedOnSale(state: GameState, cropId: string): boolean {
   return !entry?.project || isProjectDone(state, entry.project);
 }
 
+/** A crop request waits at most this many days for your crop to ripen. */
+export const CROP_WAIT = 3;
+
+/**
+ * Days until you could hand over each crop: 0 if you carry some, else the fewest growing days left on any
+ * tile of it (watered every night). Crops you do not grow are absent.
+ */
+export function cropReadyIn(state: GameState): Map<string, number> {
+  const out = new Map<string, number>();
+  const put = (item: string, d: number) => out.set(item, Math.min(d, out.get(item) ?? Infinity));
+  for (const t of Object.values(state.farm.tiles)) {
+    const crop = t.crop ? crops[t.crop.cropId] : undefined;
+    if (!crop || !t.crop) continue;
+    const left = crop.stageDays.slice(t.crop.stage).reduce((a, b) => a + b, 0) - t.crop.daysInStage;
+    put(crop.harvestItem, Math.max(0, left));
+  }
+  for (const c of Object.values(crops))
+    if (countItem(state, c.harvestItem) > 0) put(c.harvestItem, 0);
+  return out;
+}
+
 /** Goods a town order may ask for today: what the season gives, what the player can make. */
 export function orderCandidates(state: GameState): ItemRef[] {
   const season = state.time.season;
   const out = new Map<string, ItemRef>();
   const add = (r: ItemRef) => out.set(keyOf(r), r);
-  // Crops only once you grow them (or carry some): a request lasts two or three days, too short to grow
-  // a crop from seed, so asking for one you have not planted is asking for the impossible (critique 6, F3).
-  const growing = new Set(
-    Object.values(state.farm.tiles).flatMap((t) => (t.crop ? [t.crop.cropId] : [])),
-  );
+  // Crops only when you carry some or one ripens within a few days (critique 6 F3, critique 7 F1): the
+  // request then stays open until it is ripe, so it is never a row nobody could fill.
+  const ready = cropReadyIn(state);
   for (const [id, c] of Object.entries(crops))
     if (
       c.seasons.includes(season) &&
       seedOnSale(state, id) &&
-      (growing.has(id) || countItem(state, c.harvestItem) > 0)
+      (ready.get(c.harvestItem) ?? Infinity) <= CROP_WAIT
     )
       add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
@@ -62,6 +81,9 @@ export function orderCandidates(state: GameState): ItemRef[] {
 const between = (state: GameState, [lo, hi]: [number, number]): number =>
   lo + Math.floor(random(state) * (hi - lo + 1));
 
+/** Goods of the farm (weighted up on the board): crops, preserves, animal goods. */
+const FARM_TYPES = ['crop', 'preserve', 'product'];
+
 /** How many requests the board holds. Town projects (the board canopy) can post extra ones. */
 export const boardSize = (state: GameState): number =>
   ordersCfg.perDay + Math.max(0, Math.round(perk(state, 'orderSlots')));
@@ -81,8 +103,18 @@ export function generateOrders(
   let id = [...state.orders.list, ...standing].reduce((n, o) => Math.max(n, o.id), 0) + 1;
   const today = absoluteDay(state);
   const made = animalOutput(state);
+  const ready = cropReadyIn(state);
   for (let i = 0; i < count && pool.length > 0; i++) {
-    const ref = pool.splice(Math.floor(random(state) * pool.length), 1)[0] as ItemRef;
+    // What you grow and make is asked for three times as often as fish and wild goods (critique 7, F3).
+    const weights = pool.map((r) => (FARM_TYPES.includes(items[r.item]?.type ?? '') ? 3 : 1));
+    let roll = random(state) * weights.reduce((a, b) => a + b, 0);
+    let pick = pool.length - 1;
+    for (let j = 0; j < pool.length; j++)
+      if ((roll -= weights[j]!) < 0) {
+        pick = j;
+        break;
+      }
+    const ref = pool.splice(pick, 1)[0] as ItemRef;
     const value = sellValue(ref);
     const tier = ordersCfg.tiers.find((t) => value <= t.maxValue) ?? ordersCfg.tiers[0];
     if (!tier) break;
@@ -102,7 +134,11 @@ export function generateOrders(
       reward,
       xp: Math.max(4, Math.round(value * qty * ordersCfg.xpPerValue)),
       done: false,
-      until: today + between(state, ordersCfg.days ?? [1, 1]) - 1,
+      // A crop request lasts at least until a day after your crop ripens.
+      until: Math.max(
+        today + between(state, ordersCfg.days ?? [1, 1]) - 1,
+        today + (ready.get(ref.item) ?? 0) + 1,
+      ),
       from: today,
     });
   }
@@ -200,6 +236,7 @@ export function deliverOrder(state: GameState, id: number): DeliverResult {
         : 'farming';
   addXp(state, skill, order.xp);
   addStat(state, 'ordersDone');
+  state.stats['filled.day'] = absoluteDay(state); // Clay sulks on a day you beat him to the board
   toast(`Order done! +${gold}g`, 'good');
   return 'ok';
 }

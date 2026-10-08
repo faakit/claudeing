@@ -413,3 +413,18 @@ An independent critic played the build at `5fd9943` (14 real-input days plus pro
 
 - The bot can now be given a number of Action presses a day. At 150 presses (three seeds) it earns a median of about 148k in year one, 76% of the tireless bot; at 60 presses about 87k. Upgraded tools and plant-a-row make each press count, which is why the gap is smaller than the press count suggests. A test keeps the 150-press year under the tireless median and above the first statue level, so a steady human reaches the late sinks in year two rather than drowning in gold in year one.
 - **The bot keeps hens too** (a coop of three once Farming 3, fed and collected daily, eggs shipped or given to requests), so animal goods on the board are exercised by the sim. The five-seed median moved from 195,194 to 219,796 (+13%: about 12k of eggs a year plus egg requests and a different random path).
+
+## Critique 7 fixes (depth round 2)
+
+An independent critic played the build at `f27999e` (two 14-day real-input runs, probes, a 44-screen sweep) and wrote `agents/critiques/critique-7.md`: no blocker; six critique-6 fixes held. Fixed:
+
+- **F1 crop requests for crops that could not ripen in time:** a crop is asked for only if you carry some or one of yours ripens within 3 days (`cropReadyIn`, `CROP_WAIT`), and the request stays open until a day after it ripens.
+- **F2 Clay took the dearest request every day, so "3 days" was a lie:** he now takes only requests on their **last day**, so the days on a row are true; and **on a day you fill a request yourself he stays home** ("Clay stays home: you won today."), so racing him has a reward. Most of what he still takes would have expired unfilled.
+- **F3 the board asked a farmer for trout:** crops, preserves and animal goods are drawn three times as often as fish and wild goods (a test keeps two grown crops above a quarter of requests).
+- **F4 the special's Give starved a same-item request:** it keeps back what a fillable same-item request needs and says how many it gives ("Give 3"); a finished special is not posted again within a season.
+- **F5 bench:** without a sit to give, Interact says why ("Rested today." or "Sit when tired (+15).") before the usual second-tap pick-up.
+- **F6 eating:** a dish is kept when less than half of it would count ("Not hungry" on the card, "You're not hungry enough." on Action); the card shows the real gain; the bag cursor clears when the last one is eaten; out of energy with food in the bag, the line says "Eat something or go to bed."
+- **F7 legends:** the Book's Fish page shows "Legends 1/4".
+- **F8 animal specials** ask for about 70% of what the farm makes by the deadline (`SPECIAL_SHARE`).
+- **F9:** the honey tip no longer talks about feeding animals (the tip now waits for an animal); the statue page says what you have ("Now +2%.") and stays open after a level; glass-only regrowing seeds keep "again 4d" where it fits; the seed shelf lists this season's seeds, then glass-only ones, then the rest.
+- **Sim:** five-seed median repinned at 227,442 (crop requests the bot can fill; Clay only on last days). Clay took 71 of 145 requests in the seed-42 year, all on their last day and almost all ones the bot would not have filled.

@@ -5,7 +5,7 @@ import { performAction } from '../src/systems/actions';
 import { craft, craftBlock } from '../src/systems/crafting';
 import { buyUpgrade } from '../src/systems/economy';
 import { maxEnergy } from '../src/systems/energy';
-import { eat } from '../src/systems/food';
+import { eat, tiredText } from '../src/systems/food';
 import { addItem, countItem } from '../src/systems/inventory';
 import { migrate } from '../src/systems/save';
 import { hasKitchen } from '../src/systems/skills';
@@ -39,7 +39,10 @@ describe('the kitchen and cooking (a Home upgrade)', () => {
     s.energy = maxEnergy(s);
     expect(eat(s, slot)).toBe('full');
     expect(countItem(s, 'baked_potato')).toBe(2);
-    s.energy = maxEnergy(s) - 10;
+    s.energy = maxEnergy(s) - 10; // only a quarter of a 40-energy dish would count: kept
+    expect(eat(s, slot)).toBe('full');
+    expect(tiredText(s)).toMatch(/Eat something/);
+    s.energy = maxEnergy(s) - 25;
     expect(eat(s, slot)).toBe('ok');
     expect(s.energy).toBe(maxEnergy(s));
     expect(countItem(s, 'baked_potato')).toBe(1);

@@ -31,7 +31,7 @@
   },
   {
     "id": "animals",
-    "stat": "collected",
+    "stat": "animalsAdded",
     "min": 1,
     "text": "Fed, happy animals give better quality goods. Feed them daily."
   },

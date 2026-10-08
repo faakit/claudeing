@@ -36,15 +36,18 @@ export function rivalTakes(state: GameState): number {
 const NUMBER_WORDS = ['none', 'one', 'two', 'three'];
 
 /**
- * The requests the rival wants on board day `day`: the best-paying open ones that were posted before that
+ * The requests the rival wants on board day `day`: the best-paying open ones on their last day (and posted before it)
  * day (a request is always safe on the day it goes up), at most `rivalTakes`, and never the last open one.
  * Polite (4 hearts): the smallest instead.
  */
 export function rivalPicks(state: GameState, day = state.orders.day): Order[] {
+  // A day you filled a request yourself, he stays home: the race has a reward (critique 7, F2).
+  if (state.stats['filled.day'] === day) return [];
   const open = state.orders.list.filter((o) => !o.done);
   const polite = perk(state, 'rivalPolite') >= 1;
+  // Only requests on their last day (critique 7, F2): "3 days" on a row is then the truth.
   return open
-    .filter((o) => (o.from ?? -Infinity) < day)
+    .filter((o) => (o.from ?? -Infinity) < day && (o.until ?? state.orders.day) <= day)
     .sort((a, b) => (polite ? a.reward - b.reward : b.reward - a.reward))
     .slice(0, Math.min(rivalTakes(state), Math.max(0, open.length - 1)));
 }
@@ -54,6 +57,8 @@ export function rivalNotice(state: GameState): string {
   if (!rivalActive(state)) return 'Requests stay two or three days.';
   const took = state.orders.list.filter((o) => o.rival && o.takenOn === absoluteDay(state)).length;
   if (took) return `${rivalName()} took ${NUMBER_WORDS[took] ?? took} today.`;
+  if (state.stats['filled.day'] === absoluteDay(state))
+    return `${rivalName()} stays home: you won today.`;
   const picks = state.stats['rival.day'] === absoluteDay(state) ? [] : rivalPicks(state);
   if (picks.length === 0) return `${rivalName()} wants nothing here today.`;
   const at = formatClock(rivalMinute(state));

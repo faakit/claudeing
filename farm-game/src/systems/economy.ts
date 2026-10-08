@@ -97,7 +97,9 @@ export function stockFor(shopId: string, season: Season, state?: GameState): str
   const glass = allSeeds
     ? stock.filter((s) => !s.seasons.includes(season) && items[s.item]?.type === 'seed')
     : [];
-  return [...now, ...glass].map((s) => s.item);
+  // Seeds together: this season's, then the glass-only ones, then everything else.
+  const seed = (s: { item: string }) => items[s.item]?.type === 'seed';
+  return [...now.filter(seed), ...glass, ...now.filter((s) => !seed(s))].map((s) => s.item);
 }
 
 export function buyItem(state: GameState, shopId: string, itemId: string, qty: number): BuyResult {

@@ -28,6 +28,12 @@ registerPlaceableBehavior('decor', {
     }
     if (rest > 0 && pickupNow() - satAt <= ARM_MS)
       return { kind: 'message', text: 'Rested. Back tomorrow.', arm: false };
+    // Say why there is no sit, so the "tap again to pick up" that follows is a choice (critique 7, F5).
+    if (rest > 0)
+      return {
+        kind: 'message',
+        text: state.stats['rested.day'] === today ? 'Rested today.' : `Sit when tired (+${rest}).`,
+      };
     return { kind: 'message', text: def.name };
   },
   canPickUp: () => true,

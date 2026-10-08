@@ -10,6 +10,7 @@ import {
   rivalActive,
   rivalMinute,
   rivalNotice,
+  rivalPicks,
   rivalTakes,
 } from '../src/systems/rival';
 import { migrate } from '../src/systems/save';
@@ -18,12 +19,15 @@ import { measureText } from '../src/ui/fontMetrics';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
 
-/** A state on the rival's first day, with a board posted the day before (so every request is fair game). */
+/** A state on the rival's first day, every request posted the day before and on its last day (fair game). */
 function boardDay(): GameState {
   const s = newState();
   s.time.day = game.rival.startDay;
   s.orders = { day: absoluteDay(s), list: generateOrders(s) };
-  for (const o of s.orders.list) o.from = absoluteDay(s) - 1;
+  for (const o of s.orders.list) {
+    o.from = absoluteDay(s) - 1;
+    o.until = absoluteDay(s);
+  }
   return s;
 }
 const hearts = (s: GameState, n: number) =>
@@ -52,18 +56,21 @@ describe('the rival farmer', () => {
     expect(rivalNotice(s)).toBe('Clay took one today.');
   });
 
-  it('a request you filled first is safe; a late delivery finds it gone', () => {
+  it('a request you filled first is safe, and that day the rival stays home', () => {
     const s = boardDay();
     const [a, b] = s.orders.list;
     for (const o of [a!, b!]) addItem(s, o.item.split('|')[0]!, o.qty);
     s.time.minutes = 600;
     expect(deliverOrder(s, a!.id)).toBe('ok');
     s.time.minutes = rivalMinute(s) + 10;
-    // The rival came by while we were away: one of the two open ones is gone.
-    const res = deliverOrder(s, b!.id);
-    const gone = s.orders.list.find((o) => o.rival)!;
-    expect(gone.id).not.toBe(a!.id);
-    expect(res).toBe(gone.id === b!.id ? 'done' : 'ok');
+    expect(deliverOrder(s, b!.id)).toBe('ok');
+    expect(s.orders.list.some((o) => o.rival)).toBe(false);
+    // Without a delivery, a late visit finds his pick gone.
+    const t = boardDay();
+    t.time.minutes = rivalMinute(t) + 10;
+    const target = rivalPicks(t)[0]!;
+    addItem(t, target.item.split('|')[0]!, target.qty);
+    expect(deliverOrder(t, target.id)).toBe('done');
   });
 
   it('friendship softens the rivalry: later, then polite, then not at all', () => {

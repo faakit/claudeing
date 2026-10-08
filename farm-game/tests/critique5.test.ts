@@ -68,30 +68,34 @@ describe('critique 5 fixes', () => {
     expect(new Set(s.orders.list.map((x) => x.item)).size).toBe(3); // never the same good twice
   });
 
-  it('F1 / C6 F3: a request is safe the day it goes up; the next day Clay names it and takes it', () => {
+  it('C6 F3 / C7 F2: Clay takes a request only on its last day, and the board names it', () => {
     const s = rivalDay();
     s.time.minutes = rivalMinute(s);
     expect(rivalPicks(s)).toEqual([]);
     expect(applyRival(s)).toBeNull(); // everything was posted today
     expect(rivalNotice(s)).toBe('Clay wants nothing here today.');
-    // Next morning the dearest one that lasts is his target, and the board says so.
+    // Next morning: the requests whose last day it is are fair game; longer ones are not.
+    const day = absoluteDay(s) + 1;
+    const [a, b, c] = s.orders.list;
+    a!.until = day;
+    b!.until = day;
+    c!.until = day + 1;
     s.time.day += 1;
     s.time.minutes = 420;
     refreshBoard(s);
     const target = rivalPicks(s)[0]!;
-    const best = s.orders.list
-      .filter((o) => (o.from ?? 0) < absoluteDay(s))
-      .sort((a, b) => b.reward - a.reward)[0]!;
+    const best = [a!, b!].sort((x, y) => y.reward - x.reward)[0]!;
     expect(target.id).toBe(best.id);
+    expect(rivalPicks(s).some((o) => o.id === c!.id)).toBe(false);
     expect(rivalNotice(s)).toBe('Clay wants this one at 2:00 PM.');
     expect(orderSub(s, target, 0, true)).toMatch(/Clay's!$/);
-    // Bring the goods before 2 PM and it is yours; otherwise it is his.
     s.time.minutes = rivalMinute(s);
     expect(applyRival(s)?.id).toBe(target.id);
   });
 
   it('C6 F2: Clay comes even when nobody looks at the board after 2 PM', () => {
     const s = rivalDay();
+    for (const o of s.orders.list) o.until = absoluteDay(s) + 1;
     s.time.day += 1;
     refreshBoard(s); // a morning look only, every day
     const target = rivalPicks(s)[0]!;
@@ -101,6 +105,7 @@ describe('critique 5 fixes', () => {
     expect(sum.notes?.some((n) => n.startsWith('Clay filled'))).toBe(true);
     // Never twice for a day he already acted on.
     const t = rivalDay();
+    for (const o of t.orders.list) o.until = absoluteDay(t) + 1;
     t.time.day += 1;
     refreshBoard(t);
     t.time.minutes = rivalMinute(t);

@@ -42,6 +42,17 @@ export const repeatSub = (level: number, given: number, price: number): string =
   return `Level ${level}  ${kfmt(given)}/${p}${/\d$/.test(p) ? 'g' : ''}`;
 };
 
+/** What a repeatable project's levels give so far: "+3%" for the statue. */
+export function repeatNow(
+  p: { perks: Record<string, number>; repeat?: { perkLevels: number } },
+  level: number,
+): string {
+  const levels = Math.min(level, p.repeat?.perkLevels ?? 1);
+  return Object.values(p.perks)
+    .map((v) => `+${Math.round(v * levels * 100)}%`)
+    .join(', ');
+}
+
 /** What a repeatable project's next level does once its perks have run out. */
 export const GLORY_LINE = 'Each level now is just for glory.';
 

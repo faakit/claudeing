@@ -29,11 +29,17 @@ export const specialCandidates = (state: GameState): SpecialDef[] =>
   specials.filter(
     (sp) =>
       sp.seasons.includes(state.time.season) &&
+      // Not the one just finished again (critique 7, F4).
+      absoluteDay(state) - (state.stats[`special.last.${sp.id}`] ?? -Infinity) >
+        game.seasonLength &&
       (!sp.project || isProjectDone(state, sp.project)) &&
       (!sp.requires || stat(state, sp.requires.stat) >= sp.requires.min) &&
       // An animal good waits until the farm makes it (a cow alone never brings an egg special).
       (items[sp.item]?.type !== 'product' || specialCap(state, sp.item) >= SPECIAL_MIN_QTY),
   );
+
+/** Share of the farm's output an animal special may ask for (critique 7, F8). */
+export const SPECIAL_SHARE = 0.7;
 
 /** Fewest goods a special asks for. */
 export const SPECIAL_MIN_QTY = 5;
@@ -45,7 +51,8 @@ export const SPECIAL_MIN_QTY = 5;
 export function specialCap(state: GameState, item: string): number {
   if (items[item]?.type !== 'product') return Infinity;
   const perDay = animalOutput(state).get(item) ?? 0;
-  return Math.floor(perDay * (game.seasonLength - state.time.day - 1));
+  // About 70% of what the farm makes by the deadline, so a small herd still has eggs for requests and gifts.
+  return Math.floor(perDay * (game.seasonLength - state.time.day - 1) * SPECIAL_SHARE);
 }
 
 /** Build a special for today: quantity from the yearly value target, due the season's last day. */
@@ -107,11 +114,23 @@ export const specialSub = (sp: SpecialOrder): string =>
 export type SpecialResult =
   { ok: true; gave: number; finished: boolean } | { ok: false; reason: 'none' | 'nothing' };
 
-/** Hand over as many as you carry (any quality, lowest first). The last one finishes it. */
-export function giveToSpecial(state: GameState): SpecialResult {
+/**
+ * How many the special's Give hands over now: all it still needs that you carry, minus `keep` (goods held
+ * back for a same-item request you can fill: critique 7, F4), unless that would leave nothing to give.
+ */
+export function specialGiveCount(state: GameState, keep = 0): number {
+  const sp = state.special;
+  if (!sp) return 0;
+  const have = countItem(state, sp.item);
+  const spare = have - keep > 0 ? have - keep : have;
+  return Math.max(0, Math.min(sp.qty - sp.given, spare));
+}
+
+/** Hand over what `specialGiveCount` says (any quality, lowest first). The last one finishes it. */
+export function giveToSpecial(state: GameState, keep = 0): SpecialResult {
   const sp = state.special;
   if (!sp || absoluteDay(state) > sp.due) return { ok: false, reason: 'none' };
-  const take = Math.min(sp.qty - sp.given, countItem(state, sp.item));
+  const take = specialGiveCount(state, keep);
   if (take <= 0 || !removeItem(state, sp.item, take)) return { ok: false, reason: 'nothing' };
   sp.given += take;
   if (sp.given < sp.qty) return { ok: true, gave: take, finished: false };
@@ -119,6 +138,7 @@ export function giveToSpecial(state: GameState): SpecialResult {
   state.stats['earned'] = stat(state, 'earned') + sp.reward;
   gameEvents.emit('moneyChanged', { delta: sp.reward });
   befriend(state, sp.giver, SPECIAL_FRIENDSHIP);
+  state.stats[`special.last.${sp.id}`] = absoluteDay(state);
   toast(`Special order done! +${sp.reward}g`, 'good');
   state.special = null;
   addStat(state, 'specialsDone');

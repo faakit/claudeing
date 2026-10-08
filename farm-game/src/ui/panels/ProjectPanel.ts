@@ -25,6 +25,7 @@ import { fmt } from './format';
 import {
   GIVE_STEPS,
   GLORY_LINE,
+  repeatNow,
   LIST_NAV_FROM_BOTTOM,
   LIST_ROWS,
   LIST_TOP,
@@ -147,7 +148,9 @@ export class ProjectPanel extends Modal {
     const reward = this.label(
       8,
       y,
-      glory ? GLORY_LINE : `When done: ${p.reward}`,
+      glory
+        ? GLORY_LINE
+        : `When done: ${p.reward}${p.repeat && projectLevel(s, id) > 0 ? ` Now ${repeatNow(p, projectLevel(s, id))}.` : ''}`,
       C.green,
       1,
       'left',
@@ -198,7 +201,8 @@ export class ProjectPanel extends Modal {
     if (res.ok) {
       audio.play(res.finished ? 'level' : 'buy');
       haptic('success');
-      if (res.finished) this.id = null;
+      // A repeatable project stays open on its page for the next level (critique 7, F9).
+      if (res.finished && !projects[this.id ?? '']?.repeat) this.id = null;
     } else {
       audio.play('error');
       haptic('error');

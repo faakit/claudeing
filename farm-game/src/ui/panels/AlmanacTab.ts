@@ -3,6 +3,7 @@ import { getState } from '../../state/store';
 import { discovered, pageDone, pageProgress } from '../../systems/almanac';
 import { C } from '../theme';
 import { fmt } from './format';
+import { legendsLine } from './bookText';
 import type { MenuTabContext } from './MenuPanel';
 
 /** Menu tab: every good you have found, page by page. Unfound items show as dark shapes. */
@@ -44,6 +45,8 @@ export function buildAlmanac(c: MenuTabContext): void {
       const img = c.icon(16 + i * 17, y + 20, items[item]?.icon ?? 'ui_coin', 1);
       if (!discovered(s, item)) img.setTint(0x2a2238);
     });
+    // Legendary fish are not on the page (it stays finishable), but their tally is (critique 7, F7).
+    if (id === 'fish') c.label(192, y + 16, legendsLine(s), C.creamDim, 1, 'right');
     y += 38;
   }
 }

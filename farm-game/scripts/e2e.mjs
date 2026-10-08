@@ -677,7 +677,10 @@ try {
     s.time.minutes = 600;
     f.gameEvents.emit('openPanel', { type: 'board' }); // the morning look posts the board
     u.panels.get('board').close();
-    for (const o of s.orders.list) o.from -= 1; // as if posted yesterday
+    for (const o of s.orders.list) {
+      o.from -= 1; // as if posted yesterday...
+      o.until = o.from + 1; // ...and today is its last day
+    }
     s.time.minutes = 900;
     f.gameEvents.emit('openPanel', { type: 'board' });
   });

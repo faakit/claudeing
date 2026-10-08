@@ -42,12 +42,17 @@ export function shopFacts(
     base = late
       ? 'Too late now'
       : glass
-        ? `Glass only ${days}d ${sell}g`
+        ? `Glass only ${days}d ${sell}g${again}`
         : `${days} days  ${sell}g${again}`;
     alts = late
       ? []
       : glass
-        ? [`Glass ${days}d ${sell}g`, `Glass ${days}d`]
+        ? [
+            `Glass only ${days}d ${sell}g`,
+            `Glass ${days}d ${sell}g${again}`,
+            `Glass ${days}d ${sell}g`,
+            `Glass ${days}d`,
+          ]
         : [`${days}d ${sell}g${again}`, `${days}d ${sell}g`];
     short = late ? 'Too late' : glass ? `Glass ${days}d` : `${days}d ${sell}g`;
   } else if (def.type === 'animal') base = 'Needs a home';

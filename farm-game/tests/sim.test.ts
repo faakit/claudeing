@@ -239,10 +239,10 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
 /**
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
  * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow, and
- * a coop of three hens). Seed 42 alone earned 164,096. A balance change that
+ * a coop of three hens, Clay on last days only). Seed 42 alone earned 227,442. A balance change that
  * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 219_796;
+const SIM_EARNED = 227_442;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
@@ -273,6 +273,11 @@ describe('balance simulation (decent player, full year)', () => {
     expect(s.plots.length).toBeGreaterThan(2);
     // Scarecrows over every plot: the crows get next to nothing.
     expect(s.stats['crowsAte'] ?? 0).toBeLessThan(10);
+    // Clay takes one request a day, and only on its last day (critique 7, F2): what he takes, the bot had
+    // its full days for. Logged, not bounded: most of what he takes would have expired anyway.
+    const posted = Math.max(...s.orders.list.map((o) => o.id));
+    console.log(`requests posted ${posted}, Clay took ${s.stats['rivalTook'] ?? 0}`);
+    for (const o of s.orders.list.filter((x) => x.rival)) expect(o.takenOn).toBe(o.until);
   });
 
   // One seed is a tripwire, not evidence (critique 5, F9): the same bot on five seeds, judged on the median.

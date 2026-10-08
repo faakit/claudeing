@@ -11,8 +11,7 @@ import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
 import { items } from '../../data';
-import { countItem } from '../../systems/inventory';
-import { giveToSpecial, specialLabel, specialSub } from '../../systems/specials';
+import { giveToSpecial, specialGiveCount, specialLabel, specialSub } from '../../systems/specials';
 import { applyRival, rivalActive, rivalName, rivalNotice, rivalPicks } from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
@@ -37,8 +36,13 @@ export class BoardPanel extends Modal {
     this.label(8, 20, rivalNotice(s), C.creamDim);
     let y = 34;
     if (sp) {
-      // The special order sits on top, in gold: a big seasonal request with a deadline.
-      const have = countItem(s, sp.item);
+      // The special order sits on top, in gold: a big seasonal request with a deadline. Its Give keeps back
+      // what a same-item request you can fill needs, and says how many it gives (critique 7, F4).
+      const keep = s.orders.list
+        .filter((o) => !o.done && parseKey(o.item).item === sp.item && haveFor(s, o) >= o.qty)
+        .reduce((n, o) => n + o.qty, 0);
+      const give = specialGiveCount(s, keep);
+      const have = give;
       y = this.row(y, {
         icon: items[sp.item]?.icon,
         title: specialLabel(sp),
@@ -46,12 +50,12 @@ export class BoardPanel extends Modal {
         subColor: C.gold,
         buttons: [
           {
-            label: 'Give',
-            width: 34,
+            label: give > 0 ? `Give ${give}` : 'Give',
+            width: 40,
             enabled: have > 0,
             color: have > 0 ? C.green : C.creamDim,
             onClick: () => {
-              const res = giveToSpecial(getState());
+              const res = giveToSpecial(getState(), keep);
               if (res.ok) {
                 audio.play(res.finished ? 'order' : 'buy');
                 haptic('success');

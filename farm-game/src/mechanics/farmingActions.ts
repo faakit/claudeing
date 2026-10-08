@@ -30,8 +30,7 @@ import { placedAt, placeObject, restoreStored } from '../systems/placeables';
 import { addXp } from '../systems/skills';
 import { inGreenhouse, ownsPlot, plotAtTile } from '../systems/plots';
 import { villagerSpot } from '../systems/npcs';
-
-const TIRED = 'Too tired! Go to bed.';
+import { tiredText } from '../systems/food';
 
 /** Harvesting a mature crop beats whatever is equipped, so players never swap tools to collect. */
 registerActionHandler({
@@ -241,7 +240,7 @@ registerToolAction('till', ({ state, tile, tool }) => {
   if (tile.farmland && tile.owned === false)
     return { refusal: 'Not your land yet. Buy it at a sign.' };
   if (!canTill(state, tile)) return { refusal: "Can't till here." };
-  if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A better hoe breaks several tiles in a row for the same energy.
   const targets = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe')).filter((t) =>
     canTill(state, t),
@@ -286,7 +285,7 @@ registerToolAction('water', ({ state, tile, tool }) => {
   if (!soil) return { refusal: 'Nothing to water here.' };
   if (soil.watered) return { refusal: 'Already watered.' };
   if (state.water <= 0) return { refusal: 'Can is empty. Refill at the pond.' };
-  if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A bigger can waters a line of crops with one swing, as far as the water lasts.
   const targets = lineFrom(tile, state.player.facing, upgradeLvl(state, 'can'))
     .filter((t) => needsWater(state, t))
@@ -311,7 +310,7 @@ registerToolAction('clear', ({ state, tile, tool }) => {
   const key = tileKey(tile.tx, tile.ty);
   if (!tile.farmland || !state.farm.weeds[key]) return { refusal: 'Nothing to cut.' };
   if (roomFor(state, 'fiber', 1) < 1) return { refusal: 'Inventory full!' };
-  if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   return {
     plan: {
       kind: 'clear',

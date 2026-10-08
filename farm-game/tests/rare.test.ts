@@ -53,7 +53,7 @@ describe('second-year content: rare crops', () => {
     expect(orderCandidates(s).some((r) => r.item === 'blueberry')).toBe(false);
     s.farm.tiles['10,17'] = {
       watered: false,
-      crop: { cropId: 'blueberry', stage: 0, daysInStage: 0, regrow: false },
+      crop: { cropId: 'blueberry', stage: 3, daysInStage: 0, regrow: false }, // ripe in 3 days
     };
     expect(orderCandidates(s).some((r) => r.item === 'blueberry')).toBe(true);
   });
