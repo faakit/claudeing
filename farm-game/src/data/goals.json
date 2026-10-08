@@ -415,10 +415,18 @@
   },
   {
     "id": "projectAll",
-    "text": "Finish all 6 town projects",
+    "text": "Finish all 7 town projects",
     "stat": "projectsDone",
-    "target": 6,
+    "target": 7,
     "reward": 5000,
     "hint": "The Market Road comes last. It makes every sale worth more."
+  },
+  {
+    "id": "greenhouse20",
+    "text": "Harvest 20 greenhouse crops",
+    "stat": "greenhouseHarvested",
+    "target": 20,
+    "reward": 2000,
+    "hint": "Fund the Greenhouse project, then sow any seed in it."
   }
 ]

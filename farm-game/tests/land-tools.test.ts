@@ -111,7 +111,7 @@ describe('land plots', () => {
     const s = newState();
     const sign = plots['east']!.sign!;
     expect(plotForSaleAt(s, sign[0], sign[1])).toBe('east');
-    expect(signTiles(s)).toHaveLength(Object.keys(plots).length - 1);
+    expect(signTiles(s)).toHaveLength(Object.values(plots).filter((p) => p.sign).length);
     s.money = 9999;
     buyPlot(s, 'east');
     expect(plotForSaleAt(s, sign[0], sign[1])).toBeNull();

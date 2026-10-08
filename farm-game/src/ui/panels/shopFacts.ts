@@ -8,12 +8,12 @@ export function tooLate(itemId: string, day: number): boolean {
 }
 
 /** The short line under an item in the shop: facts a buyer needs, never a long blurb. Pure so tests can size it. */
-export function shopFacts(itemId: string, own: number, day: number): string {
+export function shopFacts(itemId: string, own: number, day: number, greenhouse = false): string {
   const def = items[itemId]!;
   const crop = def.plants ? crops[def.plants] : undefined;
   let base: string;
   if (crop)
-    base = tooLate(itemId, day)
+    base = !greenhouse && tooLate(itemId, day)
       ? 'Too late now'
       : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
   else if (def.type === 'animal') base = 'Needs a home';

@@ -14,6 +14,7 @@ import {
 import { toast } from '../../systems/events';
 import { countItem } from '../../systems/inventory';
 import { perk } from '../../systems/skills';
+import { ownsGreenhouse } from '../../systems/plots';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
@@ -69,7 +70,7 @@ export class ShopPanel extends Modal {
         for (const up of shop.upgrades.filter((u) => u.tab === 'home')) y = this.upgradeRow(y, up);
         rows = ROWS - 1;
       }
-      const stock = stockFor(SHOP_ID, s.time.season).filter((id) => shopTabOf(id) === this.tab);
+      const stock = stockFor(SHOP_ID, s.time.season, s).filter((id) => shopTabOf(id) === this.tab);
       if (stock.length === 0) {
         this.label(8, y + 6, 'Nothing grows in winter. Rest up!', C.creamDim);
         y += ROW_H;
@@ -100,11 +101,12 @@ export class ShopPanel extends Modal {
     const price = priceFor(s, id);
     const own = countItem(s, id);
     const gone = def.type === 'animal' && own > 0;
+    const greenhouse = ownsGreenhouse(s);
     return this.row(y, {
       icon: def.icon,
       title: def.name,
-      sub: shopFacts(id, own, s.time.day),
-      subColor: tooLate(id, s.time.day) ? C.red : undefined,
+      sub: shopFacts(id, own, s.time.day, greenhouse),
+      subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {
           label: `${fmt(price)}g`,

@@ -7,6 +7,7 @@ import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
 import { landmarksOn } from '../systems/projects';
+import { ownsPlot } from '../systems/plots';
 import { unreadCount } from '../systems/mail';
 import { mail } from '../data';
 import { ensureTexture } from './fallbackTexture';
@@ -114,12 +115,46 @@ export class ObjectsRenderer {
 
   /** Land you have not bought yet is dimmed and fenced with a "for sale" sign showing its price. */
   private syncPlots(state: GameState): void {
-    const sig = state.plots.join(',');
+    const sig = Object.keys(plots)
+      .map((id) => (ownsPlot(state, id) ? '1' : '0'))
+      .join('');
     if (sig === this.plotSig) return;
     this.plotSig = sig;
     this.plotParts.forEach((p) => p.destroy());
     this.plotParts = [];
     for (const [id, p] of Object.entries(plots)) {
+      if (p.project) {
+        // A plot that comes with a town project: a marked site until it is built, then glass.
+        const [x, y, w, h] = p.rect;
+        const built = ownsPlot(state, id);
+        const area = this.scene.add
+          .rectangle(
+            x * TILE_SIZE,
+            y * TILE_SIZE,
+            w * TILE_SIZE,
+            h * TILE_SIZE,
+            built ? 0xbfe6ff : 0x14101f,
+            built ? 0.16 : 0.3,
+          )
+          .setOrigin(0)
+          .setStrokeStyle(1, built ? 0xdff4ff : 0xf4ead2, built ? 0.8 : 0.4)
+          .setDepth(0.55);
+        this.plotParts.push(area);
+        if (!built)
+          this.plotParts.push(
+            new Label(
+              this.scene,
+              (x + w / 2) * TILE_SIZE,
+              (y + h / 2) * TILE_SIZE - 4,
+              `${p.name} site`,
+              {
+                align: 'center',
+                color: 0xf4ead2,
+              },
+            ).setDepth(1),
+          );
+        continue;
+      }
       if (state.plots.includes(id) || !p.sign) continue;
       const [x, y, w, h] = p.rect;
       const area = this.scene.add

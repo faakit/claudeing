@@ -123,7 +123,9 @@ its condition holds. Code can send a letter any time with `sendLetter(state, {..
 
 A project is one row in `projects.json`: `gold`, optional `items`, `after` (the project it waits for),
 `perks` (granted once finished), a one-line `reward` and an optional `landmark` (map, tile, texture key,
-placeholder colour). Progress is kept in stats, so a new project needs no save change. Rules live in
+placeholder colour). Progress is kept in stats, so a new project needs no save change.
+A plot in `plots.json` with `"project": "<id>"` is owned once that project is finished; with
+`"greenhouse": true` crops on it ignore the season. Rules live in
 `systems/projects.ts`; the sheet is `ui/panels/ProjectPanel.ts`, opened from the town board.
 
 ## 6. Panels and menu tabs

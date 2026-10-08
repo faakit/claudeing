@@ -86,7 +86,7 @@ Give players reasons to plan their day and their season.
       tiers (waits for the mine).
 - [x] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
       lasting purpose. _Plug in:_ `tillable` zones become state-driven; shop upgrade row.
-- [~] **R2.3 Fruit trees and a greenhouse.** Done: four fruit trees (cherry, peach, apple, frost plum), one per season, saplings bought in the shop, ten mornings to grow, fruit every third day in season. Kale also gives winter a crop. Not done: the greenhouse (needs soil per map). Trees that regrow seasonally, and a greenhouse that grows crops in
+- [x] **R2.3 Fruit trees and a greenhouse.** Done: four fruit trees (cherry, peach, apple, frost plum), one per season, saplings bought in the shop, ten mornings to grow, fruit every third day in season. Kale also gives winter a crop. The greenhouse is a 32-tile farm plot unlocked by a town project, where any crop grows in any season. Trees that regrow seasonally, and a greenhouse that grows crops in
   winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
 - [x] **R2.4 More machines.** Keg (juice, wine), loom (cloth from wool), bee house (honey), furnace (needs ore).
       Same shape as the preserve jar: a behavior, a recipe, derived goods keyed by `of`.

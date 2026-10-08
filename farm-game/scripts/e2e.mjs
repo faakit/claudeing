@@ -549,6 +549,37 @@ try {
     ps.orders.list.filter((o) => o.rival).length === 1 && ps.orders.day === 9 + 0,
     JSON.stringify(ps.orders),
   );
+  // A finished Greenhouse project: melon seeds planted in winter under glass.
+  await ui(() => {
+    const f = window.__farm;
+    f.game.scene.getScene('UI').panels.get('board').close();
+    const s = f.getState();
+    s.stats['project.greenhouse'] = 1;
+    s.time.season = 'winter';
+    s.time.minutes = 600;
+    s.farm.tiles['17,27'] = { watered: false, crop: null };
+    s.inventory.slots[6] = { item: 'melon_seed', qty: 3 };
+    s.player.map = 'farm';
+    s.player.x = 17 * 16 + 8;
+    s.player.y = 26 * 16 + 11;
+    s.player.facing = 'down';
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key !== 'UI')
+      .scene.restart();
+  });
+  await pp.waitForTimeout(1500);
+  await pp.keyboard.press('Digit7');
+  await pp.keyboard.down('Space');
+  await pp.waitForTimeout(120);
+  await pp.keyboard.up('Space');
+  await pp.waitForTimeout(400);
+  ps = await pState();
+  check(
+    'in the greenhouse a summer seed grows in winter',
+    ps.farm.tiles['17,27']?.crop?.cropId === 'melon',
+    JSON.stringify(ps.farm.tiles['17,27']),
+  );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();
 

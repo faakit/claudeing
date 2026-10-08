@@ -3,8 +3,15 @@
     "name": "Board Canopy",
     "blurb": "A roof over the town board, so more folks post their requests.",
     "gold": 1200,
-    "items": [{ "item": "fiber", "qty": 20 }],
-    "perks": { "orderSlots": 1 },
+    "items": [
+      {
+        "item": "fiber",
+        "qty": 20
+      }
+    ],
+    "perks": {
+      "orderSlots": 1
+    },
     "reward": "The board posts 4 requests a day.",
     "landmark": {
       "map": "town",
@@ -20,10 +27,18 @@
     "after": "canopy",
     "gold": 4000,
     "items": [
-      { "item": "stone", "qty": 40 },
-      { "item": "copper_bar", "qty": 3 }
+      {
+        "item": "stone",
+        "qty": 40
+      },
+      {
+        "item": "copper_bar",
+        "qty": 3
+      }
     ],
-    "perks": { "fishWindow": 0.05 },
+    "perks": {
+      "fishWindow": 0.05
+    },
     "reward": "A wider catch zone on every cast.",
     "landmark": {
       "map": "town",
@@ -38,8 +53,15 @@
     "blurb": "Books on soil, fish, stone and wild plants for everyone.",
     "after": "canopy",
     "gold": 8000,
-    "items": [{ "item": "quartz", "qty": 3 }],
-    "perks": { "xpBonus": 0.15 },
+    "items": [
+      {
+        "item": "quartz",
+        "qty": 3
+      }
+    ],
+    "perks": {
+      "xpBonus": 0.15
+    },
     "reward": "Every skill grows 15% faster.",
     "landmark": {
       "map": "town",
@@ -49,16 +71,42 @@
       "color": "#8a5a9a"
     }
   },
+  "greenhouse": {
+    "name": "Greenhouse",
+    "blurb": "A glass house on your farm, south of the east field. Warm all year.",
+    "after": "library",
+    "gold": 20000,
+    "items": [
+      {
+        "item": "quartz",
+        "qty": 10
+      },
+      {
+        "item": "iron_bar",
+        "qty": 5
+      }
+    ],
+    "perks": {},
+    "reward": "32 tiles where any crop grows in any season."
+  },
   "bathhouse": {
     "name": "Hot Spring",
     "blurb": "A warm bath by the river. You wake up with more pep.",
     "after": "library",
     "gold": 15000,
     "items": [
-      { "item": "stone", "qty": 60 },
-      { "item": "iron_bar", "qty": 5 }
+      {
+        "item": "stone",
+        "qty": 60
+      },
+      {
+        "item": "iron_bar",
+        "qty": 5
+      }
     ],
-    "perks": { "maxEnergy": 30 },
+    "perks": {
+      "maxEnergy": 30
+    },
     "reward": "+30 max energy every day.",
     "landmark": {
       "map": "town",
@@ -73,8 +121,15 @@
     "blurb": "A real hall for the four festivals, with bigger prizes.",
     "after": "fishladder",
     "gold": 25000,
-    "items": [{ "item": "cloth", "qty": 5 }],
-    "perks": { "festivalPrize": 0.5 },
+    "items": [
+      {
+        "item": "cloth",
+        "qty": 5
+      }
+    ],
+    "perks": {
+      "festivalPrize": 0.5
+    },
     "reward": "Festival prizes pay 50% more.",
     "landmark": {
       "map": "town",
@@ -90,10 +145,18 @@
     "after": "bathhouse",
     "gold": 50000,
     "items": [
-      { "item": "iron_bar", "qty": 10 },
-      { "item": "ruby", "qty": 1 }
+      {
+        "item": "iron_bar",
+        "qty": 10
+      },
+      {
+        "item": "ruby",
+        "qty": 1
+      }
     ],
-    "perks": { "sellBonus": 0.05 },
+    "perks": {
+      "sellBonus": 0.05
+    },
     "reward": "Everything you ship sells for 5% more.",
     "landmark": {
       "map": "town",

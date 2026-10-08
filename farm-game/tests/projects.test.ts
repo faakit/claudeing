@@ -144,7 +144,7 @@ describe('town projects', () => {
     expect(Object.keys(projects).every((id) => isProjectDone(s, id))).toBe(true);
     const total = Object.values(projects).reduce((n, p) => n + p.gold, 0);
     expect(total).toBeGreaterThan(80000);
-    expect(goals.at(-1)?.target).toBe(Object.keys(projects).length);
+    expect(goals.find((g) => g.id === 'projectAll')?.target).toBe(Object.keys(projects).length);
   });
 });
 

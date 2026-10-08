@@ -27,6 +27,7 @@ import { addItem, removeFromSlot, roomFor } from '../systems/inventory';
 import { sellValue } from '../systems/itemRef';
 import { placedAt, placeObject } from '../systems/placeables';
 import { addXp } from '../systems/skills';
+import { inGreenhouse } from '../systems/plots';
 
 const TIRED = 'Too tired! Go to bed.';
 
@@ -51,6 +52,7 @@ registerActionHandler({
           if (!res.ok) throw new Error('harvest was planned but failed');
           addStat(state, 'harvested', res.qty);
           if (res.q > 0) addStat(state, 'qualityHarvested', res.qty);
+          if (inGreenhouse(state, tile.tx, tile.ty)) addStat(state, 'greenhouseHarvested', res.qty);
           addXp(
             state,
             'farming',
@@ -78,7 +80,7 @@ registerActionHandler({
       return { refusal: `Won't grow in ${state.time.season}. Plant in ${when}.` };
     }
     const grow = (crops[cropId]?.stageDays ?? []).reduce((a, b) => a + b, 0);
-    if (grow >= game.seasonLength - state.time.day + 1)
+    if (!inGreenhouse(state, tile.tx, tile.ty) && grow >= game.seasonLength - state.time.day + 1)
       return { refusal: `Won't ripen in time (${grow} days). Save it for next season.` };
     // Seeds follow the hoe: a hoe that tills N in a row lets you sow the same row in one press.
     const row = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe'))

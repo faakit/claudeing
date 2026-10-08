@@ -356,6 +356,10 @@ export interface PlotDef {
   price: number;
   /** Tile where the "for sale" sign stands (null for free plots). */
   sign: [number, number] | null;
+  /** Owned once this town project is finished (instead of bought at a sign). */
+  project?: string;
+  /** Crops here ignore the season: plant anything, nothing withers. */
+  greenhouse?: boolean;
 }
 export interface GameData {
   startingMoney: number;
@@ -616,7 +620,11 @@ export function validateContent(): void {
         claimed.add(k);
       }
   }
-  if (!Object.values(plots).some((p) => p.price === 0)) fail('plots', 'needs a free starter plot');
+  if (!Object.values(plots).some((p) => p.price === 0 && !p.project))
+    fail('plots', 'needs a free starter plot');
+  for (const [id, pl] of Object.entries(plots))
+    if (pl.project && !projects[pl.project])
+      fail('plots', `"${id}" waits on unknown project "${pl.project}"`);
   for (const [id, pl] of Object.entries(plots))
     if (pl.sign && claimed.has(pl.sign.join(',')))
       fail('plots', `"${id}" sign stands inside a plot`);
@@ -628,7 +636,8 @@ export function validateContent(): void {
     for (const need of p.items ?? [])
       if (!items[need.item] || need.qty < 1)
         fail('projects', `"${id}" needs unknown item "${need.item}" or a bad quantity`);
-    if (Object.keys(p.perks).length === 0) fail('projects', `"${id}" grants no perk`);
+    if (Object.keys(p.perks).length === 0 && !Object.values(plots).some((pl) => pl.project === id))
+      fail('projects', `"${id}" grants no perk and unlocks no plot`);
     if (p.landmark && !mapIds.includes(p.landmark.map))
       fail('projects', `"${id}" landmark is on unknown map "${p.landmark.map}"`);
     // Every chain must lead back to a project that is open from the start (no loops).

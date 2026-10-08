@@ -15,6 +15,7 @@ import {
   roomFor,
 } from './inventory';
 import { perk } from './skills';
+import { ownsGreenhouse } from './plots';
 import { keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 
 /** Base price of an item id (normal quality, not derived). */
@@ -71,12 +72,16 @@ export function shippingValue(state: GameState): number {
 
 export type BuyResult = 'ok' | 'no_money' | 'full' | 'out_of_season' | 'unknown';
 
-export function stockFor(shopId: string, season: Season): string[] {
-  return (shops[shopId]?.stock ?? []).filter((s) => s.seasons.includes(season)).map((s) => s.item);
+/** What a shop sells today. With a greenhouse (pass `state`), seeds of every season are on the shelf. */
+export function stockFor(shopId: string, season: Season, state?: GameState): string[] {
+  const allSeeds = !!state && ownsGreenhouse(state);
+  return (shops[shopId]?.stock ?? [])
+    .filter((s) => s.seasons.includes(season) || (allSeeds && items[s.item]?.type === 'seed'))
+    .map((s) => s.item);
 }
 
 export function buyItem(state: GameState, shopId: string, itemId: string, qty: number): BuyResult {
-  if (!stockFor(shopId, state.time.season).includes(itemId)) {
+  if (!stockFor(shopId, state.time.season, state).includes(itemId)) {
     return shops[shopId]?.stock.some((s) => s.item === itemId) ? 'out_of_season' : 'unknown';
   }
   const cost = priceFor(state, itemId) * qty;

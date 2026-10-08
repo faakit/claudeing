@@ -242,3 +242,10 @@
 - **Friendship is the way out:** his perks are rivalry rules: at 2 hearts he comes 3 hours later, at 4 he leaves you the best request, at 5 he stops competing. His heart events reward 300 gold, Speed-Gro and iron bars.
 - **Festivals name him:** the best rival score at every festival is Clay's; beating the field brings a grudging letter.
 - **Save version 12:** orders carry an optional `rival` flag (no conversion needed).
+
+## Greenhouse (R2.3)
+
+- **A plot, not a map:** the brief expected per-map soil, but soil is keyed by farm tile and a second farmland map would need a deep refactor of every farming rule and the save. Instead the greenhouse is a 32-tile plot on the farm (south of the east field) with `"greenhouse": true`, owned once the **Greenhouse town project** (20,000g, 10 quartz, 5 iron bars, after the Library) is finished. One flag, checked in three places: planting ignores the season and the ripen-in-time rule, and nothing there withers at a season change.
+- **Seeds all year:** with a greenhouse, the shop sells every season's seeds (`stockFor` takes the state). This is what makes winter income matter: about 800 gold a day from a full greenhouse of the best crop (guarded under 1,200 by a test).
+- **Visible before it exists:** the site is marked on the farm ("Greenhouse site") so the project has a place in the player's head; once built it is drawn as glass. Project plots cannot be bought at a sign.
+- Seven projects now (about 123k gold); the "all projects" goal moved to 7, and a capstone goal (20 greenhouse harvests) was appended at the end of the chain, so no save migration was needed.
