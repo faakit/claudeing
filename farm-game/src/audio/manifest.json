@@ -753,17 +753,20 @@
     {
      "file": "sfx/till-1.mp3",
      "onset": 0.0,
-     "dur": 0.3
+     "dur": 0.3,
+     "tp": -6.6
     },
     {
      "file": "sfx/till-2.mp3",
      "onset": 0.0,
-     "dur": 0.3
+     "dur": 0.3,
+     "tp": -7.0
     },
     {
      "file": "sfx/till-3.mp3",
      "onset": 0.0,
-     "dur": 0.33
+     "dur": 0.33,
+     "tp": -6.42
     }
    ],
    "gain": 1.2882,
@@ -776,17 +779,20 @@
     {
      "file": "sfx/water-1.mp3",
      "onset": 0.00043,
-     "dur": 0.42
+     "dur": 0.42,
+     "tp": -8.82
     },
     {
      "file": "sfx/water-2.mp3",
-     "onset": 0.00093,
-     "dur": 0.42
+     "onset": 0.00082,
+     "dur": 0.42,
+     "tp": -6.78
     },
     {
      "file": "sfx/water-3.mp3",
      "onset": 0.00039,
-     "dur": 0.42
+     "dur": 0.42,
+     "tp": -6.88
     }
    ],
    "gain": 1.2303,
@@ -799,12 +805,14 @@
     {
      "file": "sfx/refill-1.mp3",
      "onset": 0.00073,
-     "dur": 0.7
+     "dur": 0.7,
+     "tp": -5.7
     },
     {
      "file": "sfx/refill-2.mp3",
      "onset": 0.00082,
-     "dur": 0.7
+     "dur": 0.7,
+     "tp": -5.54
     }
    ],
    "gain": 1.1614,
@@ -817,17 +825,20 @@
     {
      "file": "sfx/plant-1.mp3",
      "onset": 0.0,
-     "dur": 0.13
+     "dur": 0.13,
+     "tp": -5.89
     },
     {
      "file": "sfx/plant-2.mp3",
      "onset": 0.0,
-     "dur": 0.13
+     "dur": 0.13,
+     "tp": -6.09
     },
     {
      "file": "sfx/plant-3.mp3",
      "onset": 0.0,
-     "dur": 0.13
+     "dur": 0.13,
+     "tp": -6.57
     }
    ],
    "gain": 1.1614,
@@ -840,17 +851,20 @@
     {
      "file": "sfx/harvest-1.mp3",
      "onset": 0.0,
-     "dur": 0.3
+     "dur": 0.3,
+     "tp": -6.1
     },
     {
      "file": "sfx/harvest-2.mp3",
      "onset": 0.0,
-     "dur": 0.3
+     "dur": 0.3,
+     "tp": -5.84
     },
     {
      "file": "sfx/harvest-3.mp3",
      "onset": 0.0,
-     "dur": 0.29
+     "dur": 0.29,
+     "tp": -6.17
     }
    ],
    "gain": 1.2303,
@@ -862,23 +876,27 @@
    "files": [
     {
      "file": "sfx/cut-1.mp3",
-     "onset": 0.002,
-     "dur": 0.28
+     "onset": 0.00125,
+     "dur": 0.28,
+     "tp": -5.56
     },
     {
      "file": "sfx/cut-2.mp3",
-     "onset": 0.002,
-     "dur": 0.27
+     "onset": 0.00156,
+     "dur": 0.27,
+     "tp": -5.45
     },
     {
      "file": "sfx/cut-3.mp3",
-     "onset": 0.002,
-     "dur": 0.26
+     "onset": 0.00132,
+     "dur": 0.26,
+     "tp": -5.52
     },
     {
      "file": "sfx/cut-4.mp3",
-     "onset": 0.002,
-     "dur": 0.25
+     "onset": 0.00129,
+     "dur": 0.25,
+     "tp": -5.37
     }
    ],
    "gain": 1.0839,
@@ -890,23 +908,27 @@
    "files": [
     {
      "file": "sfx/swing-1.mp3",
-     "onset": 0.002,
-     "dur": 0.11
+     "onset": 0.00138,
+     "dur": 0.11,
+     "tp": -5.53
     },
     {
      "file": "sfx/swing-2.mp3",
      "onset": 0.002,
-     "dur": 0.1
+     "dur": 0.1,
+     "tp": -5.95
     },
     {
      "file": "sfx/swing-3.mp3",
-     "onset": 0.002,
-     "dur": 0.08
+     "onset": 0.00147,
+     "dur": 0.08,
+     "tp": -5.31
     },
     {
      "file": "sfx/swing-4.mp3",
-     "onset": 0.002,
-     "dur": 0.07
+     "onset": 0.00152,
+     "dur": 0.07,
+     "tp": -5.69
     }
    ],
    "gain": 1.0715,
@@ -918,18 +940,21 @@
    "files": [
     {
      "file": "sfx/coin-1.mp3",
-     "onset": 0.00136,
-     "dur": 0.26
+     "onset": 0.00057,
+     "dur": 0.26,
+     "tp": -6.6
     },
     {
      "file": "sfx/coin-2.mp3",
-     "onset": 0.00088,
-     "dur": 0.36
+     "onset": 0.00039,
+     "dur": 0.36,
+     "tp": -6.23
     },
     {
      "file": "sfx/coin-3.mp3",
-     "onset": 0.0019,
-     "dur": 0.31
+     "onset": 0.00077,
+     "dur": 0.31,
+     "tp": -6.38
     }
    ],
    "gain": 1.2589,
@@ -941,13 +966,15 @@
    "files": [
     {
      "file": "sfx/buy-1.mp3",
-     "onset": 0.002,
-     "dur": 0.49
+     "onset": 0.00188,
+     "dur": 0.49,
+     "tp": -6.14
     },
     {
      "file": "sfx/buy-2.mp3",
-     "onset": 0.00179,
-     "dur": 0.5
+     "onset": 0.00098,
+     "dur": 0.5,
+     "tp": -6.1
     }
    ],
    "gain": 1.2445,
@@ -960,17 +987,20 @@
     {
      "file": "sfx/ui-1.mp3",
      "onset": 0.0,
-     "dur": 0.05
+     "dur": 0.05,
+     "tp": -5.61
     },
     {
      "file": "sfx/ui-2.mp3",
      "onset": 2e-05,
-     "dur": 0.03
+     "dur": 0.03,
+     "tp": -5.52
     },
     {
      "file": "sfx/ui-3.mp3",
-     "onset": 0.00016,
-     "dur": 0.03
+     "onset": 5e-05,
+     "dur": 0.03,
+     "tp": -5.54
     }
    ],
    "gain": 1.1885,
@@ -984,12 +1014,14 @@
     {
      "file": "sfx/select-1.mp3",
      "onset": 0.0,
-     "dur": 0.04
+     "dur": 0.04,
+     "tp": -7.73
     },
     {
      "file": "sfx/select-2.mp3",
      "onset": 0.0,
-     "dur": 0.05
+     "dur": 0.05,
+     "tp": -7.87
     }
    ],
    "gain": 1.3646,
@@ -1003,12 +1035,14 @@
     {
      "file": "sfx/door-1.mp3",
      "onset": 0.002,
-     "dur": 0.74
+     "dur": 0.74,
+     "tp": -6.48
     },
     {
      "file": "sfx/door-2.mp3",
      "onset": 0.002,
-     "dur": 0.86
+     "dur": 0.86,
+     "tp": -5.37
     }
    ],
    "gain": 1.122,
@@ -1021,22 +1055,26 @@
     {
      "file": "sfx/stepGrass-1.mp3",
      "onset": 0.0,
-     "dur": 0.18
+     "dur": 0.18,
+     "tp": -8.44
     },
     {
      "file": "sfx/stepGrass-2.mp3",
      "onset": 0.0,
-     "dur": 0.18
+     "dur": 0.18,
+     "tp": -10.88
     },
     {
      "file": "sfx/stepGrass-3.mp3",
      "onset": 0.0,
-     "dur": 0.18
+     "dur": 0.18,
+     "tp": -10.74
     },
     {
      "file": "sfx/stepGrass-4.mp3",
      "onset": 0.0,
-     "dur": 0.18
+     "dur": 0.18,
+     "tp": -7.45
     }
    ],
    "gain": 1.122,
@@ -1050,22 +1088,26 @@
     {
      "file": "sfx/stepWood-1.mp3",
      "onset": 0.002,
-     "dur": 0.22
+     "dur": 0.22,
+     "tp": -7.3
     },
     {
      "file": "sfx/stepWood-2.mp3",
      "onset": 0.002,
-     "dur": 0.25
+     "dur": 0.25,
+     "tp": -6.67
     },
     {
      "file": "sfx/stepWood-3.mp3",
      "onset": 0.002,
-     "dur": 0.22
+     "dur": 0.22,
+     "tp": -8.54
     },
     {
      "file": "sfx/stepWood-4.mp3",
      "onset": 0.002,
-     "dur": 0.22
+     "dur": 0.22,
+     "tp": -10.13
     }
    ],
    "gain": 1.0233,
@@ -1079,12 +1121,14 @@
     {
      "file": "sfx/error-1.mp3",
      "onset": 0.0,
-     "dur": 0.19
+     "dur": 0.19,
+     "tp": -6.81
     },
     {
      "file": "sfx/error-2.mp3",
      "onset": 0.0,
-     "dur": 0.13
+     "dur": 0.13,
+     "tp": -6.81
     }
    ],
    "gain": 1.2589,
@@ -1097,17 +1141,20 @@
     {
      "file": "sfx/tick-1.mp3",
      "onset": 0.002,
-     "dur": 0.04
+     "dur": 0.04,
+     "tp": -10.43
     },
     {
      "file": "sfx/tick-2.mp3",
      "onset": 0.002,
-     "dur": 0.03
+     "dur": 0.03,
+     "tp": -8.99
     },
     {
      "file": "sfx/tick-3.mp3",
      "onset": 0.00197,
-     "dur": 0.04
+     "dur": 0.04,
+     "tp": -10.48
     }
    ],
    "gain": 1.122,
@@ -1126,18 +1173,21 @@
    "files": [
     {
      "file": "sfx/target-1.mp3",
-     "onset": 0.00091,
-     "dur": 0.03
+     "onset": 0.00029,
+     "dur": 0.03,
+     "tp": -6.05
     },
     {
      "file": "sfx/target-2.mp3",
      "onset": 0.0,
-     "dur": 0.06
+     "dur": 0.06,
+     "tp": -5.24
     },
     {
      "file": "sfx/target-3.mp3",
      "onset": 0.0,
-     "dur": 0.075
+     "dur": 0.075,
+     "tp": -5.56
     }
    ],
    "gain": 1.122,
@@ -1152,17 +1202,20 @@
     {
      "file": "sfx/ringOpen-1.mp3",
      "onset": 0.0,
-     "dur": 0.05
+     "dur": 0.05,
+     "tp": -9.41
     },
     {
      "file": "sfx/ringOpen-2.mp3",
      "onset": 0.002,
-     "dur": 0.06
+     "dur": 0.06,
+     "tp": -4.76
     },
     {
      "file": "sfx/ringOpen-3.mp3",
      "onset": 0.0,
-     "dur": 0.05
+     "dur": 0.05,
+     "tp": -9.65
     }
    ],
    "gain": 1.0593,
@@ -1176,17 +1229,20 @@
     {
      "file": "sfx/ringClose-1.mp3",
      "onset": 0.002,
-     "dur": 0.07
+     "dur": 0.07,
+     "tp": -4.44
     },
     {
      "file": "sfx/ringClose-2.mp3",
      "onset": 0.002,
-     "dur": 0.075
+     "dur": 0.075,
+     "tp": -5.57
     },
     {
      "file": "sfx/ringClose-3.mp3",
      "onset": 0.0,
-     "dur": 0.07
+     "dur": 0.07,
+     "tp": -10.47
     }
    ],
    "gain": 1.0351,
@@ -1200,17 +1256,20 @@
     {
      "file": "sfx/confirm-1.mp3",
      "onset": 0.0,
-     "dur": 0.075
+     "dur": 0.075,
+     "tp": -6.76
     },
     {
      "file": "sfx/confirm-2.mp3",
      "onset": 0.0,
-     "dur": 0.075
+     "dur": 0.075,
+     "tp": -7.96
     },
     {
      "file": "sfx/confirm-3.mp3",
      "onset": 0.0,
-     "dur": 0.075
+     "dur": 0.075,
+     "tp": -6.36
     }
    ],
    "gain": 1.2589,

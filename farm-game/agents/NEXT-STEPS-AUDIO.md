@@ -7,7 +7,7 @@ Round-2 commits:
 - `f633de0`: service-worker audio cache, perf storm scene.
 - `182ac74`: critic R5 fixes.
 - `6e935be`: title sting, festival trio, mine deep section, R6 fixes.
-- Later commits are docs and follow-ups.
+- The next commit caps sfx peaks at the source (R7) and records the mine level in DECISIONS.
 
 `npm run verify` is green: 474 unit tests, e2e, mobile e2e and perf. **Nobody has listened to any of it**, by
 ear or on a phone. Every judgement so far comes from measuring offline renders of the real engine.
@@ -54,7 +54,8 @@ ear or on a phone. Every judgement so far comes from measuring offline renders o
 **Other round-2 changes:**
 - **Crickets:** loops of 9 s and 7.333 s, which realign every 198 s (was 36 s).
 - **Sound-effect levels:** each recipe has a `trim` (dB), calibrated with `sfxlevels.py`: the median of 16 hits, K-weighted max momentary. Every cue is within about 1 dB of its role target at the output: rewards -18, tools -20, light -22, ui -25, steps -28, jingles -19. The heart jingle is -19.3, and the ui first take is replaced.
-- **Brick wall:** a soft clipper after the compressor: knee -3 dBFS, ceiling -1.4 dBFS, 2x oversampling. With every slider at maximum, festival, rain and 60 loud effects, the peak is -1.1 dBTP. Music mixes peak at -6 dBTP or lower.
+- **Brick wall:** a soft clipper after the compressor: knee -3 dBFS, ceiling -1.4 dBFS, 2x oversampling. With every slider at maximum, festival, rain and 60 loud effects, the peak is -1.0 dBTP. Music mixes peak at -6 dBTP or lower.
+- **Sound-effect peaks are capped at the source** (`sfx_tp_ceiling` in `build.py`): a cue's worst take, with its trim, volume spread and the compressor's +1.71 dB make-up gain, peaks at or under -3.5 dBTP at the default volume. A test checks it (it is the `tp` field in the manifest). Single cues now peak at -4.3 to -8.9 dBFS at the output, so the clipper never shapes everyday sounds.
 - **Service worker:** audio has its own cache, `tiny-acre-audio`, with one entry per file version (path plus content hash). A release downloads only the files that changed. `tests/audio-sw.test.ts` covers it.
 - **Perf:** a "20 sound effects a second" scene asserts that at least 20 cues play from files; about 99-110 do.
 - **Touch cues** for the one-thumb controls: `tick`, `target`, `ringOpen`, `ringClose` and `confirm`.
@@ -70,14 +71,13 @@ ear or on a phone. Every judgement so far comes from measuring offline renders o
 - Nits from the critic:
   - Swing sits about 1 dB under its target.
   - The 20-sfx/s perf scene runs at 92 fps under 6x throttle, against 124-143 for the other scenes. Each hit creates its own nodes; pool gain nodes per cue if phones show it.
-  - Spiky effects (coin, buy) peak at about -1.3 dBTP at default volume, so the clipper shaves their spikes slightly.
 - The "holding Action" perf scene still plays only 3 sfx, because the hoe fails on planted tiles. The storm scene covers the sfx path.
 - The touch cues need wiring in the controls code:
   - `tick` per painted tile
   - `target` when a walk target is set
   - `ringOpen` / `ringClose`
   - `confirm` when a tool is picked or a row is committed
-- Mine music reads -28.9 LUFS, under the -25 day target. This is probably fine under the cave bed, but decide by ear.
+- Mine music reads -28.9 LUFS on purpose: a step down into the cave, recorded in DECISIONS.md. Do not go below about -30.
 - Render speed is now 30-40x realtime (the soft clipper costs about 10%).
 
 ## What the owner should listen to first
@@ -104,8 +104,7 @@ The decisions it informs:
    - the iOS silent switch;
    - footstep latency over Bluetooth.
 2. Wire the touch cues once the controls branch merges, then render a real drag and tap session.
-3. Decide the mine level after listening with the cave ambience on top.
-4. Optional: indoor ambience (house clock or fire), woods ambience, more takes for coin and harvest, and
+3. Optional: indoor ambience (house clock or fire), woods ambience, more takes for coin and harvest, and
    more phrases per section to stretch the time before a melody repeats.
 
 ## How to run things

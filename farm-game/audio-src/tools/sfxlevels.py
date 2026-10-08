@@ -41,8 +41,8 @@ def main() -> None:
     d = sys.argv[1]
     rec = json.load(open(RECIPES, encoding="utf8"))
     target = {k: rec["families"][v["family"]]["lufs"] for k, v in rec["sfx"].items()}
-    print("| cue | target | median M | min | max | gap |")
-    print("|---|---|---|---|---|---|")
+    print("| cue | target | median M | min | max | gap | max sample peak dBFS |")
+    print("|---|---|---|---|---|---|---|")
     for path in sorted(glob.glob(os.path.join(d, "hits-*.wav"))):
         cue = os.path.basename(path)[5:-4]
         x, sr = load(path)
@@ -50,7 +50,8 @@ def main() -> None:
         t = -19 if cue in JINGLES else target.get(cue)
         med = float(np.median(hits))
         gap = f"{med - t:+.1f}" if t is not None else "-"
-        print(f"| {cue} | {t if t is not None else '-'} | {med:.1f} | {min(hits):.1f} | {max(hits):.1f} | {gap} |")
+        peak = 20 * np.log10(max(float(np.abs(x).max()), 1e-9))
+        print(f"| {cue} | {t if t is not None else '-'} | {med:.1f} | {min(hits):.1f} | {max(hits):.1f} | {gap} | {peak:.1f} |")
 
 
 if __name__ == "__main__":

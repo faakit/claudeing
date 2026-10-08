@@ -17,6 +17,15 @@ export const K_SYNTH_SFX = 1;
  * a day piece sits near -25 LUFS at the default 60% music volume, 4-6 dB under the tool sounds.
  */
 export const SAMPLED_MUSIC_GAIN = 4.2;
+/** Master compressor (safety limiter) settings. */
+export const LIMITER_THRESHOLD_DB = -3;
+export const LIMITER_RATIO = 20;
+/**
+ * The Web Audio DynamicsCompressor adds automatic make-up gain: 0.6 x the gain it would take off a
+ * full-scale signal (Chromium's DynamicsCompressorKernel). With -3 dB and 20:1 that is +1.71 dB on
+ * everything at the output; the build uses it to keep effect peaks under the clipper's knee.
+ */
+export const LIMITER_MAKEUP_DB = 0.6 * -LIMITER_THRESHOLD_DB * (1 - 1 / LIMITER_RATIO);
 export const REVERB_RETURN = 0.55;
 export const REVERB_SECONDS = 1.4;
 
@@ -81,9 +90,9 @@ export function buildGraph(ctx: BaseAudioContext): Graph {
   const master = ctx.createGain();
   // A safety limiter at the very end: many sounds at once must never clip a phone speaker.
   const limiter = ctx.createDynamicsCompressor();
-  limiter.threshold.value = -3;
+  limiter.threshold.value = LIMITER_THRESHOLD_DB;
   limiter.knee.value = 0;
-  limiter.ratio.value = 20;
+  limiter.ratio.value = LIMITER_RATIO;
   limiter.attack.value = 0.003;
   limiter.release.value = 0.15;
   // The compressor's 3 ms attack lets the front of a transient through (max sliders, festival, rain and

@@ -14,6 +14,8 @@ export interface Zone {
   dur: number;
   /** Seconds a slow (bowed, blown) attack needs to speak; the note is started this much early. */
   lag?: number;
+  /** True peak of the encoded file, dBTP (sound effects; tests check the output peak at default volume). */
+  tp?: number;
   /** Sustain loop [start, end]; the region after `end` repeats the loop start, so small shifts stay seamless. */
   loop?: [number, number];
 }
