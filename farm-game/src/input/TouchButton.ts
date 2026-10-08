@@ -1,34 +1,56 @@
 import Phaser from 'phaser';
 import { CH } from '../ui/theme';
-
-/** Logical pixels of vertical travel per tool change. */
-const SWIPE_STEP = 14;
-/** Travel that already means "this may be a swipe", before a full step. */
-const DRIFT = 4;
+import { actionDrag, GESTURE } from './gesture';
 
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
+
+export interface TouchButtonOptions {
+  x: number;
+  y: number;
+  radius: number;
+  /** Touch radius (defaults to radius + 8). */
+  hit?: number;
+  icon: IconDrawer;
+  /**
+   * 'down' acts on touch-down (Action: speed matters). 'release' acts when a still touch lifts and is
+   * cancelled once the finger travels past the tap tolerance; such a touch may turn into a joystick drag
+   * (it is "pass-through"), so a drag that starts on the button never opens anything.
+   */
+  fireOn?: 'down' | 'release';
+  /** Called on press ('down') or on a clean release ('release'). */
+  onPress: () => void;
+  /** 'down' buttons only: the press ended (lift, slide-off, or a swipe took over). */
+  onRelease?: () => void;
+  /** 'down' buttons only: +1 / -1 per tool step when the finger slides up / down while pressing. */
+  onSwipe?: (step: number) => void;
+  /** 'down' buttons only: a clearly sideways flick while pressing (+1 right, -1 left). */
+  onFlick?: (dir: number) => void;
+  /** 'down' buttons only: every pointer move of the press, relative to its anchor. */
+  onMove?: (dx: number, dy: number) => void;
+  /**
+   * Final say on whether a touch at (x, y) belongs to this button, for overlapping touch circles (see
+   * `resolveTouch` in ui/layout.ts). Defaults to "inside the touch circle".
+   */
+  owns?: (x: number, y: number) => boolean;
+}
 
 /** Round on-screen button with a generous hit area and press feedback. */
 export class TouchButton {
   readonly view: Phaser.GameObjects.Container;
-  private readonly zone: Phaser.GameObjects.Zone;
+  readonly zone: Phaser.GameObjects.Zone;
   private readonly glow: Phaser.GameObjects.Graphics;
   private enabled = true;
   private pressed = false;
+  private pointerId: number | null = null;
+  private anchor = { x: 0, y: 0 };
+  private start = { x: 0, y: 0 };
+  private cleanup: (() => void)[] = [];
 
   constructor(
     private readonly scene: Phaser.Scene,
-    x: number,
-    y: number,
-    radius: number,
-    icon: IconDrawer,
-    onPress: () => void,
-    onRelease?: () => void,
-    /** Called with +1 / -1 when the finger slides up / down while pressing (e.g. change tool). */
-    onSwipe?: (step: number) => void,
-    /** Called once per press when the finger first drifts, so a slow swipe can cancel a pending hold. */
-    onDrift?: () => void,
+    private readonly opts: TouchButtonOptions,
   ) {
+    const { x, y, radius, icon } = opts;
     const body = scene.add.graphics();
     body.fillStyle(CH.ink, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
     body.fillStyle(CH.panel, 0.62).fillCircle(0, 0, radius);
@@ -41,56 +63,80 @@ export class TouchButton {
 
     this.view = scene.add.container(x, y, [body, this.glow, iconGfx]).setDepth(90);
 
-    const hit = radius + 8; // finger-friendly margin beyond the drawn circle
+    const hit = opts.hit ?? radius + 8; // finger-friendly margin beyond the drawn circle
     this.zone = scene.add.zone(x, y, hit * 2, hit * 2).setDepth(90);
     this.zone.setInteractive({
       hitArea: new Phaser.Geom.Circle(hit, hit, hit),
-      hitAreaCallback: Phaser.Geom.Circle.Contains,
+      // Local coords inside the zone; the owner check works in screen (logical) coords.
+      hitAreaCallback: (area: Phaser.Geom.Circle, lx: number, ly: number) =>
+        Phaser.Geom.Circle.Contains(area, lx, ly) &&
+        (opts.owns ? opts.owns(x - hit + lx, y - hit + ly) : true),
     });
-    let swipeId: number | null = null;
-    let anchorY = 0;
-    let drifted = false;
+    // Release buttons let a drag that starts on them become a joystick drag.
+    this.zone.setData('passThrough', opts.fireOn === 'release');
+
     this.zone.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!this.enabled) return;
-      swipeId = p.id;
-      anchorY = p.y;
-      drifted = false;
+      this.pointerId = p.id;
+      this.anchor = { x: p.x, y: p.y };
+      this.start = { x: p.x, y: p.y };
       this.pressed = true;
       this.press(true);
-      onPress();
+      if (opts.fireOn !== 'release') opts.onPress();
     });
-    if (onSwipe) {
-      scene.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-        if (swipeId !== p.id) return;
-        const dy = p.y - anchorY;
-        if (!drifted && Math.abs(dy) >= DRIFT) {
-          drifted = true;
-          onDrift?.();
-        }
-        if (Math.abs(dy) < SWIPE_STEP) return;
-        anchorY = p.y;
-        onSwipe(dy < 0 ? 1 : -1); // first, so the release below knows it was a swipe
-        if (this.pressed) {
-          // A swipe is not a work press: let go of the held action first.
+    const onMove = (p: Phaser.Input.Pointer) => {
+      if (this.pointerId !== p.id) return;
+      if (opts.fireOn === 'release') {
+        // Moving past the tap tolerance cancels: the touch is a drag now (maybe the joystick).
+        const d = Math.hypot(p.x - this.start.x, p.y - this.start.y);
+        if (this.pressed && d > GESTURE.tapMaxMove) {
           this.pressed = false;
           this.press(false);
-          onRelease?.();
         }
-      });
-      scene.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-        if (swipeId === p.id) swipeId = null;
-      });
-    }
-    // Only a button that was actually pressed may release, so a mouse merely crossing it
-    // can never cancel input held elsewhere (e.g. Space held for the tool).
-    for (const ev of ['pointerup', 'pointerout']) {
-      this.zone.on(ev, () => {
-        if (!this.pressed) return;
+        return;
+      }
+      opts.onMove?.(p.x - this.anchor.x, p.y - this.anchor.y);
+      const kind = actionDrag(p.x - this.anchor.x, p.y - this.anchor.y);
+      if (kind === 'swipeUp' || kind === 'swipeDown') {
+        if (!opts.onSwipe) return;
+        this.anchor = { x: p.x, y: p.y };
+        opts.onSwipe(kind === 'swipeUp' ? 1 : -1); // first, so the release below knows it was a swipe
+        this.endPress(); // a swipe is not a work press: let go of the held action
+      } else if (kind === 'flick' && opts.onFlick) {
+        const dir = Math.sign(p.x - this.anchor.x);
+        this.anchor = { x: p.x, y: p.y };
+        this.endPress();
+        opts.onFlick(dir);
+      }
+    };
+    const onUp = (p: Phaser.Input.Pointer) => {
+      if (this.pointerId !== p.id) return;
+      this.pointerId = null;
+      if (opts.fireOn === 'release') {
+        const fire = this.pressed && this.enabled;
         this.pressed = false;
         this.press(false);
-        onRelease?.();
-      });
-    }
+        if (fire) opts.onPress();
+        return;
+      }
+      this.endPress();
+    };
+    scene.input.on('pointermove', onMove);
+    scene.input.on('pointerup', onUp);
+    this.cleanup.push(
+      () => scene.input.off('pointermove', onMove),
+      () => scene.input.off('pointerup', onUp),
+    );
+    // A 'down' button that was actually pressed releases when the finger slides off it, so a mouse merely
+    // crossing it can never cancel input held elsewhere (e.g. Space held for the tool).
+    if (opts.fireOn !== 'release') this.zone.on('pointerout', () => this.endPress());
+  }
+
+  private endPress(): void {
+    if (!this.pressed) return;
+    this.pressed = false;
+    this.press(false);
+    this.opts.onRelease?.();
   }
 
   private press(down: boolean): void {
@@ -102,8 +148,13 @@ export class TouchButton {
     this.scene.tweens.add({ targets: this.glow, alpha: down ? 1 : 0, duration: down ? 40 : 160 });
   }
 
+  get isEnabled(): boolean {
+    return this.enabled;
+  }
+
   /** Remove the button (used when the controls are re-laid out, e.g. left-handed mode). */
   destroy(): void {
+    this.cleanup.forEach((off) => off());
     this.zone.destroy();
     this.view.destroy();
   }
@@ -113,6 +164,7 @@ export class TouchButton {
     if (this.enabled === enabled) return;
     this.enabled = enabled;
     if (this.zone.input) this.zone.input.enabled = enabled;
+    if (!enabled) this.pressed = false;
     this.scene.tweens.add({
       targets: this.view,
       alpha: enabled ? 1 : 0,

@@ -140,8 +140,15 @@ export function selectSlot(state: GameState, slot: number): void {
   changed();
 }
 
-export function cycleSlot(state: GameState, step: number): void {
-  selectSlot(state, (state.inventory.selected + step + game.hotbarSlots) % game.hotbarSlots);
+export function cycleSlot(state: GameState, step: number, skipEmpty = false): void {
+  const n = game.hotbarSlots;
+  let i = state.inventory.selected;
+  // With skipEmpty, a swipe never stops on an empty slot (back to the start if every other one is empty).
+  for (let k = 0; k < n; k++) {
+    i = (i + step + n) % n;
+    if (!skipEmpty || state.inventory.slots[i]) break;
+  }
+  selectSlot(state, i);
 }
 
 /**

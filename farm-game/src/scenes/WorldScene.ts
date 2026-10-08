@@ -18,7 +18,8 @@ import {
 import { items, mapsData } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
-import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
+import { TileHighlight } from '../fx/TileHighlight';
+import { markerKind, type MarkerKind } from '../ui/targetMarker';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
@@ -38,8 +39,6 @@ import { projects } from '../data';
 import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
 import { gameEvents, toast } from '../systems/events';
 import { currentGoal } from '../systems/goals';
-import { getSoil, isMature } from '../systems/farming';
-import { forageAt } from '../systems/forage';
 import { selectedStack } from '../systems/inventory';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
 import { faceDirection, isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
@@ -84,6 +83,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
   private heldFailed = false;
+  /** Uses so far in the current Action hold: later ones tick the haptic less often. */
+  private holdUses = 0;
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
 
@@ -248,8 +249,10 @@ export abstract class WorldScene extends Phaser.Scene {
       return;
     }
 
-    if (!inputHub.actionHeld) this.heldFailed = false;
-    else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
+    if (!inputHub.actionHeld) {
+      this.heldFailed = false;
+      this.holdUses = 0;
+    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
 
     this.updateNpcs(state);
     this.updateTarget();
@@ -428,15 +431,15 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /** The tile the equipped item would act on right now (first that works), else the one faced. */
-  private actionTile(): { tile: TileCoord; works: boolean } {
+  private actionTile(): { tile: TileCoord; plan: string | null } {
     const state = getState();
     const cands = this.candidates();
     const best = pickBest(
       state,
       cands.map((t) => this.tileInfo(t)),
     );
-    if (best) return { tile: { tx: best.tile.tx, ty: best.tile.ty }, works: true };
-    return { tile: facingTile(state.player), works: false };
+    if (best) return { tile: { tx: best.tile.tx, ty: best.tile.ty }, plan: best.plan.kind };
+    return { tile: facingTile(state.player), plan: null };
   }
 
   private updateTarget(): void {
@@ -447,20 +450,16 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
-  private highlightKind(t: TileCoord, works: boolean): HighlightKind {
-    if (this.interactableAt(t)) return 'interactive';
-    const state = getState();
-    const crop = getSoil(state, t.tx, t.ty)?.crop;
-    if ((crop && isMature(crop)) || forageAt(state, this.mapId, t.tx, t.ty)) return 'harvest';
-    if (works) return 'free';
-    return isTileBlocked(this.grid, t.tx, t.ty) ? 'solid' : 'free';
-  }
-
+  /** The marker shows where Action will act, in a shape and colour that say whether it will. */
   private updateHighlight(time: number): void {
     const interact = this.interactTile();
     const act = this.actionTile();
-    const t = interact && !act.works ? interact.tile : act.tile;
-    this.highlight.update(this.inMap(t) ? t : null, this.highlightKind(t, act.works), time);
+    const t = interact && !act.plan ? interact.tile : act.tile;
+    const kind: MarkerKind = markerKind({
+      planKind: act.plan,
+      interactable: !act.plan && interact !== null,
+    });
+    this.highlight.update(this.inMap(t) ? t : null, kind, time);
   }
 
   // ---- actions ----
@@ -479,6 +478,10 @@ export abstract class WorldScene extends Phaser.Scene {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.heldFailed = false;
       playActionFx(this.fx, res, getState().player, stack?.item);
+      // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
+      if (res.kind === 'harvest') haptic('medium');
+      else haptic('tick', { repeat: inputHub.actionHeld && this.holdUses > 0 });
+      if (inputHub.actionHeld) this.holdUses++;
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;
@@ -494,6 +497,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!hit?.type) return;
     this.highlight.pulse();
     audio.play('ui');
+    haptic('tick');
     if (hit.type.startsWith('plot:'))
       return void gameEvents.emit('buyPlot', { id: hit.type.slice(5) });
     if (hit.type.startsWith('npc:')) {
@@ -548,7 +552,12 @@ export abstract class WorldScene extends Phaser.Scene {
     const target = { tx: Math.floor(wx / TILE_SIZE), ty: Math.floor(wy / TILE_SIZE) };
     const player = getState().player;
     const dir = adjacentDirection(playerTile(player), target);
-    if (!dir) return;
+    if (!dir) {
+      // Nothing to do from here: answer anyway, so a tap is never silent.
+      this.highlight.ping(target.tx, target.ty);
+      audio.play('select');
+      return;
+    }
     faceDirection(player, dir);
     this.syncSprite(false);
     if (this.interactableAt(target) && !planAction(getState(), this.tileInfo(target)).ok)

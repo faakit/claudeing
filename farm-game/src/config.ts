@@ -63,11 +63,9 @@ export const FADE_MS = 180;
 export const FADE_COLOR = { r: 16, g: 12, b: 28 } as const;
 export const VOID_COLOR = '#14101f';
 
-// --- Touch controls (logical px at 480x270) ---
-export const JOYSTICK = { radius: 24, deadzone: 6, axisBias: 1.25 } as const;
-export const TAP_MAX_MS = 250;
-export const TAP_MAX_MOVE = 8;
-export const UI_LAYOUT = { actionRadius: 28, interactRadius: 21, menuRadius: 14, edge: 6 } as const;
+// --- Touch controls (logical px) ---
+// Gesture thresholds live in input/gesture.ts and the dock geometry in ui/layout.ts (both pure, tested).
+export const JOYSTICK = { radius: 24, axisBias: 1.25 } as const;
 export const EVT_INTERACT_TARGET = 'interact-target';
 
 // --- Time (M2) ---

@@ -4,6 +4,7 @@ import { dominantDirection } from '../systems/direction';
 import type { Direction } from '../state/GameState';
 import type { InputHub } from './InputHub';
 import { CH } from '../ui/theme';
+import { GESTURE } from './gesture';
 
 const FADE_MS = 120;
 
@@ -15,6 +16,9 @@ export class VirtualJoystick {
   private readonly gfx: Phaser.GameObjects.Graphics;
   private readonly thumb: Phaser.GameObjects.Graphics;
   private shown = false;
+  /** The stick passed its deadzone during the current touch (so that touch can never be a tap). */
+  private engaged = false;
+  private last: { id: number; engaged: boolean } | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -46,20 +50,36 @@ export class VirtualJoystick {
     return y >= THUMB_ZONE_Y;
   }
 
+  /** Did this pointer's touch (current, or the one that just ended) move the stick past its deadzone? */
+  wasEngaged(id: number): boolean {
+    if (this.pointerId === id) return this.engaged;
+    return this.last?.id === id && this.last.engaged;
+  }
+
   private onDown(p: Phaser.Input.Pointer): void {
     if (this.pointerId !== null || !this.inZone(p.y)) return;
-    if (this.scene.input.hitTestPointer(p).length > 0) return; // pointer belongs to a button
+    // A pointer on a button belongs to it, unless the button acts only on a clean release
+    // (Menu, Interact): then a drag that starts there is still a joystick drag.
+    const hits = this.scene.input.hitTestPointer(p);
+    if (hits.some((o) => o.getData?.('passThrough') !== true)) return;
     this.pointerId = p.id;
+    this.engaged = false;
     this.origin.set(p.x, p.y);
     this.current = null;
   }
 
   private onMove(p: Phaser.Input.Pointer): void {
     if (p.id !== this.pointerId) return;
-    const { radius, deadzone, axisBias } = JOYSTICK;
+    const { radius, axisBias } = JOYSTICK;
+    const deadzone = GESTURE.stickDeadzone;
     let dx = p.x - this.origin.x;
     let dy = p.y - this.origin.y;
     const len = Math.hypot(dx, dy);
+    if (!this.engaged) {
+      // Until the thumb travels past the deadzone this touch may still be a tap: never walk.
+      if (len < deadzone) return;
+      this.engaged = true;
+    }
     if (len > radius) {
       // Dragging past the rim drags the whole stick along, so recentering is never needed.
       this.origin.x += (dx / len) * (len - radius);
@@ -67,7 +87,8 @@ export class VirtualJoystick {
       dx = p.x - this.origin.x;
       dy = p.y - this.origin.y;
     }
-    this.current = dominantDirection(dx, dy, deadzone, axisBias, this.current);
+    // Once engaged, the stick only stops when the thumb comes back near its centre.
+    this.current = dominantDirection(dx, dy, deadzone / 2, axisBias, this.current);
     this.hub.setStick(this.current);
     // Only reveal the stick once it is actually being used, so quick taps stay clean.
     if (!this.shown && len >= deadzone) this.fade(true);
@@ -80,7 +101,9 @@ export class VirtualJoystick {
   }
 
   private release(): void {
+    if (this.pointerId !== null) this.last = { id: this.pointerId, engaged: this.engaged };
     this.pointerId = null;
+    this.engaged = false;
     this.current = null;
     this.hub.setStick(null);
     this.fade(false);

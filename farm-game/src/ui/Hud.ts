@@ -193,7 +193,7 @@ export class Hud {
         ),
       ),
       gameEvents.on('levelUp', (e) =>
-        this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`),
+        this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`, 'medium'),
       ),
     );
   }
@@ -265,9 +265,10 @@ export class Hud {
     drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, CH.gold);
   }
 
-  private goalBanner(text: string): void {
+  /** A level-up is a medium pulse (owner decision 6); goals and hearts keep the success pattern. */
+  private goalBanner(text: string, pulse: 'success' | 'medium' = 'success'): void {
     audio.play('goal');
-    haptic('success');
+    haptic(pulse);
     this.banner
       .setText(text)
       .setAlpha(0)

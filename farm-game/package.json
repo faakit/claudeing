@@ -21,7 +21,9 @@
     "cap:android": "npm run cap:sync && cap open android",
     "cap:ios": "npm run cap:sync && cap open ios",
     "assets": "node scripts/make-icons.mjs && capacitor-assets generate --android --ios --iconBackgroundColor '#2a1f4a' --iconBackgroundColorDark '#2a1f4a' --splashBackgroundColor '#1b1530' --splashBackgroundColorDark '#1b1530'",
-    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run e2e && npm run e2e:mobile && npm run perf"
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run e2e && npm run e2e:mobile && npm run e2e:controls && npm run perf",
+    "e2e:controls": "node scripts/e2e-controls.mjs",
+    "bench:thumb": "node scripts/bench-thumb.mjs"
   },
   "dependencies": {
     "@capacitor/app": "8.1.2",

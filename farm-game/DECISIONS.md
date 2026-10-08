@@ -334,3 +334,47 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 - **Mix:** sound effects are matched by role on max momentary loudness (K-weighted 400 ms; rewards -18, tools -20, swing/plant -22, door -21, error -23, ui -25, steps -28 LUFS in the file, about the same at the output at default volume), true peak <= -1 dBTP after MP3 encoding; music sits near -25 LUFS integrated by day and -28 at night at the default 60% volume; ambience beds under the music. A repeat of the same cue within 350 ms (a held tool) plays 4 dB softer, and water keeps one voice. Measured from offline renders of the real engine (`audio-src/tools/render.mjs`). The master "limiter" is a DynamicsCompressorNode (-3 dB, 20:1), which by spec adds about +1.7 dB of automatic make-up gain; the measured levels include it.
 - **Phaser's own audio is off** (`audio: { noAudio: true }`): one AudioContext for the whole game.
 - **Sources:** Kenney (CC0) and OpenGameArt CC0 for sound effects and ambience, Versilian Studios (CC0) for instruments; every file, page, author, licence and sha1 in `audio-src/SOURCES.md`. Nothing was listened to by a human while building it.
+
+## One-thumb controls (PLAN-CONTROLS.md, owner decisions 2026-10-08)
+
+Owner decisions: tap-to-move and auto tool on by default (both can be turned off; the floating stick always
+works); auto tool never picks the rod or placeables; row work is a ~250 ms long-press then drag; Menu moves
+into thumb reach once it acts on release; the 8-slot hotbar stays for now; light haptics, on by default;
+iPhone 13/14 and Pixel 7 are the primary phones, the SE must pass; right-handed default, left-handed as good.
+
+### M1 quick wins
+
+- **Dock geometry is pure (`ui/layout.ts`) and every button owns its drawn disc:** `resolveTouch` gives a touch
+  to the button it is drawn on, else (in overlapping touch margins) to the higher priority (Action), else to the
+  relatively nearer one. Action moved 6 px in (12 px from the screen edge, clear of Android's back-swipe strip),
+  Interact moved down-left to (104, 338) so Action owns its whole touch circle without covering any of
+  Interact's disc. Measured: 0% of Action's disc and 0% of its touch circle go to Interact (was 10.8% of the
+  disc). With 2.5 mm Gaussian jitter around aims spread over Action's whole disc, 0.6 to 0.8% still land beyond
+  Action's circle near Interact: a thumb that physically lands on Interact presses Interact.
+- **Menu and Interact act on a clean release** (`TouchButton` `fireOn: 'release'`): cancelled once the finger
+  travels past the 8 px tap tolerance, and such a touch may become a joystick drag ("pass-through"), so a drag
+  that starts on them never opens anything. Action and the hotbar still act on touch-down (speed).
+- **Menu moved into the thumb arc** (58, 304), mirrored for the left hand: comfortable for both hands on iPhone
+  13, Pixel 7 and SE in the reach model (was a stretch on the big phones), far from Action's resting arc.
+- **A tap never walks:** gesture thresholds live in `input/gesture.ts`. The stick engages only past 9 px (was 6),
+  wider than the 8 px tap tolerance, and a world touch that engaged the stick is never a tap (max travel, not
+  the end point, decides). A still touch is a tap however long it lasted (a 300 ms tap acts like a 120 ms one).
+- **Hold survives a rolling pad:** the old rule cancelled a pending hold after 4 px of vertical drift (1.3 mm on
+  iPhone 13). Now a held press starts after 110 ms unless the finger has strayed 1.5+ px vertically and is still
+  moving (no 0.5 px of vertical change for 60 ms = settled): that is a swipe on its way to a 14 px tool step. A
+  pad that rolls and settles starts working at once. Swipes from 60 ms to 1 s for 18 px never act (unit test at
+  a phone's 16 ms move rate; e2e at true speed). A tool step needs 14 px of mostly vertical travel.
+- **Swipes skip empty slots** (`cycleSlot(state, step, skipEmpty)`); keyboard and wheel cycling still visit all.
+- **The marker says yes or no in shape as well as colour:** 2 px brackets in the action's colour (white work,
+  green gather, gold interact) when Action will act; four dim corner dots when it will not (`ui/targetMarker.ts`).
+- **No silent world taps:** a tap with nothing to do from where you stand shows a fading ring on that tile and a
+  soft click (M4 turns it into a walk).
+- **Haptics (owner decision 6):** a `medium` kind (ripe harvest, level-up) joins `tick`, `success` and `error`.
+  Every kind is throttled (tick 120 ms, medium 250, success 300, error 400) and a held action's later uses tick
+  at most every 450 ms. Ticks on a successful tile action, a tool swipe, a slot tap and when Interact opens
+  something. Vibration off means zero calls. Each pulse has a visible twin (effects, marker pop, hotbar).
+- **Bin "Ship all produce":** one button low in the sheet ships every crop, fish, wild good, preserve and
+  product; never seeds, tools, ores or crafting stock. Per-row All/+/- stay, so a mistake comes back with "-".
+- **One-thumb benchmark and controls e2e:** `npm run bench:thumb` (thresholds per milestone in
+  `scripts/bench-thresholds.json`, exits 1 on a regression) and `npm run e2e:controls` (in `verify`: iPhone 13
+  and SE, both hands).

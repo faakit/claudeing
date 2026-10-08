@@ -22,6 +22,7 @@ export function initNative(target: Lifecycle = lifecycle): void {
 
   registerHapticsDriver((kind: HapticKind) => {
     if (kind === 'tick') safely(Haptics.impact({ style: ImpactStyle.Light }));
+    else if (kind === 'medium') safely(Haptics.impact({ style: ImpactStyle.Medium }));
     else
       safely(
         Haptics.notification({
