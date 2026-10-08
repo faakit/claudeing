@@ -7,16 +7,28 @@ import { addItem, countItem, removeStack } from './inventory';
 import { displayName, keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 import { preserveOf } from './preserves';
 import { random } from './rng';
-import { addXp, isRecipeUnlocked } from './skills';
+import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
+import { applyRival } from './rival';
+import { isProjectDone } from './projects';
+import { shops } from '../data';
+
+/** Is this crop's seed on a shelf the player can buy from (not waiting on a town project)? */
+function seedOnSale(state: GameState, cropId: string): boolean {
+  const seed = Object.entries(items).find(([, d]) => d.plants === cropId)?.[0];
+  const entry = Object.values(shops)
+    .flatMap((s) => s.stock)
+    .find((e) => e.item === seed);
+  return !entry?.project || isProjectDone(state, entry.project);
+}
 
 /** Goods a town order may ask for today: what the season gives, what the player can make. */
 export function orderCandidates(state: GameState): ItemRef[] {
   const season = state.time.season;
   const out = new Map<string, ItemRef>();
   const add = (r: ItemRef) => out.set(keyOf(r), r);
-  for (const c of Object.values(crops))
-    if (c.seasons.includes(season)) add({ item: c.harvestItem });
+  for (const [id, c] of Object.entries(crops))
+    if (c.seasons.includes(season) && seedOnSale(state, id)) add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
   for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });
@@ -24,6 +36,8 @@ export function orderCandidates(state: GameState): ItemRef[] {
   for (const machine of Object.keys(machines)) {
     const recipe = recipes[machine];
     if (!recipe || !isRecipeUnlocked(state, recipe)) continue;
+    // Only once the player has one standing: a recipe alone does not make pickles.
+    if (!Object.values(state.placed).some((list) => list.some((o) => o.type === machine))) continue;
     for (const r of [...out.values()]) {
       const p = preserveOf(r, machine);
       if (p) add(p);
@@ -40,7 +54,9 @@ export function generateOrders(state: GameState): Order[] {
   const pool = orderCandidates(state);
   const list: Order[] = [];
   let id = (state.orders.list.reduce((n, o) => Math.max(n, o.id), 0) || 0) + 1;
-  for (let i = 0; i < ordersCfg.perDay && pool.length > 0; i++) {
+  // Town projects (the board canopy) can post extra requests.
+  const perDay = ordersCfg.perDay + Math.max(0, Math.round(perk(state, 'orderSlots')));
+  for (let i = 0; i < perDay && pool.length > 0; i++) {
     const ref = pool.splice(Math.floor(random(state) * pool.length), 1)[0] as ItemRef;
     const value = sellValue(ref);
     const tier = ordersCfg.tiers.find((t) => value <= t.maxValue) ?? ordersCfg.tiers[0];
@@ -91,6 +107,7 @@ export type DeliverResult = 'ok' | 'missing' | 'done' | 'unknown';
 
 /** Hand over the goods (lowest quality first) and collect the reward. Better quality earns a bonus. */
 export function deliverOrder(state: GameState, id: number): DeliverResult {
+  applyRival(state); // the rival may have been here first
   const order = state.orders.list.find((o) => o.id === id);
   if (!order) return 'unknown';
   if (order.done) return 'done';

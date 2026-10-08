@@ -71,6 +71,14 @@
     }
   },
   {
+    "id": "job1",
+    "text": "Finish a job a villager posts",
+    "stat": "jobsDone",
+    "target": 1,
+    "reward": 60,
+    "hint": "Morning news lists today's jobs. Menu > Goal shows them too."
+  },
+  {
     "id": "harvest",
     "text": "Harvest 5 crops",
     "stat": "harvested",
@@ -105,18 +113,6 @@
     }
   },
   {
-    "id": "order",
-    "text": "Fill an order on the town board",
-    "stat": "ordersDone",
-    "target": 1,
-    "reward": 80,
-    "hint": "Go to the board in town and use Interact.",
-    "where": {
-      "town": [14, 12],
-      "farm": [14, 42]
-    }
-  },
-  {
     "id": "craft",
     "text": "Craft something at the workbench",
     "stat": "crafted",
@@ -139,6 +135,18 @@
     "target": 1,
     "reward": 120,
     "hint": "Load fruit or vegetables into a jar and collect in 3 days."
+  },
+  {
+    "id": "order",
+    "text": "Fill an order on the town board",
+    "stat": "ordersDone",
+    "target": 1,
+    "reward": 80,
+    "hint": "Go to the board in town and use Interact.",
+    "where": {
+      "town": [14, 12],
+      "farm": [14, 42]
+    }
   },
   {
     "id": "quality",
@@ -194,7 +202,7 @@
   },
   {
     "id": "earn1k",
-    "text": "Earn 1,000g selling crops",
+    "text": "Earn 1,000g in all",
     "stat": "earned",
     "target": 1000,
     "reward": 100,
@@ -209,8 +217,16 @@
     "hint": "Open the shop and check the Upgrades tab."
   },
   {
+    "id": "bag",
+    "text": "Buy a Bigger Bag",
+    "stat": "upgraded.bag",
+    "target": 1,
+    "reward": 200,
+    "hint": "Shop > Home tab. Eight more slots for your goods."
+  },
+  {
     "id": "earn5k",
-    "text": "Earn 5,000g selling crops",
+    "text": "Earn 5,000g in all",
     "stat": "earned",
     "target": 5000,
     "reward": 250,
@@ -228,6 +244,26 @@
     }
   },
   {
+    "id": "project1",
+    "text": "Finish a town project",
+    "stat": "projectsDone",
+    "target": 1,
+    "reward": 300,
+    "hint": "Town board > Town projects. Give gold and goods bit by bit.",
+    "where": {
+      "town": [14, 12],
+      "farm": [14, 42]
+    }
+  },
+  {
+    "id": "decor10",
+    "text": "Place 10 decorations on the farm",
+    "stat": "decorPlaced",
+    "target": 10,
+    "reward": 300,
+    "hint": "Shop > Home tab. Place them like a sprinkler."
+  },
+  {
     "id": "jars",
     "text": "Make 10 jams, pickles or wines",
     "stat": "preserved",
@@ -242,6 +278,14 @@
     "target": 20,
     "reward": 500,
     "hint": "Cast at the pond, town river or woods lake."
+  },
+  {
+    "id": "jobs20",
+    "text": "Finish 20 daily jobs",
+    "stat": "jobsDone",
+    "target": 20,
+    "reward": 600,
+    "hint": "Three new jobs every morning. Menu > Goal shows today's."
   },
   {
     "id": "orders10",
@@ -338,6 +382,14 @@
     "hint": "Keep every field, jar and animal working each day."
   },
   {
+    "id": "project3",
+    "text": "Finish 3 town projects",
+    "stat": "projectsDone",
+    "target": 3,
+    "reward": 1500,
+    "hint": "They open one after another. Mine stone and smelt bars."
+  },
+  {
     "id": "earn50k",
     "text": "Earn 50,000g: Master Farmer",
     "stat": "earned",
@@ -360,5 +412,61 @@
     "target": 200,
     "reward": 2000,
     "hint": "Visit every house each morning."
+  },
+  {
+    "id": "projectAll",
+    "text": "Finish all 8 town projects",
+    "stat": "projectsDone",
+    "target": 8,
+    "reward": 5000,
+    "hint": "The Market Road comes last. It makes every sale worth more."
+  },
+  {
+    "id": "greenhouse20",
+    "text": "Harvest 20 greenhouse crops",
+    "stat": "greenhouseHarvested",
+    "target": 20,
+    "reward": 2000,
+    "hint": "Fund the Greenhouse project, then sow any seed in it."
+  },
+  {
+    "id": "truffles10",
+    "text": "Collect 10 truffles from pigs",
+    "stat": "collected.truffle",
+    "target": 10,
+    "reward": 1500,
+    "hint": "Craft a pig sty (Farming 6). Pigs dig only on dry days."
+  },
+  {
+    "id": "rare",
+    "text": "Grow all four rare crops",
+    "stat": "page.rare",
+    "target": 1,
+    "reward": 1500,
+    "hint": "Fund the Seed Exchange. One rare seed for each season."
+  },
+  {
+    "id": "gold50",
+    "text": "Sell 50 gold-quality goods",
+    "stat": "goldShipped",
+    "target": 50,
+    "reward": 2500,
+    "hint": "Fertilizer, happy animals and perfect catches roll gold."
+  },
+  {
+    "id": "book8",
+    "text": "Finish every page of the Book",
+    "stat": "pagesDone",
+    "target": 8,
+    "reward": 5000,
+    "hint": "Menu > Book shows what is still missing on each page."
+  },
+  {
+    "id": "special1",
+    "text": "Finish a special order",
+    "stat": "specialsDone",
+    "target": 1,
+    "reward": 1000,
+    "hint": "A big seasonal request on the board. Bring goods bit by bit."
   }
 ]

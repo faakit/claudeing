@@ -39,6 +39,11 @@ registerDayHook({
       gold: Math.round(sellValue(parseKey(key)) * qty * (1 + perk(state, 'sellBonus'))),
     }));
     const total = shipped.reduce((s, l) => s + l.gold, 0);
+    const gold = Object.entries(state.shipping).reduce(
+      (n, [key, qty]) => (parseKey(key).q === 2 ? n + qty : n),
+      0,
+    );
+    if (gold > 0) state.stats['goldShipped'] = (state.stats['goldShipped'] ?? 0) + gold;
     state.money += total;
     state.shipping = {};
     if (total > 0) {

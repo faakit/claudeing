@@ -39,6 +39,26 @@
         "seasons": ["winter"]
       },
       {
+        "item": "strawberry_seed",
+        "seasons": ["spring"],
+        "project": "seedexchange"
+      },
+      {
+        "item": "blueberry_seed",
+        "seasons": ["summer"],
+        "project": "seedexchange"
+      },
+      {
+        "item": "cranberry_seed",
+        "seasons": ["fall"],
+        "project": "seedexchange"
+      },
+      {
+        "item": "snowpea_seed",
+        "seasons": ["winter"],
+        "project": "seedexchange"
+      },
+      {
         "item": "fertilizer",
         "seasons": ["spring", "summer", "fall", "winter"]
       },
@@ -92,6 +112,42 @@
       },
       {
         "item": "feed_bale",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "pig",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "slop",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "fence",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "stone_path",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "flower_pot",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "garden_lamp",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "garden_bench",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "farm_statue",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
+        "item": "garden_fountain",
         "seasons": ["spring", "summer", "fall", "winter"]
       }
     ],
@@ -203,6 +259,26 @@
             "label": "Wider zone",
             "needs": {
               "item": "iron_bar",
+              "qty": 3
+            }
+          }
+        ]
+      },
+      {
+        "id": "bag",
+        "name": "Bigger Bag",
+        "tab": "home",
+        "icon": "item_cloth",
+        "levels": [
+          {
+            "price": 1500,
+            "label": "+8 bag slots"
+          },
+          {
+            "price": 6000,
+            "label": "+8 bag slots",
+            "needs": {
+              "item": "cloth",
               "qty": 3
             }
           }

@@ -7,6 +7,7 @@ import { growTree, isGrown, pickFruit, treeDef, treeOf } from '../systems/trees'
 
 /** Fruit trees: a sapling grows for ten mornings, then bears fruit every few days in its own season. */
 registerPlaceableBehavior('fruitTree', {
+  // Trees stay put: checking a tree for fruit is a common double tap, and it must never dig the tree up.
   canPickUp: () => false,
   status: (obj) => (treeOf(obj).fruit > 0 ? 'ready' : isGrown(obj) ? 'idle' : 'busy'),
   sprite: (obj, def) => (isGrown(obj) ? def.sprite : 'obj_sapling'),

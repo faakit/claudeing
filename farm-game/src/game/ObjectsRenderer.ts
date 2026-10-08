@@ -6,6 +6,11 @@ import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
+import { landmarksOn } from '../systems/projects';
+import { ownsPlot, signVisible } from '../systems/plots';
+import { unreadCount } from '../systems/mail';
+import { mail } from '../data';
+import { ensureTexture } from './fallbackTexture';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -25,6 +30,9 @@ export class ObjectsRenderer {
   private nodeSprites = new Map<string, { sprite: Phaser.GameObjects.Image; id: string }>();
   private plotSig = '';
   private plotParts: Phaser.GameObjects.GameObject[] = [];
+  private landmarks = new Map<string, Phaser.GameObjects.Image>();
+  private mailbox: Phaser.GameObjects.Image | null = null;
+  private mailMark: Phaser.GameObjects.Image | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -35,7 +43,53 @@ export class ObjectsRenderer {
     this.syncForage(state, animate);
     this.syncPlaced(state, animate);
     this.syncNodes(state);
+    this.syncLandmarks(state);
+    this.syncMailbox(state);
     if (this.mapId === 'farm') this.syncPlots(state);
+  }
+
+  /** The mailbox, with a bouncing marker while a letter or gift waits. */
+  syncMailbox(state: GameState): void {
+    const box = mail.mailbox;
+    if (box.map !== this.mapId) return;
+    const x = box.tx * TILE_SIZE + TILE_SIZE / 2;
+    const y = (box.ty + 1) * TILE_SIZE;
+    this.mailbox ??= this.scene.add
+      .image(x, y, ensureTexture(this.scene, box.sprite, box.color, 'post'))
+      .setOrigin(0.5, 1)
+      .setDepth(10 + y - 3);
+    const waiting = unreadCount(state) > 0;
+    if (waiting && !this.mailMark) {
+      this.mailMark = this.scene.add
+        .image(x, y - 17, 'ui_star')
+        .setTint(0xf4d35e)
+        .setDepth(10 + y);
+      if (!calm())
+        this.scene.tweens.add({
+          targets: this.mailMark,
+          y: y - 20,
+          duration: 500,
+          yoyo: true,
+          repeat: -1,
+        });
+    } else if (!waiting && this.mailMark) {
+      this.scene.tweens.killTweensOf(this.mailMark);
+      this.mailMark.destroy();
+      this.mailMark = null;
+    }
+  }
+
+  /** Buildings from finished town projects: one solid tile each, drawn like any placed object. */
+  private syncLandmarks(state: GameState): void {
+    for (const l of landmarksOn(state, this.mapId)) {
+      if (this.landmarks.has(l.id)) continue;
+      const y = (l.ty + 1) * TILE_SIZE;
+      const sprite = this.scene.add
+        .image(l.tx * TILE_SIZE + TILE_SIZE / 2, y, ensureTexture(this.scene, l.sprite, l.color))
+        .setOrigin(0.5, 1)
+        .setDepth(10 + y - 3);
+      this.landmarks.set(l.id, sprite);
+    }
   }
 
   /** Ore nodes: solid rocks with veins. They stay until broken. */
@@ -61,19 +115,56 @@ export class ObjectsRenderer {
 
   /** Land you have not bought yet is dimmed and fenced with a "for sale" sign showing its price. */
   private syncPlots(state: GameState): void {
-    const sig = state.plots.join(',');
+    const sig = Object.keys(plots)
+      .map((id) => (ownsPlot(state, id) ? '1' : signVisible(state, id) ? 's' : '0'))
+      .join('');
     if (sig === this.plotSig) return;
     this.plotSig = sig;
     this.plotParts.forEach((p) => p.destroy());
     this.plotParts = [];
     for (const [id, p] of Object.entries(plots)) {
-      if (state.plots.includes(id) || !p.sign) continue;
+      if (p.project) {
+        // A plot that comes with a town project: a marked site until it is built, then glass.
+        const [x, y, w, h] = p.rect;
+        const built = ownsPlot(state, id);
+        const area = this.scene.add
+          .rectangle(
+            x * TILE_SIZE,
+            y * TILE_SIZE,
+            w * TILE_SIZE,
+            h * TILE_SIZE,
+            built ? 0xbfe6ff : 0x14101f,
+            built ? 0.16 : 0.3,
+          )
+          .setOrigin(0)
+          .setStrokeStyle(1, built ? 0xdff4ff : 0xf4ead2, built ? 0.8 : 0.4)
+          .setDepth(0.55);
+        this.plotParts.push(area);
+        if (!built)
+          this.plotParts.push(
+            new Label(
+              this.scene,
+              (x + w / 2) * TILE_SIZE,
+              (y + h / 2) * TILE_SIZE - 4,
+              `${p.name} site`,
+              {
+                align: 'center',
+                color: 0xf4ead2,
+              },
+            ).setDepth(1),
+          );
+        continue;
+      }
+      if (ownsPlot(state, id) || !p.sign) continue;
+      // Land you do not own is always dimmed; its sign and price go up once it is within reach.
       const [x, y, w, h] = p.rect;
       const area = this.scene.add
         .rectangle(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, 0x14101f, 0.34)
         .setOrigin(0)
         .setStrokeStyle(1, 0xf4ead2, 0.45)
         .setDepth(0.55);
+      this.plotParts.push(area);
+      if (!signVisible(state, id)) continue;
       const [sx, sy] = p.sign;
       const sign = this.scene.add
         .image(sx * TILE_SIZE + TILE_SIZE / 2, (sy + 1) * TILE_SIZE, 'obj_sign')
@@ -86,7 +177,7 @@ export class ObjectsRenderer {
         `${p.price}g`,
         { align: 'center', color: 0xf4d35e },
       ).setDepth(9000);
-      this.plotParts.push(area, sign, price);
+      this.plotParts.push(sign, price);
     }
   }
 
@@ -115,9 +206,24 @@ export class ObjectsRenderer {
           repeat: -1,
           ease: 'Sine.easeInOut',
         });
+      // A soft golden ring under it pulses, so goods read as "pick me" from across a field.
+      const ring = this.scene.add
+        .ellipse(x, y + 4, 14, 6)
+        .setStrokeStyle(1, 0xf4d35e, 0.9)
+        .setDepth(0.71);
+      if (!calm())
+        this.scene.tweens.add({
+          targets: ring,
+          scaleX: 1.35,
+          scaleY: 1.35,
+          alpha: { from: 0.9, to: 0.15 },
+          duration: 1100,
+          repeat: -1,
+          delay: (tx * 97 + ty * 53) % 1100,
+        });
       const twinkle = this.scene.add
         .image(x + 4, y - 5, 'ui_star')
-        .setScale(0.6)
+        .setScale(0.8)
         .setDepth(0.9);
       twinkle.setTint(0xfff1b0);
       if (calm()) twinkle.setAlpha(0.8);
@@ -134,7 +240,7 @@ export class ObjectsRenderer {
         sprite.setScale(0.3);
         this.scene.tweens.add({ targets: sprite, scale: 0.8, duration: 260, ease: 'Back.easeOut' });
       }
-      this.forage.set(key, { sprite, extra: [shadow, twinkle], sig: item });
+      this.forage.set(key, { sprite, extra: [shadow, ring, twinkle], sig: item });
     }
     for (const [key, shown] of this.forage) {
       if (here[key]) continue;
@@ -168,10 +274,12 @@ export class ObjectsRenderer {
       });
       const x = obj.tx * TILE_SIZE + TILE_SIZE / 2;
       const y = (obj.ty + 1) * TILE_SIZE;
+      // Flat things (a stone path) lie on the ground: under the player, never over them.
+      const flat = def.params['flat'] === true;
       const sprite = this.scene.add
         .image(x, y, spriteOf(obj))
         .setOrigin(0.5, 1)
-        .setDepth(10 + y - 3);
+        .setDepth(flat ? 0.6 : 10 + y - 3);
       const extra: Phaser.GameObjects.GameObject[] = [];
       if (sig.startsWith('busy') && def.behavior === 'jar') sprite.setTint(0xd9d9d9);
       if (sig.startsWith('ready')) {
@@ -250,5 +358,12 @@ export class ObjectsRenderer {
     this.plotParts = [];
     this.nodeSprites.forEach((n) => n.sprite.destroy());
     this.nodeSprites.clear();
+    this.landmarks.forEach((l) => l.destroy());
+    this.landmarks.clear();
+    this.mailbox?.destroy();
+    this.mailbox = null;
+    if (this.mailMark) this.scene.tweens.killTweensOf(this.mailMark);
+    this.mailMark?.destroy();
+    this.mailMark = null;
   }
 }

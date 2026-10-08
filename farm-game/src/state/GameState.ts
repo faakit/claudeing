@@ -67,6 +67,45 @@ export interface Order {
   reward: number;
   xp: number;
   done: boolean;
+  /** The rival farmer filled it before you did. */
+  rival?: boolean;
+}
+
+/** A special order: deliver `qty` of `item` by absolute day `due`, a little at a time. */
+export interface SpecialOrder {
+  id: string;
+  giver: string;
+  item: string;
+  qty: number;
+  given: number;
+  reward: number;
+  due: number;
+}
+
+/** A daily job: gain `n` of a stat today (`base` is the stat's value when the job was posted). */
+export interface Job {
+  id: string;
+  giver: string;
+  stat: string;
+  base: number;
+  n: number;
+  reward: number;
+  done: boolean;
+}
+
+/** A letter in the mailbox. */
+export interface Letter {
+  id: number;
+  /** Villager id who wrote it. */
+  from: string;
+  title: string;
+  text: string;
+  /** Absolute day it arrived. */
+  day: number;
+  gift?: { item: string; qty: number };
+  read: boolean;
+  /** The enclosed gift was taken. */
+  taken: boolean;
 }
 
 /** How a villager feels about the player. Days are absolute day numbers (0 = never). */
@@ -112,8 +151,8 @@ export interface GameState {
   energy: number;
   /** Charges left in the watering can. */
   water: number;
-  /** Levels of shop upgrades by id: can, stamina, hoe, rod. */
-  upgrades: { can: number; stamina: number; hoe: number; rod: number };
+  /** Levels of shop upgrades by id: can, stamina, hoe, rod, bag (each bag level adds a row of slots). */
+  upgrades: { can: number; stamina: number; hoe: number; rod: number; bag: number };
   /** Ids of the farm plots you own (see plots.json). Tilling is only allowed on owned plots. */
   plots: string[];
   inventory: { slots: (ItemStack | null)[]; selected: number };
@@ -130,6 +169,8 @@ export interface GameState {
   forecast: Weather;
   /** Placed objects by map id. */
   placed: Record<string, PlacedObject[]>;
+  /** State of buildings picked up to be moved (animals, a tree's growth), by type, oldest first. */
+  stored: Record<string, Record<string, unknown>[]>;
   nextPlacedId: number;
   /** Total XP per skill id (levels are derived from skills.json). */
   skills: Record<string, number>;
@@ -141,11 +182,17 @@ export interface GameState {
   orders: { day: number; list: Order[] };
   /** Friendship with villagers by npc id. */
   friends: Record<string, Friendship>;
+  /** Letters in the farm's mailbox, newest last. `next` is the next letter id. */
+  mail: { next: number; list: Letter[] };
+  /** The board's special order, if one is running. */
+  special: SpecialOrder | null;
+  /** Today's small jobs from villagers. `day` is the absolute day they were posted for. */
+  jobs: { day: number; list: Job[] };
   lastSummary: DaySummary | null;
   rng: number;
 }
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 15;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -169,7 +216,7 @@ export function createInitialState(): GameState {
     money: game.startingMoney,
     energy: game.baseEnergy,
     water: game.canCapacity[0] ?? 20,
-    upgrades: { can: 0, stamina: 0, hoe: 0, rod: 0 },
+    upgrades: { can: 0, stamina: 0, hoe: 0, rod: 0, bag: 0 },
     plots: ['home'],
     inventory: { slots, selected: 0 },
     farm: { tiles: {}, weeds: {} },
@@ -188,12 +235,16 @@ export function createInitialState(): GameState {
     weather: 'sunny',
     forecast: 'sunny',
     placed: {},
+    stored: {},
     nextPlacedId: 1,
     skills: {},
     forage: {},
     nodes: {},
     orders: { day: 0, list: [] },
     friends: {},
+    jobs: { day: 0, list: [] },
+    special: null,
+    mail: { next: 1, list: [] },
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,
   };

@@ -25,8 +25,10 @@ import {
 import { addStat } from '../systems/goals';
 import { addItem, removeFromSlot, roomFor } from '../systems/inventory';
 import { sellValue } from '../systems/itemRef';
-import { placedAt, placeObject } from '../systems/placeables';
+import { placedAt, placeObject, restoreStored } from '../systems/placeables';
 import { addXp } from '../systems/skills';
+import { inGreenhouse } from '../systems/plots';
+import { villagerSpot } from '../systems/npcs';
 
 const TIRED = 'Too tired! Go to bed.';
 
@@ -51,6 +53,7 @@ registerActionHandler({
           if (!res.ok) throw new Error('harvest was planned but failed');
           addStat(state, 'harvested', res.qty);
           if (res.q > 0) addStat(state, 'qualityHarvested', res.qty);
+          if (inGreenhouse(state, tile.tx, tile.ty)) addStat(state, 'greenhouseHarvested', res.qty);
           addXp(
             state,
             'farming',
@@ -78,19 +81,25 @@ registerActionHandler({
       return { refusal: `Won't grow in ${state.time.season}. Plant in ${when}.` };
     }
     const grow = (crops[cropId]?.stageDays ?? []).reduce((a, b) => a + b, 0);
-    if (grow >= game.seasonLength - state.time.day + 1)
+    if (!inGreenhouse(state, tile.tx, tile.ty) && grow >= game.seasonLength - state.time.day + 1)
       return { refusal: `Won't ripen in time (${grow} days). Save it for next season.` };
+    // Seeds follow the hoe: a hoe that tills N in a row lets you sow the same row in one press.
+    const row = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe'))
+      .filter((t) => t.farmland && checkPlant(state, t.tx, t.ty, cropId) === 'ok')
+      .slice(0, stack.qty);
     return {
       plan: {
         kind: 'plant',
         tx: tile.tx,
         ty: tile.ty,
         run: () => {
-          plant(state, tile.tx, tile.ty, cropId);
-          removeFromSlot(state, state.inventory.selected, 1);
-          addStat(state, 'planted');
-          addXp(state, 'farming', 1);
-          return {};
+          for (const t of row) {
+            plant(state, t.tx, t.ty, cropId);
+            removeFromSlot(state, state.inventory.selected, 1);
+          }
+          addStat(state, 'planted', row.length);
+          addXp(state, 'farming', row.length);
+          return { count: row.length };
         },
       },
     };
@@ -136,12 +145,14 @@ registerActionHandler({
     if (soil?.crop) return { refusal: "Can't place on a growing crop." };
     if (placedAt(state, tile.map, tile.tx, tile.ty))
       return { refusal: 'Something is already here.' };
+    if (villagerSpot(tile.map, tile.tx, tile.ty))
+      return { refusal: 'Someone stands here every day. Try another spot.' };
     const max = Number(placeables[stack.item]?.params['max'] ?? Infinity);
     const have = Object.values(state.placed).reduce(
       (n, list) => n + list.filter((o) => o.type === stack.item).length,
       0,
     );
-    if (have >= max) return { refusal: `You can only have ${max} ${def.name.toLowerCase()}s.` };
+    if (have >= max) return { refusal: `You can only have ${max} of these.` };
     return {
       plan: {
         kind: 'place',
@@ -151,9 +162,18 @@ registerActionHandler({
           delete state.farm.weeds[tileKey(tile.tx, tile.ty)];
           delete state.farm.tiles[tileKey(tile.tx, tile.ty)];
           removeFromSlot(state, state.inventory.selected, 1);
-          placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
+          const obj = placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
+          if (restoreStored(state, obj)) gameEvents.emit('placedChanged', { map: tile.map });
           addStat(state, 'placed');
           if (def.type === 'sapling') addStat(state, 'treesPlanted');
+          // The decoration goal counts decorations standing at once, so moving one about earns nothing.
+          if (placeables[stack.item]?.behavior === 'decor') {
+            const standing = Object.values(state.placed)
+              .flat()
+              .filter((o) => placeables[o.type]?.behavior === 'decor').length;
+            const best = state.stats['decorPlaced'] ?? 0;
+            if (standing > best) addStat(state, 'decorPlaced', standing - best);
+          }
           return { item: stack.item };
         },
       },

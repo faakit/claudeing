@@ -32,6 +32,7 @@ Prettier, playwright-core (Chromium at `/opt/pw-browsers/chromium`), Capacitor 8
 | Software-GL console warnings                                | harmless; filter to `error` for assertions                                                                                              |
 | Native build impossible (no Android SDK / Xcode)            | generate and sync projects; list as unverified in `docs/MOBILE.md`                                                                      |
 | Egress blocked hosts                                        | do not fetch; vendor or generate assets locally                                                                                         |
+| Two checkouts run `npm run verify` at once (ports collide)  | set `E2E_PORT`, `E2E_MOBILE_PORT`, `PERF_PORT` to free ports (defaults 4173, 4178, 4174)                                                |
 
 ## Conventions the tools rely on
 

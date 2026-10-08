@@ -1,18 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { crops, items, shops } from '../src/data';
+import { crops, items, plots, shops } from '../src/data';
 import { performAction, type TileInfo } from '../src/systems/actions';
+import { craft } from '../src/systems/crafting';
 import { endDay } from '../src/systems/day';
-import { buyItem, buyUpgrade, shipItem, stockFor, upgradeLevel } from '../src/systems/economy';
+import { buyItem, buyUpgrade, shipStack, stockFor, upgradeLevel } from '../src/systems/economy';
 import { maxEnergy } from '../src/systems/energy';
 import { getSoil, isMature } from '../src/systems/farming';
-import { countItem } from '../src/systems/inventory';
 import { goalProgress } from '../src/systems/goals';
+import { countItem, countStack } from '../src/systems/inventory';
+import { keyOf, refOf, sellValue, type ItemRef } from '../src/systems/itemRef';
+import { deliverOrder, ensureOrders, haveFor } from '../src/systems/orders';
+import { interactWith, objectsOn } from '../src/systems/placeables';
+import { buyPlot, ownsPlot, ownsTile } from '../src/systems/plots';
+import { jarContents, loadJar, preserveOf } from '../src/systems/preserves';
 import { createInitialState, type GameState } from '../src/state/GameState';
 
 const STORE = 'town_general_store';
-const FIELD: [number, number][] = [];
-for (let y = 17; y < 28; y++) for (let x = 11; x < 29; x++) FIELD.push([x, y]);
-const tile = (tx: number, ty: number): TileInfo => ({
+/** Grass tiles outside every plot, beside the house, where the bot puts its jars. */
+const JAR_SPOTS: [number, number][] = [5, 6, 7, 8, 9, 10].map((x) => [x, 14]);
+
+const tile = (s: GameState, tx: number, ty: number): TileInfo => ({
   map: 'farm',
   tx,
   ty,
@@ -20,6 +27,7 @@ const tile = (tx: number, ty: number): TileInfo => ({
   tillable: true,
   blocked: false,
   farmland: true,
+  owned: ownsTile(s, tx, ty),
 });
 const POND: TileInfo = {
   map: 'farm',
@@ -31,12 +39,29 @@ const POND: TileInfo = {
   farmland: true,
 };
 
-const equipItem = (s: GameState, id: string) => {
+/** Every tile of every plot the bot bought (it never funds projects, so no greenhouse). */
+function field(s: GameState): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [id, p] of Object.entries(plots)) {
+    if (!ownsPlot(s, id) || p.project) continue;
+    const [x0, y0, w, h] = p.rect;
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) out.push([x, y]);
+  }
+  return out;
+}
+
+/** Select an item, moving it onto the hotbar first if it sits in the bag. */
+function equipItem(s: GameState, id: string): boolean {
   const i = s.inventory.slots.findIndex((x) => x?.item === id);
   if (i < 0) return false;
-  s.inventory.selected = i;
+  if (i >= 8) {
+    const tmp = s.inventory.slots[7] ?? null;
+    s.inventory.slots[7] = s.inventory.slots[i] ?? null;
+    s.inventory.slots[i] = tmp;
+    s.inventory.selected = 7;
+  } else s.inventory.selected = i;
   return true;
-};
+}
 
 /** Profit per tile-day for a seed, if it can mature this season. */
 function score(s: GameState, seedId: string): number {
@@ -50,9 +75,20 @@ function score(s: GameState, seedId: string): number {
   return (revenue - items[seedId]!.buyPrice!) / days;
 }
 
-/** A competent but not obsessive player: waters daily, harvests, ships, reinvests, upgrades. */
-function playDay(s: GameState): void {
-  // Refill whenever the can runs low.
+/** Where the gold came from, for the log and the bounds. */
+interface Ledger {
+  shipped: number;
+  orders: number;
+  jarsLoaded: number;
+}
+
+/**
+ * A competent but not obsessive player: waters daily, harvests, fills the board requests it can, keeps up to
+ * six preserve jars busy, ships the rest, buys land and upgrades when comfortably affordable. It does not fish,
+ * mine, raise animals, do jobs on purpose or fund projects, so it is a floor for a diligent farmer.
+ */
+function playDay(s: GameState, ledger: Ledger): void {
+  const FIELD = field(s);
   const refill = () => {
     equipItem(s, 'watering_can');
     if (s.water < 3) performAction(s, POND);
@@ -60,34 +96,63 @@ function playDay(s: GameState): void {
   // 1. harvest
   for (const [x, y] of FIELD) {
     const soil = getSoil(s, x, y);
-    if (soil?.crop && isMature(soil.crop)) performAction(s, tile(x, y));
+    if (soil?.crop && isMature(soil.crop)) performAction(s, tile(s, x, y));
   }
-  // 2. ship everything sellable
-  for (const [id, def] of Object.entries(items)) {
-    if ((def.type === 'crop' || def.type === 'material') && countItem(s, id) > 0)
-      shipItem(s, id, 999);
+  // 2. collect finished jars, then fill the board requests the bag can cover (before the rival comes)
+  for (const obj of objectsOn(s, 'farm')) if (obj.type === 'preserve_jar') interactWith(s, obj);
+  ensureOrders(s);
+  for (const o of s.orders.list)
+    if (!o.done && haveFor(s, o) >= o.qty) {
+      const before = s.money;
+      if (deliverOrder(s, o.id) === 'ok') ledger.orders += s.money - before;
+    }
+  // 3. keep jars busy with the most valuable fruit or vegetable on hand
+  for (const obj of objectsOn(s, 'farm')) {
+    if (obj.type !== 'preserve_jar' || jarContents(obj)) continue;
+    const best = s.inventory.slots
+      .filter((st): st is NonNullable<typeof st> => !!st && !!preserveOf(st))
+      .map((st) => refOf(st))
+      .sort((a, b) => sellValue(b) - sellValue(a))[0];
+    if (best && loadJar(s, obj, best) === 'ok') ledger.jarsLoaded += 1;
   }
-  // 3. upgrades when comfortably affordable
+  // 4. ship everything sellable that is not a seed, tool or machine
+  const kinds = new Map<string, ItemRef>();
+  for (const st of s.inventory.slots)
+    if (st && ['crop', 'preserve', 'material', 'forage'].includes(items[st.item]!.type))
+      kinds.set(keyOf(st), refOf(st));
+  for (const ref of kinds.values()) shipStack(s, ref, countStack(s, ref));
+  // 5. craft and place jars once unlocked (it buys the fiber), then land and upgrades when comfortable
+  const jars = objectsOn(s, 'farm').filter((o) => o.type === 'preserve_jar').length;
+  if (jars < JAR_SPOTS.length && s.money > 600) {
+    buyItem(s, STORE, 'fiber', 10);
+    if (craft(s, 'preserve_jar') === 'ok' && equipItem(s, 'preserve_jar')) {
+      const [x, y] = JAR_SPOTS[jars]!;
+      performAction(s, tile(s, x, y));
+    }
+  }
+  const nextPlot = Object.entries(plots)
+    .filter(([id, p]) => !ownsPlot(s, id) && !p.project)
+    .sort((a, b) => a[1].price - b[1].price)[0];
+  if (nextPlot && s.money > nextPlot[1].price * 1.8) buyPlot(s, nextPlot[0]);
   for (const up of shops[STORE]!.upgrades.filter((u) => u.id === 'can' || u.id === 'stamina')) {
     const price = up.levels[upgradeLevel(s, up)]?.price;
     if (price !== undefined && s.money > price * 1.6) buyUpgrade(s, up);
   }
-  // 4. water existing crops
+  // 6. water existing crops
   for (const [x, y] of FIELD) {
     const soil = getSoil(s, x, y);
     if (soil?.crop && !isMature(soil.crop) && !soil.watered && s.energy > 0) {
       refill();
       equipItem(s, 'watering_can');
-      performAction(s, tile(x, y));
+      performAction(s, tile(s, x, y));
     }
   }
-  // 5. buy and plant the best in-season seed with spare energy
-  const stock = stockFor(STORE, s.time.season)
+  // 7. buy and plant the best in-season seed with spare energy
+  const best = stockFor(STORE, s.time.season, s)
     .filter((id) => items[id]?.type === 'seed')
     .map((id) => ({ id, sc: score(s, id) }))
     .filter((e) => e.sc > 0)
-    .sort((a, b) => b.sc - a.sc);
-  const best = stock[0];
+    .sort((a, b) => b.sc - a.sc)[0];
   if (!best) return;
   for (const [x, y] of FIELD) {
     if (s.energy < 3) break;
@@ -96,44 +161,54 @@ function playDay(s: GameState): void {
     if (
       countItem(s, best.id) === 0 &&
       buyItem(s, STORE, best.id, Math.min(20, Math.floor(s.money / items[best.id]!.buyPrice!))) !==
-        'ok'
-    ) {
-      // try a smaller purchase
-      if (buyItem(s, STORE, best.id, 1) !== 'ok') break;
-    }
+        'ok' &&
+      buyItem(s, STORE, best.id, 1) !== 'ok'
+    )
+      break;
     if (!soil) {
       equipItem(s, 'hoe');
-      if (!performAction(s, tile(x, y)).ok) break;
+      if (!performAction(s, tile(s, x, y)).ok) continue;
     }
-    // use any other leftover seed type on hand first (starting parsnips etc.)
     equipItem(s, best.id);
-    if (!performAction(s, tile(x, y)).ok) continue;
+    if (!performAction(s, tile(s, x, y)).ok) continue;
     refill();
     equipItem(s, 'watering_can');
-    performAction(s, tile(x, y));
+    performAction(s, tile(s, x, y));
   }
 }
 
+/**
+ * What the bot earned in a full year when the band was last set (depth session, 2026-10-08). A balance
+ * change that moves it by a third down or 70% up fails this test and needs a DECISIONS.md note.
+ */
+const SIM_EARNED = 208_549;
+
 describe('balance simulation (decent player, full year)', () => {
-  it('a competent farmer earns a satisfying amount and the season loop never stalls', () => {
+  it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
     const s = createInitialState();
     s.rng = 42;
+    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
     const log: string[] = [];
     for (let day = 1; day <= 112; day++) {
-      playDay(s);
-      if (day % 14 === 0 || day === 56) {
+      playDay(s, ledger);
+      endDay(s, { passedOut: false, weedCandidates: [] });
+      ledger.shipped += s.lastSummary?.total ?? 0;
+      if (day % 14 === 0)
         log.push(
-          `day ${day} (${s.time.season} ${s.time.day}): gold ${s.money}, earned ${s.stats['earned'] ?? 0}, goal ${s.goalIndex}, energy max ${maxEnergy(s)}, can lv ${s.upgrades.can}`,
+          `day ${day} (${s.time.season} ${s.time.day}): gold ${s.money}, earned ${s.stats['earned'] ?? 0}, ` +
+            `shipped ${ledger.shipped}, orders ${ledger.orders}, jars ${ledger.jarsLoaded}, ` +
+            `plots ${s.plots.length}, energy ${maxEnergy(s)}, goal ${goalProgress(s)?.goal.id ?? 'done'}`,
         );
-      }
-      endDay(s, { passedOut: false, weedCandidates: FIELD });
     }
     console.log(log.join('\n'));
-    const prog = goalProgress(s);
-    console.log('final goal:', prog?.goal.id ?? 'all done');
+    const earned = s.stats['earned'] ?? 0;
     expect(s.money).toBeGreaterThan(0);
-    // An unlimited-patience bot should finish the year rich, but not absurdly so; real players land well below it.
-    expect(s.stats['earned']).toBeGreaterThan(15000);
-    expect(s.stats['earned']).toBeLessThan(400000);
+    expect(earned).toBeGreaterThan(SIM_EARNED * 0.67);
+    expect(earned).toBeLessThan(SIM_EARNED * 1.7);
+    // Side income stays a side: requests are a bonus on top of the farm, not the farm.
+    expect(ledger.orders).toBeLessThan(earned * 0.35);
+    expect(ledger.jarsLoaded).toBeGreaterThan(20);
+    // Gold has somewhere to go: the bot bought land.
+    expect(s.plots.length).toBeGreaterThan(2);
   });
 });

@@ -39,7 +39,7 @@ Highest value per effort. None of this adds a mechanic; it makes the current one
 - [x] **R1.4 Juice and feedback.** Sparkles and sounds for quality drops, level-ups, heart gains and order
       completion; a satisfying collect animation for eggs and jam; screen-edge toasts that never cover the thumb zone.
       _Done:_ quality sparkles and "Silver/Gold quality!" text on harvest, forage pick-up effects, a cast splash.
-      Not done: heart-gain and level-up flourishes, egg/jam collect animation.
+      Since then: heart-gain and level-up flourishes, and goods pop out of coops, jars, hives and trees.
 - [~] **R1.5 Accessibility basics.** Done: quality shown by star count (silver one, gold two) as well as tint, and a
   "Calm" reduce-motion toggle. Still open: text-size option, larger touch targets option.
 
@@ -65,10 +65,11 @@ Done in this round:
 Still open (ranked):
 
 - [x] Touch tool-cycle: swipe up or down on the Action button to change tool (with a one-time tip).
-- [~] Side income (machines, animals, orders) is now bounded by data-driven guard rails in `tests/balance.test.ts`; the bot simulation itself still models crops only.
+- [x] Side income (machines, animals, orders) is bounded by data-driven guard rails in `tests/balance.test.ts`; the bot simulation now farms real plots, fills orders and keeps jars busy, with a tight income band.
 - [x] A save from a newer version now shows a message on the title screen, and New Game asks before erasing it.
 - [x] A saved player position inside a wall or outside the map is moved to the nearest open tile on load.
-- [ ] Placement undo for big placeables; confirm before placing a barn.
+- [x] Placement undo for big placeables; confirm before placing a barn. _Done as:_ every building can be picked up
+      with a second tap and moved with its animals and goods (no confirm step; see DECISIONS).
 - [x] Fiber is now sold in the General Store (5 gold), so crafting is no longer capped by weed supply.
 - [x] Seasonal music (tempo, key, chords, melody density per season) and sounds for level-ups, hearts and orders.
 - [~] Art: tilled soil now reads as earth (done); the house is huge next to a 1-tile coop, animals do not roam (see R4.1).
@@ -86,7 +87,7 @@ Give players reasons to plan their day and their season.
       tiers (waits for the mine).
 - [x] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
       lasting purpose. _Plug in:_ `tillable` zones become state-driven; shop upgrade row.
-- [~] **R2.3 Fruit trees and a greenhouse.** Done: four fruit trees (cherry, peach, apple, frost plum), one per season, saplings bought in the shop, ten mornings to grow, fruit every third day in season. Kale also gives winter a crop. Not done: the greenhouse (needs soil per map). Trees that regrow seasonally, and a greenhouse that grows crops in
+- [x] **R2.3 Fruit trees and a greenhouse.** Done: four fruit trees (cherry, peach, apple, frost plum), one per season, saplings bought in the shop, ten mornings to grow, fruit every third day in season. Kale also gives winter a crop. The greenhouse is a 32-tile farm plot unlocked by a town project, where any crop grows in any season. Trees that regrow seasonally, and a greenhouse that grows crops in
   winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
 - [x] **R2.4 More machines.** Keg (juice, wine), loom (cloth from wool), bee house (honey), furnace (needs ore).
       Same shape as the preserve jar: a behavior, a recipe, derived goods keyed by `of`.
@@ -100,6 +101,8 @@ Give players reasons to plan their day and their season.
       leave a rainbow morning with a second helping of wild goods.
 - [~] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
   order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
+  _Done:_ sheep, petting, pigs that dig truffles on dry days, a feed silo that feeds every house overnight.
+  Not done: animals roaming beyond their house, animal goods as order targets.
 
 ## Then: a living world (R3)
 
@@ -110,9 +113,10 @@ More people, more places, more to discover.
       recipe or a perk. _Plug in:_ `npcs.json` gains `schedule` and `events`; the NPC renderer reads them.
       _Done:_ daily schedules (home, town, farm, woods) and birthdays (double chat, triple gifts, morning note).
       Not done: per-heart friendship events that reward a recipe or perk.
-- [~] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
+- [x] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
   Each is a JSON entry plus a role.
-  _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts). Not done: a fisher and a rival farmer.
+  _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts); Finn is the fisher; Clay the rival farmer
+  takes one board request a day from day 8 and leads the festival rivals; friendship tames him.
 - [x] **R3.3 The mine.** A fifth map with ore and gems, a pickaxe tool, energy-versus-risk floors. Ore feeds the
       furnace and tool upgrades.
       _Done:_ a mine north of the woods trail, a pickaxe (the fifth tool; saves migrate), copper/iron veins, crystals and
@@ -122,13 +126,30 @@ More people, more places, more to discover.
       state and a modal.
       _Done:_ four festivals (Flower Show spring 14, Fishing Derby summer 22, Harvest Fair fall 16, Winter Feast
       winter 24): enter one item at the town board, ranked against three rivals that grow stronger each year, with
-      gold prizes. Not done: festival maps or minigames.
+      gold prizes. Since then: the Harvest Fair and Winter Feast take a basket of three goods (variety scores extra)
+  and the Fishing Derby counts the day's three best catches, fished anywhere. Not done: festival maps.
 - [x] **R3.5 Almanac and collections.** A log of every crop, fish, forageable and recipe found, with page rewards.
       Doubles as a gentle hint system for what to try next.
       _Done:_ Menu > Book has six pages (crops, orchard, fish, wild goods, animal goods, preserves); unfound goods
       show as dark shapes, finishing a page pays gold.
-- [ ] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
+- [x] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
       scattered toasts for slower news.
+      _Done:_ a mailbox by the bin, data letters (milestones, hearts, seasons) with gifts, festival notices and
+      birthday hints the day before, a marker while mail waits.
+
+## Depth: a second act (game-depth agent, from critique 3)
+
+Critique 4 (`agents/critiques/critique-4.md`) was triaged: F1 to F12 fixed except forage visibility, day-1
+land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
+
+- [x] **D1 Town projects.** Six projects funded at the town board (`projects.json`), each granting a perk
+      for good and a landmark in town. About 103k gold of late-game sink plus mined and crafted goods.
+- [x] **D2 Home upgrades and decorations.** Bigger Bag (two rows of 8 slots) and seven decorations on the
+      shop's new Home tab; dear rows lose the x5 button.
+- [x] **D3 Daily jobs.** Three small villager requests every morning from day 2 (`jobs.json`), paid on the
+      spot with friendship; early days point at fishing, the mine and the board.
+- [x] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays,
+      seasonal morning tips. Not done: a quick bag-to-hotbar swap (critique 3, F11).
 
 ## Later: production polish (R4)
 
@@ -140,6 +161,9 @@ More people, more places, more to discover.
       already exist and will catch overflow in other languages.
 - [ ] **R4.4 Store release.** Final app id, store listings, privacy statement, crash and error reporting, signed
       builds. Follows R1.1.
+- [~] **Second-year content.** Done: a Seed Exchange project with four rare regrowing crops, a Rare Crops Book page,
+      mastery goals (gold-quality sales, every Book page). Not done: a Year 2 rivals ramp beyond the 20% a year
+      festivals already have. Special orders: one big seasonal request at a time, due at the season's end.
 - [ ] **R4.5 Retention hooks.** Daily login streak, optional notifications ("your crops are ready"), seasonal
       cosmetic rewards. Only after the core loop is proven fun.
 - [ ] **R4.6 Cloud save and cross-device sync.** Optional account, conflict-safe merges. Needs a backend decision.

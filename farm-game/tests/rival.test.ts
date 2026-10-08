@@ -1,0 +1,111 @@
+import { describe, expect, it } from 'vitest';
+import '../src/mechanics';
+import { festivals, game, npcs } from '../src/data';
+import { enterFestival } from '../src/systems/festivals';
+import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { addItem } from '../src/systems/inventory';
+import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
+import { applyRival, rivalActive, rivalMinute, rivalNotice } from '../src/systems/rival';
+import { migrate } from '../src/systems/save';
+import { absoluteDay } from '../src/systems/time';
+import { measureText } from '../src/ui/fontMetrics';
+import type { GameState } from '../src/state/GameState';
+import { newState } from './helpers';
+
+/** A state on the rival's first day, with a fresh board. */
+function boardDay(): GameState {
+  const s = newState();
+  s.time.day = game.rival.startDay;
+  s.orders = { day: absoluteDay(s), list: generateOrders(s) };
+  return s;
+}
+const hearts = (s: GameState, n: number) =>
+  (s.friends[game.rival.npc] = { points: n * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 });
+
+describe('the rival farmer', () => {
+  it('stays away during the first week', () => {
+    const s = newState();
+    s.time.minutes = 1200;
+    ensureOrders(s);
+    expect(rivalActive(s)).toBe(false);
+    expect(applyRival(s)).toBeNull();
+  });
+
+  it('takes the best-paying open request once the clock passes 2 PM, once a day', () => {
+    const s = boardDay();
+    s.time.minutes = rivalMinute(s) - 1;
+    expect(applyRival(s)).toBeNull();
+    s.time.minutes = rivalMinute(s);
+    const best = Math.max(...s.orders.list.map((o) => o.reward));
+    const took = applyRival(s);
+    expect(took?.reward).toBe(best);
+    expect(took).toMatchObject({ done: true, rival: true });
+    expect(applyRival(s)).toBeNull();
+    expect(s.orders.list.filter((o) => o.rival)).toHaveLength(1);
+    expect(rivalNotice(s)).toBe('Clay took one today.');
+  });
+
+  it('a request you filled first is safe; a late delivery finds it gone', () => {
+    const s = boardDay();
+    const [a, b] = s.orders.list;
+    for (const o of [a!, b!]) addItem(s, o.item.split('|')[0]!, o.qty);
+    s.time.minutes = 600;
+    expect(deliverOrder(s, a!.id)).toBe('ok');
+    s.time.minutes = rivalMinute(s) + 10;
+    // The rival came by while we were away: one of the two open ones is gone.
+    const res = deliverOrder(s, b!.id);
+    const gone = s.orders.list.find((o) => o.rival)!;
+    expect(gone.id).not.toBe(a!.id);
+    expect(res).toBe(gone.id === b!.id ? 'done' : 'ok');
+  });
+
+  it('friendship softens the rivalry: later, then polite, then not at all', () => {
+    const s = boardDay();
+    hearts(s, 2);
+    expect(rivalMinute(s)).toBe(game.rival.minute + 180);
+    expect(rivalNotice(s)).toMatch(/5:00 PM/);
+    hearts(s, 4);
+    s.time.minutes = 1300;
+    const cheapest = Math.min(...s.orders.list.map((o) => o.reward));
+    expect(applyRival(s)?.reward).toBe(cheapest);
+    const t = boardDay();
+    hearts(t, 5);
+    t.time.minutes = 1500;
+    expect(rivalActive(t)).toBe(false);
+    expect(applyRival(t)).toBeNull();
+  });
+
+  it('is a villager with heart events, and the notice fits the board', () => {
+    const def = npcs[game.rival.npc]!;
+    expect(def.role).toBe('rival');
+    expect(def.events?.map((e) => e.hearts)).toEqual([2, 4, 5]);
+    const s = boardDay();
+    expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
+    s.time.minutes = 2000;
+    applyRival(s);
+    expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
+  });
+
+  it('beating the field at a festival brings a letter from the rival', () => {
+    const s = newState();
+    const id = 'flower_show';
+    const f = festivals[id]!;
+    s.time.season = f.season;
+    s.time.day = f.day;
+    addItem(s, { item: 'daffodil', q: 2 }, 1);
+    const res = enterFestival(s, { item: 'daffodil', q: 2 });
+    expect(res).toMatchObject({ ok: true, place: 1 });
+    expect(s.mail.list.some((l) => l.from === game.rival.npc)).toBe(true);
+    expect(id).toBeTruthy();
+  });
+
+  it('the rival flag survives a save; v11 saves load unchanged', () => {
+    const s = boardDay();
+    s.time.minutes = 2000;
+    applyRival(s);
+    expect(migrate(JSON.parse(JSON.stringify(s))).orders).toEqual(s.orders);
+    const v11 = JSON.parse(JSON.stringify(newState())) as Record<string, unknown>;
+    v11['version'] = 11;
+    expect(migrate(v11).version).toBeGreaterThan(11);
+  });
+});

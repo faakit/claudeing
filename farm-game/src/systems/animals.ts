@@ -96,13 +96,16 @@ export function collect(state: GameState, obj: PlacedObject): number {
   return take;
 }
 
-/** Morning: fed animals produce and cheer up; hungry ones sulk. Returns true if something is waiting. */
-export function morning(obj: PlacedObject): boolean {
+/**
+ * Morning: fed animals produce and cheer up; hungry ones sulk. Outdoor workers (pigs) only find goods when
+ * `outdoorOk` (a dry day outside winter); they still cheer up when fed. Returns true if something is waiting.
+ */
+export function morning(obj: PlacedObject, outdoorOk = true): boolean {
   const sp = speciesOf(obj);
   const h = houseOf(obj);
   if (!sp || h.n === 0) return false;
   if (h.fed) {
-    h.ready = Math.min(MAX_READY, h.ready + h.n * sp.perDay);
+    if (!sp.outdoor || outdoorOk) h.ready = Math.min(MAX_READY, h.ready + h.n * sp.perDay);
     h.joy = Math.min(MAX_JOY, h.joy + 1);
   } else h.joy = Math.max(0, h.joy - 1);
   h.fed = false;

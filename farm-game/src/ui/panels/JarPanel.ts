@@ -5,9 +5,9 @@ import { getState } from '../../state/store';
 import { gameEvents } from '../../systems/events';
 import { addStat } from '../../systems/goals';
 import { displayName, iconKey, keyOf, refOf, type ItemRef } from '../../systems/itemRef';
-import { canPickUp, findPlaced, removePlaced } from '../../systems/placeables';
-import { jarDays, loadJar, preserveOf } from '../../systems/preserves';
-import { addItem, countStack, roomFor } from '../../systems/inventory';
+import { canPickUp, findPlaced, pickUpPlaced } from '../../systems/placeables';
+import { idleMachines, jarDays, loadAll, loadJar, preserveOf } from '../../systems/preserves';
+import { countStack } from '../../systems/inventory';
 import { toast } from '../../systems/events';
 import { C } from '../theme';
 import { Modal } from '../widgets';
@@ -57,6 +57,8 @@ export class JarPanel extends Modal {
         184,
       );
     let y = 34;
+    // With several empty machines of this kind, "All" fills them in one tap.
+    const idle = found ? idleMachines(s, found.map, found.obj.type).length : 0;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const out = preserveOf(ref, found?.obj.type) as ItemRef;
       y = this.row(y, {
@@ -78,6 +80,27 @@ export class JarPanel extends Modal {
               } else audio.play('error');
             },
           },
+          ...(idle > 1 && countStack(s, ref) > 1
+            ? [
+                {
+                  label: 'All',
+                  width: 26,
+                  color: C.gold,
+                  onClick: () => {
+                    const st = getState();
+                    if (!found) return;
+                    const n = loadAll(st, found.map, found.obj.type, ref);
+                    if (n > 0) {
+                      addStat(st, 'jarsLoaded', n);
+                      gameEvents.emit('placedChanged', { map: found.map });
+                      audio.play('plant');
+                      toast(`Loaded ${n} machines.`, 'good');
+                      this.close();
+                    } else audio.play('error');
+                  },
+                },
+              ]
+            : []),
         ],
       });
     }
@@ -95,9 +118,8 @@ export class JarPanel extends Modal {
     if (found && canPickUp(found.obj))
       this.button(60, this.panelH - 52, 80, 20, 'Pick up', () => {
         const st = getState();
-        if (roomFor(st, found.obj.type, 1) < 1) return void toast('Inventory full!', 'warn');
-        removePlaced(st, found.map, found.obj.id);
-        addItem(st, found.obj.type, 1);
+        if (pickUpPlaced(st, found.map, found.obj) === 'full')
+          return void toast('Inventory full!', 'warn');
         gameEvents.emit('placedChanged', { map: found.map });
         this.close();
       });

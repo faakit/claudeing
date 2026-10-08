@@ -1,4 +1,5 @@
 import { items, shops } from '../../data';
+import type { UpgradeDef } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
@@ -8,15 +9,17 @@ import {
   nextUpgrade,
   priceFor,
   upgradeLevel,
+  placeLimit,
   stockFor,
 } from '../../systems/economy';
 import { toast } from '../../systems/events';
 import { countItem } from '../../systems/inventory';
 import { perk } from '../../systems/skills';
+import { ownsGreenhouse } from '../../systems/plots';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
-import { shopFacts, tooLate } from './shopFacts';
+import { SHOP_TABS, shopFacts, shopTabOf, tooLate, type ShopTab } from './shopFacts';
 import Phaser from 'phaser';
 
 const ROWS = 5;
@@ -26,7 +29,7 @@ export class ShopPanel extends Modal {
     super(scene, 250);
   }
 
-  private tab: 'seeds' | 'farm' | 'upgrades' = 'seeds';
+  private tab: ShopTab = 'seeds';
   private page = 0;
 
   protected build(): void {
@@ -36,16 +39,14 @@ export class ShopPanel extends Modal {
     this.label(8, 8, shop.name, C.gold);
     this.icon(this.panelW - 12, 12, 'ui_coin');
     this.label(this.panelW - 20, 8, fmt(s.money), C.gold, 1, 'right');
-    const tabs: [typeof this.tab, string][] = [
-      ['seeds', 'Seeds'],
-      ['farm', 'Farm'],
-      ['upgrades', 'Upgrades'],
-    ];
-    tabs.forEach(([id, text], i) =>
+    let tx = 8;
+    SHOP_TABS.forEach(([id, text, w]) => {
+      const x = tx;
+      tx += w + 2;
       this.button(
-        8 + i * 62,
+        x,
         20,
-        60,
+        w,
         18,
         text,
         () => {
@@ -57,24 +58,27 @@ export class ShopPanel extends Modal {
           rim: this.tab === id ? C.gold : C.creamDim,
           textColor: this.tab === id ? C.gold : C.cream,
         },
-      ),
-    );
+      );
+    });
 
     let y = 44;
     if (this.tab === 'upgrades') {
       this.buildUpgrades(y);
     } else {
-      const farmTypes = ['animal', 'feed', 'sapling'];
-      const stock = stockFor(SHOP_ID, s.time.season).filter(
-        (id) => farmTypes.includes(items[id]!.type) === (this.tab === 'farm'),
-      );
+      // The Home tab starts with the house upgrades (a bigger bag), then decorations.
+      let rows = ROWS;
+      if (this.tab === 'home') {
+        for (const up of shop.upgrades.filter((u) => u.tab === 'home')) y = this.upgradeRow(y, up);
+        rows = ROWS - 1;
+      }
+      const stock = stockFor(SHOP_ID, s.time.season, s).filter((id) => shopTabOf(id) === this.tab);
       if (stock.length === 0) {
         this.label(8, y + 6, 'Nothing grows in winter. Rest up!', C.creamDim);
         y += ROW_H;
       }
-      const pages = Math.max(1, Math.ceil(stock.length / ROWS));
+      const pages = Math.max(1, Math.ceil(stock.length / rows));
       this.page = Math.min(this.page, pages - 1);
-      for (const id of stock.slice(this.page * ROWS, (this.page + 1) * ROWS))
+      for (const id of stock.slice(this.page * rows, (this.page + 1) * rows))
         y = this.stockRow(y, id);
       if (pages > 1) {
         const by = this.panelH - 54;
@@ -96,21 +100,25 @@ export class ShopPanel extends Modal {
     const s = getState();
     const def = items[id]!;
     const price = priceFor(s, id);
-    const own = countItem(s, id);
-    const gone = def.type === 'animal' && own > 0;
+    const lim = placeLimit(s, id);
+    const own = lim ? lim.have : countItem(s, id);
+    const gone = (def.type === 'animal' && own > 0) || (!!lim && lim.have >= lim.max);
+    const greenhouse = ownsGreenhouse(s);
     return this.row(y, {
       icon: def.icon,
       title: def.name,
-      sub: shopFacts(id, own, s.time.day),
-      subColor: tooLate(id, s.time.day) ? C.red : undefined,
+      sub: shopFacts(id, own, s.time.day, greenhouse),
+      subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {
           label: `${fmt(price)}g`,
           width: 44,
           onClick: () => this.buy(id, 1),
           color: s.money >= price ? C.gold : C.red,
+          enabled: !(lim && lim.have >= lim.max),
         },
-        ...(def.type === 'animal'
+        // No x5 on animals or anything dear: one tap must never spend thousands by accident.
+        ...(def.type === 'animal' || price > X5_MAX_PRICE
           ? []
           : [
               {
@@ -118,6 +126,7 @@ export class ShopPanel extends Modal {
                 width: 26,
                 onClick: () => this.buy(id, 5),
                 color: s.money >= price * 5 && !gone ? C.cream : C.creamDim,
+                enabled: !lim || lim.have + 5 <= lim.max,
               },
             ]),
       ],
@@ -127,19 +136,33 @@ export class ShopPanel extends Modal {
   private buildUpgrades(y: number): void {
     const s = getState();
     const shop = shops[SHOP_ID]!;
-    for (const up of shop.upgrades) {
+    for (const up of shop.upgrades.filter((u) => u.tab !== 'home')) y = this.upgradeRow(y, up);
+    if (perkDiscount(s) > 0)
+      this.label(
+        8,
+        y + 6,
+        `Friendship discount: ${Math.round(perkDiscount(s) * 100)}% off goods`,
+        C.green,
+      );
+  }
+
+  /** One upgrade with its price, and a second line for the bars or goods it also needs. */
+  private upgradeRow(y: number, up: UpgradeDef): number {
+    const s = getState();
+    {
       const next = nextUpgrade(s, up);
       const lvl = upgradeLevel(s, up);
       const have = next?.needs ? countItem(s, next.needs.item) : 0;
       const missing = !!next?.needs && have < next.needs.qty;
       y = this.row(y, {
         icon:
-          up.id === 'can'
+          up.icon ??
+          (up.id === 'can'
             ? 'ui_drop'
             : up.id === 'stamina'
               ? 'ui_bolt'
-              : items[up.id === 'hoe' ? 'hoe' : 'fishing_rod']!.icon,
-        title: `${up.name} ${lvl + 1}/${up.levels.length + 1}`,
+              : items[up.id === 'hoe' ? 'hoe' : 'fishing_rod']!.icon),
+        title: `${up.name} ${lvl}/${up.levels.length}`,
         sub: next ? next.label : 'Fully upgraded!',
         subColor: next ? C.creamDim : C.green,
         buttons: next
@@ -164,13 +187,7 @@ export class ShopPanel extends Modal {
         y += 10;
       }
     }
-    if (perkDiscount(s) > 0)
-      this.label(
-        8,
-        y + 6,
-        `Friendship discount: ${Math.round(perkDiscount(s) * 100)}% off goods`,
-        C.green,
-      );
+    return y;
   }
 
   private buy(id: string, qty: number): void {
@@ -188,7 +205,9 @@ export class ShopPanel extends Modal {
           ? 'Not enough gold.'
           : res === 'full'
             ? 'Inventory full!'
-            : "Can't buy that now.",
+            : res === 'limit'
+              ? 'You have as many as you can place.'
+              : "Can't buy that now.",
         'warn',
       );
     }
@@ -208,7 +227,7 @@ export class ShopPanel extends Modal {
         res === 'no_money'
           ? 'Not enough gold.'
           : res === 'no_items'
-            ? 'You need more bars.'
+            ? `You need ${nextUpgrade(getState(), up)?.needs?.qty ?? ''} ${items[nextUpgrade(getState(), up)?.needs?.item ?? '']?.name ?? 'more goods'}.`
             : 'Already maxed.',
         'warn',
       );
@@ -216,6 +235,9 @@ export class ShopPanel extends Modal {
     this.rebuild();
   }
 }
+
+/** The x5 button is only offered on cheap rows. */
+const X5_MAX_PRICE = 300;
 
 const perkDiscount = (s: ReturnType<typeof getState>): number =>
   Math.min(0.3, perk(s, 'shopDiscount'));

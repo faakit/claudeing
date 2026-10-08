@@ -50,5 +50,11 @@
     "summer": 0.07,
     "fall": 0.06,
     "winter": 0.0
+  },
+  "bagSlotsPerLevel": 8,
+  "rival": {
+    "npc": "clay",
+    "minute": 840,
+    "startDay": 8
   }
 }

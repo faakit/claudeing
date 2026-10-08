@@ -12,6 +12,7 @@ import {
   skills,
 } from '../data';
 import { plotAtTile, starterPlots } from './plots';
+import { maxEnergy as maxEnergyOf } from './energy';
 import { isDirection } from './direction';
 import { keyOf, parseKey } from './itemRef';
 import type { SaveStore } from '../platform/SaveStore';
@@ -133,6 +134,142 @@ function migrateV4(raw: Raw): Raw {
   return { ...raw, version: 5, plots: [...owned], upgrades: { ...up, hoe: 0, rod: 0 } };
 }
 
+/**
+ * The goal chain is a list and the save keeps an index into it, so a release that inserts goals must
+ * keep that index on the same goal. `oldIds` is the chain as the older release had it, `ids` the chain
+ * of the version being migrated to (the current goals for the last step). Goals inserted
+ * before the player's current one are skipped (they are easy early goals a veteran has outgrown);
+ * a player who had finished every goal continues with the first goal added after the old last one.
+ */
+export function remapGoalIndex(
+  raw: Raw,
+  oldIds: readonly string[],
+  ids: readonly string[] = goals.map((g) => g.id),
+): Raw {
+  const at = typeof raw['goalIndex'] === 'number' ? Math.max(0, Math.floor(raw['goalIndex'])) : 0;
+  const current = oldIds[at];
+  let next = current === undefined ? -1 : ids.indexOf(current);
+  if (next < 0) {
+    const last = oldIds[oldIds.length - 1];
+    next = last === undefined ? 0 : ids.indexOf(last) + 1;
+  }
+  return { ...raw, goalIndex: Math.max(0, next) };
+}
+
+/** Goal ids of releases up to save version 7. */
+const GOALS_V7 = [
+  'till',
+  'plant',
+  'water',
+  'sleep',
+  'forage',
+  'buy',
+  'harvest',
+  'ship',
+  'fish',
+  'order',
+  'craft',
+  'place',
+  'preserve',
+  'quality',
+  'talk',
+  'chicken',
+  'eggs',
+  'tree',
+  'friend',
+  'earn1k',
+  'upgrade',
+  'earn5k',
+  'land',
+  'jars',
+  'fish20',
+  'orders10',
+  'heart5',
+  'event',
+  'craft10',
+  'mine10',
+  'smelt',
+  'toolbar',
+  'festival',
+  'book3',
+  'collect50',
+  'earn20k',
+  'earn50k',
+  'earn100k',
+  'collect200',
+] as const;
+
+/** v7 -> v8: town projects added goals to the chain (their progress lives in stats, no new state). */
+function migrateV7(raw: Raw): Raw {
+  return { ...remapGoalIndex(raw, GOALS_V7, GOALS_V8), version: 8 };
+}
+
+/** Goal ids of the save-version-8 release (town projects). */
+// prettier-ignore
+const GOALS_V8 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'harvest', 'ship', 'fish', 'order', 'craft',
+  'place', 'preserve', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade',
+  'earn5k', 'land', 'project1', 'jars', 'fish20', 'orders10', 'heart5', 'event', 'craft10', 'mine10',
+  'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k',
+  'collect200', 'projectAll',
+] as const;
+
+/** v8 -> v9: the Bigger Bag upgrade (a level of 0 keeps the old slot count) and two home goals. */
+function migrateV8(raw: Raw): Raw {
+  const up = isObj(raw['upgrades']) ? raw['upgrades'] : {};
+  return {
+    ...remapGoalIndex(raw, GOALS_V8, GOALS_V9),
+    version: 9,
+    upgrades: { ...up, bag: 0 },
+  };
+}
+
+/** Goal ids of the save-version-9 release (home upgrades). */
+// prettier-ignore
+const GOALS_V9 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'harvest', 'ship', 'fish', 'order', 'craft', 'place', 'preserve', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll',
+] as const;
+
+/** v9 -> v10: daily jobs (posted from the next morning on) and two job goals. */
+function migrateV9(raw: Raw): Raw {
+  return {
+    ...remapGoalIndex(raw, GOALS_V9, GOALS_V12.slice(0, -2)),
+    version: 10,
+    jobs: { day: 0, list: [] },
+  };
+}
+
+/** v10 -> v11: the mailbox starts empty; letters whose time has passed arrive the next morning. */
+function migrateV10(raw: Raw): Raw {
+  return { ...raw, version: 11, mail: { next: 1, list: [] } };
+}
+
+/** v11 -> v12: orders may say the rival farmer took them (an optional flag; nothing to convert). */
+function migrateV11(raw: Raw): Raw {
+  return { ...raw, version: 12 };
+}
+
+/** Goal ids of the save-version-10 to 12 releases (jobs, mail, rival, greenhouse, pigs). */
+// prettier-ignore
+const GOALS_V12 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'job1', 'harvest', 'ship', 'fish', 'order', 'craft', 'place', 'preserve', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'jobs20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll', 'greenhouse20', 'truffles10',
+] as const;
+
+/** v12 -> v13: the order goal moved after the jar goals; keep each save on the goal it was on. */
+function migrateV12(raw: Raw): Raw {
+  return { ...remapGoalIndex(raw, GOALS_V12), version: 13 };
+}
+
+/** v13 -> v14: buildings can be moved with their contents (nothing is being moved in an old save). */
+function migrateV13(raw: Raw): Raw {
+  return { ...raw, version: 14, stored: {} };
+}
+
+/** v14 -> v15: special orders (the first is posted the next morning). */
+function migrateV14(raw: Raw): Raw {
+  return { ...raw, version: 15, special: null };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -140,6 +277,14 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   4: migrateV4,
   5: migrateV5,
   6: migrateV6,
+  7: migrateV7,
+  8: migrateV8,
+  9: migrateV9,
+  10: migrateV10,
+  11: migrateV11,
+  12: migrateV12,
+  13: migrateV13,
+  14: migrateV14,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -209,8 +354,9 @@ export function sanitize(raw: Raw): GameState {
     stamina: int(u['stamina'], 0, 0, staminaMax),
     hoe: int(u['hoe'], 0, 0, upgradeMax('hoe')),
     rod: int(u['rod'], 0, 0, upgradeMax('rod')),
+    bag: int(u['bag'], 0, 0, upgradeMax('bag')),
   };
-  const maxEnergy = game.baseEnergy + upgrades.stamina * game.energyPerUpgrade;
+  const bagSlots = game.inventorySlots + upgrades.bag * game.bagSlotsPerLevel;
   const canCap = game.canCapacity[upgrades.can] ?? 20;
 
   // Inventory: fixed length, valid stacks only, tools always in their fixed slots.
@@ -218,24 +364,21 @@ export function sanitize(raw: Raw): GameState {
   const toolIds = Object.entries(items)
     .filter(([, it]) => it.type === 'tool')
     .map(([id]) => id);
-  const slots: GameState['inventory']['slots'] = Array.from(
-    { length: game.inventorySlots },
-    (_, i) => {
-      if (i < toolIds.length) return { item: toolIds[i] as string, qty: 1 };
-      const st = rawSlots[i];
-      if (!isObj(st) || typeof st['item'] !== 'string') return null;
-      const def = items[st['item']];
-      if (!def || def.type === 'tool') return null;
-      const stack: NonNullable<GameState['inventory']['slots'][number]> = {
-        item: st['item'],
-        qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit),
-      };
-      const q = int(st['q'], 0, 0, game.qualityMultipliers.length - 1);
-      if (q > 0) stack.q = q;
-      if (def.derived && typeof st['of'] === 'string' && items[st['of']]) stack.of = st['of'];
-      return stack;
-    },
-  );
+  const slots: GameState['inventory']['slots'] = Array.from({ length: bagSlots }, (_, i) => {
+    if (i < toolIds.length) return { item: toolIds[i] as string, qty: 1 };
+    const st = rawSlots[i];
+    if (!isObj(st) || typeof st['item'] !== 'string') return null;
+    const def = items[st['item']];
+    if (!def || def.type === 'tool') return null;
+    const stack: NonNullable<GameState['inventory']['slots'][number]> = {
+      item: st['item'],
+      qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit),
+    };
+    const q = int(st['q'], 0, 0, game.qualityMultipliers.length - 1);
+    if (q > 0) stack.q = q;
+    if (def.derived && typeof st['of'] === 'string' && items[st['of']]) stack.of = st['of'];
+    return stack;
+  });
 
   const farmRaw = obj(raw['farm']);
   const tiles: GameState['farm']['tiles'] = {};
@@ -315,6 +458,18 @@ export function sanitize(raw: Raw): GameState {
     if (out.length) placed[mapId] = out;
   }
 
+  // Parked state of buildings being moved: only for known placeables, never more than you carry.
+  const stored: GameState['stored'] = {};
+  for (const [type, list] of Object.entries(obj(raw['stored']))) {
+    if (!placeables[type] || !Array.isArray(list)) continue;
+    const carried = slots.reduce((n, st) => (st?.item === type ? n + st.qty : n), 0);
+    const keep = list
+      .filter(isObj)
+      .slice(0, carried)
+      .map((d) => ({ ...d }));
+    if (keep.length) stored[type] = keep;
+  }
+
   const skillXp: Record<string, number> = {};
   for (const [id, xp] of Object.entries(obj(raw['skills']))) {
     if (skills[id] && isFiniteNum(xp) && xp >= 0) skillXp[id] = Math.floor(xp);
@@ -355,6 +510,7 @@ export function sanitize(raw: Raw): GameState {
         reward: int(o['reward'], 0, 0, 1e7),
         xp: int(o['xp'], 0, 0, 1e5),
         done: o['done'] === true,
+        ...(o['rival'] === true ? { rival: true } : {}),
       });
     }
   }
@@ -369,6 +525,68 @@ export function sanitize(raw: Raw): GameState {
     };
   }
 
+  const jobsRaw = obj(raw['jobs']);
+  const jobList: GameState['jobs']['list'] = [];
+  if (Array.isArray(jobsRaw['list']))
+    for (const j of jobsRaw['list'].slice(0, 6)) {
+      if (!isObj(j) || typeof j['id'] !== 'string' || typeof j['stat'] !== 'string') continue;
+      if (typeof j['giver'] !== 'string' || !npcs[j['giver']]) continue;
+      jobList.push({
+        id: j['id'],
+        giver: j['giver'],
+        stat: j['stat'],
+        base: int(j['base'], 0, 0, 1e9),
+        n: int(j['n'], 1, 1, 999),
+        reward: int(j['reward'], 0, 0, 1e5),
+        done: j['done'] === true,
+      });
+    }
+
+  const mailRaw = obj(raw['mail']);
+  const letters: GameState['mail']['list'] = [];
+  let maxLetter = 0;
+  if (Array.isArray(mailRaw['list']))
+    for (const l of mailRaw['list'].slice(-40)) {
+      if (!isObj(l) || typeof l['title'] !== 'string' || typeof l['text'] !== 'string') continue;
+      if (typeof l['from'] !== 'string' || !npcs[l['from']]) continue;
+      const id = int(l['id'], 0, 0, 1e9);
+      if (id === 0 || letters.some((x) => x.id === id)) continue;
+      maxLetter = Math.max(maxLetter, id);
+      const g = isObj(l['gift']) ? l['gift'] : null;
+      const gift =
+        g && typeof g['item'] === 'string' && items[g['item']]
+          ? { item: g['item'], qty: int(g['qty'], 1, 1, 999) }
+          : undefined;
+      letters.push({
+        id,
+        from: l['from'],
+        title: l['title'].slice(0, 80),
+        text: l['text'].slice(0, 400),
+        day: int(l['day'], 1, 1, 1e7),
+        read: l['read'] === true,
+        taken: l['taken'] === true,
+        ...(gift ? { gift } : {}),
+      });
+    }
+
+  const sp = obj(raw['special']);
+  const special: GameState['special'] =
+    typeof sp['item'] === 'string' &&
+    items[sp['item']] &&
+    typeof sp['giver'] === 'string' &&
+    npcs[sp['giver']]
+      ? {
+          id: typeof sp['id'] === 'string' ? sp['id'] : 'special',
+          giver: sp['giver'],
+          item: sp['item'],
+          qty: int(sp['qty'], 1, 1, 999),
+          given: 0,
+          reward: int(sp['reward'], 0, 0, 1e6),
+          due: int(sp['due'], 1, 1, 1e7),
+        }
+      : null;
+  if (special) special.given = int(sp['given'], 0, 0, special.qty);
+
   const ownedPlots = Array.isArray(raw['plots'])
     ? [
         ...new Set(
@@ -380,11 +598,11 @@ export function sanitize(raw: Raw): GameState {
     : [];
   for (const id of starterPlots()) if (!ownedPlots.includes(id)) ownedPlots.push(id);
 
-  return {
+  const out: GameState = {
     version: STATE_VERSION,
     time,
     money: Math.floor(raw['money'] as number),
-    energy: int(raw['energy'], maxEnergy, 0, maxEnergy),
+    energy: 0, // set below, once perks can be read
     water: int(raw['water'], canCap, 0, canCap),
     upgrades,
     plots: ownedPlots,
@@ -401,15 +619,24 @@ export function sanitize(raw: Raw): GameState {
     weather: toWeather(raw['weather']),
     forecast: toWeather(raw['forecast']),
     placed,
+    stored,
     nextPlacedId: Math.max(int(raw['nextPlacedId'], 1, 1, 1e9), maxId + 1),
     skills: skillXp,
     forage: forageOut,
     nodes: nodesOut,
     orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
     friends,
+    jobs: { day: int(jobsRaw['day'], 0, 0, 1e7), list: jobList },
+    special,
+    mail: { next: Math.max(int(mailRaw['next'], 1, 1, 1e9), maxLetter + 1), list: letters },
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,
   };
+  // Energy is capped by everything that raises it (skills, hearts, town projects), which is only known
+  // once the rest of the state is rebuilt. Clamping to the tonic level alone used to drop perks on load.
+  const cap = maxEnergyOf(out);
+  out.energy = int(raw['energy'], cap, 0, cap);
+  return out;
 }
 
 export async function saveGame(store: SaveStore, state: GameState): Promise<void> {

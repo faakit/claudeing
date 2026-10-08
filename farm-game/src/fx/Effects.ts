@@ -100,6 +100,34 @@ export class Effects {
       size: 1.2,
     });
   }
+  /** A friendship heart gained: pink and red sparks rising over the player. */
+  hearts(x: number, y: number): void {
+    this.burst(x, y, {
+      count: 16,
+      color: [0xe0574a, 0xf2a6c0, 0xff8aa0],
+      speed: 26,
+      life: 900,
+      gravity: -20,
+      up: 10,
+      spread: Math.PI * 1.4,
+      size: 1.6,
+    });
+  }
+
+  /** A skill level-up: a gold ring of sparks around the player. */
+  celebrate(x: number, y: number): void {
+    this.burst(x, y, {
+      count: 22,
+      color: [0xf4d35e, 0xfff1b0, 0xf2a65a],
+      speed: 46,
+      life: 800,
+      gravity: 30,
+      up: 6,
+      spread: Math.PI * 2,
+      size: 1.4,
+    });
+  }
+
   coins(x: number, y: number): void {
     this.burst(x, y, {
       count: 12,

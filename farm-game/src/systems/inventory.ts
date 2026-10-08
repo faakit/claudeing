@@ -4,6 +4,17 @@ import { gameEvents } from './events';
 import { discover } from './almanac';
 import { keyOf, refOf, sameRef, type ItemRef } from './itemRef';
 
+/** Slots the player owns: the base bag plus a row per Bigger Bag level. */
+export const bagSize = (state: GameState): number =>
+  game.inventorySlots + (state.upgrades.bag ?? 0) * game.bagSlotsPerLevel;
+
+/** After a bag upgrade: add the new empty slots at the end. */
+export function growBag(state: GameState): void {
+  const slots = state.inventory.slots;
+  while (slots.length < bagSize(state)) slots.push(null);
+  changed();
+}
+
 export const stackLimit = (itemId: string): number => items[itemId]?.stackLimit ?? game.stackLimit;
 export const isToolSlot = (slot: number): boolean => slot < game.toolSlots;
 
@@ -131,6 +142,29 @@ export function selectSlot(state: GameState, slot: number): void {
 
 export function cycleSlot(state: GameState, step: number): void {
   selectSlot(state, (state.inventory.selected + step + game.hotbarSlots) % game.hotbarSlots);
+}
+
+/**
+ * Put a bag item in the hand: it goes to the selected hotbar slot (swapping what was there into the bag),
+ * or to the first free hotbar slot when a tool is selected, or to the last hotbar slot. Then it is selected.
+ */
+export function equipFromBag(state: GameState, slot: number): boolean {
+  if (slot < game.hotbarSlots || !state.inventory.slots[slot]) return false;
+  const sel = state.inventory.selected;
+  let target = sel;
+  if (isToolSlot(sel)) {
+    const free = state.inventory.slots.findIndex(
+      (s, i) => !s && i < game.hotbarSlots && !isToolSlot(i),
+    );
+    target = free >= 0 ? free : game.hotbarSlots - 1;
+  }
+  const slots = state.inventory.slots;
+  const moving = slots[slot] ?? null;
+  slots[slot] = slots[target] ?? null;
+  slots[target] = moving;
+  state.inventory.selected = target;
+  changed();
+  return true;
 }
 
 /** Swap two non-tool slots (inventory rearranging). Merges stacks of the same kind. */

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { DOCK_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
-import { game } from '../data';
+import { game, npcs } from '../data';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
@@ -177,6 +177,11 @@ export class Hud {
       gameEvents.on('energyChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('saved', () => this.flashSaved()),
       gameEvents.on('goalCompleted', (g) => this.goalBanner(`GOAL COMPLETE  +${g.reward}g`)),
+      gameEvents.on('heartUp', (h) =>
+        this.goalBanner(
+          `${(npcs[h.id]?.name ?? h.id).toUpperCase()}: ${h.hearts} HEART${h.hearts > 1 ? 'S' : ''}!`,
+        ),
+      ),
       gameEvents.on('levelUp', (e) =>
         this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`),
       ),

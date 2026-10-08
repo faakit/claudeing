@@ -35,11 +35,16 @@ available (pick up or harvest beats planting beats tilling), so you never have t
 4. **Fish**: equip the rod, cast at water, tap when the bobber dips, then hold to lift the bar and keep the fish in the green.
 5. **Craft** (Menu > Craft): fertilizer, bait, sprinklers, preserve jars. Recipes unlock as your skills level up.
 6. **Preserve**: put fruit in a jar for jam or vegetables for pickles; collect after a few mornings. Worth far more than raw.
-7. **Orders**: the town board posts three requests every morning that pay well above the shipping bin.
-8. **Animals**: craft a coop (and later a barn), buy chickens and feed in town. One tap on the coop moves animals in, collects eggs and feeds them. Fed animals get happier and lay better-quality eggs; hungry ones sulk.
-9. **Villagers**: Mara (shop), Finn (woods) and Rosa (farm) greet you with a "!" each day. Chat once a day and give gifts to grow hearts; hearts unlock discounts, daily presents and perks.
+7. **Orders**: the town board posts three requests every morning that pay well above the shipping bin. Once a season it also posts a special order: a big request with a deadline at the season's end, paid well and in friendship.
+8. **Animals**: craft a coop (and later a barn), buy chickens and feed in town. One tap on the coop moves animals in, collects eggs and feeds them. Fed animals get happier and lay better-quality eggs; hungry ones sulk. Pigs dig up truffles on dry days. A feed silo (Menu > Make) stores feed and feeds every house overnight.
+9. **Villagers**: Mara (shop), Finn (woods), Rosa (farm) and Orin (smith) greet you with a "!" each day. Chat once a day and give gifts to grow hearts; hearts unlock discounts, daily presents and perks. Clay, a rival farmer, takes one board request each afternoon from day 8; befriend him to change that.
 10. **Skills**: farming, foraging and fishing level up with use and grant perks (quality, energy, double finds, wider fishing zone).
-11. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
+11. **Daily jobs**: from day 2, villagers post three small jobs each morning (catch fish, break rocks, fill a request...). They pay on the spot and build friendship. See them in the morning news and Menu > Goal.
+12. **Town projects**: the town board's "Town projects" button lists projects the whole town funds. Give gold and goods a little at a time; each finished one helps for good (more requests, faster skills, more energy, better prices) and adds a building to town. The Greenhouse project builds a glass house on your farm where any crop grows in any season. The Seed Exchange stocks four rare crops that keep giving all season.
+13. **Home**: the shop's Home tab sells a Bigger Bag (more slots) and decorations (fences, paths, pots, lamps, a fountain). Place them like a sprinkler; tap twice with Interact to pick one up. Buildings move the same way: pick up a coop and its hens come along to wherever you place the next one.
+14. **Mail**: the mailbox beside the shipping bin gets letters in the morning (a star shows when one waits): tips, thank-yous with gifts, festival notices and birthday hints.
+15. **Festivals**: one a season, entered at the town board: the Flower Show takes your best flower, the Harvest Fair and Winter Feast a basket of three different goods, and the Fishing Derby counts your three best catches of the day.
+16. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
 
 ## Project layout
 

@@ -1,0 +1,194 @@
+{
+  "canopy": {
+    "name": "Board Canopy",
+    "blurb": "A roof over the town board, so more folks post their requests.",
+    "gold": 1200,
+    "items": [
+      {
+        "item": "fiber",
+        "qty": 20
+      }
+    ],
+    "perks": {
+      "orderSlots": 1
+    },
+    "reward": "The board posts 4 requests a day.",
+    "landmark": {
+      "map": "town",
+      "tx": 15,
+      "ty": 11,
+      "sprite": "obj_landmark_canopy",
+      "color": "#c9a26a"
+    }
+  },
+  "seedexchange": {
+    "name": "Seed Exchange",
+    "blurb": "A shelf of rare seeds from over the hills, traded through the shop.",
+    "after": "canopy",
+    "gold": 6000,
+    "items": [
+      {
+        "item": "fiber",
+        "qty": 40
+      },
+      {
+        "item": "copper_bar",
+        "qty": 2
+      }
+    ],
+    "perks": {},
+    "reward": "The shop sells rare berry and pea seeds that keep giving.",
+    "landmark": {
+      "map": "town",
+      "tx": 6,
+      "ty": 12,
+      "sprite": "obj_landmark_seedexchange",
+      "color": "#7fc96b"
+    }
+  },
+  "fishladder": {
+    "name": "Fish Ladder",
+    "blurb": "Stone steps in the river let big fish swim up to town.",
+    "after": "canopy",
+    "gold": 4000,
+    "items": [
+      {
+        "item": "stone",
+        "qty": 40
+      },
+      {
+        "item": "copper_bar",
+        "qty": 3
+      }
+    ],
+    "perks": {
+      "fishWindow": 0.05
+    },
+    "reward": "A wider catch zone on every cast.",
+    "landmark": {
+      "map": "town",
+      "tx": 16,
+      "ty": 21,
+      "sprite": "obj_landmark_fishladder",
+      "color": "#6fa3e0"
+    }
+  },
+  "library": {
+    "name": "Town Library",
+    "blurb": "Books on soil, fish, stone and wild plants for everyone.",
+    "after": "canopy",
+    "gold": 8000,
+    "items": [
+      {
+        "item": "quartz",
+        "qty": 3
+      }
+    ],
+    "perks": {
+      "xpBonus": 0.15
+    },
+    "reward": "Every skill grows 15% faster.",
+    "landmark": {
+      "map": "town",
+      "tx": 19,
+      "ty": 9,
+      "sprite": "obj_landmark_library",
+      "color": "#8a5a9a"
+    }
+  },
+  "greenhouse": {
+    "name": "Greenhouse",
+    "blurb": "A glass house on your farm, south of the east field. Warm all year.",
+    "after": "library",
+    "gold": 20000,
+    "items": [
+      {
+        "item": "quartz",
+        "qty": 10
+      },
+      {
+        "item": "iron_bar",
+        "qty": 5
+      }
+    ],
+    "perks": {},
+    "reward": "32 tiles where any crop grows in any season."
+  },
+  "bathhouse": {
+    "name": "Hot Spring",
+    "blurb": "A warm bath by the river. You wake up with more pep.",
+    "after": "library",
+    "gold": 15000,
+    "items": [
+      {
+        "item": "stone",
+        "qty": 60
+      },
+      {
+        "item": "iron_bar",
+        "qty": 5
+      }
+    ],
+    "perks": {
+      "maxEnergy": 30
+    },
+    "reward": "+30 max energy every day.",
+    "landmark": {
+      "map": "town",
+      "tx": 19,
+      "ty": 13,
+      "sprite": "obj_landmark_bathhouse",
+      "color": "#d98a8a"
+    }
+  },
+  "fairhall": {
+    "name": "Fair Hall",
+    "blurb": "A real hall for the four festivals, with bigger prizes.",
+    "after": "fishladder",
+    "gold": 12000,
+    "items": [
+      {
+        "item": "cloth",
+        "qty": 5
+      }
+    ],
+    "perks": {
+      "festivalPrize": 1
+    },
+    "reward": "Festival prizes are doubled.",
+    "landmark": {
+      "map": "town",
+      "tx": 21,
+      "ty": 11,
+      "sprite": "obj_landmark_fairhall",
+      "color": "#e0574a"
+    }
+  },
+  "market": {
+    "name": "Market Road",
+    "blurb": "A paved road to the city. Buyers pay more for fresh goods.",
+    "after": "bathhouse",
+    "gold": 60000,
+    "items": [
+      {
+        "item": "iron_bar",
+        "qty": 10
+      },
+      {
+        "item": "ruby",
+        "qty": 1
+      }
+    ],
+    "perks": {
+      "sellBonus": 0.1
+    },
+    "reward": "Everything you ship sells for 10% more.",
+    "landmark": {
+      "map": "town",
+      "tx": 16,
+      "ty": 9,
+      "sprite": "obj_landmark_market",
+      "color": "#f4d35e"
+    }
+  }
+}

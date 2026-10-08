@@ -106,5 +106,53 @@
       "leaf": "#4f8f6a",
       "fruit": "#6aa88a"
     }
+  },
+  "strawberry": {
+    "seasons": ["spring"],
+    "stageDays": [2, 2, 2, 2],
+    "sprite": "crop_strawberry",
+    "harvestItem": "strawberry",
+    "harvestQuantity": 1,
+    "regrowDays": 4,
+    "placeholder": {
+      "leaf": "#4f9a46",
+      "fruit": "#e0304a"
+    }
+  },
+  "blueberry": {
+    "seasons": ["summer"],
+    "stageDays": [2, 3, 3, 3],
+    "sprite": "crop_blueberry",
+    "harvestItem": "blueberry",
+    "harvestQuantity": 1,
+    "regrowDays": 3,
+    "placeholder": {
+      "leaf": "#3f8f4a",
+      "fruit": "#4a6ad0"
+    }
+  },
+  "cranberry": {
+    "seasons": ["fall"],
+    "stageDays": [2, 2, 3, 3],
+    "sprite": "crop_cranberry",
+    "harvestItem": "cranberry",
+    "harvestQuantity": 1,
+    "regrowDays": 3,
+    "placeholder": {
+      "leaf": "#6a9a3a",
+      "fruit": "#b02040"
+    }
+  },
+  "snowpea": {
+    "seasons": ["winter"],
+    "stageDays": [1, 2, 2, 2],
+    "sprite": "crop_snowpea",
+    "harvestItem": "snowpea",
+    "harvestQuantity": 1,
+    "regrowDays": 3,
+    "placeholder": {
+      "leaf": "#4f8f6a",
+      "fruit": "#8fd07a"
+    }
   }
 }

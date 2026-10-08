@@ -132,5 +132,89 @@
     "params": {
       "max": 3
     }
+  },
+  "fence": {
+    "name": "Wood Fence",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_fence",
+    "params": {
+      "max": 60
+    }
+  },
+  "stone_path": {
+    "name": "Stone Path",
+    "behavior": "decor",
+    "solid": false,
+    "sprite": "obj_stone_path",
+    "params": {
+      "max": 80,
+      "flat": true
+    }
+  },
+  "flower_pot": {
+    "name": "Flower Pot",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_flower_pot",
+    "params": {
+      "max": 12
+    }
+  },
+  "garden_lamp": {
+    "name": "Garden Lamp",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_garden_lamp",
+    "params": {
+      "max": 8
+    }
+  },
+  "garden_bench": {
+    "name": "Garden Bench",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_garden_bench",
+    "params": {
+      "max": 6
+    }
+  },
+  "farm_statue": {
+    "name": "Farm Statue",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_farm_statue",
+    "params": {
+      "max": 2
+    }
+  },
+  "garden_fountain": {
+    "name": "Fountain",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_garden_fountain",
+    "params": {
+      "max": 1
+    }
+  },
+  "sty": {
+    "name": "Pig Sty",
+    "behavior": "animalHouse",
+    "solid": true,
+    "sprite": "obj_sty",
+    "params": {
+      "species": "pig",
+      "max": 1
+    }
+  },
+  "silo": {
+    "name": "Feed Silo",
+    "behavior": "silo",
+    "solid": true,
+    "sprite": "obj_silo",
+    "params": {
+      "cap": 300,
+      "max": 1
+    }
   }
 }

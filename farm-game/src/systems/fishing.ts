@@ -3,6 +3,7 @@ import type { FishDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { toast } from './events';
 import { addStat } from './goals';
+import { recordCatch } from './festivals';
 import { addItem, countItem, removeItem, roomFor } from './inventory';
 import { rollQuality } from './quality';
 import { isWet } from './weather';
@@ -156,6 +157,7 @@ export function resolveCatch(
   }
   const q = rollQuality(state, outcome.perfect ? 0.15 : 0);
   addItem(state, q > 0 ? { item: fishId, q } : fishId, 1);
+  recordCatch(state, { item: fishId, q }); // the Fishing Derby counts the day's best catches
   addStat(state, 'caught');
   if (q > 0) addStat(state, 'qualityCaught');
   if (outcome.perfect) addStat(state, 'perfectCatch');

@@ -3,6 +3,7 @@ import type { PlaceableDef } from '../data';
 import type { GameState, PlacedObject } from '../state/GameState';
 import type { DayContext } from './dayHooks';
 import { gameEvents } from './events';
+import { addItem, roomFor } from './inventory';
 
 /** What the UI should do when the player interacts with a placed object. */
 export type InteractResult =
@@ -26,6 +27,11 @@ export interface PlaceableBehavior {
   interact?: (state: GameState, obj: PlacedObject, def: PlaceableDef) => InteractResult;
   /** May this object be picked up right now? (A working jar may not.) */
   canPickUp?: (obj: PlacedObject) => boolean;
+  /**
+   * Picking it up keeps its state (animals, a tree's growth, a silo's feed) for the next one you place:
+   * this is how buildings are moved.
+   */
+  keepsData?: boolean;
   /** How the world should draw it: nothing going on, working, or goods ready to collect. */
   status?: (obj: PlacedObject) => 'idle' | 'busy' | 'ready';
   /** Texture to draw for this object right now (e.g. a sapling before it is a tree). Default: the placeable's sprite. */
@@ -98,6 +104,16 @@ export function solidTiles(state: GameState, map: string): [number, number][] {
     .map((o) => [o.tx, o.ty] as [number, number]);
 }
 
+/** How long a "Tap again to pick up" stays armed. */
+export const ARM_MS = 4000;
+let armed: { id: number; at: number } | null = null;
+let clock: () => number = () => Date.now();
+/** Tests can drive time. */
+export function setPickupClock(fn: () => number): void {
+  clock = fn;
+  armed = null;
+}
+
 /** Run an interaction through the object's behavior (default: pick up). */
 export function interactWith(state: GameState, obj: PlacedObject): InteractResult {
   const def = placeables[obj.type];
@@ -106,16 +122,19 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
   if (!b.interact) return { kind: 'pickup' };
   const res = b.interact(state, obj, def);
   // Machines, trees and houses have their own interactions, so picking one up is a deliberate second tap
-  // on a plain status message (never after something happened, and never while it is busy).
+  // on a plain status message (never after something happened, and never while it is busy). The arm is
+  // runtime memory with a time limit: it is never saved, and a tap minutes later starts over.
+  delete obj.data['armedPick']; // left by older versions, which saved it
   if (res.kind === 'message' && res.text !== '' && canPickUp(obj)) {
-    if (obj.data['armedPick'] === true) {
-      delete obj.data['armedPick'];
+    const now = clock();
+    if (armed && armed.id === obj.id && now - armed.at <= ARM_MS) {
+      armed = null;
       return { kind: 'pickup' };
     }
-    obj.data['armedPick'] = true;
+    armed = { id: obj.id, at: now };
     return { ...res, text: `${res.text} Tap again to pick up.` };
   }
-  delete obj.data['armedPick'];
+  armed = null;
   return res;
 }
 
@@ -128,6 +147,35 @@ export function spriteOf(obj: PlacedObject): string {
   const def = placeables[obj.type];
   if (!def) return 'ui_coin';
   return behaviorOf(def).sprite?.(obj, def) ?? def.sprite;
+}
+
+/**
+ * Pick a placed object up into the bag. Objects whose behavior `keepsData` park their state in
+ * `state.stored[type]`, and the next one of that type placed takes it back (moving a coop moves its hens).
+ */
+export function pickUpPlaced(
+  state: GameState,
+  map: string,
+  obj: PlacedObject,
+): 'ok' | 'busy' | 'full' {
+  if (!canPickUp(obj)) return 'busy';
+  if (roomFor(state, obj.type, 1) < 1) return 'full';
+  const def = placeables[obj.type];
+  if (def && behaviorOf(def).keepsData && Object.keys(obj.data).length > 0)
+    (state.stored[obj.type] ??= []).push({ ...obj.data });
+  removePlaced(state, map, obj.id);
+  addItem(state, obj.type, 1);
+  return 'ok';
+}
+
+/** A freshly placed object takes back state parked by `pickUpPlaced` (oldest first). */
+export function restoreStored(state: GameState, obj: PlacedObject): boolean {
+  const queue = state.stored[obj.type];
+  const data = queue?.shift();
+  if (queue && queue.length === 0) delete state.stored[obj.type];
+  if (!data) return false;
+  obj.data = { ...data };
+  return true;
 }
 
 export function canPickUp(obj: PlacedObject): boolean {

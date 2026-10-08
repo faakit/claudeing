@@ -18,6 +18,15 @@ export function npcLocation(id: string, minutes: number): NpcSpot | null {
   return { map: spot.map, tx: spot.tx, ty: spot.ty };
 }
 
+/** Does any villager stand on this tile at some point of the day? (Nothing may be built there.) */
+export function villagerSpot(map: string, tx: number, ty: number): boolean {
+  return Object.values(npcs).some((def) =>
+    (def.schedule ?? [{ from: 0, map: def.map, tx: def.tx, ty: def.ty }]).some(
+      (w) => w.map === map && w.tx === tx && w.ty === ty,
+    ),
+  );
+}
+
 /** Maps a villager ever visits (so a scene knows whether to draw them at all). */
 export const npcMaps = (id: string): string[] => {
   const def = npcs[id];

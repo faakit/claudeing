@@ -5,6 +5,7 @@ import { gameEvents } from './events';
 import { addItem, roomFor } from './inventory';
 import { rollQuality } from './quality';
 import { random } from './rng';
+import { inGreenhouse } from './plots';
 
 export const tileKey = (tx: number, ty: number): string => `${tx},${ty}`;
 export const parseKey = (key: string): [number, number] => {
@@ -48,7 +49,8 @@ export function checkPlant(state: GameState, tx: number, ty: number, cropId: str
   if (!def) throw new Error(`Unknown crop "${cropId}"`);
   if (!soil) return 'no_soil';
   if (soil.crop) return 'occupied';
-  if (!def.seasons.includes(state.time.season)) return 'out_of_season';
+  if (!def.seasons.includes(state.time.season) && !inGreenhouse(state, tx, ty))
+    return 'out_of_season';
   return 'ok';
 }
 
@@ -128,7 +130,9 @@ export function growCrops(state: GameState): void {
 /** Remove crops that can't survive the current season. Returns how many withered. */
 export function killOutOfSeason(state: GameState): number {
   let dead = 0;
-  for (const soil of Object.values(state.farm.tiles)) {
+  for (const [key, soil] of Object.entries(state.farm.tiles)) {
+    const [tx, ty] = parseKey(key);
+    if (inGreenhouse(state, tx, ty)) continue; // warm all year
     if (soil.crop && !cropDef(soil.crop).seasons.includes(state.time.season)) {
       soil.crop = null;
       dead += 1;
@@ -140,9 +144,10 @@ export function killOutOfSeason(state: GameState): number {
 
 /** Scatter a few weeds on untouched farmable tiles. */
 export function spawnWeeds(state: GameState, candidates: readonly [number, number][]): void {
+  const placed = new Set((state.placed['farm'] ?? []).map((o) => tileKey(o.tx, o.ty)));
   const free = candidates.filter(([x, y]) => {
     const k = tileKey(x, y);
-    return !state.farm.tiles[k] && !state.farm.weeds[k];
+    return !state.farm.tiles[k] && !state.farm.weeds[k] && !placed.has(k);
   });
   let room = game.maxWeeds - Object.keys(state.farm.weeds).length;
   for (let i = 0; i < game.weedsPerDay && room > 0 && free.length > 0; i++) {

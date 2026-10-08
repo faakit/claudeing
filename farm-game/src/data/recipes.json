@@ -260,5 +260,49 @@
       "skill": "mining",
       "level": 2
     }
+  },
+  "silo": {
+    "name": "Feed Silo",
+    "output": {
+      "item": "silo",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "stone",
+        "qty": 40
+      },
+      {
+        "item": "copper_bar",
+        "qty": 2
+      }
+    ],
+    "gold": 500,
+    "unlock": {
+      "skill": "farming",
+      "level": 4
+    }
+  },
+  "sty": {
+    "name": "Pig Sty",
+    "output": {
+      "item": "sty",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "fiber",
+        "qty": 30
+      },
+      {
+        "item": "stone",
+        "qty": 20
+      }
+    ],
+    "gold": 800,
+    "unlock": {
+      "skill": "farming",
+      "level": 6
+    }
   }
 }
