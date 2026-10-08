@@ -4,6 +4,7 @@ import index from './atlases.json';
 import { atlasFrames, planArt, type AtlasFrame, type TexturePlan } from './artPlan';
 import { artKeys } from './registry';
 import { ATLAS_FILES, artManifest, manifestByTexture, TILESET_FILE } from './manifest';
+import { seasonTilesetKey } from './mapLayers';
 
 /**
  * Packed art from `public/assets/` (built by `art-src/tools/`). `atlases.json` says which files exist, so a
@@ -18,7 +19,11 @@ export function queueArtLoads(scene: Phaser.Scene): void {
     const a = ATLAS_FILES[g];
     scene.load.atlas(a.key, a.png, a.json);
   }
-  if (index.tileset) scene.load.image(TILESET_KEY, TILESET_FILE);
+  if (index.tileset) {
+    scene.load.image(TILESET_KEY, TILESET_FILE);
+    for (const season of index.seasons ?? [])
+      scene.load.image(seasonTilesetKey(season), TILESET_FILE.replace('.png', `_${season}.png`));
+  }
 }
 
 /** Frames of all loaded atlases. */

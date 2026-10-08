@@ -119,7 +119,7 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     out["base_stone"] = base["stone"].copy()
     out["base_path"] = base["path"].copy()
     out["base_floor"] = base["floor"].copy()
-    for k, mood in enumerate(("calm", "earth", "worn")):
+    for k, mood in enumerate(("calm", "earth", "worn", "dark")):
         out[f"stone_{k}"] = mt.mine_floor(P, 700 + k * 5, mood)
     bed = make({"src": "world1b/tile_bed", "size": [32, 32], "fit": [24, 31], "anchor": "center"})
     out["bed_tl"], out["bed_tr"] = split_h(bed[:T])
@@ -212,6 +212,7 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     out["bush_rose"] = make({"src": "nature2a/n2_pinkbush", "size": [T, T], "fit": [15, 14]})
     out["bush_small"] = make({"src": "land1a/decor_bush", "size": [T, T], "fit": [12, 10]})
     out["fern"] = make({"src": "nature2a/n2_ferns", "size": [T, T], "fit": [15, 13]})
+    out["fern_flat"] = flat("nature2a/n2_ferns", (13, 11))
     # flower patches (flat ground flora: outline softened to leaf dark so they sit in the grass)
     for kind in ("roses", "daisies", "buttercups", "lavender"):
         out[f"patch_{kind}"] = flat(f"nature2a/n2_{kind}", (14, 12))

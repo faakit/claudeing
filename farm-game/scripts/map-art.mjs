@@ -87,29 +87,36 @@ function noise(x, y, cell, seed) {
 const COMPOSITION = {
   farm: {
     props: [
-      // the yard west of the farmhouse: well, firewood by the wall, barrel and crates
-      ['t_well', 6, 5],
-      ['p_firewood', 9, 5],
-      ['p_barrel', 9, 6],
-      ['p_crates', 8, 7],
-      // east of the house: tools leaning on the wall, hay and the trough, the laundry line behind
-      ['p_toolrack', 19, 7],
-      ['p_haybale', 20, 7],
-      ['p_trough', 21, 6],
-      ['w_laundry', 20, 4],
-      ['t_lanternpole', 13, 12],
+      // two yard vignettes with air between them: water (well, bucket, wash tub) and firewood (logs, the
+      // split pile, a stump for a chopping block); tools and stores by the east wall; the lamp where the path
+      // leaves the door
+      ['t_well', 3, 4],
+      ['p_bucket', 4, 5],
+      ['p_trough', 2, 5],
+      ['p_logs', 7, 5],
+      ['p_firewood', 8, 5],
+      ['p_stump', 8, 6],
+      ['p_toolrack', 19, 6],
+      ['p_barrel', 19, 7],
+      ['p_crates', 20, 7],
+      ['w_laundry', 21, 3],
+      ['p_haybale', 23, 7],
+      ['t_lanternpole', 16, 8],
       ['p_flowerbed', 10, 8],
       ['p_flowerbed', 11, 8],
-      ['p_wheelbarrow', 26, 9],
-      ['p_logs', 27, 12],
-      ['t_scarecrow', 27, 24],
-      ['p_rock', 27, 20],
-      ['p_rock', 2, 21],
-      ['p_stump', 24, 42],
-      ['p_hollowlog', 5, 42],
       ['p_cat', 11, 9],
+      ['t_scarecrow', 27, 24],
+      ['p_hollowlog', 5, 42],
       ['p_sign_sprout', 17, 42],
-      ['p_bucket', 7, 5],
+    ],
+    // copses that frame the fence corners and sides (each joins one of the farm's lone trees)
+    groves: [
+      [1, 2, 3, 2],
+      [25, 2, 3, 3],
+      [1, 19, 2, 3],
+      [27, 15, 2, 3],
+      [1, 40, 3, 3],
+      [25, 40, 3, 3],
     ],
     facade: [
       [12, 7, 'f_window_box'],
@@ -126,7 +133,7 @@ const COMPOSITION = {
     props: [
       ['t_streetlamp', 9, 3],
       ['t_streetlamp', 14, 8],
-      ['t_streetlamp', 9, 14],
+      ['t_streetlamp', 9, 15],
       ['t_streetlamp', 14, 20],
       ['t_streetlamp', 9, 28],
       // Mara's store: stock stacked by the wall
@@ -135,8 +142,8 @@ const COMPOSITION = {
       ['p_crates', 9, 7],
       ['p_crates', 1, 6],
       // the well and a bench: the square
-      ['t_well', 8, 13],
-      ['p_bench', 9, 12],
+      ['t_well', 9, 12],
+      ['p_bench', 9, 13],
       // Orin's smithy
       ['p_coal', 2, 19],
       ['p_anvil', 3, 19],
@@ -188,12 +195,19 @@ const COMPOSITION = {
       ['p_hollowlog', 18, 2],
       ['p_stump', 1, 26],
       ['p_boulder', 18, 28],
-      ['p_rocks', 1, 21],
       ['p_logs', 1, 12],
     ],
+    // groves pushing in from the wood's edge where no forage zone lies (the clearings stay open)
+    groves: [
+      [1, 17, 2, 6],
+      [2, 1, 3, 2],
+      [12, 1, 4, 2],
+      [18, 5, 1, 5],
+    ],
+    groveEdge: 0.45,
     bigOak: [17, 3],
     cave: [9, 0],
-    trees: ['pine', 'pine', 'oak', 'birch'],
+    trees: ['oak', 'birch', 'oak', 'pine'],
     bushes: ['bush_big', 'bush_berry', 'fern', 'p_boulder', 'fern', 'p_rootstump'],
     blooms: 0.15,
   },
@@ -207,6 +221,19 @@ const COMPOSITION = {
       ['p_torch', 13, 1, 'rock'],
       ['t_beams', 8, 28, 'rock'],
       ['t_beams', 11, 28, 'rock'],
+      ['t_beams', 6, 24],
+      ['t_beams', 12, 24],
+    ],
+    // rock bays pushing in from the walls, so the cavern is not a rectangle
+    bays: [
+      [2, 5, 1, 3],
+      [2, 14, 1, 4],
+      [17, 9, 1, 3],
+      [17, 18, 1, 2],
+      [5, 2, 3, 1],
+      [12, 2, 2, 1],
+      [2, 24, 1, 2],
+      [16, 27, 2, 1],
     ],
     lintel: [9, 27, 2],
     // the cart's track: from the cart by the west wall, across the hall and up toward the ore
@@ -340,7 +367,9 @@ export function artLayers(name, m, objects, extraReserved = []) {
   const has = (n) => tiles[n] !== undefined;
   const C = COMPOSITION[name] ?? { props: [], trees: [], bushes: [], blooms: 0 };
   const { w, h } = m;
-  const kind = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? null : GROUND[m.ground[y][x] - 1]);
+  // The art reads a copy of the ground with its additions (groves, rock bays) applied below.
+  const G = m.ground.map((row) => row.slice());
+  const kind = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? null : GROUND[G[y][x] - 1]);
   const L = Object.fromEntries(
     ['detail', 'shade', 'roof', 'props', 'overhead'].map((k) => [k, new Array(w * h).fill(0)]),
   );
@@ -364,6 +393,27 @@ export function artLayers(name, m, objects, extraReserved = []) {
       for (let j = o.y / 16; j < (o.y + o.height) / 16; j++)
         for (let i = o.x / 16; i < (o.x + o.width) / 16; i++) zoneTiles.add(j * w + i);
 
+  // --- additions: small groves of trees and rock bays, only on open ground outside every zone and reserved
+  // spot (the same rule as props); they are solid, so they go into `solid` like props ---
+  const freeGround = (x, y) => {
+    const k = kind(x, y);
+    const i = y * w + x;
+    return (
+      (k === 'grass' || k === 'flower' || k === 'stone') && !reserved.has(i) && !zoneTiles.has(i)
+    );
+  };
+  for (const [list, k] of [
+    [C.groves ?? [], 'tree'],
+    [C.bays ?? [], 'rock'],
+  ])
+    for (const [gx, gy, gw, gh] of list)
+      for (let y = gy; y < gy + gh; y++)
+        for (let x = gx; x < gx + gw; x++)
+          if (x >= 0 && y >= 0 && x < w && y < h && freeGround(x, y)) {
+            G[y][x] = GROUND.indexOf(k) + 1;
+            solid.add(y * w + x);
+          }
+
   const mask4 = (x, y, same, edge = true) => {
     let mk = 0;
     for (const [dx, dy, bit] of [
@@ -378,29 +428,35 @@ export function artLayers(name, m, objects, extraReserved = []) {
     return mk;
   };
 
-  // --- classify trees: the forest mass is every tree tile joined to the map edge; the rest stand alone ---
+  // --- classify trees: a group of tree tiles joined to the map edge, or of 3 or more, is drawn as a wood of
+  // crowns; smaller groups stand alone ---
   const forest = new Set();
   {
-    const stack = [];
+    const seenT = new Set();
     for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++)
-        if (kind(x, y) === 'tree' && (x === 0 || y === 0 || x === w - 1 || y === h - 1)) {
-          forest.add(y * w + x);
-          stack.push([x, y]);
+      for (let x = 0; x < w; x++) {
+        if (kind(x, y) !== 'tree' || seenT.has(y * w + x)) continue;
+        const group = [];
+        const stack = [[x, y]];
+        seenT.add(y * w + x);
+        let edge = false;
+        while (stack.length) {
+          const [cx, cy] = stack.pop();
+          group.push(cy * w + cx);
+          if (cx === 0 || cy === 0 || cx === w - 1 || cy === h - 1) edge = true;
+          for (const [nx, ny] of [
+            [cx + 1, cy],
+            [cx - 1, cy],
+            [cx, cy + 1],
+            [cx, cy - 1],
+          ])
+            if (kind(nx, ny) === 'tree' && !seenT.has(ny * w + nx)) {
+              seenT.add(ny * w + nx);
+              stack.push([nx, ny]);
+            }
         }
-    while (stack.length) {
-      const [x, y] = stack.pop();
-      for (const [nx, ny] of [
-        [x + 1, y],
-        [x - 1, y],
-        [x, y + 1],
-        [x, y - 1],
-      ])
-        if (kind(nx, ny) === 'tree' && !forest.has(ny * w + nx)) {
-          forest.add(ny * w + nx);
-          stack.push([nx, ny]);
-        }
-    }
+        if (edge || group.length >= 3) group.forEach((i) => forest.add(i));
+      }
   }
   const isForest = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? true : forest.has(y * w + x));
 
@@ -423,6 +479,14 @@ export function artLayers(name, m, objects, extraReserved = []) {
     ].filter(([dx, dy]) => kind(x + dx, y + dy) === 'water').length >= 3;
   const waterish = (k, x, y) => k === 'water' || wet(x, y);
 
+  const torches = (C.props ?? []).filter(([n]) => n === 'p_torch').map(([, x, y]) => [x, y]);
+  /** Floor darkness 0-9 at a tile corner: pockets of noise, fading in from 5 to 8 tiles away from any torch. */
+  const darkness = (cx, cy) => {
+    const d = Math.min(99, ...torches.map(([tx, ty]) => Math.hypot(tx + 0.5 - cx, ty + 0.5 - cy)));
+    const far = Math.max(0, Math.min(1, (d - 5) / 3));
+    const n = Math.max(0, Math.min(1, (noise(cx, cy, 4, 83 + w) - 0.45) * 3));
+    return Math.round(9 * far * n);
+  };
   // --- detail: ground bases under objects, transitions, variation ---
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -445,16 +509,22 @@ export function artLayers(name, m, objects, extraReserved = []) {
       } else if (k === 'water') {
         const wa = nb(x, y, 3, waterish, true);
         if (wa.includes('0')) set('detail', x, y, bake('shore', seed, x, y, wa));
-        else {
-          const r = hash(x, y, 13) % 10;
-          if (r < 4) set('detail', x, y, `water_${r % 3}`); // most open water stays calm
-        }
+        else set('detail', x, y, bake('water', seed, x, y));
       } else if (k === 'rock') {
         const r = nb(x, y, 3, (n) => n !== 'stone' && n !== 'path', true);
         set('detail', x, y, r.includes('0') ? bake('rock', seed, x, y, r) : 'rock_0');
       } else if (k === 'stone') {
         const n = noise(x, y, 5, 41 + w);
-        set('detail', x, y, `stone_${n > 0.62 ? 2 : n < 0.35 ? 1 : hash(x, y, 8) % 2}`);
+        // darker pockets of floor far from the torches; worn and earthy patches elsewhere
+        const corners = [
+          [x, y],
+          [x + 1, y],
+          [x, y + 1],
+          [x + 1, y + 1],
+        ].map(([cx, cy]) => darkness(cx, cy));
+        if (corners.some((c) => c > 0))
+          set('detail', x, y, bake('floor', seed, x, y, corners.join('')));
+        else set('detail', x, y, `stone_${n > 0.62 ? 2 : n < 0.35 ? 1 : hash(x, y, 8) % 2}`);
       } else if (k === 'bed') {
         set('detail', x, y, 'base_floor');
       } else if (k === 'tree' || k === 'bush') {
@@ -561,7 +631,10 @@ export function artLayers(name, m, objects, extraReserved = []) {
         const wa = nb(x, y, 3, waterish, true);
         if (!wa.includes('0') && n > 0.42 && f < 0.5)
           set('shade', x, y, `lily_${hash(x, y, 1) % 2}`);
-        else if (wa[1] === '0' && wa[4] === '1' && f < 0.35) set('shade', x, y, 'reeds_n');
+        else if ((wa[1] === '0' || wa[7] === '0') && (wa[3] === '0' || wa[5] === '0'))
+          // a rounded corner of the bank: a clump of reeds or bank stones softens it
+          set('shade', x, y, hash(x, y, 3) % 2 ? 'reeds_s' : 'p_rocks');
+        else if (wa[1] === '0' && f < 0.22) set('shade', x, y, 'reeds_n');
         continue;
       }
       if (!shadowable(k)) continue;
@@ -616,6 +689,22 @@ export function artLayers(name, m, objects, extraReserved = []) {
         else if (n < 0.3 && f < 0.15) set('shade', x, y, f < 0.07 ? 'rubble' : 'rubble_2');
       }
     }
+  // ferns and tall grass gathered along the groves' edges (flat, walkable: props layer, not solid)
+  if (C.groveEdge)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (kind(x, y) !== 'grass' || L.props[y * w + x]) continue;
+        if (C.props.some(([, px, py]) => px === x && py === y)) continue; // a hand-placed prop goes here
+        const nearWood = [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ].some(([dx, dy]) => kind(x + dx, y + dy) === 'tree' && woods(x + dx, y + dy));
+        const f = (hash(x, y, 57) % 1000) / 1000;
+        if (nearWood && f < C.groveEdge)
+          set('props', x, y, f < C.groveEdge / 2 ? 'fern_flat' : 'tallgrass');
+      }
   // the forest's edge: crowns spilling over the open tiles around it (under the player, or overhead where the
   // wood is south of the tile so you walk behind it), with its shadow cast down-right
   for (let y = 0; y < h; y++)
@@ -788,10 +877,32 @@ export function artLayers(name, m, objects, extraReserved = []) {
   }
   if (C.crystals) {
     // crystals on wall faces that look onto the cavern floor (already solid rock)
+    // only on the cavern's outer wall (never on a free-standing boulder, which could pass for a gem node)
+    const outer = new Set();
+    const stack = [];
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++)
+        if (kind(x, y) === 'rock' && (x === 0 || y === 0 || x === w - 1 || y === h - 1)) {
+          outer.add(y * w + x);
+          stack.push([x, y]);
+        }
+    while (stack.length) {
+      const [x, y] = stack.pop();
+      for (const [nx, ny] of [
+        [x + 1, y],
+        [x - 1, y],
+        [x, y + 1],
+        [x, y - 1],
+      ])
+        if (kind(nx, ny) === 'rock' && !outer.has(ny * w + nx)) {
+          outer.add(ny * w + nx);
+          stack.push([nx, ny]);
+        }
+    }
     const spots = [];
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++)
-        if (kind(x, y) === 'rock' && kind(x, y + 1) === 'stone' && L.props[y * w + x] === 0)
+        if (outer.has(y * w + x) && kind(x, y + 1) === 'stone' && L.props[y * w + x] === 0)
           spots.push([x, y, hash(x, y, 77)]);
     spots.sort((a, b) => a[2] - b[2]);
     for (const [x, y] of spots.slice(0, C.crystals)) {

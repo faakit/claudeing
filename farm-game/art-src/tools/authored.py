@@ -420,6 +420,7 @@ def build(pal, outline, groups, specs, make, names=None):
         extra[name] = bake.bake(P, name, tiles["grass"], tiles["stone"])
     # Identical tiles share one slot; every name keeps its own entry in tiles.json.
     index: dict[str, int] = {}
+    slot_names: list[str] = []
     allt: list[np.ndarray] = []
     slot: dict[bytes, int] = {}
     for n, tile in [(n, tiles[n]) for n in TILE_ORDER] + list(extra.items()):
@@ -430,6 +431,7 @@ def build(pal, outline, groups, specs, make, names=None):
         if n in TILE_ORDER or key not in slot:  # the placeholder row always keeps its 21 indices
             slot.setdefault(key, len(allt))
             allt.append(tile)
+            slot_names.append(n)
             index[n] = len(allt) - 1
         else:
             index[n] = slot[key]
@@ -439,6 +441,9 @@ def build(pal, outline, groups, specs, make, names=None):
     for k, tile in enumerate(allt):
         y, x = divmod(k, cols)
         sheet[y * T : (y + 1) * T, x * T : (x + 1) * T] = tile
+    import seasons
+
+    season_rgba = {k: px.idx_to_rgba(v, pal) for k, v in seasons.season_sheets(sheet, slot_names, cols, P.names).items()}
     for key, (colours, rows) in GLYPHS.items():
         groups["ui"][key] = px.idx_to_rgba(glyph(P, colours, rows), pal)
     seed = px.idx_to_rgba(seed_mound(P), pal)
@@ -449,4 +454,4 @@ def build(pal, outline, groups, specs, make, names=None):
             groups[spec["group"]][key] = px.idx_to_rgba(stepping_stones(P), pal)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(tiles["watered"], pal)
-    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_index": index, "columns": cols}
+    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_index": index, "columns": cols, "seasons": season_rgba}

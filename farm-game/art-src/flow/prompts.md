@@ -24,7 +24,7 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **22** prompts.
+Generations: **24** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -185,3 +185,19 @@ Generations: **22** prompts.
 - raw: fx2-a.jpg, fx2-b.jpg
 - used: a: sparkle, dust and splash frames, ember, seed, glint, glow (FX pass)
 - note: round 2 FX pass, submitted while nature2 was running
+
+## 23. `crops4` (1:1, preamble: tinyacre)
+
+> Crop growth stages as a grid of 4 rows and 5 columns of separate sprites with wide even spacing. Each row is one crop, seen from the side as it stands in a farm field. Columns left to right: a seed in a tiny mound of brown soil, a tiny green sprout, a young leafy plant, a full grown plant with white flowers, the mature plant ready to harvest with the fruit clearly visible. No soil under the plants except the seed mound. Rows top to bottom: low strawberry plant with red strawberries, small blueberry bush with blue berries, low cranberry plant with deep red cranberries, snow pea vine climbing a small wooden stick with green pea pods.
+
+- raw: crops4-a.jpg, crops4-b.jpg
+- used: 
+- note: round 2: the depth branch's rare crops
+
+## 24. `items7` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: four small paper seed packets, each with a picture of its fruit: strawberry, blueberry, cranberry, snow pea, then a red strawberry, a cluster of blueberries, a cluster of deep red cranberries, a green snow pea pod, then, seen in three-quarter front view as they stand on the ground: small wooden seed exchange kiosk with shelves of seed jars under a little green roof, wooden notice board with a carved green sprout emblem and a rose-pink flower on top, small grey cave stalagmite, hanging iron lantern on a hook with a warm glow, small cluster of glowing blue crystals in rock, old wooden water pump, small stone garden lantern, rose-pink climbing rose on a wooden trellis.
+
+- raw: items7-a.jpg, items7-b.jpg
+- used: 
+- note: round 2, submitted while crops4 was running

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MapArt } from '../art/mapLayers';
+import { MapArt, tilesetFor } from '../art/mapLayers';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
   ACTION_LOCK_MS,
@@ -11,7 +11,6 @@ import {
   SEASON_TINT,
   tileKind,
   TILE_SIZE,
-  TILESET_KEY,
   VOID_COLOR,
   WORLD_VIEW,
 } from '../config';
@@ -125,15 +124,16 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     const map = this.make.tilemap({ key: mapCacheKey(this.mapId) });
-    const tileset = map.addTilesetImage('placeholder', TILESET_KEY, TILE_SIZE, TILE_SIZE, 0, 0);
+    const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
+    const look = tilesetFor(this.textures, state.time.season, outdoor);
+    const tileset = map.addTilesetImage('placeholder', look.key, TILE_SIZE, TILE_SIZE, 0, 0);
     if (!tileset) throw new Error('Tileset "placeholder" missing from map');
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
-    const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
-    this.mapArt = new MapArt(map, tileset, outdoor ? SEASON_TINT[state.time.season] : 0xffffff);
+    this.mapArt = new MapArt(map, tileset, look.tinted ? SEASON_TINT[state.time.season] : 0xffffff);
 
-    if (outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
+    if (look.tinted && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add
         .rectangle(0, 0, map.widthInPixels, map.heightInPixels, SEASON_TINT[state.time.season])
         .setOrigin(0)

@@ -140,7 +140,12 @@ def mine_floor(P, seed: int, mood: str) -> np.ndarray:
     """Cavern floor: calm stone, an earthy variant (taupe grit) and a worn one, for clustered patches."""
     t = np.full((T, T), P.name("stone"), dtype=np.int32)
     r = np.random.default_rng(seed)
-    n_grit = {"calm": 3, "earth": 9, "worn": 4}[mood]
+    n_grit = {"calm": 3, "earth": 9, "worn": 4, "dark": 2}[mood]
+    if mood == "dark":  # a pocket away from the torches: half the floor in stone dark, dithered
+        for y in range(T):
+            for x in range(T):
+                if (x + y) % 2 == 0:
+                    t[y, x] = P.name("stone dark")
     for _ in range(n_grit):
         x, y = int(r.integers(0, T)), int(r.integers(0, T))
         t[y, x] = P.name("taupe")

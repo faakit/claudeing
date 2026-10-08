@@ -2,15 +2,15 @@ import { mixColor as mix } from './color';
 
 /** Time-of-day color grade, applied as a multiply overlay. Keyframes are [minutes, 0xRRGGBB]. */
 export const DAYLIGHT_KEYS: [number, number][] = [
-  [360, 0xffd9b8], // 6:00 warm dawn
-  [480, 0xfff4e2], // 8:00
+  [360, 0xffdccc], // 6:00 rosy dawn
+  [480, 0xfff4ec], // 8:00
   [600, 0xffffff], // 10:00 neutral day
   [1020, 0xffffff], // 5:00 PM
-  [1110, 0xffd6a2], // 6:30 PM golden hour
-  [1200, 0xffb27c], // 8:00 PM orange dusk
-  [1290, 0x9496cc], // 9:30 PM
-  [1380, 0x6e78b6], // 11:00 PM
-  [1560, 0x5864a6], // 2:00 AM deep night
+  [1110, 0xffe4cc], // 6:30 PM soft golden hour
+  [1200, 0xf2bcc4], // 8:00 PM rose dusk (toward the palette's rose and plum, not orange)
+  [1290, 0xa894c4], // 9:30 PM plum
+  [1380, 0x7c7cb8], // 11:00 PM
+  [1560, 0x646ca8], // 2:00 AM deep night
 ];
 
 export function daylightColor(minutes: number): number {

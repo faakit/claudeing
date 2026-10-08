@@ -1,5 +1,23 @@
 import type Phaser from 'phaser';
+import { TILESET_KEY } from '../config';
 import index from './atlases.json';
+
+/** Texture key of a season's tileset (palette swaps of the spring tiles, built by art-src/tools/seasons.py). */
+export const seasonTilesetKey = (season: string): string => `${TILESET_KEY}_${season}`;
+
+/**
+ * The tileset texture for a map: outdoors, the season's own tileset when it was built and loaded (then no colour
+ * tint is needed); otherwise the spring one. `tinted` says whether the old full-screen season tint still applies.
+ */
+export function tilesetFor(
+  textures: { exists(key: string): boolean },
+  season: string,
+  outdoor: boolean,
+): { key: string; tinted: boolean } {
+  if (!outdoor || season === 'spring') return { key: TILESET_KEY, tinted: false };
+  const key = seasonTilesetKey(season);
+  return textures.exists(key) ? { key, tinted: false } : { key: TILESET_KEY, tinted: true };
+}
 
 /**
  * The art layers baked into each map by scripts/generate-maps.mjs (see scripts/map-art.mjs): ground detail and

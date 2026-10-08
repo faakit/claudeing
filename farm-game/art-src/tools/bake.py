@@ -113,13 +113,52 @@ def normal_up(nb: str) -> np.ndarray:
     return centre((gy > 0.35) & (gy > np.abs(gx) * 0.8), 3)
 
 
+def water_px(P, X, Y, seed: int) -> np.ndarray:
+    """Open water in world space: flat water with sparse short glints (a dash of sky over a dusk-blue underline),
+    one candidate per 9x6 px cell, jittered, so nothing lines up on a grid."""
+    t = np.full(X.shape, P.name("water"), dtype=np.int32)
+    xi, yi = X.astype(int), Y.astype(int)
+    cx, cy = xi // 9, yi // 6
+    h = hash2(cx, cy, seed + 21)
+    on = (h % 7) < 2
+    ox, oy = (h >> 3) % 6, (h >> 6) % 4
+    lx, ly = xi - cx * 9 - ox, yi - cy * 6 - oy
+    n = 2 + (h >> 9) % 2
+    dash = on & (ly == 0) & (lx >= 0) & (lx < n)
+    under = on & (ly == 1) & (lx >= 1) & (lx <= n)
+    t[dash] = P.name("sky")
+    t[under] = P.name("dusk blue")
+    return t
+
+
+def water(P, recipe: list[str]) -> np.ndarray:
+    seed, x, y = int(recipe[1]), int(recipe[2]), int(recipe[3])
+    X, Y = grid(1, x, y)
+    return water_px(P, X, Y, seed)
+
+
 def shore(P, recipe: list[str], grass: np.ndarray) -> np.ndarray:
+    """A water tile's edge: convex corners rounded with a 10 px radius (an opening of the water shape), a bank
+    that meanders 1-5 px into the water tile in coves and bulges, so the drawn edge stays within ~5 px of the real
+    (collision) edge; earth bank face where land is north, wet rim, broken foam, then world-space water."""
     seed, x, y, nb = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
-    d, X, Y, _ = smooth_field(nb, x, y, seed, 2.6, 6.0)
-    X2, Y2 = grid(3, x - 1, y - 1)
-    d = d - 3.0 - centre((vnoise(X2, Y2, 12.0, seed + 9) - 0.5) * 3.0, 3)  # slow meanders 1-7 px deep
+    inside = window_mask(nb, 3)
+    R = 14.0  # convex corners: the drawn bank cuts ~5 px off the corner along the diagonal
+    sd = sdf(inside)
+    core = sd > R
+    if core.any():
+        cd = sdf(core)  # negative outside the eroded core: -distance to it
+        opened = -cd - 0.5
+        d = np.minimum(sd, R - opened)  # inside the opened shape: the distance to its rounded edge
+    else:
+        d = sd
+    d = blur(d, 1.6)
+    X, Y = grid(3, x - 1, y - 1)
+    meander = (vnoise(X, Y, 22.0, seed + 9) - 0.5) * 5.6 + (vnoise(X, Y, 6.0, seed + 3) - 0.5) * 1.2
+    d = centre(d - 2.8 - meander, 3)  # coves and bulges: the drawn bank sits 0-5 px inside the water tile
+    X, Y = centre(X, 3), centre(Y, 3)
     up = normal_up(nb)
-    t = np.full((T, T), -1, dtype=np.int32)
+    t = water_px(P, X, Y, seed)
     gx, gy = (X.astype(int) % T), (Y.astype(int) % T)
     foam_n = vnoise(X, Y, 2.0, seed + 7)
     for j in range(T):
@@ -138,7 +177,7 @@ def shore(P, recipe: list[str], grass: np.ndarray) -> np.ndarray:
                 if foam_n[j, i] > 0.3:
                     t[j, i] = P.name("ice white")
             elif v < 5.0 and (i + j) % 2 == 0:
-                t[j, i] = P.name("dusk blue") if up[j, i] else P.name("sky") if v < 4 else -1
+                t[j, i] = P.name("dusk blue") if up[j, i] else P.name("sky") if v < 4 else t[j, i]
     return t
 
 
@@ -191,8 +230,10 @@ def _crowns(nb25: str, x: int, y: int, seed: int):
             elif north_open:
                 cy = 5 + jy
             cx = (i - 1) * T + 8 + jx
+            kind = "pine" if hx % 9 == 0 else "birch" if hx % 9 in (4, 7) else "oak"
             out.append(
                 {
+                    "kind": kind,
                     "cx": cx,
                     "cy": (j - 1) * T + cy,
                     "r": r,
@@ -247,16 +288,26 @@ def canopy(P, recipe: list[str]) -> np.ndarray:
         if not keep(c):
             continue
         dx, dy = xs + 0.5 - c["cx"], ys + 0.5 - c["cy"]
-        dist = np.sqrt(dx * dx + dy * dy)
+        if c["kind"] == "pine":  # a narrower, pointed crown
+            dist = np.sqrt((dx * (1.0 + np.clip(-dy, 0, None) / c["r"] * 0.9)) ** 2 + dy * dy)
+            ramp = (mid, dark, deep, ink)
+        elif c["kind"] == "birch":
+            dist = np.sqrt(dx * dx + dy * dy)
+            ramp = (glint, hi, mid, dark)
+        else:
+            dist = np.sqrt(dx * dx + dy * dy)
+            ramp = (hi, mid, dark, deep)
         r = c["r"] + (edge_n - 0.5) * 1.6
         m = dist <= r
         light = -(dx + dy) / (np.sqrt(2) * c["r"])
-        col = np.where(light > 0.5, hi, np.where(light > -0.15, mid, np.where(light > -0.6, dark, deep)))
-        col = np.where((leaf > 0.62) & (col == mid), dark, col)
-        col = np.where((leaf < 0.25) & (col == dark), mid, col)
-        col = np.where((leaf > 0.8) & (light > 0.2), glint, col)
+        c_hi, c_mid, c_dark, c_deep = ramp
+        col = np.where(light > 0.5, c_hi, np.where(light > -0.15, c_mid, np.where(light > -0.6, c_dark, c_deep)))
+        col = np.where((leaf > 0.62) & (col == c_mid), c_dark, col)
+        col = np.where((leaf < 0.25) & (col == c_dark), c_mid, col)
+        if c["kind"] != "birch":
+            col = np.where((leaf > 0.8) & (light > 0.2), glint if c["kind"] == "oak" else c_hi, col)
         rim = m & (dist > r - 1.0)
-        col = np.where(rim & (owner >= 0), dark, col)  # a dark seam where this crown overlaps one behind it
+        col = np.where(rim & (owner >= 0), c_dark if c["kind"] != "birch" else dark, col)  # a dark seam where this crown overlaps one behind it
         img[m] = col[m]
         owner[m] = k
     # deep shade in the forest's gaps; ink outline around the silhouette
@@ -307,6 +358,10 @@ def bake(P, name: str, grass: np.ndarray, floor: np.ndarray | None = None) -> np
         return canopy(P, r)
     if r[0] == "rock":
         return rock(P, r, floor)
+    if r[0] == "water":
+        return water(P, r)
+    if r[0] == "floor":
+        return floor_dark(P, r, floor)
     if r[0] == "ao":
         return occlusion(P, r)
     raise ValueError(f"unknown baked tile {name}")
@@ -380,3 +435,19 @@ def occlusion(P, recipe: list[str]) -> np.ndarray:
     dens = np.clip((6.0 - d) / 6.0, 0, 1) * 0.55
     t[(~inside) & (thr < dens)] = P.name("stone dark")
     return centre(t, 3).copy()
+
+
+def floor_dark(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
+    """Cavern floor with a darker pocket: darkness given at the tile's four corners (0-9, from the torch distance
+    and a smooth noise in the map generator), interpolated per pixel and dithered with stone dark."""
+    seed, x, y, c = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
+    c00, c10, c01, c11 = (int(ch) / 9.0 for ch in c)
+    X, Y = grid(1, x, y)
+    fx, fy = (X - x * T) / T, (Y - y * T) / T
+    dark = (c00 * (1 - fx) + c10 * fx) * (1 - fy) + (c01 * (1 - fx) + c11 * fx) * fy
+    dark = dark + (vnoise(X, Y, 3.0, seed) - 0.5) * 0.25
+    bayer = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0
+    thr = bayer[Y.astype(int) % 4, X.astype(int) % 4]
+    t = floor.copy()
+    t[thr < dark * 0.5] = P.name("stone dark")
+    return t
