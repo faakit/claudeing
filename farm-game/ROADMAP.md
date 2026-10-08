@@ -134,8 +134,9 @@ More people, more places, more to discover.
 
 - [ ] **R4.1 Real art.** Replace generated placeholders with hand-made tilesets, character sheets, animal and item
       icons, a proper UI skin. All art is addressed by texture key, so this is an asset swap plus an atlas loader.
-- [ ] **R4.2 Real audio.** Composed music per season and time of day, recorded or authored sound effects, with the
-      current synthesized set as a fallback.
+- [x] **R4.2 Real audio.** Composed music per season and time of day, recorded or authored sound effects, with the
+      current synthesized set as a fallback. Done as sampled CC0 instruments playing composed pieces, CC0 recorded
+      sound effects and ambience (see DECISIONS "Real audio"). Still to do: a human listening pass on real phones.
 - [ ] **R4.3 Localization.** Move every player-facing string out of code and data into locale files. Text-fit tests
       already exist and will catch overflow in other languages.
 - [ ] **R4.4 Store release.** Final app id, store listings, privacy statement, crash and error reporting, signed

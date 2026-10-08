@@ -3,7 +3,8 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 
-const PORT = 4178;
+// Overridable so parallel checkouts can run their checks at the same time without sharing a server.
+const PORT = Number(process.env.E2E_MOBILE_PORT ?? 4178);
 const BASE = `http://localhost:${PORT}/`;
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const MIN_TOUCH_CSS = 44;
@@ -55,6 +56,13 @@ const server = spawn(
     stdio: 'ignore',
   },
 );
+// With strictPort a busy port makes the preview exit: fail instead of testing someone else's server.
+server.on('exit', (code) => {
+  if (code) {
+    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
+    process.exit(1);
+  }
+});
 process.on('exit', () => server.kill());
 for (let i = 0; i < 50; i++) {
   try {
@@ -81,10 +89,25 @@ try {
       isMobile: true,
       hasTouch: true,
     });
+    await ctx.addInitScript(() => {
+      const Orig = window.AudioContext;
+      if (!Orig) return;
+      window.__audioContexts = 0;
+      window.AudioContext = class extends Orig {
+        constructor(...args) {
+          super(...args);
+          window.__audioContexts++;
+        }
+      };
+    });
     const page = await ctx.newPage();
     const errors = [];
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(String(e)));
+    let audioOk = 0;
+    page.on('response', (r) => {
+      if (r.url().includes('/assets/audio/') && r.ok()) audioOk++;
+    });
     const cdp = await ctx.newCDPSession(page);
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: p.insets });
     await page.goto(`${BASE}?debug`);
@@ -144,6 +167,17 @@ try {
         `${p.name}: every touch target >= ${required} css px`,
         minTouch >= required,
         `smallest ${minTouch.toFixed(1)}`,
+      );
+    }
+    if (p === PROFILES[0]) {
+      await page
+        .waitForFunction(() => (window.__farm.audio.debugInfo().decoded ?? 0) > 40, null, { timeout: 15000 })
+        .catch(() => undefined);
+      const au = await page.evaluate(() => ({ ...window.__farm.audio.debugInfo(), contexts: window.__audioContexts }));
+      check(
+        `${p.name}: audio files load and play on a phone profile (one AudioContext)`,
+        audioOk >= 40 && au.contexts === 1 && au.decoded > 40 && !au.synthMusic,
+        JSON.stringify({ audioOk, ...au }),
       );
     }
     check(`${p.name}: no console errors`, errors.length === 0, errors.join(' | '));

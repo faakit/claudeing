@@ -1,0 +1,542 @@
+{
+ "amb/oga-birds-isaiah658": {
+  "sha1": "d9d8df440e3f8fdb9915e9bdf13657198f73a3dc",
+  "bytes": 544669
+ },
+ "amb/oga-birds-syncopika": {
+  "sha1": "7ddc9e88b33a459e5993830ca0af4973635da38a",
+  "bytes": 528004
+ },
+ "amb/oga-crickets": {
+  "sha1": "1316093416cb93d80af45c3053fcb42203885e1a",
+  "bytes": 184393
+ },
+ "amb/oga-drip": {
+  "sha1": "77e17163b4bcc4c2199eecaaa1c46ed7fa627409",
+  "bytes": 1309638
+ },
+ "amb/oga-dungeon": {
+  "sha1": "72243d85104b131227dd05665756d5c84fe732cb",
+  "bytes": 1626352
+ },
+ "amb/oga-rain-1": {
+  "sha1": "446452cfcacfab1b6c38511888f4b9ce695275a8",
+  "bytes": 550049
+ },
+ "amb/oga-wind1": {
+  "sha1": "63326da48ec3788268b3d58483cc21fd681bbf65",
+  "bytes": 5291948
+ },
+ "sfx/kenney-impact/footstep_snow_000": {
+  "sha1": "2d2102d24e131cd0ea7097942ddf451713dd5972",
+  "bytes": 7880
+ },
+ "sfx/kenney-impact/footstep_snow_001": {
+  "sha1": "e89eff89644311bd8f27b904a03ca99d38fe7fea",
+  "bytes": 7794
+ },
+ "sfx/kenney-impact/footstep_snow_002": {
+  "sha1": "0d42e724aed5b62f0ae3687b0753cb6280babf52",
+  "bytes": 7694
+ },
+ "sfx/kenney-impact/footstep_snow_003": {
+  "sha1": "971246ae8e18e1ca26eb2424c692e3c3a1952d9c",
+  "bytes": 7860
+ },
+ "sfx/kenney-impact/footstep_snow_004": {
+  "sha1": "379b553ca9e035d9e3f5005c881459da86233c92",
+  "bytes": 7630
+ },
+ "sfx/kenney-interface/drop_002": {
+  "sha1": "c0f735670be0a38a98d2bc3701a4993d0a063c6f",
+  "bytes": 6411
+ },
+ "sfx/kenney-interface/drop_003": {
+  "sha1": "5f9486ed86d9313be532f21f2bc38d8802efc304",
+  "bytes": 6288
+ },
+ "sfx/kenney-interface/drop_004": {
+  "sha1": "3df9e035aeccc6cf03697ff5a1e8fb9ef7cff433",
+  "bytes": 7230
+ },
+ "sfx/kenney-interface/error_007": {
+  "sha1": "93e2d2883d0078286e72d41e771067c9148d0ecc",
+  "bytes": 10225
+ },
+ "sfx/kenney-interface/error_008": {
+  "sha1": "1e32690ca942170fd52518b58a14735cd66805f7",
+  "bytes": 9215
+ },
+ "sfx/kenney-interface/select_001": {
+  "sha1": "bf7df59bc763af6857738979a9890ed34fe472c3",
+  "bytes": 5468
+ },
+ "sfx/kenney-interface/select_007": {
+  "sha1": "add1c8bc26c72647c52aabc1d7533eaeedf0217b",
+  "bytes": 6580
+ },
+ "sfx/kenney-rpg/cloth1": {
+  "sha1": "8175b60e772ff23d153cc9d23b78b04fdc9d2746",
+  "bytes": 16508
+ },
+ "sfx/kenney-rpg/cloth2": {
+  "sha1": "24b65b9ed97cff70aced31b502d8235b357ccd25",
+  "bytes": 11787
+ },
+ "sfx/kenney-rpg/doorOpen_1": {
+  "sha1": "ad436e0e5255fad32720d964ba7430a4be47f90a",
+  "bytes": 22848
+ },
+ "sfx/kenney-rpg/doorOpen_2": {
+  "sha1": "302fe2fbee91b06c637f35cba8a57609213f2b94",
+  "bytes": 30280
+ },
+ "sfx/kenney-rpg/footstep01": {
+  "sha1": "e57fb3d6114dc240105b125f5461387996c3273e",
+  "bytes": 9900
+ },
+ "sfx/kenney-rpg/footstep03": {
+  "sha1": "0e1cac078f939100f522387edada5e04e0cec3f5",
+  "bytes": 10559
+ },
+ "sfx/kenney-rpg/footstep06": {
+  "sha1": "9c99bc4bc1113a77b75472223c1fe4d1bf109aa4",
+  "bytes": 9885
+ },
+ "sfx/kenney-rpg/footstep08": {
+  "sha1": "1c43110bbf5e40bd328f992729ae566c95f4f701",
+  "bytes": 9242
+ },
+ "sfx/kenney-rpg/handleCoins": {
+  "sha1": "57cba4460509758eb942e857e3b1a8b377e08c45",
+  "bytes": 25394
+ },
+ "sfx/kenney-rpg/handleCoins2": {
+  "sha1": "6ba974fe74d8dbaab54d923ed8d7d5fe47139432",
+  "bytes": 13094
+ },
+ "sfx/kenney-ui/click3": {
+  "sha1": "6463c9badbc913b664a91be4cbd8a6504b69e89e",
+  "bytes": 4880
+ },
+ "sfx/kenney-ui/click4": {
+  "sha1": "585f29df159cb987b49a39041019746cb00f7e21",
+  "bytes": 4558
+ },
+ "sfx/kenney-ui/click5": {
+  "sha1": "4456e375faac1b2f1b4be772c048d6342d626b7f",
+  "bytes": 4532
+ },
+ "sfx/oga-rubberduck-100/bell_02": {
+  "sha1": "0f5858fcc1b6ce712e637d24aacd4709ec7dc08f",
+  "bytes": 18962
+ },
+ "sfx/oga-rubberduck-water/loop_bubbles_02": {
+  "sha1": "0b2c4f3c36e89ca1b5795c5ccd523b230badcc7e",
+  "bytes": 316960
+ },
+ "sfx/oga-rubberduck-water/loop_water_01": {
+  "sha1": "6d93c1ca9282f9c7958da821b469be9a27b85b56",
+  "bytes": 176039
+ },
+ "sfx/oga-rubberduck-water/splash_06": {
+  "sha1": "e45ed2ae92863e5c9159e1bac32ee76cdcb6e1f5",
+  "bytes": 25975
+ },
+ "sfx/oga-shovel": {
+  "sha1": "18904de57177e9f040267560fd2767a4d06ef5f6",
+  "bytes": 21923
+ },
+ "sfx/oga-swishes/swish-10": {
+  "sha1": "45b440fe2b98477db0117ee34f903d919cfe9457",
+  "bytes": 33862
+ },
+ "sfx/oga-swishes/swish-11": {
+  "sha1": "071497ca14ceaf1cb7ea0c26c5cb8fbcdea23baa",
+  "bytes": 28346
+ },
+ "sfx/oga-swishes/swish-12": {
+  "sha1": "444c251f3e92411174ee881fe778666317fa567f",
+  "bytes": 20892
+ },
+ "sfx/oga-swishes/swish-13": {
+  "sha1": "ae695c0c76365f2dcc0fa30b42f786768ae1bcc8",
+  "bytes": 19516
+ },
+ "vcsl/marimba_B2": {
+  "sha1": "f7015b2fdd2bf91d63194e076113e651f4a4356e",
+  "bytes": 1495616
+ },
+ "vcsl/marimba_B4": {
+  "sha1": "7de5299cee0df61e0bd9793d2bcc149e0fbd306b",
+  "bytes": 433802
+ },
+ "vcsl/marimba_C4": {
+  "sha1": "3d0c0d6ebee1efb6e969fdeb6d1b02ce226d29f2",
+  "bytes": 655244
+ },
+ "vcsl/marimba_C6": {
+  "sha1": "76ec08cb9cf01933c48e28fc3f9659f2ae5d37b4",
+  "bytes": 451844
+ },
+ "vcsl/marimba_F3": {
+  "sha1": "c0cb8132349d684ad01019e4e51495a9b83bb631",
+  "bytes": 1382924
+ },
+ "vcsl/marimba_F5": {
+  "sha1": "3b5e22859cf657b305fa7e99bc52a60bcee7a5b9",
+  "bytes": 566924
+ },
+ "vcsl/marimba_G2": {
+  "sha1": "5b6d9da150560de940b01e3131d3adb0dd041396",
+  "bytes": 1513244
+ },
+ "vcsl/marimba_G4": {
+  "sha1": "902a491153392ad4af3e706e8815d7d7d4f3d55e",
+  "bytes": 580262
+ },
+ "vcsl/ocarina_A3": {
+  "sha1": "b5fbd70964d5a067fd9ed0b772df33798baee1b1",
+  "bytes": 1730756
+ },
+ "vcsl/ocarina_A4": {
+  "sha1": "2dc3088c166d90d1ea2cfbb98deeb9b5c0d6a934",
+  "bytes": 1756556
+ },
+ "vcsl/ocarina_C#4": {
+  "sha1": "d01b72c616b03b6892e848b56d55c7d8c836e99d",
+  "bytes": 1734950
+ },
+ "vcsl/ocarina_C#5": {
+  "sha1": "6df37ad20cd60430190441235fa6b6c3a99830eb",
+  "bytes": 1520336
+ },
+ "vcsl/ocarina_F#4": {
+  "sha1": "839187ea27b27b67eaf9d27216faa40e0ede4aa2",
+  "bytes": 1785296
+ },
+ "vcsl/recorder_C4": {
+  "sha1": "4771ba46fc388196a609eb7179589f1e91913f99",
+  "bytes": 1574224
+ },
+ "vcsl/recorder_C5": {
+  "sha1": "02fd15d2b80ec33ec3e0e4ef7ae22ec1d096aa8f",
+  "bytes": 2530036
+ },
+ "vcsl/recorder_E4": {
+  "sha1": "688e481416ba23099231a1e0e62a37f50644930b",
+  "bytes": 2312324
+ },
+ "vcsl/recorder_E5": {
+  "sha1": "0f8e2f18e18e7c907610ed7e2968ac0ea2358105",
+  "bytes": 2401644
+ },
+ "vcsl/recorder_G#3": {
+  "sha1": "8f524a0f3bc9a8fc2899a25932ee202cab83b284",
+  "bytes": 2466568
+ },
+ "vcsl/recorder_G#4": {
+  "sha1": "2139f1cb4772026269d37fe3dd26e55fad4ea17b",
+  "bytes": 2394072
+ },
+ "vcsl/shaker_Mid_ShakerDouble_Down_rr1": {
+  "sha1": "89ae03e9fe294f42d505c206f481c8a8de1e7876",
+  "bytes": 46844
+ },
+ "vcsl/shaker_Mid_ShakerDouble_Down_rr2": {
+  "sha1": "cf6e3f1c9906797b508e8eaf759c88f615e2994e",
+  "bytes": 46652
+ },
+ "vcsl/shaker_Mid_ShakerDouble_Up_rr1": {
+  "sha1": "f14644b4ba502583506adb48afec2d77f1535238",
+  "bytes": 22352
+ },
+ "vcsl/shaker_Mid_ShakerDouble_Up_rr2": {
+  "sha1": "1018a618b9d11b4ab6353184eb80500c8ad28359",
+  "bytes": 29168
+ },
+ "vcsl/vibes_A4": {
+  "sha1": "d0a1830d96fbf4024eeb972b814d6ccf95052e15",
+  "bytes": 2388580
+ },
+ "vcsl/vibes_B3": {
+  "sha1": "5e1d48131c04b17b83729aa5e953afa36888f780",
+  "bytes": 2851524
+ },
+ "vcsl/vibes_C3": {
+  "sha1": "1a208d76eee674b86ae885f3e3e8bb00a4f9329e",
+  "bytes": 2117636
+ },
+ "vcsl/vibes_C5": {
+  "sha1": "f48af2de63971a12aacdc91ce5958d81506ef3fb",
+  "bytes": 1161864
+ },
+ "vcsl/vibes_D4": {
+  "sha1": "23faf494dca58646f229ac708faed1e5933ec0f7",
+  "bytes": 2625224
+ },
+ "vcsl/vibes_E3": {
+  "sha1": "eaf297dbcb4adfde22c264244a0916bd0bb93d32",
+  "bytes": 2665284
+ },
+ "vcsl/vibes_E5": {
+  "sha1": "d515d8f2613007dfed09b761e61ce7cf4c0bd026",
+  "bytes": 1496764
+ },
+ "vcsl/vibes_F4": {
+  "sha1": "5455d7620cb5005abca0356899978c164a75ec25",
+  "bytes": 2027468
+ },
+ "vcsl/vibes_G3": {
+  "sha1": "d04abb26f69203c2dddb516859d9c417d2f66d36",
+  "bytes": 3221132
+ },
+ "vsco/cello_A2": {
+  "sha1": "5c94dad1c5ad7f8c7646861864d69325add2dd14",
+  "bytes": 2336738
+ },
+ "vsco/cello_B1": {
+  "sha1": "0ff46a9ec02dee9af1b3cbf2651db0ae368f96bb",
+  "bytes": 2372492
+ },
+ "vsco/cello_C1": {
+  "sha1": "35658fa164c1d8ec6937ba46926af88ef5af4fea",
+  "bytes": 2347376
+ },
+ "vsco/cello_C3": {
+  "sha1": "154e68095b372a94ed61d5682ebfd27d18d7827f",
+  "bytes": 2444174
+ },
+ "vsco/cello_D2": {
+  "sha1": "2345b397794ba6afb8597d5b4b160fce07d9945f",
+  "bytes": 2550956
+ },
+ "vsco/cello_E1": {
+  "sha1": "fa39ceafbdf146730ad183fda78e4edc6efa3b37",
+  "bytes": 2468348
+ },
+ "vsco/cello_F2": {
+  "sha1": "fa72fe61d97adda6f33159fb57fd7aa60ac12da3",
+  "bytes": 2186012
+ },
+ "vsco/cello_G1": {
+  "sha1": "be4a2c3e9154be2e4c5c32c353ab611b23b6627a",
+  "bytes": 2161700
+ },
+ "vsco/glock_C5": {
+  "sha1": "0a6742ad4ab376c43faa0d62371cb9f801ac50f6",
+  "bytes": 1271310
+ },
+ "vsco/glock_C6": {
+  "sha1": "9cb83e87e88a4533e9da1f41465246417cd3edc1",
+  "bytes": 1271310
+ },
+ "vsco/glock_C7": {
+  "sha1": "83d282b9e7d5791aca5a701bd5e1208abee9cd2f",
+  "bytes": 492418
+ },
+ "vsco/glock_G4": {
+  "sha1": "636d2b7b4501fa01c03924b691bbbacfd0bdaf16",
+  "bytes": 1271310
+ },
+ "vsco/glock_G5": {
+  "sha1": "02fa03f1e6178719ea7116bf6725e6ad3ed7e0ca",
+  "bytes": 1226714
+ },
+ "vsco/glock_G6": {
+  "sha1": "d78090bfe0ebcb55b897b0c462146b698ed49b2a",
+  "bytes": 843122
+ },
+ "vsco/harp_A2": {
+  "sha1": "332edcf8fdcc972f074624d024467cf2f7704915",
+  "bytes": 2007670
+ },
+ "vsco/harp_A4": {
+  "sha1": "a0cb103a5e59c62d16e9b59cd3c6f7de0cd46465",
+  "bytes": 2143618
+ },
+ "vsco/harp_B3": {
+  "sha1": "e6c03848325b9e22f9d0bc3f42291d1a235b8da9",
+  "bytes": 1981130
+ },
+ "vsco/harp_B5": {
+  "sha1": "ebb0d26a96bdddfa260b5daaf6728f5f6580d2eb",
+  "bytes": 779058
+ },
+ "vsco/harp_C3": {
+  "sha1": "9a38f1001370c8aa289e0ee651e304c7963ffd61",
+  "bytes": 1586172
+ },
+ "vsco/harp_C5": {
+  "sha1": "2c03e5ea6c271511decb79ae34d21bd047706668",
+  "bytes": 1237142
+ },
+ "vsco/harp_D2": {
+  "sha1": "3b8e09995caf47728129d218af6e7a43081acd55",
+  "bytes": 1741118
+ },
+ "vsco/harp_D4": {
+  "sha1": "ee54a8047e131c7fe5872574139e9a266c0085d6",
+  "bytes": 1921690
+ },
+ "vsco/harp_E3": {
+  "sha1": "77e47688ae3e14ad9c24964ea1f4e899276094bc",
+  "bytes": 2461138
+ },
+ "vsco/harp_E5": {
+  "sha1": "70a0d089f55f95e7252fbe33b664eefd3b75df26",
+  "bytes": 1171586
+ },
+ "vsco/harp_F2": {
+  "sha1": "d59523b585d63026fc51aa4bc6ae3784d05efa1e",
+  "bytes": 3086590
+ },
+ "vsco/harp_F4": {
+  "sha1": "d6566d02b2ae78e17217a2d2530089219fab134c",
+  "bytes": 1913498
+ },
+ "vsco/harp_G3": {
+  "sha1": "0cf09a5491a7d902cbf0c06a510a76cfde348a63",
+  "bytes": 1806874
+ },
+ "vsco/harp_G5": {
+  "sha1": "778ec55c343695b9db3f475e367745b356e682dd",
+  "bytes": 1049778
+ },
+ "vsco/perc_Sleighbells_Hit_v1_rr1_Mid": {
+  "sha1": "e48702a5e52270c746e48d30808a2430ee373e84",
+  "bytes": 441104
+ },
+ "vsco/perc_Sleighbells_Hit_v1_rr2_Mid": {
+  "sha1": "757a4422638bd74e10c79cf696887a96f70cd732",
+  "bytes": 434528
+ },
+ "vsco/perc_Tamb1-Hit_v1_rr1_Sum": {
+  "sha1": "487e409cf4753426268234fe6af9b060c9c425e1",
+  "bytes": 338496
+ },
+ "vsco/perc_Tamb1-Hit_v1_rr2_Sum": {
+  "sha1": "9f84ccb039cdc61495884d48ec94732b187ebc11",
+  "bytes": 290840
+ },
+ "vsco/perc_Tamb1-Hit_v2_rr1_Sum": {
+  "sha1": "576fe229a720a62405543b8b7361d908c9b86adb",
+  "bytes": 293256
+ },
+ "vsco/perc_Triangle3-Hit_v1_rr1_Sum": {
+  "sha1": "3f9b8d56601a8b437f0cdcc3fecd9e09e94c13be",
+  "bytes": 1482680
+ },
+ "vsco/perc_Triangle3-Hit_v1_rr2_Sum": {
+  "sha1": "f45312ad0b72d594a2e282b4a4e5e04ded7cbf4b",
+  "bytes": 1251436
+ },
+ "vsco/piano_41": {
+  "sha1": "69484f31bdcbb1bc8f43d504f57f837600f00409",
+  "bytes": 7572904
+ },
+ "vsco/piano_45": {
+  "sha1": "47a8024516a51af1ba4b0b0059d4839c6ccb361a",
+  "bytes": 6306106
+ },
+ "vsco/piano_49": {
+  "sha1": "db0ec502288404b50021bce12d87f8b20079a6d2",
+  "bytes": 6180628
+ },
+ "vsco/piano_53": {
+  "sha1": "ef9553e3ccb6e09e3071a38a6dda64bd780b3418",
+  "bytes": 4643212
+ },
+ "vsco/piano_57": {
+  "sha1": "56573c8197f21682ba4c92372674f5159e0f2c07",
+  "bytes": 5748202
+ },
+ "vsco/piano_61": {
+  "sha1": "efd2f85998a9f05cae4a6a3bd640784b509d789e",
+  "bytes": 4346848
+ },
+ "vsco/piano_65": {
+  "sha1": "0f8f84d1691a50739d58469ceaddf215e3e3ebe2",
+  "bytes": 4476550
+ },
+ "vsco/piano_69": {
+  "sha1": "e5c4e08107564bac4a1f17ffed06850cc71d84ec",
+  "bytes": 3204940
+ },
+ "vsco/piano_73": {
+  "sha1": "fd7d43bc5611290e2de254a0350dbfb3de399108",
+  "bytes": 2656870
+ },
+ "vsco/piano_77": {
+  "sha1": "195531ce4c1721decfe4f2f11c010ebf5caacbf1",
+  "bytes": 3008866
+ },
+ "vsco/piano_81": {
+  "sha1": "b800e67dfb71ea567347e83471ee73b5eb0b5cff",
+  "bytes": 3144364
+ },
+ "vsco/piano_85": {
+  "sha1": "f050a364f82fd34fa96d45256c73f82ce0625f57",
+  "bytes": 2888572
+ },
+ "vsco/pizz_A2": {
+  "sha1": "adce5d164d1fbce56bf39501ebdba96348b878e2",
+  "bytes": 748484
+ },
+ "vsco/pizz_B1": {
+  "sha1": "7f7abe6cb77d86b0f72f28d241b43afbcfac09b9",
+  "bytes": 1058144
+ },
+ "vsco/pizz_C3": {
+  "sha1": "e3eccbb0c8011db10c759675910f79848344e8b5",
+  "bytes": 762122
+ },
+ "vsco/pizz_D2": {
+  "sha1": "18ab6bafe41d4d726a5cf025982759a021788120",
+  "bytes": 770222
+ },
+ "vsco/pizz_E1": {
+  "sha1": "9f829002bd381b8ccf23b2006eaeaf3de421820a",
+  "bytes": 826130
+ },
+ "vsco/pizz_E3": {
+  "sha1": "002c902f9ed64b76036f462488b102391ae098fa",
+  "bytes": 613436
+ },
+ "vsco/pizz_F2": {
+  "sha1": "cbd7b78177d435125bb2ce786c25a56394150c30",
+  "bytes": 479312
+ },
+ "vsco/viola_A3": {
+  "sha1": "49c23cad69b31ac4dcbe2123eeb5907fd735aa26",
+  "bytes": 2491352
+ },
+ "vsco/viola_B2": {
+  "sha1": "d8f7f09657415bc832cf6d7f457ea5cbbe1e514a",
+  "bytes": 2861510
+ },
+ "vsco/viola_C4": {
+  "sha1": "54c1f2fa87e71f771013607894d89ddcb33a3dbf",
+  "bytes": 2289656
+ },
+ "vsco/viola_D3": {
+  "sha1": "f462ad5f4b9e3da4f8098e89f1e6a4add5381ab1",
+  "bytes": 2789648
+ },
+ "vsco/viola_E2": {
+  "sha1": "dfca0df516a672d7f6ab57f43237c35e40be41b6",
+  "bytes": 2520044
+ },
+ "vsco/viola_E4": {
+  "sha1": "0b36826304fff43f80d3bd0e792a142a7a905825",
+  "bytes": 2044358
+ },
+ "vsco/viola_F3": {
+  "sha1": "350ce9a24655a19a80b3ec069904066751df8b66",
+  "bytes": 2487818
+ },
+ "vsco/viola_G2": {
+  "sha1": "953d56083bbc9436bab935324ee06b19669ce705",
+  "bytes": 2001644
+ }
+}

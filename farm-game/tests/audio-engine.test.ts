@@ -1,0 +1,230 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MANIFEST, MUSIC, instrumentFiles, slotInstruments } from '../src/audio/assets';
+import { SampleBank, detectOnset, onsetOffset } from '../src/audio/bank';
+import { chooseAmbience, chooseMusic, type Scene } from '../src/audio/director';
+import { MusicPlayer } from '../src/audio/music';
+import { SfxPlayer } from '../src/audio/sfx';
+import { audio } from '../src/platform/audio';
+import { BAD_BYTES, FakeAudioContext, FakeGain, FakeSource, GOOD_BYTES, asCtx } from './fakeAudio';
+
+type Behaviour = 'ok' | 'missing' | 'corrupt';
+// The engine under test sees: no instrument samples at all, a missing and a corrupt sfx file.
+const behaviour = (url: string): Behaviour =>
+  url.includes('/inst/') || url.includes('sfx/water') ? 'missing' : url.includes('sfx/refill') ? 'corrupt' : 'ok';
+const realFetch = globalThis.fetch;
+const realWindow = (globalThis as { window?: unknown }).window;
+
+beforeAll(() => {
+  globalThis.fetch = (async (url: string) => {
+    const b = behaviour(String(url));
+    if (b === 'missing') return { ok: false, status: 404, arrayBuffer: async () => new ArrayBuffer(0) };
+    return { ok: true, status: 200, arrayBuffer: async () => (b === 'corrupt' ? BAD_BYTES() : GOOD_BYTES()) };
+  }) as unknown as typeof fetch;
+  (globalThis as { window?: unknown }).window = {
+    AudioContext: FakeAudioContext,
+    addEventListener: () => undefined,
+    setInterval: () => 1,
+    clearInterval: () => undefined,
+  };
+});
+afterAll(() => {
+  globalThis.fetch = realFetch;
+  (globalThis as { window?: unknown }).window = realWindow;
+});
+
+const sources = (c: FakeAudioContext) => c.created.filter((n): n is FakeSource => n instanceof FakeSource);
+const sampled = (c: FakeAudioContext) => sources(c).filter((s) => s.buffer?.decoded);
+
+describe('sample bank', () => {
+  it('finds the attack after decoder priming and clamps silly offsets', () => {
+    const d = new Float32Array(1000);
+    d.fill(0.4, 100);
+    expect(detectOnset(d, 1000)).toBeCloseTo(0.1);
+    expect(onsetOffset(0.027, 0.002)).toBeCloseTo(0.025);
+    expect(onsetOffset(0.0, 0.002)).toBe(0);
+    expect(onsetOffset(0.5, 0)).toBe(0.08);
+  });
+
+  it('remembers missing and corrupt files so callers fall back instead of waiting', async () => {
+    const ctx = new FakeAudioContext();
+    const bank = new SampleBank('x/', async (url) => {
+      if (url.includes('missing')) throw new Error('404');
+      return url.includes('corrupt') ? BAD_BYTES() : GOOD_BYTES();
+    });
+    expect(await bank.load(asCtx(ctx), 'missing.mp3', 0)).toBeNull();
+    expect(bank.failed('missing.mp3')).toBe(true);
+    expect(await bank.load(asCtx(ctx), 'corrupt.mp3', 0)).toBeNull();
+    expect(bank.failed('corrupt.mp3')).toBe(true);
+    const ok = await bank.load(asCtx(ctx), 'fine.mp3', 0.002);
+    expect(ok?.offset).toBeCloseTo(0.023, 3);
+    expect(bank.failed('fine.mp3')).toBe(false);
+    // decoding again later works (the compressed bytes are kept, not detached)
+    expect(bank.evict(['fine.mp3'], Infinity)).toBe(1);
+    expect(await bank.load(asCtx(ctx), 'fine.mp3', 0.002)).not.toBeNull();
+  });
+});
+
+describe('sound effect player', () => {
+  it('caps voices per cue, stealing the oldest, and never repeats a take back to back', async () => {
+    const ctx = new FakeAudioContext();
+    const bank = new SampleBank('x/', async () => GOOD_BYTES());
+    let r = 0;
+    const rng = () => [0.1, 0.9, 0.5, 0.3, 0.7][r++ % 5]!;
+    const sfx = new SfxPlayer(asCtx(ctx), bank, new FakeGain(ctx, 'gain') as unknown as AudioNode, rng);
+    await sfx.preload();
+    const cap = MANIFEST.sfx['stepGrass']!.voices;
+    const buffers: unknown[] = [];
+    for (let i = 0; i < 6; i++) {
+      expect(sfx.play('stepGrass', 0)).toBe(true);
+      buffers.push(sources(ctx).at(-1)!.buffer);
+    }
+    const live = sources(ctx).filter((s) => s.stoppedAt === null || s.stoppedAt > 0.5);
+    expect(live.length).toBeLessThanOrEqual(cap);
+    // started at the decoder offset, so the attack is instant
+    expect(sources(ctx)[0]!.started![1]).toBeGreaterThan(0.02);
+  });
+
+  it('reports a miss when nothing is decoded so the engine can use the synth', () => {
+    const ctx = new FakeAudioContext();
+    const sfx = new SfxPlayer(asCtx(ctx), new SampleBank('x/', async () => GOOD_BYTES()), new FakeGain(ctx, 'gain') as unknown as AudioNode);
+    expect(sfx.play('till', 0)).toBe(false);
+    expect(sfx.play('not-a-cue', 0)).toBe(false);
+  });
+});
+
+describe('music player', () => {
+  const buses = (ctx: FakeAudioContext) => {
+    const g = () => new FakeGain(ctx, 'gain') as unknown as AudioNode;
+    return { dry: { day: g(), night: g(), both: g() }, wet: { day: g(), night: g(), both: g() }, sfx: g() };
+  };
+
+  it("says 'none' when no instrument of a piece can load, so the synth music takes over", async () => {
+    const ctx = new FakeAudioContext();
+    const m = new MusicPlayer(asCtx(ctx), new SampleBank('x/', async () => BAD_BYTES()), buses(ctx), () => undefined);
+    await m.preload('spring');
+    expect(m.status('spring')).toBe('none');
+  });
+
+  it('waits for its samples, then plays; a failed instrument falls back per note to the synth', async () => {
+    const ctx = new FakeAudioContext();
+    const failInst = 'recorder';
+    const failFiles = new Set(instrumentFiles(failInst).map((z) => z.file));
+    const bank = new SampleBank('x/', async (url) => {
+      if ([...failFiles].some((f) => url.endsWith(f))) throw new Error('404');
+      return GOOD_BYTES();
+    });
+    const synth: number[] = [];
+    const m = new MusicPlayer(asCtx(ctx), bank, buses(ctx), (midi) => synth.push(midi));
+    m.setSlot('spring', false, 0);
+    expect(m.status('spring')).toBe('loading');
+    m.tick(0, { enabled: true, day: true, night: false });
+    expect(m.stats.sampled).toBe(0); // not started while loading
+    await m.preload('spring');
+    expect(m.status('spring')).toBe('ready');
+    for (let t = 0; t < 60; t += 0.1) {
+      ctx.currentTime = t;
+      m.tick(t, { enabled: true, day: true, night: false });
+    }
+    expect(m.stats.sampled).toBeGreaterThan(50);
+    expect(synth.length).toBeGreaterThan(0);
+    expect(slotInstruments('spring')).toContain(failInst);
+  });
+
+  it('schedules nothing while disabled (muted or music at 0) but keeps time', async () => {
+    const ctx = new FakeAudioContext();
+    const m = new MusicPlayer(asCtx(ctx), new SampleBank('x/', async () => GOOD_BYTES()), buses(ctx), () => undefined);
+    m.setSlot('summer', false, 0);
+    await m.preload('summer');
+    for (let t = 0; t < 10; t += 0.1) m.tick(t, { enabled: false, day: true, night: false });
+    expect(m.stats.sampled + m.stats.synth).toBe(0);
+    for (let t = 10; t < 20; t += 0.1) m.tick(t, { enabled: true, day: true, night: false });
+    expect(m.stats.sampled).toBeGreaterThan(0);
+    expect(m.stats.dropped).toBe(0);
+  });
+
+  it('plays jingles from samples in the current key, or reports a miss', async () => {
+    const ctx = new FakeAudioContext();
+    const bank = new SampleBank('x/', async () => GOOD_BYTES());
+    const m = new MusicPlayer(asCtx(ctx), bank, buses(ctx), () => undefined);
+    expect(m.jingle('level', 0)).toBe(false);
+    for (const p of MUSIC.jingles['level']!.parts)
+      await Promise.all(instrumentFiles(p.inst).map((z) => bank.load(asCtx(ctx), z.file, z.onset)));
+    expect(m.jingle('level', 0)).toBe(true);
+  });
+});
+
+describe('audio engine', () => {
+  it('creates one AudioContext however often it is unlocked', () => {
+    const before = FakeAudioContext.instances;
+    audio.unlock();
+    audio.unlock();
+    expect(FakeAudioContext.instances - before).toBe(1);
+  });
+
+  it('plays the synthesized sound for a cue whose file is missing or corrupt', async () => {
+    const ctx = (audio as unknown as { ctx: FakeAudioContext }).ctx;
+    for (const cue of ['water', 'refill'])
+      await Promise.all(MANIFEST.sfx[cue]!.files.map((z) => audio.bank.load(asCtx(ctx), z.file, z.onset)));
+    const before = ctx.created.length;
+    const beforeSampled = sampled(ctx).length;
+    audio.play('water');
+    audio.play('refill');
+    expect(ctx.created.length).toBeGreaterThan(before);
+    expect(sampled(ctx).length).toBe(beforeSampled);
+  });
+
+  it('plays the recorded take once it is decoded', async () => {
+    const ctx = (audio as unknown as { ctx: FakeAudioContext }).ctx;
+    await Promise.all(MANIFEST.sfx['till']!.files.map((z) => audio.bank.load(asCtx(ctx), z.file, z.onset)));
+    const before = sampled(ctx).length;
+    audio.play('till');
+    expect(sampled(ctx).length).toBe(before + 1);
+  });
+
+  it('is silent while muted', () => {
+    const ctx = (audio as unknown as { ctx: FakeAudioContext }).ctx;
+    audio.setVolumes(0.6, 0.8, true);
+    const before = ctx.created.length;
+    audio.play('till');
+    audio.play('level');
+    expect(ctx.created.length).toBe(before);
+    audio.setVolumes(0.6, 0.8, false);
+  });
+
+  it('switches to the synth music when no instrument of the piece can load', async () => {
+    const ctx = (audio as unknown as { ctx: FakeAudioContext }).ctx;
+    audio.setMusic('mine', true);
+    await Promise.all(
+      slotInstruments('mine').flatMap((i) => instrumentFiles(i).map((z) => audio.bank.load(asCtx(ctx), z.file, z.onset))),
+    );
+    ctx.currentTime = 100;
+    (audio as unknown as { tick(): void }).tick();
+    expect(audio.debugInfo()['synthMusic']).toBe(true);
+  });
+});
+
+describe('director', () => {
+  const base: Scene = { inGame: true, map: 'farm', outdoor: true, season: 'summer', night: 0, weather: 'sunny', festival: false };
+  it('picks title, season (indoors or out), mine and festival music', () => {
+    expect(chooseMusic({ ...base, inGame: false }).slot).toBe('title');
+    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false });
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false })).toEqual({ slot: 'summer', indoor: true });
+    expect(chooseMusic({ ...base, map: 'mine', outdoor: false }).slot).toBe('mine');
+    expect(chooseMusic({ ...base, map: 'town', festival: true }).slot).toBe('festival');
+    expect(chooseMusic({ ...base, map: 'farm', festival: true }).slot).toBe('summer');
+    expect(chooseMusic({ ...base, map: 'town', festival: true, night: 0.8 }).slot).toBe('summer');
+  });
+  it('places birds by day, crickets at night, wind in winter, drips in the mine', () => {
+    expect(chooseAmbience(base).birds).toBe(1);
+    expect(chooseAmbience(base).crickets).toBe(0);
+    const night = chooseAmbience({ ...base, night: 1 });
+    expect(night.birds).toBe(0);
+    expect(night.crickets).toBeGreaterThan(0.5);
+    expect(night.crickets).toBeLessThanOrEqual(1);
+    expect(chooseAmbience({ ...base, weather: 'rain' }).birds).toBe(0);
+    expect(chooseAmbience({ ...base, season: 'winter' }).wind).toBeGreaterThan(0);
+    expect(chooseAmbience({ ...base, map: 'mine', outdoor: false })).toMatchObject({ cave: 1, drips: 1, birds: 0 });
+    expect(chooseAmbience({ ...base, map: 'house', outdoor: false }).birds).toBe(0);
+    expect(chooseAmbience({ ...base, inGame: false }).birds).toBe(0);
+  });
+});

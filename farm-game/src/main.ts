@@ -11,6 +11,7 @@ import { WoodsScene } from './scenes/WoodsScene';
 import { UIScene } from './scenes/UIScene';
 import { getState } from './state/store';
 import { audio } from './platform/audio';
+import { wireAudio } from './game/audioWiring';
 import { wireLifecycle } from './game/lifecycleWiring';
 import { refreshOnRotate, suppressBrowserGestures } from './platform/display';
 import { installWebLifecycle, lifecycle } from './platform/lifecycle';
@@ -27,6 +28,8 @@ const game = new Phaser.Game({
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   backgroundColor: '#1a1c2c',
+  // All sound goes through platform/audio.ts and its own AudioContext; Phaser must not make a second one.
+  audio: { noAudio: true },
   pixelArt: true,
   roundPixels: true,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
@@ -55,6 +58,7 @@ if (import.meta.env.PROD && !isNative() && 'serviceWorker' in navigator) {
 
 refreshOnRotate(() => game.scale.refresh());
 wireLifecycle(game);
+wireAudio(game);
 installWebLifecycle(lifecycle, document, window);
 initNative();
 

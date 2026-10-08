@@ -51,7 +51,9 @@ available (pick up or harvest beats planting beats tilling), so you never have t
 - `ROADMAP.md` what we build next, in priority order.
 - `DECISIONS.md` every judgment call. `GOAL.md` the MVP definition.
 
-All art and audio are currently generated in code (placeholders). Real assets are the next step.
+Art is currently generated in code (placeholders). Audio is real: CC0 recorded sound effects and ambience, and
+composed music played on CC0 sampled instruments (`src/audio/`, built from `audio-src/`; credits in `ASSETS.md`),
+with the original synthesized sounds as the fallback.
 
 ## Phones and stores
 

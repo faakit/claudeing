@@ -198,3 +198,13 @@
 - List rows abbreviate (`fitRow`: "(have 4)" to "x4", "Makes" to ">", Silver/Gold to Si./Au.) before cutting with "..".
 - A finger drifting 4 px on the Action button cancels the pending hold, so slow swipes never use the tool.
 - Flower Show rivals lowered to 24/33/42 so a plain flower can place third.
+
+## Real audio
+
+- **Formats:** every file is mono MP3 (LAME VBR, 44.1 kHz), which `decodeAudioData` handles on iOS Safari/WKWebView, Android WebView and desktop Chrome (Playwright's Chromium has no AAC, so MP3 also lets e2e prove real decoding). No Ogg (older iOS).
+- **Music is composed note data played live on sampled instruments**, not baked loops: 94 CC0 instrument samples (VSCO 2 CE, VCSL: piano, harp, marimba, glock, vibes, recorder, ocarina, viola and cello sections, cello pizzicato, small percussion) and seven pieces (four seasons with day and night arrangements on one bar clock, title, mine, festival) in `src/audio/music.json`, written in `audio-src/tools/music_src.py`. Variety comes from composed phrase pools, A/B sections and breathing sections, so nothing repeats like a 30 s loop, the payload stays small (1.3 MB of samples) and decoded memory stays low. House = the season piece without percussion (same clock, no restart).
+- **Fallback never goes silent:** any sfx cue without a decoded take plays the original synth; a missing instrument plays its notes on a synth voice; a piece with no loadable instrument switches to the original synth music; rain uses the noise bed until the recording loads.
+- **Loading:** bytes are fetched after the first frame (through the service worker's cache on a first visit, not twice), decoded at the unlock tap in priority order (sfx and jingles, then the current piece); unused decoded buffers are dropped after 2 minutes. Sustain samples and ambience beds have baked crossfade loops with a repeated tail, so decoder priming cannot cause a click; the engine measures each buffer's onset to compensate.
+- **Mix:** files are mastered by family (active-region RMS, true peak <= -1 dBTP); music sits near -25 LUFS by day and -28 at night at the default 60% volume, tool sounds 4-6 dB above it, ambience under the music. Measured from offline renders of the real engine (`audio-src/tools/render.mjs`).
+- **Phaser's own audio is off** (`audio: { noAudio: true }`): one AudioContext for the whole game.
+- **Sources:** Kenney (CC0) and OpenGameArt CC0 for sound effects and ambience, Versilian Studios (CC0) for instruments; every file, page, author, licence and sha1 in `audio-src/SOURCES.md`. Nothing was listened to by a human while building it.
