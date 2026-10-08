@@ -1,4 +1,4 @@
-import { goals } from '../data';
+import { goals, tips } from '../data';
 import type { GoalDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
@@ -24,6 +24,18 @@ export function checkGoals(state: GameState): void {
     goal = currentGoal(state);
   }
   gameEvents.emit('goalChanged', undefined);
+  checkTips(state);
+}
+
+/** One-time explanations the first time a mechanic shows up (stored as `tip.<id>` stats, so saved). */
+export function checkTips(state: GameState): void {
+  for (const tip of tips) {
+    const key = `tip.${tip.id}`;
+    if (state.stats[key] || stat(state, tip.stat) < tip.min) continue;
+    state.stats[key] = 1;
+    toast(tip.text, 'info');
+    return; // one at a time; the next waits for the next check
+  }
 }
 
 /** Increment a lifetime stat and re-check goals. */

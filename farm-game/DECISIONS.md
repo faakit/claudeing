@@ -109,3 +109,9 @@
 
 - **Morning summary overlapped:** wrapped lines were placed at fixed y steps. The sheet now lays out top to bottom using each label's real height, measures once, then draws at the measured height. Rule: never place wrapped text at a fixed y.
 - **Villager sheet flashed shut on a tap:** buttons act on press, so the sheet opened under the finger and the release landed on the dim backdrop, which counted as "tap outside". Backdrops now only dismiss when the press also began on them. An e2e check presses and releases the real Interact button.
+
+## Balance, onboarding and accessibility pass
+
+- **Fishing and foraging were runaway money (up to ~2700 and ~500 gold a day):** fish now sell for 25 to 100, forage 20 to 45, the rod costs 5 energy and spawns per day are 2/3/6. Rule encoded in `tests/balance.test.ts`: no side activity may pay more per energy than the best crop; animals pay back in 8 to 42 days; preserves multiply price by 1.3 to 3.2.
+- **Hints, not hand-holding:** each goal carries a one-line hint (Goals tab, plus a toast after 40 s idle, at most every 90 s). First-time tips are data (`tips.json`), keyed to stats, stored as `tip.<id>` stats so they are saved with no new state, and show one at a time.
+- **Quality reads by count as well as colour:** silver is one star, gold two. "Calm" mode removes shaking and ambient bobbing; it applies to newly drawn scenes.

@@ -55,6 +55,8 @@ export class Hud {
   private hotbarIcons: Phaser.GameObjects.Image[] = [];
   private hotbarQty: Label[] = [];
   private hotbarStars: Phaser.GameObjects.Image[] = [];
+  /** Gold has two stars and silver one, so quality reads by count, not only by tint. */
+  private hotbarStars2: Phaser.GameObjects.Image[] = [];
   private hotbarZones: Phaser.GameObjects.Zone[] = [];
   private readonly nameLabel: Label;
   private nameTween: Phaser.Tweens.Tween | null = null;
@@ -121,6 +123,13 @@ export class Hud {
         scene.add
           .image(x + 5, HOTBAR_Y + SLOT - 5, 'ui_star')
           .setDepth(depth + 2)
+          .setVisible(false),
+      );
+      this.hotbarStars2.push(
+        scene.add
+          .image(x + 11, HOTBAR_Y + SLOT - 5, 'ui_star')
+          .setDepth(depth + 2)
+          .setTint(0xf4d35e)
           .setVisible(false),
       );
       this.hotbarQty.push(
@@ -289,6 +298,7 @@ export class Hud {
       const icon = this.hotbarIcons[i]!;
       const qty = this.hotbarQty[i]!;
       const star = this.hotbarStars[i]!;
+      const star2 = this.hotbarStars2[i]!;
       const lift = sel ? 2 : 0;
       if (stack) {
         const ref = refOf(stack);
@@ -304,10 +314,12 @@ export class Hud {
           .setVisible(q > 0)
           .setTint(q >= 2 ? 0xf4d35e : 0xc9d3e4)
           .setY(HOTBAR_Y + SLOT - 5 - lift);
+        star2.setVisible(q >= 2).setY(HOTBAR_Y + SLOT - 5 - lift);
       } else {
         icon.setVisible(false);
         qty.setText('');
         star.setVisible(false);
+        star2.setVisible(false);
       }
     }
     if (s.inventory.selected !== this.lastSelected) {

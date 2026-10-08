@@ -215,6 +215,7 @@ export function sanitize(raw: Raw): GameState {
     muted: st['muted'] === true,
     vibrate: st['vibrate'] !== false, // default on, including for saves that predate the setting
     leftHanded: st['leftHanded'] === true,
+    reduceMotion: st['reduceMotion'] === true,
   };
 
   // Placed objects: known types, real tiles, unique ids.

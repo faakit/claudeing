@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { game, goals, items, shops } from '../src/data';
+import { game, goals, items, shops, tips } from '../src/data';
 import { fitText, measureText } from '../src/ui/fontMetrics';
 import { formatClock } from '../src/systems/time';
 import { HUD_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../src/config';
@@ -24,6 +24,12 @@ describe('portrait layout', () => {
         182,
       );
     }
+  });
+
+  it('every goal hint and tip fits two lines of the 184px sheet text', () => {
+    for (const g of goals)
+      expect(measureText(`Hint: ${g.hint}`), g.id).toBeLessThanOrEqual(184 * 2 - 24);
+    for (const t of tips) expect(measureText(t.text), t.id).toBeLessThanOrEqual(186 * 3 - 30);
   });
 
   it('the clock fits its 2x box at every minute of the day', () => {

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { PX_TEXTURE } from '../art/gameArt';
+import { getState } from '../state/store';
 import { Label } from '../ui/font';
 
 interface Burst {
@@ -183,6 +184,7 @@ export class Effects {
     target: Phaser.GameObjects.Components.Transform & Phaser.GameObjects.GameObject,
     amount = 2,
   ): void {
+    if (getState().settings.reduceMotion) return;
     const x0 = target.x;
     this.scene.tweens.add({
       targets: target,

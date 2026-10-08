@@ -3,6 +3,7 @@ import { PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placehol
 import { TILE_SIZE } from '../config';
 import { npcs } from '../data';
 import type { GameState } from '../state/GameState';
+import { getState } from '../state/store';
 import { canChat } from '../systems/friendship';
 import { Label } from '../ui/font';
 import { C } from '../ui/theme';
@@ -31,19 +32,22 @@ export class NpcRenderer {
         .setOrigin(0.5, 1)
         .setTint(parseInt(def.tint.slice(1), 16))
         .setDepth(10 + y);
-      scene.tweens.add({
-        targets: sprite,
-        scaleY: 1.03,
-        duration: 900 + (id.length % 3) * 150,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
+      const calm = getState().settings.reduceMotion;
+      if (!calm)
+        scene.tweens.add({
+          targets: sprite,
+          scaleY: 1.03,
+          duration: 900 + (id.length % 3) * 150,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
       // A bobbing "!" says there is something new to hear today.
       const marker = new Label(scene, x, y - 36, '!', { align: 'center', color: C.gold }).setDepth(
         9000,
       );
-      scene.tweens.add({ targets: marker, y: y - 39, duration: 450, yoyo: true, repeat: -1 });
+      if (!calm)
+        scene.tweens.add({ targets: marker, y: y - 39, duration: 450, yoyo: true, repeat: -1 });
       this.shown.set(id, { sprite, marker, parts: [shadow] });
     }
   }

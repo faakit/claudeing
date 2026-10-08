@@ -15,6 +15,7 @@ import {
   adjustVolume,
   toggleLeftHanded,
   toggleMute,
+  toggleReduceMotion,
   toggleVibration,
 } from '../../systems/settings';
 import { C } from '../theme';
@@ -194,6 +195,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       if (!isToolSlot(i) && stack.qty > 1)
         c.label(x + size - 2, y + size - 9, String(stack.qty), C.cream, 1, 'right');
       if (ref.q) c.icon(x + 5, y + size - 5, 'ui_star').setTint(ref.q >= 2 ? 0xf4d35e : 0xc9d3e4);
+      if ((ref.q ?? 0) >= 2) c.icon(x + 11, y + size - 5, 'ui_star').setTint(0xf4d35e);
     }
     const zone = c.scene.add
       .zone(x, y, size + 1, size + 1)
@@ -247,6 +249,7 @@ function buildGoals(c: MenuTabContext): void {
     c.add(g);
     c.label(164, c.top + 28, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold);
     c.label(8, c.top + 40, `Reward: +${fmt(prog.goal.reward)}g`, C.green);
+    c.label(8, c.top + 52, `Hint: ${prog.goal.hint}`, C.creamDim, 1, 'left', 184);
   } else {
     c.label(
       8,
@@ -258,7 +261,7 @@ function buildGoals(c: MenuTabContext): void {
       184,
     );
   }
-  let y = c.top + 60;
+  let y = c.top + 78;
   c.label(8, y, 'COMPLETED', C.gold);
   y += 12;
   const done = goals.slice(Math.max(0, s.goalIndex - 4), s.goalIndex);
@@ -349,6 +352,15 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     c.label(100, y + 2, 'Share > Add to', C.creamDim);
     c.label(100, y + 12, 'Home Screen', C.creamDim);
   }
+  y += 26;
+  pair(y, [
+    s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
+    () => {
+      toggleReduceMotion(s);
+      gameEvents.emit('settingsChanged', undefined);
+      c.rebuild();
+    },
+  ]);
   y += 26;
   const saveBtn: Button = c.button(8, y, half, 22, 'Save now', () => {
     void saveNow().then((ok) => {

@@ -2,8 +2,11 @@ import Phaser from 'phaser';
 import { TILE_SIZE } from '../config';
 import { items, placeables } from '../data';
 import type { GameState } from '../state/GameState';
+import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { jarContents, jarReady } from '../systems/preserves';
+
+const calm = (): boolean => getState().settings.reduceMotion;
 
 interface Shown {
   sprite: Phaser.GameObjects.Image;
@@ -45,27 +48,30 @@ export class ObjectsRenderer {
         .setScale(0.8)
         .setDepth(0.8 + ty * 0.001);
       // A gentle bob + a twinkle makes goods easy to spot from across a field.
-      this.scene.tweens.add({
-        targets: sprite,
-        y: y - 1.5,
-        duration: 900 + ((tx * 7 + ty * 13) % 5) * 90,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
+      if (!calm())
+        this.scene.tweens.add({
+          targets: sprite,
+          y: y - 1.5,
+          duration: 900 + ((tx * 7 + ty * 13) % 5) * 90,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
       const twinkle = this.scene.add
         .image(x + 4, y - 5, 'ui_star')
         .setScale(0.6)
         .setDepth(0.9);
       twinkle.setTint(0xfff1b0);
-      this.scene.tweens.add({
-        targets: twinkle,
-        alpha: { from: 0, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-        delay: (tx * 131 + ty * 71) % 900,
-      });
+      if (calm()) twinkle.setAlpha(0.8);
+      else
+        this.scene.tweens.add({
+          targets: twinkle,
+          alpha: { from: 0, to: 1 },
+          duration: 700,
+          yoyo: true,
+          repeat: -1,
+          delay: (tx * 131 + ty * 71) % 900,
+        });
       if (animate) {
         sprite.setScale(0.3);
         this.scene.tweens.add({ targets: sprite, scale: 0.8, duration: 260, ease: 'Back.easeOut' });
@@ -133,16 +139,17 @@ export class ObjectsRenderer {
             .setOrigin(0.5, 1)
             .setScale(0.62)
             .setDepth(10 + y + 4);
-          this.scene.tweens.add({
-            targets: critter,
-            x: home + (i % 2 ? -6 : 6),
-            duration: 1400 + i * 350,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut',
-            onYoyo: () => critter.setFlipX(!critter.flipX),
-            delay: i * 400,
-          });
+          if (!calm())
+            this.scene.tweens.add({
+              targets: critter,
+              x: home + (i % 2 ? -6 : 6),
+              duration: 1400 + i * 350,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut',
+              onYoyo: () => critter.setFlipX(!critter.flipX),
+              delay: i * 400,
+            });
           extra.push(critter);
         }
         if (house.ready > 0) {
@@ -150,13 +157,14 @@ export class ObjectsRenderer {
             .image(x, y - 19, items[species.product]?.icon ?? 'ui_star')
             .setScale(0.8)
             .setDepth(10 + y + 8);
-          this.scene.tweens.add({
-            targets: bubble,
-            y: y - 22,
-            duration: 520,
-            yoyo: true,
-            repeat: -1,
-          });
+          if (!calm())
+            this.scene.tweens.add({
+              targets: bubble,
+              y: y - 22,
+              duration: 520,
+              yoyo: true,
+              repeat: -1,
+            });
           extra.push(bubble);
         }
       }

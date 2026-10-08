@@ -196,7 +196,7 @@
     "type": "forage",
     "icon": "item_wild_leek",
     "color": "#9fd36b",
-    "sellPrice": 28,
+    "sellPrice": 20,
     "description": "A spring wild onion.",
     "family": "veg"
   },
@@ -205,7 +205,7 @@
     "type": "forage",
     "icon": "item_daffodil",
     "color": "#f4d35e",
-    "sellPrice": 40,
+    "sellPrice": 30,
     "description": "Bright spring flower.",
     "family": "flower"
   },
@@ -214,7 +214,7 @@
     "type": "forage",
     "icon": "item_wild_berry",
     "color": "#c0396a",
-    "sellPrice": 45,
+    "sellPrice": 32,
     "description": "Sweet summer berries.",
     "family": "fruit"
   },
@@ -223,7 +223,7 @@
     "type": "forage",
     "icon": "item_wild_sunflower",
     "color": "#f2b03e",
-    "sellPrice": 60,
+    "sellPrice": 40,
     "description": "Tall and cheerful.",
     "family": "flower"
   },
@@ -232,7 +232,7 @@
     "type": "forage",
     "icon": "item_blackberry",
     "color": "#4a2a6a",
-    "sellPrice": 55,
+    "sellPrice": 38,
     "description": "Plump fall berries.",
     "family": "fruit"
   },
@@ -241,7 +241,7 @@
     "type": "forage",
     "icon": "item_mushroom",
     "color": "#c9a27a",
-    "sellPrice": 70,
+    "sellPrice": 45,
     "description": "Earthy woodland find.",
     "family": "veg"
   },
@@ -250,7 +250,7 @@
     "type": "forage",
     "icon": "item_winter_root",
     "color": "#b8956a",
-    "sellPrice": 60,
+    "sellPrice": 40,
     "description": "Dug from frozen ground.",
     "family": "veg"
   },
@@ -259,7 +259,7 @@
     "type": "forage",
     "icon": "item_holly",
     "color": "#2f8a45",
-    "sellPrice": 50,
+    "sellPrice": 35,
     "description": "Festive winter sprig.",
     "family": "flower"
   },
@@ -268,7 +268,7 @@
     "type": "fish",
     "icon": "item_carp",
     "color": "#c9a24a",
-    "sellPrice": 60,
+    "sellPrice": 25,
     "description": "Common pond fish."
   },
   "bluegill": {
@@ -276,7 +276,7 @@
     "type": "fish",
     "icon": "item_bluegill",
     "color": "#4a8ac0",
-    "sellPrice": 85,
+    "sellPrice": 35,
     "description": "Small and feisty."
   },
   "perch": {
@@ -284,7 +284,7 @@
     "type": "fish",
     "icon": "item_perch",
     "color": "#8aa84a",
-    "sellPrice": 95,
+    "sellPrice": 40,
     "description": "Striped cold-water fish."
   },
   "trout": {
@@ -292,7 +292,7 @@
     "type": "fish",
     "icon": "item_trout",
     "color": "#d98a8a",
-    "sellPrice": 110,
+    "sellPrice": 55,
     "description": "Quick river fish."
   },
   "catfish": {
@@ -300,7 +300,7 @@
     "type": "fish",
     "icon": "item_catfish",
     "color": "#6a6a7a",
-    "sellPrice": 150,
+    "sellPrice": 80,
     "description": "Bites best in the rain."
   },
   "salmon": {
@@ -308,7 +308,7 @@
     "type": "fish",
     "icon": "item_salmon",
     "color": "#e0745a",
-    "sellPrice": 170,
+    "sellPrice": 100,
     "description": "A prized fall catch."
   },
   "fertilizer": {
@@ -456,7 +456,7 @@
     "type": "product",
     "icon": "item_milk",
     "color": "#f4f4f8",
-    "sellPrice": 130,
+    "sellPrice": 110,
     "description": "Rich and creamy."
   },
   "coop": {

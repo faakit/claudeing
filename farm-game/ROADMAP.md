@@ -20,21 +20,28 @@ simulation's income floor was lowered from 20k to 15k gold after the quality sys
 
 ## Now: make what exists feel great (R1, about 1 sprint)
 
+Status: R1.2 to R1.4 done and R1.5 partly done (see below). R1.1 needs a human with a phone.
+
 Highest value per effort. None of this adds a mechanic; it makes the current ones land.
 
 - [ ] **R1.1 Real-device pass.** Build and run the Android and iOS projects on actual phones. Check frame rate,
       safe areas, haptics, audio resume after calls, one-handed reach on small and large phones. Fix what breaks.
       Output: a filled-in device checklist in `docs/MOBILE.md`.
-- [ ] **R1.2 Balance pass.** Re-tune the bot simulation with animals, orders and fishing included. Targets: first
+- [x] **R1.2 Balance pass.** Re-tune the bot simulation with animals, orders and fishing included. Targets: first
       year feels generous, a comfortable player finishes with a satisfying surplus, nothing is a runaway money loop
       (check eggs, jam and orders against raw shipping). Restore a meaningful income band in `tests/sim.test.ts`.
-- [ ] **R1.3 First-hour onboarding.** The goals teach in order, but add light guidance: highlight the current goal's
+- [x] **R1.3 First-hour onboarding.** The goals teach in order, but add light guidance: highlight the current goal's
       target (the board, the pond, the coop), a short "what to do next" nudge after idle time, and a one-time
       explanation of hearts and quality the first time each appears.
-- [ ] **R1.4 Juice and feedback.** Sparkles and sounds for quality drops, level-ups, heart gains and order
+      _Done:_ every goal has a hint (shown in Menu > Goals, and as a toast after 40 s of no input); seven one-time
+      tips fire when quality, foraging, hearts, orders, animals, skills and perfect catches first happen. Not done:
+      highlighting the goal's target in the world.
+- [x] **R1.4 Juice and feedback.** Sparkles and sounds for quality drops, level-ups, heart gains and order
       completion; a satisfying collect animation for eggs and jam; screen-edge toasts that never cover the thumb zone.
-- [ ] **R1.5 Accessibility basics.** Text-size option, a colour-safe quality indicator (shape, not only tint),
-      reduce-motion toggle, larger touch targets option.
+      _Done:_ quality sparkles and "Silver/Gold quality!" text on harvest, forage pick-up effects, a cast splash.
+      Not done: heart-gain and level-up flourishes, egg/jam collect animation.
+- [~] **R1.5 Accessibility basics.** Done: quality shown by star count (silver one, gold two) as well as tint, and a
+  "Calm" reduce-motion toggle. Still open: text-size option, larger touch targets option.
 
 ## Next: depth in the daily loop (R2)
 

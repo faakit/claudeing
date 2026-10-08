@@ -100,6 +100,8 @@ export interface Settings {
   vibrate: boolean;
   /** Mirror the thumb controls to the left side of the dock. */
   leftHanded: boolean;
+  /** Calmer visuals: no shaking, bobbing or wandering animation. */
+  reduceMotion: boolean;
 }
 
 /** Everything that must be saved lives here. Plain, serializable data only. */
@@ -167,7 +169,14 @@ export function createInitialState(): GameState {
     player: { map, ...spawnPosition(tx, ty), facing },
     stats: {},
     goalIndex: 0,
-    settings: { music: 0.6, sfx: 0.8, muted: false, vibrate: true, leftHanded: false },
+    settings: {
+      music: 0.6,
+      sfx: 0.8,
+      muted: false,
+      vibrate: true,
+      leftHanded: false,
+      reduceMotion: false,
+    },
     weather: 'sunny',
     placed: {},
     nextPlacedId: 1,

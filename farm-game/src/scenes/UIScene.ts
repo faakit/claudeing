@@ -23,7 +23,7 @@ import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { endDay } from '../systems/day';
 import { gameEvents, type PanelType } from '../systems/events';
-import { addStat, stat } from '../systems/goals';
+import { addStat, currentGoal, stat } from '../systems/goals';
 import { cycleSlot, selectSlot } from '../systems/inventory';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
@@ -48,6 +48,8 @@ import type { Modal } from '../ui/widgets';
 import { mapCacheKey } from './PreloadScene';
 import { WorldScene } from './WorldScene';
 
+/** Silence before a hint appears. */
+const IDLE_HINT_MS = 40_000;
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
 
@@ -123,6 +125,8 @@ export class UIScene extends Phaser.Scene {
   private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
   private lateWarnedDay = -1;
+  /** Real ms since the player last touched anything; a long silence earns a hint about the goal. */
+  private idleMs = 0;
   private rain!: RainLayer;
   private dragHint: Phaser.GameObjects.Container | null = null;
   private sleeping = false;
@@ -233,6 +237,7 @@ export class UIScene extends Phaser.Scene {
       this.dragHint = null;
     }
     this.hud.update(time);
+    this.updateIdleHint(delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather === 'rain';
     let base = daylightColor(s.time.minutes);
@@ -256,6 +261,17 @@ export class UIScene extends Phaser.Scene {
       this.lastNight = night;
       audio.setNight(night);
     }
+  }
+
+  /** After a long quiet spell, remind the player what the current goal wants (at most every 90 s). */
+  private updateIdleHint(delta: number): void {
+    if (runtime.blocked || this.sleeping) return;
+    if (inputHub.direction !== null || inputHub.actionHeld) this.idleMs = 0;
+    else this.idleMs += delta;
+    if (this.idleMs < IDLE_HINT_MS) return;
+    this.idleMs = -IDLE_HINT_MS / 2;
+    const goal = currentGoal(getState());
+    if (goal) this.hud.toast(`Hint: ${goal.hint}`, 'info');
   }
 
   // ---- thumb controls ----
@@ -353,6 +369,7 @@ export class UIScene extends Phaser.Scene {
   /** A short, nearly stationary touch on the world counts as a tap (not a joystick drag). */
   private setupTaps(): void {
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      this.idleMs = 0;
       audio.unlock();
       if (this.input.hitTestPointer(p).length > 0) return; // started on a button
       this.taps.set(p.id, { x: p.x, y: p.y, t: p.downTime });

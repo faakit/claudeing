@@ -1,0 +1,44 @@
+[
+  {
+    "id": "quality",
+    "stat": "qualityHarvested",
+    "min": 1,
+    "text": "Silver and gold goods sell for more. Fertilizer and skills raise the odds."
+  },
+  {
+    "id": "forage",
+    "stat": "foraged",
+    "min": 1,
+    "text": "Wild goods grow back every morning, and each season has its own."
+  },
+  {
+    "id": "hearts",
+    "stat": "maxHearts",
+    "min": 1,
+    "text": "Hearts grow with daily chats and gifts. Perks unlock at 2 to 5 hearts."
+  },
+  {
+    "id": "orders",
+    "stat": "ordersDone",
+    "min": 1,
+    "text": "Orders pay more than the bin. Check the board every morning."
+  },
+  {
+    "id": "animals",
+    "stat": "collected",
+    "min": 1,
+    "text": "Fed, happy animals give better quality goods. Feed them daily."
+  },
+  {
+    "id": "skills",
+    "stat": "level.farming",
+    "min": 2,
+    "text": "Skills unlock recipes and perks. See Menu > Craft and Skills."
+  },
+  {
+    "id": "perfect",
+    "stat": "perfectCatch",
+    "min": 1,
+    "text": "Perfect catches roll better quality fish. Stay on the fish!"
+  }
+]

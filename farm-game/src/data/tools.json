@@ -15,7 +15,7 @@
     "icon": "item_scythe"
   },
   "fishing_rod": {
-    "energyCost": 2,
+    "energyCost": 5,
     "action": "fish",
     "icon": "item_fishing_rod"
   }

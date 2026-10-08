@@ -23,3 +23,8 @@ export function toggleLeftHanded(state: GameState): boolean {
   state.settings.leftHanded = !state.settings.leftHanded;
   return state.settings.leftHanded;
 }
+
+export function toggleReduceMotion(state: GameState): boolean {
+  state.settings.reduceMotion = !state.settings.reduceMotion;
+  return state.settings.reduceMotion;
+}

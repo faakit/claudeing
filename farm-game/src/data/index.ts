@@ -13,6 +13,7 @@ import fishRaw from './fish.json';
 import ordersRaw from './orders.json';
 import animalsRaw from './animals.json';
 import npcsRaw from './npcs.json';
+import tipsRaw from './tips.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -106,6 +107,14 @@ export interface GoalDef {
   stat: string;
   target: number;
   reward: number;
+  /** One line telling a stuck player what to do next. */
+  hint: string;
+}
+export interface TipDef {
+  id: string;
+  stat: string;
+  min: number;
+  text: string;
 }
 export interface SkillDef {
   name: string;
@@ -245,6 +254,7 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
@@ -285,7 +295,11 @@ export function validateContent(): void {
   }
   for (const si of game.startingItems)
     if (!items[si.item]) fail('game', `unknown starting item "${si.item}"`);
-  for (const g of goals) if (!g.id || !g.stat || g.target < 1) fail('goals', `bad goal "${g.id}"`);
+  for (const g of goals) {
+    if (!g.id || !g.stat || g.target < 1) fail('goals', `bad goal "${g.id}"`);
+    if (!g.hint) fail('goals', `goal "${g.id}" needs a hint`);
+  }
+  for (const t of tips) if (!t.id || !t.stat || !t.text) fail('tips', `bad tip "${t.id}"`);
   const mapIds = Object.keys(mapsData.maps);
   for (const [id, sk] of Object.entries(skills)) {
     if (sk.xpTable[0] !== 0 || sk.xpTable.some((v, i) => i > 0 && v <= (sk.xpTable[i - 1] ?? 0))) {

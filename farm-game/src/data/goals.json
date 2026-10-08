@@ -4,153 +4,175 @@
     "text": "Till 6 soil tiles with the hoe",
     "stat": "tilled",
     "target": 6,
-    "reward": 20
+    "reward": 20,
+    "hint": "Select the hoe (slot 1) and press Action on bare ground."
   },
   {
     "id": "plant",
     "text": "Plant 5 seeds on tilled soil",
     "stat": "planted",
     "target": 5,
-    "reward": 20
+    "reward": 20,
+    "hint": "Pick seeds on the hotbar and press Action on tilled soil."
   },
   {
     "id": "water",
     "text": "Water 5 plants with the can",
     "stat": "watered",
     "target": 5,
-    "reward": 20
+    "reward": 20,
+    "hint": "Equip the can and press Action on crops. Refill at the pond."
   },
   {
     "id": "sleep",
     "text": "Sleep in bed to grow your crops",
     "stat": "daysSlept",
     "target": 1,
-    "reward": 30
+    "reward": 30,
+    "hint": "Walk into the house and use the bed with Interact."
   },
   {
     "id": "harvest",
     "text": "Harvest 5 crops",
     "stat": "harvested",
     "target": 5,
-    "reward": 50
+    "reward": 50,
+    "hint": "Ripe crops are full-grown. Press Action on them."
   },
   {
     "id": "ship",
     "text": "Ship 5 items in the bin",
     "stat": "shipped",
     "target": 5,
-    "reward": 50
+    "reward": 50,
+    "hint": "Put crops in the bin beside the house with Interact."
   },
   {
     "id": "buy",
     "text": "Buy 5 seeds in town (south)",
     "stat": "bought",
     "target": 5,
-    "reward": 50
+    "reward": 50,
+    "hint": "Walk south through the gate to town and use the shop door."
   },
   {
     "id": "forage",
     "text": "Pick up 3 wild goods off the ground",
     "stat": "foraged",
     "target": 3,
-    "reward": 40
+    "reward": 40,
+    "hint": "Look for sparkling goods on the ground and press Action."
   },
   {
     "id": "fish",
     "text": "Catch a fish with the rod",
     "stat": "caught",
     "target": 1,
-    "reward": 60
+    "reward": 60,
+    "hint": "Equip the rod, face water and press Action. Tap on the bite!"
   },
   {
     "id": "order",
     "text": "Fill an order on the town board",
     "stat": "ordersDone",
     "target": 1,
-    "reward": 80
+    "reward": 80,
+    "hint": "Go to the board in town and use Interact."
   },
   {
     "id": "craft",
     "text": "Craft something at the workbench",
     "stat": "crafted",
     "target": 1,
-    "reward": 60
+    "reward": 60,
+    "hint": "Open Menu > Craft. Fertilizer needs fiber from cut weeds."
   },
   {
     "id": "place",
     "text": "Place a sprinkler or a jar",
     "stat": "placed",
     "target": 1,
-    "reward": 100
+    "reward": 100,
+    "hint": "Craft a sprinkler or jar, then press Action on bare ground."
   },
   {
     "id": "preserve",
     "text": "Make a jar of jam or pickles",
     "stat": "preserved",
     "target": 1,
-    "reward": 120
+    "reward": 120,
+    "hint": "Load fruit or vegetables into a jar and collect in 3 days."
   },
   {
     "id": "quality",
     "text": "Harvest 5 silver or gold crops",
     "stat": "qualityHarvested",
     "target": 5,
-    "reward": 150
+    "reward": 150,
+    "hint": "Put fertilizer on tilled soil before planting."
   },
   {
     "id": "talk",
     "text": "Say hello to a villager",
     "stat": "talked",
     "target": 1,
-    "reward": 40
+    "reward": 40,
+    "hint": "Walk up to someone with a ! and press Interact."
   },
   {
     "id": "chicken",
     "text": "Raise your first chicken in a coop",
     "stat": "animalsAdded",
     "target": 1,
-    "reward": 150
+    "reward": 150,
+    "hint": "Craft a coop, place it, then buy a chicken in town."
   },
   {
     "id": "eggs",
     "text": "Collect 5 eggs or milk",
     "stat": "collected",
     "target": 5,
-    "reward": 150
+    "reward": 150,
+    "hint": "Feed your animals every day. Products wait each morning."
   },
   {
     "id": "friend",
     "text": "Reach 2 hearts with a villager",
     "stat": "maxHearts",
     "target": 2,
-    "reward": 200
+    "reward": 200,
+    "hint": "Chat daily and give gifts they like."
   },
   {
     "id": "earn1k",
     "text": "Earn 1,000g selling crops",
     "stat": "earned",
     "target": 1000,
-    "reward": 100
+    "reward": 100,
+    "hint": "Grow valuable crops and sell jam, eggs and fish."
   },
   {
     "id": "upgrade",
     "text": "Buy an upgrade in the shop",
     "stat": "upgrades",
     "target": 1,
-    "reward": 100
+    "reward": 100,
+    "hint": "Open the shop and check the Upgrades tab."
   },
   {
     "id": "earn5k",
     "text": "Earn 5,000g selling crops",
     "stat": "earned",
     "target": 5000,
-    "reward": 250
+    "reward": 250,
+    "hint": "Add sprinklers and more plots to grow faster."
   },
   {
     "id": "earn20k",
     "text": "Earn 20,000g: Harvest Legend",
     "stat": "earned",
     "target": 20000,
-    "reward": 1000
+    "reward": 1000,
+    "hint": "Keep every field, jar and animal working each day."
   }
 ]
