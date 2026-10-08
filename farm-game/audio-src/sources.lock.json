@@ -67,6 +67,14 @@
   "sha1": "1e32690ca942170fd52518b58a14735cd66805f7",
   "bytes": 9215
  },
+ "sfx/kenney-interface/pluck_001": {
+  "sha1": "c658b24e88542f4cb04029cd3fef0bda8959ecc7",
+  "bytes": 6317
+ },
+ "sfx/kenney-interface/pluck_002": {
+  "sha1": "8b3c2210f0c00affebb5796a3a200f0a02ea5d2d",
+  "bytes": 6941
+ },
  "sfx/kenney-interface/select_001": {
   "sha1": "bf7df59bc763af6857738979a9890ed34fe472c3",
   "bytes": 5468
@@ -74,6 +82,18 @@
  "sfx/kenney-interface/select_007": {
   "sha1": "add1c8bc26c72647c52aabc1d7533eaeedf0217b",
   "bytes": 6580
+ },
+ "sfx/kenney-interface/tick_001": {
+  "sha1": "4a02fc8e21a4db678c3f082f4ea8c4904bcde72c",
+  "bytes": 4497
+ },
+ "sfx/kenney-interface/tick_002": {
+  "sha1": "a357bc7139d7a50cdc12cb854e313ba3bb253fc6",
+  "bytes": 4514
+ },
+ "sfx/kenney-interface/tick_004": {
+  "sha1": "5dde75b602bb2502bee79aac4d1e323ccd945170",
+  "bytes": 5031
  },
  "sfx/kenney-rpg/cloth1": {
   "sha1": "8175b60e772ff23d153cc9d23b78b04fdc9d2746",
@@ -115,6 +135,14 @@
   "sha1": "6ba974fe74d8dbaab54d923ed8d7d5fe47139432",
   "bytes": 13094
  },
+ "sfx/kenney-ui/click1": {
+  "sha1": "c3337913b1b58c70d28e332aa8de519dfe607b21",
+  "bytes": 4983
+ },
+ "sfx/kenney-ui/click2": {
+  "sha1": "25a576056dbaf4ca6ff53eef9ba7ed1c75f1e6ab",
+  "bytes": 4656
+ },
  "sfx/kenney-ui/click3": {
   "sha1": "6463c9badbc913b664a91be4cbd8a6504b69e89e",
   "bytes": 4880
@@ -126,6 +154,26 @@
  "sfx/kenney-ui/click5": {
   "sha1": "4456e375faac1b2f1b4be772c048d6342d626b7f",
   "bytes": 4532
+ },
+ "sfx/kenney-ui/mouseclick1": {
+  "sha1": "a6f604d07a91186db36c438026ec1b391f1d7612",
+  "bytes": 4686
+ },
+ "sfx/kenney-ui/mouserelease1": {
+  "sha1": "2ec7233b15cad2bce7da1e88bfc06c4edd20eae7",
+  "bytes": 4775
+ },
+ "sfx/kenney-ui/rollover2": {
+  "sha1": "9a0d7f6497a5eeaeef20f4bead08ddf9de85396e",
+  "bytes": 4701
+ },
+ "sfx/kenney-ui/rollover3": {
+  "sha1": "7c65ae025bd28d6ed8584d4eec64acd56677ffc8",
+  "bytes": 4778
+ },
+ "sfx/kenney-ui/rollover4": {
+  "sha1": "77a74725ed9670f80545ff19657c4263415f75a8",
+  "bytes": 5188
  },
  "sfx/oga-rubberduck-100/bell_02": {
   "sha1": "0f5858fcc1b6ce712e637d24aacd4709ec7dc08f",

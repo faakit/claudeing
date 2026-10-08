@@ -282,7 +282,7 @@ def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0, by: str = 
     def loud(v: np.ndarray) -> float:
         return dsp.momentary_lufs(v) if by == "lufs" else dsp.db(dsp.active_rms(v))
 
-    for _ in range(4):
+    for _ in range(8):
         y = y * dsp.undb(level_db - loud(y))
         if dsp.true_peak(y) <= dsp.undb(TP_CEIL_DB - 0.5):
             break
@@ -321,12 +321,15 @@ def build_sfx(raw: str, recipes: dict) -> dict:
         hp = r.get("hp", fam["hp"])
         files = []
         for i, parts in enumerate(r["variants"]):
-            y = finish_shot(mix_parts(raw, parts, hp), fam["lufs"], by="lufs")
+            y = finish_shot(mix_parts(raw, parts, hp), fam["lufs"], max_len=r.get("maxLen", 2.0), by="lufs")
             fname = f"sfx/{cue}-{i + 1}.mp3"
             dsp.encode_mp3(y, os.path.join(OUT, fname), quality=5)
             files.append({"file": fname, "onset": round(dsp.onset(y, -40) / SR, 5), "dur": round(len(y) / SR, 4)})
             report.append(shot_row(cue, i + 1, y, fam["lufs"], os.path.join(OUT, fname)))
-        out[cue] = {"files": files, "gain": 1, "pitch": r["pitch"], "vol": r["vol"], "voices": r["voices"]}
+        # "trim" (dB) calibrates the cue at the output: the files are matched in isolation, the trim
+        # closes the gap measured on renders of the real mix (audio-src/tools/sfxlevels.py).
+        out[cue] = {"files": files, "gain": round(float(dsp.undb(r.get("trim", 0))), 4), "pitch": r["pitch"],
+                    "vol": r["vol"], "voices": r["voices"]}
         if "repeatDb" in r:
             out[cue]["repeatDb"] = r["repeatDb"]
     report.append("")

@@ -4,6 +4,7 @@ import { PiecePlayer, catchUp, makeRng } from '../src/audio/sequencer';
 import type { BarOptions } from '../src/audio/sequencer';
 import {
   bassNote,
+  chordAt,
   noteToMidi,
   parseChord,
   parseChords,
@@ -12,6 +13,7 @@ import {
   voiceTone,
   voicing,
 } from '../src/audio/theory';
+import type { PhraseNote } from '../src/audio/theory';
 import { MUSIC_SLOTS } from '../src/audio/types';
 import { maxShift, pickZone } from '../src/audio/zones';
 import { SEASONS } from '../src/state/GameState';
@@ -183,5 +185,159 @@ describe('sequencer', () => {
     expect(catchUp(10, 10.02, 2)).toBe(10);
     expect(catchUp(10, 15.5, 2)).toBe(16);
     expect(catchUp(10, 16, 2)).toBe(16);
+  });
+});
+
+/**
+ * The critic's round-2 finding F20: spring, summer, title and festival shared one progression and
+ * cadence (summer was spring a tone up), fall and winter another. These checks keep the pieces apart.
+ * audio-src/tools/seasons.py prints the same numbers as a table (and measures renders).
+ */
+describe('each piece has its own harmony and melodies', () => {
+  const NAMES = ['spring', 'summer', 'fall', 'winter', 'title', 'festival'] as const;
+  const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'] as const;
+  type Note = PhraseNote & { midi: number };
+  const piece = (n: string) => MUSIC.pieces[n]!;
+  const tonicOf = (n: string) => {
+    const k = piece(n).key;
+    expect(k, `${n} declares its key`).toMatch(/^[A-G][#b]? (major|minor|mixolydian|dorian|lydian)$/);
+    return parseChord(k!.split(' ')[0]!).root;
+  };
+  /** Triad class for bigrams: sus, dim, min or maj. */
+  const triad = (q: number[]) =>
+    !q.includes(3) && !q.includes(4) ? 'sus' : q.includes(3) && q.includes(6) ? 'dim' : q.includes(3) ? 'min' : 'maj';
+  const chordsOf = (n: string, sec: string) => parseChords(piece(n).sections[sec]!.chords, piece(n).meter).chords;
+  const deg = (n: string, pc: number, shift = 0) => (pc - tonicOf(n) + shift + 24) % 12;
+  const token = (n: string, c: { root: number; tones: number[]; bass: number }) =>
+    `${deg(n, c.root)}:${c.tones.join('.')}${c.bass !== c.root ? `/${deg(n, c.bass)}` : ''}`;
+  const bigrams = (n: string, shift = 0) => {
+    const seq = piece(n).form.flatMap((s) => chordsOf(n, s).map((c) => `${deg(n, c.chord.root, shift)}${triad(c.chord.tones)}`));
+    seq.push(seq[0]!);
+    const out = new Set<string>();
+    for (let i = 0; i + 1 < seq.length; i++) if (seq[i] !== seq[i + 1]) out.add(`${seq[i]}>${seq[i + 1]}`);
+    return out;
+  };
+  const phraseIds = (n: string, time?: string) => [
+    ...new Set(
+      piece(n)
+        .layers.filter((l) => l.phrases && (!time || l.time === time || l.time === 'both'))
+        .flatMap((l) => Object.values(l.phrases!).flat(2)),
+    ),
+  ];
+  const notesOf = (n: string, id: string): Note[] =>
+    parsePhrase(piece(n).phrases[id]!, piece(n).meter).notes.filter((x): x is Note => x.midi !== null);
+  const trigrams = (n: string) => {
+    const out = new Set<string>();
+    for (const id of phraseIds(n)) {
+      const m = notesOf(n, id).map((x) => x.midi);
+      for (let i = 0; i + 3 < m.length; i++) out.add(`${m[i + 1]! - m[i]!},${m[i + 2]! - m[i + 1]!},${m[i + 3]! - m[i + 2]!}`);
+    }
+    return out;
+  };
+  const features = (n: string) => {
+    const ids = phraseIds(n, 'day');
+    const notes = ids.map((id) => notesOf(n, id));
+    const beats = ids.reduce((s, id) => s + parsePhrase(piece(n).phrases[id]!, piece(n).meter).bars * piece(n).meter, 0);
+    const flat = notes.flat();
+    const ivs = notes.flatMap((ns) => ns.slice(1).map((x, i) => Math.abs(x.midi - ns[i]!.midi)));
+    const mids = flat.map((x) => x.midi).sort((a, b) => a - b);
+    const h = mids.length / 2;
+    const median = mids.length % 2 ? mids[Math.floor(h)]! : (mids[h - 1]! + mids[h]!) / 2;
+    return {
+      npb: flat.length / beats,
+      median,
+      leap: ivs.filter((i) => i > 2).length / ivs.length,
+      range: mids[mids.length - 1]! - mids[0]!,
+      sync: flat.filter((x) => Math.abs(x.beat - Math.round(x.beat)) > 1e-6).length / flat.length,
+    };
+  };
+  function pairs<T>(xs: readonly T[]): (readonly [T, T])[] {
+    return xs.flatMap((a, i) => xs.slice(i + 1).map((b) => [a, b] as const));
+  }
+
+  it('no two pieces share an A-section progression or a cadence (Roman numerals)', () => {
+    const progs = NAMES.map((n) => chordsOf(n, 'A').map((c) => token(n, c.chord)).join(' '));
+    expect(new Set(progs).size).toBe(NAMES.length);
+    const cadences = NAMES.map((n) => chordsOf(n, 'A').slice(-3).map((c) => token(n, c.chord)).join(' '));
+    expect(new Set(cadences).size).toBe(NAMES.length);
+  });
+
+  it('chord-bigram overlap is at most 0.4 for every pair, in any key', () => {
+    for (const [a, b] of pairs(NAMES)) {
+      const A = bigrams(a);
+      let worst = 0;
+      for (let s = 0; s < 12; s++) {
+        const B = bigrams(b, s);
+        const inter = [...A].filter((x) => B.has(x)).length;
+        worst = Math.max(worst, inter / new Set([...A, ...B]).size);
+      }
+      expect(worst, `${a}-${b}`).toBeLessThanOrEqual(0.4);
+    }
+  });
+
+  it('melodies share at most 25% of their interval 3-grams, so none is another transposed', () => {
+    for (const [a, b] of pairs(NAMES)) {
+      const A = trigrams(a);
+      const B = trigrams(b);
+      const inter = [...A].filter((x) => B.has(x)).length;
+      expect(inter / Math.min(A.size, B.size), `${a}-${b}`).toBeLessThanOrEqual(0.25);
+    }
+  });
+
+  it('every season tune differs from every other in at least two melodic features', () => {
+    const f = Object.fromEntries(SEASON_NAMES.map((n) => [n, features(n)]));
+    for (const [a, b] of pairs(SEASON_NAMES)) {
+      const x = f[a]!;
+      const y = f[b]!;
+      const diff = [
+        Math.abs(x.npb - y.npb) > 0.2 * Math.max(x.npb, y.npb),
+        Math.abs(x.median - y.median) > 3,
+        Math.abs(x.leap - y.leap) > 0.1,
+        Math.abs(x.range - y.range) > 4,
+        Math.abs(x.sync - y.sync) > 0.1,
+      ].filter(Boolean).length;
+      expect(diff, `${a}-${b} ${JSON.stringify([x, y])}`).toBeGreaterThanOrEqual(2);
+    }
+    // Summer is the bright one; fall and winter are minor and slower than spring.
+    expect(f.summer!.median - f.spring!.median).toBeGreaterThanOrEqual(2);
+    for (const n of ['fall', 'winter']) {
+      expect(piece(n).key).toMatch(/minor|dorian/);
+      expect(piece(n).bpm).toBeLessThan(piece('spring').bpm);
+    }
+  });
+
+  it('melody notes on a beat are chord tones, or resolve by step to the next note', () => {
+    for (const [name, p] of Object.entries(MUSIC.pieces))
+      for (const l of p.layers)
+        for (const [sec, slots] of Object.entries(l.phrases ?? {})) {
+          const chords = parseChords(p.sections[sec]!.chords, p.meter).chords;
+          let start = 0;
+          for (const pool of slots) {
+            for (const id of pool) {
+              const ns = notesOf(name, id);
+              ns.forEach((n, k) => {
+                if (Math.abs(n.beat - Math.round(n.beat)) > 1e-6) return;
+                const c = chordAt(chords, start * p.meter + n.beat).chord;
+                const tones = new Set([...c.tones.map((t) => (c.root + t) % 12), c.bass]);
+                if (tones.has(n.midi % 12)) return;
+                const next = ns[k + 1]?.midi;
+                expect(next !== undefined && Math.abs(next - n.midi) <= 2, `${name}.${id} beat ${n.beat} over ${c.symbol}`).toBe(true);
+              });
+            }
+            start += parsePhrase(p.phrases[pool[0]!]!, p.meter).bars;
+          }
+        }
+  });
+
+  it('voicings never stack two notes a semitone apart', () => {
+    for (const p of Object.values(MUSIC.pieces))
+      for (const l of p.layers)
+        if (l.pattern && !l.bass)
+          for (const sec of Object.values(p.sections))
+            for (const c of parseChords(sec.chords, p.meter).chords) {
+              const v = voicing(c.chord, l.anchor ?? 60);
+              for (let i = 0; i + 1 < v.length; i++) expect(v[i + 1]! - v[i]!, c.chord.symbol).toBeGreaterThan(1);
+            }
+    expect(voicing(parseChord('Fmaj7'), 64)).toEqual([65, 69, 72, 76]);
   });
 });

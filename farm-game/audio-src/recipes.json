@@ -207,6 +207,10 @@
   "error": {
    "lufs": -23,
    "hp": 120
+  },
+  "touch": {
+   "lufs": -27,
+   "hp": 300
   }
  },
  "sfx": {
@@ -257,7 +261,8 @@
       "gain": -8
      }
     ]
-   ]
+   ],
+   "trim": 2.2
   },
   "water": {
    "family": "tools",
@@ -286,7 +291,8 @@
       "to": 2.72
      }
     ]
-   ]
+   ],
+   "trim": 0.7
   },
   "refill": {
    "family": "tools",
@@ -317,7 +323,8 @@
       "shift": -2
      }
     ]
-   ]
+   ],
+   "trim": 1.3
   },
   "plant": {
    "family": "light",
@@ -370,7 +377,8 @@
      }
     ]
    ],
-   "hp": 300
+   "hp": 300,
+   "trim": 1.3
   },
   "harvest": {
    "family": "rewards",
@@ -412,7 +420,8 @@
       "gain": -7
      }
     ]
-   ]
+   ],
+   "trim": 1.8
   },
   "cut": {
    "family": "tools",
@@ -468,7 +477,8 @@
       "at": 0.02
      }
     ]
-   ]
+   ],
+   "trim": 0.7
   },
   "swing": {
    "family": "light",
@@ -501,7 +511,8 @@
       "shift": -4
      }
     ]
-   ]
+   ],
+   "trim": 1.3
   },
   "coin": {
    "family": "rewards",
@@ -529,7 +540,8 @@
       "src": "sfx/kenney-rpg/handleCoins2"
      }
     ]
-   ]
+   ],
+   "trim": 2.0
   },
   "buy": {
    "family": "rewards",
@@ -559,7 +571,8 @@
       "at": 0.08
      }
     ]
-   ]
+   ],
+   "trim": 1.9
   },
   "ui": {
    "family": "ui",
@@ -569,7 +582,7 @@
    "variants": [
     [
      {
-      "src": "sfx/kenney-ui/click3"
+      "src": "sfx/kenney-ui/click2"
      }
     ],
     [
@@ -583,7 +596,8 @@
      }
     ]
    ],
-   "repeatDb": 0
+   "repeatDb": 0,
+   "trim": 1.5
   },
   "select": {
    "family": "ui",
@@ -602,7 +616,8 @@
      }
     ]
    ],
-   "repeatDb": 0
+   "repeatDb": 0,
+   "trim": 2.7
   },
   "door": {
    "family": "door",
@@ -624,7 +639,8 @@
       "to": 0.9
      }
     ]
-   ]
+   ],
+   "trim": 1.0
   },
   "stepGrass": {
    "family": "steps",
@@ -662,7 +678,8 @@
      }
     ]
    ],
-   "repeatDb": 0
+   "repeatDb": 0,
+   "trim": 0.8
   },
   "stepWood": {
    "family": "steps",
@@ -691,7 +708,8 @@
      }
     ]
    ],
-   "repeatDb": 0
+   "repeatDb": 0,
+   "trim": 0.2
   },
   "error": {
    "family": "error",
@@ -709,7 +727,154 @@
       "src": "sfx/kenney-interface/error_008"
      }
     ]
-   ]
+   ],
+   "trim": 2.0
+  },
+  "tick": {
+   "family": "touch",
+   "pitch": 1.0,
+   "vol": 1.5,
+   "voices": 2,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-interface/tick_004"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/tick_004",
+      "shift": 2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/tick_002"
+     },
+     {
+      "src": "sfx/kenney-interface/tick_004",
+      "gain": -12,
+      "shift": -2
+     }
+    ]
+   ],
+   "maxLen": 0.075,
+   "trim": 1.0,
+   "repeatDb": -8
+  },
+  "target": {
+   "family": "touch",
+   "pitch": 0.8,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-ui/rollover2",
+      "shift": -2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/mouseclick1",
+      "shift": -2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/click1",
+      "shift": -3
+     }
+    ]
+   ],
+   "maxLen": 0.075,
+   "trim": 1.0,
+   "repeatDb": -8
+  },
+  "ringOpen": {
+   "family": "touch",
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-ui/rollover3",
+      "shift": 2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/rollover4",
+      "shift": 2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/rollover3",
+      "shift": 3
+     }
+    ]
+   ],
+   "maxLen": 0.075,
+   "trim": 0.5,
+   "repeatDb": -8
+  },
+  "ringClose": {
+   "family": "touch",
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-ui/mouserelease1",
+      "shift": -2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/rollover4",
+      "shift": -3
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-ui/rollover3",
+      "shift": -3
+     }
+    ]
+   ],
+   "maxLen": 0.075,
+   "trim": 0.3,
+   "repeatDb": -8
+  },
+  "confirm": {
+   "family": "touch",
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-interface/pluck_001"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/pluck_002"
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-interface/pluck_001",
+      "shift": 2
+     }
+    ]
+   ],
+   "maxLen": 0.075,
+   "trim": 2.0,
+   "repeatDb": -8
   }
  },
  "ambience": {
@@ -733,7 +898,7 @@
     },
     {
      "from": 3.2,
-     "body": 7.2
+     "body": 7.333333333333333
     }
    ]
   },

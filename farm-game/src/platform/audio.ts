@@ -38,7 +38,13 @@ export type Sfx =
   | 'select'
   | 'level'
   | 'heart'
-  | 'order';
+  | 'order'
+  // One-thumb controls (soft, under 80 ms, at or below the ui click; see docs/EXTENDING.md):
+  | 'tick'
+  | 'target'
+  | 'ringOpen'
+  | 'ringClose'
+  | 'confirm';
 
 /** Every cue id, for tests and tooling (keep in sync with the union above; a test checks it). */
 export const SFX_IDS: readonly Sfx[] = [
@@ -62,6 +68,11 @@ export const SFX_IDS: readonly Sfx[] = [
   'level',
   'heart',
   'order',
+  'tick',
+  'target',
+  'ringOpen',
+  'ringClose',
+  'confirm',
 ];
 
 // A major pentatonic keeps any random melody pleasant.
@@ -478,6 +489,22 @@ class AudioEngine {
         break;
       case 'swing':
         this.hiss(0.1, { freq: 1800, to: 700, q: 1.2, gain: 0.12 });
+        break;
+      case 'tick':
+        this.tone(1500 + Math.random() * 200, 0.02, { gain: 0.05, type: 'triangle' });
+        break;
+      case 'target':
+        this.tone(620, 0.04, { to: 760, gain: 0.05, type: 'sine' });
+        break;
+      case 'ringOpen':
+        this.tone(520, 0.06, { to: 780, gain: 0.05, type: 'triangle' });
+        break;
+      case 'ringClose':
+        this.tone(780, 0.06, { to: 520, gain: 0.05, type: 'triangle' });
+        break;
+      case 'confirm':
+        this.tone(1047, 0.04, { gain: 0.06, type: 'triangle' });
+        this.tone(1568, 0.05, { gain: 0.06, type: 'triangle', delay: 0.03 });
         break;
     }
   }

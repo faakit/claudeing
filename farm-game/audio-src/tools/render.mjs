@@ -15,16 +15,34 @@ const FILTER = process.argv[4] ?? '';
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
-const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order'];
+const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm'];
 
 const jobs = [];
 for (const s of SEASONS) {
   jobs.push({ name: `music-${s}-day`, o: { seconds: 60, slot: s, night: 0 } });
   jobs.push({ name: `music-${s}-night`, o: { seconds: 60, slot: s, night: 1 } });
 }
+// Long renders for the season comparison (audio-src/tools/seasons.py --renders) and for listening.
+for (const s of SEASONS) {
+  jobs.push({ name: `long-${s}-day`, o: { seconds: 240, slot: s, night: 0 } });
+  jobs.push({ name: `long-${s}-night`, o: { seconds: 240, slot: s, night: 1 } });
+}
+for (const s of ['title', 'festival']) jobs.push({ name: `long-${s}`, o: { seconds: 240, slot: s } });
+// Held tools and the crickets' combined loop period (two layers, 9 s and 7.333 s: 198 s).
+jobs.push({ name: 'water-rapid', o: { seconds: 5, cues: Array.from({ length: 16 }, (_, i) => ({ cue: 'water', at: 0.2 + i * 0.2 })) } });
+// The critic's fatigue test for the one-thumb cues: ten taps a second for 5 s over spring music.
+for (const c of ['tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'ui'])
+  jobs.push({ name: `tap-rapid-${c}`, o: { seconds: 6, slot: 'spring', cues: Array.from({ length: 50 }, (_, i) => ({ cue: c, at: 0.5 + i * 0.1 })) } });
+for (const c of ['tick', 'target', 'ringOpen', 'ringClose', 'confirm'])
+  jobs.push({ name: `tap-dry-${c}`, o: { seconds: 6, cues: Array.from({ length: 50 }, (_, i) => ({ cue: c, at: 0.5 + i * 0.1 })) } });
+jobs.push({ name: 'tap-rapid-mix', o: { seconds: 6, slot: 'spring', cues: Array.from({ length: 50 }, (_, i) => ({ cue: ['target', 'tick', 'tick', 'tick', 'confirm'][i % 5], at: 0.5 + i * 0.1 })) } });
+jobs.push({ name: 'crickets-long', o: { seconds: 420, ambience: { crickets: 1 } } });
 jobs.push({ name: 'music-spring-indoor', o: { seconds: 40, slot: 'spring', indoor: true } });
 for (const s of ['title', 'mine', 'festival']) jobs.push({ name: `music-${s}`, o: { seconds: 60, slot: s } });
 for (const c of SFX) jobs.push({ name: `sfx-${c}`, o: { seconds: 2.5, cues: [{ cue: c, at: 0.2 }] } });
+// Eight hits of each cue, 1.2 s apart (no repeat duck), for per-take output loudness (sfxlevels.py).
+for (const c of SFX)
+  jobs.push({ name: `hits-${c}`, o: { seconds: 10, cues: Array.from({ length: 8 }, (_, i) => ({ cue: c, at: 0.2 + i * 1.2 })) } });
 jobs.push({ name: 'amb-rain', o: { seconds: 20, ambience: { rain: 1 } } });
 jobs.push({ name: 'amb-birds', o: { seconds: 30, ambience: { birds: 1 } } });
 jobs.push({ name: 'amb-crickets', o: { seconds: 20, ambience: { crickets: 1 } } });

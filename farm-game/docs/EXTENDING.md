@@ -165,11 +165,30 @@ Game code only calls `audio.play('<cue>')` with an id from the `Sfx` union in `s
 <raw-dir>` and `python -I audio-src/tools/sources_md.py`; credit it in `ASSETS.md`. A short musical
   cue can instead be a jingle in `audio-src/tools/music_src.py` (`JINGLES`, written in C, played in the key
   of the current piece). `tests/audio-assets.test.ts` checks every id resolves.
+- **Touch-control cues** (for the one-thumb controls; all soft, 75 ms or shorter, about -28 LUFS max
+  momentary at the output, under the `ui` click, and 8 dB softer when repeated within 350 ms):
+
+  | id          | use it for                                                             |
+  | ----------- | ---------------------------------------------------------------------- |
+  | `tick`      | each tile painted while dragging a row; stepping a target preview      |
+  | `target`    | a tap that sets a walk-and-act target (the preview marker appears)     |
+  | `ringOpen`  | the tool ring opens                                                    |
+  | `ringClose` | the tool ring closes without a choice                                  |
+  | `confirm`   | a tool picked in the ring, or a painted row committed                  |
+
+  Haptics policy (so a tap never gets both a click and a buzz on every action): frequent events (tile
+  ticks, target previews, steps) are sound only; a haptic pulse goes with rare, deliberate events only
+  (ring open, tool picked, row committed, error), at most one per 150 ms. With haptics off nothing in the
+  audio changes. `render.mjs` jobs `tap-dry-<id>` / `tap-rapid-<id>` render ten taps a second for 5 s.
 - **Music** lives in `audio-src/tools/music_src.py` (regenerate `src/audio/music.json` with it): chords
   per section, accompaniment patterns, composed phrase pools. Which piece plays is decided in
-  `src/audio/director.ts`. Tests reject phrases whose bars do not add up and notes no sample can reach.
+  `src/audio/director.ts`. Tests reject phrases whose bars do not add up and notes no sample can reach,
+  and keep the pieces apart (own A progression and cadence, chord-bigram and melody 3-gram overlap
+  limits, on-beat melody notes that are chord tones or resolve by step); `python -I
+  audio-src/tools/seasons.py [--renders <dir>]` prints the same numbers.
 - **Check the mix** with `node audio-src/tools/render.mjs <dir>` (against a running dev server) and
-  `python -I audio-src/tools/measure.py <dir>`, then listen on a phone.
+  `python -I audio-src/tools/measure.py <dir>` (`sfxlevels.py <dir>` for each cue's output level against
+  its target; the `trim` in a recipe closes the gap), then listen on a phone.
 
 ## Checklist for a new mechanic
 

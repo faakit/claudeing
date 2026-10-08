@@ -322,5 +322,101 @@
   "licence": "CC0-1.0",
   "pack": "OpenGameArt: 100-cc0-sfx-2",
   "member": "sfx100v2_thunder_01.ogg"
+ },
+ "sfx/kenney-ui/click1": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/click1.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/click2": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/click2.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/mouseclick1": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/mouseclick1.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/mouserelease1": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/mouserelease1.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/rollover2": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/rollover2.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/rollover3": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/rollover3.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-ui/rollover4": {
+  "url": "https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip",
+  "member": "Audio/rollover4.ogg",
+  "page": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney UI Audio"
+ },
+ "sfx/kenney-interface/tick_001": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/tick_001.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/tick_002": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/tick_002.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/tick_004": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/tick_004.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/pluck_001": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/pluck_001.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-interface/pluck_002": {
+  "url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "member": "Audio/pluck_002.ogg",
+  "page": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Interface Sounds"
  }
 }

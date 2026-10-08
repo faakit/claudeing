@@ -103,6 +103,8 @@ export interface Section {
 }
 
 export interface Piece {
+  /** Declared key and mode ("D mixolydian"), for the analysis tools and tests; not used at runtime. */
+  key?: string;
   /** Transposition (semitones from C major) for event jingles so they sit in this piece's key. */
   jingleKey: number;
   /** Mix level of the whole piece, dB (pieces are balanced against each other from offline renders). */

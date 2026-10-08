@@ -766,7 +766,7 @@
      "dur": 0.33
     }
    ],
-   "gain": 1,
+   "gain": 1.2882,
    "pitch": 1.2,
    "vol": 1.5,
    "voices": 2
@@ -789,7 +789,7 @@
      "dur": 0.42
     }
    ],
-   "gain": 1,
+   "gain": 1.0839,
    "pitch": 1.0,
    "vol": 1.5,
    "voices": 1
@@ -807,7 +807,7 @@
      "dur": 0.7
     }
    ],
-   "gain": 1,
+   "gain": 1.1614,
    "pitch": 0.8,
    "vol": 1,
    "voices": 1
@@ -830,7 +830,7 @@
      "dur": 0.13
     }
    ],
-   "gain": 1,
+   "gain": 1.1614,
    "pitch": 1.5,
    "vol": 1.5,
    "voices": 2
@@ -853,7 +853,7 @@
      "dur": 0.29
     }
    ],
-   "gain": 1,
+   "gain": 1.2303,
    "pitch": 1.5,
    "vol": 1,
    "voices": 3
@@ -881,7 +881,7 @@
      "dur": 0.25
     }
    ],
-   "gain": 1,
+   "gain": 1.0839,
    "pitch": 1.5,
    "vol": 1.5,
    "voices": 2
@@ -909,7 +909,7 @@
      "dur": 0.07
     }
    ],
-   "gain": 1,
+   "gain": 1.1614,
    "pitch": 1.5,
    "vol": 1.5,
    "voices": 2
@@ -918,7 +918,7 @@
    "files": [
     {
      "file": "sfx/coin-1.mp3",
-     "onset": 0.00138,
+     "onset": 0.00136,
      "dur": 0.26
     },
     {
@@ -932,7 +932,7 @@
      "dur": 0.31
     }
    ],
-   "gain": 1,
+   "gain": 1.2589,
    "pitch": 1.0,
    "vol": 1,
    "voices": 2
@@ -950,7 +950,7 @@
      "dur": 0.5
     }
    ],
-   "gain": 1,
+   "gain": 1.2445,
    "pitch": 0.5,
    "vol": 1,
    "voices": 1
@@ -959,8 +959,8 @@
    "files": [
     {
      "file": "sfx/ui-1.mp3",
-     "onset": 0.00093,
-     "dur": 0.06
+     "onset": 0.0,
+     "dur": 0.05
     },
     {
      "file": "sfx/ui-2.mp3",
@@ -973,7 +973,7 @@
      "dur": 0.03
     }
    ],
-   "gain": 1,
+   "gain": 1.1885,
    "pitch": 1.0,
    "vol": 1,
    "voices": 2,
@@ -992,7 +992,7 @@
      "dur": 0.05
     }
    ],
-   "gain": 1,
+   "gain": 1.3646,
    "pitch": 1.0,
    "vol": 1,
    "voices": 2,
@@ -1011,7 +1011,7 @@
      "dur": 0.86
     }
    ],
-   "gain": 1,
+   "gain": 1.122,
    "pitch": 0.8,
    "vol": 1,
    "voices": 1
@@ -1039,7 +1039,7 @@
      "dur": 0.18
     }
    ],
-   "gain": 1,
+   "gain": 1.0965,
    "pitch": 1.5,
    "vol": 2,
    "voices": 3,
@@ -1068,7 +1068,7 @@
      "dur": 0.22
     }
    ],
-   "gain": 1,
+   "gain": 1.0233,
    "pitch": 1.2,
    "vol": 2,
    "voices": 3,
@@ -1087,10 +1087,130 @@
      "dur": 0.13
     }
    ],
-   "gain": 1,
+   "gain": 1.2589,
    "pitch": 0.5,
    "vol": 1,
    "voices": 1
+  },
+  "tick": {
+   "files": [
+    {
+     "file": "sfx/tick-1.mp3",
+     "onset": 0.002,
+     "dur": 0.04
+    },
+    {
+     "file": "sfx/tick-2.mp3",
+     "onset": 0.002,
+     "dur": 0.03
+    },
+    {
+     "file": "sfx/tick-3.mp3",
+     "onset": 0.0,
+     "dur": 0.06
+    }
+   ],
+   "gain": 1.122,
+   "pitch": 1.0,
+   "vol": 1.5,
+   "voices": 2,
+   "repeatDb": -8
+  },
+  "target": {
+   "files": [
+    {
+     "file": "sfx/target-1.mp3",
+     "onset": 0.00091,
+     "dur": 0.03
+    },
+    {
+     "file": "sfx/target-2.mp3",
+     "onset": 0.0,
+     "dur": 0.06
+    },
+    {
+     "file": "sfx/target-3.mp3",
+     "onset": 0.0,
+     "dur": 0.075
+    }
+   ],
+   "gain": 1.122,
+   "pitch": 0.8,
+   "vol": 1,
+   "voices": 1,
+   "repeatDb": -8
+  },
+  "ringOpen": {
+   "files": [
+    {
+     "file": "sfx/ringOpen-1.mp3",
+     "onset": 0.0,
+     "dur": 0.05
+    },
+    {
+     "file": "sfx/ringOpen-2.mp3",
+     "onset": 0.002,
+     "dur": 0.06
+    },
+    {
+     "file": "sfx/ringOpen-3.mp3",
+     "onset": 0.0,
+     "dur": 0.05
+    }
+   ],
+   "gain": 1.0593,
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "repeatDb": -8
+  },
+  "ringClose": {
+   "files": [
+    {
+     "file": "sfx/ringClose-1.mp3",
+     "onset": 0.002,
+     "dur": 0.07
+    },
+    {
+     "file": "sfx/ringClose-2.mp3",
+     "onset": 0.002,
+     "dur": 0.075
+    },
+    {
+     "file": "sfx/ringClose-3.mp3",
+     "onset": 0.0,
+     "dur": 0.07
+    }
+   ],
+   "gain": 1.0351,
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "repeatDb": -8
+  },
+  "confirm": {
+   "files": [
+    {
+     "file": "sfx/confirm-1.mp3",
+     "onset": 0.0,
+     "dur": 0.075
+    },
+    {
+     "file": "sfx/confirm-2.mp3",
+     "onset": 0.0,
+     "dur": 0.075
+    },
+    {
+     "file": "sfx/confirm-3.mp3",
+     "onset": 0.0,
+     "dur": 0.075
+    }
+   ],
+   "gain": 1.2589,
+   "pitch": 0.5,
+   "vol": 1,
+   "voices": 1,
+   "repeatDb": -8
   }
  },
  "ambience": {
@@ -1123,10 +1243,10 @@
     {
      "file": "amb/crickets-2.mp3",
      "onset": 0,
-     "dur": 8.3,
+     "dur": 8.4333,
      "loop": [
       1.0,
-      8.2
+      8.33333
      ]
     }
    ],
