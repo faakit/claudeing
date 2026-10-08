@@ -73,3 +73,11 @@ Data validated, system tested, mechanic registered, UI text fits, balance bound 
 
 At the end of every session write `agents/out/depth-<date>.md`: what shipped (commits), what was verified and how,
 what is unverified, open questions for the human, and the next three goals.
+
+## Open findings from critique 3 (`agents/critiques/critique-3.md`) to take first
+
+- F2 pacing: daily chores finish by about 6:40 AM, then ~19 idle game hours; days 3 to 4 are dead; nothing points at
+  fishing, the board or the mine early. Add a daily job layer (bounties, villager requests, weather/season tasks).
+- Second act that spends gold: greenhouse, farm tiers, town projects (backlog 1 and 4).
+- One-thumb loop: plant-a-row, load-all for machines, quick bag swap; tutorial toast replays on map change; forage is
+  hard to spot; gifts are blind (show what a villager likes after the first try).

@@ -142,3 +142,24 @@ export function fitText(text: string, maxPx: number, scale = 1): string {
   while (t.length > 1 && measureText(`${t}..`, scale) > maxPx) t = t.slice(0, -1);
   return `${t}..`;
 }
+
+/** Ordered, meaning-preserving shortenings tried before a row of text is cut off with "..". */
+const SHORTER: [RegExp, string][] = [
+  [/\(have (\d+)\)/, 'x$1'],
+  [/^Makes /, '> '],
+  [/ Seeds$/, ''],
+  [/ Sapling$/, ' Sap.'],
+  [/^Silver /, 'Si. '],
+  [/^Gold /, 'Au. '],
+  [/\bhave (\d+)/, 'x$1'],
+];
+
+/** Like fitText, but first applies friendlier abbreviations so list rows keep their facts. */
+export function fitRow(text: string, maxPx: number, scale = 1): string {
+  let t = text;
+  for (const [re, to] of SHORTER) {
+    if (measureText(t, scale) <= maxPx) return t;
+    t = t.replace(re, to);
+  }
+  return fitText(t, maxPx, scale);
+}

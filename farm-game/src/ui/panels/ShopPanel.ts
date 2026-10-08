@@ -110,12 +110,16 @@ export class ShopPanel extends Modal {
           onClick: () => this.buy(id, 1),
           color: s.money >= price ? C.gold : C.red,
         },
-        {
-          label: 'x5',
-          width: 26,
-          onClick: () => this.buy(id, 5),
-          color: s.money >= price * 5 && !gone ? C.cream : C.creamDim,
-        },
+        ...(def.type === 'animal'
+          ? []
+          : [
+              {
+                label: 'x5',
+                width: 26,
+                onClick: () => this.buy(id, 5),
+                color: s.money >= price * 5 && !gone ? C.cream : C.creamDim,
+              },
+            ]),
       ],
     });
   }

@@ -84,3 +84,13 @@ describe('menu tabs', () => {
     for (const [id, label] of labels) expect(measureText(label), id).toBeLessThanOrEqual(w - 4);
   });
 });
+
+describe('fitRow', () => {
+  it('abbreviates before cutting, and still fits', async () => {
+    const { fitRow, measureText } = await import('../src/ui/fontMetrics');
+    const out = fitRow('Makes Gold Melon Wine (have 14)', 120);
+    expect(measureText(out)).toBeLessThanOrEqual(120);
+    expect(out).toContain('x14');
+    expect(fitRow('Short', 120)).toBe('Short');
+  });
+});

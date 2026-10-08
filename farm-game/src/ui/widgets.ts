@@ -3,7 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
-import { fitText, Label } from './font';
+import { fitRow, Label } from './font';
 import { C } from './theme';
 
 /** Notched pixel-art panel: ink outline, cream rim, soft shadow. Drawn at (x, y). */
@@ -325,8 +325,8 @@ export abstract class Modal {
     if (spec.icon) this.icon(15, y + 12, spec.icon);
     const right = (spec.buttons ?? []).reduce((w, b) => w + (b.width ?? 44) + 3, 0);
     const maxText = this.panelW - 8 - 28 - right - 2;
-    this.label(28, y + 3, fitText(spec.title, maxText));
-    if (spec.sub) this.label(28, y + 14, fitText(spec.sub, maxText), spec.subColor ?? C.creamDim);
+    this.label(28, y + 3, fitRow(spec.title, maxText));
+    if (spec.sub) this.label(28, y + 14, fitRow(spec.sub, maxText), spec.subColor ?? C.creamDim);
     let x = this.panelW - 8;
     for (const b of spec.buttons ?? []) {
       const w = b.width ?? 44;

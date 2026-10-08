@@ -27,5 +27,4 @@ export function buildAlmanac(c: MenuTabContext): void {
     });
     y += 38;
   }
-  c.label(8, c.bottom - 18, 'Hold an item once to add it.', C.creamDim, 1, 'left', 184);
 }

@@ -7,7 +7,7 @@
     "accept": {
       "families": ["flower"]
     },
-    "rivals": [40, 60, 90],
+    "rivals": [24, 33, 42],
     "prizes": [600, 350, 200],
     "consolation": 60
   },

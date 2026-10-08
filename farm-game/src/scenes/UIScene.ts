@@ -315,6 +315,7 @@ export class UIScene extends Phaser.Scene {
         cycleSlot(getState(), step);
         audio.play('select');
       },
+      () => this.holdTimer?.remove(),
     );
     this.actionIcon?.destroy();
     this.actionIcon = this.add

@@ -250,9 +250,9 @@ function buildGoals(c: MenuTabContext): void {
   if (prog) {
     c.label(8, c.top + 14, prog.goal.text, C.cream, 1, 'left', 184);
     const g = c.scene.add.graphics();
-    drawBar(g, 8, c.top + 28, 150, 7, prog.value / prog.goal.target, C.gold);
+    drawBar(g, 8, c.top + 28, 184, 7, prog.value / prog.goal.target, C.gold);
     c.add(g);
-    c.label(164, c.top + 28, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold);
+    c.label(192, c.top + 40, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold, 1, 'right');
     c.label(8, c.top + 40, `Reward: +${fmt(prog.goal.reward)}g`, C.green);
     c.label(8, c.top + 52, `Hint: ${prog.goal.hint}`, C.creamDim, 1, 'left', 184);
   } else {

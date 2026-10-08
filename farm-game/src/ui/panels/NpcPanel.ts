@@ -68,7 +68,7 @@ export class NpcPanel extends Modal {
     this.label(
       8,
       20,
-      isBirthday(s, this.id) ? 'Birthday today!' : fitText(def.blurb, 136),
+      isBirthday(s, this.id) ? 'Birthday today!' : fitText(def.blurb, 150),
       isBirthday(s, this.id) ? C.gold : C.creamDim,
     );
     const hearts = heartsOf(s, this.id);

@@ -190,3 +190,11 @@
 - Hotbar-first items are seeds, saplings, fertilizer and placeables; bait, feed and animals go to the bag.
 - Placeables may replace empty tilled soil (the soil tile is removed), but not a growing crop.
 - Bag grid sits at the bottom of the menu sheet, within thumb reach.
+
+## Critique 3 fixes
+
+- Empty machines get a "Pick up" button in their panel (the second-tap rule can never arm when Interact opens a panel).
+- Animals have no x5 buy button (one tap used to buy 1,750g of chickens).
+- List rows abbreviate (`fitRow`: "(have 4)" to "x4", "Makes" to ">", Silver/Gold to Si./Au.) before cutting with "..".
+- A finger drifting 4 px on the Action button cancels the pending hold, so slow swipes never use the tool.
+- Flower Show rivals lowered to 24/33/42 so a plain flower can place third.

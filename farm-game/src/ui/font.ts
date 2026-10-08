@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAP, GLYPHS, parseGlyph } from './fontMetrics';
-export { fitText, measureText } from './fontMetrics';
+export { fitRow, fitText, measureText } from './fontMetrics';
 
 /**
  * Hand-built 5x7 pixel font, generated into a bitmap font at boot so UI text is

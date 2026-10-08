@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 
 /** Logical pixels of vertical travel per tool change. */
 const SWIPE_STEP = 14;
+/** Travel that already means "this may be a swipe", before a full step. */
+const DRIFT = 4;
 
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
 
@@ -23,6 +25,8 @@ export class TouchButton {
     onRelease?: () => void,
     /** Called with +1 / -1 when the finger slides up / down while pressing (e.g. change tool). */
     onSwipe?: (step: number) => void,
+    /** Called once per press when the finger first drifts, so a slow swipe can cancel a pending hold. */
+    onDrift?: () => void,
   ) {
     const body = scene.add.graphics();
     body.fillStyle(0x14101f, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
@@ -44,10 +48,12 @@ export class TouchButton {
     });
     let swipeId: number | null = null;
     let anchorY = 0;
+    let drifted = false;
     this.zone.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (!this.enabled) return;
       swipeId = p.id;
       anchorY = p.y;
+      drifted = false;
       this.pressed = true;
       this.press(true);
       onPress();
@@ -56,6 +62,10 @@ export class TouchButton {
       scene.input.on('pointermove', (p: Phaser.Input.Pointer) => {
         if (swipeId !== p.id) return;
         const dy = p.y - anchorY;
+        if (!drifted && Math.abs(dy) >= DRIFT) {
+          drifted = true;
+          onDrift?.();
+        }
         if (Math.abs(dy) < SWIPE_STEP) return;
         anchorY = p.y;
         onSwipe(dy < 0 ? 1 : -1); // first, so the release below knows it was a swipe
