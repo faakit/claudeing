@@ -94,3 +94,26 @@ describe('decorations with a small use (owner: mostly cosmetic)', () => {
     expect(t.stats['rested.day']).toBeUndefined();
   });
 });
+
+describe('the bench, after critique 6 (F7)', () => {
+  it('mashing Interact sits once and never lifts the bench; a nearly full player keeps the sit', async () => {
+    const { setPickupClock } = await import('../src/systems/placeables');
+    let now = 1000;
+    setPickupClock(() => now);
+    const s = newState();
+    const bench = placeObject(s, 'farm', 4, 4, 'garden_bench');
+    s.energy = 50;
+    const kinds = [0, 1, 2, 3].map(() => {
+      now += 400;
+      return interactWith(s, bench).kind;
+    });
+    expect(kinds).not.toContain('pickup');
+    expect(s.energy).toBe(65);
+    const t = newState();
+    t.energy = maxEnergy(t) - 5;
+    interactWith(t, placeObject(t, 'farm', 4, 4, 'garden_bench'));
+    expect(t.energy).toBe(maxEnergy(t) - 5);
+    expect(t.stats['rested.day']).toBeUndefined();
+    setPickupClock(() => Date.now());
+  });
+});

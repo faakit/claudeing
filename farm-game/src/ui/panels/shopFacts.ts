@@ -24,17 +24,32 @@ export function shopFacts(
   day: number,
   greenhouse = false,
   room = shopFactsRoom(true),
+  season?: string,
 ): string {
   const def = items[itemId]!;
   const crop = def.plants ? crops[def.plants] : undefined;
   let base: string;
   let short: string | null = null;
+  /** Shorter ways to say `base` when it does not fit beside the buttons. */
+  let alts: string[] = [];
   if (crop) {
     const days = crop.stageDays.reduce((a, b) => a + b, 0);
     const sell = items[crop.harvestItem]?.sellPrice ?? 0;
     const late = !greenhouse && tooLate(itemId, day);
-    base = late ? 'Too late now' : `${days} days  ${sell}g`;
-    short = late ? 'Too late' : `${days}d ${sell}g`;
+    // With a greenhouse every season's seeds are sold; say which ones only grow under glass.
+    const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
+    const again = crop.regrowDays ? `, again ${crop.regrowDays}d` : '';
+    base = late
+      ? 'Too late now'
+      : glass
+        ? `Glass only ${days}d ${sell}g`
+        : `${days} days  ${sell}g${again}`;
+    alts = late
+      ? []
+      : glass
+        ? [`Glass ${days}d ${sell}g`, `Glass ${days}d`]
+        : [`${days}d ${sell}g${again}`, `${days}d ${sell}g`];
+    short = late ? 'Too late' : glass ? `Glass ${days}d` : `${days}d ${sell}g`;
   } else if (def.type === 'animal') base = 'Needs a home';
   else if (def.type === 'sapling') base = `${seasonName(trees[itemId]?.season ?? '')} fruit`;
   else if (def.type === 'feed') base = 'Daily food';
@@ -46,7 +61,7 @@ export function shopFacts(
     // For decorations `own` counts placed ones too, against the cap: "Decor 1/1".
     return `Decor ${own}/${String(placeables[itemId]?.params['max'] ?? 1)}`;
   else base = def.description;
-  if (own <= 0) return base;
+  if (own <= 0) return [base, ...alts].find((l) => measureText(l) <= room) ?? base;
   for (const line of [`${base} (own ${own})`, short && `${short}, own ${own}`])
     if (line && measureText(line) <= room) return line;
   return `Own ${own}`;

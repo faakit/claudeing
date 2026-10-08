@@ -29,9 +29,12 @@ describe('animal goods on the board (handover goal 2)', () => {
     house(s, 'coop', 3, 3);
     house(s, 'barn', 2, 5);
     house(s, 'sty', 2, 7);
-    placeObject(s, 'farm', 9, 3, 'bee_house');
+    const hive = placeObject(s, 'farm', 9, 3, 'bee_house');
+    // Pigs dig only on dry days (counted at 60%); honey only once a hive has some ready.
+    expect(Object.fromEntries(animalOutput(s))).toEqual({ egg: 3, milk: 2, truffle: 1.2 });
+    hive.data['hive'] = { timer: 0, ready: 1 };
     const out = animalOutput(s);
-    expect(Object.fromEntries(out)).toEqual({ egg: 3, milk: 2, truffle: 2, honey: 0.25 });
+    expect(Object.fromEntries(out)).toEqual({ egg: 3, milk: 2, truffle: 1.2, honey: 0.25 });
     for (const item of ['egg', 'milk', 'truffle', 'honey'])
       expect(asked(s)).toContain(keyOf({ item }));
     s.time.season = 'winter'; // pigs dig nothing in winter
@@ -45,7 +48,7 @@ describe('animal goods on the board (handover goal 2)', () => {
       const s = newState();
       s.rng = seed;
       house(s, 'coop', 1);
-      placeObject(s, 'farm', 9, 3, 'bee_house');
+      placeObject(s, 'farm', 9, 3, 'bee_house').data['hive'] = { timer: 0, ready: 1 };
       for (const o of generateOrders(s, 30)) {
         if (o.item.startsWith('egg|')) expect(o.qty).toBeLessThanOrEqual(2);
         if (o.item.startsWith('honey|')) expect(o.qty).toBe(1);
@@ -68,5 +71,27 @@ describe('animal goods on the board (handover goal 2)', () => {
     expect(ids()).not.toContain('truffles');
     house(s, 'sty', 1, 9);
     expect(ids()).toContain('truffles');
+  });
+});
+
+describe('specials sized to the farm (critique 6, F4)', () => {
+  it('one hen is never asked for 30 eggs; a big coop gets the full special', async () => {
+    const { makeSpecial, specialCap } = await import('../src/systems/specials');
+    const def = specials.find((d) => d.item === 'egg')!;
+    const s = newState();
+    s.time.season = 'spring';
+    s.time.day = 5;
+    house(s, 'coop', 1);
+    const one = makeSpecial(s, def);
+    expect(one.qty).toBeLessThanOrEqual(specialCap(s, 'egg'));
+    expect(one.qty).toBeLessThanOrEqual(28 - 5 - 1);
+    house(s, 'coop', 3, 6);
+    expect(makeSpecial(s, def).qty).toBeGreaterThan(one.qty);
+    // With too few days left for even five eggs, no egg special goes up at all.
+    const late = newState();
+    late.time.season = 'spring';
+    late.time.day = 24;
+    house(late, 'coop', 1);
+    expect(specialCandidates(late).some((d) => d.item === 'egg')).toBe(false);
   });
 });

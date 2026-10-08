@@ -38,14 +38,15 @@ export class MovePanel extends Modal {
       'left',
       184,
     );
-    this.button(8, this.panelH - 56, this.panelW - 16, 24, 'Move it', () => this.confirm(), {
+    this.button(8, this.panelH - 56, this.panelW - 16, 24, 'Move it', () => this.move(), {
       textColor: C.green,
       rim: C.green,
     }).setEnabled(!!found);
     this.closeButton('Leave it');
   }
 
-  override confirm(): void {
+  /** The Move button only: Enter (the sheet's confirm key) must not do the risky thing (critique 6, F8). */
+  private move(): void {
     const st = getState();
     const found = findPlaced(st, this.id);
     if (!found) return this.close();

@@ -49,6 +49,12 @@ describe('second-year content: rare crops', () => {
     }
     s.stats['project.seedexchange'] = 1;
     s.time.season = 'summer';
+    // ...and, like every crop, only once some is growing (critique 6, F3).
+    expect(orderCandidates(s).some((r) => r.item === 'blueberry')).toBe(false);
+    s.farm.tiles['10,17'] = {
+      watered: false,
+      crop: { cropId: 'blueberry', stage: 0, daysInStage: 0, regrow: false },
+    };
     expect(orderCandidates(s).some((r) => r.item === 'blueberry')).toBe(true);
   });
 

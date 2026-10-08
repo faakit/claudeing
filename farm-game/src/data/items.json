@@ -953,7 +953,7 @@
     "buyPrice": 80,
     "sellPrice": 20,
     "placeable": true,
-    "description": "Keeps crows off the crops around it."
+    "description": "Keeps crows off the crops within 4 tiles."
   },
   "tulip_seed": {
     "name": "Tulip Bulbs",

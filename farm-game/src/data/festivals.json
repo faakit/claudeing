@@ -39,7 +39,7 @@
     "accept": {
       "types": ["crop", "forage"]
     },
-    "rivals": [300, 600, 950],
+    "rivals": [400, 750, 1300],
     "prizes": [1000, 600, 300],
     "consolation": 100,
     "mode": "basket",
@@ -67,7 +67,7 @@
     "accept": {
       "types": ["preserve", "product"]
     },
-    "rivals": [260, 480, 900],
+    "rivals": [300, 700, 1600],
     "prizes": [1000, 600, 300],
     "consolation": 100,
     "mode": "basket",

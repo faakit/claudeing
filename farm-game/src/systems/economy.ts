@@ -84,13 +84,20 @@ export function placeLimit(state: GameState, itemId: string): { have: number; ma
   return { have: placed + countItem(state, itemId), max };
 }
 
-/** What a shop sells today. With a greenhouse (pass `state`), seeds of every season are on the shelf. */
+/**
+ * What a shop sells today. With a greenhouse (pass `state`), seeds of every season are on the shelf, after
+ * this season's (critique 6, F5: out-of-season seeds first made a trap).
+ */
 export function stockFor(shopId: string, season: Season, state?: GameState): string[] {
   const allSeeds = !!state && ownsGreenhouse(state);
-  return (shops[shopId]?.stock ?? [])
-    .filter((s) => !s.project || (!!state && isProjectDone(state, s.project)))
-    .filter((s) => s.seasons.includes(season) || (allSeeds && items[s.item]?.type === 'seed'))
-    .map((s) => s.item);
+  const stock = (shops[shopId]?.stock ?? []).filter(
+    (s) => !s.project || (!!state && isProjectDone(state, s.project)),
+  );
+  const now = stock.filter((s) => s.seasons.includes(season));
+  const glass = allSeeds
+    ? stock.filter((s) => !s.seasons.includes(season) && items[s.item]?.type === 'seed')
+    : [];
+  return [...now, ...glass].map((s) => s.item);
 }
 
 export function buyItem(state: GameState, shopId: string, itemId: string, qty: number): BuyResult {

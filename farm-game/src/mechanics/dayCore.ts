@@ -1,7 +1,7 @@
 import { game } from '../data';
 import { restoreEnergy } from '../systems/energy';
 import { gameEvents } from '../systems/events';
-import { growCrops, killOutOfSeason, spawnWeeds } from '../systems/farming';
+import { growCrops, killOutOfSeason, spawnWeeds, spentUnderGlass } from '../systems/farming';
 import { checkGoals } from '../systems/goals';
 import { parseKey, sellValue } from '../systems/itemRef';
 import { registerDayHook } from '../systems/dayHooks';
@@ -61,6 +61,12 @@ registerDayHook({
   run(state, ctx) {
     const seasonChanged = advanceCalendar(state);
     ctx.scratch['seasonChanged'] = seasonChanged;
+    // Teach the greenhouse rule where it bites (critique 6, F8).
+    const spent = seasonChanged ? spentUnderGlass(state) : 0;
+    if (spent > 0)
+      ctx.notes.push(
+        `${spent} regrowing crop${spent > 1 ? 's' : ''} under glass ${spent > 1 ? 'were' : 'was'} spent: they last one season.`,
+      );
     ctx.summary.withered = seasonChanged ? killOutOfSeason(state) : 0;
   },
 });

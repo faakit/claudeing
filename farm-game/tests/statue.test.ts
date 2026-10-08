@@ -81,3 +81,26 @@ describe("the Founder's Statue: a repeatable late-game sink", () => {
     expect(measureText(GLORY_LINE)).toBeLessThanOrEqual(184);
   });
 });
+
+describe('the projects sheet scales to every project (critique 6, F1)', () => {
+  it('nine projects never push an Open button under Close or off the screen', async () => {
+    const { projectLists, LIST_ROWS, LIST_TOP, LIST_NAV_FROM_BOTTOM, PROJECT_SHEET_H, projectSub } =
+      await import('../src/ui/panels/projectText');
+    const ROW_H = 26;
+    // Rows, then the "More after..." line, all above the paging buttons, which sit above Close.
+    expect(LIST_TOP + LIST_ROWS * ROW_H + 4 + 10).toBeLessThanOrEqual(
+      PROJECT_SHEET_H - LIST_NAV_FROM_BOTTOM,
+    );
+    expect(PROJECT_SHEET_H - LIST_NAV_FROM_BOTTOM + 20).toBeLessThanOrEqual(PROJECT_SHEET_H - 28);
+    const s = lateGame();
+    const { open, finished } = projectLists(s);
+    expect(open).toEqual(['statue']); // the statue is first, never off the bottom
+    expect(finished).toHaveLength(Object.keys(projects).length - 1);
+    // Mid-game: everything open fits on the first page or pages cleanly.
+    const mid = newState();
+    for (const id of ['canopy', 'library', 'fishladder']) mid.stats[`project.${id}`] = 1;
+    expect(projectLists(mid).open.length).toBeGreaterThan(0);
+    // A finished project with no perk says "Done!", not "Done: ".
+    expect(projectSub(1, 1, true, {})).toBe('Done!');
+  });
+});

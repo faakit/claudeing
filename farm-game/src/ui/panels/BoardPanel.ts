@@ -13,7 +13,7 @@ import { fmt } from './format';
 import { items } from '../../data';
 import { countItem } from '../../systems/inventory';
 import { giveToSpecial, specialLabel, specialSub } from '../../systems/specials';
-import { applyRival, rivalName, rivalNotice } from '../../systems/rival';
+import { applyRival, rivalActive, rivalName, rivalNotice, rivalPicks } from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
 export class BoardPanel extends Modal {
@@ -62,6 +62,10 @@ export class BoardPanel extends Modal {
         ],
       });
     }
+    // The requests Clay is after today are marked, so the race is about a known target.
+    const eyed = new Set(
+      rivalActive(s) && s.stats['rival.day'] !== s.orders.day ? rivalPicks(s).map((o) => o.id) : [],
+    );
     for (const o of s.orders.list) {
       const have = haveFor(s, o);
       const ready = !o.done && have >= o.qty;
@@ -72,8 +76,15 @@ export class BoardPanel extends Modal {
           ? `${rivalName()} filled this one.`
           : o.done
             ? 'Thank you!'
-            : orderSub(s, o, have),
-        subColor: o.rival ? C.warn : o.done ? C.green : ready ? C.gold : C.creamDim,
+            : orderSub(s, o, have, eyed.has(o.id)),
+        subColor:
+          o.rival || (eyed.has(o.id) && !ready)
+            ? C.warn
+            : o.done
+              ? C.green
+              : ready
+                ? C.gold
+                : C.creamDim,
         buttons: [
           {
             label: o.rival ? 'Gone' : o.done ? 'Done' : 'Give',

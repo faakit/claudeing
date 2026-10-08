@@ -42,7 +42,7 @@ export function ownsTile(state: GameState, tx: number, ty: number): boolean {
 
 /**
  * Is a plot's "for sale" sign up yet? The cheapest unbought plot always is; a dearer one appears once the
- * player has earned a quarter of its price or holds half of it, so day one is not two 2,000g signs at the door.
+ * player has earned half its price or holds half of it, so day one is not two 2,000g signs at the door.
  */
 export function signVisible(state: GameState, id: string): boolean {
   const p = plots[id];
@@ -50,7 +50,7 @@ export function signVisible(state: GameState, id: string): boolean {
   const forSale = Object.entries(plots).filter(([pid, x]) => x.sign && !ownsPlot(state, pid));
   const cheapest = Math.min(...forSale.map(([, x]) => x.price));
   return (
-    p.price <= cheapest || (state.stats['earned'] ?? 0) >= p.price / 4 || state.money >= p.price / 2
+    p.price <= cheapest || (state.stats['earned'] ?? 0) >= p.price / 2 || state.money >= p.price / 2
   );
 }
 

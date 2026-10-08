@@ -17,24 +17,38 @@ import {
   priceOf,
   projectLevel,
   projectProgress,
-  visibleProjects,
   type FundResult,
 } from '../../systems/projects';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { fmt } from './format';
-import { GIVE_STEPS, GLORY_LINE, PROJECTS_INTRO, projectSub, repeatSub } from './projectText';
+import {
+  GIVE_STEPS,
+  GLORY_LINE,
+  LIST_NAV_FROM_BOTTOM,
+  LIST_ROWS,
+  LIST_TOP,
+  PROJECT_SHEET_H,
+  PROJECTS_INTRO,
+  projectLists,
+  projectSub,
+  repeatSub,
+} from './projectText';
 
 /** The town fund: a list of projects, and a page per project to give gold and goods to. */
 export class ProjectPanel extends Modal {
   private id: string | null = null;
+  private page = 0;
+  private showFinished = false;
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 250);
+    super(scene, PROJECT_SHEET_H);
   }
 
   override open(): void {
     this.id = null;
+    this.page = 0;
+    this.showFinished = false;
     super.open();
   }
 
@@ -55,10 +69,15 @@ export class ProjectPanel extends Modal {
     this.label(8, 8, 'Town Projects', C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     this.label(8, 20, PROJECTS_INTRO, C.creamDim);
-    let y = 34;
-    for (const id of visibleProjects(s)) {
+    // Open projects first; finished ones on their own pages, so nine projects never push a row under
+    // Close or off the screen (critique 6, F1).
+    const { open, finished } = projectLists(s);
+    const list = this.showFinished ? finished : open;
+    const pages = Math.max(1, Math.ceil(list.length / LIST_ROWS));
+    this.page = Math.min(this.page, pages - 1);
+    let y = LIST_TOP;
+    for (const id of list.slice(this.page * LIST_ROWS, (this.page + 1) * LIST_ROWS)) {
       const p = projects[id]!;
-      // A repeatable project (the statue) is never "done": it shows its level and stays open.
       const done = isProjectDone(s, id) && !p.repeat;
       y = this.row(y, {
         icon: this.landmarkIcon(id),
@@ -83,15 +102,36 @@ export class ProjectPanel extends Modal {
       });
     }
     const locked = nextLocked(s);
-    if (locked)
+    if (locked && !this.showFinished && this.page === pages - 1)
       this.label(
         8,
         y + 4,
         `More after the ${projects[locked.after]?.name ?? 'next one'}.`,
         C.creamDim,
-        1,
-        'left',
-        184,
+      );
+    const by = this.panelH - LIST_NAV_FROM_BOTTOM;
+    if (pages > 1) {
+      this.button(8, by, 30, 20, '<', () => {
+        this.page = (this.page + pages - 1) % pages;
+        this.rebuild();
+      });
+      this.button(162, by, 30, 20, '>', () => {
+        this.page = (this.page + 1) % pages;
+        this.rebuild();
+      });
+    }
+    if (finished.length > 0)
+      this.button(
+        42,
+        by,
+        116,
+        20,
+        this.showFinished ? `Open ones (${open.length})` : `Finished (${finished.length})`,
+        () => {
+          this.showFinished = !this.showFinished;
+          this.page = 0;
+          this.rebuild();
+        },
       );
   }
 

@@ -48,11 +48,11 @@ const POND: TileInfo = {
   farmland: true,
 };
 
-/** Every tile of every plot the bot bought (it never funds projects, so no greenhouse). */
+/** Every tile of every plot the bot owns, the greenhouse too once it is built. */
 function field(s: GameState): [number, number][] {
   const out: [number, number][] = [];
   for (const [id, p] of Object.entries(plots)) {
-    if (!ownsPlot(s, id) || p.project) continue;
+    if (!ownsPlot(s, id)) continue;
     const [x0, y0, w, h] = p.rect;
     for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) out.push([x, y]);
   }
@@ -88,6 +88,8 @@ function equipItem(s: GameState, id: string): boolean {
 /** Profit per tile-day for a seed, if it can mature this season. */
 function score(s: GameState, seedId: string): number {
   const crop = crops[items[seedId]!.plants!]!;
+  // Outdoors only this season's crops grow (with a greenhouse the shop sells them all: critique 6, F5).
+  if (!crop.seasons.includes(s.time.season)) return -1;
   const left = 28 - s.time.day;
   const grow = crop.stageDays.reduce((a, b) => a + b, 0);
   if (grow >= left) return -1;
@@ -208,10 +210,11 @@ function playDay(s: GameState, ledger: Ledger): void {
 
 /**
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
- * animal goods on the board, crows and scarecrows, smaller jobs). Seed 42 alone earned 163,492. A balance change that
+ * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow).
+ * Seed 42 alone earned 163,980. A balance change that
  * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 177_686;
+const SIM_EARNED = 195_194;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {

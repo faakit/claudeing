@@ -108,7 +108,7 @@ export class ShopPanel extends Modal {
     return this.row(y, {
       icon: def.icon,
       title: def.name,
-      sub: shopFacts(id, own, s.time.day, greenhouse, shopFactsRoom(x5)),
+      sub: shopFacts(id, own, s.time.day, greenhouse, shopFactsRoom(x5), s.time.season),
       subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {

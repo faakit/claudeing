@@ -653,12 +653,17 @@ try {
     'Interact at the mailbox opens the mail sheet',
     await ui(() => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen),
   );
-  // From day 8 the rival farmer fills one open request every afternoon.
+  // From day 8 the rival farmer fills one open request every afternoon (one that was up since yesterday).
   await ui(() => {
     const f = window.__farm;
-    f.game.scene.getScene('UI').panels.get('mail').close();
+    const u = f.game.scene.getScene('UI');
+    u.panels.get('mail').close();
     const s = f.getState();
     s.time.day = 9;
+    s.time.minutes = 600;
+    f.gameEvents.emit('openPanel', { type: 'board' }); // the morning look posts the board
+    u.panels.get('board').close();
+    for (const o of s.orders.list) o.from -= 1; // as if posted yesterday
     s.time.minutes = 900;
     f.gameEvents.emit('openPanel', { type: 'board' });
   });
@@ -737,11 +742,11 @@ try {
       s.stats[`project.${id}`] = 1;
     s.money = 50000;
     f.gameEvents.emit('openPanel', { type: 'projects' });
-    const panel = ui.panels.get('projects');
-    panel.id = 'statue';
-    panel.rebuild();
   });
   await pp.waitForTimeout(400);
+  await pClick(172, 150 + 34 + 11); // Open on the first row: the statue leads the list (critique 6, F1)
+  const opened = await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').id);
+  check("the Founder's Statue opens from the projects list with a tap", opened === 'statue', opened);
   await pClick(161, 150 + 168 + 11); // +10,000g
   ps = await pState();
   check(

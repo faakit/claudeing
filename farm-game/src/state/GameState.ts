@@ -71,6 +71,10 @@ export interface Order {
   rival?: boolean;
   /** Last absolute day it is open (requests stay two or three days). Older saves: the day it was posted. */
   until?: number;
+  /** Absolute day it was posted; the rival never takes a request on that day. */
+  from?: number;
+  /** Absolute day the rival took it. */
+  takenOn?: number;
 }
 
 /** A special order: deliver `qty` of `item` by absolute day `due`, a little at a time. */

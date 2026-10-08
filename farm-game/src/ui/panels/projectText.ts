@@ -1,4 +1,20 @@
+import { projects } from '../../data';
+import type { GameState } from '../../state/GameState';
+import { isProjectDone, visibleProjects } from '../../systems/projects';
 import { fmt } from './format';
+
+/** The project sheet's height and list layout: rows from LIST_TOP, paging buttons above Close. */
+export const PROJECT_SHEET_H = 250;
+export const LIST_TOP = 34;
+export const LIST_ROWS = 5;
+export const LIST_NAV_FROM_BOTTOM = 52;
+
+/** The list's two views: projects you can still fund (the statue always), and finished ones. */
+export function projectLists(state: GameState): { open: string[]; finished: string[] } {
+  const ids = visibleProjects(state);
+  const finished = ids.filter((id) => isProjectDone(state, id) && !projects[id]?.repeat);
+  return { open: ids.filter((id) => !finished.includes(id)), finished };
+}
 import { perkLine } from './perkText';
 
 /** Gold steps for the Give buttons: small, medium, large. Each gives at most what is still needed. */
@@ -11,7 +27,9 @@ export function projectSub(
   done: boolean,
   perks: Record<string, number>,
 ): string {
-  return done ? `Done: ${perkLine(perks)}` : `${fmt(given)}/${fmt(gold)}g`;
+  if (!done) return `${fmt(given)}/${fmt(gold)}g`;
+  const line = perkLine(perks);
+  return line ? `Done: ${line}` : 'Done!';
 }
 
 /** Big gold in few characters: 4,500, 45k, 1.2M. */

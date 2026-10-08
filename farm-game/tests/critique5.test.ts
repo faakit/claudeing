@@ -16,7 +16,7 @@ import {
   setPickupClock,
 } from '../src/systems/placeables';
 import { POINTS_PER_HEART } from '../src/systems/friendship';
-import { applyRival, rivalMinute } from '../src/systems/rival';
+import { applyRival, rivalMinute, rivalNotice, rivalPicks } from '../src/systems/rival';
 import { migrate } from '../src/systems/save';
 import { siloStock } from '../src/systems/silo';
 import { absoluteDay } from '../src/systems/time';
@@ -68,18 +68,45 @@ describe('critique 5 fixes', () => {
     expect(new Set(s.orders.list.map((x) => x.item)).size).toBe(3); // never the same good twice
   });
 
-  it('F1: Clay takes a request you were still gathering for: the race is real', () => {
+  it('F1 / C6 F3: a request is safe the day it goes up; the next day Clay names it and takes it', () => {
     const s = rivalDay();
-    const best = [...s.orders.list].sort((a, b) => b.reward - a.reward)[0]!;
-    // Day one: nothing to give. Clay comes by in the afternoon and takes the best one.
     s.time.minutes = rivalMinute(s);
-    expect(applyRival(s)?.id).toBe(best.id);
-    // Next morning it is gone, and the two others are still open for you.
+    expect(rivalPicks(s)).toEqual([]);
+    expect(applyRival(s)).toBeNull(); // everything was posted today
+    expect(rivalNotice(s)).toBe('Clay wants nothing here today.');
+    // Next morning the dearest one that lasts is his target, and the board says so.
     s.time.day += 1;
     s.time.minutes = 420;
     refreshBoard(s);
-    expect(s.orders.list.find((o) => o.id === best.id)).toBeUndefined();
-    expect(s.orders.list.filter((o) => !o.done).length).toBe(3);
+    const target = rivalPicks(s)[0]!;
+    const best = s.orders.list
+      .filter((o) => (o.from ?? 0) < absoluteDay(s))
+      .sort((a, b) => b.reward - a.reward)[0]!;
+    expect(target.id).toBe(best.id);
+    expect(rivalNotice(s)).toBe('Clay wants this one at 2:00 PM.');
+    expect(orderSub(s, target, 0, true)).toMatch(/Clay's!$/);
+    // Bring the goods before 2 PM and it is yours; otherwise it is his.
+    s.time.minutes = rivalMinute(s);
+    expect(applyRival(s)?.id).toBe(target.id);
+  });
+
+  it('C6 F2: Clay comes even when nobody looks at the board after 2 PM', () => {
+    const s = rivalDay();
+    s.time.day += 1;
+    refreshBoard(s); // a morning look only, every day
+    const target = rivalPicks(s)[0]!;
+    const sum = sleep(s);
+    expect(s.stats['rivalTook']).toBe(1);
+    expect(s.orders.list.find((o) => o.id === target.id)).toBeUndefined();
+    expect(sum.notes?.some((n) => n.startsWith('Clay filled'))).toBe(true);
+    // Never twice for a day he already acted on.
+    const t = rivalDay();
+    t.time.day += 1;
+    refreshBoard(t);
+    t.time.minutes = rivalMinute(t);
+    applyRival(t);
+    sleep(t);
+    expect(t.stats['rivalTook']).toBe(1);
   });
 
   it('F1: Clay is in town when his 2-heart perk says he comes (5 PM)', () => {
@@ -216,5 +243,34 @@ describe('round 2 probe fixes', () => {
     houseOf(barn).n = 1;
     houseOf(barn).ready = 2;
     expect(occupantsOf(barn)).toBe('1 cow, 2 milk waiting');
+  });
+});
+
+describe('critique 6 shop fixes', () => {
+  it('F5/F8: seed rows fit, say "Glass only" out of season and say when a crop regrows', async () => {
+    const { items } = await import('../src/data');
+    const { shopFacts, shopFactsRoom } = await import('../src/ui/panels/shopFacts');
+    for (const season of ['spring', 'summer', 'fall', 'winter'])
+      for (const id of Object.keys(items).filter((i) => items[i]!.type === 'seed'))
+        for (const own of [0, 99])
+          for (const x5 of [true, false]) {
+            const line = shopFacts(id, own, 1, true, shopFactsRoom(x5), season);
+            expect(measureText(line), `${id} ${season} ${line}`).toBeLessThanOrEqual(
+              shopFactsRoom(x5),
+            );
+          }
+    expect(shopFacts('melon_seed', 0, 1, true, shopFactsRoom(true), 'fall')).toMatch(/^Glass/);
+    expect(shopFacts('strawberry_seed', 0, 1, true, shopFactsRoom(false), 'spring')).toMatch(
+      /again 4d/,
+    );
+  });
+
+  it("F5: with a greenhouse the season's own seeds come first on the shelf", async () => {
+    const { stockFor } = await import('../src/systems/economy');
+    const s = newState();
+    s.stats['project.greenhouse'] = 1;
+    const fall = stockFor('town_general_store', 'fall', s).filter((i) => i.endsWith('_seed'));
+    expect(fall[0]).toBe('pumpkin_seed');
+    expect(fall.indexOf('yam_seed')).toBeLessThan(fall.indexOf('parsnip_seed'));
   });
 });

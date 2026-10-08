@@ -32,14 +32,30 @@ export const specialCandidates = (state: GameState): SpecialDef[] =>
       (!sp.project || isProjectDone(state, sp.project)) &&
       (!sp.requires || stat(state, sp.requires.stat) >= sp.requires.min) &&
       // An animal good waits until the farm makes it (a cow alone never brings an egg special).
-      (items[sp.item]?.type !== 'product' || animalOutput(state).has(sp.item)),
+      (items[sp.item]?.type !== 'product' || specialCap(state, sp.item) >= SPECIAL_MIN_QTY),
   );
+
+/** Fewest goods a special asks for. */
+export const SPECIAL_MIN_QTY = 5;
+
+/**
+ * Most of an animal good a special may ask for: what the farm makes by the deadline, with two days spare
+ * (critique 6, F4: one hen was asked for 30 eggs). Unlimited for crops and bars.
+ */
+export function specialCap(state: GameState, item: string): number {
+  if (items[item]?.type !== 'product') return Infinity;
+  const perDay = animalOutput(state).get(item) ?? 0;
+  return Math.floor(perDay * (game.seasonLength - state.time.day - 1));
+}
 
 /** Build a special for today: quantity from the yearly value target, due the season's last day. */
 export function makeSpecial(state: GameState, def: SpecialDef): SpecialOrder {
   const price = items[def.item]?.sellPrice ?? 1;
   const value = SPECIAL_VALUE * (1 + 0.5 * (state.time.year - 1));
-  const qty = Math.max(5, Math.round(value / price));
+  const qty = Math.min(
+    Math.max(SPECIAL_MIN_QTY, Math.round(value / price)),
+    specialCap(state, def.item),
+  );
   return {
     id: def.id,
     giver: def.giver,

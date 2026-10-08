@@ -133,6 +133,14 @@ export function growCrops(state: GameState): void {
  */
 export const lastsOneSeason = (cropId: string): boolean => !!crops[cropId]?.regrowDays;
 
+/** Regrowing crops under glass that the coming season change will spend (for the morning note). */
+export function spentUnderGlass(state: GameState): number {
+  return Object.entries(state.farm.tiles).filter(([key, soil]) => {
+    const [tx, ty] = parseKey(key);
+    return !!soil.crop && lastsOneSeason(soil.crop.cropId) && inGreenhouse(state, tx, ty);
+  }).length;
+}
+
 /** Remove crops that can't survive the current season. Returns how many withered. */
 export function killOutOfSeason(state: GameState): number {
   let dead = 0;

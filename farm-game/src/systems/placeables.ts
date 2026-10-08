@@ -8,7 +8,8 @@ import { addItem, roomFor } from './inventory';
 /** What the UI should do when the player interacts with a placed object. */
 export type InteractResult =
   | { kind: 'none' }
-  | { kind: 'message'; text: string }
+  /** `arm: false`: this message never arms "tap again to pick up" (a tap right after a sit-down). */
+  | { kind: 'message'; text: string; arm?: boolean }
   /** Open the sheet registered under `panel` for this object. */
   | { kind: 'panel'; panel: string; id: number }
   /** Pick the object back up into the inventory. */
@@ -122,6 +123,8 @@ export function occupantsOf(obj: PlacedObject): string | null {
 export const ARM_MS = 4000;
 let armed: { id: number; at: number } | null = null;
 let clock: () => number = () => Date.now();
+/** The pick-up clock (ms), for behaviors that need "a moment ago". */
+export const pickupNow = (): number => clock();
 /** Tests can drive time. */
 export function setPickupClock(fn: () => number): void {
   clock = fn;
@@ -139,7 +142,7 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
   // on a plain status message (never after something happened, and never while it is busy). The arm is
   // runtime memory with a time limit: it is never saved, and a tap minutes later starts over.
   delete obj.data['armedPick']; // left by older versions, which saved it
-  if (res.kind === 'message' && res.text !== '' && canPickUp(obj)) {
+  if (res.kind === 'message' && res.text !== '' && res.arm !== false && canPickUp(obj)) {
     // A building with animals or stock is moved from a sheet with a Move button, never by a stray
     // second tap of a chore (critique 5, F3).
     const occupied = b.occupants?.(obj) ?? null;

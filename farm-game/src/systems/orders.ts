@@ -28,8 +28,18 @@ export function orderCandidates(state: GameState): ItemRef[] {
   const season = state.time.season;
   const out = new Map<string, ItemRef>();
   const add = (r: ItemRef) => out.set(keyOf(r), r);
+  // Crops only once you grow them (or carry some): a request lasts two or three days, too short to grow
+  // a crop from seed, so asking for one you have not planted is asking for the impossible (critique 6, F3).
+  const growing = new Set(
+    Object.values(state.farm.tiles).flatMap((t) => (t.crop ? [t.crop.cropId] : [])),
+  );
   for (const [id, c] of Object.entries(crops))
-    if (c.seasons.includes(season) && seedOnSale(state, id)) add({ item: c.harvestItem });
+    if (
+      c.seasons.includes(season) &&
+      seedOnSale(state, id) &&
+      (growing.has(id) || countItem(state, c.harvestItem) > 0)
+    )
+      add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
   for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });
@@ -93,6 +103,7 @@ export function generateOrders(
       xp: Math.max(4, Math.round(value * qty * ordersCfg.xpPerValue)),
       done: false,
       until: today + between(state, ordersCfg.days ?? [1, 1]) - 1,
+      from: today,
     });
   }
   return list;

@@ -18,11 +18,12 @@ import { measureText } from '../src/ui/fontMetrics';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
 
-/** A state on the rival's first day, with a fresh board. */
+/** A state on the rival's first day, with a board posted the day before (so every request is fair game). */
 function boardDay(): GameState {
   const s = newState();
   s.time.day = game.rival.startDay;
   s.orders = { day: absoluteDay(s), list: generateOrders(s) };
+  for (const o of s.orders.list) o.from = absoluteDay(s) - 1;
   return s;
 }
 const hearts = (s: GameState, n: number) =>
@@ -69,9 +70,9 @@ describe('the rival farmer', () => {
     const s = boardDay();
     hearts(s, 2);
     expect(rivalMinute(s)).toBe(game.rival.minute + 180);
-    expect(rivalNotice(s)).toMatch(/5:00 PM/);
+    expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
     hearts(s, 4);
-    expect(rivalNotice(s)).toMatch(/takes a small one at 5:00 PM/);
+    expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
     expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
     s.time.minutes = 1300;
     const cheapest = Math.min(...s.orders.list.map((o) => o.reward));
@@ -128,7 +129,7 @@ describe('the rival in year two (handover goal 3)', () => {
     s.time.year = 2;
     s.orders.day = absoluteDay(s);
     expect(rivalTakes(s)).toBe(2);
-    expect(rivalNotice(s)).toMatch(/best two at 2:00 PM/);
+    expect(rivalNotice(s)).toMatch(/wants two of these at 2:00 PM/);
     s.time.minutes = rivalMinute(s);
     const sorted = [...s.orders.list].sort((a, b) => b.reward - a.reward);
     applyRival(s);

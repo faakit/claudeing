@@ -512,6 +512,8 @@ export function sanitize(raw: Raw): GameState {
         done: o['done'] === true,
         ...(o['rival'] === true ? { rival: true } : {}),
         ...(typeof o['until'] === 'number' ? { until: int(o['until'], 0, 0, 1e7) } : {}),
+        ...(typeof o['from'] === 'number' ? { from: int(o['from'], 0, 0, 1e7) } : {}),
+        ...(typeof o['takenOn'] === 'number' ? { takenOn: int(o['takenOn'], 0, 0, 1e7) } : {}),
       });
     }
   }

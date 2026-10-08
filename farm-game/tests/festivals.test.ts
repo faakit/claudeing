@@ -201,13 +201,22 @@ describe('festival minigames', () => {
     const mixed = [{ item: 'wine', of: 'melon' }, { item: 'jam', of: 'tomato' }, { item: 'egg' }];
     expect(basketKinds(feast, mixed)).toEqual(['Wine', 'Jam', 'Animal']);
     expect(basketKinds(feast, [{ item: 'egg' }, { item: 'milk' }])).toEqual(['Animal']);
-    // A single gold wine no longer wins the Feast on its own; a varied basket with it does.
+    // A single gold wine no longer wins the Feast on its own; a varied basket with it places.
     const s = onFestivalDay('winter_feast');
     const alone = basketScore(feast, [{ item: 'wine', of: 'melon', q: 2 }]);
     expect(placeFor(s, feast, alone)).toBeGreaterThan(1);
     expect(
       placeFor(s, feast, basketScore(feast, [{ ...mixed[0]!, q: 2 }, ...mixed.slice(1)])),
-    ).toBe(1);
+    ).toBeLessThanOrEqual(2);
+    // Three jars' best (melon wine, melon jam, pumpkin pickles) wins, but no longer at 2.6x Clay
+    // (critique 6, F6).
+    const best = [
+      { item: 'wine', of: 'melon' },
+      { item: 'jam', of: 'melon' },
+      { item: 'pickles', of: 'pumpkin' },
+    ];
+    expect(placeFor(s, feast, basketScore(feast, best))).toBe(1);
+    expect(basketScore(feast, best) / Math.max(...rivalScores(s, feast))).toBeLessThan(1.6);
     // A modest varied basket (tomato jam, kale pickles, an egg) still reaches the podium.
     const modest = [
       { item: 'jam', of: 'tomato' },

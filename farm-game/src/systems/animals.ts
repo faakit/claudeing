@@ -118,8 +118,8 @@ export const productName = (obj: PlacedObject): string =>
 
 /**
  * Animal goods the farm makes now, per day: eggs from hens, milk from cows, truffles from pigs (none in
- * winter), honey from bee houses (one per `days` mornings). Orders and specials ask only for these, and
- * never for more than a couple of days' worth.
+ * winter, and only on dry days: counted at 60%), honey from bee houses that have some ready (one per
+ * `days` mornings). Orders and specials ask only for these, and never for more than the farm can make.
  */
 export function animalOutput(state: GameState): Map<string, number> {
   const out = new Map<string, number>();
@@ -127,15 +127,20 @@ export function animalOutput(state: GameState): Map<string, number> {
   for (const list of Object.values(state.placed))
     for (const obj of list) {
       const def = placeables[obj.type];
-      if (def?.behavior === 'beeHouse')
+      // Honey is slow: a request only goes up when a hive has some ready to hand over.
+      const hive = obj.data['hive'] as { ready?: number } | undefined;
+      if (def?.behavior === 'beeHouse' && (hive?.ready ?? 0) > 0)
         add('honey', 1 / Math.max(1, Number(def.params['days'] ?? 4)));
       const sp = speciesOf(obj);
       if (def?.behavior !== 'animalHouse' || !sp) continue;
       if (sp.outdoor && state.time.season === 'winter') continue;
-      add(sp.product, houseOf(obj).n * sp.perDay);
+      add(sp.product, houseOf(obj).n * sp.perDay * (sp.outdoor ? DRY_SHARE : 1));
     }
   return out;
 }
+
+/** Share of days an outdoor animal (a pig) can work: dry, not winter. */
+export const DRY_SHARE = 0.6;
 
 /** The most of an animal good a request may ask for: about two days of what the farm makes. */
 export const animalOrderCap = (perDay: number): number => Math.max(1, Math.ceil(perDay * 2));
