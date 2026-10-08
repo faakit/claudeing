@@ -199,6 +199,17 @@
 - A finger drifting 4 px on the Action button cancels the pending hold, so slow swipes never use the tool.
 - Flower Show rivals lowered to 24/33/42 so a plain flower can place third.
 
+## Art pipeline (art agent, 2026-10-08)
+
+- **Source art is generated with Google Flow (Nano Banana 2.1) by the owner's account, then processed, never shipped raw.** The owner chose this over hand pixelling for speed. Every shipped sprite goes through the deterministic, committed pipeline in `art-src/tools/` (chroma key, native-grid detection, per-cell median, coverage-weighted mode downscale over palette indices, island cleanup, a fresh 1 px outline in the darkest palette brown) and lands on the game's grid in the shared palette. Prompts and which output fed which sprite are logged in `art-src/flow/prompts.md`; raw JPEGs stay outside the repo, the per-sprite crops are committed so the build re-runs from the repo.
+- **Terrain is authored in code, not generated:** tiles must tile and keep the placeholder indices, so base textures are palette-indexed patterns in `art-src/tools/authored.py`; object tiles (tree, bush, bed, doors) put a Flow sprite on such a base.
+- **Atlas keys alias the atlas GPU texture:** each texture key the game asks for becomes a view onto one shared atlas texture (WebGL), so call sites are unchanged and everything in one atlas batches together. Partial coverage, or the Canvas renderer, paints atlas frames over the generated canvas instead. Any key the atlases lack keeps its generated placeholder; a missing key logs an error (e2e fails on it).
+- **Objects may be taller than their tile** (buildings 16x20, trees 16x24, tall crops 16x24), bottom-anchored like before; collision is unchanged. Villagers are 20x32 so a hat or a beard fits; the player stays 16x32.
+- **Palette v2 (art director, 2026-10-08):** `public/assets/palette.gpl` is now an authored 32-colour palette in ramps (ink, night/water, foliage, earth, skin, reds, gold/lamp, plum, stone); slot 0 `ink` is the outline everywhere (no more "darkest colour" guess). No nudges logged yet.
+- **UI skin direction: walnut chrome + parchment content sheets**, approved by the art director. It is implemented behind `?skin=walnut` with chrome/content colour tokens (`C`, `CH` in `src/ui/theme.ts`); plum stays the default until the critic's round-1 fixes land (flat plates under text, sand slots in the hotbar, one selection style, ink button text, skinned letterbox).
+- **Villagers stay on their native Flow grid:** heights are reached by deleting whole rows below the waist (no resampling), so faces keep their pixels; Orin gets a 24x32 frame.
+- **Villagers have their own sheets** (`npc_<id>`, 4 directions x 2-frame idle) instead of the tinted player; the non-integer breathing scale tween is gone (it smeared pixels).
+
 ## Town projects (gold sink, late game)
 
 - **A town fund is the late-game sink:** six projects in `projects.json` (1,200g to 50,000g, about 103k in all, plus mined and crafted goods) open one after another from the town board's "Town projects" button. Gold is given in +100 / +1,000 / +10,000 steps (never more than still needed), goods with one "Give goods" tap, so it fits a one-thumb, 5-minute session.

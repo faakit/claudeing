@@ -9,7 +9,7 @@ export default tseslint.config(
   { rules: { '@typescript-eslint/no-explicit-any': 'error' } },
   // Build/test scripts run in Node but also evaluate code inside the browser page.
   {
-    files: ['scripts/**/*.mjs', 'agents/**/*.mjs', 'audio-src/**/*.mjs'],
+    files: ['scripts/**/*.mjs', 'agents/**/*.mjs', 'audio-src/**/*.mjs', 'art-src/**/*.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 import { GAP, GLYPHS, parseGlyph } from './fontMetrics';
+import { C } from './theme';
+
+const isDark = (c: number): boolean =>
+  ((c >> 16) & 255) * 0.299 + ((c >> 8) & 255) * 0.587 + (c & 255) * 0.114 < 110;
 export { fitRow, fitText, measureText } from './fontMetrics';
 
 /**
@@ -88,7 +92,7 @@ export class Label extends Phaser.GameObjects.Container {
     super(scene, x, y);
     const scale = style.scale ?? 1;
     this.align = style.align ?? 'left';
-    this.color = style.color ?? 0xf4ead2;
+    this.color = style.color ?? C.cream;
     const make = (color: number) => {
       const t = new Phaser.GameObjects.BitmapText(scene, 0, 0, FONT_KEY, text, H_SIZE)
         .setTint(color)
@@ -96,9 +100,11 @@ export class Label extends Phaser.GameObjects.Container {
       if (style.maxWidth) t.setMaxWidth(style.maxWidth / scale);
       return t;
     };
-    const shadowColor = style.shadow === undefined ? 0x14101f : style.shadow;
+    // Dark text (ink on parchment) gets no drop shadow; light text gets an ink one.
+    const shadowColor =
+      style.shadow === undefined ? (isDark(this.color) ? null : C.ink) : style.shadow;
     this.shade = shadowColor === null ? null : make(shadowColor);
-    this.main = make(style.color ?? 0xf4ead2);
+    this.main = make(this.color);
     if (this.shade) this.add(this.shade);
     this.add(this.main);
     this.layout();

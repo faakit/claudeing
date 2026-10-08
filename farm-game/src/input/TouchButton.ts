@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CH } from '../ui/theme';
 
 /** Logical pixels of vertical travel per tool change. */
 const SWIPE_STEP = 14;
@@ -29,12 +30,12 @@ export class TouchButton {
     onDrift?: () => void,
   ) {
     const body = scene.add.graphics();
-    body.fillStyle(0x14101f, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
-    body.fillStyle(0x2a2238, 0.62).fillCircle(0, 0, radius);
-    body.lineStyle(2, 0xf4ead2, 0.7).strokeCircle(0, 0, radius - 1);
-    body.lineStyle(1, 0x14101f, 0.5).strokeCircle(0, 0, radius + 0.5);
+    body.fillStyle(CH.ink, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
+    body.fillStyle(CH.panel, 0.62).fillCircle(0, 0, radius);
+    body.lineStyle(2, CH.cream, 0.7).strokeCircle(0, 0, radius - 1);
+    body.lineStyle(1, CH.ink, 0.5).strokeCircle(0, 0, radius + 0.5);
     this.glow = scene.add.graphics().setAlpha(0);
-    this.glow.fillStyle(0xf4ead2, 0.3).fillCircle(0, 0, radius - 2);
+    this.glow.fillStyle(CH.cream, 0.3).fillCircle(0, 0, radius - 2);
     const iconGfx = scene.add.graphics();
     icon(iconGfx);
 

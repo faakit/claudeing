@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
+import { SHADOW_TEXTURE } from '../art/placeholders';
+import { npcFrame, npcTexture } from '../art/manifest';
+import type { Direction } from '../state/GameState';
 import { TILE_SIZE } from '../config';
 import { npcs } from '../data';
 import type { GameState } from '../state/GameState';
@@ -7,7 +9,7 @@ import { getState } from '../state/store';
 import { canChat } from '../systems/friendship';
 import { npcLocation, npcMaps } from '../systems/npcs';
 import { Label } from '../ui/font';
-import { C } from '../ui/theme';
+import { CH as C } from '../ui/theme';
 
 interface Shown {
   sprite: Phaser.GameObjects.Sprite;
@@ -35,20 +37,10 @@ export class NpcRenderer {
       if (!npcMaps(id).includes(mapId)) continue;
       const shadow = scene.add.image(0, 0, SHADOW_TEXTURE).setVisible(false);
       const sprite = scene.add
-        .sprite(0, 0, PLAYER_TEXTURE, playerIdleFrame(def.facing))
+        .sprite(0, 0, npcTexture(id), npcFrame(id, def.facing, 0))
         .setOrigin(0.5, 1)
-        .setTint(parseInt(def.tint.slice(1), 16))
         .setVisible(false);
-      const calm = getState().settings.reduceMotion;
-      if (!calm)
-        scene.tweens.add({
-          targets: sprite,
-          scaleY: 1.03,
-          duration: 900 + (id.length % 3) * 150,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.easeInOut',
-        });
+      this.idle(sprite, id, def.facing);
       // A bobbing "!" says there is something new to hear today.
       const marker = new Label(scene, 0, 0, '!', { align: 'center', color: C.gold })
         .setDepth(9000)
@@ -113,8 +105,18 @@ export class NpcRenderer {
     if (!s?.at) return;
     const dx = px0 - px(s.at.tx);
     const dy = py0 - (s.at.ty * TILE_SIZE + TILE_SIZE / 2);
-    const dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down';
-    s.sprite.setFrame(playerIdleFrame(dir));
+    const dir: Direction =
+      Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down';
+    this.idle(s.sprite, id, dir);
+  }
+
+  /** Two-frame idle facing `dir` (a still frame with reduced motion). */
+  private idle(sprite: Phaser.GameObjects.Sprite, id: string, dir: Direction): void {
+    if (getState().settings.reduceMotion) {
+      sprite.anims.stop();
+      sprite.setFrame(npcFrame(id, dir, 0));
+    } else
+      sprite.anims.play({ key: `${npcTexture(id)}_idle_${dir}`, startFrame: id.length % 2 }, true);
   }
 
   destroy(): void {

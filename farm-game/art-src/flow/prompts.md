@@ -1,0 +1,163 @@
+# Google Flow prompts
+
+Every image used as source material, generated with Google Flow (model Nano Banana 2.1) by the project
+owner's account, 2 outputs per prompt (`-a`, `-b`). Raw downloads are kept outside the repo
+(`flow-raw/<id>-a.jpg`); the per-sprite crops that feed the pipeline are in `crops/<id><variant>/`.
+Each prompt is the shared preamble followed by the body below. Generated file: edit `prompts.json`.
+
+The first prompts named a generic genre style; from `npcs4` on, the preamble describes Tiny Acre's own style
+and never names games, studios or artists (art director's request).
+
+## Preamble: standard
+
+> Pixel art game sprites for a cozy top-down farming game in the style of classic 16-bit farming RPGs. Every sprite is a tiny 16x16 pixel sprite drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark brown outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Every object is opaque (no see-through glass) and contains no magenta or hot pink.
+
+## Preamble: character
+
+> Pixel art game sprites for a cozy top-down farming game in the style of classic 16-bit farming RPGs. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark brown outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
+
+## Preamble: tinyacre
+
+> Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is a tiny 16x16 pixel sprite drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Every object is opaque and contains no magenta or hot pink.
+
+## Preamble: tinyacre-character
+
+> Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
+
+Generations: **19** prompts.
+
+## 1. `items1` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: parsnip (cream root with green leaves), potato, white cauliflower head with leaves, red tomato, round green striped melon, ear of yellow corn, orange pumpkin, purple-red yam, dark green kale bunch, pair of red cherries, peach, red apple, purple plum, bundle of green plant fiber, grey stone, wild leek.
+
+- raw: items1-a.jpg, items1-b.jpg
+- used: a: crop, fruit, fiber, stone, wild leek icons
+
+## 2. `items2` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: yellow daffodil flower, cluster of red wild berries with a leaf, wild sunflower, cluster of dark purple blackberries, brown forest mushroom, gnarled tan winter root, sprig of green holly leaves with red berries, golden carp fish, blue bluegill fish, green striped perch fish, pink spotted trout fish, grey whiskered catfish, orange-red salmon fish, small tin can of pink worms (fishing bait), chunk of rock with orange copper ore, chunk of rock with silver-blue iron ore.
+
+- raw: items2-a.jpg, items2-b.jpg
+- used: b: forage, fish, bait, ore icons
+
+## 3. `items3` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: white quartz crystal, purple amethyst gem, red ruby gem, copper ingot bar, iron ingot bar, white chicken egg, bottle full of white milk with a blue cap, jar of golden honey with a cloth lid, fluffy ball of white wool, jar of red berry jam with a cloth lid, jar of green pickles with a metal lid, dark red wine bottle with a cork, folded bolt of blue cloth, bundle of golden hay, small burlap sack of chicken feed grain, green bale of fodder tied with string.
+
+- raw: items3-a.jpg, items3-b.jpg
+- used: b: gems, bars, animal products, preserves, feed icons
+
+## 4. `items4` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: iron farming hoe with a wooden handle, blue metal watering can, curved scythe with a wooden handle, wooden fishing rod with a red and white float, iron pickaxe with a wooden handle, then nine small paper seed packets, each with a picture of its vegetable: parsnip, potato, cauliflower, tomato, melon, corn, pumpkin, yam, kale, then a brown sack of fertilizer, then a dark brown sack of rich fertilizer.
+
+- raw: items4-a.jpg, items4-b.jpg
+- used: a: tool, seed packet and fertilizer icons
+
+## 5. `crops1` (1:1, preamble: standard)
+
+> Crop growth stages as a grid of 4 rows and 5 columns of separate sprites with wide even spacing. Each row is one crop, seen from the side as it stands in a farm field. Columns left to right: a seed in a tiny mound of brown soil, a tiny green sprout, a young leafy plant, a full grown plant with buds, the mature plant ready to harvest with the vegetable clearly visible. No soil under the plants except the seed mound. Rows top to bottom: parsnip (cream root top showing under leafy greens), potato plant, cauliflower (white head in big leaves), tomato plant on a wooden stake with red tomatoes.
+
+- raw: crops1-a.jpg, crops1-b.jpg
+- used: b: crop frames parsnip, potato, cauliflower, tomato
+
+## 6. `crops2` (1:1, preamble: standard)
+
+> Crop growth stages as a grid of 4 rows and 5 columns of separate sprites with wide even spacing. Each row is one crop, seen from the side as it stands in a farm field. Columns left to right: a seed in a tiny mound of brown soil, a tiny green sprout, a young leafy plant, a full grown plant with buds, the mature plant ready to harvest with the vegetable clearly visible. No soil under the plants except the seed mound. Rows top to bottom: melon vine with a big round green striped melon, tall corn stalk with yellow cobs, pumpkin vine with a big orange pumpkin, dark green curly kale plant.
+
+- raw: crops2-a.jpg, crops2-b.jpg
+- used: b: crop frames melon, corn, pumpkin, kale
+
+## 7. `crops3` (1:1, preamble: standard)
+
+> A grid of 4 rows and 5 columns of separate sprites with wide even spacing, all seen from the side as they stand in the world. Row 1, a yam crop growing: seed in a tiny soil mound, tiny sprout, young vine, grown vine with buds, mature vine with purple yams showing. Row 2, small fruit trees about 16 pixels wide and 24 pixels tall: a young bare sapling, a cherry tree with red cherries, a peach tree with peaches, an apple tree with red apples, a plum tree with purple plums. Row 3: a plain grey boulder, a boulder with orange copper ore veins, a boulder with silver-blue iron ore veins, a boulder with purple gem crystals, a small wooden for-sale sign on a post. Row 4: a tuft of wild weeds, a round green bush with red berries, a small round leafy tree, a patch of pink and yellow wildflowers, a wooden notice board on two legs.
+
+- raw: crops3-a.jpg, crops3-b.jpg
+- used: a: fruit trees, sapling; b: yam frames, ore nodes, sign, weed, tile objects
+
+## 8. `world1` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate farm objects with wide even spacing, seen in three-quarter front view as they stand on the ground, in this order, left to right, top to bottom: tiny wooden chicken coop with a ramp, tiny red barn with white trim, tiny wooden tool shed, metal lawn sprinkler on a short pipe, golden quality sprinkler with four nozzles, wooden preserves barrel with a glass jar lid, wooden keg barrel with a brass tap, yellow wooden bee house box with a little roof, wooden weaving loom with blue cloth, small stone smelting furnace with a glowing fire mouth, wooden shipping crate with a lid, single bed with a red quilt seen from above, wooden front door in a stone wall, shop door under a red and white striped awning, red mailbox on a post, small stone water well.
+
+- raw: world1-a.jpg, world1-b.jpg
+- used: b: buildings and machines (b's loom has magenta threads, so a's loom), tile objects
+
+## 9. `player1` (1:1, preamble: character)
+
+> Character sprite sheet of the player, a young farmer with short brown hair, a blue shirt, dark blue trousers and brown boots, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head. A grid of 3 rows and 4 columns, the same character in every cell, with wide even spacing. Row 1 facing the viewer: standing, walking with left foot forward, standing, walking with right foot forward. Row 2 seen from behind, same four poses. Row 3 facing right in side view, same four poses.
+
+- raw: player1-a.jpg, player1-b.jpg
+- used: a: all 20 player frames (left = mirrored right; passing frames lifted 1 px by the script)
+
+## 10. `npcs1` (1:1, preamble: character)
+
+> Character sprite sheet of four different village characters, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head, each with a clearly different silhouette. A grid of 4 rows and 3 columns with wide even spacing; columns: facing the viewer, seen from behind, facing right in side view, all standing. Row 1: Mara the shopkeeper, a woman with red hair in a bun, peach blouse and a long cream apron. Row 2: Finn the fisherman, a young man in a light blue raincoat and a yellow bucket hat. Row 3: Rosa the gardener, an older woman with grey hair, a wide straw hat and a lavender dress. Row 4: Orin the blacksmith, a big burly bald man with a bushy brown beard and a dark leather apron.
+
+- raw: npcs1-a.jpg, npcs1-b.jpg
+- used: a: villager frames (left = mirrored right; idle frame 2 made by the script)
+
+## 11. `animals1` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: white hen in side view facing right standing, the same hen pecking with its head down, brown and white cow in side view facing right standing, the same cow grazing with its head lowered, fluffy white sheep in side view facing right standing, the same sheep grazing with its head lowered, a gold coin, a yellow lightning bolt, a blue water drop, a yellow sun, a grey rain cloud with blue drops, a white five-pointed star, a red heart, a white four-pointed sparkle, a small puff of white dust, a small blue water splash.
+
+- raw: animals1-a.jpg, animals1-b.jpg
+- used: a: animals (2 frames each), coin, bolt, drop; sun/rain/star/heart too small at 7-13 px, code-drawn kept
+
+## 12. `items5` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: green bottle of plant growth tonic with a cork, little cherry tree sapling in a clay pot, little peach tree sapling in a clay pot, little apple tree sapling in a clay pot, little plum tree sapling in a clay pot, old tree stump, cluster of small grey pebbles, wooden barrel, round hay bale, stack of two wooden crates, wooden wheelbarrow, scarecrow with a straw hat, wooden bench, wooden signpost with two arrows, small pile of firewood logs, clay flower pot with red flowers.
+
+- raw: items5-a.jpg, items5-b.jpg
+- used: a: speed-gro and sapling icons; decor sprites kept for map decor
+
+## 13. `items6` (1:1, preamble: standard)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, in this order, left to right, top to bottom: garden lamp post with a glowing yellow lantern, small grey stone statue of a farmer on a pedestal, small round stone fountain with blue water, small wooden pig sty pen with a little roof, tall wooden feed silo with a cone roof, pink pig in side view facing right standing, the same pink pig rooting with its snout down, wooden bucket of brown slop, black truffle, short wooden fence section, flat round grey stepping stones seen from above, iron street lamp post with a lantern, wooden window flower box with red flowers, wooden water trough, small pile of rubble with a glowing blue crystal, burning wall torch on a wooden bracket.
+
+- raw: items6-a.jpg, items6-b.jpg
+- used: a: garden decor placeables, sty, silo, pig (2 frames), slop, truffle, fence; map decor (lamp, flower box, trough, crystal, torch). Stepping stones were too weak at 16 px: authored in code instead.
+
+## 14. `land1` (1:1, preamble: standard (without the 16x16 sentence))
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 16 pixels wide and 24 pixels tall, in this order, left to right, top to bottom: wooden notice board under a small shingled roof, stone steps in a little waterfall with a fish jumping, tiny stone library with a book emblem, small wooden hot spring bathhouse with steam, small festive hall with colorful bunting flags, market stall with a striped awning and crates of vegetables, small greenhouse with pale blue opaque glass panes and a white frame, big round oak tree, tall dark green pine tree, white birch tree, dense dark green bush, hanging lantern on a wooden pole, laundry line with clothes between two posts, stack of crates with apples, mine cart full of ore, wooden mine support beams with a lantern.
+
+- raw: land1-a.jpg, land1-b.jpg
+- used: a: the six town-project landmarks; trees, props and mine decor for the maps pass
+
+## 15. `npcs2` (1:1, preamble: character)
+
+> Character sprite sheet of five village characters, full body, cute proportions with a big head, each figure about 18 pixels wide and 30 pixels tall, as tall as a grown-up farmer, each with a clearly different silhouette. A grid of 5 rows and 3 columns with wide even spacing; columns: facing the viewer, seen from behind, facing right in side view, all standing. Row 1: Mara the shopkeeper, a woman with red hair in a bun, peach blouse and a long cream apron. Row 2: Finn the fisherman, a young man in a light blue raincoat and a yellow bucket hat. Row 3: Rosa the gardener, an older woman with grey hair, a wide straw hat and a lavender dress. Row 4: Orin the blacksmith, the tallest and widest, a big burly bald man with a bushy brown beard and a dark leather apron. Row 5: Clay the rival farmer, a proud young man with slicked blond hair, a light blue denim jacket and a red neckerchief.
+
+- raw: npcs2-a.jpg, npcs2-b.jpg
+- used: not used: figures came out about 20 px tall (too small); superseded by npcs3/npcs4
+
+## 16. `npcs3` (1:1, preamble: character)
+
+> Character sprite sheet of three village characters, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head, each with a clearly different silhouette. A grid of 3 rows and 3 columns with wide even spacing; columns: facing the viewer, seen from behind, facing right in side view, all standing. Row 1: Mara the shopkeeper, a woman with red hair in a bun, peach blouse and a long cream apron. Row 2: Finn the fisherman, a young man in a light blue raincoat and a yellow bucket hat. Row 3: Rosa the gardener, an older woman with grey hair, a wide straw hat and a lavender dress.
+
+- raw: npcs3-a.jpg, npcs3-b.jpg
+- used: b: Mara, Finn, Rosa (native grid, rows trimmed to the target heights)
+- note: 3 rows per image keeps figures about 30 native px tall
+
+## 17. `npcs4` (1:1, preamble: tinyacre-character)
+
+> Character sprite sheet, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head. A grid of 3 rows and 3 columns with wide even spacing. Row 1, Orin the blacksmith, the tallest and widest villager, a big burly bald man with a bushy brown beard, a barrel chest and a dark leather apron: facing the viewer, seen from behind, facing right in side view. Row 2, Clay the rival farmer, a proud young man with slicked blond hair, a light blue denim jacket and a red neckerchief: facing the viewer, seen from behind, facing right in side view. Row 3, a young farmer with short brown hair, a blue shirt, dark blue trousers and brown boots, facing the viewer: raising a hoe overhead, pouring a watering can, casting a fishing rod.
+
+- raw: npcs4-a.jpg, npcs4-b.jpg
+- used: b: Orin (a drew him shirtless); a: Clay (hands on hips); tool poses kept for later
+
+## 18. `interior1` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate cottage furniture sprites with wide even spacing, seen in three-quarter top-down view, in this order, left to right, top to bottom: small wooden table, wooden chair, tall bookshelf with colorful books, stone fireplace with a warm fire, wood cooking stove with a pot, potted leafy house plant, wooden dresser, round braided rug in warm red and cream, small window with curtains, wall clock, framed landscape painting, wooden storage chest, standing lamp with a warm shade, basket of yarn, wooden barrel of apples, cozy armchair.
+
+- raw: interior1-a.jpg, interior1-b.jpg
+- used: house interior decor (maps pass)
+- note: submitted while npcs4 was running
+
+## 19. `ambient1` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate small sprites with wide even spacing, in this order, left to right, top to bottom: white butterfly with wings open, the same butterfly with wings closed, orange butterfly with wings open, the same orange butterfly with wings closed, single rose-pink flower petal, single falling orange autumn leaf, single falling red autumn leaf, white snowflake, small glowing yellow firefly, small dandelion seed puff, rose-pink wildflower with five petals, small clump of rose-pink wildflowers, mossy fallen log, small grey rock, shallow rain puddle seen from above, clump of tall grass.
+
+- raw: ambient1-a.jpg, ambient1-b.jpg
+- used: ambient particles and map decor (atmosphere and maps passes)
+- note: submitted while interior1 was running

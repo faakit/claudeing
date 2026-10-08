@@ -3,6 +3,7 @@ import { JOYSTICK, THUMB_ZONE_Y } from '../config';
 import { dominantDirection } from '../systems/direction';
 import type { Direction } from '../state/GameState';
 import type { InputHub } from './InputHub';
+import { CH } from '../ui/theme';
 
 const FADE_MS = 120;
 
@@ -21,17 +22,17 @@ export class VirtualJoystick {
   ) {
     const { radius } = JOYSTICK;
     this.gfx = scene.add.graphics().setDepth(100).setAlpha(0);
-    this.gfx.fillStyle(0x14101f, 0.28).fillCircle(0, 0, radius + 6);
-    this.gfx.lineStyle(2, 0xf4ead2, 0.55).strokeCircle(0, 0, radius + 6);
+    this.gfx.fillStyle(CH.ink, 0.28).fillCircle(0, 0, radius + 6);
+    this.gfx.lineStyle(2, CH.cream, 0.55).strokeCircle(0, 0, radius + 6);
     for (const a of [0, 90, 180, 270]) {
       const rad = Phaser.Math.DegToRad(a);
       this.gfx
-        .fillStyle(0xf4ead2, 0.5)
+        .fillStyle(CH.cream, 0.5)
         .fillCircle(Math.cos(rad) * (radius - 4), Math.sin(rad) * (radius - 4), 1.5);
     }
     this.thumb = scene.add.graphics().setDepth(101).setAlpha(0);
-    this.thumb.fillStyle(0xf4ead2, 0.8).fillCircle(0, 0, 11);
-    this.thumb.lineStyle(2, 0x14101f, 0.5).strokeCircle(0, 0, 11);
+    this.thumb.fillStyle(CH.cream, 0.8).fillCircle(0, 0, 11);
+    this.thumb.lineStyle(2, CH.ink, 0.5).strokeCircle(0, 0, 11);
 
     const input = scene.input;
     input.on('pointerdown', this.onDown, this);
