@@ -50,6 +50,28 @@ automatically after a merge and show placeholders until art is made (rerun `node
 4. **Licensing:** keep using Flow. The ASSETS.md record is done. The owner must re-verify Google's terms before any
    store release.
 
+## Critic final round (246fdf6): new findings
+
+Notes: `art-critique/review-2.md` and `final.md`. All round-1 items stay open.
+
+- **R2-1, MAJOR, clay roofs** (`round-2/r2_roof_zoom.png`). They read as 1-row red/orange stripes, the loudest thing on
+  screen, and the 1 px sand ridge cap doesn't read. Redo `roof()` in `art-src/tools/authored.py` before roofs spread
+  through the map layers:
+  - staggered tiles about 4 px wide, in 3 px courses offset by half a tile;
+  - a 1 px wine shadow under each course;
+  - orange only as a small highlight on each tile;
+  - a 2-3 px sand ridge cap with an ink outline;
+  - eaves: an ink line plus a 1-2 px shadow on the wall below.
+- **R2-2, minor, edge lips** (`round-2/r2_tileset_3x.png`, rows 2-3). Grass-to-path/plot transitions use a dark,
+  ink-like lip; use leaf dark or teal shade instead (`creep()` in `tiles_extra.py`). Ink is for objects and
+  interactive things only.
+- **R2-3, minor:** tree/bush tiles with a grass base square go on grass only (the pond bush again).
+
+Acceptance for the next session:
+- walnut becomes the default only after R1-1..R1-4 and R1-6;
+- the maps pass is judged on R1-10, R2-1 and R2-2;
+- the atmosphere pass is judged on R1-9.
+
 ## Next batches, in priority order
 
 1. **Critic round-1 UI fixes, then make walnut the default** (list above). Verify, screenshot farm HUD, bag, shop and
