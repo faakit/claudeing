@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
+import { fish } from '../../data';
 import { audio } from '../../platform/audio';
+import { toast } from '../../systems/events';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import { isShippable, shipStack, shippingValue, unshipStack } from '../../systems/economy';
@@ -118,6 +120,9 @@ export class BinPanel extends Modal {
     else {
       audio.play('coin');
       haptic('tick');
+      // A legend is once a game: say it can still come back out tonight (critique 7, F7).
+      if (delta > 0 && fish.some((f) => f.legend && f.item === ref.item))
+        toast('A legend in the bin! Take it back out before bed to keep it.', 'warn');
     }
     this.rebuild();
   }

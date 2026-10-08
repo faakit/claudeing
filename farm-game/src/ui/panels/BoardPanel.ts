@@ -10,6 +10,7 @@ import { Modal } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
+import { cartStock } from '../../systems/cart';
 import { items } from '../../data';
 import { giveToSpecial, specialGiveCount, specialLabel, specialSub } from '../../systems/specials';
 import { applyRival, rivalActive, rivalName, rivalNotice, rivalPicks } from '../../systems/rival';
@@ -27,9 +28,12 @@ export class BoardPanel extends Modal {
     // Rows, then the festival and projects buttons, then Close: the sheet grows with the board.
     const fest = festivalToday(s);
     const festOpen = !!fest && !hasEntered(s, fest.id);
+    const cartOpen = cartStock(s).length > 0;
     const rows = Math.max(1, s.orders.list.length);
     const sp = s.special;
-    this.setHeight(34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + 26 + 34);
+    this.setHeight(
+      34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + (cartOpen ? 26 : 0) + 26 + 34,
+    );
     this.panel();
     this.label(8, 8, 'Requests', C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
@@ -120,6 +124,21 @@ export class BoardPanel extends Modal {
         () => {
           this.close();
           gameEvents.emit('openPanel', { type: 'festival' });
+        },
+        { textColor: C.gold, rim: C.gold },
+      );
+      y += 26;
+    }
+    if (cartOpen) {
+      this.button(
+        8,
+        y + 2,
+        this.panelW - 16,
+        22,
+        'The traveling cart is here!',
+        () => {
+          this.close();
+          gameEvents.emit('openPanel', { type: 'cart' });
         },
         { textColor: C.gold, rim: C.gold },
       );

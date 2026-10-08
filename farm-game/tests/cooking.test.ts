@@ -73,3 +73,9 @@ describe('the kitchen and cooking (a Home upgrade)', () => {
     }
   });
 });
+
+it('a dish row with Make and x5 still shows its ingredients whole', async () => {
+  const { recipeNeed } = await import('../src/ui/panels/craftText');
+  for (const [id, r] of dishes)
+    expect(measureText(recipeNeed(r)), id).toBeLessThanOrEqual(200 - 8 - 28 - 41 - 27 - 2);
+});

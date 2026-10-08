@@ -12,7 +12,8 @@ export type PanelType =
   | 'festival'
   | 'projects'
   | 'mail'
-  | 'fishing';
+  | 'fishing'
+  | 'cart';
 
 export interface GameEvents {
   toast: { text: string; kind?: 'info' | 'warn' | 'good' };

@@ -20,6 +20,7 @@ import treesRaw from './trees.json';
 import collectionsRaw from './collections.json';
 import nodesRaw from './nodes.json';
 import festivalsRaw from './festivals.json';
+import cartRaw from './cart.json';
 import miningRaw from './mining.json';
 import projectsRaw from './projects.json';
 import jobsRaw from './jobs.json';
@@ -491,6 +492,14 @@ export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
 export const festivals = festivalsRaw as unknown as Record<string, FestivalDef>;
+/** The traveling cart (see systems/cart.ts). */
+export interface CartDef {
+  days: number[];
+  slots: number;
+  limit: number;
+  stock: { item: string; mult: number; price?: number }[];
+}
+export const cart = cartRaw as unknown as CartDef;
 export const nodes = nodesRaw as unknown as Record<string, NodeDef>;
 export const mining = miningRaw as unknown as MiningDef;
 export const collections = collectionsRaw as unknown as Record<string, CollectionDef>;
@@ -660,6 +669,11 @@ export function validateContent(): void {
     if (f.stocked && !fish.some((x) => x.item === f.stocked?.fish))
       fail('festivals', `"${id}" stocks unknown fish "${f.stocked.fish}"`);
   }
+  for (const e of cart.stock) {
+    if (!items[e.item]) fail('cart', `sells unknown item "${e.item}"`);
+    if (!e.price && !items[e.item]?.buyPrice) fail('cart', `"${e.item}" needs a price`);
+  }
+  for (const d of cart.days) if (d < 1 || d > game.seasonLength) fail('cart', `bad day ${d}`);
   for (const [id, n] of Object.entries(nodes)) {
     if (n.drops.length === 0 || n.weight <= 0) fail('nodes', `"${id}" needs drops and a weight`);
     for (const dr of n.drops)

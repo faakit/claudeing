@@ -4,7 +4,7 @@ import { craft, craftBlock } from '../../systems/crafting';
 import { countItem } from '../../systems/inventory';
 import { audio } from '../../platform/audio';
 import { isRecipeUnlocked } from '../../systems/skills';
-import { lockedText } from './craftText';
+import { lockedText, recipeNeed } from './craftText';
 import { C } from '../theme';
 import { ROW_H } from '../widgets';
 import { fmt } from './format';
@@ -30,10 +30,7 @@ export function buildCraft(c: MenuTabContext): void {
   for (const id of ids.slice(page * PER_PAGE, (page + 1) * PER_PAGE)) {
     const r = recipes[id]!;
     const unlocked = isRecipeUnlocked(s, r);
-    const need = r.ingredients
-      .map((i) => `${i.qty} ${items[i.item]?.name ?? i.item}`)
-      .concat(r.gold ? [`${r.gold}g`] : [])
-      .join(', ');
+    const need = recipeNeed(r);
     const block = craftBlock(s, id);
     y = c.row(y, {
       icon: items[r.output.item]?.icon,
@@ -45,6 +42,23 @@ export function buildCraft(c: MenuTabContext): void {
           ? C.red
           : C.creamDim,
       buttons: [
+        // Dishes come in batches: x5 cooks as many as you have ingredients for, up to five.
+        ...(r.kitchen && unlocked
+          ? [
+              {
+                label: 'x5',
+                width: 24,
+                enabled: block === null,
+                color: block === null ? C.cream : C.creamDim,
+                onClick: () => {
+                  let made = 0;
+                  while (made < 5 && craft(getState(), id) === 'ok') made += 1;
+                  audio.play(made > 0 ? 'buy' : 'error');
+                  c.rebuild();
+                },
+              },
+            ]
+          : []),
         {
           label: 'Make',
           width: 38,

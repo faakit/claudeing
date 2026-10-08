@@ -36,6 +36,7 @@ import { Hud } from '../ui/Hud';
 import {
   BinPanel,
   BoardPanel,
+  CartPanel,
   FestivalPanel,
   FishingPanel,
   installMenuTabs,
@@ -478,6 +479,7 @@ export class UIScene extends Phaser.Scene {
     this.panels.set('festival', new FestivalPanel(this));
     this.panels.set('projects', new ProjectPanel(this));
     this.panels.set('mail', new MailPanel(this));
+    this.panels.set('cart', new CartPanel(this));
     this.jar = new JarPanel(this);
     this.npc = new NpcPanel(this);
     this.plot = new PlotPanel(this);

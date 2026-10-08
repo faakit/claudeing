@@ -794,6 +794,26 @@ try {
     asked && ps.stats['fest.fishing_derby.y1'] === 1,
     JSON.stringify(ps.stats),
   );
+  // The traveling cart: on its days a few premium goods, bought with a real tap on Buy.
+  await ui(() => {
+    const f = window.__farm;
+    const u = f.game.scene.getScene('UI');
+    for (const m of u.panels.values()) if (m.isOpen) m.close();
+    const s = f.getState();
+    s.time.season = 'spring';
+    s.time.day = 5;
+    s.money = 5000;
+    f.gameEvents.emit('openPanel', { type: 'cart' });
+  });
+  await pp.waitForTimeout(400);
+  const moneyCart = (await pState()).money;
+  await pClick(172, 400 - 196 + 34 + 11); // Buy on the first row
+  ps = await pState();
+  check(
+    'the traveling cart sells with a tap on its days',
+    ps.money < moneyCart && ps.stats.cartBought === 1,
+    `money ${moneyCart} -> ${ps.money}`,
+  );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();
 

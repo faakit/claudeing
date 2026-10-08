@@ -428,3 +428,10 @@ An independent critic played the build at `f27999e` (two 14-day real-input runs,
 - **F8 animal specials** ask for about 70% of what the farm makes by the deadline (`SPECIAL_SHARE`).
 - **F9:** the honey tip no longer talks about feeding animals (the tip now waits for an animal); the statue page says what you have ("Now +2%.") and stays open after a level; glass-only regrowing seeds keep "again 4d" where it fits; the seed shelf lists this season's seeds, then glass-only ones, then the rest.
 - **Sim:** five-seed median repinned at 227,442 (crop requests the bot can fill; Clay only on last days). Clay took 71 of 145 requests in the seed-42 year, all on their last day and almost all ones the bot would not have filled.
+
+## The traveling cart, x5 cooking, a legend warning
+
+- **A traveling cart on days 5, 12, 19 and 26 of every season** (`cart.json`): four goods a visit from a pool the store does not sell, at a premium: rare seeds at twice the price before (or instead of) the Seed Exchange, saplings, Speed-Gro, and copper and iron bars, quartz and cloth for players who do not mine or weave. Five of each a visit. Opened from a gold "The traveling cart is here!" button on the board; the morning news announces it. Its stock is a hash of the day, so it needs no saved state (purchases are `cart.<day>.<item>` stats). Seeds are offered only when they grow now or you have a greenhouse. A weekly reason to visit town and a mid-game gold sink; bars cost about five times what the bin pays, so it is a shortcut, never a loop.
+- **x5 on dishes** at the workbench (cooks up to five); ingredient lines drop the "1" ("Pumpkin, Egg, Milk") so they fit beside two buttons.
+- **A legend in the bin** gets a warning toast: it can still be taken back out before bed.
+- New texture keys: none (the cart is a sheet, not an object in the world).
