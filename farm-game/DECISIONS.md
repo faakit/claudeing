@@ -210,6 +210,15 @@
 - **Villagers stay on their native Flow grid:** heights are reached by deleting whole rows below the waist (no resampling), so faces keep their pixels; Orin gets a 24x32 frame.
 - **Villagers have their own sheets** (`npc_<id>`, 4 directions x 2-frame idle) instead of the tinted player; the non-integer breathing scale tween is gone (it smeared pixels).
 
+## Maps pass (art agent, round 2)
+
+- **Five art tile layers in every map** (`detail`, `shade`, `props`, `roof`, `overhead`), written by `scripts/map-art.mjs` from the ground grid, plus a hidden `lights` object group for the night glow. They share the one tileset texture. `src/art/mapLayers.ts` creates them only when the art tileset exists; the runtime roofs and ground tufts (`src/art/decor.ts`) are gone.
+- **Transitions are baked in world space:** the map generator asks for exactly the edge tiles it needs (`art-src/map-tiles.json`: forest crowns, shores, grass creeping onto paths, mine rock, floor occlusion) and `art-src/tools/bake.py` renders each from its neighbourhood with noise in world coordinates, so edges meander, ponds have rounded banks and nothing repeats at 16 px. Identical tiles share a slot. After changing a map, run `npm run art:maps` (generate, render the new tiles, generate again); a unit test fails if a requested tile is missing.
+- **Gameplay geometry is unchanged.** Ground, doors, zones, objects, spawns and fixed spots are as before. The only new collision is hand-placed props (barrels, lamps, a well, furniture: 18 on the farm, 22 in town, 8 in the house, 4 in the woods, 2 in the mine), and a prop is placed only on open grass or floor outside every zone, door, door spawn, plot (with a 1-tile margin), plot sign, landmark, mailbox, start, wake and villager spot; anything else is skipped with a warning. A test checks no added solid tile is inside an object or zone, and the map tests check connectivity. Big visuals (the forest mass, the woods' old oak, boats, crystals, beams) sit on tiles that were already solid.
+- **Overhead tiles fade near the player** (3x4 tiles around the feet go to 45% alpha), so you, your target marker and any forage under a tree crown stay visible.
+- **Indoors, the void around the room is ink**, not navy, so the house reads as a framed box.
+- **Clay roofs per the critic's R2-1 spec:** 4 px tiles in 3 px staggered courses, a 1 px wine shadow under each course, one orange glint per tile, a 3 px sand ridge cap outlined in ink drawn overhead above the building (you walk behind it), an ink eave line and a plum shadow on the facade below. The shop keeps slate with a pale stone ridge so it stands out.
+
 ## Town projects (gold sink, late game)
 
 - **A town fund is the late-game sink:** six projects in `projects.json` (1,200g to 50,000g, about 103k in all, plus mined and crafted goods) open one after another from the town board's "Town projects" button. Gold is given in +100 / +1,000 / +10,000 steps (never more than still needed), goods with one "Give goods" tap, so it fits a one-thumb, 5-minute session.

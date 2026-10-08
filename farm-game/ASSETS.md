@@ -18,7 +18,10 @@
 - Human edits: the pipeline is deterministic; hand-made changes are logged in `art-src/flow/prompts.md` (edits
   section), mostly on the player and villagers (row trims, frame derivation, idle frames).
 - **Authored in code** (original, this repo): terrain tiles (grass, dirt, path, water, soil, walls, floors, fence,
-  quilt) and derived frames in `art-src/tools/authored.py`; the remaining code-drawn placeholders in `src/art/`.
+  quilt) and derived frames in `art-src/tools/authored.py`; the map-layer tiles in `art-src/tools/maptiles.py`
+  (fences, cobbles, interior walls, rails, flora, clay roofs, chimney, cave mouth) and `art-src/tools/bake.py` (forest
+  crowns, shores, path edges, mine rock, rendered per map); the remaining code-drawn placeholders in `src/art/`.
+- Round 2 (2026-10-08, same account and terms): Flow sheets `village2`, `nature2` and `fx2` (props, nature, effects).
 - Usage terms: Google's generative AI terms apply to the Flow outputs; the owner is responsible for confirming they
   allow commercial redistribution before a store release. No third-party sprite packs, no scraped images, no
   trademarked characters were used (prompts ask for generic farm objects and original villagers).

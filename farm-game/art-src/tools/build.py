@@ -149,14 +149,17 @@ def main() -> None:
     import authored  # noqa: E402  (needs the palette)
 
     groups: dict[str, dict[str, np.ndarray]] = {"world": {}, "ui": {}, "chars": {}}
+    tiles_only = "--tiles" in sys.argv  # just the tileset (after the maps asked for new baked tiles)
     for key, spec in specs.items():
-        if "src" not in spec:
+        if "src" not in spec or tiles_only:
             continue
         idx = build_crop_sprite(spec, pal, pal_lab, outline)
         groups[spec["group"]][key] = px.idx_to_rgba(idx, pal)
     extra = authored.build(
         pal, outline, groups, specs, lambda sp: build_crop_sprite(sp, pal, pal_lab, outline), names
     )
+    if tiles_only:
+        groups = {}
     for g, sprites in groups.items():
         for k, arr in sprites.items():
             save_png(arr, os.path.join(ART, "sprites", g, f"{k}.png"))
@@ -166,7 +169,7 @@ def main() -> None:
         save_png(extra["tileset"], os.path.join(ART, "sprites", "tiles.png"))
         index["tileset"] = True
         with open(os.path.join(PUB, "tilesets", "tiles.json"), "w", newline="\n") as f:
-            json.dump({"columns": 21, "tiles": {n: i for i, n in enumerate(extra["tile_names"])}}, f, indent=1)
+            json.dump({"columns": extra["columns"], "tiles": extra["tile_index"]}, f, indent=1)
             f.write("\n")
     for g, sprites in groups.items():
         if not sprites:
@@ -187,9 +190,11 @@ def main() -> None:
         print(f"{g}: {len(sprites)} frames, {sheet.shape[1]}x{sheet.shape[0]}")
     if "--prune" in sys.argv:
         prune_crops()
+    if tiles_only:
+        return
     with open(os.path.join(GAME, "src", "art", "atlases.json"), "w", newline="\n") as f:
-        json.dump(index, f, indent=2)
-        f.write("\n")
+        atl = ", ".join(json.dumps(a) for a in index["atlases"])
+        f.write(f'{{\n  "tileset": {json.dumps(index["tileset"])},\n  "atlases": [{atl}]\n}}\n')
 
 
 if __name__ == "__main__":

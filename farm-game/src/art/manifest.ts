@@ -12,7 +12,6 @@ import {
   trees,
 } from '../data';
 import { DIRECTIONS } from '../systems/direction';
-import { GROUND_DECOR_KEYS, ROOF_KEYS } from './decor';
 
 /**
  * Every texture key (and frame) the game draws, derived from data wherever the data names it, so new
@@ -263,16 +262,6 @@ export function artManifest(): ArtEntry[] {
     exact: false,
     optional: true,
   });
-  for (const k of [...ROOF_KEYS, ...GROUND_DECOR_KEYS])
-    add({
-      texture: k,
-      w: 16,
-      h: 16,
-      group: 'world',
-      kind: 'decor (art only)',
-      from: 'art/decor.ts',
-      optional: true,
-    });
   return out;
 }
 

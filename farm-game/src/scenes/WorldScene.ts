@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { addRoofs } from '../art/decor';
+import { MapArt } from '../art/mapLayers';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
   ACTION_LOCK_MS,
@@ -60,6 +60,9 @@ import {
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
 
+/** Palette slot 0 (ink): the outline colour, also the void around indoor maps. */
+const INK_HEX = '#2a1a24';
+
 /** Quiet time before the goal arrow appears. */
 const GUIDE_AFTER_MS = 14_000;
 
@@ -75,6 +78,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private highlight!: TileHighlight;
   private ground!: Phaser.Tilemaps.TilemapLayer;
   private farm: FarmRenderer | null = null;
+  private mapArt: MapArt | null = null;
   protected fx!: Effects;
   private transitioning = false;
   /** After a door, ignore held input until it is released once, so doors never bounce. */
@@ -126,9 +130,10 @@ export abstract class WorldScene extends Phaser.Scene {
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
-    addRoofs(this, layer, !!mapsData.maps[this.mapId]?.farmland);
+    const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
+    this.mapArt = new MapArt(map, tileset, outdoor ? SEASON_TINT[state.time.season] : 0xffffff);
 
-    if (mapsData.maps[this.mapId]?.outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
+    if (outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add
         .rectangle(0, 0, map.widthInPixels, map.heightInPixels, SEASON_TINT[state.time.season])
         .setOrigin(0)
@@ -242,6 +247,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.syncSprite(moving);
 
     const here = playerTile(player);
+    this.mapArt?.follow(here.tx, here.ty);
     const door = objectAt(this.objects, here.tx, here.ty, 'door');
     if (door) {
       this.useDoor(door);
@@ -315,7 +321,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const cam = this.cameras.main;
     // The world only draws between the HUD and the dock, so nothing is ever hidden behind a control.
     cam.setViewport(WORLD_VIEW.x, WORLD_VIEW.y, WORLD_VIEW.w, WORLD_VIEW.h);
-    cam.setBackgroundColor(VOID_COLOR);
+    // Around a small room, the void is the ink of the outline palette, so the walls read as a framed box.
+    cam.setBackgroundColor(mapsData.maps[this.mapId]?.outdoor ? VOID_COLOR : INK_HEX);
     // Maps smaller than the view get bounds equal to the view, centered on the map.
     const bw = Math.max(mapW, WORLD_VIEW.w);
     const bh = Math.max(mapH, WORLD_VIEW.h);
