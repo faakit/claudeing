@@ -1,0 +1,126 @@
+[
+ {
+  "id": "items1",
+  "aspect": "1:1",
+  "body": "A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: parsnip (cream root with green leaves), potato, white cauliflower head with leaves, red tomato, round green striped melon, ear of yellow corn, orange pumpkin, purple-red yam, dark green kale bunch, pair of red cherries, peach, red apple, purple plum, bundle of green plant fiber, grey stone, wild leek.",
+  "raw": [
+   "items1-a.jpg",
+   "items1-b.jpg"
+  ],
+  "used": "a: crop, fruit, fiber, stone, wild leek icons",
+  "note": ""
+ },
+ {
+  "id": "items2",
+  "aspect": "1:1",
+  "body": "A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: yellow daffodil flower, cluster of red wild berries with a leaf, wild sunflower, cluster of dark purple blackberries, brown forest mushroom, gnarled tan winter root, sprig of green holly leaves with red berries, golden carp fish, blue bluegill fish, green striped perch fish, pink spotted trout fish, grey whiskered catfish, orange-red salmon fish, small tin can of pink worms (fishing bait), chunk of rock with orange copper ore, chunk of rock with silver-blue iron ore.",
+  "raw": [
+   "items2-a.jpg",
+   "items2-b.jpg"
+  ],
+  "used": "b: forage, fish, bait, ore icons",
+  "note": ""
+ },
+ {
+  "id": "items3",
+  "aspect": "1:1",
+  "body": "A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: white quartz crystal, purple amethyst gem, red ruby gem, copper ingot bar, iron ingot bar, white chicken egg, bottle full of white milk with a blue cap, jar of golden honey with a cloth lid, fluffy ball of white wool, jar of red berry jam with a cloth lid, jar of green pickles with a metal lid, dark red wine bottle with a cork, folded bolt of blue cloth, bundle of golden hay, small burlap sack of chicken feed grain, green bale of fodder tied with string.",
+  "raw": [
+   "items3-a.jpg",
+   "items3-b.jpg"
+  ],
+  "used": "b: gems, bars, animal products, preserves, feed icons",
+  "note": ""
+ },
+ {
+  "id": "items4",
+  "aspect": "1:1",
+  "body": "A 4x4 grid of 16 separate item icons with wide even spacing, in this order, left to right, top to bottom: iron farming hoe with a wooden handle, blue metal watering can, curved scythe with a wooden handle, wooden fishing rod with a red and white float, iron pickaxe with a wooden handle, then nine small paper seed packets, each with a picture of its vegetable: parsnip, potato, cauliflower, tomato, melon, corn, pumpkin, yam, kale, then a brown sack of fertilizer, then a dark brown sack of rich fertilizer.",
+  "raw": [
+   "items4-a.jpg",
+   "items4-b.jpg"
+  ],
+  "used": "a: tool, seed packet and fertilizer icons",
+  "note": ""
+ },
+ {
+  "id": "crops1",
+  "aspect": "1:1",
+  "body": "Crop growth stages as a grid of 4 rows and 5 columns of separate sprites with wide even spacing. Each row is one crop, seen from the side as it stands in a farm field. Columns left to right: a seed in a tiny mound of brown soil, a tiny green sprout, a young leafy plant, a full grown plant with buds, the mature plant ready to harvest with the vegetable clearly visible. No soil under the plants except the seed mound. Rows top to bottom: parsnip (cream root top showing under leafy greens), potato plant, cauliflower (white head in big leaves), tomato plant on a wooden stake with red tomatoes.",
+  "raw": [
+   "crops1-a.jpg",
+   "crops1-b.jpg"
+  ],
+  "used": "b: crop frames parsnip, potato, cauliflower, tomato",
+  "note": ""
+ },
+ {
+  "id": "crops2",
+  "aspect": "1:1",
+  "body": "Crop growth stages as a grid of 4 rows and 5 columns of separate sprites with wide even spacing. Each row is one crop, seen from the side as it stands in a farm field. Columns left to right: a seed in a tiny mound of brown soil, a tiny green sprout, a young leafy plant, a full grown plant with buds, the mature plant ready to harvest with the vegetable clearly visible. No soil under the plants except the seed mound. Rows top to bottom: melon vine with a big round green striped melon, tall corn stalk with yellow cobs, pumpkin vine with a big orange pumpkin, dark green curly kale plant.",
+  "raw": [
+   "crops2-a.jpg",
+   "crops2-b.jpg"
+  ],
+  "used": "b: crop frames melon, corn, pumpkin, kale",
+  "note": ""
+ },
+ {
+  "id": "crops3",
+  "aspect": "1:1",
+  "body": "A grid of 4 rows and 5 columns of separate sprites with wide even spacing, all seen from the side as they stand in the world. Row 1, a yam crop growing: seed in a tiny soil mound, tiny sprout, young vine, grown vine with buds, mature vine with purple yams showing. Row 2, small fruit trees about 16 pixels wide and 24 pixels tall: a young bare sapling, a cherry tree with red cherries, a peach tree with peaches, an apple tree with red apples, a plum tree with purple plums. Row 3: a plain grey boulder, a boulder with orange copper ore veins, a boulder with silver-blue iron ore veins, a boulder with purple gem crystals, a small wooden for-sale sign on a post. Row 4: a tuft of wild weeds, a round green bush with red berries, a small round leafy tree, a patch of pink and yellow wildflowers, a wooden notice board on two legs.",
+  "raw": [
+   "crops3-a.jpg",
+   "crops3-b.jpg"
+  ],
+  "used": "a: fruit trees, sapling; b: yam frames, ore nodes, sign, weed, tile objects",
+  "note": ""
+ },
+ {
+  "id": "world1",
+  "aspect": "1:1",
+  "body": "A 4x4 grid of 16 separate farm objects with wide even spacing, seen in three-quarter front view as they stand on the ground, in this order, left to right, top to bottom: tiny wooden chicken coop with a ramp, tiny red barn with white trim, tiny wooden tool shed, metal lawn sprinkler on a short pipe, golden quality sprinkler with four nozzles, wooden preserves barrel with a glass jar lid, wooden keg barrel with a brass tap, yellow wooden bee house box with a little roof, wooden weaving loom with blue cloth, small stone smelting furnace with a glowing fire mouth, wooden shipping crate with a lid, single bed with a red quilt seen from above, wooden front door in a stone wall, shop door under a red and white striped awning, red mailbox on a post, small stone water well.",
+  "raw": [
+   "world1-a.jpg",
+   "world1-b.jpg"
+  ],
+  "used": "b: buildings and machines (b's loom has magenta threads, so a's loom), tile objects",
+  "note": ""
+ },
+ {
+  "id": "player1",
+  "aspect": "1:1",
+  "body": "Character sprite sheet of the player, a young farmer with short brown hair, a blue shirt, dark blue trousers and brown boots, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head. A grid of 3 rows and 4 columns, the same character in every cell, with wide even spacing. Row 1 facing the viewer: standing, walking with left foot forward, standing, walking with right foot forward. Row 2 seen from behind, same four poses. Row 3 facing right in side view, same four poses.",
+  "raw": [
+   "player1-a.jpg",
+   "player1-b.jpg"
+  ],
+  "used": "a: all 20 player frames (left = mirrored right; passing frames lifted 1 px by the script)",
+  "note": "",
+  "preamble": "character"
+ },
+ {
+  "id": "npcs1",
+  "aspect": "1:1",
+  "body": "Character sprite sheet of four different village characters, full body, each pose 16 pixels wide and 32 pixels tall, cute proportions with a big head, each with a clearly different silhouette. A grid of 4 rows and 3 columns with wide even spacing; columns: facing the viewer, seen from behind, facing right in side view, all standing. Row 1: Mara the shopkeeper, a woman with red hair in a bun, peach blouse and a long cream apron. Row 2: Finn the fisherman, a young man in a light blue raincoat and a yellow bucket hat. Row 3: Rosa the gardener, an older woman with grey hair, a wide straw hat and a lavender dress. Row 4: Orin the blacksmith, a big burly bald man with a bushy brown beard and a dark leather apron.",
+  "raw": [
+   "npcs1-a.jpg",
+   "npcs1-b.jpg"
+  ],
+  "used": "a: villager frames (left = mirrored right; idle frame 2 made by the script)",
+  "note": "",
+  "preamble": "character"
+ },
+ {
+  "id": "animals1",
+  "aspect": "1:1",
+  "body": "A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: white hen in side view facing right standing, the same hen pecking with its head down, brown and white cow in side view facing right standing, the same cow grazing with its head lowered, fluffy white sheep in side view facing right standing, the same sheep grazing with its head lowered, a gold coin, a yellow lightning bolt, a blue water drop, a yellow sun, a grey rain cloud with blue drops, a white five-pointed star, a red heart, a white four-pointed sparkle, a small puff of white dust, a small blue water splash.",
+  "raw": [
+   "animals1-a.jpg",
+   "animals1-b.jpg"
+  ],
+  "used": "a: animals (2 frames each), coin, bolt, drop; sun/rain/star/heart too small at 7-13 px, code-drawn kept",
+  "note": "",
+  "preamble": "standard"
+ }
+]

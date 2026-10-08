@@ -99,6 +99,7 @@ export function artManifest(): ArtEntry[] {
         group: 'world',
         kind: s === c.stageDays.length ? `crop ${id} ripe` : `crop ${id} stage ${s}`,
         from: 'crops.json',
+        exact: false,
       });
   }
   for (const [id, p] of Object.entries(placeables)) {
@@ -223,6 +224,7 @@ export function artManifest(): ArtEntry[] {
           group: 'chars',
           kind: `villager ${id} idle ${d} ${i}`,
           from: 'npcs.json',
+          exact: false,
         });
   return out;
 }

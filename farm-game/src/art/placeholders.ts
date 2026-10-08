@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { PLACEHOLDER_TILES, TILESET_KEY, TILE_SIZE } from '../config';
 import { DIRECTIONS } from '../systems/direction';
 import type { Direction } from '../state/GameState';
+import { npcs } from '../data';
+import { npcFrame, npcTexture } from './manifest';
 
 /**
  * Code-generated stand-in art (M0-M6). Texture keys and frame names follow the final
@@ -195,7 +197,7 @@ function outline(ctx: Ctx, ox: number, oy: number, w: number, h: number, color: 
   ctx.putImageData(new ImageData(out, w, h), ox, oy);
 }
 
-const PAL = {
+const BASE_PAL = {
   skin: '#f2c9a0',
   hair: '#5b3a29',
   shirt: '#4a7fc1',
@@ -207,7 +209,14 @@ const PAL = {
 };
 
 /** Draw one 16x32 player frame. `step` is 0-3 (walk cycle); -1 = idle. */
-function drawPlayer(ctx: Ctx, ox: number, oy: number, dir: Direction, step: number): void {
+function drawPlayer(
+  ctx: Ctx,
+  ox: number,
+  oy: number,
+  dir: Direction,
+  step: number,
+  PAL: typeof BASE_PAL = BASE_PAL,
+): void {
   const r = (x: number, y: number, w: number, h: number, c: string) => {
     ctx.fillStyle = c;
     ctx.fillRect(ox + x, oy + y, w, h);
@@ -262,14 +271,17 @@ function drawPlayer(ctx: Ctx, ox: number, oy: number, dir: Direction, step: numb
 }
 
 export function generatePlaceholderTextures(scene: Phaser.Scene): void {
-  const tiles = scene.textures.createCanvas(
-    TILESET_KEY,
-    TILE_SIZE * PLACEHOLDER_TILES.length,
-    TILE_SIZE,
-  );
-  if (!tiles) throw new Error(`Could not create texture ${TILESET_KEY}`);
-  PLACEHOLDER_TILES.forEach((_, i) => drawTile(tiles.getContext(), i));
-  tiles.refresh();
+  // The real tileset (public/assets/tilesets) loads under the same key; draw tiles only without it.
+  if (!scene.textures.exists(TILESET_KEY)) {
+    const tiles = scene.textures.createCanvas(
+      TILESET_KEY,
+      TILE_SIZE * PLACEHOLDER_TILES.length,
+      TILE_SIZE,
+    );
+    if (!tiles) throw new Error(`Could not create texture ${TILESET_KEY}`);
+    PLACEHOLDER_TILES.forEach((_, i) => drawTile(tiles.getContext(), i));
+    tiles.refresh();
+  }
 
   const sheet = scene.textures.createCanvas(
     PLAYER_TEXTURE,
@@ -283,12 +295,30 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
       const ox = col * PLAYER_W;
       const oy = row * PLAYER_H;
       drawPlayer(ctx, ox, oy, dir, col - 1); // col 0 = idle (-1), cols 1-4 = walk 0-3
-      outline(ctx, ox, oy, PLAYER_W, PLAYER_H, PAL.line);
+      outline(ctx, ox, oy, PLAYER_W, PLAYER_H, BASE_PAL.line);
       const name = col === 0 ? idleFrame(dir) : walkFrame(dir, col - 1);
       sheet.add(name, 0, ox, oy, PLAYER_W, PLAYER_H);
     }
   });
   sheet.refresh();
+
+  // Villagers: the player figure in their own shirt colour, 4 directions x 2 idle frames.
+  for (const [id, def] of Object.entries(npcs)) {
+    const key = npcTexture(id);
+    const tex = scene.textures.createCanvas(key, PLAYER_W * 2, PLAYER_H * DIRECTIONS.length);
+    if (!tex) throw new Error(`Could not create ${key}`);
+    const pal = { ...BASE_PAL, shirt: def.tint, shirtDark: def.tint };
+    DIRECTIONS.forEach((dir, row) => {
+      for (let i = 0; i < 2; i++) {
+        const ox = i * PLAYER_W;
+        const oy = row * PLAYER_H;
+        drawPlayer(tex.getContext(), ox, oy + i, dir, -1, pal);
+        outline(tex.getContext(), ox, oy, PLAYER_W, PLAYER_H, BASE_PAL.line);
+        tex.add(npcFrame(id, dir, i), 0, ox, oy, PLAYER_W, PLAYER_H);
+      }
+    });
+    tex.refresh();
+  }
 
   const shadow = scene.textures.createCanvas(SHADOW_TEXTURE, 14, 6);
   if (!shadow) throw new Error('Could not create shadow texture');

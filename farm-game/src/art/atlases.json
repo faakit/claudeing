@@ -1,0 +1,8 @@
+{
+  "tileset": true,
+  "atlases": [
+    "world",
+    "ui",
+    "chars"
+  ]
+}

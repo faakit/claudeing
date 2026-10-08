@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { animals, crops, items, nodes, placeables, trees } from '../data';
+import { animalIdleKey } from './manifest';
 
 /** Code-generated gameplay art (soil, crops, items, UI glyphs). Replaced by atlases in M7. */
 export const SOIL_TEXTURE = { tilled: 'soil_tilled', watered: 'soil_watered' } as const;
@@ -777,10 +778,16 @@ export function generateGameArt(scene: Phaser.Scene): void {
     refresh(scene, def.sprite);
   }
   for (const a of Object.values(animals)) {
-    const ctx = canvas(scene, a.sprite, 16, 16);
-    drawAnimal(ctx, a.item, 16, 16, 0, 0);
-    outline(ctx, 0, 0, 16, 16);
-    refresh(scene, a.sprite);
+    // Frame 2 of the idle is the same animal one pixel lower (a breath).
+    for (const [key, dy] of [
+      [a.sprite, 0],
+      [animalIdleKey(a.sprite), 1],
+    ] as const) {
+      const ctx = canvas(scene, key, 16, 16);
+      drawAnimal(ctx, a.item, 16, 16, 0, dy);
+      outline(ctx, 0, 0, 16, 16);
+      refresh(scene, key);
+    }
   }
   // Fruit trees: one canopy per tree (tinted by its leaf colour), plus a shared sapling.
   for (const [id, t] of Object.entries(trees)) {
