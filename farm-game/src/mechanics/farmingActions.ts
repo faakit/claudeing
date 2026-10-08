@@ -80,17 +80,23 @@ registerActionHandler({
     const grow = (crops[cropId]?.stageDays ?? []).reduce((a, b) => a + b, 0);
     if (grow >= game.seasonLength - state.time.day + 1)
       return { refusal: `Won't ripen in time (${grow} days). Save it for next season.` };
+    // Seeds follow the hoe: a hoe that tills N in a row lets you sow the same row in one press.
+    const row = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe'))
+      .filter((t) => t.farmland && checkPlant(state, t.tx, t.ty, cropId) === 'ok')
+      .slice(0, stack.qty);
     return {
       plan: {
         kind: 'plant',
         tx: tile.tx,
         ty: tile.ty,
         run: () => {
-          plant(state, tile.tx, tile.ty, cropId);
-          removeFromSlot(state, state.inventory.selected, 1);
-          addStat(state, 'planted');
-          addXp(state, 'farming', 1);
-          return {};
+          for (const t of row) {
+            plant(state, t.tx, t.ty, cropId);
+            removeFromSlot(state, state.inventory.selected, 1);
+          }
+          addStat(state, 'planted', row.length);
+          addXp(state, 'farming', row.length);
+          return { count: row.length };
         },
       },
     };

@@ -11,6 +11,7 @@ import {
   heartsOf,
   isBirthday,
   isGiftable,
+  knownReaction,
   lineFor,
   MAX_HEARTS,
   nextPerk,
@@ -25,6 +26,7 @@ import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
+import { giftSub } from './giftText';
 
 const ROWS = 5;
 
@@ -180,7 +182,12 @@ export class NpcPanel extends Modal {
     this.label(8, 36, `A gift for ${npcs[this.id]!.name}?`, C.cream);
     const kinds = new Map<string, ItemRef>();
     for (const st of s.inventory.slots) if (st && isGiftable(st)) kinds.set(keyOf(st), refOf(st));
-    const list = [...kinds.values()];
+    // Known favourites first, unknown next, known dislikes last: the list remembers past gifts.
+    const list = [...kinds.values()].sort(
+      (a, b) =>
+        GIFT_ORDER.indexOf(knownReaction(s, this.id, a)) -
+        GIFT_ORDER.indexOf(knownReaction(s, this.id, b)),
+    );
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
     if (list.length === 0)
@@ -195,10 +202,12 @@ export class NpcPanel extends Modal {
       );
     let y = 48;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
+      const known = knownReaction(s, this.id, ref);
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),
-        sub: `Have ${countStack(s, ref)}`,
+        sub: giftSub(countStack(s, ref), known),
+        subColor: known ? KNOWN_COLOR[known] : C.creamDim,
         buttons: [
           {
             label: 'Give',
@@ -231,6 +240,9 @@ export class NpcPanel extends Modal {
     }
   }
 }
+
+const GIFT_ORDER = ['love', 'like', null, 'neutral', 'dislike'] as const;
+const KNOWN_COLOR = { love: C.gold, like: C.green, neutral: C.creamDim, dislike: C.red } as const;
 
 const REPLIES = {
   love: 'This is my favourite thing ever!',

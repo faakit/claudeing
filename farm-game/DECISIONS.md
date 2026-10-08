@@ -220,3 +220,10 @@
 - **Pointers, not chores:** `introDay` puts the fishing job on day 2, the mine on day 3 and the board on day 4, so the idle days 3 and 4 now point at the side activities critique 3 found nobody discovers. `requires` hides jobs that cannot be done yet (no animal goods before an animal).
 - **Stat watchers:** `registerStatWatcher` in `systems/goals.ts` runs on every stat change; jobs are the first user. No polling, no new events.
 - **Bounded:** a balance test keeps the three best jobs of a day under 300 gold, a modest early boost that is irrelevant late. Save version 10 adds `jobs` and two job goals (one right after "buy", so days 2 to 4 always have something to finish).
+
+## One-thumb conveniences (critique 3)
+
+- **Gifts are never blind twice:** a villager's reaction to an item is remembered as a stat (`gift.<npc>.<item>`), and from 3 hearts their favourites count as known. The gift list sorts known favourites first and known dislikes last and says "Loves it!", "Likes it", "Not fussed", "Dislikes it" or "Not tried yet".
+- **Seeds follow the hoe:** a hoe that tills N tiles in a row also sows N seeds in a row with one press (only on tilled, empty soil, as far as the stack goes). No new upgrade to learn.
+- **"All" in machine sheets:** with two or more empty machines of the same kind on the map, one tap loads the item into all of them.
+- **Welcome toasts show once per game** (`tip.welcome` stat), not on every map change; the day-1 summary no longer gives a winter tip (tips can be limited to seasons), and a busy morning drops the tip instead of growing past the screen.

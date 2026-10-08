@@ -390,6 +390,10 @@ try {
   await pp.keyboard.press('Enter');
   await pp.waitForTimeout(1500);
   await pp.evaluate(() => {
+    window.__toasts = [];
+    window.__farm.gameEvents.on('toast', (t) => window.__toasts.push(t.text));
+  });
+  await pp.evaluate(() => {
     const f = window.__farm;
     const s = f.getState();
     s.money = 3000;
@@ -465,6 +469,33 @@ try {
     `slots ${ps.inventory.slots.length} money ${ps.money}`,
   );
   await ui(() => window.__farm.game.scene.getScene('UI').panels.get('shop').close());
+  check(
+    'the welcome tip does not replay after changing maps',
+    !(await ui(() => window.__toasts.some((t) => t.startsWith('Welcome')))),
+  );
+  // "All" in a machine sheet fills every empty machine of that kind on the map.
+  await ui(() => {
+    const s = window.__farm.getState();
+    s.placed.town = [1, 2, 3].map((i) => ({
+      id: 300 + i,
+      type: 'preserve_jar',
+      tx: 20,
+      ty: 4 + i,
+      data: {},
+    }));
+    s.nextPlacedId = 400;
+    s.inventory.slots[7] = { item: 'tomato', qty: 5 };
+    window.__farm.game.scene.getScene('UI').jar.openFor(301);
+  });
+  await pp.waitForTimeout(400);
+  await pClick(138, 150 + 34 + 11); // All
+  ps = await pState();
+  check(
+    'machine sheet: All loads every empty jar in one tap',
+    ps.placed.town.every((o) => o.data.jar) && ps.inventory.slots[7]?.qty === 2,
+    JSON.stringify(ps.placed.town),
+  );
+  await ui(() => (window.__farm.getState().placed.town = []));
   await pp.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
   await pp.waitForTimeout(3200);
   await pp.keyboard.press('Enter');

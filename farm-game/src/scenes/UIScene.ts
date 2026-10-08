@@ -176,8 +176,10 @@ export class UIScene extends Phaser.Scene {
       fresh.goalIndex === 0 &&
       fresh.time.day === 1 &&
       fresh.time.season === 'spring' &&
-      !fresh.stats['tilled']
+      !fresh.stats['tilled'] &&
+      !fresh.stats['tip.welcome'] // once per game, not on every map change
     ) {
+      fresh.stats['tip.welcome'] = 1;
       this.time.delayedCall(900, () =>
         this.hud.toast('Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.', 'good'),
       );

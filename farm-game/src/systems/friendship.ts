@@ -81,6 +81,23 @@ export function reactionTo(id: string, ref: ItemRef): Reaction {
   return 'neutral';
 }
 
+/** Reactions are remembered per villager and item as stats (`gift.<npc>.<item>`), 1 = dislike .. 4 = love. */
+const REACTION_CODE: Record<Reaction, number> = { dislike: 1, neutral: 2, like: 3, love: 4 };
+const CODE_REACTION: Reaction[] = ['neutral', 'dislike', 'neutral', 'like', 'love'];
+const giftKey = (id: string, item: string): string => `gift.${id}.${item}`;
+
+/**
+ * What the player knows about how a villager feels about an item: from an earlier gift, or (from 3
+ * hearts) their favourites. Null when it is still a guess. The gift list shows this, so gifts are never
+ * blind twice.
+ */
+export function knownReaction(state: GameState, id: string, ref: ItemRef): Reaction | null {
+  const code = state.stats[giftKey(id, ref.item)];
+  if (code) return CODE_REACTION[code] ?? null;
+  if (heartsOf(state, id) >= 3 && reactionTo(id, ref) === 'love') return 'love';
+  return null;
+}
+
 /** Items that make sense as presents: anything but tools, animals and placed machines. */
 export const isGiftable = (ref: ItemRef): boolean => {
   const t = items[ref.item]?.type;
@@ -128,6 +145,7 @@ export function giveGift(state: GameState, id: string, ref: ItemRef): GiftResult
   const base = GIFT_POINTS[reaction];
   const points = isBirthday(state, id) && base > 0 ? base * 3 : base;
   (state.friends[id] ??= blank()).giftedDay = absoluteDay(state);
+  state.stats[giftKey(id, ref.item)] = REACTION_CODE[reaction];
   addPoints(state, id, points);
   addStat(state, 'gifted');
   toast(

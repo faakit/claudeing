@@ -138,7 +138,8 @@ More people, more places, more to discover.
       shop's new Home tab; dear rows lose the x5 button.
 - [x] **D3 Daily jobs.** Three small villager requests every morning from day 2 (`jobs.json`), paid on the
       spot with friendship; early days point at fishing, the mine and the board.
-- [ ] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays.
+- [x] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays,
+      seasonal morning tips. Not done: a quick bag-to-hotbar swap (critique 3, F11).
 
 ## Later: production polish (R4)
 
