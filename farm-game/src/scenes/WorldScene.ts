@@ -20,6 +20,16 @@ import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
+import { findPath, pathToFace } from '../systems/pathfind';
+import {
+  compensateTouch,
+  CSS_PX_PER_MM,
+  SNAP_MM,
+  tapIntent,
+  type TapIntent,
+  type TapWorld,
+} from '../systems/tapIntent';
+import { cssPerLogical } from '../ui/hit';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
@@ -28,7 +38,7 @@ import { controlsLog } from '../input/controlsLog';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
-import { spawnPosition, type GameState } from '../state/GameState';
+import { spawnPosition, type Direction, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { nodeTiles } from '../systems/mining';
@@ -44,11 +54,14 @@ import { currentGoal } from '../systems/goals';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
 import {
   createMoveState,
+  createRoute,
   faceDirection,
   isTileBlocked,
   stepMove,
+  stepRoute,
   type CollisionGrid,
   type MoveState,
+  type Route,
 } from '../systems/movement';
 import { tickTime } from '../systems/time';
 import {
@@ -94,7 +107,13 @@ export abstract class WorldScene extends Phaser.Scene {
   /** Uses so far in the current Action hold: later ones tick the haptic less often. */
   private holdUses = 0;
   /** What the marker and Action icon showed last frame (debug log: did the act match?). */
-  private lastMark: { slot: number | null; plan: string | null; tx: number; ty: number } | null = null;
+  private lastMark: { slot: number | null; plan: string | null; tx: number; ty: number } | null =
+    null;
+  /** A tap's walk in progress, and what to do on arrival (runtime only). */
+  private route: Route | null = null;
+  private routeEnd: { intent: TapIntent; face: Direction | null } | null = null;
+  /** A tap preview is showing (touch held still on the world). */
+  private preview = false;
   /** Turn-in-place and settle-on-release state (runtime only). */
   private move: MoveState = createMoveState();
   private lastTarget: string | null | undefined;
@@ -118,6 +137,9 @@ export abstract class WorldScene extends Phaser.Scene {
     this.heldFailed = false;
     this.lastTarget = undefined;
     this.move = createMoveState();
+    this.route = null;
+    this.routeEnd = null;
+    this.preview = false;
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
@@ -183,6 +205,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.cleanup.push(
       inputHub.on('interact', () => this.onInteract()),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
+      inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
+      inputHub.on('tapCancel', () => this.onTapCancel()),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
@@ -252,7 +276,13 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     if (this.actionLock > 0) dir = null; // a swing roots you for a moment
 
-    const { moving } = stepMove(player, this.move, dir, delta, this.grid);
+    // A tap's walk runs until the stick or a key takes over (they always win, at once).
+    let moving: boolean;
+    if (this.route && dir === null && this.actionLock <= 0) moving = this.followRoute(delta);
+    else {
+      if (this.route && dir !== null) this.cancelRoute();
+      moving = stepMove(player, this.move, dir, delta, this.grid).moving;
+    }
     this.syncSprite(moving);
 
     const here = playerTile(player);
@@ -577,15 +607,158 @@ export abstract class WorldScene extends Phaser.Scene {
     this.things?.sync(state, true);
   }
 
-  /** Tapping a tile next to the player turns toward it and uses the equipped item there. */
-  private onTap(x: number, y: number): void {
-    if (this.transitioning || runtime.blocked || this.actionLock > 0) return;
-    // Taps arrive in screen space; only the world viewport shows tiles.
-    if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return;
+  // ---- tap to move (M4) ----
+
+  /** Screen (logical) point -> world point, or null outside the world view. */
+  private worldPoint(x: number, y: number): { x: number; y: number } | null {
+    if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return null;
     const cam = this.cameras.main;
-    const wx = x - cam.x + cam.scrollX;
-    const wy = y - cam.y + cam.scrollY;
-    const target = { tx: Math.floor(wx / TILE_SIZE), ty: Math.floor(wy / TILE_SIZE) };
+    return { x: x - cam.x + cam.scrollX, y: y - cam.y + cam.scrollY };
+  }
+
+  /** The world as tap intent sees it. */
+  private tapWorld(): TapWorld {
+    return {
+      tileSize: TILE_SIZE,
+      snapPx: (SNAP_MM * CSS_PX_PER_MM) / cssPerLogical(this),
+      inMap: (t) => this.inMap(t),
+      blocked: (t) => isTileBlocked(this.grid, t.tx, t.ty),
+      interactable: (t) => this.interactableAt(t),
+      actKind: (t) => chooseAction(getState(), [this.tileInfo(t)])?.plan.kind ?? null,
+    };
+  }
+
+  private isDoor = (tx: number, ty: number): boolean => !!objectAt(this.objects, tx, ty, 'door');
+
+  /** Where a tap at (x, y) leads: the intent and the walk to do it, or null path when it cannot. */
+  private planTap(
+    x: number,
+    y: number,
+  ): { intent: TapIntent; path: TileCoord[] | null; face: Direction | null } | null {
+    if (!this.worldPoint(x, y)) return null; // outside the world view: not a world tap
+    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
+    const w = this.worldPoint(c.x, c.y) ?? this.worldPoint(x, y)!;
+    const intent = tapIntent(this.tapWorld(), w.x, w.y);
+    if (intent.kind === 'none') return { intent, path: null, face: null };
+    const here = playerTile(getState().player);
+    const avoid = (tx: number, ty: number) => this.isDoor(tx, ty);
+    // Your own tile: nothing to walk to, and stepping off just to work it would surprise.
+    if (intent.target.tx === here.tx && intent.target.ty === here.ty)
+      return { intent, path: null, face: null };
+    if (intent.kind === 'walk') {
+      return { intent, path: findPath(this.grid, here, [intent.target], { avoid }), face: null };
+    }
+    const r = pathToFace(this.grid, here, intent.target, { avoid });
+    return { intent, path: r?.path ?? null, face: r?.face ?? null };
+  }
+
+  private intentMarker(intent: TapIntent): MarkerKind {
+    if (intent.kind === 'interact') return 'interact';
+    if (intent.kind === 'act') return markerKind({ planKind: intent.plan, interactable: false });
+    return 'none';
+  }
+
+  /** A touch held still on the world: show where a tap would lead before the finger lifts. */
+  private onTapPreview(x: number, y: number): void {
+    if (this.transitioning || runtime.blocked || !getState().settings.controls.tapToMove) return;
+    const plan = this.planTap(x, y);
+    if (!plan) return;
+    this.preview = true;
+    if (plan.path)
+      this.highlight.showPlan(plan.path, plan.intent.target, this.intentMarker(plan.intent));
+    else this.highlight.showPlan(null, null, 'none');
+  }
+
+  private onTapCancel(): void {
+    if (!this.preview) return;
+    this.preview = false;
+    if (!this.route) this.highlight.showPlan(null, null, 'none');
+  }
+
+  /**
+   * A tap on the world. With tap-to-move: walk there and do the obvious thing (interact, act with the auto
+   * tool, or just walk). Without: the old rule, the 4 tiles next to the player only.
+   */
+  private onTap(x: number, y: number): void {
+    this.preview = false;
+    if (this.transitioning || runtime.blocked) return;
+    if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
+    const plan = this.planTap(x, y);
+    if (!plan) return;
+    if (!plan.path) {
+      // Nothing to do there, or no way to get there: answer anyway, never silently.
+      this.cancelRoute();
+      this.highlight.ping(plan.intent.target.tx, plan.intent.target.ty);
+      audio.play('select');
+      if (plan.intent.kind !== 'none' && !this.onPlayerTile(plan.intent.target)) {
+        toast("Can't get there.", 'warn');
+        haptic('error');
+      }
+      controlsLog.push({ kind: 'silent', t: this.time.now, detail: plan.intent.kind });
+      return;
+    }
+    this.route = createRoute(plan.path);
+    this.routeEnd = { intent: plan.intent, face: plan.face };
+    this.highlight.showPlan(plan.path, plan.intent.target, this.intentMarker(plan.intent));
+    controlsLog.push({
+      kind: 'route',
+      t: this.time.now,
+      detail: `${plan.intent.kind}@${plan.intent.target.tx},${plan.intent.target.ty} in ${plan.path.length - 1}`,
+    });
+    // Already there: act now, or, mid-swing, as soon as the swing ends (the route waits for the lock), so a
+    // quick second tap is buffered, never dropped.
+    if (plan.path.length === 1 && this.actionLock <= 0) this.arrive();
+  }
+
+  private onPlayerTile(t: TileCoord): boolean {
+    const here = playerTile(getState().player);
+    return here.tx === t.tx && here.ty === t.ty;
+  }
+
+  /** One frame of a tap's walk. */
+  private followRoute(delta: number): boolean {
+    const route = this.route!;
+    const end = this.routeEnd!;
+    const res = stepRoute(getState().player, this.move, route, delta, this.grid);
+    if (res === 'blocked') {
+      this.cancelRoute();
+      this.highlight.ping(end.intent.target.tx, end.intent.target.ty);
+      audio.play('error');
+      haptic('error');
+      return false;
+    }
+    if (res === 'arrived') {
+      this.arrive();
+      return false;
+    }
+    this.highlight.showPlan(route.path, end.intent.target, this.intentMarker(end.intent), route.i);
+    return true;
+  }
+
+  /** At the end of a tap's walk: face the target and do it. */
+  private arrive(): void {
+    const end = this.routeEnd;
+    this.cancelRoute();
+    if (!end) return;
+    const player = getState().player;
+    if (end.face) faceDirection(player, end.face);
+    this.syncSprite(false);
+    const target = end.intent.target;
+    if (end.intent.kind === 'interact') this.onInteract(target);
+    else if (end.intent.kind === 'act') this.tryAction(target);
+  }
+
+  private cancelRoute(): void {
+    this.route = null;
+    this.routeEnd = null;
+    if (!this.preview) this.highlight.showPlan(null, null, 'none');
+  }
+
+  /** Tap-to-move off: tapping a tile next to the player turns toward it and uses Action there. */
+  private onTapAdjacent(x: number, y: number): void {
+    const w = this.worldPoint(x, y);
+    if (!w) return;
+    const target = { tx: Math.floor(w.x / TILE_SIZE), ty: Math.floor(w.y / TILE_SIZE) };
     const player = getState().player;
     const dir = adjacentDirection(playerTile(player), target);
     if (!dir) {

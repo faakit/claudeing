@@ -4,11 +4,12 @@ import { game, mapsData } from '../data';
 import { RainLayer } from '../fx/RainLayer';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
-import { holdMayStart, PressTrack, worldRelease } from '../input/gesture';
+import { holdMayStart } from '../input/gesture';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { TouchButton } from '../input/TouchButton';
 import { VirtualJoystick } from '../input/VirtualJoystick';
+import { WorldTouch } from '../input/WorldTouch';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import { lifecycle } from '../platform/lifecycle';
@@ -109,7 +110,7 @@ export class UIScene extends Phaser.Scene {
   private interactButton: TouchButton | null = null;
   private interactIcon: Phaser.GameObjects.Graphics | null = null;
   private interactType: string | null = null;
-  private taps = new Map<number, PressTrack>();
+  private worldTouch!: WorldTouch;
   private joystick!: VirtualJoystick;
   /** Current dock geometry (mirrored in left-handed mode). */
   layout: DockLayout = dockLayout(false);
@@ -131,7 +132,14 @@ export class UIScene extends Phaser.Scene {
   private lateWarnedDay = -1;
   private swiped = false;
   /** The Action press in progress: when it began, its vertical travel, and when that last changed. */
-  private actionPress: { at: number; dy: number; mark: number; movedAt: number } | null = null;
+  private actionPress: {
+    at: number;
+    dy: number;
+    mark: number;
+    movedAt: number;
+    /** Rendered frames since the last vertical move. */
+    frames: number;
+  } | null = null;
   private actionIcon: Phaser.GameObjects.Image | null = null;
   private actionIconKey = '';
   private lastSeason = '';
@@ -147,7 +155,6 @@ export class UIScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.taps.clear();
     this.cleanup = [];
     this.controls = [];
     this.interactButton = null;
@@ -195,7 +202,9 @@ export class UIScene extends Phaser.Scene {
       );
       this.time.delayedCall(4200, () =>
         this.hud.toast(
-          'Drag anywhere low on the screen to walk. Hold Action to keep working.',
+          getState().settings.controls.tapToMove
+            ? 'Tap a tile to walk there and work it. Or drag low on the screen to steer.'
+            : 'Drag anywhere low on the screen to walk. Hold Action to keep working.',
           'info',
         ),
       );
@@ -249,7 +258,10 @@ export class UIScene extends Phaser.Scene {
       audio.setRain(0);
       audio.setNight(0);
     });
-    this.setupTaps();
+    this.worldTouch = new WorldTouch(this, inputHub, this.joystick, () => {
+      this.idleMs = 0;
+      audio.unlock();
+    });
   }
 
   update(time: number, delta: number): void {
@@ -260,7 +272,8 @@ export class UIScene extends Phaser.Scene {
       this.dragHint = null;
     }
     this.hud.update(time);
-    this.updateHold(time);
+    this.updateHold(this.time.now);
+    this.worldTouch.update();
     this.updateActionIcon();
     this.updateIdleHint(delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
@@ -388,7 +401,7 @@ export class UIScene extends Phaser.Scene {
   private pressAction(): void {
     this.swiped = false;
     const now = this.time.now;
-    this.actionPress = { at: now, dy: 0, mark: 0, movedAt: now };
+    this.actionPress = { at: now, dy: 0, mark: 0, movedAt: now, frames: 0 };
   }
 
   private moveAction(dy: number): void {
@@ -398,6 +411,7 @@ export class UIScene extends Phaser.Scene {
     if (Math.abs(dy - p.mark) >= 0.5) {
       p.movedAt = this.time.now;
       p.mark = dy;
+      p.frames = 0;
     }
     p.dy = dy;
   }
@@ -406,7 +420,8 @@ export class UIScene extends Phaser.Scene {
   private updateHold(time: number): void {
     const p = this.actionPress;
     if (!p || this.swiped || inputHub.actionHeld) return;
-    if (holdMayStart(time - p.at, p.dy, time - p.movedAt)) inputHub.actionHeld = true;
+    p.frames++;
+    if (holdMayStart(time - p.at, p.dy, time - p.movedAt, p.frames)) inputHub.actionHeld = true;
   }
 
   private releaseAction(): void {
@@ -491,28 +506,6 @@ export class UIScene extends Phaser.Scene {
       );
     }
     this.tweens.add({ targets: this.interactIcon, alpha: type !== null ? 1 : 0, duration: 140 });
-  }
-
-  /**
-   * A still touch on the world is a tap, however long it lasted; a touch that moved the stick is never a
-   * tap (so a rolling tap can never both walk and act).
-   */
-  private setupTaps(): void {
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      this.idleMs = 0;
-      audio.unlock();
-      if (this.input.hitTestPointer(p).length > 0) return; // started on a button
-      this.taps.set(p.id, new PressTrack(p.x, p.y, p.downTime));
-    });
-    this.input.on('pointermove', (p: Phaser.Input.Pointer) => this.taps.get(p.id)?.move(p.x, p.y));
-    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      const track = this.taps.get(p.id);
-      this.taps.delete(p.id);
-      if (!track) return;
-      track.move(p.x, p.y);
-      if (worldRelease(track, this.joystick.wasEngaged(p.id)) === 'tap')
-        inputHub.emit('tap', { x: p.x, y: p.y });
-    });
   }
 
   // ---- panels ----

@@ -193,11 +193,14 @@ try {
         `soil ${await soil(page)}, moved ${(c1.x - c0.x).toFixed(1)} facing ${c1.facing}`,
       );
 
-      // --- No silent taps: a tap two tiles away answers with a ring on that tile.
+      // --- No silent taps: a tap on your own tile (nothing to do there) answers with a ring.
       await place(page, 10, 17, 'down');
       await sleep(400);
-      const far = await tileScreen(page, 12, 17);
-      await t.tap(far.x, far.y, 70);
+      // a solid tile with nothing on it (the house wall at 11,7)
+      await place(page, 11, 9, 'up');
+      await sleep(1300);
+      const own = await tileScreen(page, 11, 7);
+      await t.tap(own.x, own.y, 70);
       await sleep(60);
       const ring = await page.evaluate(() => {
         const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
@@ -205,9 +208,218 @@ try {
       });
       check(`${tag}: a tap with nothing to do shows a ring (never silent)`, ring);
 
+      // --- The marker lies on the ground: under characters, animals and walk-behind objects.
+      const depths = await page.evaluate(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        const marker = w.highlight.gfx.depth;
+        const list = w.children.list;
+        // every sprite (the farmer, villagers, animals) draws above the marker
+        const spritesBelow = list.filter((o) => o.type === 'Sprite' && o.depth <= marker).length;
+        return {
+          marker,
+          player: w.sprite.depth,
+          ground: w.ground.depth,
+          spritesBelow,
+          sprites: list.filter((o) => o.type === 'Sprite').length,
+        };
+      });
+      check(
+        `${tag}: the target marker draws above the ground and below the player, villagers and y-sorted objects`,
+        depths.marker > depths.ground &&
+          depths.marker < depths.player &&
+          depths.spritesBelow === 0 &&
+          depths.sprites > 0,
+        JSON.stringify(depths),
+      );
+
+      // --- Tap to move (M4): one tap walks to the bin and opens it; Rosa likewise.
+      await place(page, 14, 13, 'down');
+      await sleep(1300); // camera settles
+      t.reset();
+      const bin = await tileScreen(page, 12, 9);
+      await t.tap(bin.x, bin.y, 70);
+      await page
+        .waitForFunction(
+          () =>
+            window.__farm.game.scene
+              .getScene('UI')
+              .allModals()
+              .some((m) => m.isOpen),
+          null,
+          {
+            timeout: 6000,
+          },
+        )
+        .catch(() => undefined);
+      check(
+        `${tag}: one tap on the bin 4 tiles away walks there and opens it`,
+        (await openSheets(page)) === 1 && t.ledger().gestures === 1,
+        `sheets ${await openSheets(page)}, gestures ${t.ledger().gestures}`,
+      );
+      await closeSheets(page);
+
+      // A tap on a far grass tile walks next to it and tills it; the preview shows before the finger lifts.
+      await place(page, 10, 17, 'down');
+      await sleep(1300);
+      const g = await tileScreen(page, 12, 19);
+      await t.down(g.x, g.y);
+      await sleep(180);
+      const previewShown = await page.evaluate(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        return w.highlight.plan.visible;
+      });
+      const stillThere = await player(page);
+      await t.up();
+      await page
+        .waitForFunction(() => !!window.__farm.getState().farm.tiles['12,19'], null, {
+          timeout: 5000,
+        })
+        .catch(() => undefined);
+      check(
+        `${tag}: a held tap previews its path, and on release walks there and works the tile`,
+        previewShown && stillThere.tx === 10 && (await soil(page)) === 1,
+        `preview ${previewShown}, soil ${await soil(page)}`,
+      );
+
+      // The stick cancels a walk at once, with no act afterwards; a second tap retargets.
+      await place(page, 10, 17, 'down');
+      await sleep(1300);
+      const far2 = await tileScreen(page, 12, 22); // in the home plot (9-12 x 16-23)
+      await t.tap(far2.x, far2.y, 60);
+      await sleep(250);
+      await t.down(L.stickHome.x, L.stickHome.y);
+      await t.move(L.stickHome.x, L.stickHome.y - 16);
+      await sleep(120);
+      const routeGone = await page.evaluate(
+        () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
+      );
+      await t.up();
+      await sleep(1500);
+      check(
+        `${tag}: a stick push cancels a tap's walk at once and nothing is worked afterwards`,
+        routeGone && (await soil(page)) === 0,
+        `route cleared ${routeGone}, soil ${await soil(page)}`,
+      );
+      await place(page, 10, 17, 'down');
+      await sleep(1300);
+      const a1 = await tileScreen(page, 12, 22);
+      await t.tap(a1.x, a1.y, 60);
+      await sleep(200);
+      const a2 = await tileScreen(page, 9, 22); // the camera follows the walk: map the tile now
+      await t.tap(a2.x, a2.y, 60);
+      await page
+        .waitForFunction(() => Object.keys(window.__farm.getState().farm.tiles).length > 0, null, {
+          timeout: 5000,
+        })
+        .catch(() => undefined);
+      await sleep(400);
+      const worked = await page.evaluate(() => Object.keys(window.__farm.getState().farm.tiles));
+      check(
+        `${tag}: a second tap mid-walk retargets: only the new tile is worked`,
+        worked.length === 1 && worked[0] !== '12,22', // the first target is never worked
+        worked.join(' '),
+      );
+
+      // Grazes on the dock and hotbar never reach the world.
+      await place(page, 10, 17, 'down');
+      await sleep(300);
+      const before = await player(page);
+      for (const [gx, gy] of [
+        [L.stickHome.x, 300],
+        [100, 366],
+        [L.action.x - 40, 360],
+        [30, 395],
+      ]) {
+        await t.tap(gx, gy, 70);
+        await sleep(150);
+      }
+      await sleep(500);
+      const after = await player(page);
+      check(
+        `${tag}: taps on the dock and hotbar never walk the farmer`,
+        after.tx === before.tx && after.ty === before.ty && (await soil(page)) === 0,
+        `${before.tx},${before.ty} -> ${after.tx},${after.ty}`,
+      );
+
+      // Tap accuracy, in the page's real camera: Gaussian thumbs (1.5 and 2.5 mm, 1.5 mm toward the thumb
+      // base) at the bin and at a ripe crop resolve to that target; crop misses never act on another tile.
+      await place(
+        page,
+        14,
+        13,
+        'down',
+        "s.farm.tiles = { '13,17': { watered: true, crop: { cropId: 'parsnip', stage: 9, daysInStage: 0, regrow: false } } }; s.placed.farm = [{ id: 950, type: 'preserve_jar', tx: 16, ty: 15, data: {} }]; f.gameEvents.emit('placedChanged', { map: 'farm' });",
+      );
+      await sleep(1300);
+      const acc = await page.evaluate(
+        ({ mm, hand }) => {
+          const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+          let seed = 7;
+          const u = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+          const g = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+          const cam = w.cameras.main;
+          const out = {};
+          for (const [name, tx, ty, kind] of [
+            ['bin', 12, 9, 'interact'],
+            ['jar', 16, 15, 'interact'],
+            ['crop', 13, 17, 'act'],
+          ])
+            for (const sigma of [1.5, 2.5]) {
+              let hit = 0;
+              let wrongAct = 0;
+              let otherSheet = 0;
+              for (let i = 0; i < 200; i++) {
+                const off = 1.06 * mm; // 1.5 mm toward the thumb base, split over x and y
+                const sx =
+                  tx * 16 +
+                  8 -
+                  cam.scrollX +
+                  cam.x +
+                  g() * sigma * mm +
+                  (hand === 'left' ? -off : off);
+                const sy = ty * 16 + 8 - cam.scrollY + cam.y + g() * sigma * mm + off;
+                const plan = w.planTap(sx, sy);
+                const i2 = plan?.intent;
+                const onTarget =
+                  i2 && i2.target.tx === tx && i2.target.ty === ty && i2.kind === kind;
+                if (onTarget) hit++;
+                else if (i2?.kind === 'act' && i2.plan !== 'till') wrongAct++;
+                else if (i2?.kind === 'interact') otherSheet++;
+              }
+              out[`${name}@${sigma}`] = {
+                hit: hit / 200,
+                otherSheet: otherSheet / 200,
+                wrongAct: wrongAct / 200,
+              };
+            }
+          return out;
+        },
+        { mm, hand },
+      );
+      console.log(`      ${tag} tap accuracy: ${JSON.stringify(acc)}`);
+      // The jar stands alone: it must catch >= 95% / 85%. The bin has the mailbox right beside it, so a miss
+      // there may open the mailbox: still a sheet, never an act; bin-or-sheet must meet the same bar.
+      check(
+        `${tag}: taps at a machine resolve to it >= 95% at 1.5 mm and >= 85% at 2.5 mm`,
+        acc['jar@1.5'].hit >= 0.95 && acc['jar@2.5'].hit >= 0.85,
+        JSON.stringify(acc),
+      );
+      check(
+        `${tag}: taps at the bin open the bin (or the mailbox beside it) >= 95% / 85%`,
+        acc['bin@1.5'].hit + acc['bin@1.5'].otherSheet >= 0.95 &&
+          acc['bin@2.5'].hit + acc['bin@2.5'].otherSheet >= 0.85,
+        JSON.stringify(acc),
+      );
+      check(
+        `${tag}: taps near a ripe crop never harvest, water or plant a different tile`,
+        acc['crop@1.5'].wrongAct === 0 && acc['crop@2.5'].wrongAct === 0,
+        JSON.stringify(acc),
+      );
+
       // --- Grid feel (M2): a flick in a new direction turns in place; every release rests on a tile centre.
       const flickFails = [];
-      for (const ms of [60, 90, 140, 200]) {
+      let flickSkipped = 0;
+      for (const ms of [60, 90, 120, 150]) {
         for (const [dir, dx, dy] of [
           ['right', 1, 0],
           ['up', 0, -1],
@@ -215,20 +427,32 @@ try {
           await place(page, 10, 17, 'down');
           await sleep(150);
           const f0 = await player(page);
+          await page.evaluate(() => (window.__touchLog = []));
           await t.down(L.stickHome.x, L.stickHome.y);
           await t.move(L.stickHome.x + dx * 16, L.stickHome.y + dy * 16);
-          await sleep(ms);
+          await sleep(Math.max(0, ms - 25)); // the touch takes ~25 ms more to reach the page than this
           await t.up();
           await sleep(300);
           const f1 = await player(page);
+          // The push the game saw: from the move that left the deadzone to the lift, measured in the page.
+          const log = await page.evaluate(() => window.__touchLog);
+          const mv = log.find((e) => e.type === 'touchmove');
+          const end = log.find((e) => e.type === 'touchend');
+          const actual = mv && end ? end.t - mv.t : 0;
+          if (actual > 150) {
+            flickSkipped++;
+            continue; // the harness lagged past the 150 ms bar; not a fair sample
+          }
           if (f1.tx !== f0.tx || f1.ty !== f0.ty || f1.facing !== dir)
-            flickFails.push(`${dir} ${ms}ms -> ${f1.tx},${f1.ty} ${f1.facing}`);
+            flickFails.push(
+              `${dir} ${ms}ms (${Math.round(actual)} measured) -> ${f1.tx},${f1.ty} ${f1.facing}`,
+            );
         }
       }
       check(
-        `${tag}: flicks of 60-200 ms in a new direction turn without leaving the tile`,
-        flickFails.length === 0,
-        flickFails.join('; '),
+        `${tag}: flicks of 60-150 ms in a new direction turn without leaving the tile`,
+        flickFails.length === 0 && flickSkipped <= 2,
+        `${flickFails.join('; ')} (${flickSkipped} skipped: harness lag)`,
       );
       const offCentre = [];
       for (const ms of [180, 260, 340, 420, 610]) {

@@ -151,6 +151,10 @@ export class MenuPanel extends Modal {
     this.rebuild();
   }
 
+  clearCursor(): void {
+    this.cursor = null;
+  }
+
   get selectedCursor(): number | null {
     return this.cursor;
   }
@@ -230,6 +234,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       () => {
         equipFromBag(getState(), cursor);
         audio.play('select');
+        menu.clearCursor(); // the item left the bag: reopening must not show a stale selection
         c.close();
       },
       { textColor: C.green, rim: C.green },

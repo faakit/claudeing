@@ -1,0 +1,194 @@
+import { describe, expect, it } from 'vitest';
+import { spawnPosition, type PlayerState } from '../src/state/GameState';
+import {
+  createGrid,
+  createMoveState,
+  createRoute,
+  stepRoute,
+  type CollisionGrid,
+} from '../src/systems/movement';
+import { findPath, pathToFace, standTiles } from '../src/systems/pathfind';
+import { SNAP_PX, tapIntent, type TapWorld } from '../src/systems/tapIntent';
+import type { TileCoord } from '../src/systems/world';
+
+const TS = 16;
+function gridFrom(rows: string[]): CollisionGrid {
+  return createGrid(
+    rows[0]!.length,
+    rows.length,
+    TS,
+    rows.flatMap((r) => [...r].map((c) => (c === '#' ? 1 : 0))),
+  );
+}
+const ROOM = gridFrom([
+  '##########',
+  '#........#',
+  '#.####...#',
+  '#....#...#',
+  '#....#...#',
+  '##########',
+]);
+
+describe('pathfind', () => {
+  it('finds the shortest 4-way path around walls', () => {
+    const p = findPath(ROOM, { tx: 1, ty: 3 }, [{ tx: 6, ty: 3 }])!;
+    expect(p[0]).toEqual({ tx: 1, ty: 3 });
+    expect(p[p.length - 1]).toEqual({ tx: 6, ty: 3 });
+    // around the wall: up the left side, along row 1, down the right side
+    expect(p.length).toBe(1 + 2 + 5 + 2);
+    for (let i = 1; i < p.length; i++)
+      expect(Math.abs(p[i]!.tx - p[i - 1]!.tx) + Math.abs(p[i]!.ty - p[i - 1]!.ty)).toBe(1);
+  });
+
+  it('returns null when the goal is unreachable or solid', () => {
+    const boxed = gridFrom(['#####', '#.#.#', '#####']);
+    expect(findPath(boxed, { tx: 1, ty: 1 }, [{ tx: 3, ty: 1 }])).toBeNull();
+    expect(findPath(ROOM, { tx: 1, ty: 1 }, [{ tx: 2, ty: 2 }])).toBeNull();
+  });
+
+  it('never walks through a door unless the door is the goal', () => {
+    const corridor = gridFrom(['#####', '#...#', '#...#', '#####']);
+    const door = (tx: number, ty: number) => tx === 2 && ty === 1;
+    const p = findPath(corridor, { tx: 1, ty: 1 }, [{ tx: 3, ty: 1 }], { avoid: door })!;
+    expect(p.some((t) => door(t.tx, t.ty))).toBe(false);
+    const q = findPath(corridor, { tx: 1, ty: 1 }, [{ tx: 2, ty: 1 }], { avoid: door })!;
+    expect(q[q.length - 1]).toEqual({ tx: 2, ty: 1 });
+  });
+
+  it('stands next to a target and faces it', () => {
+    const r = pathToFace(ROOM, { tx: 1, ty: 1 }, { tx: 3, ty: 2 })!; // a wall tile: stand above it
+    expect(r.path[r.path.length - 1]).toEqual({ tx: 3, ty: 1 });
+    expect(r.face).toBe('down');
+    expect(standTiles({ tx: 3, ty: 2 })).toHaveLength(4);
+    // already next to it: no walk, just face
+    const here = pathToFace(ROOM, { tx: 3, ty: 1 }, { tx: 3, ty: 2 })!;
+    expect(here.path).toEqual([{ tx: 3, ty: 1 }]);
+  });
+
+  it('takes well under 2 ms on a 60x60 map', () => {
+    const rows = Array.from({ length: 60 }, (_, y) =>
+      Array.from({ length: 60 }, (_, x) =>
+        x === 0 || y === 0 || x === 59 || y === 59 || (x % 6 === 3 && y % 9 !== 4) ? '#' : '.',
+      ).join(''),
+    );
+    const g = gridFrom(rows);
+    const t0 = performance.now();
+    for (let i = 0; i < 50; i++) findPath(g, { tx: 1, ty: 1 }, [{ tx: 58, ty: 58 }]);
+    expect((performance.now() - t0) / 50).toBeLessThan(2);
+  });
+});
+
+describe('walking a route', () => {
+  it('walks centre to centre and arrives exactly on the last centre', () => {
+    const p: PlayerState = { map: 't', ...spawnPosition(1, 3), facing: 'down' };
+    const ms = createMoveState();
+    const path = findPath(ROOM, { tx: 1, ty: 3 }, [{ tx: 6, ty: 3 }])!;
+    const route = createRoute(path);
+    let res: string = 'moving';
+    let frames = 0;
+    while (res === 'moving' && frames < 1000) {
+      res = stepRoute(p, ms, route, 16, ROOM);
+      frames++;
+    }
+    expect(res).toBe('arrived');
+    expect(p.x).toBeCloseTo(spawnPosition(6, 3).x, 6);
+    expect(p.y).toBeCloseTo(spawnPosition(6, 3).y, 6);
+    // 9 tiles at 64 px/s is 2.25 s
+    expect(frames * 16).toBeLessThan(2400);
+  });
+
+  it('reports blocked when something stands in the way', () => {
+    const p: PlayerState = { map: 't', ...spawnPosition(1, 1), facing: 'right' };
+    const route = createRoute([
+      { tx: 1, ty: 1 },
+      { tx: 2, ty: 1 },
+    ]);
+    const blocked = gridFrom(['####', '#.##', '####']);
+    let res: string = 'moving';
+    for (let i = 0; i < 20 && res === 'moving'; i++)
+      res = stepRoute(p, createMoveState(), route, 16, blocked);
+    expect(res).toBe('blocked');
+  });
+});
+
+describe('tap intent', () => {
+  /** A little farm: a bin at (5,2), a ripe crop at (2,4), a wall at (8,1), grass elsewhere. */
+  const world = (over: Partial<TapWorld> = {}): TapWorld => ({
+    tileSize: TS,
+    inMap: (t) => t.tx >= 0 && t.ty >= 0 && t.tx < 10 && t.ty < 8,
+    blocked: (t) => (t.tx === 5 && t.ty === 2) || (t.tx === 8 && t.ty === 1),
+    interactable: (t) => (t.tx === 5 && t.ty === 2 ? 'bin' : null),
+    actKind: (t) => (t.tx === 2 && t.ty === 4 ? 'harvest' : null),
+    ...over,
+  });
+  const at = (t: TileCoord, ox = 8, oy = 8) => [t.tx * TS + ox, t.ty * TS + oy] as const;
+
+  it('interact > act > walk on the tapped tile', () => {
+    expect(tapIntent(world(), ...at({ tx: 5, ty: 2 }))).toMatchObject({
+      kind: 'interact',
+      type: 'bin',
+    });
+    expect(tapIntent(world(), ...at({ tx: 2, ty: 4 }))).toMatchObject({
+      kind: 'act',
+      plan: 'harvest',
+    });
+    expect(tapIntent(world(), ...at({ tx: 3, ty: 6 }))).toMatchObject({ kind: 'walk' });
+    expect(tapIntent(world(), ...at({ tx: 8, ty: 1 }))).toMatchObject({ kind: 'none' });
+  });
+
+  it('a near miss on a bin snaps to it; a farther one walks', () => {
+    // 4 px left of the bin's tile, on the grass tile beside it
+    const near = tapIntent(world(), 5 * TS - 4, 2 * TS + 8);
+    expect(near).toMatchObject({ kind: 'interact', type: 'bin', snapped: true });
+    const far = tapIntent(world(), 5 * TS - SNAP_PX - 2, 2 * TS + 8);
+    expect(far.kind).toBe('walk');
+  });
+
+  it('a miss next to a crop never works a different tile: it walks', () => {
+    const r = tapIntent(world(), 3 * TS + 2, 4 * TS + 8); // just right of the ripe crop
+    expect(r.kind).toBe('walk');
+  });
+
+  it('a magnet never steals a tap that would act (tilling around a sprinkler stays tilling)', () => {
+    const w = world({
+      actKind: (t) => (t.tx === 4 && t.ty === 2 ? 'till' : null),
+    });
+    expect(tapIntent(w, 5 * TS - 3, 2 * TS + 8)).toMatchObject({ kind: 'act', plan: 'till' });
+    expect(tapIntent(w, 6 * TS + 2, 2 * TS + 8)).toMatchObject({ kind: 'interact', type: 'bin' });
+  });
+
+  it('accuracy: Gaussian taps at the bin resolve to it >= 95% at 1.5 mm and >= 85% at 2.5 mm', () => {
+    // iPhone 13: 1 mm = 3.17 logical px. Thumbs also land ~1.5 mm toward the thumb base (down-right).
+    let s = 99;
+    const u = () => ((s = (s * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+    const g = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+    const px = 3.17;
+    for (const [sigmaMm, need] of [
+      [1.5, 0.95],
+      [2.5, 0.85],
+    ] as const) {
+      let hit = 0;
+      for (let i = 0; i < 2000; i++) {
+        const x = 5 * TS + 8 + (g() * sigmaMm + 1.06) * px;
+        const y = 2 * TS + 8 + (g() * sigmaMm + 1.06) * px;
+        const r = tapIntent(world(), x, y);
+        if (r.kind === 'interact') hit++;
+      }
+      expect(hit / 2000, `${sigmaMm} mm`).toBeGreaterThanOrEqual(need);
+    }
+  });
+});
+
+describe('touch offset compensation', () => {
+  it('moves a tap up and away from the thumb base by about 1 mm, mirrored for the left hand', async () => {
+    const { compensateTouch } = await import('../src/systems/tapIntent');
+    const r = compensateTouch(100, 200, false, 1.9);
+    expect(r.x).toBeLessThan(100);
+    expect(r.y).toBeLessThan(200);
+    expect(100 - r.x).toBeCloseTo(200 - r.y, 6);
+    expect(100 - r.x).toBeGreaterThan(1.5);
+    expect(100 - r.x).toBeLessThan(3.5); // ~0.7 mm per axis on a 1.9 css/logical phone
+    const l = compensateTouch(100, 200, true, 1.9);
+    expect(l.x).toBeGreaterThan(100);
+  });
+});

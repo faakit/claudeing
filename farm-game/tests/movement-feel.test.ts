@@ -37,7 +37,7 @@ function at(tx: number, ty: number, facing: Direction = 'down'): PlayerState {
 /** Push `dir` for `ms` (16 ms frames), then release and let any settle finish. */
 function push(p: PlayerState, m: MoveState, dir: Direction | null, ms: number, grid = OPEN) {
   let moved = 0;
-  for (let t = 0; t < ms; t += 16) if (stepMove(p, m, dir, 16, grid).moving) moved++;
+  for (let t = 16; t <= ms; t += 16) if (stepMove(p, m, dir, 16, grid).moving) moved++;
   return moved;
 }
 const release = (p: PlayerState, m: MoveState, grid = OPEN) => push(p, m, null, 400, grid);
@@ -56,8 +56,8 @@ describe('turn in place', () => {
     }
   });
 
-  it('flicks up to 200 ms in a new direction never change tile', () => {
-    for (const ms of [60, 100, 140, 180, 200]) {
+  it('flicks up to 150 ms in a new direction never change tile', () => {
+    for (const ms of [60, 100, 140, 150]) {
       const p = at(4, 3, 'down');
       const m = createMoveState();
       push(p, m, 'left', ms);
@@ -92,6 +92,45 @@ describe('turn in place', () => {
     const y0 = p.y;
     stepMove(p, m, 'down', 16, OPEN);
     expect(p.y).toBeGreaterThan(y0);
+  });
+});
+
+describe('short pushes are steps, never rubber bands', () => {
+  /** Push, release, settle; report tiles moved and the largest slide back from the furthest point. */
+  function nudge(dir: Direction, facing: Direction, ms: number) {
+    const p = at(4, 3, facing);
+    const m = createMoveState();
+    const axis = dir === 'left' || dir === 'right' ? 'x' : 'y';
+    const sign = dir === 'right' || dir === 'down' ? 1 : -1;
+    const start = p[axis];
+    let furthest = 0;
+    for (let t = 16; t <= ms; t += 16) {
+      // whole 16 ms frames inside the push (a 150 ms push spans 9 frames)
+      stepMove(p, m, dir, 16, OPEN);
+      furthest = Math.max(furthest, (p[axis] - start) * sign);
+    }
+    for (let t = 0; t < 400; t += 16) {
+      stepMove(p, m, null, 16, OPEN);
+      furthest = Math.max(furthest, (p[axis] - start) * sign);
+    }
+    const moved = ((p[axis] - start) * sign) / TS;
+    return { tiles: Math.round(moved), slideBack: furthest - (p[axis] - start) * sign };
+  }
+
+  it('a push the way you face of 100 ms or more is exactly one tile (up to ~250 ms)', () => {
+    for (const ms of [100, 130, 160, 200, 240])
+      expect(nudge('right', 'right', ms).tiles, `${ms}`).toBe(1);
+  });
+
+  it('a new-direction push of 150 ms or less stays; longer ones step one tile', () => {
+    for (const ms of [60, 100, 150]) expect(nudge('down', 'right', ms).tiles, `${ms}`).toBe(0);
+    for (const ms of [200, 260, 300]) expect(nudge('down', 'right', ms).tiles, `${ms}`).toBe(1);
+  });
+
+  it('no push under 250 ms slides back more than 4 px', () => {
+    for (const facing of ['right', 'up'] as const)
+      for (let ms = 16; ms < 250; ms += 16)
+        expect(nudge('right', facing, ms).slideBack, `${facing} ${ms}`).toBeLessThanOrEqual(4);
   });
 });
 

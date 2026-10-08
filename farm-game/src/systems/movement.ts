@@ -3,6 +3,7 @@ import {
   MAX_FRAME_MS,
   PLAYER_HITBOX,
   PLAYER_SPEED,
+  FIRST_STEP_COMMIT_PX,
   SETTLE_BACK_PX,
   SETTLE_SPEED,
   TURN_HOLD_MS,
@@ -176,6 +177,11 @@ export interface MoveState {
   sign: number;
   /** The glide in progress: a target coordinate on `axis`. */
   settle: number | null;
+  /**
+   * Where the current walk started on its axis, when that was a tile centre: until the walk passes the next
+   * centre, a release commits to that next tile after `FIRST_STEP_COMMIT_PX`, so a short nudge is a step.
+   */
+  walkStart: number | null;
 }
 
 export const createMoveState = (): MoveState => ({
@@ -185,7 +191,14 @@ export const createMoveState = (): MoveState => ({
   axis: null,
   sign: 0,
   settle: null,
+  walkStart: null,
 });
+
+/** Is `pos` a tile centre on this axis (within a hair)? */
+function onCentre(pos: number, axis: 'x' | 'y', hb: Hitbox, ts: number): boolean {
+  const rel = (pos - centreOffset(axis, hb, ts)) / ts;
+  return Math.abs(rel - Math.round(rel)) * ts < 0.5;
+}
 
 /** Tile-centre coordinates along an axis (feet y sits `h/2` below the box centre). */
 const centreOffset = (axis: 'x' | 'y', hb: Hitbox, ts: number) =>
@@ -199,6 +212,7 @@ export function settleTarget(
   grid: CollisionGrid,
   other: number,
   hb: Hitbox = PLAYER_HITBOX,
+  walkStart: number | null = null,
 ): number | null {
   const ts = grid.tileSize;
   const off = centreOffset(axis, hb, ts);
@@ -209,7 +223,10 @@ export function settleTarget(
   const past = Math.abs(pos - back);
   const open = (c: number) =>
     !boxBlocked(grid, axis === 'x' ? c : other, axis === 'x' ? other : c, hb);
-  const first = past < SETTLE_BACK_PX ? back : fwd;
+  // The first tile of a walk: a short nudge that got going is a step, not a slide back.
+  const firstStep = walkStart !== null && Math.abs(back - walkStart) < 0.01;
+  const window = firstStep ? FIRST_STEP_COMMIT_PX : SETTLE_BACK_PX;
+  const first = past < window ? back : fwd;
   const second = first === back ? fwd : back;
   if (open(first)) return first;
   return open(second) ? second : null;
@@ -242,8 +259,15 @@ export function stepMove(
     ms.turnDir = null;
     ms.settle = null;
     const v = DIR_VECTORS[dir];
-    ms.axis = v.x !== 0 ? 'x' : 'y';
-    ms.sign = v.x !== 0 ? v.x : v.y;
+    const axis = v.x !== 0 ? 'x' : 'y';
+    const sign = v.x !== 0 ? v.x : v.y;
+    // A walk starts (from a standstill, or turning onto a new axis or back): remember where, if on a centre.
+    if (!ms.moving || ms.axis !== axis || ms.sign !== sign) {
+      const pos = axis === 'x' ? player.x : player.y;
+      ms.walkStart = onCentre(pos, axis, hb, grid.tileSize) ? pos : null;
+    }
+    ms.axis = axis;
+    ms.sign = sign;
     const r = stepPlayer(player, dir, dt, grid, hb);
     ms.moving = r.moving;
     // Pushing into a wall from standstill still counts as walking (no turn delay next frame).
@@ -255,7 +279,7 @@ export function stepMove(
   if (ms.moving && ms.axis) {
     const pos = ms.axis === 'x' ? player.x : player.y;
     const other = ms.axis === 'x' ? player.y : player.x;
-    ms.settle = settleTarget(pos, ms.axis, ms.sign, grid, other, hb);
+    ms.settle = settleTarget(pos, ms.axis, ms.sign, grid, other, hb, ms.walkStart);
   }
   ms.moving = false;
   return { moving: glide(player, ms, dt, grid, hb) };
@@ -279,4 +303,78 @@ function glide(
   player.y = r.y;
   if (r.hit || Math.abs(left) <= step) ms.settle = null;
   return delta !== 0 && !r.hit;
+}
+
+/** A walk along tile centres (tap-to-move), runtime only. `i` is the next waypoint. */
+export interface Route {
+  path: { tx: number; ty: number }[];
+  i: number;
+  /** Frames in a row without progress (a villager stepped in the way). */
+  stuck: number;
+}
+
+export const createRoute = (path: { tx: number; ty: number }[]): Route => ({
+  path,
+  i: 0,
+  stuck: 0,
+});
+
+/**
+ * Walk one frame along a route, centre to centre, at walking speed and through the same collision as the stick.
+ * Lines up on the cross axis first, so the box never clips a corner. Returns 'arrived' on the last centre and
+ * 'blocked' after a few frames without progress.
+ */
+export function stepRoute(
+  player: PlayerState,
+  ms: MoveState,
+  route: Route,
+  dtMs: number,
+  grid: CollisionGrid,
+  hb: Hitbox = PLAYER_HITBOX,
+): 'moving' | 'arrived' | 'blocked' {
+  let budget = (PLAYER_SPEED * Math.min(dtMs, MAX_FRAME_MS)) / 1000;
+  const ts = grid.tileSize;
+  ms.settle = null;
+  ms.turnDir = null;
+  while (budget > 1e-6) {
+    const wp = route.path[route.i];
+    if (!wp) {
+      ms.moving = false;
+      return 'arrived';
+    }
+    const cx = wp.tx * ts + ts / 2;
+    const cy = wp.ty * ts + ts / 2 + hb.h / 2;
+    const dx = cx - player.x;
+    const dy = cy - player.y;
+    if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) {
+      route.i++;
+      continue;
+    }
+    // Finish the smaller offset first (usually a leftover from the stick), then the move to the next centre.
+    const axis: 'x' | 'y' =
+      Math.abs(dx) < 1e-6
+        ? 'y'
+        : Math.abs(dy) < 1e-6
+          ? 'x'
+          : Math.abs(dx) <= Math.abs(dy)
+            ? 'x'
+            : 'y';
+    const left = axis === 'x' ? dx : dy;
+    const step = Math.sign(left) * Math.min(Math.abs(left), budget);
+    player.facing = axis === 'x' ? (step > 0 ? 'right' : 'left') : step > 0 ? 'down' : 'up';
+    const r = moveAxis(grid, hb, player.x, player.y, axis, step);
+    const moved = Math.abs(r.x - player.x) + Math.abs(r.y - player.y);
+    player.x = r.x;
+    player.y = r.y;
+    ms.moving = true;
+    ms.axis = axis;
+    ms.sign = Math.sign(step);
+    if (moved < 1e-6) {
+      route.stuck++;
+      return route.stuck > 6 ? 'blocked' : 'moving';
+    }
+    route.stuck = 0;
+    budget -= moved;
+  }
+  return 'moving';
 }

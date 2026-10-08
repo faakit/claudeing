@@ -53,37 +53,38 @@ describe('dock hit areas', () => {
       expect(resolveTouch(L.interact.x, L.interact.y, hidden)).toBe(null);
     });
 
-    it(`${hand}: 500 jittered thumbs aimed inside Action (2.5 mm, iPhone 13) rarely press Interact`, () => {
-      const g = gauss(left ? 7 : 3);
-      let k = left ? 11 : 5;
-      const u = () => ((k = (k * 69069 + 1) >>> 0) + 0.5) / 4294967296;
-      const sigma = 2.5 * logicalPerMm(PHONES[0]!);
-      let toInteract = 0;
-      let i = 0;
-      while (i < 500) {
-        // a true centre uniformly inside Action's drawn disc (edges included: the worst case)
-        const cx = (u() * 2 - 1) * L.action.r;
-        const cy = (u() * 2 - 1) * L.action.r;
-        if (Math.hypot(cx, cy) > L.action.r) continue;
-        i++;
-        const hit = resolveTouch(
-          L.action.x + cx + g() * sigma,
-          L.action.y + cy + g() * sigma,
-          spots,
-        );
-        if (hit === 'interact') toInteract++;
-      }
-      // Action owns its whole touch circle; only a touch that lands beyond it, near Interact, goes there.
-      expect(toInteract / 500).toBeLessThanOrEqual(0.01);
-      // and a touch that lands anywhere in Action's touch circle never does
-      for (let a = 0; a < 360; a += 3) {
-        const r = L.action.hit - 0.01;
-        const rad = (a * Math.PI) / 180;
-        expect(
-          resolveTouch(L.action.x + Math.cos(rad) * r, L.action.y + Math.sin(rad) * r, spots),
-        ).toBe('action');
-      }
-    });
+    for (const phone of PHONES)
+      it(`${hand} ${phone.id}: 500 jittered thumbs aimed inside Action (2.5 mm) rarely press Interact`, () => {
+        const g = gauss(left ? 7 : 3);
+        let k = left ? 11 : 5;
+        const u = () => ((k = (k * 69069 + 1) >>> 0) + 0.5) / 4294967296;
+        const sigma = 2.5 * logicalPerMm(phone);
+        let toInteract = 0;
+        let i = 0;
+        while (i < 500) {
+          // a true centre uniformly inside Action's drawn disc (edges included: the worst case)
+          const cx = (u() * 2 - 1) * L.action.r;
+          const cy = (u() * 2 - 1) * L.action.r;
+          if (Math.hypot(cx, cy) > L.action.r) continue;
+          i++;
+          const hit = resolveTouch(
+            L.action.x + cx + g() * sigma,
+            L.action.y + cy + g() * sigma,
+            spots,
+          );
+          if (hit === 'interact') toInteract++;
+        }
+        // Action owns its whole touch circle; only a touch that lands beyond it, near Interact, goes there.
+        expect(toInteract / 500).toBeLessThanOrEqual(0.01);
+        // and a touch that lands anywhere in Action's touch circle never does
+        for (let a = 0; a < 360; a += 3) {
+          const r = L.action.hit - 0.01;
+          const rad = (a * Math.PI) / 180;
+          expect(
+            resolveTouch(L.action.x + Math.cos(rad) * r, L.action.y + Math.sin(rad) * r, spots),
+          ).toBe('action');
+        }
+      });
   }
 });
 
@@ -111,8 +112,12 @@ describe('dock reach (thumb model, both hands)', () => {
 });
 
 describe('world touches: tap or stick, never both', () => {
-  it('the stick deadzone is wider than the tap tolerance', () => {
-    expect(GESTURE.stickDeadzone).toBeGreaterThan(GESTURE.tapMaxMove);
+  it('one threshold: a touch is still exactly until the stick would engage', () => {
+    const t = new PressTrack(0, 0, 0);
+    t.move(GESTURE.stickDeadzone - 0.01, 0);
+    expect(t.still).toBe(true);
+    t.move(GESTURE.stickDeadzone, 0);
+    expect(t.still).toBe(false);
   });
 
   it('a still touch is a tap whatever its duration; a stick touch never is', () => {
@@ -161,6 +166,11 @@ describe('Action: hold, swipe, roll', () => {
     }
     return null;
   }
+
+  it('one long frame without touch events never reads as a settled finger', () => {
+    expect(holdMayStart(200, 6, 100, 1)).toBe(false);
+    expect(holdMayStart(200, 6, 100, 2)).toBe(true);
+  });
 
   it('a still press starts working after the hold delay', () => {
     expect(holdStart([])).toBe(Math.ceil(HOLD_ACTION_MS / 16) * 16);

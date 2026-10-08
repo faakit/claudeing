@@ -420,3 +420,56 @@ iPhone 13/14 and Pixel 7 are the primary phones, the SE must pass; right-handed 
   Auto tool, Stick size S/M/L (radius 18/24/32), Left hand, Vibrate. Switches appear as their milestones ship.
 - **Haptic merge:** two pulses within 80 ms merge (a tile worked and a goal completed in the same frame buzz
   once); a stronger pulse replaces a weaker one, never the reverse.
+
+### M4 tap a tile to walk there and act
+
+- **One world-touch handler (`input/WorldTouch.ts`):** a touch that starts on the world view and stays within
+  8 px is a tap whatever its length; after 100 ms still it previews (path dots and a goal marker in the intent's
+  colour); release commits. A touch that moves past 9 px is the stick and never a tap (the preview is
+  dropped). Touches that start in the dock or on a sheet never reach the world. The tile is read where the
+  finger landed (touch-down), not where a rolling pad lifted.
+- **What a tap means (`systems/tapIntent.ts`, pure):** interact with the thing on the tile > act on the tile
+  (what the auto tool would do there) > walk onto it. Interact targets are magnets for 3 mm around their tile
+  (converted per screen) when the tap would only walk or hit something solid; a tap that would act stays an act
+  (tilling round a sprinkler never opens it). **Acts never snap:** a miss next to a crop walks, it never works a
+  different tile, so a sloppy tap can never harvest, water or plant the wrong thing. Your own tile is never
+  worked by a tap. Measured (e2e, 200 taps each, 1.5 mm toward the thumb base): a lone machine 100% at 1.5 mm
+  and 89-97% at 2.5 mm; the bin, which has the mailbox beside it, opens the bin or the mailbox 100% / 94-97%;
+  a single crop tile 64-86% / 36-49% (a 4-5 mm tile under a 2.5 mm spread), and 0 wrong-tile acts.
+- **Touch offset compensation:** thumbs land below and toward the thumb base. Taps on the world are read about
+  0.7 mm up and 0.7 mm away from the holding side (mirrored for the left hand), using the CSS reference pixel
+  (about 6.3 CSS px per mm), half of the 1.5 mm offset the controls critic models. Not measured on a real hand.
+- **Walking (`systems/pathfind.ts`, `stepRoute`):** breadth-first 4-way search on the collision grid (well under
+  2 ms on a 60x60 map), to a tile next to the target from which the farmer faces it; doors are entered only
+  when tapped. The walk follows tile centres through the same collision as the stick. The stick or a key
+  cancels it at once; a second tap retargets; a villager stepping in the way stops it with a refusal ring.
+  Unreachable: a ring, an error pulse and "Can't get there."
+- **Off switch:** Options > Controls > Tap to walk OFF restores the old rule (only the 4 tiles next to you).
+- **The target marker lies on the ground** (`MARKER_DEPTH` 0.95: above the ground, soil, tint and flat decor,
+  below every y-sorted sprite at 9 + y). It always was under the farmer; facing up, its brackets peeked out
+  beside the head and read as drawn over it, so acting markers now also wash the tile faintly, which reads as
+  ground. An e2e check pins the order.
+- **Bag fix:** after "Use now" the bag's selection cursor is cleared (it stayed on the emptied cell, so reopening the bag and tapping that cell deselected it instead of opening the card; found by the benchmark).
+
+### Controls review 1 fixes (before M4 landed)
+
+- **One threshold for still and stick (F2):** a touch is still exactly while its travel stays under 9 px, and
+  the stick engages at 9 px; the stick zone now covers the whole world view and the dock, so every touch off a
+  button is a tap or the stick, never nothing. Release buttons (Menu, Interact) cancel at the same 9 px.
+- **Nudges are steps (F3):** the first tile of a walk from a tile centre commits after 4 px
+  (`FIRST_STEP_COMMIT_PX`); the 13 px settle-back applies only once the walk has passed a centre. A push the way
+  you face of 100 ms or more is exactly one tile; a new-direction push of 150 ms or less turns in place (turn
+  hold 90 -> 100 ms); no push under 250 ms slides back more than 4 px (unit tests in whole 16 ms frames).
+- **Taps during a swing are buffered, not dropped (F5):** the walk (even a zero-length one) waits for the swing
+  lock and then acts.
+- **Menu radius 14 -> 16 (touch 24), Interact at (98, 342) (F6, F7):** with 2.5 mm jitter around aims over
+  Action's whole disc, Interact presses stay under 1% on all five phones (SE was 1.3-1.8%).
+- **Hold settle needs 2 rendered frames (F9)** as well as 60 ms without vertical movement, so one long frame
+  that holds touch events back never starts a hold mid-swipe.
+- **The "nothing to do" dots are stronger (F10):** 2x2 at full colour on a darker 4x4 underlay, 85% alpha.
+- **Settle window and reaction spread (F4, not met by design):** a tile is 250 ms of walking. Releases at
+  sprite-centre + 180 +- 30 ms land 9.6 to 13.4 px late, anticipation (-40 +- 30 ms) 0.6 to 4.5 px early: 18 px
+  of spread for a 16 px tile, so no position rule can catch both. With the back window at 13 px the model gives
+  about 78% at 180 +- 30, 99.7% at 120 +- 30 and about 59% for anticipation; 14 px would give 90% / 38%. Kept at
+  13 (the bench now has REACTION_SD and negative REACTION_MS to measure it). Tap-to-walk makes exact stick stops
+  unnecessary for errands, and the two-speed stick (M7) is the precision answer.

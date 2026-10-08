@@ -5,9 +5,10 @@
  */
 
 export const GESTURE = {
-  /** A touch whose travel never exceeded this is still: a tap, a press, a long-press. */
-  tapMaxMove: 8,
-  /** The floating stick engages only past this, so a still touch can never also walk. Must exceed tapMaxMove. */
+  /**
+   * One threshold for "still" and "stick": a touch whose travel stays under this is still (a tap, a press, a
+   * long-press); the moment it reaches it, the floating stick engages. No touch is ever both, or neither.
+   */
   stickDeadzone: 9,
   /** Vertical travel on Action per tool step. */
   swipeStep: 14,
@@ -30,9 +31,9 @@ export class PressTrack {
     return d;
   }
 
-  /** Still for the whole touch: never strayed past the tap tolerance. */
+  /** Still for the whole touch: never reached the stick's deadzone. */
   get still(): boolean {
-    return this.maxTravel <= GESTURE.tapMaxMove;
+    return this.maxTravel < GESTURE.stickDeadzone;
   }
 }
 
@@ -75,7 +76,11 @@ export function holdMayStart(
   sinceDownMs: number,
   dy: number,
   msSinceVerticalMove: number,
+  framesSinceVerticalMove = Infinity,
 ): boolean {
   if (sinceDownMs < HOLD_ACTION_MS) return false;
-  return Math.abs(dy) < HOLD_JITTER || msSinceVerticalMove >= HOLD_SETTLE_MS;
+  // Settled = no vertical change for 60 ms AND across at least 2 rendered frames, so one long frame (a GC
+  // pause holding the touch events back) never reads as a still finger mid-swipe.
+  const settled = msSinceVerticalMove >= HOLD_SETTLE_MS && framesSinceVerticalMove >= 2;
+  return Math.abs(dy) < HOLD_JITTER || settled;
 }

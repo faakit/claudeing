@@ -7,8 +7,12 @@ export interface TapPoint {
 export interface InputEvents {
   action: undefined;
   interact: undefined;
-  /** Short touch in logical screen coordinates. */
+  /** A still touch on the world lifted (logical screen coordinates): commit a tap. */
   tap: TapPoint;
+  /** A touch on the world has been still for a moment: preview what a tap there would do. */
+  tapPreview: TapPoint;
+  /** The previewed touch turned into a drag (the stick) or left the world: drop the preview. */
+  tapCancel: undefined;
   /** Hotbar slot picked by number key (0-based). */
   slot: number;
   /** Cycle the hotbar by +1 / -1 (wheel, Tab). */

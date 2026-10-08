@@ -41,8 +41,8 @@ export const HIT_MARGIN = 8;
  */
 const REF = {
   action: { x: 160, y: DOCK_Y + 36, r: 28 },
-  interact: { x: 104, y: DOCK_Y + 50, r: 20 },
-  menu: { x: 58, y: DOCK_Y + 16, r: 14 },
+  interact: { x: 98, y: DOCK_Y + 54, r: 20 },
+  menu: { x: 58, y: DOCK_Y + 18, r: 16 },
   stickHome: { x: 56, y: DOCK_Y + 58 },
   dragHint: { x: 60, y: DOCK_Y - 40 },
 } as const;

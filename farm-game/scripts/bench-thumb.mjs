@@ -38,8 +38,27 @@ const thresholds = allThresholds[milestone] ?? {};
 // Since M2 the farmer settles onto the tile centre it was last near, so even a perfect player aims at the
 // sprite's centre (STOP=center, the default). STOP=tile releases on the hidden tile index (the old perfect bot).
 const centreStop = (process.env.STOP ?? 'center') === 'center';
+// Spread of a person's reaction time around REACTION_MS (Gaussian, ms). Rows with REACTION_MS=0 stay perfect
+// unless REACTION_SD is set explicitly.
+const reactionSd = Number(process.env.REACTION_SD ?? 30);
+const sdExplicit = process.env.REACTION_SD !== undefined;
+let seed = Number(process.env.SEED ?? 7);
+const gauss = () => {
+  const u = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+  return Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+};
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+
+/**
+ * Does this build walk on a tap? TAP=0 forces the stick (to bench a build from before M4, whose saves already
+ * carry the setting), TAP=1 forces taps; default: the game's own setting.
+ */
+async function tapModeOn(page) {
+  if (process.env.TAP === '0') return false;
+  if (process.env.TAP === '1') return true;
+  return page.evaluate(() => window.__farm.getState().settings.controls?.tapToMove === true);
+}
 
 function makeWorld(page, thumb, L, reactionMs) {
   const ACTION = { x: L.action.x, y: L.action.y };
@@ -118,8 +137,12 @@ function makeWorld(page, thumb, L, reactionMs) {
     const [dx, dy] = DIRS[seg.dir];
     if (fresh) await thumb.down(JOY.x, JOY.y);
     await thumb.move(JOY.x + dx * 18, JOY.y + dy * 18);
+    // This stop's reaction time: the row's mean plus Gaussian spread (REACTION_SD). Negative = anticipation:
+    // let go that long before the sprite is centred, i.e. `lead` px early at walking speed.
+    const reaction = reactionMs + (reactionMs !== 0 || sdExplicit ? gauss() * reactionSd : 0);
+    const lead = reaction < 0 ? (-reaction * 64) / 1000 : 0;
     await page.waitForFunction(
-      ({ seg, centre, map }) => {
+      ({ seg, centre, map, lead }) => {
         const p = window.__farm.getState().player;
         const fy = p.y - 3;
         const tx = Math.floor(p.x / 16);
@@ -128,12 +151,12 @@ function makeWorld(page, thumb, L, reactionMs) {
           p.map !== map ||
           (centre
             ? seg.dir === 'up'
-              ? fy <= seg.ty * 16 + 8
+              ? fy <= seg.ty * 16 + 8 + lead
               : seg.dir === 'down'
-                ? fy >= seg.ty * 16 + 8
+                ? fy >= seg.ty * 16 + 8 - lead
                 : seg.dir === 'left'
-                  ? p.x <= seg.tx * 16 + 8
-                  : p.x >= seg.tx * 16 + 8
+                  ? p.x <= seg.tx * 16 + 8 + lead
+                  : p.x >= seg.tx * 16 + 8 - lead
             : seg.dir === 'up'
               ? ty <= seg.ty
               : seg.dir === 'down'
@@ -144,13 +167,13 @@ function makeWorld(page, thumb, L, reactionMs) {
         if (hit) window.__crossT = performance.now();
         return hit;
       },
-      { seg, centre: centreStop, map: mapNow },
+      { seg, centre: centreStop, map: mapNow, lead },
       { polling: 'raf', timeout: 15000 },
     );
     if ((await tile()).map !== mapNow) return;
-    if (reactionMs) {
+    if (reaction > 0) {
       const late = await page.evaluate(() => performance.now() - window.__crossT);
-      await sleep(Math.max(0, reactionMs - late - 15)); // ~15 ms for the touch to reach the page
+      await sleep(Math.max(0, reaction - late - 15)); // ~15 ms for the touch to reach the page
     }
     await thumb.move(JOY.x, JOY.y); // back to the centre: stop
     const actual = await page.evaluate(() => (window.__lastTouchT ?? 0) - window.__crossT);
@@ -250,6 +273,31 @@ function makeWorld(page, thumb, L, reactionMs) {
     const c = await tileScreen(page, tx, ty);
     await thumb.tap(c.x, c.y, holdMs);
   }
+  /**
+   * Get to a thing and open it: with tap-to-move (M4+) one tap on it; before that, walk to the stand tile
+   * with the stick and press Interact.
+   */
+  async function goInteract(target, stand, dir) {
+    const tapMode = await tapModeOn(page);
+    if (!tapMode) {
+      await walkTo(stand.tx, stand.ty, dir);
+      await tapInteract();
+      return;
+    }
+    await tapTile(target.tx, target.ty);
+    await page
+      .waitForFunction(
+        () =>
+          window.__farm.game.scene
+            .getScene('UI')
+            .allModals()
+            .some((m) => m.isOpen),
+        null,
+        { timeout: 8000 },
+      )
+      .catch(() => undefined);
+    await sleep(350);
+  }
   return {
     ACTION,
     INTERACT,
@@ -264,6 +312,7 @@ function makeWorld(page, thumb, L, reactionMs) {
     tapSlot,
     tapMenu,
     tapTile,
+    goInteract,
     tile,
   };
 }
@@ -342,8 +391,9 @@ const TASKS = {
     await ripen(page);
     await pass();
     const harvested = await farmCount(page, 'harvested');
+    // With auto tool a held pass may already plant what it tilled, so judge the end state.
     return {
-      ok: tilled === 9 && planted === 9 && watered === 9 && harvested >= 9,
+      ok: planted === 9 && watered === 9 && harvested >= 9 && (auto || tilled === 9),
       auto,
       tilled,
       planted,
@@ -398,8 +448,7 @@ const TASKS = {
       page,
       "s.inventory.slots[9] = { item: 'parsnip', qty: 9 }; s.inventory.slots[10] = { item: 'wild_leek', qty: 3 }; s.inventory.slots[11] = { item: 'daffodil', qty: 2 };",
     );
-    await w.walkTo(12, 10, 'up');
-    await w.tapInteract();
+    await w.goInteract({ tx: 12, ty: 9 }, { tx: 12, ty: 10 }, 'up');
     await w.tapText(/^Ship all produce$/);
     await w.tapText(/^Done$/);
     const shipped = await page.evaluate(() =>
@@ -412,8 +461,7 @@ const TASKS = {
   async villager(w, page) {
     await fresh(page, "s.inventory.slots[9] = { item: 'daffodil', qty: 2 };");
     await page.waitForTimeout(600); // villagers re-sync once per game minute
-    await w.walkTo(16, 13, 'up');
-    await w.tapInteract();
+    await w.goInteract({ tx: 16, ty: 12 }, { tx: 16, ty: 13 }, 'up');
     await w.tapText(/^Gift$/);
     await w.tapText(/^Give$/, 0);
     await w.tapText(/^Close$/);
@@ -428,8 +476,7 @@ const TASKS = {
       "s.placed.farm = [{ id: 950, type: 'preserve_jar', tx: 16, ty: 15, data: {} }]; s.nextPlacedId = 951; s.inventory.slots[9] = { item: 'parsnip', qty: 5 };",
     );
     await page.waitForTimeout(300);
-    await w.walkTo(16, 16, 'up');
-    await w.tapInteract();
+    await w.goInteract({ tx: 16, ty: 15 }, { tx: 16, ty: 16 }, 'up');
     await w.tapText(/^Load$/, 0);
     const data = await page.evaluate(() => window.__farm.getState().placed.farm?.[0]?.data ?? {});
     return { ok: Object.keys(data).length > 0, loaded: data };
@@ -451,8 +498,21 @@ const TASKS = {
     });
     if (!water) throw new Error('no water edge found');
     await w.swipeTool(3);
-    await w.walkTo(water[0], water[1], 'down');
-    await w.tapAction();
+    const tapMode = await tapModeOn(page);
+    if (tapMode) {
+      // M4: walk until the pond is on screen, then tap the water with the rod in hand: walk and cast in one
+      await w.walkTo(water[0], water[1] - 3, 'down');
+      await sleep(600); // camera catches up
+      await w.tapTile(water[0], water[1] + 1);
+      await page
+        .waitForFunction(() => window.__farm.game.scene.getScene('UI').fishing.isOpen, null, {
+          timeout: 8000,
+        })
+        .catch(() => undefined);
+    } else {
+      await w.walkTo(water[0], water[1], 'down');
+      await w.tapAction();
+    }
     await sleep(200);
     const ui = 'window.__farm.game.scene.getScene("UI").fishing';
     const t0 = Date.now();
@@ -500,7 +560,7 @@ function judge(row) {
   else if (row.detail?.ok === false) fails.push('task did not complete');
   // Rows with a reaction delay (a human-like stop) have their own thresholds ("task@human"); without one,
   // only success counts.
-  const th = row.reactionMs > 0 ? thresholds[`${row.task}@human`] : thresholds[row.task];
+  const th = row.reactionMs !== 0 ? thresholds[`${row.task}@human`] : thresholds[row.task];
   if (!th || row.detail?.error) return fails;
   for (const [k, max] of Object.entries(th)) {
     if (k.startsWith('_')) continue;

@@ -87,9 +87,9 @@ export class TouchButton {
     const onMove = (p: Phaser.Input.Pointer) => {
       if (this.pointerId !== p.id) return;
       if (opts.fireOn === 'release') {
-        // Moving past the tap tolerance cancels: the touch is a drag now (maybe the joystick).
+        // Reaching the stick's deadzone cancels: the touch is a drag now (the joystick takes it).
         const d = Math.hypot(p.x - this.start.x, p.y - this.start.y);
-        if (this.pressed && d > GESTURE.tapMaxMove) {
+        if (this.pressed && d >= GESTURE.stickDeadzone) {
           this.pressed = false;
           this.press(false);
         }

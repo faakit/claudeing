@@ -10,8 +10,11 @@ export const HUD_H = 74; // read-only info at the top, out of thumb reach on pur
 export const DOCK_H = 112; // controls + hotbar
 export const DOCK_Y = GAME_HEIGHT - DOCK_H;
 export const WORLD_VIEW = { x: 0, y: HUD_H, w: GAME_WIDTH, h: DOCK_Y - HUD_H } as const;
-/** The floating joystick may start anywhere below this line (the lower ~60% of the screen). */
-export const THUMB_ZONE_Y = 150;
+/**
+ * The floating joystick may start anywhere below this line: the whole world view and the dock, so every touch
+ * off a button is either a tap or the stick (never nothing).
+ */
+export const THUMB_ZONE_Y = HUD_H;
 
 export const MAP_KEYS = { farm: 'map_farm' } as const;
 export const TILESET_KEY = 'tiles_placeholder';
@@ -57,7 +60,12 @@ export const CORNER_ASSIST_PX = 4;
 export const MAX_FRAME_MS = 50;
 export const WALK_FPS = 8;
 /** Turn in place: from a standstill, a push in a new direction walks only after this long (a flick turns). */
-export const TURN_HOLD_MS = 90;
+export const TURN_HOLD_MS = 100;
+/**
+ * The first tile of a walk from a tile centre: a release this far along commits to the next tile (a nudge is a
+ * step); after the walk has passed a centre, SETTLE_BACK_PX applies.
+ */
+export const FIRST_STEP_COMMIT_PX = 4;
 /** Settle on release: glide back to the last tile centre passed if it is closer than this, else forward. */
 export const SETTLE_BACK_PX = 13;
 /** Settle glide speed, px/s (the longest glide, 13 px back, takes under 120 ms). */
