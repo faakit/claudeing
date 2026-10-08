@@ -153,20 +153,29 @@ try {
   );
 
   // 3b. Real audio: files are fetched and decoded, sounds and music play from samples, one context.
-  await page.waitForFunction(() => (window.__farm.audio.debugInfo().decoded ?? 0) > 40, null, {
-    timeout: 15000,
-  }).catch(() => undefined);
+  await page
+    .waitForFunction(() => (window.__farm.audio.debugInfo().decoded ?? 0) > 40, null, {
+      timeout: 15000,
+    })
+    .catch(() => undefined);
   await page.keyboard.press('Digit1');
   await tap('Space'); // hoe swing: a recorded take, not the synth
   await page.waitForTimeout(2500);
-  const au = await page.evaluate(() => ({ ...window.__farm.audio.debugInfo(), contexts: window.__audioContexts }));
+  const au = await page.evaluate(() => ({
+    ...window.__farm.audio.debugInfo(),
+    contexts: window.__audioContexts,
+  }));
   check('audio: exactly one AudioContext (Phaser has none)', au.contexts === 1, JSON.stringify(au));
   check(
     'audio: sound and music files are fetched without errors',
     audioFiles.ok >= 40 && audioFiles.bad.length === 0,
     `${audioFiles.ok} ok, bad: ${audioFiles.bad.slice(0, 3).join(' | ')}`,
   );
-  check('audio: files decode and the context runs', au.decoded > 40 && au.state === 'running', JSON.stringify(au));
+  check(
+    'audio: files decode and the context runs',
+    au.decoded > 40 && au.state === 'running',
+    JSON.stringify(au),
+  );
   check(
     'audio: sound effects play recorded takes and music plays sampled notes',
     au.sfx?.played > 0 && au.music?.sampled > 0 && !au.synthMusic,

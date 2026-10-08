@@ -171,9 +171,14 @@ try {
     }
     if (p === PROFILES[0]) {
       await page
-        .waitForFunction(() => (window.__farm.audio.debugInfo().decoded ?? 0) > 40, null, { timeout: 15000 })
+        .waitForFunction(() => (window.__farm.audio.debugInfo().decoded ?? 0) > 40, null, {
+          timeout: 15000,
+        })
         .catch(() => undefined);
-      const au = await page.evaluate(() => ({ ...window.__farm.audio.debugInfo(), contexts: window.__audioContexts }));
+      const au = await page.evaluate(() => ({
+        ...window.__farm.audio.debugInfo(),
+        contexts: window.__audioContexts,
+      }));
       check(
         `${p.name}: audio files load and play on a phone profile (one AudioContext)`,
         audioOk >= 40 && au.contexts === 1 && au.decoded > 40 && !au.synthMusic,

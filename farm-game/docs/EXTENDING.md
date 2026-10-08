@@ -162,7 +162,7 @@ Game code only calls `audio.play('<cue>')` with an id from the `Sfx` union in `s
   `audio-src/sfx-sources.json` (page, author, licence: CC0 or CC-BY only) and a recipe in
   `audio-src/recipes.json` (`sfx.<id>`: family, 2-4 variants cut from sources, pitch/volume spread, voice
   cap). Run `python -I audio-src/tools/fetch.py <raw-dir> --lock`, `python -I audio-src/tools/build.py
-  <raw-dir>` and `python -I audio-src/tools/sources_md.py`; credit it in `ASSETS.md`. A short musical
+<raw-dir>` and `python -I audio-src/tools/sources_md.py`; credit it in `ASSETS.md`. A short musical
   cue can instead be a jingle in `audio-src/tools/music_src.py` (`JINGLES`, written in C, played in the key
   of the current piece). `tests/audio-assets.test.ts` checks every id resolves.
 - **Music** lives in `audio-src/tools/music_src.py` (regenerate `src/audio/music.json` with it): chords

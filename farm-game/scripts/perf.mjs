@@ -141,7 +141,9 @@ try {
     await page.evaluate(() => (window.__farm.inputHub.actionHeld = false));
     // The budget above includes the audio engine's scheduling: report that music really was playing.
     const au = await page.evaluate(() => window.__farm.audio.debugInfo());
-    console.log(`${rate}x audio during the run: ${JSON.stringify({ state: au.state, synth: au.synthMusic, music: au.music, sfx: au.sfx })}`);
+    console.log(
+      `${rate}x audio during the run: ${JSON.stringify({ state: au.state, synth: au.synthMusic, music: au.music, sfx: au.sfx })}`,
+    );
     await ctx.close();
   }
 } finally {
