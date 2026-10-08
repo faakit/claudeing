@@ -178,6 +178,11 @@ for (const [name, setup] of Object.entries(SCENES)) {
       await page.keyboard.press('Enter');
       await page.waitForTimeout(1500);
       await page.evaluate(setup);
+      if (process.env.TIME)
+        await page.evaluate(
+          (t) => (window.__farm.getState().time.minutes = t),
+          Number(process.env.TIME),
+        );
       await page.waitForTimeout(1300);
     }
     await page.screenshot({ path: `${OUT}/${PREFIX}_${name}_${size}.png` });

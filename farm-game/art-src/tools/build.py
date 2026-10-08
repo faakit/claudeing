@@ -165,6 +165,9 @@ def main() -> None:
         save_png(extra["tileset"], os.path.join(PUB, "tilesets", "tiles.png"))
         save_png(extra["tileset"], os.path.join(ART, "sprites", "tiles.png"))
         index["tileset"] = True
+        with open(os.path.join(PUB, "tilesets", "tiles.json"), "w", newline="\n") as f:
+            json.dump({"columns": 21, "tiles": {n: i for i, n in enumerate(extra["tile_names"])}}, f, indent=1)
+            f.write("\n")
     for g, sprites in groups.items():
         if not sprites:
             continue

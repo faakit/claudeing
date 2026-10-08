@@ -8,7 +8,11 @@ const BASE = process.env.URL ?? 'http://localhost:5175/';
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
 for (const skin of ['plum', 'walnut']) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true });
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    hasTouch: true,
+  });
   const page = await ctx.newPage();
   await page.goto(`${BASE}?debug&skin=${skin}`);
   await page.waitForTimeout(1500);
@@ -19,8 +23,21 @@ for (const skin of ['plum', 'walnut']) {
     s.time.minutes = 600;
     s.player.x = 12 * 16 + 8;
     s.player.y = 15 * 16 + 11;
-    const pick = ['parsnip_seed', 'tomato', 'cauliflower', 'pumpkin', 'egg', 'milk', 'honey', 'wool', 'jam', 'wine'];
-    s.inventory.slots = s.inventory.slots.map((v, i) => (i < 4 ? v : pick[i - 4] ? { item: pick[i - 4], qty: 1 + (i % 5) } : v));
+    const pick = [
+      'parsnip_seed',
+      'tomato',
+      'cauliflower',
+      'pumpkin',
+      'egg',
+      'milk',
+      'honey',
+      'wool',
+      'jam',
+      'wine',
+    ];
+    s.inventory.slots = s.inventory.slots.map((v, i) =>
+      i < 4 ? v : pick[i - 4] ? { item: pick[i - 4], qty: 1 + (i % 5) } : v,
+    );
     window.__farm.gameEvents.emit('inventoryChanged', undefined);
   });
   await page.waitForTimeout(2600);

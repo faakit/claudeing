@@ -216,30 +216,42 @@ def fence(P: Pal) -> np.ndarray:
 
 
 ROOF_STYLES = {
-    # base, shadow, highlight
-    "red": ("#b8503c", "#8a3a33", "#d9785a"),
-    "slate": ("#5f6f8a", "#45506a", "#8090a8"),
+    # base, shadow, highlight (palette slot names): red clay for every house, slate for the shop
+    "red": ("red", "wine", "orange"),
+    "slate": ("stone", "stone dark", "stone lt"),
 }
 
 
 def roof(P: Pal, style: str, row: str, col: str) -> np.ndarray:
-    """One roof tile for a building drawn over its wall tiles (decor layer). row: t/m/b, col: l/c/r.
+    """One roof tile over a building's wall tiles. row: t (ridge), m, b (eave), or e (the ridge cap seen above the
+    building, drawn in the overhead layer so you walk behind it); col: l/c/r.
 
-    Overlapping shingle courses every 4 px, staggered; ridge on top, a dark eave line at the bottom,
-    outline on the outer sides. Wraps horizontally, so any building width tiles."""
-    b, d, h = (P(c) for c in ROOF_STYLES[style])
+    Overlapping clay courses every 4 px with short staggered seams; a sand ridge cap (the town's signature) on top,
+    a dark eave line at the bottom, ink on the outer sides. Wraps horizontally, so any width tiles."""
+    b, d, h = (P.name(c) for c in ROOF_STYLES[style])
+    cap, cap_d = P.name("sand"), P.name("wood")
+    if row == "e":
+        t = np.full((T, T), -1, dtype=np.int32)
+        t[11, :] = P.outline
+        t[12:15, :] = cap
+        t[14, ::2] = cap_d
+        t[15, :] = d
+        if col == "l":
+            t[11:, 0] = P.outline
+        if col == "r":
+            t[11:, 15] = P.outline
+        return t
     t = fill(b)
     for r0 in range(0, T, 4):
         t[r0, :] = h  # lit top of each course
         t[r0 + 3, :] = d  # shadow under it
         off = 4 if (r0 // 4) % 2 else 0
-        for c in range(off, T + off, 8):  # short, staggered seams between shingles
+        for c in range(off, T + off, 8):  # short, staggered seams between tiles
             t[r0 + 2 : r0 + 4, c % T] = d
             t[r0 + 3, (c + 1) % T] = P.outline
     if row == "t":
-        t[0, :] = P.outline
-        t[1, :] = h
-        t[2, :] = h
+        t[0, :] = cap
+        t[1, :] = cap_d
     if row == "b":
         t[13, :] = d
         t[14, :] = P.outline
@@ -417,12 +429,23 @@ def build(pal, outline, groups, specs, make, names=None):
     tiles["bush"] = overlay(grass(P, 61), tile_sprite(make, "crops3b/tile_bush", (15, 14)))
     tiles["rock"] = overlay(stone_floor(P, 71), tile_sprite(make, "crops3a/node_rock_node", (16, 15)))
 
+    # Extra tiles for the map layers, appended in rows of 21 after the placeholder row (indices unchanged).
+    import tiles_extra
+
+    extra = tiles_extra.build_extra(P, make, tiles, roof)
+    names = list(TILE_ORDER) + list(extra)
+    allt = [tiles[n] for n in TILE_ORDER] + list(extra.values())
+    cols = len(TILE_ORDER)
+    rows = (len(allt) + cols - 1) // cols
+    sheet = np.full((rows * T, cols * T), -1, dtype=np.int32)
+    for k, tile in enumerate(allt):
+        y, x = divmod(k, cols)
+        sheet[y * T : (y + 1) * T, x * T : (x + 1) * T] = tile
+    # Runtime decor (src/art/decor.ts): roofs and ground tufts, until the maps pass moves them into map layers.
     for style in ROOF_STYLES:
         for row in "tmb":
             for col in "lcr":
                 groups["world"][f"decor_roof_{style}_{row}{col}"] = px.idx_to_rgba(roof(P, style, row, col), pal)
-
-    sheet = np.concatenate([tiles[n] for n in TILE_ORDER], axis=1)
     for kind in ("grass_a", "grass_b", "flowers"):
         groups["world"][f"decor_{kind}"] = px.idx_to_rgba(tuft(P, kind), pal)
     for key, (colours, rows) in GLYPHS.items():
@@ -435,4 +458,4 @@ def build(pal, outline, groups, specs, make, names=None):
             groups[spec["group"]][key] = px.idx_to_rgba(stepping_stones(P), pal)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(tiles["watered"], pal)
-    return {"tileset": px.idx_to_rgba(sheet, pal)}
+    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_names": names}
