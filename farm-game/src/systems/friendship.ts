@@ -7,6 +7,7 @@ import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
 import { items } from '../data';
 import { absoluteDay } from './time';
+import { isWet } from './weather';
 
 export const POINTS_PER_HEART = 50;
 export const MAX_HEARTS = 5;
@@ -47,7 +48,7 @@ export function lineFor(state: GameState, id: string): string {
   const def = npcs[id] as NpcDef;
   const hearts = heartsOf(state, id);
   const pool =
-    state.weather === 'rain' && absoluteDay(state) % 3 === 0
+    isWet(state.weather) && absoluteDay(state) % 3 === 0
       ? def.lines.rain
       : hearts >= 4
         ? def.lines.close

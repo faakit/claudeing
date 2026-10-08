@@ -249,13 +249,14 @@ export class UIScene extends Phaser.Scene {
     this.hud.update(time);
     this.updateIdleHint(delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
-    const raining = s.weather === 'rain';
+    const raining = s.weather !== 'sunny';
+    const storm = s.weather === 'storm';
     let base = daylightColor(s.time.minutes);
-    if (raining && !indoors) base = mixColor(base, 0x9db0cc, 0.4); // grey-blue overcast
+    if (raining && !indoors) base = mixColor(base, 0x9db0cc, storm ? 0.6 : 0.4); // grey-blue overcast
     const grade = indoors ? indoorColor(base) : base;
     // A white multiply overlay changes nothing but still costs a blend, so skip it.
     this.tint.setVisible(grade !== 0xffffff).setFillStyle(grade);
-    this.rain.setIntensity(raining && !indoors ? 1 : 0);
+    this.rain.setIntensity(raining && !indoors ? (storm ? 1.6 : 1) : 0);
     this.rain.update(delta);
     audio.setRain(raining ? (indoors ? 0.35 : 1) : 0);
     if (
@@ -437,7 +438,7 @@ export class UIScene extends Phaser.Scene {
   private openPanel(type: PanelType): void {
     if (runtime.blocked) return;
     inputHub.clearHeld();
-    if (type === 'craft' || type === 'skills') this.menu.openTab(type);
+    if (type === 'craft' || type === 'skills' || type === 'book') this.menu.openTab(type);
     else if (type === 'fishing')
       return; // started only by casting
     else this.panels.get(type)?.open();
@@ -497,8 +498,8 @@ export class UIScene extends Phaser.Scene {
     await this.summary.present(summary);
     if (summary.yearEnd) await this.yearEnd.present();
     this.hud.toast(
-      state.weather === 'rain'
-        ? `Good morning! It's raining, crops are watered.`
+      state.weather !== 'sunny'
+        ? `Good morning! ${state.weather === 'storm' ? 'A storm' : "It's raining"}, crops are watered.`
         : `Good morning! ${seasonLabel(state.time.season)} ${state.time.day}`,
       'info',
     );

@@ -43,6 +43,12 @@ registerDayHook({
   run(state, ctx) {
     if (ctx.scratch['seasonChanged']) clearForage(state);
     const spawned = spawnForage(state, ctx.forageSpots);
+    // The morning after a storm the woods are full: a second helping of goods.
+    if (ctx.scratch['prevWeather'] === 'storm') {
+      const more = spawnForage(state, ctx.forageSpots);
+      for (const [map, n] of Object.entries(more)) spawned[map] = (spawned[map] ?? 0) + n;
+      ctx.notes.push('A rainbow after the storm: extra wild goods!');
+    }
     const total = Object.values(spawned).reduce((a, b) => a + b, 0);
     if (total > 0)
       ctx.notes.push(

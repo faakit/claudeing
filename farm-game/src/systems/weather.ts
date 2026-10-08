@@ -7,7 +7,10 @@ import { random } from './rng';
 export function rollWeather(state: GameState): Weather {
   const t = state.time;
   if (t.year === 1 && t.season === 'spring' && t.day <= game.calmDays) return 'sunny';
-  return random(state) < game.rainChance[t.season] ? 'rain' : 'sunny';
+  const r = random(state);
+  const storm = game.stormChance[t.season] ?? 0;
+  if (r < storm) return 'storm';
+  return r < storm + (game.rainChance[t.season] ?? 0) ? 'rain' : 'sunny';
 }
 
 /** Rain waters every tilled tile for free. */
@@ -16,4 +19,6 @@ export function waterAllSoil(state: GameState): void {
   gameEvents.emit('farmChanged', undefined);
 }
 
-export const isRaining = (state: GameState): boolean => state.weather === 'rain';
+/** Rain or storm: soil is watered for free. */
+export const isWet = (w: Weather): boolean => w === 'rain' || w === 'storm';
+export const isRaining = (state: GameState): boolean => isWet(state.weather);

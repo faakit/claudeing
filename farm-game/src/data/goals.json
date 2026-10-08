@@ -268,6 +268,14 @@
     "hint": "Build machines and houses to grow your income."
   },
   {
+    "id": "book3",
+    "text": "Complete 3 almanac pages",
+    "stat": "pagesDone",
+    "target": 3,
+    "reward": 600,
+    "hint": "Open Menu > Book and find every good on a page."
+  },
+  {
     "id": "collect50",
     "text": "Collect 50 animal products",
     "stat": "collected",

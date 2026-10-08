@@ -210,10 +210,10 @@ export class Hud {
           ? C.warn
           : C.cream,
     );
-    const rainy = s.weather === 'rain';
+    const rainy = s.weather !== 'sunny';
     const weatherKey = rainy ? 'ui_rain' : 'ui_sun';
     if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
-    this.weatherLabel.setText(rainy ? 'Rainy' : 'Sunny');
+    this.weatherLabel.setText(s.weather === 'storm' ? 'Storm' : rainy ? 'Rainy' : 'Sunny');
 
     if (this.shownMoney < 0) this.shownMoney = s.money;
     if (this.shownMoney !== s.money) {

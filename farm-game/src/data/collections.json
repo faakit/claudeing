@@ -1,0 +1,51 @@
+{
+  "crops": {
+    "name": "Crops",
+    "reward": 300,
+    "items": [
+      "cauliflower",
+      "corn",
+      "kale",
+      "melon",
+      "parsnip",
+      "potato",
+      "pumpkin",
+      "tomato",
+      "yam"
+    ]
+  },
+  "orchard": {
+    "name": "Orchard",
+    "reward": 250,
+    "items": ["apple", "cherry", "peach", "plum"]
+  },
+  "fish": {
+    "name": "Fish",
+    "reward": 400,
+    "items": ["carp", "bluegill", "perch", "trout", "catfish", "salmon"]
+  },
+  "wild": {
+    "name": "Wild Goods",
+    "reward": 300,
+    "items": [
+      "blackberry",
+      "daffodil",
+      "holly",
+      "mushroom",
+      "wild_berry",
+      "wild_leek",
+      "wild_sunflower",
+      "winter_root"
+    ]
+  },
+  "barn": {
+    "name": "Animal Goods",
+    "reward": 300,
+    "items": ["egg", "milk", "wool", "honey"]
+  },
+  "cellar": {
+    "name": "Preserves",
+    "reward": 500,
+    "items": ["jam", "pickles", "wine", "cloth"]
+  }
+}

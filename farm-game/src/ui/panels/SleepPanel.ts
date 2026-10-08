@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { getState } from '../../state/store';
 import { formatClock } from '../../systems/time';
+import { forecastText } from './SummaryPanels';
 import { C } from '../theme';
 import { Modal } from '../widgets';
 
@@ -9,7 +10,7 @@ export class SleepPanel extends Modal {
     scene: Phaser.Scene,
     private readonly onSleep: () => void,
   ) {
-    super(scene, 138);
+    super(scene, 154);
   }
 
   override confirm(): void {
@@ -31,10 +32,19 @@ export class SleepPanel extends Modal {
       'center',
       184,
     );
-    this.button(8, 78, this.panelW - 16, 24, 'Sleep', () => this.confirm(), {
+    this.label(
+      this.panelW / 2,
+      66,
+      `Tomorrow: ${forecastText(s.forecast)}${s.forecast === 'storm' ? '. Pick ripe fruit first!' : s.forecast === 'rain' ? '. No watering needed.' : ''}`,
+      s.forecast === 'sunny' ? C.creamDim : C.blue,
+      1,
+      'center',
+      184,
+    );
+    this.button(8, 94, this.panelW - 16, 24, 'Sleep', () => this.confirm(), {
       textColor: C.green,
       rim: C.green,
     });
-    this.button(8, 106, this.panelW - 16, 22, 'Not yet', () => this.close());
+    this.button(8, 122, this.panelW - 16, 22, 'Not yet', () => this.close());
   }
 }

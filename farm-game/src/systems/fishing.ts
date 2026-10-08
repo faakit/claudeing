@@ -5,6 +5,7 @@ import { toast } from './events';
 import { addStat } from './goals';
 import { addItem, countItem, removeItem, roomFor } from './inventory';
 import { rollQuality } from './quality';
+import { isWet } from './weather';
 import { random } from './rng';
 import { addXp, perk } from './skills';
 
@@ -14,17 +15,19 @@ export function fishFor(state: GameState, map: string): FishDef[] {
     (f) =>
       f.maps.includes(map) &&
       f.seasons.includes(state.time.season) &&
-      (!f.weather || f.weather === state.weather),
+      (!f.weather || (f.weather === 'rain' && isWet(state.weather)) || f.weather === state.weather),
   );
 }
 
 export function pickFish(state: GameState, map: string): FishDef | null {
   const pool = fishFor(state, map);
-  const total = pool.reduce((n, f) => n + f.weight, 0);
+  // Storms stir the water: fish that only bite in wet weather bite far more often.
+  const w = (f: FishDef) => f.weight * (state.weather === 'storm' && f.weather ? 3 : 1);
+  const total = pool.reduce((n, f) => n + w(f), 0);
   if (total <= 0) return null;
   let r = random(state) * total;
   for (const f of pool) {
-    r -= f.weight;
+    r -= w(f);
     if (r < 0) return f;
   }
   return pool[pool.length - 1] ?? null;

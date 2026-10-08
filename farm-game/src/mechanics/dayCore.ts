@@ -8,7 +8,7 @@ import { registerDayHook } from '../systems/dayHooks';
 import { perk } from '../systems/skills';
 import { ownsTile } from '../systems/plots';
 import { advanceCalendar } from '../systems/time';
-import { rollWeather, waterAllSoil } from '../systems/weather';
+import { isWet, rollWeather, waterAllSoil } from '../systems/weather';
 
 // The original rollover, expressed as hooks. Order inside the pipeline is what the design requires:
 // crops grow, shipped goods are paid, then the calendar moves on and the new day sets itself up.
@@ -69,8 +69,11 @@ registerDayHook({
       state,
       ctx.weedCandidates.filter(([x, y]) => ownsTile(state, x, y)),
     );
-    state.weather = rollWeather(state);
-    if (state.weather === 'rain') waterAllSoil(state);
+    ctx.scratch['prevWeather'] = state.weather;
+    // Today's weather was announced last night; tomorrow's is rolled now.
+    state.weather = state.forecast;
+    state.forecast = rollWeather(state);
+    if (isWet(state.weather)) waterAllSoil(state);
     restoreEnergy(state, ctx.passedOut ? game.passOutEnergyFraction : 1);
     if (!ctx.passedOut) state.stats['daysSlept'] = (state.stats['daysSlept'] ?? 0) + 1;
     ctx.summary.weather = state.weather;

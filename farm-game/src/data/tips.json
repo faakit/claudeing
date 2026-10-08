@@ -46,5 +46,11 @@
     "stat": "perfectCatch",
     "min": 1,
     "text": "Perfect catches roll better quality fish. Stay on the fish!"
+  },
+  {
+    "id": "book",
+    "stat": "discoveries",
+    "min": 1,
+    "text": "New kinds of goods go in Menu > Book. Finish a page for gold."
   }
 ]

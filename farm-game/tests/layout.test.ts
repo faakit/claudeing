@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { game, goals, items, shops, tips } from '../src/data';
 import { fitText, measureText } from '../src/ui/fontMetrics';
+import { TAB_LABELS } from '../src/ui/panels/tabLabels';
 import { shopFacts } from '../src/ui/panels/shopFacts';
 import { formatClock } from '../src/systems/time';
 import { HUD_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../src/config';
@@ -73,5 +74,13 @@ describe('shop rows never truncate', () => {
     for (const id of all)
       for (const day of [1, 27])
         expect(measureText(shopFacts(id, 99, day)), `${id} day ${day}`).toBeLessThanOrEqual(110);
+  });
+});
+
+describe('menu tabs', () => {
+  it('every tab label fits its button with room to spare', () => {
+    const labels = Object.entries(TAB_LABELS);
+    const w = Math.floor((GAME_WIDTH - 8) / labels.length) - 2;
+    for (const [id, label] of labels) expect(measureText(label), id).toBeLessThanOrEqual(w - 4);
   });
 });

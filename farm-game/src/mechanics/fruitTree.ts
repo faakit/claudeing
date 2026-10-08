@@ -11,6 +11,11 @@ registerPlaceableBehavior('fruitTree', {
   sprite: (obj, def) => (isGrown(obj) ? def.sprite : 'obj_sapling'),
   onMorning(state, obj, _def, ctx) {
     if (growTree(obj, state.time.season)) ctx.notes.push('Fruit is ripe on a tree.');
+    // A storm shakes ripe fruit to the ground. The forecast gives you a night to pick it first.
+    if (state.weather === 'storm' && treeOf(obj).fruit > 0) {
+      treeOf(obj).fruit = 0;
+      ctx.notes.push('The storm blew fruit off a tree.');
+    }
   },
   interact(state, obj) {
     const def = treeDef(obj);

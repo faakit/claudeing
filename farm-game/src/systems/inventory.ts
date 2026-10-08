@@ -1,6 +1,7 @@
 import { game, items } from '../data';
 import type { GameState, ItemStack } from '../state/GameState';
 import { gameEvents } from './events';
+import { discover } from './almanac';
 import { keyOf, refOf, sameRef, type ItemRef } from './itemRef';
 
 export const stackLimit = (itemId: string): number => items[itemId]?.stackLimit ?? game.stackLimit;
@@ -48,6 +49,7 @@ export function roomFor(state: GameState, ref: string | ItemRef, qty: number): n
 export function addItem(state: GameState, ref: string | ItemRef, qty: number): number {
   const r = asRef(ref);
   if (!items[r.item]) throw new Error(`Unknown item "${r.item}"`);
+  if (qty > 0) discover(state, r.item);
   const limit = stackLimit(r.item);
   let left = qty;
   const slots = state.inventory.slots;

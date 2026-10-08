@@ -17,6 +17,7 @@ import tipsRaw from './tips.json';
 import plotsRaw from './plots.json';
 import machinesRaw from './machines.json';
 import treesRaw from './trees.json';
+import collectionsRaw from './collections.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -156,6 +157,7 @@ export interface FishDef {
   item: string;
   maps: string[];
   seasons: Season[];
+  /** Needs wet weather (rain or storm). */
   weather?: 'sunny' | 'rain';
   weight: number;
   /** 0..1: how hard the reel mini-game is. */
@@ -198,6 +200,12 @@ export interface NpcDef {
   giftHearts: number;
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
+}
+export interface CollectionDef {
+  name: string;
+  /** Gold for finding every item on the page. */
+  reward: number;
+  items: string[];
 }
 export interface TreeDef {
   name: string;
@@ -249,6 +257,8 @@ export interface GameData {
   /** Sell-price multiplier per quality tier (0 normal, 1 silver, 2 gold). */
   qualityMultipliers: number[];
   rainChance: Record<Season, number>;
+  /** Chance (0-1) that a new day is a storm (rain plus wind), by season. Checked before rain. */
+  stormChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;
 }
@@ -292,6 +302,7 @@ export const forage = forageRaw as unknown as ForageDef;
 export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
+export const collections = collectionsRaw as unknown as Record<string, CollectionDef>;
 export const trees = treesRaw as unknown as Record<string, TreeDef>;
 export const machines = machinesRaw as unknown as Record<string, MachineDef>;
 export const plots = plotsRaw as unknown as Record<string, PlotDef>;
@@ -417,6 +428,11 @@ export function validateContent(): void {
     if (items[t.fruit]?.family !== 'fruit')
       fail('trees', `"${id}" fruit "${t.fruit}" must be a fruit item`);
     if (t.growDays < 1 || t.every < 1 || t.cap < 1) fail('trees', `"${id}" has a bad number`);
+  }
+  for (const [id, c] of Object.entries(collections)) {
+    if (c.items.length === 0) fail('collections', `"${id}" is empty`);
+    for (const it of c.items)
+      if (!items[it]) fail('collections', `"${id}" lists unknown item "${it}"`);
   }
   const claimed = new Set<string>();
   for (const [id, pl] of Object.entries(plots)) {

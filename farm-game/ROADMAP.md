@@ -93,8 +93,11 @@ Give players reasons to plan their day and their season.
       _Done:_ `machines.json` now drives jar-like machines (days, XP, family -> product); added the keg (fruit -> wine,
       5 days) and the bee house (honey every 4 days, no input). Renderer uses a generic `status` hook. Not done: loom,
       furnace (waits for sheep and the mine).
-- [ ] **R2.5 Weather with consequences.** Storms that can damage unwatered young crops, a rare rainbow day with a
+- [x] **R2.5 Weather with consequences.** Storms that can damage unwatered young crops, a rare rainbow day with a
       forage bonus, wind that scatters forage. Telegraphed the evening before so players can react.
+      _Done:_ tomorrow's weather is shown on the bed sheet and the morning summary. Storms (summer and fall) water
+      the soil, shake ripe fruit off trees (pick it first!), make wet-weather fish bite three times as often and
+      leave a rainbow morning with a second helping of wild goods.
 - [~] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
   order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
 
@@ -112,8 +115,10 @@ More people, more places, more to discover.
 - [ ] **R3.4 Seasonal festivals.** One event per season on a fixed day: a fishing contest, a crop show, a winter
       feast. Orders, skills and friendship all feed into a score. _Plug in:_ a day hook that swaps in an event map
       state and a modal.
-- [ ] **R3.5 Almanac and collections.** A log of every crop, fish, forageable and recipe found, with page rewards.
+- [x] **R3.5 Almanac and collections.** A log of every crop, fish, forageable and recipe found, with page rewards.
       Doubles as a gentle hint system for what to try next.
+      _Done:_ Menu > Book has six pages (crops, orchard, fish, wild goods, animal goods, preserves); unfound goods
+      show as dark shapes, finishing a page pays gold.
 - [ ] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
       scattered toasts for slower news.
 

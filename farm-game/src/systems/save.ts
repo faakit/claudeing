@@ -76,6 +76,14 @@ function migrateV3(raw: Raw): Raw {
   return { ...raw, version: 4, friends: {} };
 }
 
+/** v5 -> v6: tomorrow's forecast. Old saves simply get a calm forecast. */
+function migrateV5(raw: Raw): Raw {
+  return { ...raw, version: 6, forecast: 'sunny' };
+}
+
+const toWeather = (v: unknown): GameState['weather'] =>
+  v === 'rain' || v === 'storm' ? v : 'sunny';
+
 /**
  * v4 -> v5: land plots. Anyone who already farmed outside the starter plot keeps every plot they used
  * (tilled soil or placed objects), so nothing they built becomes unreachable.
@@ -103,6 +111,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   2: migrateV2,
   3: migrateV3,
   4: migrateV4,
+  5: migrateV5,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -351,7 +360,8 @@ export function sanitize(raw: Raw): GameState {
     stats,
     goalIndex: int(raw['goalIndex'], 0, 0, goals.length),
     settings,
-    weather: raw['weather'] === 'rain' ? 'rain' : 'sunny',
+    weather: toWeather(raw['weather']),
+    forecast: toWeather(raw['forecast']),
     placed,
     nextPlacedId: Math.max(int(raw['nextPlacedId'], 1, 1, 1e9), maxId + 1),
     skills: skillXp,

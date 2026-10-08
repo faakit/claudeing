@@ -44,5 +44,11 @@
     "winter": 0
   },
   "calmDays": 2,
-  "qualityMultipliers": [1, 1.25, 1.5]
+  "qualityMultipliers": [1, 1.25, 1.5],
+  "stormChance": {
+    "spring": 0.0,
+    "summer": 0.07,
+    "fall": 0.06,
+    "winter": 0.0
+  }
 }

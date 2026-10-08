@@ -22,6 +22,8 @@ import { C } from '../theme';
 import type { Label } from '../font';
 import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from '../widgets';
 import { fmt } from './format';
+import { buildAlmanac } from './AlmanacTab';
+import { TAB_LABELS } from './tabLabels';
 import { buildCraft } from './CraftTab';
 import { buildSkills } from './SkillsTab';
 
@@ -168,11 +170,12 @@ export class MenuPanel extends Modal {
 
 /** Registered by `installMenuTabs`, which binds the tabs to a live MenuPanel. */
 export function installMenuTabs(menu: MenuPanel): void {
-  registerMenuTab({ id: 'bag', label: 'Bag', build: (c) => buildBag(c, menu) });
-  registerMenuTab({ id: 'goals', label: 'Goals', build: buildGoals });
-  registerMenuTab({ id: 'craft', label: 'Craft', build: buildCraft });
-  registerMenuTab({ id: 'skills', label: 'Skills', build: buildSkills });
-  registerMenuTab({ id: 'opts', label: 'Opts', build: (c) => buildOptions(c, menu) });
+  registerMenuTab({ id: 'bag', label: TAB_LABELS.bag, build: (c) => buildBag(c, menu) });
+  registerMenuTab({ id: 'goals', label: TAB_LABELS.goals, build: buildGoals });
+  registerMenuTab({ id: 'craft', label: TAB_LABELS.craft, build: buildCraft });
+  registerMenuTab({ id: 'skills', label: TAB_LABELS.skills, build: buildSkills });
+  registerMenuTab({ id: 'book', label: TAB_LABELS.book, build: buildAlmanac });
+  registerMenuTab({ id: 'opts', label: TAB_LABELS.opts, build: (c) => buildOptions(c, menu) });
 }
 
 function buildBag(c: MenuTabContext, menu: MenuPanel): void {

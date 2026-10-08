@@ -137,9 +137,20 @@ export class SummaryPanel extends WaitModal {
       wrap: 184,
     });
     y += text(
-      sum.weather === 'rain' ? 'It is raining. Crops are watered!' : 'The sun is out today.',
-      sum.weather === 'rain' ? C.blue : C.creamDim,
+      sum.weather === 'storm'
+        ? 'A storm! Crops are watered.'
+        : sum.weather === 'rain'
+          ? 'It is raining. Crops are watered!'
+          : 'The sun is out today.',
+      sum.weather === 'sunny' ? C.creamDim : C.blue,
       { gap: 8 },
+    );
+    y += text(
+      `Tomorrow: ${forecastText(s.forecast)}`,
+      s.forecast === 'sunny' ? C.creamDim : C.blue,
+      {
+        gap: 8,
+      },
     );
     y += text(`Tip: ${TIPS[(s.time.day + s.time.year) % TIPS.length]}`, C.creamDim, {
       wrap: 184,
@@ -182,3 +193,6 @@ export class YearEndPanel extends WaitModal {
     });
   }
 }
+
+export const forecastText = (w: string): string =>
+  w === 'storm' ? 'a storm is coming' : w === 'rain' ? 'rain' : 'sunny';

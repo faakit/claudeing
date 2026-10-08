@@ -149,3 +149,9 @@
 - **Seasons sound different:** tempo, key and melody density per season, with minor chords in fall and winter. New cues for level-up, heart gain and finished orders.
 - **Soil is turned earth, not planks:** broken wavy furrows and clods, soft corners so tiles blend into one field.
 - **Shop paging:** five rows per page with a pager, since the Farm tab grew past one screen.
+
+## Forecast, storms and the Book
+
+- **A forecast makes weather a decision, not a coin flip:** tomorrow's weather is rolled the morning before and shown on the bed sheet and the morning summary ("Tomorrow: rain. No watering needed"). Storms only exist in summer and fall, are rarer than rain, and trade a risk (ripe tree fruit is shaken off) for rewards (wet-weather fish bite 3x as often, a rainbow morning doubles wild goods). Save version 6 adds `forecast`.
+- **The almanac costs no new state:** discoveries are `got.<item>` stats set by `addItem` the first time you hold something, finished pages are `page.<id>` stats. Pages are data (`collections.json`) and finishing one pays gold once. Items you held before this update are discovered the next time you pick one up.
+- **Menu tab labels shortened (Goal, Make, Skill, Book) and tested for fit:** six tabs share the sheet width; a pure `tabLabels.ts` lets a test prove every label fits its button.

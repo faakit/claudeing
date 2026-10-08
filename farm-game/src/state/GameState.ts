@@ -3,7 +3,7 @@ import { game, items, mapsData } from '../data';
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type Season = 'spring' | 'summer' | 'fall' | 'winter';
-export type Weather = 'sunny' | 'rain';
+export type Weather = 'sunny' | 'rain' | 'storm';
 export const SEASONS: readonly Season[] = ['spring', 'summer', 'fall', 'winter'];
 
 /** Player position is the feet-center in map pixels. */
@@ -126,6 +126,8 @@ export interface GameState {
   goalIndex: number;
   settings: Settings;
   weather: Weather;
+  /** Tomorrow's weather, known tonight so the player can plan (rain means no watering, a storm shakes fruit down). */
+  forecast: Weather;
   /** Placed objects by map id. */
   placed: Record<string, PlacedObject[]>;
   nextPlacedId: number;
@@ -141,7 +143,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -182,6 +184,7 @@ export function createInitialState(): GameState {
       reduceMotion: false,
     },
     weather: 'sunny',
+    forecast: 'sunny',
     placed: {},
     nextPlacedId: 1,
     skills: {},
