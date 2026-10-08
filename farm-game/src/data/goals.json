@@ -460,5 +460,13 @@
     "target": 8,
     "reward": 5000,
     "hint": "Menu > Book shows what is still missing on each page."
+  },
+  {
+    "id": "special1",
+    "text": "Finish a special order",
+    "stat": "specialsDone",
+    "target": 1,
+    "reward": 1000,
+    "hint": "A big seasonal request on the board. Bring goods bit by bit."
   }
 ]

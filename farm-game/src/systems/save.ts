@@ -265,6 +265,11 @@ function migrateV13(raw: Raw): Raw {
   return { ...raw, version: 14, stored: {} };
 }
 
+/** v14 -> v15: special orders (the first is posted the next morning). */
+function migrateV14(raw: Raw): Raw {
+  return { ...raw, version: 15, special: null };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -279,6 +284,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   11: migrateV11,
   12: migrateV12,
   13: migrateV13,
+  14: migrateV14,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -563,6 +569,24 @@ export function sanitize(raw: Raw): GameState {
       });
     }
 
+  const sp = obj(raw['special']);
+  const special: GameState['special'] =
+    typeof sp['item'] === 'string' &&
+    items[sp['item']] &&
+    typeof sp['giver'] === 'string' &&
+    npcs[sp['giver']]
+      ? {
+          id: typeof sp['id'] === 'string' ? sp['id'] : 'special',
+          giver: sp['giver'],
+          item: sp['item'],
+          qty: int(sp['qty'], 1, 1, 999),
+          given: 0,
+          reward: int(sp['reward'], 0, 0, 1e6),
+          due: int(sp['due'], 1, 1, 1e7),
+        }
+      : null;
+  if (special) special.given = int(sp['given'], 0, 0, special.qty);
+
   const ownedPlots = Array.isArray(raw['plots'])
     ? [
         ...new Set(
@@ -603,6 +627,7 @@ export function sanitize(raw: Raw): GameState {
     orders: { day: int(ordersRaw['day'], 0, 0, 1e7), list: orderList },
     friends,
     jobs: { day: int(jobsRaw['day'], 0, 0, 1e7), list: jobList },
+    special,
     mail: { next: Math.max(int(mailRaw['next'], 1, 1, 1e9), maxLetter + 1), list: letters },
     lastSummary: null, // transient: only meaningful right after a rollover
     rng: isFiniteNum(raw['rng']) ? raw['rng'] >>> 0 : fresh.rng,

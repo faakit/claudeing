@@ -71,6 +71,17 @@ export interface Order {
   rival?: boolean;
 }
 
+/** A special order: deliver `qty` of `item` by absolute day `due`, a little at a time. */
+export interface SpecialOrder {
+  id: string;
+  giver: string;
+  item: string;
+  qty: number;
+  given: number;
+  reward: number;
+  due: number;
+}
+
 /** A daily job: gain `n` of a stat today (`base` is the stat's value when the job was posted). */
 export interface Job {
   id: string;
@@ -173,13 +184,15 @@ export interface GameState {
   friends: Record<string, Friendship>;
   /** Letters in the farm's mailbox, newest last. `next` is the next letter id. */
   mail: { next: number; list: Letter[] };
+  /** The board's special order, if one is running. */
+  special: SpecialOrder | null;
   /** Today's small jobs from villagers. `day` is the absolute day they were posted for. */
   jobs: { day: number; list: Job[] };
   lastSummary: DaySummary | null;
   rng: number;
 }
 
-export const STATE_VERSION = 14;
+export const STATE_VERSION = 15;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -230,6 +243,7 @@ export function createInitialState(): GameState {
     orders: { day: 0, list: [] },
     friends: {},
     jobs: { day: 0, list: [] },
+    special: null,
     mail: { next: 1, list: [] },
     lastSummary: null,
     rng: (Date.now() & 0x7fffffff) >>> 0,

@@ -22,3 +22,4 @@ import './projects';
 import './decor';
 import './jobs';
 import './mail';
+import './specials';

@@ -163,7 +163,7 @@ land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
       builds. Follows R1.1.
 - [~] **Second-year content.** Done: a Seed Exchange project with four rare regrowing crops, a Rare Crops Book page,
       mastery goals (gold-quality sales, every Book page). Not done: a Year 2 rivals ramp beyond the 20% a year
-      festivals already have, a weekly special-orders board.
+      festivals already have. Special orders: one big seasonal request at a time, due at the season's end.
 - [ ] **R4.5 Retention hooks.** Daily login streak, optional notifications ("your crops are ready"), seasonal
       cosmetic rewards. Only after the core loop is proven fun.
 - [ ] **R4.6 Cloud save and cross-device sync.** Optional account, conflict-safe merges. Needs a backend decision.

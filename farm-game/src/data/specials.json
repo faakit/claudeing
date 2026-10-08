@@ -1,0 +1,84 @@
+[
+  {
+    "id": "cauli",
+    "giver": "mara",
+    "item": "cauliflower",
+    "seasons": ["spring"]
+  },
+  {
+    "id": "potato",
+    "giver": "rosa",
+    "item": "potato",
+    "seasons": ["spring"]
+  },
+  {
+    "id": "berries",
+    "giver": "mara",
+    "item": "strawberry",
+    "seasons": ["spring"],
+    "project": "seedexchange"
+  },
+  {
+    "id": "melon",
+    "giver": "finn",
+    "item": "melon",
+    "seasons": ["summer"]
+  },
+  {
+    "id": "corn",
+    "giver": "orin",
+    "item": "corn",
+    "seasons": ["summer"]
+  },
+  {
+    "id": "tomato",
+    "giver": "mara",
+    "item": "tomato",
+    "seasons": ["summer"]
+  },
+  {
+    "id": "pumpkin",
+    "giver": "rosa",
+    "item": "pumpkin",
+    "seasons": ["fall"]
+  },
+  {
+    "id": "yam",
+    "giver": "orin",
+    "item": "yam",
+    "seasons": ["fall"]
+  },
+  {
+    "id": "cranberry",
+    "giver": "finn",
+    "item": "cranberry",
+    "seasons": ["fall"],
+    "project": "seedexchange"
+  },
+  {
+    "id": "kale",
+    "giver": "orin",
+    "item": "kale",
+    "seasons": ["winter"]
+  },
+  {
+    "id": "eggs",
+    "giver": "mara",
+    "item": "egg",
+    "seasons": ["winter", "spring"],
+    "requires": {
+      "stat": "animalsAdded",
+      "min": 1
+    }
+  },
+  {
+    "id": "bars",
+    "giver": "orin",
+    "item": "iron_bar",
+    "seasons": ["winter", "summer"],
+    "requires": {
+      "stat": "made.furnace",
+      "min": 1
+    }
+  }
+]

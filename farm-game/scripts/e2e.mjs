@@ -536,6 +536,11 @@ try {
     ps.orders.list.length === 4,
     `orders ${ps.orders.list.length}`,
   );
+  check(
+    'a special order is on the board the next morning',
+    !!ps.special && ps.special.qty > 0 && ps.special.reward > 0,
+    JSON.stringify(ps.special),
+  );
   // The post: a welcome letter arrived overnight; Interact at the mailbox by the house opens it.
   check(
     'a welcome letter is in the mailbox on day 2',

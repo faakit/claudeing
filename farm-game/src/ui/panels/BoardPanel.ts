@@ -9,6 +9,9 @@ import { Modal } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
+import { items } from '../../data';
+import { countItem } from '../../systems/inventory';
+import { giveToSpecial, specialLabel, specialSub } from '../../systems/specials';
 import { applyRival, rivalName, rivalNotice } from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
@@ -25,12 +28,39 @@ export class BoardPanel extends Modal {
     const fest = festivalToday(s);
     const festOpen = !!fest && !hasEntered(s, fest.id);
     const rows = Math.max(1, s.orders.list.length);
-    this.setHeight(34 + rows * 26 + (festOpen ? 26 : 0) + 26 + 34);
+    const sp = s.special;
+    this.setHeight(34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + 26 + 34);
     this.panel();
     this.label(8, 8, "Today's Requests", C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     this.label(8, 20, rivalNotice(s), C.creamDim);
     let y = 34;
+    if (sp) {
+      // The special order sits on top, in gold: a big seasonal request with a deadline.
+      const have = countItem(s, sp.item);
+      y = this.row(y, {
+        icon: items[sp.item]?.icon,
+        title: specialLabel(sp),
+        sub: specialSub(sp),
+        subColor: C.gold,
+        buttons: [
+          {
+            label: 'Give',
+            width: 34,
+            enabled: have > 0,
+            color: have > 0 ? C.green : C.creamDim,
+            onClick: () => {
+              const res = giveToSpecial(getState());
+              if (res.ok) {
+                audio.play(res.finished ? 'order' : 'buy');
+                haptic('success');
+              } else audio.play('error');
+              this.rebuild();
+            },
+          },
+        ],
+      });
+    }
     for (const o of s.orders.list) {
       const have = haveFor(s, o);
       const ready = !o.done && have >= o.qty;

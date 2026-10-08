@@ -24,6 +24,7 @@ import miningRaw from './mining.json';
 import projectsRaw from './projects.json';
 import jobsRaw from './jobs.json';
 import mailRaw from './mail.json';
+import specialsRaw from './specials.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -294,6 +295,17 @@ export interface MachineDef {
   /** Item family ("fruit", "veg") -> the derived good this machine makes of it. */
   recipes: Record<string, string>;
 }
+/** A special order: a big seasonal request from a villager with a deadline (see systems/specials.ts). */
+export interface SpecialDef {
+  id: string;
+  giver: string;
+  item: string;
+  seasons: Season[];
+  /** Only once this town project is finished (e.g. rare crops). */
+  project?: string;
+  /** Only once a stat reached `min`. */
+  requires?: { stat: string; min: number };
+}
 /** When a letter is sent: every field given must hold (checked each morning). */
 export interface LetterWhen {
   /** On or after this absolute day. */
@@ -452,6 +464,7 @@ export const plots = plotsRaw as unknown as Record<string, PlotDef>;
 export const projects = projectsRaw as unknown as Record<string, ProjectDef>;
 export const jobs = jobsRaw as unknown as JobDef[];
 export const mail = mailRaw as unknown as MailData;
+export const specials = specialsRaw as unknown as SpecialDef[];
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 
@@ -681,6 +694,15 @@ export function validateContent(): void {
     if (w.season !== undefined && !SEASONS.includes(w.season))
       fail('mail', `"${l.id}" has a bad season`);
     if (Object.keys(w).length === 0) fail('mail', `"${l.id}" has no "when"`);
+  }
+  for (const sp of specials) {
+    if (!npcs[sp.giver]) fail('specials', `"${sp.id}" is from unknown villager "${sp.giver}"`);
+    if (!items[sp.item]?.sellPrice)
+      fail('specials', `"${sp.id}" asks for unknown item "${sp.item}"`);
+    if (sp.project && !projects[sp.project])
+      fail('specials', `"${sp.id}" waits on unknown project "${sp.project}"`);
+    if (sp.seasons.length === 0 || sp.seasons.some((x) => !SEASONS.includes(x)))
+      fail('specials', `"${sp.id}" needs seasons`);
   }
   const jobIds = new Set<string>();
   for (const j of jobs) {
