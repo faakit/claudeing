@@ -37,6 +37,11 @@ export interface SfxAsset {
   voices: number;
   /** Level change (dB) for a repeat within 350 ms of the last one (held tools). Default -4; steps 0. */
   repeatDb?: number;
+  /** Repeats closer than this (seconds) are dropped: a fast drag over a row ticks at most this often. */
+  minGap?: number;
+  /** Cues this one silences for `maskFor` seconds after it plays (a row tick hides the footstep on that tile). */
+  masks?: string[];
+  maskFor?: number;
 }
 
 /** A looping ambience bed or a pool of one-shots (birds, drips). */

@@ -1,4 +1,4 @@
-"""Output loudness of each sound effect, per hit, from `hits-<cue>.wav` renders (render.mjs: eight hits
+"""Output loudness of each sound effect, per hit, from `hits-<cue>.wav` renders (render.mjs: sixteen hits
 1.2 s apart at the default volumes). Prints the K-weighted max momentary loudness (400 ms, stereo, as
 ebur128 "M") of every hit, their median and spread, and the gap to the role target at the output.
 
@@ -46,7 +46,7 @@ def main() -> None:
     for path in sorted(glob.glob(os.path.join(d, "hits-*.wav"))):
         cue = os.path.basename(path)[5:-4]
         x, sr = load(path)
-        hits = [momentary_max(x[int((0.2 + i * 1.2 - 0.05) * sr):int((0.2 + i * 1.2 + 1.15) * sr)], sr) for i in range(8)]
+        hits = [momentary_max(x[int((0.2 + i * 1.2 - 0.05) * sr):int((0.2 + i * 1.2 + 1.15) * sr)], sr) for i in range(16)]
         t = -19 if cue in JINGLES else target.get(cue)
         med = float(np.median(hits))
         gap = f"{med - t:+.1f}" if t is not None else "-"

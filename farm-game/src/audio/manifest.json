@@ -789,7 +789,7 @@
      "dur": 0.42
     }
    ],
-   "gain": 1.0839,
+   "gain": 1.2303,
    "pitch": 1.0,
    "vol": 1.5,
    "voices": 1
@@ -909,7 +909,7 @@
      "dur": 0.07
     }
    ],
-   "gain": 1.1614,
+   "gain": 1.0715,
    "pitch": 1.5,
    "vol": 1.5,
    "voices": 2
@@ -1039,7 +1039,7 @@
      "dur": 0.18
     }
    ],
-   "gain": 1.0965,
+   "gain": 1.0,
    "pitch": 1.5,
    "vol": 2,
    "voices": 3,
@@ -1114,7 +1114,13 @@
    "pitch": 1.0,
    "vol": 1.5,
    "voices": 2,
-   "repeatDb": -8
+   "repeatDb": -8,
+   "minGap": 0.07,
+   "masks": [
+    "stepGrass",
+    "stepWood"
+   ],
+   "maskFor": 0.08
   },
   "target": {
    "files": [
@@ -1138,7 +1144,8 @@
    "pitch": 0.8,
    "vol": 1,
    "voices": 1,
-   "repeatDb": -8
+   "repeatDb": -8,
+   "minGap": 0.07
   },
   "ringOpen": {
    "files": [

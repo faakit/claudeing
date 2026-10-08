@@ -10,7 +10,7 @@ INSTRUMENTS = {
     "piano": {"gain": 0.9, "pan": 0.0, "reverb": 0.3, "release": 0.35},
     "harp": {"gain": 0.8, "pan": -0.25, "reverb": 0.35, "release": 0.6},
     "marimba": {"gain": 0.8, "pan": 0.2, "reverb": 0.2, "release": 0.25},
-    "glock": {"gain": 0.45, "pan": 0.3, "reverb": 0.4, "release": 0.7},
+    "glock": {"gain": 0.38, "pan": 0.3, "reverb": 0.4, "release": 0.7},
     "vibes": {"gain": 0.75, "pan": -0.15, "reverb": 0.45, "release": 0.9},
     "pizz": {"gain": 0.9, "pan": 0.1, "reverb": 0.15, "release": 0.15},
     "recorder": {"gain": 0.75, "pan": 0.12, "reverb": 0.3, "release": 0.12, "attack": 0.03},
@@ -263,13 +263,15 @@ PIECES["winter"] = {
 # ---------------------------------------------------------------- title: Eb major, 76 bpm
 # A fixed four-bar hook (a rising sixth, Bb to G) opens every A section, doubled an octave up on the
 # glock. The harmony climbs I-iii7-IVmaj7-V and answers with the borrowed minor iv (Abm6) into the tonic:
-# a minor plagal cadence, the "coming home" sound. Harp, viola pad, cello bass, piano tune.
+# a minor plagal cadence, the "coming home" sound. It keeps borrowing from Eb minor (Cbmaj7, Gb, Cb).
+# The rest of the piano tune sits low (around C5) and leans on dotted, off-beat entries. Harp, viola
+# pad, cello bass.
 PIECES["title"] = {
     "key": "Eb major", "level": 2.7, "jingleKey": 3, "bpm": 76, "meter": 4,
     "sections": {
-        "A": {"chords": "Ebadd9 | Gm7 | Abmaj7 | Bbsus4 Bb | Eb/G | Cm7 | Abmaj7 | Abm6"},
-        "B": {"chords": "Cm9 | Abmaj7 | Eb/G | Bb | Cm9 | Abmaj7 | Fm9 | Bbsus4 Bb"},
-        "R": {"chords": "Abmaj7 | Ebadd9 | Abm6 | Eb"},
+        "A": {"chords": "Ebadd9 | Gm7 | Abmaj7 | Bbsus4 Bb | Eb/G | Cbmaj7 | Abmaj7 | Abm6"},
+        "B": {"chords": "Abmaj7 | Gb | Cb | Bbsus4 Bb | Abmaj7 | Gb | Fm9 | Bbsus4 Bb"},
+        "R": {"chords": "Cbmaj7 | Gb | Abm6 | Ebadd9"},
     },
     "form": ["A", "A", "B", "A", "R"],
     "layers": [
@@ -286,12 +288,12 @@ PIECES["title"] = {
         "hook": "Bb4:1 G5:2 F5:.5 Eb5:.5 | D5:1.5 Bb4:.5 F5:2 | Eb5:1 C5:1 G5:1.5 Ab5:.5 | Bb5:3 r:1",
         "hookHi": "Bb5:1 G6:2 F6:.5 Eb6:.5 | D6:1.5 Bb5:.5 F6:2 | Eb6:1 C6:1 G6:1.5 Ab6:.5 | Bb6:3 r:1",
         "bellEnd": "r:4 | r:4 | r:2 G6:2 | Eb6:2 r:2",
-        "a2": "G5:1.5 F5:.5 Eb5:1 Bb4:1 | C5:1 Eb5:1 G5:1 Bb5:1 | Ab5:1.5 G5:.5 Eb5:1 C5:1 | B4:2 Ab4:1 F4:1",
-        "a2b": "Eb5:2 D5:1 C5:1 | Bb4:2 C5:1 D5:1 | Eb5:1.5 F5:.5 G5:1 Ab5:1 | Ab5:1 G5:.5 F5:.5 Eb5:2",
-        "b1": "G5:3 Eb5:1 | C5:2 Eb5:1.5 Ab5:.5 | G5:2 Bb4:2 | D5:1 F5:1 Bb5:2",
-        "b1b": "C6:2 G5:1 Eb5:1 | Eb5:1.5 C5:.5 Ab4:2 | Bb4:1 Eb5:1 G5:2 | F5:3 r:1",
-        "b2": "Eb5:1 G5:1 C6:2 | C6:1.5 Ab5:.5 Eb5:2 | F5:1 Ab5:1 C6:1 Eb6:1 | Eb6:2 D6:2",
-        "b2b": "G5:2 Eb5:2 | Ab5:2 C5:2 | Ab5:1.5 G5:.5 F5:1 C5:1 | F5:2 D5:2",
+        "a2": "G4:1.5 Bb4:1 Eb5:1.5 | Eb5:1.5 Bb4:1 Gb4:1.5 | Ab4:1.5 C5:1 Eb5:1.5 | Cb5:2.5 Ab4:1.5",
+        "a2b": "Bb4:.5 Eb5:1.5 G4:2 | r:.5 Gb4:.5 Cb5:1.5 Bb4:1.5 | C5:2.5 Eb4:1.5 | F4:1.5 Ab4:1 Cb5:1.5",
+        "b1": "r:.5 Eb4:.5 Ab4:1.5 G4:.5 C5:1 | Bb4:1.5 Db5:1.5 Bb4:1 | Eb5:1.5 Gb4:.5 Cb5:2 | F4:1.5 Eb5:.5 D5:2",
+        "b1b": "C5:1.5 Ab4:.5 Eb4:1 G4:1 | Gb4:.5 Bb4:1 Db5:1.5 Bb4:1 | Cb5:1.5 Eb5:1 Gb5:1.5 | F5:2.5 D5:1.5",
+        "b2": "Ab4:1.5 C5:1 Eb5:1.5 | Db5:1.5 Bb4:1 Gb4:1.5 | Ab4:1.5 C5:.5 Eb5:1 G4:1 | Bb4:2.5 r:1.5",
+        "b2b": "r:1 Eb5:1.5 C5:1.5 | Bb4:1 Db5:1.5 F5:1.5 | F4:1 Ab4:1.5 C5:1.5 | Eb5:2 D5:2",
     },
 }
 

@@ -56,6 +56,27 @@ export function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   return buf;
 }
 
+/** Soft-clip transfer curve: identity up to KNEE, then a tanh shoulder towards CEILING (linear). */
+export const CLIP_KNEE = 0.6;
+export const CLIP_CEILING = 0.89;
+export function softClipCurve(n = 4097): Float32Array<ArrayBuffer> {
+  const curve = new Float32Array(new ArrayBuffer(n * 4));
+  const span = CLIP_CEILING - CLIP_KNEE;
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    const a = Math.abs(x);
+    curve[i] = Math.sign(x) * (a <= CLIP_KNEE ? a : CLIP_KNEE + span * Math.tanh((a - CLIP_KNEE) / span));
+  }
+  return curve;
+}
+
+function softClipper(ctx: BaseAudioContext): WaveShaperNode {
+  const ws = ctx.createWaveShaper();
+  ws.curve = softClipCurve();
+  ws.oversample = '4x';
+  return ws;
+}
+
 export function buildGraph(ctx: BaseAudioContext): Graph {
   const master = ctx.createGain();
   // A safety limiter at the very end: many sounds at once must never clip a phone speaker.
@@ -65,7 +86,12 @@ export function buildGraph(ctx: BaseAudioContext): Graph {
   limiter.ratio.value = 20;
   limiter.attack.value = 0.003;
   limiter.release.value = 0.15;
-  master.connect(limiter).connect(ctx.destination);
+  // The compressor's 3 ms attack lets the front of a transient through (max sliders, festival, rain and
+  // a burst of effects reached 0 dBTP). A soft clipper after it is the brick wall: linear up to
+  // -4.4 dBFS, then a tanh knee that never passes -1 dBFS. Normal mixes peak below the knee.
+  const out: AudioNode =
+    typeof ctx.createWaveShaper === 'function' ? softClipper(ctx) : ctx.createGain();
+  master.connect(limiter).connect(out).connect(ctx.destination);
   const mk = (dest: AudioNode, value = 1) => {
     const g = ctx.createGain();
     g.gain.value = value;

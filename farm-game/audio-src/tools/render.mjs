@@ -35,14 +35,39 @@ for (const c of ['tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'ui'])
   jobs.push({ name: `tap-rapid-${c}`, o: { seconds: 6, slot: 'spring', cues: Array.from({ length: 50 }, (_, i) => ({ cue: c, at: 0.5 + i * 0.1 })) } });
 for (const c of ['tick', 'target', 'ringOpen', 'ringClose', 'confirm'])
   jobs.push({ name: `tap-dry-${c}`, o: { seconds: 6, cues: Array.from({ length: 50 }, (_, i) => ({ cue: c, at: 0.5 + i * 0.1 })) } });
+// A row painted by dragging: 15 tiles a second over spring music, with footsteps every 0.28 s.
+jobs.push({
+  name: 'drag-row-15',
+  o: {
+    seconds: 6,
+    slot: 'spring',
+    cues: [
+      ...Array.from({ length: 60 }, (_, i) => ({ cue: 'tick', at: 1 + i / 15 })),
+      ...Array.from({ length: 15 }, (_, i) => ({ cue: 'stepGrass', at: 1.01 + i * 0.28 })),
+      { cue: 'confirm', at: 5.1 },
+    ],
+  },
+});
+// Stress: every slider at maximum, festival music, rain, 60 loud effects in 10 s. Must not clip.
+jobs.push({
+  name: 'stress-max',
+  o: {
+    seconds: 12,
+    slot: 'festival',
+    music: 1,
+    sfx: 1,
+    ambience: { rain: 1 },
+    cues: Array.from({ length: 60 }, (_, i) => ({ cue: ['coin', 'harvest', 'buy', 'till', 'water', 'cut'][i % 6], at: 0.5 + i / 6 })),
+  },
+});
 jobs.push({ name: 'tap-rapid-mix', o: { seconds: 6, slot: 'spring', cues: Array.from({ length: 50 }, (_, i) => ({ cue: ['target', 'tick', 'tick', 'tick', 'confirm'][i % 5], at: 0.5 + i * 0.1 })) } });
 jobs.push({ name: 'crickets-long', o: { seconds: 420, ambience: { crickets: 1 } } });
 jobs.push({ name: 'music-spring-indoor', o: { seconds: 40, slot: 'spring', indoor: true } });
 for (const s of ['title', 'mine', 'festival']) jobs.push({ name: `music-${s}`, o: { seconds: 60, slot: s } });
 for (const c of SFX) jobs.push({ name: `sfx-${c}`, o: { seconds: 2.5, cues: [{ cue: c, at: 0.2 }] } });
-// Eight hits of each cue, 1.2 s apart (no repeat duck), for per-take output loudness (sfxlevels.py).
+// Sixteen hits of each cue, 1.2 s apart (no repeat duck), for per-take output loudness (sfxlevels.py).
 for (const c of SFX)
-  jobs.push({ name: `hits-${c}`, o: { seconds: 10, cues: Array.from({ length: 8 }, (_, i) => ({ cue: c, at: 0.2 + i * 1.2 })) } });
+  jobs.push({ name: `hits-${c}`, o: { seconds: 20, cues: Array.from({ length: 16 }, (_, i) => ({ cue: c, at: 0.2 + i * 1.2 })) } });
 jobs.push({ name: 'amb-rain', o: { seconds: 20, ambience: { rain: 1 } } });
 jobs.push({ name: 'amb-birds', o: { seconds: 30, ambience: { birds: 1 } } });
 jobs.push({ name: 'amb-crickets', o: { seconds: 20, ambience: { crickets: 1 } } });

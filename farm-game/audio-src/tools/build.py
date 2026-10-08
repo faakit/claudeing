@@ -330,8 +330,9 @@ def build_sfx(raw: str, recipes: dict) -> dict:
         # closes the gap measured on renders of the real mix (audio-src/tools/sfxlevels.py).
         out[cue] = {"files": files, "gain": round(float(dsp.undb(r.get("trim", 0))), 4), "pitch": r["pitch"],
                     "vol": r["vol"], "voices": r["voices"]}
-        if "repeatDb" in r:
-            out[cue]["repeatDb"] = r["repeatDb"]
+        for k in ("repeatDb", "minGap", "masks", "maskFor"):
+            if k in r:
+                out[cue][k] = r[k]
     report.append("")
     return out
 
