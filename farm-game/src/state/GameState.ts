@@ -112,8 +112,8 @@ export interface GameState {
   energy: number;
   /** Charges left in the watering can. */
   water: number;
-  /** Levels of shop upgrades by id: can, stamina, hoe, rod. */
-  upgrades: { can: number; stamina: number; hoe: number; rod: number };
+  /** Levels of shop upgrades by id: can, stamina, hoe, rod, bag (each bag level adds a row of slots). */
+  upgrades: { can: number; stamina: number; hoe: number; rod: number; bag: number };
   /** Ids of the farm plots you own (see plots.json). Tilling is only allowed on owned plots. */
   plots: string[];
   inventory: { slots: (ItemStack | null)[]; selected: number };
@@ -145,7 +145,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 9;
 
 /** Feet position that puts the hitbox center in the middle of tile (tx, ty). */
 export function spawnPosition(tx: number, ty: number): { x: number; y: number } {
@@ -169,7 +169,7 @@ export function createInitialState(): GameState {
     money: game.startingMoney,
     energy: game.baseEnergy,
     water: game.canCapacity[0] ?? 20,
-    upgrades: { can: 0, stamina: 0, hoe: 0, rod: 0 },
+    upgrades: { can: 0, stamina: 0, hoe: 0, rod: 0, bag: 0 },
     plots: ['home'],
     inventory: { slots, selected: 0 },
     farm: { tiles: {}, weeds: {} },

@@ -441,6 +441,25 @@ try {
     JSON.stringify(ps.stats),
   );
   await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').close());
+  // The shop's Home tab: a Bigger Bag adds a row of slots; decorations are bought like seeds.
+  await ui(() => {
+    window.__farm.gameEvents.emit('openPanel', { type: 'shop' });
+    const shop = window.__farm.game.scene.getScene('UI').panels.get('shop');
+    shop.tab = 'home';
+    shop.rebuild();
+  });
+  await pp.waitForTimeout(400);
+  await pClick(163, 150 + 44 + 11); // Bigger Bag 1,500g
+  await pClick(170, 150 + 70 + 11); // Wood Fence 15g
+  ps = await pState();
+  check(
+    'Home tab: the Bigger Bag adds 8 slots and a fence can be bought',
+    ps.inventory.slots.length === 32 &&
+      ps.upgrades.bag === 1 &&
+      ps.inventory.slots.some((x) => x?.item === 'fence'),
+    `slots ${ps.inventory.slots.length} money ${ps.money}`,
+  );
+  await ui(() => window.__farm.game.scene.getScene('UI').panels.get('shop').close());
   await pp.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
   await pp.waitForTimeout(3200);
   await pp.keyboard.press('Enter');

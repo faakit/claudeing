@@ -141,7 +141,7 @@ registerActionHandler({
       (n, list) => n + list.filter((o) => o.type === stack.item).length,
       0,
     );
-    if (have >= max) return { refusal: `You can only have ${max} ${def.name.toLowerCase()}s.` };
+    if (have >= max) return { refusal: `You can only have ${max} of these.` };
     return {
       plan: {
         kind: 'place',
@@ -154,6 +154,7 @@ registerActionHandler({
           placeObject(state, tile.map, tile.tx, tile.ty, stack.item);
           addStat(state, 'placed');
           if (def.type === 'sapling') addStat(state, 'treesPlanted');
+          if (placeables[stack.item]?.behavior === 'decor') addStat(state, 'decorPlaced');
           return { item: stack.item };
         },
       },

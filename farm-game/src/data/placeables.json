@@ -132,5 +132,76 @@
     "params": {
       "max": 3
     }
+  },
+  "fence": {
+    "name": "Wood Fence",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_fence",
+    "params": {
+      "max": 60,
+      "charm": 1
+    }
+  },
+  "stone_path": {
+    "name": "Stone Path",
+    "behavior": "decor",
+    "solid": false,
+    "sprite": "obj_stone_path",
+    "params": {
+      "max": 80,
+      "charm": 1,
+      "flat": true
+    }
+  },
+  "flower_pot": {
+    "name": "Flower Pot",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_flower_pot",
+    "params": {
+      "max": 12,
+      "charm": 3
+    }
+  },
+  "garden_lamp": {
+    "name": "Garden Lamp",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_garden_lamp",
+    "params": {
+      "max": 8,
+      "charm": 5
+    }
+  },
+  "garden_bench": {
+    "name": "Garden Bench",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_garden_bench",
+    "params": {
+      "max": 6,
+      "charm": 6
+    }
+  },
+  "farm_statue": {
+    "name": "Farm Statue",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_farm_statue",
+    "params": {
+      "max": 2,
+      "charm": 25
+    }
+  },
+  "garden_fountain": {
+    "name": "Fountain",
+    "behavior": "decor",
+    "solid": true,
+    "sprite": "obj_garden_fountain",
+    "params": {
+      "max": 1,
+      "charm": 60
+    }
   }
 }

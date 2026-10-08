@@ -18,3 +18,4 @@ import './villagers';
 import './mining';
 import './festivals';
 import './projects';
+import './decor';

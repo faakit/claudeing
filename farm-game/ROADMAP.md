@@ -134,7 +134,8 @@ More people, more places, more to discover.
 
 - [x] **D1 Town projects.** Six projects funded at the town board (`projects.json`), each granting a perk
       for good and a landmark in town. About 103k gold of late-game sink plus mined and crafted goods.
-- [ ] **D2 Home upgrades and decorations.** Bigger bag tiers; cosmetic placeables (fences, paths, flowers).
+- [x] **D2 Home upgrades and decorations.** Bigger Bag (two rows of 8 slots) and seven decorations on the
+      shop's new Home tab; dear rows lose the x5 button.
 - [ ] **D3 Daily jobs.** Small daily requests from villagers that fill the idle hours of days 2 to 14.
 - [ ] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays.
 

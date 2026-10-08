@@ -209,6 +209,14 @@
     "hint": "Open the shop and check the Upgrades tab."
   },
   {
+    "id": "bag",
+    "text": "Buy a Bigger Bag",
+    "stat": "upgraded.bag",
+    "target": 1,
+    "reward": 200,
+    "hint": "Shop > Home tab. Eight more slots for your goods."
+  },
+  {
     "id": "earn5k",
     "text": "Earn 5,000g selling crops",
     "stat": "earned",
@@ -238,6 +246,14 @@
       "town": [14, 12],
       "farm": [14, 42]
     }
+  },
+  {
+    "id": "decor10",
+    "text": "Place 10 decorations on the farm",
+    "stat": "decorPlaced",
+    "target": 10,
+    "reward": 300,
+    "hint": "Shop > Home tab. Place them like a sprinkler."
   },
   {
     "id": "jars",

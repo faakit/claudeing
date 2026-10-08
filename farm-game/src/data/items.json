@@ -754,5 +754,75 @@
     "sellPrice": 160,
     "description": "Smelts ore into bars in 2 days.",
     "placeable": true
+  },
+  "fence": {
+    "name": "Wood Fence",
+    "type": "placeable",
+    "icon": "item_fence",
+    "color": "#a0703a",
+    "buyPrice": 15,
+    "sellPrice": 3,
+    "placeable": true,
+    "description": "A sturdy fence post. Line up a few."
+  },
+  "stone_path": {
+    "name": "Stone Path",
+    "type": "placeable",
+    "icon": "item_stone_path",
+    "color": "#b8b0a0",
+    "buyPrice": 10,
+    "sellPrice": 2,
+    "placeable": true,
+    "description": "Flat stones to walk on. Keeps a path tidy."
+  },
+  "flower_pot": {
+    "name": "Flower Pot",
+    "type": "placeable",
+    "icon": "item_flower_pot",
+    "color": "#e07aa0",
+    "buyPrice": 120,
+    "sellPrice": 30,
+    "placeable": true,
+    "description": "Pink blooms in a clay pot."
+  },
+  "garden_lamp": {
+    "name": "Garden Lamp",
+    "type": "placeable",
+    "icon": "item_garden_lamp",
+    "color": "#f4d35e",
+    "buyPrice": 450,
+    "sellPrice": 112,
+    "placeable": true,
+    "description": "A warm lamp for evening walks."
+  },
+  "garden_bench": {
+    "name": "Garden Bench",
+    "type": "placeable",
+    "icon": "item_garden_bench",
+    "color": "#8a5a32",
+    "buyPrice": 600,
+    "sellPrice": 150,
+    "placeable": true,
+    "description": "A bench to rest on after a long day."
+  },
+  "farm_statue": {
+    "name": "Farm Statue",
+    "type": "placeable",
+    "icon": "item_farm_statue",
+    "color": "#c9ced6",
+    "buyPrice": 5000,
+    "sellPrice": 1250,
+    "placeable": true,
+    "description": "A proud statue of a giant turnip."
+  },
+  "garden_fountain": {
+    "name": "Fountain",
+    "type": "placeable",
+    "icon": "item_garden_fountain",
+    "color": "#6fa3e0",
+    "buyPrice": 12000,
+    "sellPrice": 3000,
+    "placeable": true,
+    "description": "A splashing fountain. The finest farms have one."
   }
 }

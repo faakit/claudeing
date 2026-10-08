@@ -50,5 +50,6 @@
     "summer": 0.07,
     "fall": 0.06,
     "winter": 0.0
-  }
+  },
+  "bagSlotsPerLevel": 8
 }

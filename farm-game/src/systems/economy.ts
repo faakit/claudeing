@@ -5,7 +5,15 @@ import { waterCapacity } from './actions';
 import { restoreEnergy } from './energy';
 import { gameEvents } from './events';
 import { addStat } from './goals';
-import { addItem, countItem, countStack, removeItem, removeStack, roomFor } from './inventory';
+import {
+  addItem,
+  countItem,
+  countStack,
+  growBag,
+  removeItem,
+  removeStack,
+  roomFor,
+} from './inventory';
 import { perk } from './skills';
 import { keyOf, parseKey, refOf, sellValue, type ItemRef } from './itemRef';
 
@@ -112,7 +120,9 @@ export function buyUpgrade(
   (state.upgrades as Record<string, number>)[up.id] = upgradeLevel(state, up) + 1;
   if (up.id === 'can') state.water = waterCapacity(state);
   else if (up.id === 'stamina') restoreEnergy(state, 1);
+  else if (up.id === 'bag') growBag(state);
   gameEvents.emit('moneyChanged', { delta: -next.price });
+  state.stats[`upgraded.${up.id}`] = upgradeLevel(state, up);
   addStat(state, 'upgrades');
   return 'ok';
 }

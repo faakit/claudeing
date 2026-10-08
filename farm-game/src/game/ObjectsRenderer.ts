@@ -185,10 +185,12 @@ export class ObjectsRenderer {
       });
       const x = obj.tx * TILE_SIZE + TILE_SIZE / 2;
       const y = (obj.ty + 1) * TILE_SIZE;
+      // Flat things (a stone path) lie on the ground: under the player, never over them.
+      const flat = def.params['flat'] === true;
       const sprite = this.scene.add
         .image(x, y, spriteOf(obj))
         .setOrigin(0.5, 1)
-        .setDepth(10 + y - 3);
+        .setDepth(flat ? 0.6 : 10 + y - 3);
       const extra: Phaser.GameObjects.GameObject[] = [];
       if (sig.startsWith('busy') && def.behavior === 'jar') sprite.setTint(0xd9d9d9);
       if (sig.startsWith('ready')) {

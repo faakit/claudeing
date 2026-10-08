@@ -184,7 +184,9 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   const pitch = 23;
   const x0 = 8;
   // The grid sits at the bottom of the sheet, right above the tabs, where the thumb already is.
-  const y0 = c.bottom - 3 * pitch - 2;
+  // A Bigger Bag adds whole rows; the grid grows upward so it stays next to the thumb.
+  const rows = Math.ceil(s.inventory.slots.length / 8);
+  const y0 = c.bottom - rows * pitch - 2;
   const g = c.scene.add.graphics();
   c.add(g);
   const cursor = menu.selectedCursor;

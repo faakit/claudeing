@@ -135,13 +135,17 @@ function migrateV4(raw: Raw): Raw {
 
 /**
  * The goal chain is a list and the save keeps an index into it, so a release that inserts goals must
- * keep that index on the same goal. `oldIds` is the chain as the older release had it. Goals inserted
+ * keep that index on the same goal. `oldIds` is the chain as the older release had it, `ids` the chain
+ * of the version being migrated to (the current goals for the last step). Goals inserted
  * before the player's current one are skipped (they are easy early goals a veteran has outgrown);
  * a player who had finished every goal continues with the first goal added after the old last one.
  */
-export function remapGoalIndex(raw: Raw, oldIds: readonly string[]): Raw {
+export function remapGoalIndex(
+  raw: Raw,
+  oldIds: readonly string[],
+  ids: readonly string[] = goals.map((g) => g.id),
+): Raw {
   const at = typeof raw['goalIndex'] === 'number' ? Math.max(0, Math.floor(raw['goalIndex'])) : 0;
-  const ids = goals.map((g) => g.id);
   const current = oldIds[at];
   let next = current === undefined ? -1 : ids.indexOf(current);
   if (next < 0) {
@@ -196,7 +200,23 @@ const GOALS_V7 = [
 
 /** v7 -> v8: town projects added goals to the chain (their progress lives in stats, no new state). */
 function migrateV7(raw: Raw): Raw {
-  return { ...remapGoalIndex(raw, GOALS_V7), version: 8 };
+  return { ...remapGoalIndex(raw, GOALS_V7, GOALS_V8), version: 8 };
+}
+
+/** Goal ids of the save-version-8 release (town projects). */
+// prettier-ignore
+const GOALS_V8 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'harvest', 'ship', 'fish', 'order', 'craft',
+  'place', 'preserve', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade',
+  'earn5k', 'land', 'project1', 'jars', 'fish20', 'orders10', 'heart5', 'event', 'craft10', 'mine10',
+  'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k',
+  'collect200', 'projectAll',
+] as const;
+
+/** v8 -> v9: the Bigger Bag upgrade (a level of 0 keeps the old slot count) and two home goals. */
+function migrateV8(raw: Raw): Raw {
+  const up = isObj(raw['upgrades']) ? raw['upgrades'] : {};
+  return { ...remapGoalIndex(raw, GOALS_V8), version: 9, upgrades: { ...up, bag: 0 } };
 }
 
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
@@ -207,6 +227,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   5: migrateV5,
   6: migrateV6,
   7: migrateV7,
+  8: migrateV8,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -276,7 +297,9 @@ export function sanitize(raw: Raw): GameState {
     stamina: int(u['stamina'], 0, 0, staminaMax),
     hoe: int(u['hoe'], 0, 0, upgradeMax('hoe')),
     rod: int(u['rod'], 0, 0, upgradeMax('rod')),
+    bag: int(u['bag'], 0, 0, upgradeMax('bag')),
   };
+  const bagSlots = game.inventorySlots + upgrades.bag * game.bagSlotsPerLevel;
   const maxEnergy = game.baseEnergy + upgrades.stamina * game.energyPerUpgrade;
   const canCap = game.canCapacity[upgrades.can] ?? 20;
 
@@ -285,24 +308,21 @@ export function sanitize(raw: Raw): GameState {
   const toolIds = Object.entries(items)
     .filter(([, it]) => it.type === 'tool')
     .map(([id]) => id);
-  const slots: GameState['inventory']['slots'] = Array.from(
-    { length: game.inventorySlots },
-    (_, i) => {
-      if (i < toolIds.length) return { item: toolIds[i] as string, qty: 1 };
-      const st = rawSlots[i];
-      if (!isObj(st) || typeof st['item'] !== 'string') return null;
-      const def = items[st['item']];
-      if (!def || def.type === 'tool') return null;
-      const stack: NonNullable<GameState['inventory']['slots'][number]> = {
-        item: st['item'],
-        qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit),
-      };
-      const q = int(st['q'], 0, 0, game.qualityMultipliers.length - 1);
-      if (q > 0) stack.q = q;
-      if (def.derived && typeof st['of'] === 'string' && items[st['of']]) stack.of = st['of'];
-      return stack;
-    },
-  );
+  const slots: GameState['inventory']['slots'] = Array.from({ length: bagSlots }, (_, i) => {
+    if (i < toolIds.length) return { item: toolIds[i] as string, qty: 1 };
+    const st = rawSlots[i];
+    if (!isObj(st) || typeof st['item'] !== 'string') return null;
+    const def = items[st['item']];
+    if (!def || def.type === 'tool') return null;
+    const stack: NonNullable<GameState['inventory']['slots'][number]> = {
+      item: st['item'],
+      qty: int(st['qty'], 1, 1, def.stackLimit ?? game.stackLimit),
+    };
+    const q = int(st['q'], 0, 0, game.qualityMultipliers.length - 1);
+    if (q > 0) stack.q = q;
+    if (def.derived && typeof st['of'] === 'string' && items[st['of']]) stack.of = st['of'];
+    return stack;
+  });
 
   const farmRaw = obj(raw['farm']);
   const tiles: GameState['farm']['tiles'] = {};

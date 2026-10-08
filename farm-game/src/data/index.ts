@@ -108,9 +108,13 @@ export interface UpgradeNeed {
   qty: number;
 }
 export interface UpgradeDef {
-  /** 'can', 'stamina', 'hoe', 'rod': the keys of `state.upgrades`. */
+  /** 'can', 'stamina', 'hoe', 'rod', 'bag': the keys of `state.upgrades`. */
   id: string;
   name: string;
+  /** Shop tab it is sold on: the Upgrades tab unless it says "home". */
+  tab?: 'home';
+  /** Row icon texture (defaults per id). */
+  icon?: string;
   levels: { price: number; label: string; needs?: UpgradeNeed }[];
 }
 export interface ShopDef {
@@ -307,6 +311,8 @@ export interface GameData {
   startingMoney: number;
   startingItems: { item: string; qty: number }[];
   inventorySlots: number;
+  /** Extra slots each Bigger Bag level adds (a whole row of the bag grid). */
+  bagSlotsPerLevel: number;
   hotbarSlots: number;
   toolSlots: number;
   stackLimit: number;
@@ -578,6 +584,11 @@ export function validateContent(): void {
       seen.add(at);
     }
   }
+  for (const [id, pl] of Object.entries(placeables))
+    if (pl.behavior === 'decor' && !(Number(pl.params['max']) >= 1))
+      fail('placeables', `decoration "${id}" needs a "max" of at least 1`);
+  if (game.bagSlotsPerLevel % game.hotbarSlots !== 0)
+    fail('game', 'bagSlotsPerLevel must be whole rows of the bag grid');
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');
