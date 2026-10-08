@@ -37,6 +37,8 @@ for (let i = 0; i < 50; i++) {
 
 const browser = await chromium.launch({ executablePath: CHROMIUM });
 const results = [];
+/** Sound effects played from files during the storm scene, per throttle level. */
+const sfxCounts = [];
 try {
   for (const rate of throttles) {
     const ctx = await browser.newContext({
@@ -139,6 +141,19 @@ try {
       });
     });
     await page.evaluate(() => (window.__farm.inputHub.actionHeld = false));
+    // Sound-effect storm: 20 cues a second (tools, rewards, steps, touch ticks) on top of the full
+    // field and the music, so the budget covers the sfx path (take choice, voice caps, node churn).
+    const sfxBefore = await page.evaluate(() => window.__farm.audio.debugInfo().sfx?.played ?? 0);
+    await sample('full field + 20 sound effects a second', () =>
+      page.evaluate(() => {
+        const cues = ['water', 'till', 'stepGrass', 'harvest', 'coin', 'cut', 'plant', 'tick', 'stepGrass', 'swing'];
+        let i = 0;
+        window.__sfxStorm = setInterval(() => window.__farm.audio.play(cues[i++ % cues.length]), 50);
+      }),
+    );
+    await page.evaluate(() => clearInterval(window.__sfxStorm));
+    const sfxPlayed = (await page.evaluate(() => window.__farm.audio.debugInfo().sfx?.played ?? 0)) - sfxBefore;
+    sfxCounts.push({ throttle: `${rate}x`, played: sfxPlayed });
     // The budget above includes the audio engine's scheduling: report that music really was playing.
     const au = await page.evaluate(() => window.__farm.audio.debugInfo());
     console.log(
@@ -151,6 +166,14 @@ try {
   server.kill();
 }
 console.table(results);
+
+// The storm scene must really have played sound effects from files (not the synth, not nothing).
+console.log('sfx played from files during the storm scene:', JSON.stringify(sfxCounts));
+const quiet = sfxCounts.filter((c) => c.played < 20);
+if (quiet.length > 0) {
+  console.error('PERF: the sound-effect scene played fewer than 20 sfx from files:', quiet);
+  process.exit(1);
+}
 
 // Regression budgets (hardware-independent): fail loudly if the renderer gets heavier.
 const BUDGET = { drawsPerFrame: 12, jsMsPerFrame: 3.5 };
