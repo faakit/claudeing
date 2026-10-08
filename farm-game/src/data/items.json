@@ -1027,5 +1027,37 @@
     "sellPrice": 540,
     "energy": 80,
     "description": "The best of fall. Restores 80 energy."
+  },
+  "glimmer_trout": {
+    "name": "Glimmer Trout",
+    "type": "fish",
+    "icon": "item_glimmer_trout",
+    "color": "#e8c0d0",
+    "sellPrice": 400,
+    "description": "A legend of the spring river."
+  },
+  "sun_carp": {
+    "name": "Sun Carp",
+    "type": "fish",
+    "icon": "item_sun_carp",
+    "color": "#f2b84a",
+    "sellPrice": 350,
+    "description": "A golden giant of the farm pond."
+  },
+  "old_whiskers": {
+    "name": "Old Whiskers",
+    "type": "fish",
+    "icon": "item_old_whiskers",
+    "color": "#5a5a6a",
+    "sellPrice": 500,
+    "description": "The oldest catfish in the woods."
+  },
+  "ice_pike": {
+    "name": "Ice Pike",
+    "type": "fish",
+    "icon": "item_ice_pike",
+    "color": "#b8d8e8",
+    "sellPrice": 450,
+    "description": "Hunts under the winter ice."
   }
 }

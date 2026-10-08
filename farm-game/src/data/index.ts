@@ -186,6 +186,8 @@ export interface FishDef {
   weight: number;
   /** 0..1: how hard the reel mini-game is. */
   difficulty: number;
+  /** A legendary fish: bites until you catch it once, never asked for on the board. */
+  legend?: boolean;
 }
 export interface OrdersDef {
   perDay: number;

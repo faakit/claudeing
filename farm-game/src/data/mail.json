@@ -183,6 +183,16 @@
         "item": "scarecrow",
         "qty": 1
       }
+    },
+    {
+      "id": "legends",
+      "from": "finn",
+      "title": "Legends of the valley",
+      "text": "Four giant fish live here, one a season, and each bites only once. A trout in the town river on rainy spring days. A golden carp in your own pond in summer. Old Whiskers in the woods when fall rain falls. A pike under the winter ice in town.",
+      "when": {
+        "stat": "caught",
+        "min": 10
+      }
     }
   ]
 }

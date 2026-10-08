@@ -17,12 +17,13 @@ export function fishFor(state: GameState, map: string): FishDef[] {
   const stocked = festivalToday(state)?.def.stocked;
   return fishTable.filter(
     (f) =>
-      (stocked?.fish === f.item && stocked.maps.includes(map)) ||
-      (f.maps.includes(map) &&
-        f.seasons.includes(state.time.season) &&
-        (!f.weather ||
-          (f.weather === 'rain' && isWet(state.weather)) ||
-          f.weather === state.weather)),
+      !(f.legend && state.stats[`legend.${f.item}`]) &&
+      ((stocked?.fish === f.item && stocked.maps.includes(map)) ||
+        (f.maps.includes(map) &&
+          f.seasons.includes(state.time.season) &&
+          (!f.weather ||
+            (f.weather === 'rain' && isWet(state.weather)) ||
+            f.weather === state.weather))),
   );
 }
 
@@ -167,6 +168,12 @@ export function resolveCatch(
   if (recordCatch(state, { item: fishId, q }))
     toast(`Derby best! ${displayName({ item: fishId, q })}. Score ${derbyScore(state)}.`, 'good');
   addStat(state, 'caught');
+  if (def.legend) {
+    // A legend bites once a game: remember it, and make a fuss.
+    state.stats[`legend.${fishId}`] = 1;
+    addStat(state, 'legends');
+    toast(`A legend! You caught the ${items[fishId]?.name ?? fishId}!`, 'good');
+  }
   if (q > 0) addStat(state, 'qualityCaught');
   if (outcome.perfect) addStat(state, 'perfectCatch');
   addXp(

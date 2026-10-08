@@ -41,5 +41,39 @@
     "seasons": ["fall"],
     "weight": 2,
     "difficulty": 0.7
+  },
+  {
+    "item": "glimmer_trout",
+    "maps": ["town"],
+    "seasons": ["spring"],
+    "weight": 0.4,
+    "difficulty": 0.85,
+    "legend": true,
+    "weather": "rain"
+  },
+  {
+    "item": "sun_carp",
+    "maps": ["farm"],
+    "seasons": ["summer"],
+    "weight": 0.4,
+    "difficulty": 0.8,
+    "legend": true
+  },
+  {
+    "item": "old_whiskers",
+    "maps": ["woods"],
+    "seasons": ["fall"],
+    "weight": 0.4,
+    "difficulty": 0.9,
+    "legend": true,
+    "weather": "rain"
+  },
+  {
+    "item": "ice_pike",
+    "maps": ["town"],
+    "seasons": ["winter"],
+    "weight": 0.4,
+    "difficulty": 0.85,
+    "legend": true
   }
 ]

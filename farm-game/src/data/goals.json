@@ -484,5 +484,13 @@
     "target": 1,
     "reward": 300,
     "hint": "Buy a kitchen (shop, Home tab), then cook at the workbench."
+  },
+  {
+    "id": "legend1",
+    "text": "Catch a legendary fish",
+    "stat": "legends",
+    "target": 1,
+    "reward": 1500,
+    "hint": "Finn knows where the four legends of the valley hide."
   }
 ]

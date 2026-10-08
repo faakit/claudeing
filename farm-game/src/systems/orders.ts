@@ -42,7 +42,7 @@ export function orderCandidates(state: GameState): ItemRef[] {
       add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
-  for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });
+  for (const f of fishTable) if (f.seasons.includes(season) && !f.legend) add({ item: f.item });
   // Eggs, milk, wool, truffles and honey, once the farm makes them.
   for (const item of animalOutput(state).keys()) add({ item });
   // Goods from any machine the player has unlocked (jam, pickles, wine...).

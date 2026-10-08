@@ -402,3 +402,9 @@ An independent critic played the build at `5fd9943` (14 real-input days plus pro
 - **Six dishes cooked at the workbench** (recipes with `kitchen: true`): Parsnip Soup, Baked Potato, Fish Stew, Berry Tart, Kale Salad, Pumpkin Pie. Each restores 30 to 80 energy. Eat from the bag card ("Eat +40") or with the dish in hand and Action (`eat` handler, priority 45; auto tool: none). A full player is refused, so a dish is never wasted.
 - **Energy, not money:** a dish sells for at most 15% over its ingredients (a test), so cooking makes a long day longer instead of being a second jar. Villagers like some dishes (Rosa loves pumpkin pie, Finn fish stew). A "Cook a meal" goal is appended.
 - New texture keys: `item_parsnip_soup`, `item_baked_potato`, `item_fish_stew`, `item_berry_tart`, `item_kale_salad`, `item_pumpkin_pie`.
+
+## Legendary fish (fishing mastery)
+
+- **Four legends, one a season** (`legend: true` in `fish.json`, appended so derby fish codes keep their meaning): Glimmer Trout (town river, rainy spring), Sun Carp (the farm pond, summer), Old Whiskers (woods, rainy fall), Ice Pike (town, winter). Each is rare (weight 0.4), hard (0.8 to 0.9) and bites only until you catch it once (`legend.<id>` stat). They are never board requests.
+- **Found through Finn:** a letter after your tenth catch says where each hides; a "Catch a legendary fish" goal is appended. Not on a Book page, so finishing the Book stays reachable.
+- New texture keys: `item_glimmer_trout`, `item_sun_carp`, `item_old_whiskers`, `item_ice_pike`.
