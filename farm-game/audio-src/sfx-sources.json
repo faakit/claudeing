@@ -321,5 +321,13 @@
   "licence": "CC0-1.0",
   "pack": "OpenGameArt: wind1",
   "note": "Synthesized wind (PureData)."
+ },
+ "amb/oga-rubberduck-thunder": {
+  "url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx-2",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx-2",
+  "member": "sfx100v2_thunder_01.ogg"
  }
 }

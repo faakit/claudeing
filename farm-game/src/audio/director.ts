@@ -36,13 +36,15 @@ export interface AmbienceTargets {
   wind: number;
   cave: number;
   drips: number;
+  thunder: number;
 }
 
 export function chooseAmbience(s: Scene): AmbienceTargets {
-  const none: AmbienceTargets = { birds: 0, crickets: 0, wind: 0, cave: 0, drips: 0 };
+  const none: AmbienceTargets = { birds: 0, crickets: 0, wind: 0, cave: 0, drips: 0, thunder: 0 };
   if (!s.inGame) return none;
   if (s.map === 'mine') return { ...none, cave: 1, drips: 1 };
-  if (!s.outdoor) return none;
+  // Thunder carries indoors too, a little softer.
+  if (!s.outdoor) return { ...none, thunder: s.weather === 'storm' ? 0.6 : 0 };
   const wet = s.weather !== 'sunny';
   const storm = s.weather === 'storm';
   const day = 1 - s.night;
@@ -56,5 +58,6 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     wind: storm ? 0.8 : winter ? 0.5 + 0.4 * s.night : 0,
     cave: 0,
     drips: 0,
+    thunder: storm ? 1 : 0,
   };
 }

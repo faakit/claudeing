@@ -24,6 +24,7 @@ All files were rebuilt by `audio-src/tools/build.py`.
 | `amb/birds-*` | [Ambient Bird Sounds](https://opengameart.org/content/ambient-bird-sounds) and [Bird chirping sounds](https://opengameart.org/content/bird-chirping-sounds) | isaiah658; syncopika | CC0 | Single calls cut out (played at random times, positions and pitches) |
 | `amb/drips-*` | [Dripping water loop](https://opengameart.org/content/dripping-water-loop) | qubodup | CC0 | Single drips cut out |
 | `amb/cave` | [Loopable Dungeon Ambience](https://opengameart.org/content/loopable-dungeon-ambience) | jaggedstone | CC0 | 16 s cut, crossfaded loop |
+| `amb/thunder-*` | [100 CC0 SFX #2](https://opengameart.org/content/100-cc0-sfx-2) | rubberduck | CC0 | One thunder roll trimmed, a second copy 3 semitones lower (storms only) |
 | `amb/wind` | [wind1](https://opengameart.org/content/wind1) | lukerustltd | CC0 | 15 s cut, crossfaded loop |
 
 The music itself (melodies, chords, arrangements in `src/audio/music.json`) was composed for this game.

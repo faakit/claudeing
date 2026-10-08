@@ -171,4 +171,6 @@ family target is in the next column; max momentary is the loudest 400 ms window.
 | drips | 4 | 540 | 1.3 | -26.0 | -26 | -25.1 | -9.5 | - |
 | drips | 5 | 350 | 2.0 | -26.0 | -26 | -28.6 | -2.5 | - |
 | drips | 6 | 310 | 0.6 | -26.0 | -26 | -27.2 | -10.8 | - |
+| thunder | 1 | 3740 | 0.6 | -27.0 | -27 | -21.6 | -8.9 | - |
+| thunder | 2 | 4400 | 0.6 | -27.0 | -27 | -21.7 | -9.2 | - |
 

@@ -349,7 +349,7 @@ def build_ambience(raw: str, recipes: dict) -> dict:
         else:
             files = []
             for i, part in enumerate(r["shots"]):
-                y = finish_shot(mix_parts(raw, [part], r["hp"]), r["level"], 2.0)
+                y = finish_shot(mix_parts(raw, [part], r["hp"]), r["level"], r.get("maxLen", 2.0))
                 fname = f"amb/{name}-{i + 1}.mp3"
                 dsp.encode_mp3(y, os.path.join(OUT, fname), quality=6)
                 files.append({"file": fname, "onset": round(dsp.onset(y, -40) / SR, 5), "dur": round(len(y) / SR, 4)})

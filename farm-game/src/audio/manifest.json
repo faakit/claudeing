@@ -1223,6 +1223,23 @@
    "gain": 1,
    "mode": "shots",
    "every": 2.5
+  },
+  "thunder": {
+   "files": [
+    {
+     "file": "amb/thunder-1.mp3",
+     "onset": 0.00057,
+     "dur": 3.74
+    },
+    {
+     "file": "amb/thunder-2.mp3",
+     "onset": 0.00057,
+     "dur": 4.4
+    }
+   ],
+   "gain": 1,
+   "mode": "shots",
+   "every": 28
   }
  }
 }

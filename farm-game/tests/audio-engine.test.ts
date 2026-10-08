@@ -226,5 +226,8 @@ describe('director', () => {
     expect(chooseAmbience({ ...base, map: 'mine', outdoor: false })).toMatchObject({ cave: 1, drips: 1, birds: 0 });
     expect(chooseAmbience({ ...base, map: 'house', outdoor: false }).birds).toBe(0);
     expect(chooseAmbience({ ...base, inGame: false }).birds).toBe(0);
+    expect(chooseAmbience({ ...base, weather: 'storm' }).thunder).toBe(1);
+    expect(chooseAmbience({ ...base, weather: 'storm', map: 'house', outdoor: false }).thunder).toBeGreaterThan(0);
+    expect(chooseAmbience({ ...base, weather: 'rain' }).thunder).toBe(0);
   });
 });

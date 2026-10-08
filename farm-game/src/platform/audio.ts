@@ -109,6 +109,7 @@ class AudioEngine {
   private synthBus!: GainNode;
   private ambienceBus!: GainNode;
   private musicBus!: GainNode;
+  private duck!: GainNode;
   private dayBus!: GainNode;
   private nightBus!: GainNode;
   private bothBus!: GainNode;
@@ -212,6 +213,7 @@ class AudioEngine {
     this.synthBus = g.synthBus;
     this.ambienceBus = g.ambienceBus;
     this.musicBus = g.musicBus;
+    this.duck = g.duck;
     this.dayBus = g.dayBus;
     this.nightBus = g.nightBus;
     this.bothBus = g.bothBus;
@@ -382,6 +384,10 @@ class AudioEngine {
     if (!ctx || this.muted) return;
     const now = ctx.currentTime;
     if (JINGLE_CUES.has(name)) {
+      // Let a fanfare through: dip the music for a moment (-6 dB, back over about a second).
+      this.duck.gain.cancelScheduledValues(now);
+      this.duck.gain.setTargetAtTime(0.5, now, 0.05);
+      this.duck.gain.setTargetAtTime(1, now + 0.9, 0.35);
       if (this.musicPlayer?.jingle(name, now)) return;
     } else if (this.sfxPlayer?.play(name, now)) return;
     this.playSynth(name);

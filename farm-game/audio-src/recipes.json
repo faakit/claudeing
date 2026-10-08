@@ -827,6 +827,26 @@
      "to": 1.45
     }
    ]
+  },
+  "thunder": {
+   "mode": "shots",
+   "every": 28,
+   "level": -27,
+   "hp": 60,
+   "shots": [
+    {
+     "src": "amb/oga-rubberduck-thunder",
+     "from": 0.75,
+     "to": 5.2
+    },
+    {
+     "src": "amb/oga-rubberduck-thunder",
+     "from": 0.75,
+     "to": 5.2,
+     "shift": -3
+    }
+   ],
+   "maxLen": 4.4
   }
  }
 }

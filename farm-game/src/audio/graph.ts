@@ -27,6 +27,8 @@ export interface Graph {
   synthBus: GainNode;
   ambienceBus: GainNode;
   musicBus: GainNode;
+  /** Briefly lowers the music under a jingle (level up, goal...). */
+  duck: GainNode;
   dayBus: GainNode;
   nightBus: GainNode;
   bothBus: GainNode;
@@ -73,7 +75,8 @@ export function buildGraph(ctx: BaseAudioContext): Graph {
   const sfxBus = mk(master);
   const synthBus = mk(sfxBus, K_SYNTH_SFX);
   const ambienceBus = mk(sfxBus, K_AMBIENCE);
-  const musicBus = mk(master);
+  const duck = mk(master);
+  const musicBus = mk(duck);
   // One small reverb for all music: mono in, generated stereo impulse (no file).
   const reverbIn = ctx.createGain();
   reverbIn.channelCount = 1;
@@ -87,6 +90,7 @@ export function buildGraph(ctx: BaseAudioContext): Graph {
     synthBus,
     ambienceBus,
     musicBus,
+    duck,
     dayBus: mk(musicBus),
     nightBus: mk(musicBus, 0),
     bothBus: mk(musicBus),

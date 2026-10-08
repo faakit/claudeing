@@ -156,3 +156,4 @@ and credit them in ASSETS.md.
 | amb/oga-drip | [OpenGameArt: dripping-water-loop](https://opengameart.org/content/dripping-water-loop) | qubodup | `atmosbasement.mp3_.flac` | CC0-1.0 | 77e17163b4bc | amb/drips-1.mp3, amb/drips-2.mp3, amb/drips-3.mp3, amb/drips-4.mp3, amb/drips-5.mp3, amb/drips-6.mp3 |
 | amb/oga-dungeon | [OpenGameArt: loopable-dungeon-ambience](https://opengameart.org/content/loopable-dungeon-ambience) | jaggedstone | `dungeon_ambient_1_0.ogg` | CC0-1.0 | 72243d85104b | amb/cave.mp3 |
 | amb/oga-wind1 | [OpenGameArt: wind1](https://opengameart.org/content/wind1) | lukerustltd (Synthesized wind (PureData).) | `wind1.wav` | CC0-1.0 | 63326da48ec3 | amb/wind.mp3 |
+| amb/oga-rubberduck-thunder | [OpenGameArt: 100-cc0-sfx-2](https://opengameart.org/content/100-cc0-sfx-2) | rubberduck | `sfx100v2_thunder_01.ogg` in `sfx_100_v2.zip` | CC0-1.0 | 639a29a34913 | amb/thunder-1.mp3, amb/thunder-2.mp3 |
