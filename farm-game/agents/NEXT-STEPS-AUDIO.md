@@ -61,6 +61,21 @@ the critic has not re-measured yet. **Re-render everything at `f9c0aae` before b
 | Nit | ui-1 is 2 dB under its target (true-peak limited) | Swap the take or limit it. |
 | Nit | Birds one-shots read -18..-24 max momentary in the file (about -23..-29 at the output at full intensity) | Probably fine as foreground birdsong but may sit above the music; listen, and lower `birds.level` if so. |
 
+## Critic final round (on f305b87)
+
+Confirmed fixed by the critic's own renders (`audio-critique/round-3/renders`, `final.md`): rapid water
+(16 cans at 0.2 s: -25.5 LUFS, was -14.6), winter-night pad dip (0% of 72 bars dip over 3 dB), eviction,
+drips licence and Ted Kerr credit, thunder licence. Rewards within 1.6 dB at the output (harvest -21.1,
+coin -21.0, buy -19.5), tools within 3.2 dB (water -19.9, cut -22.2, till -23.1).
+Still open, add to the list below:
+- Harmony shared across seasons (major, step 2 below).
+- Crickets: 9.0 s and 7.2 s layers realign every 36 s (correlation 0.998). Use 7.333 s (2200/300 s, a
+  198 s cycle) or another length with a long common multiple, in `recipes.json` `ambience.crickets.layers`.
+- Heart jingle overshoots (-16.8, now the loudest event): lower the heart part gains in `music_src.py`.
+- Output levels read 1-3 dB under the build targets (till lowest): nudge the family targets or K_SFX after a
+  render.
+- ui-1 about 2 dB short; perf plays only 3 sfx; SW cache version is global.
+
 ## What the owner should listen to first (on a phone speaker and on headphones)
 
 1. A New Game on the farm in spring, daytime, walking and using the hoe, can and scythe: sound effects against
