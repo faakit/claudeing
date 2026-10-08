@@ -173,7 +173,14 @@ export class YearEndPanel extends WaitModal {
     const earned = stat(s, 'earned');
     this.panel();
     this.label(this.panelW / 2, 10, 'END OF YEAR', C.gold, 2, 'center');
-    this.label(this.panelW / 2, 30, `Year ${s.time.year} results`, C.creamDim, 1, 'center');
+    this.label(
+      this.panelW / 2,
+      30,
+      `Year ${Math.max(1, s.time.year - 1)} results`,
+      C.creamDim,
+      1,
+      'center',
+    );
     const rows: [string, string][] = [
       ['Gold earned', `${fmt(earned)}g`],
       ['Crops harvested', fmt(stat(s, 'harvested'))],

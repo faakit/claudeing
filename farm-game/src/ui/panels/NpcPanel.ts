@@ -167,7 +167,7 @@ export class NpcPanel extends Modal {
     this.label(
       def.role === 'shop' ? 138 : 104,
       y + 4,
-      canGift(s, this.id) ? 'One gift a day.' : 'Come back tomorrow.',
+      canGift(s, this.id) ? '1 gift a day.' : 'Back tomorrow.',
       C.creamDim,
       1,
       'left',
