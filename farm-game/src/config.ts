@@ -56,6 +56,12 @@ export const CORNER_ASSIST_PX = 4;
 /** Clamp for frame deltas so a lag spike can never tunnel through a wall. */
 export const MAX_FRAME_MS = 50;
 export const WALK_FPS = 8;
+/** Turn in place: from a standstill, a push in a new direction walks only after this long (a flick turns). */
+export const TURN_HOLD_MS = 90;
+/** Settle on release: glide back to the last tile centre passed if it is closer than this, else forward. */
+export const SETTLE_BACK_PX = 13;
+/** Settle glide speed, px/s (the longest glide, 13 px back, takes under 120 ms). */
+export const SETTLE_SPEED = 110;
 
 // --- Camera & transitions ---
 export const CAMERA_LERP = 0.12;
@@ -65,7 +71,7 @@ export const VOID_COLOR = '#14101f';
 
 // --- Touch controls (logical px) ---
 // Gesture thresholds live in input/gesture.ts and the dock geometry in ui/layout.ts (both pure, tested).
-export const JOYSTICK = { radius: 24, axisBias: 1.25 } as const;
+export const JOYSTICK = { radius: 24, axisBias: 1.6 } as const;
 export const EVT_INTERACT_TARGET = 'interact-target';
 
 // --- Time (M2) ---

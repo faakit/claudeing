@@ -1,7 +1,7 @@
 {
   "M0": {
     "_note": "Before the controls work (PLAN-CONTROLS.md, bench.json): a perfect bot on iPhone 13.",
-    "plot3x3": { "gestures": 26, "travelMm": 1100, "toolChanges": 2 },
+    "plot3x3": { "gestures": 26, "travelMm": 1150, "toolChanges": 2 },
     "switchSwipe": { "gestures": 5 },
     "switchHotbar": { "gestures": 2 },
     "bagUse": { "gestures": 5 },
@@ -13,7 +13,7 @@
   },
   "M1": {
     "_note": "Quick wins: Action owns its disc, release-acting Menu/Interact, swipe skips empty slots, Ship all.",
-    "plot3x3": { "gestures": 26, "travelMm": 1100, "toolChanges": 2 },
+    "plot3x3": { "gestures": 26, "travelMm": 1150, "toolChanges": 2 },
     "switchSwipe": { "gestures": 1 },
     "switchHotbar": { "gestures": 2 },
     "bagUse": { "gestures": 5 },

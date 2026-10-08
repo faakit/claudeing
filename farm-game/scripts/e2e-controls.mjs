@@ -205,6 +205,50 @@ try {
       });
       check(`${tag}: a tap with nothing to do shows a ring (never silent)`, ring);
 
+      // --- Grid feel (M2): a flick in a new direction turns in place; every release rests on a tile centre.
+      const flickFails = [];
+      for (const ms of [60, 90, 140, 200]) {
+        for (const [dir, dx, dy] of [
+          ['right', 1, 0],
+          ['up', 0, -1],
+        ]) {
+          await place(page, 10, 17, 'down');
+          await sleep(150);
+          const f0 = await player(page);
+          await t.down(L.stickHome.x, L.stickHome.y);
+          await t.move(L.stickHome.x + dx * 16, L.stickHome.y + dy * 16);
+          await sleep(ms);
+          await t.up();
+          await sleep(300);
+          const f1 = await player(page);
+          if (f1.tx !== f0.tx || f1.ty !== f0.ty || f1.facing !== dir)
+            flickFails.push(`${dir} ${ms}ms -> ${f1.tx},${f1.ty} ${f1.facing}`);
+        }
+      }
+      check(
+        `${tag}: flicks of 60-200 ms in a new direction turn without leaving the tile`,
+        flickFails.length === 0,
+        flickFails.join('; '),
+      );
+      const offCentre = [];
+      for (const ms of [180, 260, 340, 420, 610]) {
+        await place(page, 6, 17, 'right');
+        await sleep(150);
+        await t.down(L.stickHome.x, L.stickHome.y);
+        await t.move(L.stickHome.x + 16, L.stickHome.y);
+        await sleep(ms);
+        await t.up();
+        await sleep(350);
+        const q = await page.evaluate(() => window.__farm.getState().player);
+        const cx = Math.floor(q.x / 16) * 16 + 8;
+        if (Math.abs(q.x - cx) > 1) offCentre.push(`${ms}ms x=${q.x.toFixed(1)}`);
+      }
+      check(
+        `${tag}: after every stick release the farmer rests on a tile centre (+-1 px)`,
+        offCentre.length === 0,
+        offCentre.join('; '),
+      );
+
       // --- The marker says yes or no.
       await place(page, 10, 17, 'down');
       await sleep(200);
@@ -242,16 +286,31 @@ try {
       // --- Swipes never use the old tool; hoe -> seeds is one swipe down (empty slots skipped).
       let uses = 0;
       const usedAt = [];
+      let stalls = 0;
       for (const ms of [60, 150, 300, 500]) {
-        await place(page, 10, 17, 'down');
-        await sleep(150);
-        // At true speed: 18 px in `ms`, however slow the harness is to deliver each move.
-        await t.timedDrag(L.action.x, L.action.y, L.action.x, L.action.y - 18, ms);
-        await sleep(300);
-        const n = await soil(page);
-        if (n) usedAt.push(ms);
-        uses += n;
+        // A loaded machine can stall the harness between touch events, so the finger really is still for
+        // 110 ms and a hold is correct. Such samples are retried (up to 3 times) and counted.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          await place(page, 10, 17, 'down');
+          await sleep(150);
+          await page.evaluate(() => (window.__touchLog = []));
+          await t.timedDrag(L.action.x, L.action.y, L.action.x, L.action.y - 18, ms);
+          await sleep(300);
+          const log = await page.evaluate(() => window.__touchLog);
+          const times = log.filter((e) => e.type !== 'touchend').map((e) => e.t);
+          const maxGap = Math.max(...times.slice(1).map((v, k) => v - times[k]));
+          if (maxGap > 90 && attempt < 2) {
+            stalls++;
+            continue;
+          }
+          const n = await soil(page);
+          if (n) usedAt.push(ms);
+          uses += n;
+          break;
+        }
       }
+      if (stalls)
+        console.log(`      ${tag}: ${stalls} swipe samples retried (harness stalled > 90 ms)`);
       check(
         `${tag}: swipes of 60-500 ms change tool and never use the old one`,
         uses === 0,
@@ -320,12 +379,25 @@ try {
           const L = await page.evaluate(() => window.__lat);
           return L.hit === null || L.down === null ? 99 : L.hit - L.down;
         };
-        await place(page, 10, 17, 'down');
+        // Walking the way you face starts at once; a new direction turns at once (and walks after the hold).
+        await place(page, 10, 17, 'right');
         await sleep(300);
         const stick = await frames(
           () => {
             const x0 = window.__farm.getState().player.x;
             window.__probeOk = () => window.__farm.getState().player.x !== x0;
+          },
+          async () => {
+            await t.down(L.stickHome.x, L.stickHome.y);
+            await t.move(L.stickHome.x + 20, L.stickHome.y);
+          },
+        );
+        await t.up();
+        await place(page, 10, 17, 'down');
+        await sleep(300);
+        const turn = await frames(
+          () => {
+            window.__probeOk = () => window.__farm.getState().player.facing === 'right';
           },
           async () => {
             await t.down(L.stickHome.x, L.stickHome.y);
@@ -349,10 +421,10 @@ try {
           () => t.down(40.5, 383.5),
         );
         await t.up();
-        console.log(`      frames: stick ${stick}, action ${press}, hotbar ${slot}`);
+        console.log(`      frames: stick ${stick}, turn ${turn}, action ${press}, hotbar ${slot}`);
         check(
-          `${tag}: frames from touch to response: stick <= 2, Action <= 2, hotbar <= 1`,
-          stick <= 2 && press <= 2 && slot <= 1,
+          `${tag}: frames from touch to response: stick walk <= 2, turn <= 2, Action <= 2, hotbar <= 1`,
+          stick <= 2 && turn <= 2 && press <= 2 && slot <= 1,
           `stick ${stick}, action ${press}, hotbar ${slot}`,
         );
       }

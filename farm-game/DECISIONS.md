@@ -378,3 +378,20 @@ iPhone 13/14 and Pixel 7 are the primary phones, the SE must pass; right-handed 
 - **One-thumb benchmark and controls e2e:** `npm run bench:thumb` (thresholds per milestone in
   `scripts/bench-thresholds.json`, exits 1 on a regression) and `npm run e2e:controls` (in `verify`: iPhone 13
   and SE, both hands).
+
+### M2 grid feel
+
+- **Turn in place, only from a standstill:** a push in a new direction turns at once and walks only after
+  90 ms (`TURN_HOLD_MS`); pushing the way you face walks at once; a direction change while walking adds 0 ms.
+  Runtime state only (`MoveState` in `systems/movement.ts`), never saved.
+- **Settle on release:** the farmer glides along the walking axis (110 px/s, at most 120 ms) to a tile centre:
+  back to the last centre passed if it was less than 13 px ago (`SETTLE_BACK_PX`; 203 ms of walking), else on
+  to the next one; never into a blocked tile. 13 rather than the plan's 12 because a release 180 ms after the
+  sprite looked centred lands 11.5 to 12.3 px past it once frames quantize. The cost: letting go more than
+  3 px before a centre (about 50 ms early) settles forward onto that tile, which is what was aimed at.
+  A release 250 ms late is a full tile (16 px at 4 tiles/s) and cannot be told apart from a deliberate step.
+- **Flicks are turns:** with turn-in-place plus settle, any flick up to 200 ms in a new direction ends on the
+  starting tile, facing the new way.
+- **Joystick axis hysteresis 1.25 -> 1.6:** a thumb held at 40 to 50 degrees with about 1 mm of drift
+  flipped axis 2.0 to 2.4 times a second; now about 0.7 to 1.0 (unit-tested model). Choosing a new axis now
+  needs a push about 58 degrees off the old one.

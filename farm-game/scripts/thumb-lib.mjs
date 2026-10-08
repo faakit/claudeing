@@ -4,6 +4,7 @@
 //
 // Everything here is headless emulation. Nothing in it says how a real hand feels on a real phone.
 import { spawn } from 'node:child_process';
+import { cpSync, rmSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 export const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
@@ -91,13 +92,19 @@ export function zoneAt(p, hand, x, y) {
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Start `vite preview` on a port (strict), resolve when it answers. Returns { url, stop }. */
-export async function startPreview(port) {
-  const server = spawn(
-    process.execPath,
-    ['node_modules/vite/bin/vite.js', 'preview', '--port', String(port), '--strictPort'],
-    { stdio: 'ignore' },
-  );
+/**
+ * Start `vite preview` on a port (strict), resolve when it answers. Returns { url, stop }. With `snapshot`, it
+ * serves a private copy of dist/ so a long benchmark is not disturbed by a rebuild meanwhile.
+ */
+export async function startPreview(port, { snapshot = false } = {}) {
+  const args = ['node_modules/vite/bin/vite.js', 'preview', '--port', String(port), '--strictPort'];
+  if (snapshot) {
+    const dir = `.bench-dist/${port}`;
+    rmSync(dir, { recursive: true, force: true });
+    cpSync('dist', dir, { recursive: true });
+    args.push('--outDir', dir);
+  }
+  const server = spawn(process.execPath, args, { stdio: 'ignore' });
   server.on('exit', (code) => {
     if (code) {
       console.error(`preview server exited (${code}): is port ${port} taken?`);
@@ -130,6 +137,18 @@ export async function openGame(browser, url, p, { leftHanded = false, query = ''
   });
   // Count vibrate calls, so feedback checks can see haptics on the web path.
   await ctx.addInitScript(() => {
+    // When each touch event reaches the page (to measure modelled reaction times honestly).
+    window.__touchLog = [];
+    for (const type of ['touchstart', 'touchmove', 'touchend'])
+      window.addEventListener(
+        type,
+        () => {
+          window.__lastTouchT = performance.now();
+          window.__touchLog.push({ type, t: window.__lastTouchT });
+          if (window.__touchLog.length > 200) window.__touchLog.shift();
+        },
+        true,
+      );
     window.__vibrations = [];
     navigator.vibrate = (pattern) => {
       window.__vibrations.push({ t: performance.now(), pattern });
@@ -210,6 +229,8 @@ export class Thumb {
     this.zones = { comfort: 0, stretch: 0, hard: 0 };
     this.corrections = 0;
     this.toolChanges = 0;
+    /** Measured ms from the moment the bot "saw" its stop point to the stick release reaching the page. */
+    this.releases = [];
   }
   ledger() {
     const k = mmPerCss(this.p);
@@ -223,6 +244,9 @@ export class Thumb {
       travelMm: Math.round((this.contact + this.air) * k),
       corrections: this.corrections,
       toolChanges: this.toolChanges,
+      releaseMs: this.releases.length
+        ? Math.round(this.releases.reduce((a, b) => a + b, 0) / this.releases.length)
+        : null,
       touchZones: { ...this.zones },
     };
   }

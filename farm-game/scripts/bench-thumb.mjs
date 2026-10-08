@@ -106,38 +106,53 @@ function makeWorld(page, thumb, L, reactionMs) {
       { tx, ty },
     );
 
-  const reached = (t, seg) =>
-    centreStop
-      ? seg.dir === 'up'
-        ? t.fy <= seg.ty * 16 + 8
-        : seg.dir === 'down'
-          ? t.fy >= seg.ty * 16 + 8
-          : seg.dir === 'left'
-            ? t.x <= seg.tx * 16 + 8
-            : t.x >= seg.tx * 16 + 8
-      : seg.dir === 'up'
-        ? t.ty <= seg.ty
-        : seg.dir === 'down'
-          ? t.ty >= seg.ty
-          : seg.dir === 'left'
-            ? t.tx <= seg.tx
-            : t.tx >= seg.tx;
-
   let mapNow = 'farm';
-  /** Hold the stick toward `dir` until the player reaches the segment end (plus the reaction delay). */
+  /**
+   * Hold the stick toward `dir` until the player reaches the segment end, then let go `reactionMs` later.
+   * The crossing is detected in the page on the frame it happens (not by polling over CDP), and the delay is
+   * measured from that frame, so the harness's own lag does not add to the modelled reaction time.
+   */
   async function steer(seg, fresh) {
     const [dx, dy] = DIRS[seg.dir];
     if (fresh) await thumb.down(JOY.x, JOY.y);
     await thumb.move(JOY.x + dx * 18, JOY.y + dy * 18);
-    const t0 = Date.now();
-    while (Date.now() - t0 < 15000) {
-      const t = await tile();
-      if (t.map !== mapNow) return t;
-      if (reached(t, seg)) break;
-      await sleep(8);
+    await page.waitForFunction(
+      ({ seg, centre, map }) => {
+        const p = window.__farm.getState().player;
+        const fy = p.y - 3;
+        const tx = Math.floor(p.x / 16);
+        const ty = Math.floor(fy / 16);
+        const hit =
+          p.map !== map ||
+          (centre
+            ? seg.dir === 'up'
+              ? fy <= seg.ty * 16 + 8
+              : seg.dir === 'down'
+                ? fy >= seg.ty * 16 + 8
+                : seg.dir === 'left'
+                  ? p.x <= seg.tx * 16 + 8
+                  : p.x >= seg.tx * 16 + 8
+            : seg.dir === 'up'
+              ? ty <= seg.ty
+              : seg.dir === 'down'
+                ? ty >= seg.ty
+                : seg.dir === 'left'
+                  ? tx <= seg.tx
+                  : tx >= seg.tx);
+        if (hit) window.__crossT = performance.now();
+        return hit;
+      },
+      { seg, centre: centreStop, map: mapNow },
+      { polling: 'raf', timeout: 15000 },
+    );
+    if ((await tile()).map !== mapNow) return;
+    if (reactionMs) {
+      const late = await page.evaluate(() => performance.now() - window.__crossT);
+      await sleep(Math.max(0, reactionMs - late - 15)); // ~15 ms for the touch to reach the page
     }
-    if (reactionMs) await sleep(reactionMs);
     await thumb.move(JOY.x, JOY.y); // back to the centre: stop
+    const actual = await page.evaluate(() => (window.__lastTouchT ?? 0) - window.__crossT);
+    thumb.releases.push(Math.round(actual));
   }
 
   /** Walk to (tx,ty) so that the last step is `lastDir` (so the player ends facing that way). */
@@ -166,9 +181,32 @@ function makeWorld(page, thumb, L, reactionMs) {
       const [ndx, ndy] = DIRS[dir];
       await thumb.down(JOY.x, JOY.y);
       await thumb.move(JOY.x + ndx * 18, JOY.y + ndy * 18);
-      await sleep(t.tx === tx && t.ty === ty ? 40 : 120);
+      if (t.tx === tx && t.ty === ty) await sleep(60); // a flick to turn
+      else {
+        // a nudge: push until the farmer is visibly on the next tile (sprite centred), then let go
+        const goal = { tx: t.tx + ndx, ty: t.ty + ndy };
+        await page
+          .waitForFunction(
+            ({ goal, dir }) => {
+              const p = window.__farm.getState().player;
+              const fy = p.y - 3;
+              const cx = goal.tx * 16 + 8;
+              const cy = goal.ty * 16 + 8;
+              return dir === 'right'
+                ? p.x >= cx
+                : dir === 'left'
+                  ? p.x <= cx
+                  : dir === 'down'
+                    ? fy >= cy
+                    : fy <= cy;
+            },
+            { goal, dir },
+            { polling: 'raf', timeout: 1500 },
+          )
+          .catch(() => undefined);
+      }
       await thumb.up();
-      await sleep(140);
+      await sleep(200);
     }
   }
 
@@ -452,7 +490,8 @@ function judge(row) {
   const fails = [];
   if (row.detail?.error) fails.push(`error: ${row.detail.error}`);
   else if (row.detail?.ok === false) fails.push('task did not complete');
-  const th = thresholds[row.task];
+  // Human-like stops (STOP=center) have their own thresholds ("task@center"); without one, only success counts.
+  const th = row.stop === 'center' ? thresholds[`${row.task}@center`] : thresholds[row.task];
   if (!th || row.detail?.error) return fails;
   for (const [k, max] of Object.entries(th)) {
     if (k.startsWith('_')) continue;
@@ -463,7 +502,9 @@ function judge(row) {
 }
 
 const results = [];
-const base = process.env.URL ?? (await startPreview(Number(process.env.BENCH_PORT ?? 5180))).url;
+const base =
+  process.env.URL ??
+  (await startPreview(Number(process.env.BENCH_PORT ?? 5180), { snapshot: true })).url;
 const browser = await launch();
 try {
   for (const p of profiles)
@@ -534,11 +575,11 @@ try {
 const label = process.env.LABEL ?? 'latest';
 writeFileSync(`${OUT}bench-${label}.json`, JSON.stringify(results, null, 1));
 const md = [
-  `| profile | hand | stop | reaction ms | task | gestures | taps | holds | drags | travel mm | corrections | tool changes | seconds | comfort/stretch/hard | result |`,
+  `| profile | hand | stop | reaction ms (measured) | task | gestures | taps | holds | drags | travel mm | corrections | tool changes | seconds | comfort/stretch/hard | result |`,
   `|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|`,
   ...results.map(
     (r) =>
-      `| ${r.profile} | ${r.hand} | ${r.stop} | ${r.reactionMs} | ${r.task} | ${r.gestures} | ${r.taps} | ${r.holds} | ${r.drags} | ${r.travelMm} | ${r.corrections} | ${r.toolChanges} | ${r.detail?.seconds?.toFixed?.(1) ?? ''} | ${r.touchZones.comfort}/${r.touchZones.stretch}/${r.touchZones.hard} | ${r.fails.length ? `FAIL: ${r.fails.join('; ')}` : 'ok'} |`,
+      `| ${r.profile} | ${r.hand} | ${r.stop} | ${r.reactionMs}${r.releaseMs !== null ? ` (${r.releaseMs})` : ''} | ${r.task} | ${r.gestures} | ${r.taps} | ${r.holds} | ${r.drags} | ${r.travelMm} | ${r.corrections} | ${r.toolChanges} | ${r.detail?.seconds?.toFixed?.(1) ?? ''} | ${r.touchZones.comfort}/${r.touchZones.stretch}/${r.touchZones.hard} | ${r.fails.length ? `FAIL: ${r.fails.join('; ')}` : 'ok'} |`,
   ),
 ].join('\n');
 writeFileSync(`${OUT}bench-${label}.md`, `${md}\n`);

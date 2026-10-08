@@ -41,7 +41,14 @@ import { gameEvents, toast } from '../systems/events';
 import { currentGoal } from '../systems/goals';
 import { selectedStack } from '../systems/inventory';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
-import { faceDirection, isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
+import {
+  createMoveState,
+  faceDirection,
+  isTileBlocked,
+  stepMove,
+  type CollisionGrid,
+  type MoveState,
+} from '../systems/movement';
 import { tickTime } from '../systems/time';
 import {
   adjacentDirection,
@@ -85,6 +92,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private heldFailed = false;
   /** Uses so far in the current Action hold: later ones tick the haptic less often. */
   private holdUses = 0;
+  /** Turn-in-place and settle-on-release state (runtime only). */
+  private move: MoveState = createMoveState();
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
 
@@ -105,6 +114,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.actionLock = 0;
     this.heldFailed = false;
     this.lastTarget = undefined;
+    this.move = createMoveState();
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
@@ -239,7 +249,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     if (this.actionLock > 0) dir = null; // a swing roots you for a moment
 
-    const { moving } = stepPlayer(player, dir, delta, this.grid);
+    const { moving } = stepMove(player, this.move, dir, delta, this.grid);
     this.syncSprite(moving);
 
     const here = playerTile(player);
