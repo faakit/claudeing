@@ -3,6 +3,8 @@ import { crops, items, jobs as jobDefs, plots, projects, shops } from '../src/da
 import { JOBS_PER_DAY, jobReward } from '../src/systems/jobs';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { craft } from '../src/systems/crafting';
+import { collect, feed, moveIn } from '../src/systems/animals';
+import { levelOf } from '../src/systems/skills';
 import { endDay } from '../src/systems/day';
 import { buyItem, buyUpgrade, shipStack, stockFor, upgradeLevel } from '../src/systems/economy';
 import { maxEnergy } from '../src/systems/energy';
@@ -120,8 +122,8 @@ interface Ledger {
 
 /**
  * A competent but not obsessive player: waters daily, harvests, fills the board requests it can, keeps up to
- * six preserve jars busy, ships the rest, buys land and upgrades when comfortably affordable. It does not fish,
- * mine, raise animals, do jobs on purpose or fund projects, so it is a floor for a diligent farmer.
+ * six preserve jars busy and a coop of three hens, ships the rest, buys land and upgrades when comfortably
+ * affordable. It does not fish, mine, do jobs on purpose or fund projects (except in the two-year run).
  */
 function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
   actions.left = budget;
@@ -155,7 +157,7 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
   // 4. ship everything sellable that is not a seed, tool or machine
   const kinds = new Map<string, ItemRef>();
   for (const st of s.inventory.slots)
-    if (st && ['crop', 'preserve', 'material', 'forage'].includes(items[st.item]!.type))
+    if (st && ['crop', 'preserve', 'material', 'forage', 'product'].includes(items[st.item]!.type))
       kinds.set(keyOf(st), refOf(st));
   for (const ref of kinds.values()) shipStack(s, ref, countStack(s, ref));
   // 5. a scarecrow in the middle of every block of 9x9 of each plot it owns (crows take the odd crop)
@@ -165,6 +167,19 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
       if (getSoil(s, x, y)) delete s.farm.tiles[`${x},${y}`]; // an empty tilled tile gives way
       if (equipItem(s, 'scarecrow')) act(s, tile(s, x, y));
     }
+  // 6a. a coop of three hens once Farming 3 allows it: collect and feed every day, ship the eggs
+  const coop = objectsOn(s, 'farm').find((o) => o.type === 'coop');
+  if (!coop && s.money > 3000 && levelOf(s, 'farming') >= 3) {
+    buyItem(s, STORE, 'fiber', 20);
+    if (craft(s, 'coop') === 'ok' && equipItem(s, 'coop')) act(s, tile(s, 12, 14));
+    buyItem(s, STORE, 'chicken', 3);
+  }
+  if (coop) {
+    moveIn(s, coop);
+    collect(s, coop);
+    if (countItem(s, 'chicken_feed') < 3) buyItem(s, STORE, 'chicken_feed', 9);
+    feed(s, coop);
+  }
   // 6. craft and place jars once unlocked (it buys the fiber), then land and upgrades when comfortable
   const jars = objectsOn(s, 'farm').filter((o) => o.type === 'preserve_jar').length;
   if (jars < JAR_SPOTS.length && s.money > 600) {
@@ -223,11 +238,11 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
 
 /**
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
- * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow).
- * Seed 42 alone earned 163,980. A balance change that
+ * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow, and
+ * a coop of three hens). Seed 42 alone earned 164,096. A balance change that
  * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 195_194;
+const SIM_EARNED = 219_796;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {

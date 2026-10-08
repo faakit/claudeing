@@ -412,3 +412,4 @@ An independent critic played the build at `5fd9943` (14 real-input days plus pro
 ## A human-paced sim (critique 5, F9: "no clock")
 
 - The bot can now be given a number of Action presses a day. At 150 presses (three seeds) it earns a median of about 148k in year one, 76% of the tireless bot; at 60 presses about 87k. Upgraded tools and plant-a-row make each press count, which is why the gap is smaller than the press count suggests. A test keeps the 150-press year under the tireless median and above the first statue level, so a steady human reaches the late sinks in year two rather than drowning in gold in year one.
+- **The bot keeps hens too** (a coop of three once Farming 3, fed and collected daily, eggs shipped or given to requests), so animal goods on the board are exercised by the sim. The five-seed median moved from 195,194 to 219,796 (+13%: about 12k of eggs a year plus egg requests and a different random path).
