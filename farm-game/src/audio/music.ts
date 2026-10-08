@@ -259,12 +259,15 @@ export class MusicPlayer {
     const gain = velGain(ev.vel);
     if (pick && d) {
       const rate = ev.perc ? pick.rate * (0.985 + this.rng() * 0.03) : pick.rate;
+      // Sustained instruments play legato: each note holds a little past the next one's start, so
+      // a pad's new chord fades in under the old one instead of leaving a gap at the bar line.
+      const legato = pick.zone.loop ? Math.min(0.5, (mix?.attack ?? 0) + 0.15) : 0;
       this.voices.push(
         playSample(this.ctx, d, pick.zone, strip.gain, {
           when,
           rate,
           gain,
-          dur: ev.perc ? undefined : s.dur,
+          dur: ev.perc ? undefined : s.dur + legato,
           attack: mix?.attack,
           release: mix?.release,
         }),

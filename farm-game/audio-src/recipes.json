@@ -2,7 +2,7 @@
  "instruments": {
   "piano": {
    "kind": "decay",
-   "maxLen": 3.0,
+   "maxLen": 2.4,
    "zones": {
     "41": "vsco/piano_41",
     "45": "vsco/piano_45",
@@ -20,7 +20,7 @@
   },
   "harp": {
    "kind": "decay",
-   "maxLen": 2.6,
+   "maxLen": 2.2,
    "zones": {
     "38": "vsco/harp_D2",
     "41": "vsco/harp_F2",
@@ -54,7 +54,7 @@
   },
   "glock": {
    "kind": "decay",
-   "maxLen": 2.0,
+   "maxLen": 1.8,
    "zones": {
     "79": "vsco/glock_G4",
     "84": "vsco/glock_C5",
@@ -66,7 +66,7 @@
   },
   "vibes": {
    "kind": "decay",
-   "maxLen": 2.6,
+   "maxLen": 2.2,
    "zones": {
     "60": "vcsl/vibes_C3",
     "64": "vcsl/vibes_E3",

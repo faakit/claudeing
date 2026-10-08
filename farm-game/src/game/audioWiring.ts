@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { chooseAmbience, chooseMusic, type Scene } from '../audio/director';
 import { mapsData } from '../data';
 import { audio } from '../platform/audio';
+import { isNative } from '../platform/native';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { festivalToday, hasEntered } from '../systems/festivals';
@@ -27,15 +28,16 @@ function describe(): Scene {
 }
 
 /**
- * Resolve once a first visit's offline worker controls the page (so audio downloads go through
- * its cache instead of twice), or right away where there is no worker. Never waits more than 8 s.
+ * Resolve once the offline worker controls the page, so a first visit downloads the audio once,
+ * through its cache, instead of twice in parallel. Resolves at once where there is no worker (dev,
+ * native apps) and never waits more than 8 s.
  */
 function serviceWorkerSettled(): Promise<unknown> {
   const sw = typeof navigator !== 'undefined' ? navigator.serviceWorker : undefined;
-  if (!import.meta.env.PROD || !sw || sw.controller) return Promise.resolve();
+  if (!import.meta.env.PROD || isNative() || !sw || sw.controller) return Promise.resolve();
   return Promise.race([
-    sw.getRegistration().then((reg) =>
-      reg ? new Promise((resolve) => sw.addEventListener('controllerchange', resolve, { once: true })) : undefined,
+    sw.ready.then(() =>
+      sw.controller ? undefined : new Promise((resolve) => sw.addEventListener('controllerchange', resolve, { once: true })),
     ),
     new Promise((resolve) => setTimeout(resolve, 8000)),
   ]);

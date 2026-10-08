@@ -59,11 +59,13 @@ JINGLES = {
         {"inst": "vibes", "notes": "E6:.5 C6:.5 G5:.5 E5:.5 D5:.5 G5:.5 C6:3"},
         {"inst": "harp", "notes": "C4:2 G4:1 C5:3", "gain": 0.6}]},
     "heart": {"bpm": 140, "parts": [
-        {"inst": "glock", "notes": "G5:.5 D6:2", "gain": 0.9},
-        {"inst": "harp", "notes": "G4:.5 B4:2", "gain": 0.6}]},
+        {"inst": "glock", "notes": "G5:.5 D6:2", "gain": 1.4},
+        {"inst": "vibes", "notes": "G5:.5 B5:2", "gain": 0.9},
+        {"inst": "harp", "notes": "G4:.5 B4:2", "gain": 0.8}]},
     "order": {"bpm": 150, "parts": [
-        {"inst": "marimba", "notes": "C6:.5 E6:.5 G6:2"},
-        {"inst": "triangle", "notes": "r:1 C5:2", "gain": 0.8}]},
+        {"inst": "vibes", "notes": "C5:.5 E5:.5 G5:2"},
+        {"inst": "harp", "notes": "C4:.5 E4:.5 G4:2", "gain": 0.7},
+        {"inst": "glock", "notes": "r:1 C6:2", "gain": 0.8}]},
 }
 
 PIECES = {}

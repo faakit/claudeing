@@ -6,73 +6,73 @@
     {
      "file": "inst/piano-41.mp3",
      "onset": 0.00166,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 40.94
     },
     {
      "file": "inst/piano-45.mp3",
      "onset": 0.00175,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 44.86
     },
     {
      "file": "inst/piano-49.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 48.94
     },
     {
      "file": "inst/piano-53.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 52.97
     },
     {
      "file": "inst/piano-57.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 57.03
     },
     {
      "file": "inst/piano-61.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 61.0
     },
     {
      "file": "inst/piano-65.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 65.01
     },
     {
      "file": "inst/piano-69.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 69.01
     },
     {
      "file": "inst/piano-73.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 73.04
     },
     {
      "file": "inst/piano-77.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 77.04
     },
     {
      "file": "inst/piano-81.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 81.05
     },
     {
      "file": "inst/piano-85.mp3",
      "onset": 0.002,
-     "dur": 3.0,
+     "dur": 2.4,
      "root": 85.09
     }
    ]
@@ -83,85 +83,85 @@
     {
      "file": "inst/harp-38.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 37.88
     },
     {
      "file": "inst/harp-41.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 40.9
     },
     {
      "file": "inst/harp-45.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 44.93
     },
     {
      "file": "inst/harp-48.mp3",
      "onset": 0.00023,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 47.98
     },
     {
      "file": "inst/harp-52.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 51.94
     },
     {
      "file": "inst/harp-55.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 54.9
     },
     {
      "file": "inst/harp-59.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 58.88
     },
     {
      "file": "inst/harp-62.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 61.88
     },
     {
      "file": "inst/harp-65.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 65.0
     },
     {
      "file": "inst/harp-69.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 68.9
     },
     {
      "file": "inst/harp-72.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 71.88
     },
     {
      "file": "inst/harp-76.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 75.89
     },
     {
      "file": "inst/harp-79.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 78.95
     },
     {
      "file": "inst/harp-83.mp3",
      "onset": 0.002,
-     "dur": 2.35,
+     "dur": 2.2,
      "root": 82.92
     }
    ]
@@ -225,31 +225,31 @@
     {
      "file": "inst/glock-79.mp3",
      "onset": 0.0,
-     "dur": 2.0,
+     "dur": 1.8,
      "root": 79.08
     },
     {
      "file": "inst/glock-84.mp3",
      "onset": 0.0,
-     "dur": 2.0,
+     "dur": 1.8,
      "root": 84.12
     },
     {
      "file": "inst/glock-91.mp3",
      "onset": 0.002,
-     "dur": 2.0,
+     "dur": 1.8,
      "root": 91.12
     },
     {
      "file": "inst/glock-96.mp3",
      "onset": 0.0,
-     "dur": 2.0,
+     "dur": 1.8,
      "root": 96.16
     },
     {
      "file": "inst/glock-103.mp3",
      "onset": 2e-05,
-     "dur": 2.0,
+     "dur": 1.8,
      "root": 103.16
     },
     {
@@ -266,55 +266,55 @@
     {
      "file": "inst/vibes-60.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 60.0
     },
     {
      "file": "inst/vibes-64.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 64.0
     },
     {
      "file": "inst/vibes-67.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 67.0
     },
     {
      "file": "inst/vibes-71.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 71.0
     },
     {
      "file": "inst/vibes-74.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 74.0
     },
     {
      "file": "inst/vibes-77.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 77.0
     },
     {
      "file": "inst/vibes-81.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 81.0
     },
     {
      "file": "inst/vibes-84.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 84.0
     },
     {
      "file": "inst/vibes-88.mp3",
      "onset": 0.002,
-     "dur": 2.6,
+     "dur": 2.2,
      "root": 88.0
     }
    ]
