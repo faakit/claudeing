@@ -99,7 +99,7 @@ export class ProjectPanel extends Modal {
     const s = getState();
     const p = projects[id]!;
     this.icon(15, 15, this.landmarkIcon(id));
-    this.label(28, 8, p.repeat ? `${p.name} ${projectLevel(s, id) + 1}` : p.name, C.gold);
+    this.label(28, 8, p.name, C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     const blurb = this.label(8, 26, p.blurb, C.cream, 1, 'left', 184);
     let y = 26 + blurb.textHeight + 4;
@@ -120,7 +120,12 @@ export class ProjectPanel extends Modal {
     y += 11;
     const price = priceOf(s, id);
     const left = price - goldGiven(s, id);
-    this.label(8, y, `Gold ${fmt(goldGiven(s, id))}/${fmt(price)}`, left > 0 ? C.cream : C.green);
+    this.label(
+      8,
+      y,
+      `${p.repeat ? `Level ${projectLevel(s, id) + 1}  ` : ''}Gold ${fmt(goldGiven(s, id))}/${fmt(price)}`,
+      left > 0 ? C.cream : C.green,
+    );
     y += 12;
     for (const n of itemNeeds(s, id)) {
       this.label(8, y, needLabel(s, n), n.given >= n.need ? C.green : C.creamDim);

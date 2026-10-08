@@ -204,3 +204,17 @@ describe('critique 5 minor fixes', () => {
     expect(Object.values(collections).some((c) => c.items.includes('truffle'))).toBe(true);
   });
 });
+
+describe('round 2 probe fixes', () => {
+  it('the Move sheet counts goods the way people say them', () => {
+    const s = newState();
+    const coop = placeObject(s, 'farm', 4, 4, 'coop');
+    houseOf(coop).n = 3;
+    houseOf(coop).ready = 2;
+    expect(occupantsOf(coop)).toBe('3 chickens, 2 eggs waiting');
+    const barn = placeObject(s, 'farm', 6, 4, 'barn');
+    houseOf(barn).n = 1;
+    houseOf(barn).ready = 2;
+    expect(occupantsOf(barn)).toBe('1 cow, 2 milk waiting');
+  });
+});
