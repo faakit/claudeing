@@ -3,7 +3,7 @@
 Branch `depth/round2` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/agents-2026-10-08`.
 Pushed to `origin/depth/round2` after every green verify.
 
-Status: in progress (checkpoint during critique 8).
+Status: in progress (checkpoint after critique 8).
 
 ## Commits shipped
 
@@ -24,10 +24,12 @@ Status: in progress (checkpoint during critique 8).
 | `61e118e` | Sim bot keeps a coop of hens (animal requests exercised); median repinned |
 | `933be12` | Critique 7 fixes: crop requests wait for ripening, Clay only on last days and stays home when you fill one, farm-weighted board, special's "Give N", bench lines, dishes never wasted, Legends 1/4, 70% animal specials, statue bonus line, seed order |
 | `3e1b9c5` | Traveling cart (days 5/12/19/26), x5 cooking, legend-in-the-bin warning |
+| `f1a6e64` | Report and handover refresh |
+| `a51cf83` | Critique 8 fixes: season scoreboard against Clay, field-sized crop requests, special keeps goods for requests, cart never resells store goods, plain-only batch cooking, text |
 
 ## What was verified, and how
 
-- `npm run verify` green before every commit (lint, typecheck, unit 466 -> 533, build, e2e, mobile e2e, perf within
+- `npm run verify` green before every commit (lint, typecheck, unit 466 -> 537, build, e2e, mobile e2e, perf within
   <= 12 draws and <= 3.5 ms JS per frame).
 - New unit test files: `critique5.test.ts`, `animal-orders.test.ts`, `statue.test.ts`, `decor-effects.test.ts`,
   `cooking.test.ts`, `legends.test.ts`; additions to festivals, greenhouse, rival, projects, machines, rare, balance
@@ -41,8 +43,8 @@ Status: in progress (checkpoint during critique 8).
   `agents/critiques/critique-6.md` and `shots-6/`. All nine findings triaged; fixes in `316a162`.
 - Critique 7 (frozen `f27999e`, two 14-day real-input runs, 44-screen sweep, no blocker): `critique-7.md` and
   `shots-7/`; all nine findings triaged, fixes in `933be12`.
-- Critique 8 runs on a frozen copy of `3e1b9c5` (`C:/Users/andre/dev/tiny-acre/critique-8b`); the first attempt was
-  cut off by a usage limit.
+- Critique 8 (frozen `3e1b9c5`, two 16-day real-input runs, 42-screen sweep, no blocker): `critique-8.md` and
+  `shots-8/`; all eight findings triaged, fixes in `a51cf83`. A first attempt was cut off by a usage limit.
 
 ## Not verified
 
@@ -53,7 +55,8 @@ Status: in progress (checkpoint during critique 8).
 ## Save versions
 
 No `STATE_VERSION` bump this round (still 15). New state is optional fields or stats:
-`Order.until`, `Order.from`, `Order.takenOn` (optional, sanitized); stats `filled.day`, `special.last.<id>`,
+`Order.until`, `Order.from`, `Order.takenOn` (optional, sanitized); stats `board.s<n>.you|rival`, `boardWins`,
+`special.last.<id>`,
 `cart.<day>.<item>`, `cartBought`, `rested.day`, `crowsAte`,
 `project.<id>.level`, `projectLevels`, `upgraded.kitchen`, `cooked`, `ate`, `legend.<fish>`, `legends`,
 `fest.<id>.y<year>.fish<i>`.

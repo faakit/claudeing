@@ -2,7 +2,7 @@
 
 Branch `depth/round2` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/agents-2026-10-08`, pushed to
 `origin/depth/round2`. Every commit passed `npm run verify` (lint, typecheck, unit, build, e2e, mobile e2e, perf).
-Save version is still **15**: everything new this round is an optional field or a stat. Unit tests 466 -> 533.
+Save version is still **15**: everything new this round is an optional field or a stat. Unit tests 466 -> 537.
 Round 1's handover is in git history (`git show 1d89c97:farm-game/agents/NEXT-STEPS-DEPTH.md`).
 
 ## Shipped in round 2 (oldest first)
@@ -22,17 +22,19 @@ Round 1's handover is in git history (`git show 1d89c97:farm-game/agents/NEXT-ST
 | `61e118e` | Sim bot keeps a coop of hens |
 | `933be12` | Critique 7 fixes: crop requests wait for ripening (`cropReadyIn`), Clay only on a request's last day and not on a day you filled one (`filled.day`), farm goods weighted 3x on the board, special's "Give N" keeps goods for a same-item request, no immediate repeat special, bench lines, dishes never wasted, Legends 1/4, 70% animal specials |
 | `3e1b9c5` | Traveling cart (`cart.json`, days 5/12/19/26), x5 cooking, legend-in-the-bin warning |
+| `a51cf83` | Critique 8 fixes: a season scoreboard against Clay (`boardTally`, `settleSeason`; the stay-home rule is gone), crop requests sized to the field (`cropSupply`) and posted up to 7 days ahead, the special never takes goods a request needs, the cart never resells store goods, plain-only batch cooking |
 
 ## Critiques
 
 - `agents/critiques/critique-6.md` (+ `shots-6/`): frozen `5fd9943`, 14 real-input days, all nine findings fixed in
   `316a162`.
 - `agents/critiques/critique-7.md` (+ `shots-7/`): frozen `f27999e`, no blocker; all nine findings fixed in `933be12`.
-- Critique 8 was started on a frozen copy of `3e1b9c5` (`C:/Users/andre/dev/tiny-acre/critique-8b`).
+- `agents/critiques/critique-8.md` (+ `shots-8/`): frozen `3e1b9c5`, no blocker; all eight findings fixed in `a51cf83`.
 
 ## Next goals, in priority order
 
-1. **Triage critique 8** (if it finished, `agents/critiques/critique-8.md`) and fix its top findings.
+1. **Run critique 9** on a frozen copy of the head: the season scoreboard against Clay is new and unplayed, and the
+   board rules changed in each of the last three rounds.
 2. **Long-press hotbar picker** (critique 3 F11, critique 4 F8, critique 6 F9): hold a hotbar slot to cycle bag stacks
    of usable types. Lives in `ui/Hud.ts`, which the controls agent owns; hand it over or do it after their merge.
    `systems/inventory.ts equipFromBag` already does the swap.
@@ -45,12 +47,13 @@ Round 1's handover is in git history (`git show 1d89c97:farm-game/agents/NEXT-ST
 
 Risks to keep in mind:
 - Goals are an index into a list: only append (this round appended statue3, cook, legend1).
-- `tests/sim.test.ts` pins the five-seed median at 227,442 (-20% / +25%); a deliberate balance change must move
+- `tests/sim.test.ts` pins the five-seed median at 213,730 (-20% / +25%); a deliberate balance change must move
   `SIM_EARNED` and say why in DECISIONS.md. The two-year run asserts the statue absorbs year-two gold.
 - Fish codes for the derby are indexes into `fish.json`: append fish, never insert.
 - `upgradeLevel` falls back to the `upgraded.<id>` stat for upgrades not in `state.upgrades` (the kitchen).
 - Clay acts lazily (board opened or order delivered after his hour) and overnight (`settleRival` in the morning
-  hook); `rival.day` keeps it to once a day. He takes only requests on their last day, never on a day you filled one.
+  hook); `rival.day` keeps it to once a day. He takes only requests on their last day; the season scoreboard counts
+  his takes against your fills (`board.s<season>.you|rival` stats).
 
 ## New texture keys still needing art
 
