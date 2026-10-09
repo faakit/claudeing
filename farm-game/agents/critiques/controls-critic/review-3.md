@@ -13,16 +13,16 @@
 
 ## Follow-ups from review 2
 
-| # | status | note |
-|---|---|---|
-| 2.1 tap landscaping | FIXED (ruling 1) | Taps of 120-200 ms on grass walk only (16/16). But see B1: a slower still touch tills. |
-| 2.2 magnets | FIXED (ruling 4) | Accepted, with the agent's tile-size accuracy numbers replacing my 85% bar. |
-| 2.3 explicit wins / seeds | FIXED (rulings 2-3) | Paint keeps the chain as owner ruling 5. Accepted. |
-| 2.4 bench errands | FIXED | sell 3, villager 4, machine 3 (one hop tap; jar off-screen), from bench-m5.md. |
-| 2.5 wrong-kind acts | ACCEPTED | |
-| 2.6 fish | moved to M6 | |
-| 2.7 perf route | deferred to M7 | Tracked. |
-| 2.8 tap tip | deferred to M7 | Tracked. |
+| #                         | status              | note                                                                                   |
+| ------------------------- | ------------------- | -------------------------------------------------------------------------------------- |
+| 2.1 tap landscaping       | FIXED (ruling 1)    | Taps of 120-200 ms on grass walk only (16/16). But see B1: a slower still touch tills. |
+| 2.2 magnets               | FIXED (ruling 4)    | Accepted, with the agent's tile-size accuracy numbers replacing my 85% bar.            |
+| 2.3 explicit wins / seeds | FIXED (rulings 2-3) | Paint keeps the chain as owner ruling 5. Accepted.                                     |
+| 2.4 bench errands         | FIXED               | sell 3, villager 4, machine 3 (one hop tap; jar off-screen), from bench-m5.md.         |
+| 2.5 wrong-kind acts       | ACCEPTED            |                                                                                        |
+| 2.6 fish                  | moved to M6         |                                                                                        |
+| 2.7 perf route            | deferred to M7      | Tracked.                                                                               |
+| 2.8 tap tip               | deferred to M7      | Tracked.                                                                               |
 
 ## Findings
 

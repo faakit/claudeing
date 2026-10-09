@@ -31,10 +31,10 @@
 3. **MAJOR: pick accuracy, with a bias.**
    - Evidence (pick, 42 per row; misses are always the neighbour on the side the thumb-base offset rotates toward, e.g. "want 3 got 4", "want 2 got 3"):
 
-     | endpoint jitter | rows | right | wrong | no pick |
-     |---|---|---|---|---|
-     | σ 2 mm | i13 and SE, both hands | 24-30 | 8-11 | 3-7 |
-     | σ 1.2 mm | i13 and Pixel 7, both hands | 35-37 | 2-4 | 1-5 |
+     | endpoint jitter | rows                        | right | wrong | no pick |
+     | --------------- | --------------------------- | ----- | ----- | ------- |
+     | σ 2 mm          | i13 and SE, both hands      | 24-30 | 8-11  | 3-7     |
+     | σ 1.2 mm        | i13 and Pixel 7, both hands | 35-37 | 2-4   | 1-5     |
 
    - Nine sectors of 18.75 degrees at a 50 px radius are 5.2 mm on i13 and 4.6 mm on SE.
    - Ask:

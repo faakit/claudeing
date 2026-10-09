@@ -36,11 +36,11 @@
      - `UIScene.setupTaps` emits `tap` with `p.x, p.y` on `pointerup`.
      - In the probe, adjacent-tile taps on soil (down-point jitter 1 mm, plus a roll) acted at these rates:
 
-       | profile | roll 1 mm | roll 1.5 mm | roll 2 mm |
-       |---|---|---|---|
-       | i13 | 28-29 / 30 | 20-23 / 30 | 19-24 / 30 |
-       | Pixel 7 | 28-29 / 30 | 20-26 / 30 | 20-24 / 30 |
-       | SE | 25-28 / 30 | 15-19 / 30 | 15-16 / 30 |
+       | profile | roll 1 mm  | roll 1.5 mm | roll 2 mm  |
+       | ------- | ---------- | ----------- | ---------- |
+       | i13     | 28-29 / 30 | 20-23 / 30  | 19-24 / 30 |
+       | Pixel 7 | 28-29 / 30 | 20-26 / 30  | 20-24 / 30 |
+       | SE      | 25-28 / 30 | 15-19 / 30  | 15-16 / 30 |
 
      - Most misses were a ring on a different tile: SE right showed 5 such rings at a 1 mm roll and 9 at 2 mm.
    - Ask: use the touch-down point (or the mean of the first 50 ms) as the tap position. M4's tap-to-walk will inherit this.
@@ -100,12 +100,12 @@
 
 ## Deviations
 
-| # | Deviation | Decision | Reason |
-|---|---|---|---|
-| 1 | Interact <= 1% instead of 0 | Accepted for i13 and Pixel 7 | Geometry. SE is followed up in F7. |
-| 2 | 250 ms reaction cannot reach 0 corrections | Accepted | It is a full tile. Replaced by the variance-based ask in F4. |
-| 3 | Bench default is now STOP=center | Accepted | |
-| 4 | 20 Menu drags per profile in e2e | Accepted | I ran 100 per profile and hand: 0 opens. |
+| #   | Deviation                                  | Decision                     | Reason                                                       |
+| --- | ------------------------------------------ | ---------------------------- | ------------------------------------------------------------ |
+| 1   | Interact <= 1% instead of 0                | Accepted for i13 and Pixel 7 | Geometry. SE is followed up in F7.                           |
+| 2   | 250 ms reaction cannot reach 0 corrections | Accepted                     | It is a full tile. Replaced by the variance-based ask in F4. |
+| 3   | Bench default is now STOP=center           | Accepted                     |                                                              |
+| 4   | 20 Menu drags per profile in e2e           | Accepted                     | I ran 100 per profile and hand: 0 opens.                     |
 
 ## Risk ledger movement
 

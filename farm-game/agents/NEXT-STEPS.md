@@ -4,12 +4,12 @@ Four agents worked in parallel on their own branches, three of them paired with 
 every checkpoint. This branch (`integration/round2-2026-10-09`) merges all of them on top of round 1
 (`integration/agents-2026-10-08`). Start a new session from here, not from the agent branches.
 
-| Area | Handover | Critic notes | Top next step |
-| --- | --- | --- | --- |
-| One-thumb controls (top priority) | [NEXT-STEPS-CONTROLS.md](NEXT-STEPS-CONTROLS.md) | [critiques/controls-critic/](critiques/controls-critic/ledger.md) (reviews 1-4) | Critic re-test of the Action-paint and tool-ring redesign; decide serpentine or strip painting to reach 5 gestures |
-| Game depth | [NEXT-STEPS-DEPTH.md](NEXT-STEPS-DEPTH.md) | `critiques/critique-6.md` to `critique-9.md` | Critique 9: show the season score when losing, a non-fishing path to beat Clay, warn before a request eats the harvest |
-| Art | [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md) | [critiques/art-critic/](critiques/art-critic/final.md) (accepted, no majors left) | Art for the 21 newest keys (tulips, dishes, legendary fish, scarecrow, statue); the "New Game" doubled label; redo tool poses |
-| Audio | [NEXT-STEPS-AUDIO.md](NEXT-STEPS-AUDIO.md) | [critiques/audio-critic/](critiques/audio-critic/final.md) (nothing open) | Paused until a human has listened; then act on that feedback |
+| Area                              | Handover                                         | Critic notes                                                                                             | Top next step                                                                                                                                                                          |
+| --------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| One-thumb controls (top priority) | [NEXT-STEPS-CONTROLS.md](NEXT-STEPS-CONTROLS.md) | [critiques/controls-critic/](critiques/controls-critic/final.md) (final: no blockers, ready for a phone) | A slow press on Action does nothing (make press-and-lift act once, fix the two "Hold Action" hints); then let a painted line turn a corner to bring the plot from 15 gestures toward 8 |
+| Game depth                        | [NEXT-STEPS-DEPTH.md](NEXT-STEPS-DEPTH.md)       | `critiques/critique-6.md` to `critique-9.md`                                                             | Critique 9: show the season score when losing, a non-fishing path to beat Clay, warn before a request eats the harvest                                                                 |
+| Art                               | [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md)           | [critiques/art-critic/](critiques/art-critic/final.md) (accepted, no majors left)                        | Art for the 21 newest keys (tulips, dishes, legendary fish, scarecrow, statue); the "New Game" doubled label; redo tool poses                                                          |
+| Audio                             | [NEXT-STEPS-AUDIO.md](NEXT-STEPS-AUDIO.md)       | [critiques/audio-critic/](critiques/audio-critic/final.md) (nothing open)                                | Paused until a human has listened; then act on that feedback                                                                                                                           |
 
 ## What changed at the merge
 

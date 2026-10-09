@@ -17,18 +17,18 @@
 
 ## Review-1 follow-ups
 
-| # | status | evidence |
-|---|---|---|
-| F1 tap = down point | FIXED | Fixed rolls of 0-8.5 px (up to 2.7 mm on i13) hit the right tile 8/8 at every size (`diag.log`). Random rolls at σ 1 mm hit the right tile 29-30/30 on i13 and Pixel 7. |
-| F2 one threshold | FIXED | Rolls of 9.5 px or more engage the stick, which turns the farmer: a visible response. No touch in the probe ended with no visible outcome. |
-| F3 rubber band | FIXED | A same-direction push of 120-230 ms is exactly 1 tile, with at most 0.4 px slide-back. A new-direction 120 ms flick is 0 tiles (3 px wobble); 160 ms is 1 tile (i13 and SE right, `nudge.log`). |
-| F4 settle window | REJECTED-OK | The arithmetic holds: 18 px of spread for a 16 px tile. Re-measured on target: 120±30 gave 16/16; 180±30 gave 14/16. The owner's phone checklist will carry it. |
-| F5 tap during lock | FIXED | 3/3 acts at 150, 200 and 250 ms spacing, on 6 runs. |
-| F6 Menu on SE | FIXED | Intended jittered taps open it 36/40 (90%) on SE and 37-38/40 on i13 and Pixel 7. Misses do nothing; 1/160 walked. |
-| F7 Interact on SE | FIXED | Interact-aimed taps open 38-40/40. The Action steal statistic is in the unit test (trusted, not re-measured). |
-| F8 bag cursor | FIXED | bagUse passes in every row. |
-| F9 hold settle | FIXED | Unit test (trusted). |
-| F10 marker dots | FIXED | Not re-screenshotted. |
+| #                   | status      | evidence                                                                                                                                                                                        |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1 tap = down point | FIXED       | Fixed rolls of 0-8.5 px (up to 2.7 mm on i13) hit the right tile 8/8 at every size (`diag.log`). Random rolls at σ 1 mm hit the right tile 29-30/30 on i13 and Pixel 7.                         |
+| F2 one threshold    | FIXED       | Rolls of 9.5 px or more engage the stick, which turns the farmer: a visible response. No touch in the probe ended with no visible outcome.                                                      |
+| F3 rubber band      | FIXED       | A same-direction push of 120-230 ms is exactly 1 tile, with at most 0.4 px slide-back. A new-direction 120 ms flick is 0 tiles (3 px wobble); 160 ms is 1 tile (i13 and SE right, `nudge.log`). |
+| F4 settle window    | REJECTED-OK | The arithmetic holds: 18 px of spread for a 16 px tile. Re-measured on target: 120±30 gave 16/16; 180±30 gave 14/16. The owner's phone checklist will carry it.                                 |
+| F5 tap during lock  | FIXED       | 3/3 acts at 150, 200 and 250 ms spacing, on 6 runs.                                                                                                                                             |
+| F6 Menu on SE       | FIXED       | Intended jittered taps open it 36/40 (90%) on SE and 37-38/40 on i13 and Pixel 7. Misses do nothing; 1/160 walked.                                                                              |
+| F7 Interact on SE   | FIXED       | Interact-aimed taps open 38-40/40. The Action steal statistic is in the unit test (trusted, not re-measured).                                                                                   |
+| F8 bag cursor       | FIXED       | bagUse passes in every row.                                                                                                                                                                     |
+| F9 hold settle      | FIXED       | Unit test (trusted).                                                                                                                                                                            |
+| F10 marker dots     | FIXED       | Not re-screenshotted.                                                                                                                                                                           |
 
 ## Findings
 
