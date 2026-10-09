@@ -3,7 +3,9 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { JINGLE_CUES, MANIFEST, allFiles, instrumentFiles } from '../src/audio/assets';
+import { K_SFX, LIMITER_MAKEUP_DB } from '../src/audio/graph';
 import { SFX_IDS, type Sfx } from '../src/platform/audio';
+import { createInitialState } from '../src/state/GameState';
 
 const AUDIO_DIR = fileURLToPath(new URL('../public/assets/audio', import.meta.url));
 
@@ -96,5 +98,18 @@ describe('audio cue map', () => {
       // 300 = gcd(44100, 48000): a body of k/300 s is k*147 frames at 44.1 kHz and k*160 at 48 kHz.
       expect(Math.abs(body * 300 - Math.round(body * 300)), name).toBeLessThan(0.005);
     }
+  });
+});
+
+describe('sound-effect peaks at the default volume', () => {
+  it('no single cue peaks above -3.5 dBTP at the output, so the master soft clipper never shapes it', () => {
+    const bus = createInitialState().settings.sfx * K_SFX;
+    for (const [cue, a] of Object.entries(MANIFEST.sfx))
+      for (const z of a.files) {
+        expect(z.tp, `${z.file} records its true peak`).toBeTypeOf('number');
+        // Worst case: this take, the cue's gain and its random volume spread all at once.
+        const out = z.tp! + 20 * Math.log10(a.gain * bus) + a.vol + LIMITER_MAKEUP_DB;
+        expect(out, `${cue} ${z.file}`).toBeLessThanOrEqual(-3.5);
+      }
   });
 });

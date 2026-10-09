@@ -14,6 +14,8 @@ export interface Zone {
   dur: number;
   /** Seconds a slow (bowed, blown) attack needs to speak; the note is started this much early. */
   lag?: number;
+  /** True peak of the encoded file, dBTP (sound effects; tests check the output peak at default volume). */
+  tp?: number;
   /** Sustain loop [start, end]; the region after `end` repeats the loop start, so small shifts stay seamless. */
   loop?: [number, number];
 }
@@ -37,6 +39,11 @@ export interface SfxAsset {
   voices: number;
   /** Level change (dB) for a repeat within 350 ms of the last one (held tools). Default -4; steps 0. */
   repeatDb?: number;
+  /** Repeats closer than this (seconds) are dropped: a fast drag over a row ticks at most this often. */
+  minGap?: number;
+  /** Cues this one silences for `maskFor` seconds after it plays (a row tick hides the footstep on that tile). */
+  masks?: string[];
+  maskFor?: number;
 }
 
 /** A looping ambience bed or a pool of one-shots (birds, drips). */
@@ -103,6 +110,8 @@ export interface Section {
 }
 
 export interface Piece {
+  /** Declared key and mode ("D mixolydian"), for the analysis tools and tests; not used at runtime. */
+  key?: string;
   /** Transposition (semitones from C major) for event jingles so they sit in this piece's key. */
   jingleKey: number;
   /** Mix level of the whole piece, dB (pieces are balanced against each other from offline renders). */
@@ -114,7 +123,11 @@ export interface Piece {
   /** Swing amount for off-beat eighths, 0..0.3 of an eighth. */
   swing?: number;
   sections: Record<string, Section>;
+  /** Sections played once, the first time the piece starts (a sting), before the form loops. */
+  intro?: string[];
   form: string[];
+  /** The form from year two on (variation sections), so the second year does not repeat the first. */
+  form2?: string[];
   layers: Layer[];
   /** Melody phrases in note:beats tokens, bars separated by '|'. */
   phrases: Record<string, string>;
@@ -123,6 +136,10 @@ export interface Piece {
 /** A short fanfare played by the sampler for a game event (level up, goal...). Written in C major. */
 export interface Jingle {
   bpm: number;
+  /** Playback level (default 1): motifs and flourishes sit under the event fanfares. */
+  volume?: number;
+  /** Default 1. A jingle silences or drops a lower-priority one within a second of it. */
+  priority?: number;
   parts: { inst: string; notes: string; gain?: number }[];
 }
 
@@ -130,6 +147,8 @@ export interface MusicData {
   instruments: Record<string, InstrumentMix>;
   patterns: Record<string, PatternStep[]>;
   jingles: Record<string, Jingle>;
+  /** Musical moments the engine plays itself (villager motifs, dawn and dusk, season and festival stings). */
+  stings: Record<string, Jingle>;
   pieces: Record<string, Piece>;
 }
 
@@ -141,7 +160,9 @@ export type MusicSlot =
   | 'fall'
   | 'winter'
   | 'mine'
-  | 'festival';
+  | 'festival'
+  | 'shop'
+  | 'lullaby';
 
 export const MUSIC_SLOTS: readonly MusicSlot[] = [
   'title',
@@ -151,4 +172,6 @@ export const MUSIC_SLOTS: readonly MusicSlot[] = [
   'winter',
   'mine',
   'festival',
+  'shop',
+  'lullaby',
 ];

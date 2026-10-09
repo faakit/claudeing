@@ -22,6 +22,8 @@ export class Ambience {
   private targets = new Map<string, number>();
   private nextShot = new Map<string, number>();
   private lastShot = new Map<string, number>();
+  /** Called when a one-shot starts (the engine ducks the music under thunder). */
+  onShot: ((name: string, when: number, dur: number) => void) | null = null;
 
   constructor(
     private ctx: BaseAudioContext,
@@ -133,6 +135,7 @@ export class Ambience {
     const rate = 0.92 + this.rng() * 0.16;
     const gain = a.gain * target * Math.pow(10, (-6 * this.rng()) / 20);
     let last = playSample(this.ctx, pick.d!, pick.z, dest, { when: now + 0.02, rate, gain });
+    this.onShot?.(name, now + 0.02, pick.z.dur / rate);
     // A bird often answers itself.
     if (name === 'birds' && this.rng() < 0.3) {
       const when = now + 0.2 + this.rng() * 0.3;

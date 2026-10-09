@@ -17,6 +17,15 @@ export const K_SYNTH_SFX = 1;
  * a day piece sits near -25 LUFS at the default 60% music volume, 4-6 dB under the tool sounds.
  */
 export const SAMPLED_MUSIC_GAIN = 4.2;
+/** Master compressor (safety limiter) settings. */
+export const LIMITER_THRESHOLD_DB = -3;
+export const LIMITER_RATIO = 20;
+/**
+ * The Web Audio DynamicsCompressor adds automatic make-up gain: 0.6 x the gain it would take off a
+ * full-scale signal (Chromium's DynamicsCompressorKernel). With -3 dB and 20:1 that is +1.71 dB on
+ * everything at the output; the build uses it to keep effect peaks under the clipper's knee.
+ */
+export const LIMITER_MAKEUP_DB = 0.6 * -LIMITER_THRESHOLD_DB * (1 - 1 / LIMITER_RATIO);
 export const REVERB_RETURN = 0.55;
 export const REVERB_SECONDS = 1.4;
 
@@ -56,16 +65,44 @@ export function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   return buf;
 }
 
+/** Soft-clip transfer curve: identity up to KNEE, then a tanh shoulder towards CEILING (linear). */
+export const CLIP_KNEE = 0.71;
+export const CLIP_CEILING = 0.85;
+export function softClipCurve(n = 4097): Float32Array<ArrayBuffer> {
+  const curve = new Float32Array(new ArrayBuffer(n * 4));
+  const span = CLIP_CEILING - CLIP_KNEE;
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    const a = Math.abs(x);
+    curve[i] = Math.sign(x) * (a <= CLIP_KNEE ? a : CLIP_KNEE + span * Math.tanh((a - CLIP_KNEE) / span));
+  }
+  return curve;
+}
+
+function softClipper(ctx: BaseAudioContext): WaveShaperNode {
+  const ws = ctx.createWaveShaper();
+  ws.curve = softClipCurve();
+  ws.oversample = '2x';
+  return ws;
+}
+
 export function buildGraph(ctx: BaseAudioContext): Graph {
   const master = ctx.createGain();
   // A safety limiter at the very end: many sounds at once must never clip a phone speaker.
   const limiter = ctx.createDynamicsCompressor();
-  limiter.threshold.value = -3;
+  limiter.threshold.value = LIMITER_THRESHOLD_DB;
   limiter.knee.value = 0;
-  limiter.ratio.value = 20;
+  limiter.ratio.value = LIMITER_RATIO;
   limiter.attack.value = 0.003;
   limiter.release.value = 0.15;
-  master.connect(limiter).connect(ctx.destination);
+  // The compressor's 3 ms attack lets the front of a transient through (max sliders, festival, rain and
+  // a burst of effects reached 0 dBTP). A soft clipper after it is the brick wall: linear up to -3 dBFS
+  // (the compressor threshold), then a tanh knee that stays under -1.4 dBFS (-1 dBTP with 2x
+  // oversampling). Music mixes peak below the knee, so it only acts on spiky effects and at extreme
+  // settings. 4x oversampling cost a quarter of the offline render speed for no audible gain here.
+  const out: AudioNode =
+    typeof ctx.createWaveShaper === 'function' ? softClipper(ctx) : ctx.createGain();
+  master.connect(limiter).connect(out).connect(ctx.destination);
   const mk = (dest: AudioNode, value = 1) => {
     const g = ctx.createGain();
     g.gain.value = value;

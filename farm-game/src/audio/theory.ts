@@ -84,6 +84,8 @@ export function chordAt(chords: ChordAt[], beat: number): ChordAt {
  * Voice a chord from an anchor: the chord tones (as pitches) starting at the lowest chord tone at
  * or above `anchor`, ascending. Index i>=n continues an octave up. Moving the anchor never jumps
  * more than a fourth or so between neighbouring chords, so this doubles as simple voice leading.
+ * Close voicing would put a seventh a semitone under the root (Fmaj7 from E: E F A C), a harsh
+ * cluster on a pad; the lower note of any semitone pair moves up an octave instead (F A C E).
  */
 export function voicing(chord: Chord, anchor: number): number[] {
   const pcs = [...new Set(chord.tones.map((t) => (chord.root + t) % 12))];
@@ -92,13 +94,38 @@ export function voicing(chord: Chord, anchor: number): number[] {
     if (n < anchor) n += 12;
     return n;
   });
-  return out.sort((a, b) => a - b);
+  out.sort((a, b) => a - b);
+  for (let guard = 0; guard < 4; guard++) {
+    const i = out.findIndex((n, k) => k + 1 < out.length && out[k + 1]! - n <= 1);
+    if (i < 0) break;
+    out[i] = out[i]! + 12;
+    out.sort((a, b) => a - b);
+  }
+  return out;
 }
 
 export function voiceTone(v: number[], index: number): number {
   const n = v.length;
   const oct = Math.floor(index / n);
   return v[((index % n) + n) % n]! + 12 * oct;
+}
+
+/** Pitch classes sounding in a chord (tones and slash bass). */
+export function chordPcs(chord: Chord): Set<number> {
+  return new Set([...chord.tones.map((t) => (chord.root + t) % 12), chord.bass]);
+}
+
+/**
+ * A held note against a chord: if it sits a semitone (m2 or M7) from a chord tone without being one,
+ * move it to the nearest chord tone (lower on a tie). Notes that are chord tones or a whole tone or
+ * more away from every chord tone (ninths, sixths) stay as written.
+ */
+export function fitToChord(midi: number, chord: Chord): number {
+  const pcs = chordPcs(chord);
+  const pc = ((midi % 12) + 12) % 12;
+  if (pcs.has(pc) || ![...pcs].some((c) => (pc - c + 12) % 12 === 1 || (c - pc + 12) % 12 === 1)) return midi;
+  for (const d of [-1, 1, -2, 2, -3, 3]) if (pcs.has((((midi + d) % 12) + 12) % 12)) return midi + d;
+  return midi;
 }
 
 /** The bass note of a chord in the octave at or above `anchor`. */

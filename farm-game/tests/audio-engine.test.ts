@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MANIFEST, MUSIC, instrumentFiles, slotInstruments } from '../src/audio/assets';
 import { SampleBank, detectOnset, onsetOffset } from '../src/audio/bank';
-import { chooseAmbience, chooseMusic, type Scene } from '../src/audio/director';
+import { MomentClock, PanelTracker, SHOP_DWELL_MS, chooseAmbience, chooseMusic, type Scene } from '../src/audio/director';
 import { MusicPlayer } from '../src/audio/music';
 import { SfxPlayer } from '../src/audio/sfx';
 import { audio } from '../src/platform/audio';
@@ -217,16 +217,119 @@ describe('audio engine', () => {
   });
 });
 
+describe('musical moments', () => {
+  const ctxOf = () => (audio as unknown as { ctx: FakeAudioContext }).ctx;
+  it('plays villager motifs and season stings (synth when samples are missing), and ignores unknown names', () => {
+    const ctx = ctxOf();
+    let n = ctx.created.length;
+    audio.motif('clay');
+    expect(ctx.created.length).toBeGreaterThan(n);
+    n = ctx.created.length;
+    audio.motif('nobody');
+    expect(ctx.created.length).toBe(n);
+    audio.seasonSting('fall');
+    expect(ctx.created.length).toBeGreaterThan(n);
+    for (const v of [1, 2, 3]) {
+      expect(MUSIC.stings[`dawn-${v}`]).toBeDefined();
+      expect(MUSIC.stings[`dusk-${v}`]).toBeDefined();
+    }
+    for (const id of ['mara', 'finn', 'rosa', 'orin', 'clay'])
+      for (const v of ['', '-heart']) expect(MUSIC.stings[`motif-${id}${v}`], `${id}${v}`).toBeDefined();
+    for (const s of ['spring', 'summer', 'fall', 'winter']) {
+      expect(MUSIC.stings[`season-${s}`], s).toBeDefined();
+      expect(MUSIC.stings[`open-${s}`], s).toBeDefined();
+    }
+  });
+});
+
+describe('panels and moments', () => {
+  it('plays the shop piece only while the store is open (after a short dwell), never for a later menu', () => {
+    const p = new PanelTracker();
+    p.open('shop', 0);
+    p.frame(1);
+    expect(p.current(500), 'dwell').toBeNull();
+    expect(p.current(SHOP_DWELL_MS + 1)).toBe('shop');
+    p.frame(0); // Escape closes the store
+    expect(p.current(5000)).toBeNull();
+    p.frame(1); // the menu opens without an openPanel event (critic R9 #1)
+    expect(p.current(6000)).toBeNull();
+    p.open('menu', 6000);
+    expect(p.current(9000)).toBe('menu');
+  });
+  it('plays dawn and dusk once each on the first day of a week, outdoors, in rotating variants', () => {
+    const c = new MomentClock();
+    expect(c.step(1, 0, true), 'not a week start').toBeNull();
+    expect(c.step(7, 0, false), 'indoors').toBeNull();
+    expect(c.step(7, 0.1, true)).toBe('dawn-2');
+    expect(c.step(7, 0.2, true), 'once').toBeNull();
+    expect(c.step(7, 0.5, true)).toBeNull();
+    expect(c.step(7, 0.7, true)).toBe('dusk-2');
+    expect(c.step(7, 0.9, true)).toBeNull();
+    const d = new MomentClock();
+    expect(d.step(14, 0.9, true), 'stepping out at night is not dusk').toBeNull();
+    expect(d.step(14, 0.1, true)).toBe('dawn-3');
+    expect(new MomentClock().step(21, 0.1, true)).toBe('dawn-1');
+  });
+});
+
+describe('jingle priority', () => {
+  const buses = (ctx: FakeAudioContext) => {
+    const g = () => new FakeGain(ctx, 'gain') as unknown as AudioNode;
+    return { dry: { day: g(), night: g(), both: g() }, wet: { day: g(), night: g(), both: g() }, sfx: g() };
+  };
+  const ready = async () => {
+    const ctx = new FakeAudioContext();
+    const bank = new SampleBank('x/', async () => GOOD_BYTES());
+    for (const cue of ['order', 'special'])
+      for (const p of MUSIC.jingles[cue]!.parts)
+        await Promise.all(instrumentFiles(p.inst).map((z) => bank.load(asCtx(ctx), z.file, z.onset)));
+    return { ctx, m: new MusicPlayer(asCtx(ctx), bank, buses(ctx), () => undefined) };
+  };
+  it('the special-order fanfare cuts an order jingle that started just before it', async () => {
+    const { ctx, m } = await ready();
+    expect(m.jingle('order', 10)).toBe(true);
+    const order = sampled(ctx);
+    const naturalEnd = Math.max(...order.map((s) => s.stoppedAt ?? 0));
+    expect(m.jingle('special', 10.3)).toBe(true);
+    for (const s of order) expect(s.stoppedAt!, 'order stopped early').toBeLessThan(naturalEnd);
+    expect(sampled(ctx).length).toBeGreaterThan(order.length);
+  });
+  it('drops an order jingle asked for just after the special fanfare (the order of calls does not matter)', async () => {
+    const { ctx, m } = await ready();
+    expect(m.jingle('special', 10)).toBe(true);
+    const n = sampled(ctx).length;
+    expect(m.jingle('order', 10.4), 'handled, so no synth either').toBe(true);
+    expect(sampled(ctx).length).toBe(n);
+    expect(m.jingle('order', 12)).toBe(true);
+    expect(sampled(ctx).length).toBeGreaterThan(n);
+  });
+});
+
 describe('director', () => {
   const base: Scene = { inGame: true, map: 'farm', outdoor: true, season: 'summer', night: 0, weather: 'sunny', festival: false };
   it('picks title, season (indoors or out), mine and festival music', () => {
     expect(chooseMusic({ ...base, inGame: false }).slot).toBe('title');
-    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false });
-    expect(chooseMusic({ ...base, map: 'house', outdoor: false })).toEqual({ slot: 'summer', indoor: true });
+    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false, rain: false, year: 1 });
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false })).toMatchObject({ slot: 'summer', indoor: true });
     expect(chooseMusic({ ...base, map: 'mine', outdoor: false }).slot).toBe('mine');
     expect(chooseMusic({ ...base, map: 'town', festival: true }).slot).toBe('festival');
     expect(chooseMusic({ ...base, map: 'farm', festival: true }).slot).toBe('summer');
     expect(chooseMusic({ ...base, map: 'town', festival: true, night: 0.8 }).slot).toBe('summer');
+  });
+  it('plays the shop piece in the store, the lullaby in the house at night, and passes rain and year', () => {
+    expect(chooseMusic({ ...base, map: 'town', panel: 'shop' })).toMatchObject({ slot: 'shop', indoor: true });
+    expect(chooseMusic({ ...base, map: 'town', panel: null }).slot).toBe('summer');
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false, night: 0.8 }).slot).toBe('lullaby');
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false, night: 0.3 }).slot).toBe('summer');
+    expect(chooseMusic({ ...base, weather: 'storm', year: 2 })).toMatchObject({ rain: true, year: 2 });
+    expect(chooseMusic({ ...base, weather: 'sunny' }).rain).toBe(false);
+    const shop = chooseAmbience({ ...base, map: 'town', panel: 'shop' });
+    expect(shop.forge).toBeGreaterThan(0);
+    expect(shop.anvil).toBeGreaterThan(0);
+    expect(shop.birds).toBe(0);
+    expect(chooseAmbience({ ...base, map: 'house', outdoor: false, night: 0.9 }).clock).toBeGreaterThan(
+      chooseAmbience({ ...base, map: 'house', outdoor: false, night: 0 }).clock,
+    );
   });
   it('places birds by day, crickets at night, wind in winter, drips in the mine', () => {
     expect(chooseAmbience(base).birds).toBe(1);

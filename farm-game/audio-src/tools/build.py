@@ -15,6 +15,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsp  # noqa: E402
+import gen_beds  # noqa: E402
 from dsp import SR  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -271,10 +272,25 @@ def mix_parts(raw: str, parts: list, hp: float) -> np.ndarray:
     return out
 
 
-def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0, by: str = "rms") -> np.ndarray:
+# A single sound effect at the default volume must peak at or below this at the output, so the master's
+# soft clipper (knee -3 dBFS) never shapes an everyday sound. Default sfx bus: 0.8 x K_SFX 0.9, then the
+# master compressor's automatic make-up gain (LIMITER_MAKEUP_DB in src/audio/graph.ts, +1.71 dB).
+OUT_TP_MAX_DB = -3.5
+SFX_BUS_DB = 20 * np.log10(0.8 * 0.9) + 0.6 * 3 * (1 - 1 / 20)
+
+
+def sfx_tp_ceiling(r: dict) -> float:
+    """File true-peak ceiling for a cue: the output limit minus its trim, its random volume spread
+    and the bus gain, with 0.3 dB to spare for pitch spread."""
+    return min(TP_CEIL_DB, OUT_TP_MAX_DB - r.get("trim", 0) - r["vol"] - SFX_BUS_DB - 0.3)
+
+
+def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0, by: str = "rms",
+                tp_ceil: float = TP_CEIL_DB) -> np.ndarray:
     """Start at the attack, drop the silent tail, fade out, and match the target loudness:
     by="lufs": max momentary loudness (K-weighted, 400 ms) as played on the stereo bus;
-    by="rms": RMS over the active region (used for ambience one-shots)."""
+    by="rms": RMS over the active region (used for ambience one-shots).
+    `tp_ceil` (dBTP) caps the peaks; spiky sounds are limited to reach it at the same loudness."""
     y = trim_start(y, -40)
     end = decay_end(y, max_len, -50)
     y = dsp.fade(y[:end], fade_out=min(int(0.03 * SR), max(end // 3, 1)))
@@ -282,17 +298,17 @@ def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0, by: str = 
     def loud(v: np.ndarray) -> float:
         return dsp.momentary_lufs(v) if by == "lufs" else dsp.db(dsp.active_rms(v))
 
-    for _ in range(4):
+    for _ in range(12):
         y = y * dsp.undb(level_db - loud(y))
-        if dsp.true_peak(y) <= dsp.undb(TP_CEIL_DB - 0.5):
+        if dsp.true_peak(y) <= dsp.undb(tp_ceil - 0.5):
             break
         # Spiky sounds (coins) reach the ceiling long before the target loudness: limit the spikes
         # (a few ms each) instead of turning the whole sound down by several dB.
-        y = dsp.limit(y, dsp.undb(TP_CEIL_DB - 1.5))
+        y = dsp.limit(y, dsp.undb(tp_ceil - 1.5))
     tp = dsp.true_peak(y)
     # leave 0.5 dB for MP3 encoding overshoot
-    if tp > dsp.undb(TP_CEIL_DB - 0.5):
-        y = y * (dsp.undb(TP_CEIL_DB - 0.5) / tp)
+    if tp > dsp.undb(tp_ceil - 0.5):
+        y = y * (dsp.undb(tp_ceil - 0.5) / tp)
     return y
 
 
@@ -321,14 +337,25 @@ def build_sfx(raw: str, recipes: dict) -> dict:
         hp = r.get("hp", fam["hp"])
         files = []
         for i, parts in enumerate(r["variants"]):
-            y = finish_shot(mix_parts(raw, parts, hp), fam["lufs"], by="lufs")
+            y = finish_shot(mix_parts(raw, parts, hp), fam["lufs"], max_len=r.get("maxLen", 2.0), by="lufs",
+                            tp_ceil=sfx_tp_ceiling(r))
             fname = f"sfx/{cue}-{i + 1}.mp3"
             dsp.encode_mp3(y, os.path.join(OUT, fname), quality=5)
-            files.append({"file": fname, "onset": round(dsp.onset(y, -40) / SR, 5), "dur": round(len(y) / SR, 4)})
+            # MP3 can ring above the source on sharp transients (till: +1.7 dB): check the decoded file.
+            over = encoded_tp(os.path.join(OUT, fname)) - sfx_tp_ceiling(r)
+            if over > 0:
+                y = y * dsp.undb(-over - 0.1)
+                dsp.encode_mp3(y, os.path.join(OUT, fname), quality=5)
+            files.append({"file": fname, "onset": round(dsp.onset(y, -40) / SR, 5), "dur": round(len(y) / SR, 4),
+                          "tp": round(encoded_tp(os.path.join(OUT, fname)), 2)})
             report.append(shot_row(cue, i + 1, y, fam["lufs"], os.path.join(OUT, fname)))
-        out[cue] = {"files": files, "gain": 1, "pitch": r["pitch"], "vol": r["vol"], "voices": r["voices"]}
-        if "repeatDb" in r:
-            out[cue]["repeatDb"] = r["repeatDb"]
+        # "trim" (dB) calibrates the cue at the output: the files are matched in isolation, the trim
+        # closes the gap measured on renders of the real mix (audio-src/tools/sfxlevels.py).
+        out[cue] = {"files": files, "gain": round(float(dsp.undb(r.get("trim", 0))), 4), "pitch": r["pitch"],
+                    "vol": r["vol"], "voices": r["voices"]}
+        for k in ("repeatDb", "minGap", "masks", "maskFor"):
+            if k in r:
+                out[cue][k] = r[k]
     report.append("")
     return out
 
@@ -357,11 +384,13 @@ def build_ambience(raw: str, recipes: dict) -> dict:
                 assert start >= 0, f"{name}: 'from' must leave {pre / SR:.2f} s of pre-roll for the crossfade"
                 seg = x[start : start + pre + body + int(0.1 * SR)].copy()
                 assert len(seg) == pre + body + int(0.1 * SR), f"{name}: source too short for this layer"
-                # Equal-power crossfade: ambience is noise-like, the two ends are uncorrelated.
+                # Equal-power crossfade: ambience is noise-like, the two ends are uncorrelated. A periodic
+                # bed (the clock: body a whole number of periods) has identical ends: equal-gain instead.
                 e = pre + body
                 t = np.linspace(0, np.pi / 2, xfade)
+                fo, fi = (np.cos(t) ** 2, np.sin(t) ** 2) if r.get("correlated") else (np.cos(t), np.sin(t))
                 y = seg.copy()
-                y[e - xfade : e] = seg[e - xfade : e] * np.cos(t) + seg[pre - xfade : pre] * np.sin(t)
+                y[e - xfade : e] = seg[e - xfade : e] * fo + seg[pre - xfade : pre] * fi
                 y[e : e + int(0.1 * SR)] = seg[pre : pre + int(0.1 * SR)]
                 y = y * (dsp.undb(level) / np.sqrt(np.mean(y[pre:e] ** 2)))
                 tp = dsp.true_peak(y)
@@ -403,6 +432,7 @@ def main() -> None:
     if only in (None, "sfx"):
         manifest["sfx"] = build_sfx(raw, recipes)
     if only in (None, "ambience"):
+        gen_beds.generate(raw)
         manifest["ambience"] = build_ambience(raw, recipes)
     manifest = {k: manifest[k] for k in ("instruments", "sfx", "ambience") if k in manifest}
     os.makedirs(os.path.dirname(MANIFEST), exist_ok=True)

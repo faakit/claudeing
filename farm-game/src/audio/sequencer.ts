@@ -1,5 +1,5 @@
 import { bassNote, chordAt, parseChords, parsePhrase, voiceTone, voicing } from './theory';
-import type { ChordAt, PhraseNote } from './theory';
+import type { Chord, ChordAt, PhraseNote } from './theory';
 import type { Layer, LayerTime, Piece, PatternStep } from './types';
 
 /** Deterministic PRNG (mulberry32) so renders and tests repeat exactly. */
@@ -44,7 +44,14 @@ export interface BarOptions {
   night: boolean;
   /** Number of hits per percussion instrument (round robin pool size). */
   percHits: (inst: string) => number;
+  /** A rainy day: no percussion, accompaniment on the main beats only, melodies rest more. */
+  rain?: boolean;
+  /** Game year: from year two a piece plays its `form2` (variation sections) if it has one. */
+  year?: number;
 }
+
+/** Extra chance that a melody sits a section out on a rainy day. */
+export const RAIN_REST = 0.25;
 
 const PERC = new Set(['shaker', 'tamb', 'sleigh', 'triangle']);
 
@@ -62,6 +69,7 @@ export class PiecePlayer {
   private sections = new Map<string, ParsedSection>();
   private phrases = new Map<string, { bars: number; notes: PhraseNote[] }>();
   private formIndex = 0;
+  private introIndex = 0;
   private barInSection = 0;
   /** layer id -> phrase currently playing (null = resting) and the bar it started. */
   private current = new Map<string, { id: string | null; start: number }>();
@@ -89,15 +97,46 @@ export class PiecePlayer {
     return { formIndex: this.formIndex, bar: this.barInSection };
   }
 
+  private formFor(opt: BarOptions): string[] {
+    return (opt.year ?? 1) >= 2 && this.piece.form2 ? this.piece.form2 : this.piece.form;
+  }
+
+  /** The section and bar `k` bars after the next one to be generated (k = 0 is the next one). */
+  peek(k: number, opt: Pick<BarOptions, 'year'>): { section: string; bar: number } {
+    const introLen = this.piece.intro?.length ?? 0;
+    const form = this.formFor(opt as BarOptions);
+    let intro = this.introIndex;
+    let f = this.formIndex;
+    let b = this.barInSection;
+    for (let i = 0; i < k; i++) {
+      const sid = intro < introLen ? this.piece.intro![intro]! : form[f % form.length]!;
+      b++;
+      if (b >= this.sections.get(sid)!.bars) {
+        b = 0;
+        if (intro < introLen) intro++;
+        else f = (f + 1) % form.length;
+      }
+    }
+    return { section: intro < introLen ? this.piece.intro![intro]! : form[f % form.length]!, bar: b };
+  }
+
+  /** The chord at a beat of a bar of a section. */
+  chordOf(section: string, bar: number, beat: number): Chord {
+    return chordAt(this.sections.get(section)!.chords, bar * this.piece.meter + beat).chord;
+  }
+
   nextBar(rng: () => number, opt: BarOptions): BarOut {
-    const sectionId = this.piece.form[this.formIndex % this.piece.form.length]!;
+    const inIntro = this.introIndex < (this.piece.intro?.length ?? 0);
+    const form = this.formFor(opt);
+    const sectionId = inIntro ? this.piece.intro![this.introIndex]! : form[this.formIndex % form.length]!;
     const section = this.sections.get(sectionId)!;
     const bar = this.barInSection;
     const events: NoteEvent[] = [];
     for (const layer of this.piece.layers) {
       // Always advance phrase choice so the rng sequence does not depend on day/night.
-      const melody = layer.phrases ? this.melodyFor(layer, sectionId, bar, rng) : null;
+      const melody = layer.phrases ? this.melodyFor(layer, sectionId, bar, rng, inIntro, opt.rain) : null;
       if (layer.tacet?.includes(sectionId)) continue;
+      if (opt.rain && PERC.has(layer.inst)) continue;
       if (opt.indoor && layer.outdoorOnly) continue;
       if (layer.time === 'day' && !opt.day) continue;
       if (layer.time === 'night' && !opt.night) continue;
@@ -108,17 +147,26 @@ export class PiecePlayer {
     this.barInSection += 1;
     if (this.barInSection >= section.bars) {
       this.barInSection = 0;
-      this.formIndex = (this.formIndex + 1) % this.piece.form.length;
+      if (inIntro) this.introIndex += 1;
+      else this.formIndex = (this.formIndex + 1) % form.length;
     }
     return { section: sectionId, bar, events };
   }
 
-  private melodyFor(layer: Layer, sectionId: string, bar: number, rng: () => number): NoteEvent[] | null {
+  private melodyFor(
+    layer: Layer,
+    sectionId: string,
+    bar: number,
+    rng: () => number,
+    always = false,
+    rain = false,
+  ): NoteEvent[] | null {
     const slots = layer.phrases![sectionId];
     if (!slots || slots.length === 0) return [];
     // Decide once per section whether this melody rests, then pick a phrase at each slot start.
     if (bar === 0 || !this.current.has(layer.id)) {
-      this.resting.set(layer.id, rng() < (layer.rest ?? 0));
+      // An intro (the title sting) always plays; the rng is still drawn so the sequence stays the same.
+      this.resting.set(layer.id, rng() < (layer.rest ?? 0) + (rain ? RAIN_REST : 0) && !always);
       this.current.delete(layer.id);
     }
     let start = 0;
@@ -167,6 +215,9 @@ export class PiecePlayer {
     for (const [b, tones, beats, vel] of steps) {
       if (vel <= 0 || b < from || b >= from + meter) continue;
       const beatInBar = b - from;
+      // Rain thins the accompaniment to the main beats (1 and 3, or the downbeat in 3/4).
+      if (opt.rain && !isBass && (Math.abs(beatInBar - Math.round(beatInBar)) > 1e-6 || Math.round(beatInBar) % 2 === 1))
+        continue;
       const chord = chordAt(section.chords, bar * meter + beatInBar).chord;
       const v = Math.min(1, vel * (0.9 + rng() * 0.2) * (layer.gain ?? 1));
       const list = Array.isArray(tones) ? tones : [tones];

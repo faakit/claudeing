@@ -18,7 +18,8 @@ export class SfxPlayer {
   private voices = new Map<string, Voice[]>();
   private last = new Map<string, number>();
   private lastAt = new Map<string, number>();
-  readonly stats = { played: 0, fallback: 0 };
+  private maskedUntil = new Map<string, number>();
+  readonly stats = { played: 0, fallback: 0, dropped: 0 };
 
   constructor(
     private ctx: BaseAudioContext,
@@ -38,6 +39,12 @@ export class SfxPlayer {
   play(cue: string, now: number): boolean {
     const a = MANIFEST.sfx[cue];
     if (!a || a.files.length === 0) return false;
+    // Too soon after the last copy (minGap), or masked by another cue: handled, by staying silent.
+    const prevPlayed = this.lastAt.get(cue);
+    if ((a.minGap && prevPlayed !== undefined && now - prevPlayed < a.minGap) || (this.maskedUntil.get(cue) ?? -1) > now) {
+      this.stats.dropped++;
+      return true;
+    }
     const ready = a.files.map((z, i) => ({ z, i, d: this.bank.get(z.file, now) })).filter((x) => x.d);
     if (ready.length === 0) {
       a.files.forEach((z) => void this.bank.load(this.ctx, z.file, z.onset));
@@ -56,6 +63,7 @@ export class SfxPlayer {
     const prevAt = this.lastAt.get(cue);
     const repeatDuck = prevAt !== undefined && now - prevAt < REPEAT_WINDOW ? Math.pow(10, (a.repeatDb ?? -4) / 20) : 1;
     this.lastAt.set(cue, now);
+    for (const m of a.masks ?? []) this.maskedUntil.set(m, now + (a.maskFor ?? 0.08));
     const gain = a.gain * repeatDuck * Math.pow(10, (spread(this.rng) * a.vol) / 20);
     live.push(playSample(this.ctx, pick.d!, pick.z, this.dest, { when: now, rate, gain }));
     this.voices.set(cue, live);

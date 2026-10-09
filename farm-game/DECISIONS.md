@@ -332,5 +332,20 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 - **Fallback never goes silent:** any sfx cue without a decoded take plays the original synth; a missing instrument plays its notes on a synth voice; a piece with no loadable instrument switches to the original synth music; rain uses the noise bed until the recording loads.
 - **Loading:** bytes are fetched after the first frame (through the service worker's cache on a first visit, not twice), decoded at the unlock tap in priority order (sfx and jingles, then the current piece); unused decoded buffers are dropped after 2 minutes. Sustain samples and ambience beds have baked crossfade loops with a repeated tail, so decoder priming cannot cause a click; the engine measures each buffer's onset to compensate.
 - **Mix:** sound effects are matched by role on max momentary loudness (K-weighted 400 ms; rewards -18, tools -20, swing/plant -22, door -21, error -23, ui -25, steps -28 LUFS in the file, about the same at the output at default volume), true peak <= -1 dBTP after MP3 encoding; music sits near -25 LUFS integrated by day and -28 at night at the default 60% volume; ambience beds under the music. A repeat of the same cue within 350 ms (a held tool) plays 4 dB softer, and water keeps one voice. Measured from offline renders of the real engine (`audio-src/tools/render.mjs`). The master "limiter" is a DynamicsCompressorNode (-3 dB, 20:1), which by spec adds about +1.7 dB of automatic make-up gain; the measured levels include it.
+- **Round 2: output calibration and peaks.** Each sfx recipe carries a `trim` (dB) measured on renders of the real
+  mix (`audio-src/tools/sfxlevels.py`: median of 16 hits, K-weighted max momentary), so every cue lands within
+  about 1 dB of its role target *at the output* (they were 1-3 dB under). Peaks are fixed at the source: a cue's
+  file is limited so that its worst take, with its trim, volume spread and the compressor's make-up gain, peaks
+  at or under -3.5 dBTP at the default volume (`tests/audio-assets.test.ts`). A WaveShaper soft clipper after
+  the compressor (linear to -3 dBFS, tanh knee, ceiling -1.4 dBFS, 2x oversampling) is the brick wall; only
+  extreme settings reach it (all sliders at max with festival, rain and 60 effects: -1.0 dBTP).
+- **Each piece has its own harmony** (round 2): summer mixolydian over a pedal, fall Andalusian/aeolian with a
+  Neapolitan, winter suspensions over a D pedal, title a hook with borrowed minor-key chords and a sting intro,
+  festival a ragtime circle with a minor trio, mine a phrygian deep section. Tests keep them apart (distinct
+  progressions and cadences, chord-bigram and melody 3-gram overlap limits); `audio-src/tools/seasons.py`
+  measures transposition-invariant harmonic similarity on renders.
+- **The mine is intentionally quieter:** its music sits near -29 LUFS (as in round 1), -27 with the cave bed and
+  drips, a step down from the farm's -25 by day. Not lower than about -30 for the music alone, or the cave bed
+  masks it on phone speakers.
 - **Phaser's own audio is off** (`audio: { noAudio: true }`): one AudioContext for the whole game.
 - **Sources:** Kenney (CC0) and OpenGameArt CC0 for sound effects and ambience, Versilian Studios (CC0) for instruments; every file, page, author, licence and sha1 in `audio-src/SOURCES.md`. Nothing was listened to by a human while building it.

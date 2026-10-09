@@ -19,7 +19,7 @@
    "release": 0.25
   },
   "glock": {
-   "gain": 0.45,
+   "gain": 0.38,
    "pan": 0.3,
    "reverb": 0.4,
    "release": 0.7
@@ -383,6 +383,229 @@
     0
    ]
   ],
+  "summerComp": [
+   [
+    0,
+    [
+     0,
+     1,
+     2
+    ],
+    0.5,
+    0.7
+   ],
+   [
+    1.5,
+    [
+     0,
+     1,
+     2
+    ],
+    0.5,
+    0.6
+   ],
+   [
+    3,
+    [
+     0,
+     1,
+     2
+    ],
+    0.5,
+    0.55
+   ],
+   [
+    3.5,
+    [
+     1,
+     2
+    ],
+    0.5,
+    0.4
+   ]
+  ],
+  "bassTresillo": [
+   [
+    0,
+    0,
+    1.4,
+    0.85
+   ],
+   [
+    1.5,
+    2,
+    1.4,
+    0.6
+   ],
+   [
+    3,
+    0,
+    0.9,
+    0.7
+   ]
+  ],
+  "arpTrip": [
+   [
+    0,
+    0,
+    1,
+    0.65
+   ],
+   [
+    0.333,
+    1,
+    1,
+    0.45
+   ],
+   [
+    0.667,
+    2,
+    1,
+    0.5
+   ],
+   [
+    1,
+    3,
+    1,
+    0.55
+   ],
+   [
+    1.333,
+    2,
+    1,
+    0.45
+   ],
+   [
+    1.667,
+    1,
+    1,
+    0.45
+   ],
+   [
+    2,
+    0,
+    1,
+    0.6
+   ],
+   [
+    2.333,
+    1,
+    1,
+    0.45
+   ],
+   [
+    2.667,
+    2,
+    1,
+    0.5
+   ],
+   [
+    3,
+    3,
+    1,
+    0.55
+   ],
+   [
+    3.333,
+    2,
+    1,
+    0.45
+   ],
+   [
+    3.667,
+    1,
+    1,
+    0.45
+   ]
+  ],
+  "arpTripHalf": [
+   [
+    0,
+    0,
+    2,
+    0.55
+   ],
+   [
+    0.333,
+    1,
+    2,
+    0.4
+   ],
+   [
+    0.667,
+    2,
+    2,
+    0.45
+   ],
+   [
+    2,
+    1,
+    2,
+    0.45
+   ],
+   [
+    2.333,
+    2,
+    2,
+    0.4
+   ],
+   [
+    2.667,
+    3,
+    2,
+    0.45
+   ]
+  ],
+  "bass2": [
+   [
+    0,
+    0,
+    2,
+    0.75
+   ],
+   [
+    2,
+    1,
+    2,
+    0.6
+   ]
+  ],
+  "stride": [
+   [
+    1,
+    [
+     0,
+     1,
+     2
+    ],
+    0.5,
+    0.55
+   ],
+   [
+    3,
+    [
+     0,
+     1,
+     2
+    ],
+    0.5,
+    0.5
+   ]
+  ],
+  "bassOomPah": [
+   [
+    0,
+    0,
+    0.9,
+    0.85
+   ],
+   [
+    2,
+    1,
+    0.9,
+    0.7
+   ]
+  ],
   "waltzChords": [
    [
     1,
@@ -415,6 +638,19 @@
     ],
     3,
     0.55
+   ]
+  ],
+  "pad3wide": [
+   [
+    0,
+    [
+     0,
+     1,
+     2,
+     3
+    ],
+    3,
+    0.5
    ]
   ],
   "bass3": [
@@ -509,17 +745,17 @@
     {
      "inst": "glock",
      "notes": "G5:.5 D6:2",
-     "gain": 1.4
+     "gain": 1.1
     },
     {
      "inst": "vibes",
      "notes": "G5:.5 B5:2",
-     "gain": 0.9
+     "gain": 0.7
     },
     {
      "inst": "harp",
      "notes": "G4:.5 B4:2",
-     "gain": 0.8
+     "gain": 0.62
     }
    ]
   },
@@ -541,10 +777,429 @@
      "gain": 0.8
     }
    ]
+  },
+  "special": {
+   "bpm": 140,
+   "volume": 0.85,
+   "priority": 2,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "C5:.25 E5:.25 G5:.25 C6:.5 G5:.25 C6:.25 E6:1.5"
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:.5 G4:.5 C5:.5 E5:1.5",
+     "gain": 0.7
+    },
+    {
+     "inst": "glock",
+     "notes": "r:1.5 C6:.5 G6:1.5",
+     "gain": 0.7
+    }
+   ]
+  }
+ },
+ "stings": {
+  "motif-mara": {
+   "bpm": 112,
+   "volume": 0.75,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "G5:.5 C6:.5 E6:.5 D6:.5 C6:1.5"
+    },
+    {
+     "inst": "marimba",
+     "notes": "C5:.5 r:.5 G4:.5 r:.5 C5:1",
+     "gain": 0.6
+    }
+   ]
+  },
+  "motif-mara-heart": {
+   "bpm": 90,
+   "volume": 0.8,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "G5:.5 C6:.5 E6:.5 D6:.5 C6:2"
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:.25 E4:.25 G4:.25 C5:2.75",
+     "gain": 0.6
+    },
+    {
+     "inst": "glock",
+     "notes": "r:2.5 G6:1.5",
+     "gain": 0.5
+    }
+   ]
+  },
+  "motif-finn": {
+   "bpm": 84,
+   "volume": 0.75,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "E5:1 G5:.5 A5:1.5 G5:.5 E5:1.5"
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:1.5 G4:1.5 C5:2",
+     "gain": 0.6
+    }
+   ]
+  },
+  "motif-finn-heart": {
+   "bpm": 72,
+   "volume": 0.9,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "E5:1 G5:.5 A5:1.5 C6:2"
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:.25 G4:.25 C5:.25 E5:3.25",
+     "gain": 0.6
+    },
+    {
+     "inst": "glock",
+     "notes": "r:3 E6:2",
+     "gain": 0.5
+    }
+   ]
+  },
+  "motif-rosa": {
+   "bpm": 96,
+   "volume": 0.75,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:1.5"
+    },
+    {
+     "inst": "glock",
+     "notes": "r:3 E6:1.5",
+     "gain": 0.4
+    }
+   ]
+  },
+  "motif-rosa-heart": {
+   "bpm": 80,
+   "volume": 0.7,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:2"
+    },
+    {
+     "inst": "vibes",
+     "notes": "r:1 E5:1 G5:3",
+     "gain": 0.6
+    },
+    {
+     "inst": "glock",
+     "notes": "r:3 G6:2",
+     "gain": 0.4
+    }
+   ]
+  },
+  "motif-orin": {
+   "bpm": 100,
+   "volume": 0.8,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "C4:.5 C4:.5 G4:.5 E4:.5 C5:2"
+    },
+    {
+     "inst": "pizz",
+     "notes": "C3:1 G2:1 C3:2",
+     "gain": 0.8
+    }
+   ]
+  },
+  "motif-orin-heart": {
+   "bpm": 84,
+   "volume": 0.8,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "C4:.5 C4:.5 G4:.5 E4:.5 C5:2.5"
+    },
+    {
+     "inst": "pizz",
+     "notes": "C3:1 G2:1 C3:2.5",
+     "gain": 0.8
+    },
+    {
+     "inst": "harp",
+     "notes": "r:2 G4:.25 C5:.25 E5:2.5",
+     "gain": 0.6
+    }
+   ]
+  },
+  "motif-clay": {
+   "bpm": 150,
+   "volume": 0.5,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 G5:1"
+    },
+    {
+     "inst": "pizz",
+     "notes": "G3:.25 F#3:.25 G3:.5 E3:.5 A3:.5 G3:1",
+     "gain": 0.8
+    }
+   ]
+  },
+  "motif-clay-heart": {
+   "bpm": 120,
+   "volume": 0.55,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 C6:1.5"
+    },
+    {
+     "inst": "pizz",
+     "notes": "C3:1 G3:1 C3:1.5",
+     "gain": 0.8
+    },
+    {
+     "inst": "glock",
+     "notes": "r:2 E6:1.5",
+     "gain": 0.4
+    }
+   ]
+  },
+  "dawn-1": {
+   "bpm": 100,
+   "volume": 0.4,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "C4:.25 E4:.25 G4:.25 C5:.25 E5:2"
+    },
+    {
+     "inst": "vibes",
+     "notes": "r:1 C6:2",
+     "gain": 0.6
+    },
+    {
+     "inst": "glock",
+     "notes": "r:1 G6:2",
+     "gain": 0.5
+    }
+   ]
+  },
+  "dawn-2": {
+   "bpm": 92,
+   "volume": 0.4,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "E5:.5 G5:.5 C6:2.5"
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:.5 G4:.5 E5:2.5",
+     "gain": 0.6
+    }
+   ]
+  },
+  "dawn-3": {
+   "bpm": 108,
+   "volume": 0.4,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "C5:.25 D5:.25 E5:.25 G5:.25 A5:.5 G5:1.5"
+    },
+    {
+     "inst": "glock",
+     "notes": "r:1.5 E6:1.5",
+     "gain": 0.5
+    }
+   ]
+  },
+  "dusk-1": {
+   "bpm": 80,
+   "volume": 0.4,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "E6:.5 C6:.5 A5:.5 G5:2"
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:3.5",
+     "gain": 0.6
+    }
+   ]
+  },
+  "dusk-2": {
+   "bpm": 76,
+   "volume": 0.4,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "G5:.5 E5:.5 C5:.5 G4:2.5"
+    },
+    {
+     "inst": "vibes",
+     "notes": "r:1.5 E5:2.5",
+     "gain": 0.6
+    }
+   ]
+  },
+  "dusk-3": {
+   "bpm": 72,
+   "volume": 0.4,
+   "parts": [
+    {
+     "inst": "vibes",
+     "notes": "A5:1 G5:.5 E5:.5 D5:.5 C5:2"
+    },
+    {
+     "inst": "harp",
+     "notes": "F3:2 C4:2.5",
+     "gain": 0.6
+    }
+   ]
+  },
+  "season-spring": {
+   "bpm": 96,
+   "volume": 0.8,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "C4:.5 G4:.5 C5:.5 E5:.5 G5:2"
+    },
+    {
+     "inst": "glock",
+     "notes": "r:2 C6:2",
+     "gain": 0.6
+    }
+   ]
+  },
+  "season-summer": {
+   "bpm": 120,
+   "volume": 0.8,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "G4:.25 A4:.25 C5:.5 D5:.5 E5:.5 G5:1.5"
+    },
+    {
+     "inst": "vibes",
+     "notes": "r:2 E6:1.5",
+     "gain": 0.7
+    }
+   ]
+  },
+  "season-fall": {
+   "bpm": 80,
+   "volume": 0.8,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "A3:.5 C4:.5 E4:.5 A4:.5 C5:2"
+    },
+    {
+     "inst": "vibes",
+     "notes": "r:1.5 E5:2.5",
+     "gain": 0.7
+    }
+   ]
+  },
+  "season-winter": {
+   "bpm": 72,
+   "volume": 1.1,
+   "parts": [
+    {
+     "inst": "glock",
+     "notes": "E6:.5 D6:.5 C6:.5 A5:2"
+    },
+    {
+     "inst": "vibes",
+     "notes": "A4:3.5",
+     "gain": 0.7
+    }
+   ]
+  },
+  "open-spring": {
+   "bpm": 132,
+   "volume": 0.9,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "C5:.25 E5:.25 G5:.25 C6:.25 G5:.5 C6:1.5"
+    },
+    {
+     "inst": "glock",
+     "notes": "r:1 E6:.5 G6:1.5",
+     "gain": 0.6
+    }
+   ]
+  },
+  "open-summer": {
+   "bpm": 120,
+   "volume": 0.9,
+   "parts": [
+    {
+     "inst": "marimba",
+     "notes": "E5:.5 G5:.5 A5:.5 G5:.5 C6:2"
+    },
+    {
+     "inst": "pizz",
+     "notes": "C3:.5 G3:.5 C3:.5 G3:.5 C3:2",
+     "gain": 0.8
+    }
+   ]
+  },
+  "open-fall": {
+   "bpm": 116,
+   "volume": 0.9,
+   "parts": [
+    {
+     "inst": "harp",
+     "notes": "C4:.5 E4:.5 G4:.5 C5:.5 E5:.5 G5:1.5"
+    },
+    {
+     "inst": "pizz",
+     "notes": "C3:1 G2:1 C3:2",
+     "gain": 0.8
+    }
+   ]
+  },
+  "open-winter": {
+   "bpm": 100,
+   "volume": 1.2,
+   "parts": [
+    {
+     "inst": "glock",
+     "notes": "G5:.5 E6:.5 C6:2"
+    },
+    {
+     "inst": "vibes",
+     "notes": "C5:1 E5:1 G5:2",
+     "gain": 0.7
+    },
+    {
+     "inst": "harp",
+     "notes": "C4:4",
+     "gain": 0.6
+    }
+   ]
   }
  },
  "pieces": {
   "spring": {
+   "key": "C major",
    "level": 0,
    "nightLevel": 2.5,
    "jingleKey": 0,
@@ -559,6 +1214,9 @@
     },
     "R": {
      "chords": "F | C | F | G"
+    },
+    "A2": {
+     "chords": "Fmaj7 | Em7 | Dm7 | Gsus4 G | E7 | A7 | Dm7 Fm6 | C"
     }
    },
    "form": [
@@ -566,6 +1224,13 @@
     "A",
     "B",
     "A",
+    "R"
+   ],
+   "form2": [
+    "A",
+    "A2",
+    "B",
+    "A2",
     "R"
    ],
    "layers": [
@@ -612,6 +1277,16 @@
        [
         "b2",
         "b2b"
+       ]
+      ],
+      "A2": [
+       [
+        "s2a1",
+        "s2a1b"
+       ],
+       [
+        "s2a2",
+        "s2a2b"
        ]
       ]
      }
@@ -666,6 +1341,14 @@
        [
         "nb2"
        ]
+      ],
+      "A2": [
+       [
+        "s2n1"
+       ],
+       [
+        "s2n2"
+       ]
       ]
      }
     }
@@ -674,7 +1357,7 @@
     "a1": "E5:1 G5:1 C6:1.5 B5:.5 | A5:2 E5:2 | F5:1 A5:1 C6:1 A5:1 | G5:3 r:1",
     "a1b": "G5:1.5 E5:.5 D5:1 C5:1 | C5:1 E5:1 A5:2 | A5:1.5 G5:.5 F5:1 E5:1 | D5:2 r:2",
     "a2": "E5:1 G5:1 C6:1 E6:1 | D6:2 C6:1 A5:1 | F5:1 A5:1 G5:1 F5:1 | E5:3 r:1",
-    "a2b": "C5:1 E5:1 G5:2 | A5:1 G5:1 E5:1 C5:1 | D5:1 F5:1 B4:1 D5:1 | C5:3 r:1",
+    "a2b": "C5:1 E5:1 G5:2 | A5:1 E5:1 C5:1 E5:1 | D5:1 F5:1 B4:1 D5:1 | C5:3 r:1",
     "b1": "A5:1.5 G5:.5 F5:1 A5:1 | B5:1 D6:1 G5:2 | G5:1 E5:1 B4:1 E5:1 | C5:1 E5:1 A5:2",
     "b1b": "C6:2 A5:1 F5:1 | D5:1 G5:1 B5:2 | B5:1.5 A5:.5 G5:1 E5:1 | E5:4",
     "b2": "F5:1 A5:1 C6:1 A5:1 | B5:1 G5:1 D5:2 | F5:1 E5:1 D5:1 C5:1 | D5:2 B4:2",
@@ -684,24 +1367,34 @@
     "na2": "G5:4 | E5:2 C5:2 | D5:2 F5:2 | E5:4",
     "na2b": "r:2 C6:2 | A5:4 | F5:2 B5:2 | C6:4",
     "nb1": "C6:4 | B5:2 G5:2 | E5:4 | r:2 C5:2",
-    "nb2": "A5:4 | G5:2 D5:2 | F5:2 C5:2 | D5:2 B4:2"
+    "nb2": "A5:4 | G5:2 D5:2 | F5:2 C5:2 | D5:2 B4:2",
+    "s2a1": "A5:1 C6:1 E6:1.5 D6:.5 | B5:1.5 G5:.5 E5:2 | F5:1 A5:1 D6:1 C6:1 | C6:2 B5:2",
+    "s2a1b": "F5:1.5 G5:.5 A5:1 C6:1 | G5:2 B5:1 D6:1 | A5:1.5 F5:.5 D5:2 | D5:1 G5:1 B5:2",
+    "s2a2": "B5:1.5 A5:.5 G#5:2 | C#6:1.5 A5:.5 E5:1 G5:1 | F5:1 A5:1 Ab5:1 F5:1 | C6:3 r:1",
+    "s2a2b": "E6:2 D6:1 B5:1 | A5:1 E5:1 G5:1 C#6:1 | D6:1 A5:1 G5:1 F5:1 | E5:4",
+    "s2n1": "E5:4 | G5:2 B5:2 | A5:4 | C6:2 B5:2",
+    "s2n2": "B5:4 | C#6:2 A5:2 | F5:2 D5:2 | E5:4"
    }
   },
   "summer": {
-   "level": 0,
-   "nightLevel": 1.3,
+   "key": "D mixolydian",
+   "level": -1.1,
+   "nightLevel": -0.1,
    "jingleKey": 2,
-   "bpm": 84,
+   "bpm": 92,
    "meter": 4,
    "sections": {
     "A": {
-     "chords": "D | Bm | G | A | D | Bm | Em7 A7 | D"
+     "chords": "D | C/D | G/D | D | D | C/D | Em7 G/D | C D"
     },
     "B": {
-     "chords": "G | A | F#m | Bm | G | A | Em7 | Asus4 A"
+     "chords": "Fmaj7 | C/E | Bbmaj7 | C | Fmaj7 | C/E | Bbmaj7 | Cadd9"
     },
     "R": {
-     "chords": "G | D | G | A"
+     "chords": "G/D | D | C/D | D"
+    },
+    "A2": {
+     "chords": "D | E/D | Gmaj7 | D | Bm7 | Em7 | Cadd9 | D"
     }
    },
    "form": [
@@ -711,12 +1404,19 @@
     "A",
     "R"
    ],
+   "form2": [
+    "A",
+    "A2",
+    "B",
+    "A2",
+    "R"
+   ],
    "layers": [
     {
      "id": "comp",
      "inst": "marimba",
      "time": "day",
-     "pattern": "marimbaComp",
+     "pattern": "summerComp",
      "anchor": 62,
      "gain": 0.8
     },
@@ -724,7 +1424,7 @@
      "id": "bass",
      "inst": "pizz",
      "time": "day",
-     "pattern": "bassWalk",
+     "pattern": "bassTresillo",
      "anchor": 38,
      "bass": true,
      "tacet": [
@@ -756,6 +1456,16 @@
         "b2",
         "b2b"
        ]
+      ],
+      "A2": [
+       [
+        "u2a1",
+        "u2a1b"
+       ],
+       [
+        "u2a2",
+        "u2a2b"
+       ]
       ]
      }
     },
@@ -782,24 +1492,25 @@
      "gain": 0.7
     },
     {
-     "id": "pad",
-     "inst": "viola",
-     "time": "night",
-     "pattern": "pad",
-     "anchor": 57,
-     "gain": 0.7
-    },
-    {
      "id": "ncomp",
-     "inst": "harp",
+     "inst": "marimba",
      "time": "night",
      "pattern": "arpUp",
      "anchor": 62,
      "gain": 0.5
     },
     {
+     "id": "nbass",
+     "inst": "cello",
+     "time": "night",
+     "pattern": "bassLong",
+     "anchor": 38,
+     "bass": true,
+     "gain": 0.55
+    },
+    {
      "id": "ntune",
-     "inst": "vibes",
+     "inst": "ocarina",
      "time": "night",
      "rest": 0.3,
      "phrases": {
@@ -820,42 +1531,60 @@
        [
         "nb2"
        ]
+      ],
+      "A2": [
+       [
+        "u2n1"
+       ],
+       [
+        "u2n2"
+       ]
       ]
      }
     }
    ],
    "phrases": {
-    "a1": "F#5:1 A5:1 D6:1.5 C#6:.5 | B5:2 F#5:2 | G5:1 B5:1 D6:1 B5:1 | A5:3 r:1",
-    "a1b": "A5:.5 F#5:.5 A5:1 B5:.5 A5:.5 F#5:1 | D5:1 F#5:1 B5:2 | B5:1 A5:.5 G5:.5 E5:1 D5:1 | E5:2 r:2",
-    "a2": "F#5:1 A5:1 D6:2 | E6:1 D6:1 B5:1 F#5:1 | G5:1 B5:1 A5:1 G5:1 | F#5:3 r:1",
-    "a2b": "D5:1 F#5:1 A5:2 | B5:1 A5:1 F#5:1 D5:1 | E5:1 G5:1 C#5:1 E5:1 | D5:3 r:1",
-    "b1": "B5:1.5 A5:.5 G5:1 B5:1 | C#6:1 E6:1 A5:2 | A5:1 F#5:1 C#5:1 F#5:1 | D5:1 F#5:1 B5:2",
-    "b1b": "D6:2 B5:1 G5:1 | E5:1 A5:1 C#6:2 | C#6:1.5 B5:.5 A5:1 F#5:1 | F#5:4",
-    "b2": "G5:1 B5:1 D6:1 B5:1 | C#6:1 A5:1 E5:2 | G5:1 F#5:1 E5:1 D5:1 | E5:2 C#5:2",
-    "b2b": "B5:2 D6:2 | E6:1.5 C#6:.5 A5:2 | B5:1 G5:1 E5:1 G5:1 | A5:4",
-    "na1": "r:2 A5:2 | F#5:4 | r:2 B5:1 D6:1 | C#6:4",
-    "na1b": "F#5:4 | r:1 D5:1 F#5:2 | G5:2 D5:2 | E5:4",
-    "na2": "A5:4 | F#5:2 D5:2 | E5:2 G5:2 | F#5:4",
-    "na2b": "r:2 D6:2 | B5:4 | G5:2 C#6:2 | D6:4",
-    "nb1": "D6:4 | C#6:2 A5:2 | F#5:4 | r:2 D5:2",
-    "nb2": "B5:4 | A5:2 E5:2 | G5:2 D5:2 | E5:2 C#5:2"
+    "a1": "r:.5 F#5:.5 A5:1 A5:.5 B5:.5 A5:1 | G5:1.5 C6:.5 E6:1 C6:1 | B5:.5 A5:.5 G5:1 D6:1 G5:.5 B5:.5 | A5:3 r:1",
+    "a1b": "D6:1.5 C6:.5 A5:1 F#5:1 | E5:.5 G5:1 E5:.5 C6:2 | D6:.5 B5:.5 G5:1 D6:1.5 B5:.5 | A5:2 F#5:.5 A5:.5 D6:1",
+    "a2": "F#5:.5 A5:.5 D6:1 D6:.5 E6:.5 D6:1 | C6:1.5 G5:.5 E5:2 | E5:.5 G5:.5 B5:1 D6:1 B5:1 | E6:1 C6:.5 G5:.5 F#5:1 A5:1",
+    "a2b": "A5:1.5 F#5:.5 A5:.5 D6:1.5 | E6:.5 D6:.5 C6:1 G5:2 | G5:.5 B5:.5 E5:1 B5:.5 D6:1.5 | C6:1.5 G5:.5 A5:.5 F#5:.5 D6:1",
+    "b1": "r:.5 A5:.5 C6:1 E6:1.5 C6:.5 | G5:1 C6:1 E6:2 | D6:1.5 A5:.5 F5:1 A5:1 | G5:.5 C6:.5 E6:1 G5:2",
+    "b1b": "C6:1.5 A5:.5 F5:.5 A5:.5 C6:1 | E6:1.5 C6:.5 G5:2 | F5:.5 A5:.5 D6:1 F6:1 D6:1 | E6:2 r:.5 G5:.5 C6:1",
+    "b2": "F5:.5 A5:.5 C6:.5 E6:1 C6:1.5 | E6:1 D6:.5 C6:.5 G5:2 | F5:1 A5:.5 D6:1 F6:1.5 | E6:1.5 D6:.5 C6:1 D6:1",
+    "b2b": "A5:2 C6:1.5 E6:.5 | E6:.5 G5:.5 C6:1 E6:2 | D6:2 r:.5 F5:.5 A5:1 | G5:1 C6:.5 E6:.5 D6:2",
+    "na1": "A5:3 F#5:1 | G5:2 E5:2 | B5:2 D5:2 | A5:4",
+    "na1b": "r:2 D6:2 | C6:3 G5:1 | B5:4 | F#5:2 A5:2",
+    "na2": "F#5:4 | E5:2 G5:2 | B5:2 D6:2 | C6:2 D6:2",
+    "na2b": "D6:3 A5:1 | G5:4 | G5:2 B5:2 | E5:2 F#5:2",
+    "nb1": "A5:4 | G5:2 E5:2 | F5:3 D5:1 | E5:4",
+    "nb2": "C6:4 | C6:2 G5:2 | A5:2 F5:2 | D6:4",
+    "u2a1": "r:.5 F#5:.5 A5:.5 B5:.5 A5:1 F#5:1 | G#5:1.5 E5:.5 B5:1 D6:1 | F#5:.5 G5:.5 B5:1 D6:1.5 B5:.5 | A5:3 r:1",
+    "u2a1b": "D6:.5 A5:.5 F#5:1 A5:.5 D6:1.5 | E6:1 B5:.5 G#5:.5 E5:2 | D6:1 B5:1 G5:.5 F#5:.5 G5:1 | F#5:2 r:2",
+    "u2a2": "r:.5 D6:.5 B5:1 A5:.5 F#5:.5 D5:1 | E5:.5 G5:.5 B5:1 D6:1 B5:1 | C6:1.5 G5:.5 E5:1 D5:1 | D5:.5 F#5:.5 A5:1 D6:2",
+    "u2a2b": "F#5:1.5 A5:.5 B5:1 D6:1 | G5:1 B5:.5 E6:1.5 D6:1 | E6:1 C6:1 G5:1.5 E5:.5 | F#5:1 A5:1 D6:2",
+    "u2n1": "F#5:4 | G#5:2 E5:2 | B5:4 | A5:4",
+    "u2n2": "D6:4 | B5:2 G5:2 | E5:2 C6:2 | D6:4"
    }
   },
   "fall": {
-   "level": 0.3,
-   "nightLevel": 1.8,
-   "jingleKey": -2,
-   "bpm": 66,
+   "key": "E minor",
+   "level": 3.1,
+   "nightLevel": -2.2,
+   "jingleKey": -5,
+   "bpm": 70,
    "meter": 4,
    "sections": {
     "A": {
-     "chords": "Gm | Eb | Cm | D7 | Gm | Eb | Cm7 D7 | Gm"
+     "chords": "Em | D | C | B7 | Em | A | C D | Em"
     },
     "B": {
-     "chords": "Bb | F | Gm | Eb | Bb | F | Cm7 | Dsus4 D"
+     "chords": "Am7 | D | G | Em | Am7 | F | C | B7"
     },
     "R": {
-     "chords": "Eb | Bb | Cm | D"
+     "chords": "Em | Am7 | Em | Am7"
+    },
+    "A2": {
+     "chords": "Em | Cmaj7 | Am7 | B7 | Em | D | Cmaj7 | B7"
     }
    },
    "form": [
@@ -865,29 +1594,37 @@
     "A",
     "R"
    ],
+   "form2": [
+    "A",
+    "A2",
+    "B",
+    "A2",
+    "R"
+   ],
    "layers": [
     {
      "id": "comp",
      "inst": "harp",
      "time": "day",
-     "pattern": "arp8",
-     "anchor": 55,
-     "gain": 0.75
+     "pattern": "arpTrip",
+     "anchor": 52,
+     "gain": 0.7
     },
     {
      "id": "bass",
-     "inst": "pizz",
+     "inst": "cello",
      "time": "day",
-     "pattern": "bass1",
-     "anchor": 38,
+     "pattern": "bass2",
+     "anchor": 40,
      "bass": true,
+     "gain": 0.6,
      "tacet": [
       "R"
      ]
     },
     {
      "id": "tune",
-     "inst": "piano",
+     "inst": "viola",
      "time": "day",
      "rest": 0.15,
      "phrases": {
@@ -910,29 +1647,30 @@
         "b2",
         "b2b"
        ]
+      ],
+      "A2": [
+       [
+        "f2a1",
+        "f2a1b"
+       ],
+       [
+        "f2a2",
+        "f2a2b"
+       ]
       ]
      }
     },
     {
-     "id": "pad",
-     "inst": "viola",
+     "id": "ncomp",
+     "inst": "harp",
      "time": "night",
-     "pattern": "pad",
-     "anchor": 55,
-     "gain": 0.7
-    },
-    {
-     "id": "nbass",
-     "inst": "cello",
-     "time": "night",
-     "pattern": "bassLong",
-     "anchor": 36,
-     "bass": true,
-     "gain": 0.7
+     "pattern": "arpTripHalf",
+     "anchor": 52,
+     "gain": 0.55
     },
     {
      "id": "ntune",
-     "inst": "piano",
+     "inst": "cello",
      "time": "night",
      "rest": 0.25,
      "phrases": {
@@ -953,42 +1691,60 @@
        [
         "nb2"
        ]
+      ],
+      "A2": [
+       [
+        "f2n1"
+       ],
+       [
+        "f2n2"
+       ]
       ]
      }
     }
    ],
    "phrases": {
-    "a1": "Bb4:1 D5:1 G5:1.5 F#5:.5 | G5:2 Eb5:2 | Eb5:1 G5:1 C5:1 Eb5:1 | D5:3 r:1",
-    "a1b": "D5:1.5 C5:.5 Bb4:1 A4:1 | G4:1 Bb4:1 Eb5:2 | C5:1 Eb5:1 G5:1 Eb5:1 | F#5:2 r:2",
-    "a2": "G5:1 Bb5:1 D6:2 | C6:1 Bb5:1 G5:1 Eb5:1 | Eb5:1 G5:1 F#5:1 A5:1 | G5:3 r:1",
-    "a2b": "D5:1 G5:1 Bb5:2 | Bb5:1 G5:1 Eb5:1 Bb4:1 | C5:1 Eb5:1 D5:1 C5:1 | Bb4:1 A4:1 G4:2",
-    "b1": "D5:1.5 C5:.5 Bb4:1 D5:1 | F5:1 A5:1 C6:2 | Bb5:1 G5:1 D5:1 G5:1 | Eb5:1 G5:1 Bb5:2",
-    "b1b": "F5:2 D5:1 Bb4:1 | A4:1 C5:1 F5:2 | G5:1.5 F5:.5 D5:1 Bb4:1 | Bb4:4",
-    "b2": "Bb5:1 F5:1 D5:1 F5:1 | A5:1 F5:1 C5:2 | Eb5:1 D5:1 C5:1 Bb4:1 | G4:2 F#4:2",
-    "b2b": "D6:2 Bb5:2 | C6:1.5 A5:.5 F5:2 | G5:1 Eb5:1 C5:1 Eb5:1 | D5:4",
-    "na1": "r:2 D5:2 | Eb5:4 | r:2 C5:1 Eb5:1 | D5:4",
-    "na1b": "Bb4:4 | r:1 G4:1 Bb4:2 | C5:2 G4:2 | A4:4",
-    "na2": "D5:4 | Bb4:2 G4:2 | Eb5:2 F#5:2 | G5:4",
-    "na2b": "r:2 G5:2 | G5:2 Eb5:2 | C5:2 A4:2 | Bb4:4",
-    "nb1": "F5:4 | F5:2 C5:2 | D5:4 | r:2 Eb5:2",
-    "nb2": "D5:4 | C5:2 A4:2 | Bb4:2 G4:2 | A4:2 F#4:2"
+    "a1": "B4:3 A4:1 | A4:2 F#4:2 | G4:3 F#4:.5 E4:.5 | D#4:4",
+    "a1b": "E5:1.5 D5:.5 B4:2 | A4:3 F#4:1 | E4:1.5 G4:.5 C5:2 | B4:4",
+    "a2": "G4:1.5 F#4:.5 E4:2 | C#5:3 B4:1 | C5:2 A4:1 F#4:1 | G4:1.5 F#4:.5 E4:2",
+    "a2b": "B4:3 C5:1 | C#5:2 E5:2 | E5:2 D5:1 C5:1 | B4:4",
+    "b1": "C5:3 B4:1 | A4:2 F#4:2 | G4:3 A4:1 | B4:4",
+    "b1b": "E5:2 D5:1 C5:1 | D5:3 C5:1 | B4:2 D5:2 | E5:4",
+    "b2": "A4:1.5 B4:.5 C5:2 | C5:2 A4:2 | G4:1.5 F#4:.5 E4:2 | D#4:3 r:1",
+    "b2b": "E5:3 D5:1 | C5:2 F4:2 | G4:2 E5:2 | D#5:4",
+    "na1": "G3:4 | F#3:2 A3:2 | G3:2 E3:2 | F#3:2 D#3:2",
+    "na1b": "r:2 B3:2 | A3:4 | E3:2 C4:2 | B3:4",
+    "na2": "E4:3 B3:1 | C#4:4 | C4:2 A3:2 | B3:4",
+    "na2b": "B3:4 | A3:2 E3:2 | G3:2 F#3:2 | E3:4",
+    "nb1": "C4:4 | A3:2 F#3:2 | B3:2 D4:2 | E4:4",
+    "nb2": "E4:4 | C4:2 A3:2 | G3:2 E3:2 | D#3:4",
+    "f2a1": "G4:3 F#4:1 | E4:2 G4:2 | A4:1.5 B4:.5 C5:2 | B4:4",
+    "f2a1b": "B4:3 A4:1 | G4:2 E4:2 | E4:1.5 G4:.5 C5:2 | D#5:2 B4:2",
+    "f2a2": "E5:1.5 D5:.5 B4:2 | A4:2 F#4:2 | G4:1.5 B4:.5 E5:2 | D#5:3 r:1",
+    "f2a2b": "G4:2 B4:2 | A4:3 D5:1 | C5:2 B4:2 | A4:1 F#4:1 D#4:2",
+    "f2n1": "E3:4 | E3:2 G3:2 | A3:2 C4:2 | B3:4",
+    "f2n2": "B3:4 | A3:2 F#3:2 | G3:2 E3:2 | D#3:4"
    }
   },
   "winter": {
-   "level": 5.5,
+   "key": "D minor",
+   "level": 7.5,
    "nightLevel": -3.8,
    "jingleKey": 5,
    "bpm": 56,
    "meter": 3,
    "sections": {
     "A": {
-     "chords": "Dm | Bb | Gm | A7 | Dm | Bb | Gm6 A7 | Dm"
+     "chords": "Dm | Bbmaj7/D | Gm/D | Dsus2 | Dm | Bbmaj7/D | Gm/D | Dsus4 Dm"
     },
     "B": {
-     "chords": "F | C | Dm | Bb | F | C | Gm | Asus4 A"
+     "chords": "Bbmaj7 | C | Fmaj7 | Dm | Bbmaj7 | C | Gm7 | Asus4"
     },
     "R": {
-     "chords": "Bb | F | Gm | A"
+     "chords": "Dm | Gm/D | Dm | Gm/D"
+    },
+    "A2": {
+     "chords": "Fmaj7 | C/E | Dm7 | Bbmaj7 | Fmaj7/A | Gm7 | Bbm6 | Asus4"
     }
    },
    "form": [
@@ -996,6 +1752,13 @@
     "A",
     "B",
     "A",
+    "R"
+   ],
+   "form2": [
+    "A",
+    "A2",
+    "B",
+    "A2",
     "R"
    ],
    "layers": [
@@ -1041,6 +1804,16 @@
         "b2",
         "b2b"
        ]
+      ],
+      "A2": [
+       [
+        "w2a1",
+        "w2a1b"
+       ],
+       [
+        "w2a2",
+        "w2a2b"
+       ]
       ]
      }
     },
@@ -1048,7 +1821,7 @@
      "id": "dpad",
      "inst": "viola",
      "time": "day",
-     "pattern": "pad3",
+     "pattern": "pad3wide",
      "anchor": 57,
      "gain": 0.45
     },
@@ -1067,8 +1840,8 @@
      "id": "pad",
      "inst": "viola",
      "time": "night",
-     "pattern": "pad3",
-     "anchor": 55,
+     "pattern": "pad3wide",
+     "anchor": 57,
      "gain": 0.7
     },
     {
@@ -1076,15 +1849,16 @@
      "inst": "cello",
      "time": "night",
      "pattern": "bass3",
-     "anchor": 36,
+     "anchor": 38,
      "bass": true,
      "gain": 0.65
     },
     {
      "id": "ntune",
-     "inst": "vibes",
+     "inst": "piano",
      "time": "night",
      "rest": 0.3,
+     "gain": 0.85,
      "phrases": {
       "A": [
        [
@@ -1103,43 +1877,64 @@
        [
         "nb2"
        ]
+      ],
+      "A2": [
+       [
+        "w2n1"
+       ],
+       [
+        "w2n2"
+       ]
       ]
      }
     }
    ],
    "phrases": {
-    "a1": "A5:1 D6:1 F6:1 | F6:2 D6:1 | D6:1 Bb5:1 G5:1 | A5:3",
-    "a1b": "F6:2 E6:1 | D6:2 Bb5:1 | G6:1 F6:1 D6:1 | C#6:3",
-    "a2": "D6:1 F6:1 A6:1 | Bb6:2 F6:1 | E6:1.5 C#6:1.5 | D6:3",
-    "a2b": "A5:1 D6:1 F6:1 | D6:2 Bb5:1 | Bb5:1.5 A5:1.5 | D6:3",
-    "b1": "C6:1 F6:1 A6:1 | G6:2 E6:1 | F6:1 D6:1 A5:1 | Bb5:3",
-    "b1b": "A6:2 F6:1 | E6:1 G6:1 C6:1 | D6:2 F6:1 | D6:3",
-    "b2": "F6:1 C6:1 A5:1 | G5:1 C6:1 E6:1 | D6:1 Bb5:1 G5:1 | A5:1.5 C#6:1.5",
-    "b2b": "A6:2 C7:1 | G6:3 | Bb6:1 G6:1 D6:1 | E6:1.5 C#6:1.5",
-    "na1": "r:1 A5:2 | F5:3 | r:1 D5:1 G5:1 | E5:3",
-    "na1b": "D5:3 | r:1 F5:2 | Bb5:2 G5:1 | A5:3",
-    "na2": "F5:3 | D5:3 | E5:1.5 C#5:1.5 | D5:3",
-    "na2b": "A5:3 | Bb5:2 F5:1 | G5:1.5 E5:1.5 | F5:3",
-    "nb1": "C6:3 | G5:2 E5:1 | F5:3 | r:1 D5:2",
-    "nb2": "A5:3 | G5:2 C5:1 | Bb5:2 G5:1 | A5:1.5 C#6:1.5"
+    "a1": "A5:2 D6:1 | G6:2 F6:1 | D6:3 | E6:3",
+    "a1b": "F6:2 E6:1 | D6:3 | Bb5:1.5 D6:1.5 | A6:2 E6:1",
+    "a2": "D6:2 A6:1 | Bb6:2 A6:1 | G6:3 | G6:1.5 F6:1.5",
+    "a2b": "A6:3 | F6:2 E6:1 | D6:2 Bb5:1 | A5:3",
+    "b1": "D6:2 A6:1 | G6:3 | F6:2 C6:1 | A5:3",
+    "b1b": "F6:3 | E6:2 C6:1 | E6:3 | D6:3",
+    "b2": "Bb5:2 F6:1 | G6:3 | F6:2 D6:1 | D6:3",
+    "b2b": "A6:3 | G6:2 C6:1 | D6:2 G6:1 | E6:3",
+    "na1": "A5:3 | F5:2 D5:1 | D5:3 | E5:3",
+    "na1b": "r:1 D6:2 | A5:3 | Bb5:2 G5:1 | A5:3",
+    "na2": "F5:3 | D5:2 F5:1 | G5:3 | G5:1.5 F5:1.5",
+    "na2b": "D6:3 | C6:2 Bb5:1 | Bb5:2 G5:1 | A5:1.5 F5:1.5",
+    "nb1": "F5:3 | E5:2 G5:1 | A5:3 | r:1 D5:2",
+    "nb2": "D6:3 | C6:2 G5:1 | Bb5:2 F5:1 | E5:3",
+    "w2a1": "A6:2 F6:1 | G6:3 | F6:2 D6:1 | D6:3",
+    "w2a1b": "C6:2 E6:1 | E6:3 | A5:1.5 C6:1.5 | Bb5:3",
+    "w2a2": "C6:3 | Bb5:2 D6:1 | Db6:2 F6:1 | E6:3",
+    "w2a2b": "F6:2 E6:1 | D6:3 | Db6:1.5 Bb5:1.5 | A5:3",
+    "w2n1": "A5:3 | G5:3 | F5:3 | D5:3",
+    "w2n2": "C6:3 | Bb5:3 | Db6:3 | E5:3"
    }
   },
   "title": {
-   "level": 0.5,
-   "jingleKey": 5,
-   "bpm": 70,
+   "key": "Eb major",
+   "level": 2.7,
+   "jingleKey": 3,
+   "bpm": 76,
    "meter": 4,
    "sections": {
     "A": {
-     "chords": "F | Dm | Bb | C | F | Dm | Gm7 C7 | F"
+     "chords": "Ebadd9 | Gm7 | Abmaj7 | Bbsus4 Bb | Eb/G | Cbmaj7 | Abmaj7 | Abm6"
     },
     "B": {
-     "chords": "Bb | C | Am | Dm | Bb | C | Gm7 | Csus4 C"
+     "chords": "Abmaj7 | Gb | Cb | Bbsus4 Bb | Abmaj7 | Gb | Fm9 | Bbsus4 Bb"
     },
     "R": {
-     "chords": "Bb | F | Bb | C"
+     "chords": "Cbmaj7 | Gb | Abm6 | Ebadd9"
+    },
+    "I": {
+     "chords": "Ebadd9 | Bb"
     }
    },
+   "intro": [
+    "I"
+   ],
    "form": [
     "A",
     "A",
@@ -1153,7 +1948,7 @@
      "inst": "harp",
      "time": "both",
      "pattern": "arpUp",
-     "anchor": 53,
+     "anchor": 51,
      "gain": 0.65
     },
     {
@@ -1161,7 +1956,16 @@
      "inst": "viola",
      "time": "both",
      "pattern": "pad",
-     "anchor": 53,
+     "anchor": 51,
+     "gain": 0.5
+    },
+    {
+     "id": "bass",
+     "inst": "cello",
+     "time": "both",
+     "pattern": "bassLong",
+     "anchor": 39,
+     "bass": true,
      "gain": 0.5
     },
     {
@@ -1170,10 +1974,14 @@
      "time": "both",
      "rest": 0.1,
      "phrases": {
+      "I": [
+       [
+        "sting"
+       ]
+      ],
       "A": [
        [
-        "a1",
-        "a1b"
+        "hook"
        ],
        [
         "a2",
@@ -1191,20 +1999,46 @@
        ]
       ]
      }
+    },
+    {
+     "id": "bell",
+     "inst": "glock",
+     "time": "both",
+     "rest": 0.3,
+     "gain": 0.6,
+     "phrases": {
+      "I": [
+       [
+        "stingHi"
+       ]
+      ],
+      "A": [
+       [
+        "hookHi"
+       ],
+       [
+        "bellEnd"
+       ]
+      ]
+     }
     }
    ],
    "phrases": {
-    "a1": "A4:1 C5:1 F5:1.5 E5:.5 | D5:2 A4:2 | Bb4:1 D5:1 F5:1 D5:1 | C5:3 r:1",
-    "a1b": "C5:1.5 A4:.5 G4:1 F4:1 | F4:1 A4:1 D5:2 | D5:1.5 C5:.5 Bb4:1 A4:1 | G4:2 r:2",
-    "a2": "A4:1 C5:1 F5:1 A5:1 | G5:2 F5:1 D5:1 | Bb4:1 D5:1 C5:1 Bb4:1 | A4:3 r:1",
-    "a2b": "F4:1 A4:1 C5:2 | D5:1 C5:1 A4:1 F4:1 | G4:1 Bb4:1 E4:1 G4:1 | F4:3 r:1",
-    "b1": "D5:1.5 C5:.5 Bb4:1 D5:1 | E5:1 G5:1 C5:2 | C5:1 A4:1 E4:1 A4:1 | F4:1 A4:1 D5:2",
-    "b1b": "F5:2 D5:1 Bb4:1 | G4:1 C5:1 E5:2 | E5:1.5 D5:.5 C5:1 A4:1 | A4:4",
-    "b2": "Bb4:1 D5:1 F5:1 D5:1 | E5:1 C5:1 G4:2 | Bb4:1 A4:1 G4:1 F4:1 | G4:2 E4:2",
-    "b2b": "D5:2 F5:2 | G5:1.5 E5:.5 C5:2 | D5:1 Bb4:1 G4:1 Bb4:1 | C5:4"
+    "sting": "Bb4:.5 Eb5:.5 G5:.5 Bb5:.5 Eb6:2 | D6:1.5 Bb5:.5 F5:2",
+    "stingHi": "r:1 Eb6:.5 G6:.5 Bb6:2 | F6:2 r:2",
+    "hook": "Bb4:1 G5:2 F5:.5 Eb5:.5 | D5:1.5 Bb4:.5 F5:2 | Eb5:1 C5:1 G5:1.5 Ab5:.5 | Bb5:3 r:1",
+    "hookHi": "Bb5:1 G6:2 F6:.5 Eb6:.5 | D6:1.5 Bb5:.5 F6:2 | Eb6:1 C6:1 G6:1.5 Ab6:.5 | Bb6:3 r:1",
+    "bellEnd": "r:4 | r:4 | r:2 G6:2 | Eb6:2 r:2",
+    "a2": "G4:1.5 Bb4:1 Eb5:1.5 | Eb5:1.5 Bb4:1 Gb4:1.5 | Ab4:1.5 C5:1 Eb5:1.5 | Cb5:2.5 Ab4:1.5",
+    "a2b": "Bb4:.5 Eb5:1.5 G4:2 | r:.5 Gb4:.5 Cb5:1.5 Bb4:1.5 | C5:2.5 Eb4:1.5 | F4:1.5 Ab4:1 Cb5:1.5",
+    "b1": "r:.5 Eb4:.5 Ab4:1.5 G4:.5 C5:1 | Bb4:1.5 Db5:1.5 Bb4:1 | Eb5:1.5 Gb4:.5 Cb5:2 | F4:1.5 Eb5:.5 D5:2",
+    "b1b": "C5:1.5 Ab4:.5 Eb4:1 G4:1 | Gb4:.5 Bb4:1 Db5:1.5 Bb4:1 | Cb5:1.5 Eb5:1 Gb5:1.5 | F5:2.5 D5:1.5",
+    "b2": "Ab4:1.5 C5:1 Eb5:1.5 | Db5:1.5 Bb4:1 Gb4:1.5 | Ab4:1.5 C5:.5 Eb5:1 G4:1 | Bb4:2.5 r:1.5",
+    "b2b": "r:1 Eb5:1.5 C5:1.5 | Bb4:1 Db5:1.5 F5:1.5 | F4:1 Ab4:1.5 C5:1.5 | Eb5:2 D5:2"
    }
   },
   "mine": {
+   "key": "A minor",
    "level": 2.5,
    "jingleKey": 0,
    "bpm": 60,
@@ -1218,13 +2052,17 @@
     },
     "R": {
      "chords": "Am | Am | Am | Am"
+    },
+    "D": {
+     "chords": "Am | Bb/A | Am | Bb/A | Dm/A | Bb/A | Esus4 | Am"
     }
    },
    "form": [
     "A",
     "B",
     "A",
-    "R"
+    "R",
+    "D"
    ],
    "layers": [
     {
@@ -1252,7 +2090,8 @@
      "anchor": 57,
      "gain": 0.55,
      "tacet": [
-      "R"
+      "R",
+      "D"
      ]
     },
     {
@@ -1278,6 +2117,14 @@
        [
         "b2"
        ]
+      ],
+      "D": [
+       [
+        "d1"
+       ],
+       [
+        "d2"
+       ]
       ]
      }
     }
@@ -1286,45 +2133,53 @@
     "a1": "r:2 E5:2 | C5:4 | r:2 A4:1 C5:1 | B4:4",
     "a1b": "A4:4 | r:1 E5:1 A5:2 | E5:2 C5:2 | D5:4",
     "a2": "C5:4 | E5:2 A4:2 | F5:2 C5:2 | B4:2 G#4:2",
-    "a2b": "r:2 A5:2 | G5:2 E5:2 | D5:2 A4:2 | E5:4",
+    "a2b": "r:2 A5:2 | C6:2 E5:2 | D5:2 A4:2 | E5:4",
     "b1": "F5:4 | E5:2 C5:2 | A4:2 C5:2 | B4:4",
-    "b2": "E5:4 | D5:2 B4:2 | C5:4 | r:4"
+    "b2": "E5:4 | D5:2 B4:2 | C5:4 | r:4",
+    "d1": "r:2 E5:2 | D5:4 | r:2 C5:2 | D5:2 F5:2",
+    "d2": "F5:4 | F5:2 D5:2 | E5:2 B4:2 | A4:4"
    }
   },
   "festival": {
-   "level": 0,
+   "key": "G major",
+   "level": -1.4,
    "jingleKey": -5,
-   "bpm": 100,
+   "bpm": 112,
    "meter": 4,
-   "swing": 0.15,
+   "swing": 0.2,
    "sections": {
     "A": {
-     "chords": "G | C | D | G | G | C | Am7 D7 | G"
+     "chords": "G | E7 | Am7 | D7 | G | E7 | A7 D7 | G"
     },
     "B": {
-     "chords": "C | D | Bm | Em | C | D | Am7 | Dsus4 D"
+     "chords": "C | Cm6 | G/B | E7 | Am7 | D7 | G | D7"
+    },
+    "C": {
+     "chords": "Em | B7 | Em | B7 | Am | Em/G | F#m7b5 B7 | Em"
     }
    },
    "form": [
     "A",
     "A",
     "B",
+    "A",
+    "C",
     "A"
    ],
    "layers": [
     {
      "id": "comp",
-     "inst": "marimba",
+     "inst": "piano",
      "time": "both",
-     "pattern": "marimbaComp",
-     "anchor": 62,
-     "gain": 0.75
+     "pattern": "stride",
+     "anchor": 55,
+     "gain": 0.8
     },
     {
      "id": "bass",
      "inst": "pizz",
      "time": "both",
-     "pattern": "bassWalk",
+     "pattern": "bassOomPah",
      "anchor": 43,
      "bass": true
     },
@@ -1353,6 +2208,16 @@
         "b2",
         "b2b"
        ]
+      ],
+      "C": [
+       [
+        "c1",
+        "c1b"
+       ],
+       [
+        "c2",
+        "c2b"
+       ]
       ]
      }
     },
@@ -1379,14 +2244,148 @@
     }
    ],
    "phrases": {
-    "a1": "D5:.5 G5:.5 B5:.5 G5:.5 D6:1 B5:1 | C6:1 E6:1 C6:1 G5:1 | F#5:.5 A5:.5 D6:1 C6:1 A5:1 | B5:2 G5:2",
-    "a1b": "B5:1 A5:.5 G5:.5 D5:1 G5:1 | E5:1 G5:1 C6:2 | A5:1 F#5:.5 E5:.5 D5:1 F#5:1 | G5:3 r:1",
-    "a2": "G5:.5 B5:.5 D6:.5 B5:.5 G5:1 D5:1 | E5:1 G5:1 C6:2 | C6:1 A5:1 A5:1 F#5:1 | G5:3 r:1",
-    "a2b": "D6:1 B5:1 G5:1 B5:1 | C6:1.5 B5:.5 A5:1 G5:1 | E5:1 C5:1 D5:1 F#5:1 | G5:4",
-    "b1": "E5:.5 G5:.5 C6:1 G5:1 E5:1 | F#5:.5 A5:.5 D6:1 A5:1 F#5:1 | B5:1 F#5:1 D5:1 F#5:1 | E5:2 G5:2",
-    "b1b": "G5:1.5 E5:.5 C5:1 E5:1 | D5:1 F#5:1 A5:2 | B5:1 A5:.5 F#5:.5 D5:1 B4:1 | E5:4",
-    "b2": "C6:1 B5:1 G5:1 E5:1 | D5:1 F#5:1 A5:2 | C6:1 A5:1 G5:1 E5:1 | G5:2 F#5:2",
-    "b2b": "E6:1 C6:1 G5:2 | F#5:1 A5:1 D6:2 | E6:1 C6:1 A5:1 E5:1 | D5:2 A5:2"
+    "a1": "D5:.5 E5:.5 G5:1 B5:.5 A5:.5 G5:1 | G#5:1 B5:.5 G#5:.5 E5:1 D5:1 | C5:.5 E5:.5 A5:1 G5:.5 E5:.5 C5:1 | D5:.5 F#5:.5 A5:.5 C6:.5 B5:1 A5:1",
+    "a1b": "B5:1 A5:.5 G5:.5 D5:1 G5:1 | E5:1 G#5:1 B5:1.5 A5:.5 | A5:.5 G5:.5 E5:.5 C5:.5 E5:1 A5:1 | F#5:1.5 E5:.5 D5:1 C6:1",
+    "a2": "G5:.5 A5:.5 B5:.5 D6:.5 E6:.5 D6:.5 B5:1 | B5:.5 G#5:.5 E5:1 D5:2 | C#5:.5 E5:.5 A5:1 A5:.5 C6:.5 F#5:1 | G5:3 r:1",
+    "a2b": "D6:1 B5:.5 G5:.5 D5:1 G5:1 | G#5:1 E5:.5 G#5:.5 B5:1 D6:1 | C#6:1 A5:.5 E5:.5 D5:.5 F#5:.5 A5:.5 C6:.5 | B5:2 G5:2",
+    "b1": "E5:.5 G5:.5 C6:1 G5:.5 E5:.5 C5:1 | Eb5:.5 G5:.5 A5:1 C6:1 A5:1 | B5:.5 A5:.5 G5:1 D5:1 G5:1 | G#5:1 B5:1 E6:1.5 D6:.5",
+    "b1b": "C6:1.5 B5:.5 G5:1 E5:1 | Eb5:1.5 C5:.5 A4:1 C5:1 | D5:1 G5:1 B5:1 D6:1 | B5:1.5 G#5:.5 E5:2",
+    "b2": "A5:.5 C6:.5 E6:1 C6:.5 A5:.5 E5:1 | F#5:.5 A5:.5 C6:1 A5:1 F#5:1 | G5:.5 B5:.5 D6:1 B5:1 G5:1 | F#5:1 A5:1 C6:1 D6:1",
+    "b2b": "E5:1 G5:1 C6:1 A5:1 | D6:1.5 C6:.5 A5:1 F#5:1 | G5:1 D5:1 B4:1 D5:1 | C5:1 E5:1 F#5:1 A5:1",
+    "c1": "E5:.5 F#5:.5 G5:.5 B5:.5 E6:1 B5:1 | A5:.5 F#5:.5 D#5:1 F#5:1 B5:1 | G5:.5 F#5:.5 E5:1 G5:1 B5:1 | A5:1 F#5:1 D#5:2",
+    "c1b": "B5:1 G5:.5 E5:.5 B4:1 E5:1 | D#5:1 F#5:.5 A5:.5 B5:2 | E6:1.5 B5:.5 G5:1 E5:1 | F#5:1 A5:1 B5:2",
+    "c2": "A5:.5 C6:.5 E6:1 C6:.5 A5:.5 E5:1 | G5:.5 B5:.5 E6:1 B5:1 G5:1 | F#5:.5 A5:.5 C6:1 B5:.5 A5:.5 F#5:1 | E5:3 r:1",
+    "c2b": "E6:1.5 C6:.5 A5:1 E5:1 | B5:1.5 G5:.5 E5:2 | C6:1 A5:1 D#5:1 F#5:1 | E5:4"
+   }
+  },
+  "shop": {
+   "key": "F major",
+   "level": 0,
+   "jingleKey": 5,
+   "bpm": 96,
+   "meter": 4,
+   "swing": 0.1,
+   "sections": {
+    "A": {
+     "chords": "F | Dm7 | Gm7 | C7 | F | D7 | Gm7 C7 | F"
+    },
+    "B": {
+     "chords": "Bbmaj7 | Am7 | Gm7 | C7 | Bbmaj7 | A7 | Dm7 G7 | C7"
+    }
+   },
+   "form": [
+    "A",
+    "A",
+    "B",
+    "A"
+   ],
+   "layers": [
+    {
+     "id": "comp",
+     "inst": "marimba",
+     "time": "both",
+     "pattern": "marimbaComp",
+     "anchor": 60,
+     "gain": 0.6
+    },
+    {
+     "id": "bass",
+     "inst": "pizz",
+     "time": "both",
+     "pattern": "bassWalk",
+     "anchor": 41,
+     "bass": true,
+     "gain": 0.8
+    },
+    {
+     "id": "tune",
+     "inst": "vibes",
+     "time": "both",
+     "rest": 0.1,
+     "phrases": {
+      "A": [
+       [
+        "a1",
+        "a1b"
+       ],
+       [
+        "a2",
+        "a2b"
+       ]
+      ],
+      "B": [
+       [
+        "b1"
+       ],
+       [
+        "b2"
+       ]
+      ]
+     }
+    }
+   ],
+   "phrases": {
+    "a1": "C5:.5 F5:.5 A5:.5 G5:.5 F5:1.5 r:.5 | A5:1 F5:.5 D5:.5 C5:2 | Bb4:.5 D5:.5 G5:1 F5:1 D5:1 | E5:1.5 G5:.5 C5:2",
+    "a1b": "A5:1.5 G5:.5 F5:1 C5:1 | D5:1 F5:1 A5:1 C6:1 | Bb5:1 G5:1 D5:1 F5:1 | E5:1 Bb4:1 G4:1 C5:1",
+    "a2": "F5:1 A5:1 C6:1.5 A5:.5 | F#5:1.5 D5:.5 A5:2 | G5:1 Bb5:1 E5:1 G5:1 | F5:3 r:1",
+    "a2b": "C6:1.5 A5:.5 F5:1 A5:1 | A5:1 F#5:1 D5:1 C6:1 | Bb5:1.5 G5:.5 E5:1 Bb4:1 | A4:1 C5:1 F5:2",
+    "b1": "D5:.5 F5:.5 A5:1 Bb5:.5 A5:.5 F5:1 | E5:1 G5:1 C6:2 | Bb5:1.5 A5:.5 G5:1 D5:1 | E5:1 G5:1 Bb5:2",
+    "b2": "F5:1 A5:1 D6:1 A5:1 | C#6:1.5 A5:.5 E5:2 | F5:1 A5:1 B5:1 D6:1 | C6:2 Bb5:1 G5:1"
+   }
+  },
+  "lullaby": {
+   "key": "F major",
+   "level": 6.5,
+   "jingleKey": 5,
+   "bpm": 54,
+   "meter": 3,
+   "sections": {
+    "A": {
+     "chords": "Fmaj7 | Dm7 | Bbmaj7 | Csus4 C | Fmaj7 | Am7 | Gm7 C | F"
+    },
+    "R": {
+     "chords": "Bbmaj7 | Fmaj7 | Bbmaj7 | Csus4 C"
+    }
+   },
+   "form": [
+    "A",
+    "A",
+    "R"
+   ],
+   "layers": [
+    {
+     "id": "comp",
+     "inst": "harp",
+     "time": "both",
+     "pattern": "arp3",
+     "anchor": 53,
+     "gain": 0.5
+    },
+    {
+     "id": "tune",
+     "inst": "vibes",
+     "time": "both",
+     "rest": 0.35,
+     "gain": 0.6,
+     "phrases": {
+      "A": [
+       [
+        "la1",
+        "la1b"
+       ],
+       [
+        "la2",
+        "la2b"
+       ]
+      ]
+     }
+    }
+   ],
+   "phrases": {
+    "la1": "A5:3 | F5:2 D5:1 | D5:3 | F5:1.5 E5:1.5",
+    "la1b": "r:1 C5:2 | A5:3 | F5:2 D5:1 | C5:3",
+    "la2": "C6:3 | A5:2 E5:1 | G5:1.5 E5:1.5 | F5:3",
+    "la2b": "E5:3 | E5:1 C5:2 | Bb4:1.5 C5:1.5 | A4:3"
    }
   }
  }
