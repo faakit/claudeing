@@ -769,7 +769,20 @@ const TASKS = {
     // 3; before, slot 14 for both put the left thumb's target across the sheet). BAG_SLOT overrides.
     const bagSlot = Number(process.env.BAG_SLOT ?? (w.hand === 'left' ? 9 : 14));
     await fresh(page, `s.inventory.slots[${bagSlot}] = { item: 'sprinkler', qty: 1 };`);
-    await w.walkTo(10, 17, 'down');
+    // Get onto the field: a tap there with tap-to-walk (round 3; any open tile in front takes the sprinkler),
+    // else the stick.
+    if (await tapModeOn(page)) {
+      await w.settleCamera();
+      await w.tapTile(10, 12);
+      await sleep(150);
+      await page
+        .waitForFunction(
+          () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
+          null,
+          { timeout: 8000, polling: 50 },
+        )
+        .catch(() => undefined);
+    } else await w.walkTo(10, 17, 'down');
     // M6: the ring's Bag is under the thumb; before, the Menu button.
     if (await w.hasRing()) {
       await w.ringPick(8);
