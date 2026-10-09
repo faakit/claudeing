@@ -14,6 +14,7 @@ import numpy as np
 import pixelart as px
 
 T = 16
+TILESET_COLUMNS = 32
 TILE_ORDER = [
     "grass", "dirt", "tilled", "watered", "water", "path", "fence", "wall", "door", "floor", "wallin",
     "bed", "bin", "tree", "flower", "shopwall", "shopdoor", "board", "bush", "stone", "rock",
@@ -223,73 +224,47 @@ ROOF_STYLES = {
 
 
 def roof(P: Pal, style: str, row: str, col: str) -> np.ndarray:
-    """One roof tile over a building's wall tiles. row: t (ridge), m, b (eave), or e (the ridge cap seen above the
-    building, drawn in the overhead layer so you walk behind it); col: l/c/r.
+    """One roof tile over a building's wall tiles (R2-1, the art critic's spec). row: t (ridge), m, b (eave), or e
+    (the ridge cap rising above the building, drawn in the overhead layer so you walk behind it); col: l/c/r.
 
-    Overlapping clay courses every 4 px with short staggered seams; a sand ridge cap (the town's signature) on top,
-    a dark eave line at the bottom, ink on the outer sides. Wraps horizontally, so any width tiles."""
+    Staggered tiles 4 px wide in 3 px courses, each course offset by half a tile, a 1 px shadow under every course,
+    the highlight only as one small glint per tile; a 3 px ridge cap (sand on clay, the valley's signature) with an
+    ink outline; at the eave an ink line (the facade below gets a 1-2 px shadow from the shade layer)."""
     b, d, h = (P.name(c) for c in ROOF_STYLES[style])
-    cap, cap_d = P.name("sand"), P.name("wood")
+    cap, cap_d = (P.name("sand"), P.name("wood")) if style == "red" else (P.name("stone lt"), P.name("stone"))
+    ink = P.outline
     if row == "e":
         t = np.full((T, T), -1, dtype=np.int32)
-        t[11, :] = P.outline
-        t[12:15, :] = cap
-        t[14, ::2] = cap_d
-        t[15, :] = d
+        t[12, :] = ink
+        t[13, :] = cap
+        t[14, :] = cap
+        t[14, 1::3] = cap_d  # the cap's rounded tiles
+        t[15, :] = cap_d
         if col == "l":
-            t[11:, 0] = P.outline
+            t[12:, 0] = ink
         if col == "r":
-            t[11:, 15] = P.outline
+            t[12:, T - 1] = ink
         return t
     t = fill(b)
     for r0 in range(0, T, 4):
-        t[r0, :] = h  # lit top of each course
-        t[r0 + 3, :] = d  # shadow under it
-        off = 4 if (r0 // 4) % 2 else 0
-        for c in range(off, T + off, 8):  # short, staggered seams between tiles
-            t[r0 + 2 : r0 + 4, c % T] = d
-            t[r0 + 3, (c + 1) % T] = P.outline
+        t[r0 + 3, :] = d  # the shadow under each course
+        off = 2 if (r0 // 4) % 2 else 0
+        for c in range(off, T + off, 4):
+            t[r0 : r0 + 3, (c + 3) % T] = d  # the seam between two tiles
+            t[r0, c % T] = h  # one glint on each tile's lit corner
     if row == "t":
         t[0, :] = cap
-        t[1, :] = cap_d
+        t[0, 2::3] = cap_d
+        t[1, :] = ink
     if row == "b":
-        t[13, :] = d
-        t[14, :] = P.outline
-        t[15, :] = -1  # a 1 px gap shows the facade top: the eave overhangs
+        t[14, :] = d
+        t[15, :] = ink
     if col == "l":
-        t[:, 0] = P.outline
+        t[:, 0] = ink
+        t[:, 1] = d
     if col == "r":
-        t[:, 15] = P.outline
-    if row == "b":
-        t[15, :] = -1
-    return t
-
-
-def tuft(P: Pal, kind: str) -> np.ndarray:
-    """Ground decor overlays scattered over grass and paths (no outline: they sit flat in the ground)."""
-    t = np.full((T, T), -1, dtype=np.int32)
-    g, d, li = P("#4f8a3c"), P("#3c6e35"), P("#8cc265")
-    if kind == "grass_a":  # a tall-grass tuft
-        for x, h in ((5, 3), (6, 5), (7, 4), (8, 6), (9, 4), (10, 3)):
-            t[13 - h : 13, x] = g
-            t[13 - h, x] = li
-        t[12, 5:11] = d
-    elif kind == "grass_b":  # two small sprigs
-        for x0, y0 in ((3, 6), (10, 11)):
-            t[y0 : y0 + 3, x0] = g
-            t[y0 + 1 : y0 + 3, x0 + 2] = g
-            t[y0, x0] = li
-            t[y0 + 1, x0 + 1] = d
-    elif kind == "flowers":  # three tiny flowers
-        for (x, y), c in zip(((4, 5), (11, 8), (6, 12)), ("#f2e6c9", "#f4d35e", "#d9785a")):
-            t[y, x] = P(c)
-            t[y - 1, x] = t[y + 1, x] = t[y, x - 1] = t[y, x + 1] = P("#f2e6c9") if c != "#f2e6c9" else P("#f4d35e")
-            t[y, x] = P(c)
-            t[y + 2, x] = g
-    elif kind == "pebbles":
-        for x, y in ((4, 6), (11, 4), (8, 11)):
-            t[y, x : x + 2] = P("#a39d99")
-            t[y + 1, x : x + 2] = P("#6e6a6b")
+        t[:, T - 1] = ink
+        t[:, T - 2] = d
     return t
 
 
@@ -365,6 +340,9 @@ GLYPHS = {
         ],
     ),
     "fx_px": ({"w": "#ece8e0"}, ["ww", "ww"]),
+    # authored where the Flow crop was too small to survive the downscale
+    "fx_snow": ({"w": "#d6ecf0", "s": "#72aadc"}, [".w.w.", "wwsww", ".sws.", "wwsww", ".w.w."]),
+    "fx_sparkle_3": ({"w": "#fff0a0", "g": "#f4cc3c"}, ["g...g", ".....", "..w..", ".....", "g...g"]),
 }
 
 
@@ -405,20 +383,21 @@ def tile_sprite(make, src: str, fit=(16, 16), anchor="bottom") -> np.ndarray:
 def build(pal, outline, groups, specs, make, names=None):
     P = Pal(pal, outline)
     P.names = list(names or [])
+    import maptiles as mt
     tiles: dict[str, np.ndarray] = {
-        "grass": grass(P),
-        "dirt": dirt(P),
+        "grass": mt.grass_base(P),
+        "dirt": mt.dirt_base(P),
         "tilled": soil(P, False),
         "watered": soil(P, True),
-        "water": water(P),
-        "path": path(P),
+        "water": mt.water_base(P),
+        "path": mt.path_base(P),
         "fence": fence(P),
         "wall": bricks(P, "#a39d99", "#5e5a5b", "#cfc2ad"),
         "floor": planks(P),
         "wallin": wall_in(P),
         "bed": quilt(P),
         "shopwall": plaster(P),
-        "stone": stone_floor(P),
+        "stone": mt.stone_base(P),
     }
     tiles["door"] = overlay(tiles["wall"], tile_sprite(make, "world1b/tile_door"))
     tiles["shopdoor"] = overlay(tiles["shopwall"], tile_sprite(make, "world1b/tile_shopdoor"))
@@ -433,21 +412,46 @@ def build(pal, outline, groups, specs, make, names=None):
     import tiles_extra
 
     extra = tiles_extra.build_extra(P, make, tiles, roof)
-    names = list(TILE_ORDER) + list(extra)
-    allt = [tiles[n] for n in TILE_ORDER] + list(extra.values())
-    cols = len(TILE_ORDER)
+    # Baked tiles the maps asked for (scripts/map-art.mjs -> art-src/map-tiles.json), rendered in world space.
+    import json
+    import os
+
+    import bake
+
+    req = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "map-tiles.json")
+    for name in json.load(open(req)) if os.path.exists(req) else []:
+        extra[name] = bake.bake(P, name, tiles["grass"], tiles["stone"])
+    # Identical tiles share one slot; every name keeps its own entry in tiles.json.
+    index: dict[str, int] = {}
+    slot_names: list[str] = []
+    allt: list[np.ndarray] = []
+    slot: dict[bytes, int] = {}
+    for n, tile in [(n, tiles[n]) for n in TILE_ORDER] + list(extra.items()):
+        key = tile.astype(np.int32).tobytes()
+        if n.startswith("seasonal_"):  # empty in spring, drawn in other seasons: always its own slot
+            allt.append(tile)
+            slot_names.append(n)
+            index[n] = len(allt) - 1
+            continue
+        if n not in TILE_ORDER and not (tile >= 0).any():
+            index[n] = -1  # fully transparent: the map generator leaves the cell empty
+            continue
+        if n in TILE_ORDER or key not in slot:  # the placeholder row always keeps its 21 indices
+            slot.setdefault(key, len(allt))
+            allt.append(tile)
+            slot_names.append(n)
+            index[n] = len(allt) - 1
+        else:
+            index[n] = slot[key]
+    cols = TILESET_COLUMNS
     rows = (len(allt) + cols - 1) // cols
     sheet = np.full((rows * T, cols * T), -1, dtype=np.int32)
     for k, tile in enumerate(allt):
         y, x = divmod(k, cols)
         sheet[y * T : (y + 1) * T, x * T : (x + 1) * T] = tile
-    # Runtime decor (src/art/decor.ts): roofs and ground tufts, until the maps pass moves them into map layers.
-    for style in ROOF_STYLES:
-        for row in "tmb":
-            for col in "lcr":
-                groups["world"][f"decor_roof_{style}_{row}{col}"] = px.idx_to_rgba(roof(P, style, row, col), pal)
-    for kind in ("grass_a", "grass_b", "flowers"):
-        groups["world"][f"decor_{kind}"] = px.idx_to_rgba(tuft(P, kind), pal)
+    import seasons
+
+    season_rgba = {k: px.idx_to_rgba(v, pal) for k, v in seasons.season_sheets(sheet, slot_names, cols, P.names, tiles_extra.SEASON_OVERRIDES).items()}
     for key, (colours, rows) in GLYPHS.items():
         groups["ui"][key] = px.idx_to_rgba(glyph(P, colours, rows), pal)
     seed = px.idx_to_rgba(seed_mound(P), pal)
@@ -458,4 +462,4 @@ def build(pal, outline, groups, specs, make, names=None):
             groups[spec["group"]][key] = px.idx_to_rgba(stepping_stones(P), pal)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(tiles["watered"], pal)
-    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_names": names}
+    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_index": index, "columns": cols, "seasons": season_rgba}

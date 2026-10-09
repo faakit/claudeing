@@ -130,6 +130,14 @@ const SCENES = {
       .find((x) => x.scene.key === 'Farm')
       .scene.start('Mine');
   },
+  shop: () => {
+    const f = window.__farm;
+    f.getState().money = 900;
+    f.gameEvents.emit('openPanel', { type: 'shop' });
+  },
+  board: () => {
+    window.__farm.gameEvents.emit('openPanel', { type: 'board' });
+  },
   inventory: () => {
     const f = window.__farm;
     const s = f.getState();

@@ -31,6 +31,7 @@ CROPS = os.path.join(ART, "flow", "crops")
 PUB = os.path.join(GAME, "public", "assets")
 PALETTE = os.path.join(PUB, "palette.gpl")
 USED: set[str] = set()
+NAMES: list[str] = []  # palette slot names (filled in main)
 
 
 def prune_crops() -> None:
@@ -63,6 +64,10 @@ def build_crop_sprite(spec: dict, pal, pal_lab, outline: int) -> np.ndarray:
     if spec.get("flip"):
         nat = nat[:, ::-1]
     idx = px.quantize(nat, pal, pal_lab)
+    if spec.get("recolor"):  # palette-slot remap by name, all at once (e.g. a villager's signature colour)
+        src = idx.copy()
+        for a, b in spec["recolor"].items():
+            idx[src == NAMES.index(a)] = NAMES.index(b)
     w, h = spec["size"]
     fit = spec.get("fit", [w, h])
     drop = spec.get("drop_rows", 0)
@@ -78,6 +83,10 @@ def build_crop_sprite(spec: dict, pal, pal_lab, outline: int) -> np.ndarray:
         idx = idx[:, over // 2 : idx.shape[1] - (over - over // 2)]
     idx = px.clean_and_outline(idx, outline, spec.get("island", 2))
     out = px.place(idx, w, h, spec.get("anchor", "bottom"))
+    for x, y, slot in spec.get("pixfix", []):  # hand-placed pixels, logged in art-src/flow/edits.md
+        if spec.get("flip"):
+            x = w - 1 - x
+        out[y, x] = -1 if slot == "clear" else NAMES.index(slot)
     bob = spec.get("bob", 0)
     if bob:  # idle "breath": everything above the legs sinks 1 px (legs: the bottom `bob` rows)
         top = out[: h - bob].copy()
@@ -140,6 +149,7 @@ def main() -> None:
     # The palette is authored (v2 ramps, chosen with the art director); slot 0 is the outline ink.
     pal = px.load_gpl(PALETTE)
     names = px.load_gpl_names(PALETTE)
+    NAMES[:] = names
     assert len(pal) <= 32, "palette over 32 colours"
     assert names[0] == "ink", "palette slot 0 must be the outline ink"
     pal_arr = np.array(pal, dtype=np.float64)
@@ -149,14 +159,17 @@ def main() -> None:
     import authored  # noqa: E402  (needs the palette)
 
     groups: dict[str, dict[str, np.ndarray]] = {"world": {}, "ui": {}, "chars": {}}
+    tiles_only = "--tiles" in sys.argv  # just the tileset (after the maps asked for new baked tiles)
     for key, spec in specs.items():
-        if "src" not in spec:
+        if "src" not in spec or tiles_only:
             continue
         idx = build_crop_sprite(spec, pal, pal_lab, outline)
         groups[spec["group"]][key] = px.idx_to_rgba(idx, pal)
     extra = authored.build(
         pal, outline, groups, specs, lambda sp: build_crop_sprite(sp, pal, pal_lab, outline), names
     )
+    if tiles_only:
+        groups = {}
     for g, sprites in groups.items():
         for k, arr in sprites.items():
             save_png(arr, os.path.join(ART, "sprites", g, f"{k}.png"))
@@ -164,9 +177,11 @@ def main() -> None:
     if extra.get("tileset") is not None:
         save_png(extra["tileset"], os.path.join(PUB, "tilesets", "tiles.png"))
         save_png(extra["tileset"], os.path.join(ART, "sprites", "tiles.png"))
+        for season, img in extra.get("seasons", {}).items():
+            save_png(img, os.path.join(PUB, "tilesets", f"tiles_{season}.png"))
         index["tileset"] = True
         with open(os.path.join(PUB, "tilesets", "tiles.json"), "w", newline="\n") as f:
-            json.dump({"columns": 21, "tiles": {n: i for i, n in enumerate(extra["tile_names"])}}, f, indent=1)
+            json.dump({"columns": extra["columns"], "tiles": extra["tile_index"]}, f, indent=1)
             f.write("\n")
     for g, sprites in groups.items():
         if not sprites:
@@ -187,9 +202,12 @@ def main() -> None:
         print(f"{g}: {len(sprites)} frames, {sheet.shape[1]}x{sheet.shape[0]}")
     if "--prune" in sys.argv:
         prune_crops()
+    if tiles_only:
+        return
     with open(os.path.join(GAME, "src", "art", "atlases.json"), "w", newline="\n") as f:
-        json.dump(index, f, indent=2)
-        f.write("\n")
+        atl = ", ".join(json.dumps(a) for a in index["atlases"])
+        sea = ", ".join(json.dumps(k) for k in extra.get("seasons", {}))
+        f.write(f'{{\n  "seasons": [{sea}],\n  "tileset": {json.dumps(index["tileset"])},\n  "atlases": [{atl}]\n}}\n')
 
 
 if __name__ == "__main__":

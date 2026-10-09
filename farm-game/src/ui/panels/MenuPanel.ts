@@ -111,7 +111,7 @@ export class MenuPanel extends Modal {
       const active = t.id === this.tab;
       // Tabs sit at the bottom, right above Close: the thumb's resting place on a tall phone.
       this.button(4 + i * w, this.panelH - 58, w - 2, 22, t.label, () => this.openTab(t.id), {
-        rim: active ? C.gold : C.creamDim,
+        rim: active ? C.select : C.creamDim,
         textColor: active ? C.gold : C.cream,
       });
     });
@@ -204,7 +204,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     const y = y0 + Math.floor(i / 8) * pitch;
     drawSlot(g, x, y, size, i === cursor, i < game.hotbarSlots);
     if (i === s.inventory.selected)
-      g.lineStyle(1, C.gold, 1).strokeRect(x - 1.5, y - 1.5, size + 3, size + 3);
+      g.lineStyle(1, C.select, 1).strokeRect(x - 1.5, y - 1.5, size + 3, size + 3);
     if (stack) {
       const ref = refOf(stack);
       c.icon(x + size / 2, y + size / 2, iconKey(ref));

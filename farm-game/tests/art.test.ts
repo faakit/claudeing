@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('phaser', () => ({ default: {} }));
 
 import { PLACEHOLDER_TILES, TILESET_KEY } from '../src/config';
-import { animals, crops, items, nodes, npcs, placeables, tools } from '../src/data';
+import { animals, crops, items, mapsData, nodes, npcs, placeables, tools } from '../src/data';
 import index from '../src/art/atlases.json';
 import { atlasFrames, planArt, type AtlasFrame } from '../src/art/artPlan';
 import {
@@ -117,30 +117,105 @@ describe('art manifest', () => {
     expect(orphans).toEqual([]);
   });
 
-  it('the tileset image keeps the placeholder tile order and size', () => {
+  it('the tileset image keeps the placeholder tile order and matches its index', () => {
     if (!index.tileset) return;
     const png = readFileSync(`public/${TILESET_FILE}`);
+    const meta = JSON.parse(readFileSync('public/assets/tilesets/tiles.json', 'utf8')) as {
+      columns: number;
+      tiles: Record<string, number>;
+    };
     // PNG IHDR: width and height are big-endian at bytes 16 and 20.
-    expect(png.readUInt32BE(16)).toBe(16 * PLACEHOLDER_TILES.length);
+    expect(png.readUInt32BE(16)).toBe(16 * meta.columns);
     expect(png.readUInt32BE(20) % 16).toBe(0);
+    PLACEHOLDER_TILES.forEach((t, i) => expect(meta.tiles[t.name], t.name).toBe(i));
   });
 });
 
-describe('roof decor', () => {
-  it('roofs every wall block except its bottom (facade) row', async () => {
-    const { roofTiles } = await import('../src/art/decor');
-    // 4x3 map: grass border, a 2x3 wall block with a door in its bottom row.
-    const G = 1;
-    const W = 8;
-    const D = 9;
-    const data = [G, W, W, G, G, W, W, G, G, W, D, G];
-    const roofs = roofTiles(data, 4, 3);
-    expect(roofs.map((r) => `${r.tx},${r.ty}:${r.key}`).sort()).toEqual([
-      '1,0:decor_roof_red_tl',
-      '1,1:decor_roof_red_bl',
-      '2,0:decor_roof_red_tr',
-      '2,1:decor_roof_red_br',
+describe('map art layers', () => {
+  type Layer = { name: string; type: string; data?: number[]; objects?: { type: string }[] };
+  type Tmj = {
+    width: number;
+    height: number;
+    layers: Layer[];
+    tilesets: { tilecount: number; columns: number; imagewidth: number; imageheight: number }[];
+  };
+  const maps = Object.fromEntries(
+    Object.entries(mapsData.maps).map(([id, d]) => [
+      id,
+      JSON.parse(readFileSync(`public/${d.file}`, 'utf8')) as Tmj,
+    ]),
+  );
+
+  it('every map tile points into the tileset, and the tileset size matches the image', () => {
+    if (!index.tileset) return;
+    const png = readFileSync(`public/${TILESET_FILE}`);
+    for (const [id, m] of Object.entries(maps)) {
+      const ts = m.tilesets[0]!;
+      expect(ts.imagewidth, id).toBe(png.readUInt32BE(16));
+      expect(ts.imageheight, id).toBe(png.readUInt32BE(20));
+      expect(ts.tilecount, id).toBe(ts.columns * (ts.imageheight / 16));
+      for (const l of m.layers.filter((l) => l.type === 'tilelayer'))
+        for (const g of l.data ?? [])
+          expect(g, `${id}:${l.name}`).toBeLessThanOrEqual(ts.tilecount);
+    }
+  });
+
+  it('has every baked tile the maps ask for (run npm run art:maps after changing a map)', () => {
+    if (!index.tileset) return;
+    const recipes = JSON.parse(readFileSync('art-src/map-tiles.json', 'utf8')) as string[];
+    const tiles = JSON.parse(readFileSync('public/assets/tilesets/tiles.json', 'utf8')).tiles;
+    expect(recipes.filter((r) => tiles[r] === undefined)).toEqual([]);
+  });
+
+  it('adds collision only for props, never inside a zone or on a door', () => {
+    const SOLID = new Set([
+      'fence',
+      'water',
+      'wall',
+      'wallin',
+      'bed',
+      'bin',
+      'tree',
+      'shopwall',
+      'shopdoor',
+      'board',
+      'bush',
+      'rock',
     ]);
-    expect(roofTiles([W, W, W], 3, 1)).toEqual([]);
+    for (const [id, m] of Object.entries(maps)) {
+      const ground = m.layers.find((l) => l.name === 'ground')!.data!;
+      const coll = m.layers.find((l) => l.name === 'collision')!.data!;
+      const objects = (m.layers.find((l) => l.name === 'objects')!.objects ?? []) as unknown as {
+        type: string;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }[];
+      ground.forEach((g, i) => {
+        const solidGround = SOLID.has(PLACEHOLDER_TILES[g - 1]?.name ?? '');
+        if (solidGround) expect(coll[i], `${id} ${i}: ground solid`).not.toBe(0);
+        if (solidGround || coll[i] === 0) return;
+        const tx = i % m.width;
+        const ty = Math.floor(i / m.width);
+        for (const o of objects) {
+          const inside =
+            tx >= o.x / 16 &&
+            tx < (o.x + o.width) / 16 &&
+            ty >= o.y / 16 &&
+            ty < (o.y + o.height) / 16;
+          expect(inside, `${id}: a prop at ${tx},${ty} sits in ${o.type}`).toBe(false);
+        }
+      });
+    }
+  });
+
+  it('fades the overhead tiles around the player and the head tile above', async () => {
+    const { fadeTiles } = await import('../src/art/mapLayers');
+    const t = fadeTiles(5, 5).map(([x, y]) => `${x},${y}`);
+    expect(t).toContain('5,4');
+    expect(t).toContain('5,3');
+    expect(t).toContain('4,6');
+    expect(t).not.toContain('5,7');
   });
 });

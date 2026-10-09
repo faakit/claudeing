@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:maps": "node scripts/generate-maps.mjs",
+    "art:maps": "node scripts/generate-maps.mjs && python art-src/tools/build.py --tiles && node scripts/generate-maps.mjs",
     "e2e": "node scripts/e2e.mjs",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",

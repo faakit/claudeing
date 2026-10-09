@@ -1,7 +1,7 @@
 /**
  * UI colour tokens. Two skins:
- * - `plum`: the original dark plum UI (default until the walnut skin is approved).
- * - `walnut`: on the art palette (public/assets/palette.gpl). Chrome (HUD plates, dock, controls) is walnut wood
+ * - `plum`: the original dark plum UI (still available with `?skin=plum`).
+ * - `walnut` (default): on the art palette (public/assets/palette.gpl). Chrome (HUD plates, dock, controls) is walnut wood
  *   with parchment text; content sheets (bag, shop, menus, dialogs) are parchment paper with ink text.
  * `C` is for content sheets, `CH` for chrome. In the plum skin they are the same.
  * The skin can be previewed with `?skin=walnut` (or `?skin=plum`) in the URL.
@@ -24,6 +24,8 @@ const PLUM = {
   rim: 0xf4ead2,
   /** Rim of an unselected slot. */
   slotRim: 0xb9ae98,
+  /** The one selection colour (slots, tabs): a gold ring with ink notches and a ledge. */
+  select: 0xf4d35e,
 };
 export type Tokens = { [K in keyof typeof PLUM]: number };
 
@@ -52,7 +54,8 @@ const WALNUT_CONTENT: Tokens = {
   panelLight: P.sand,
   cream: P.ink,
   creamDim: P.plumShadow,
-  gold: P.wine,
+  // headings, prices and "Gold" in ink (critic R1-5): wine is only for warnings and what you cannot afford
+  gold: P.ink,
   green: P.leafDark,
   red: P.wine,
   blue: P.dusk,
@@ -60,6 +63,7 @@ const WALNUT_CONTENT: Tokens = {
   slot: P.sand,
   rim: P.wood,
   slotRim: P.soil,
+  select: P.gold,
 };
 const WALNUT_CHROME: Tokens = {
   ink: P.ink,
@@ -72,9 +76,11 @@ const WALNUT_CHROME: Tokens = {
   red: P.red,
   blue: P.sky,
   warn: P.orange,
-  slot: P.plumShadow,
+  // hotbar slots are the bag's recessed sand slot too, so thin tools keep their ink outline (critic R1-2)
+  slot: P.sand,
   rim: P.wood,
-  slotRim: P.sand,
+  slotRim: P.soil,
+  select: P.gold,
 };
 
 function readSkin(): Skin {
@@ -84,7 +90,7 @@ function readSkin(): Skin {
   } catch {
     /* no location (tests) */
   }
-  return 'plum';
+  return 'walnut';
 }
 
 export const SKIN: Skin = readSkin();
@@ -92,7 +98,10 @@ export const SKIN: Skin = readSkin();
 export const C: Tokens = SKIN === 'walnut' ? WALNUT_CONTENT : PLUM;
 /** Chrome: HUD plates, dock, toasts, on-screen controls. */
 export const CH: Tokens = SKIN === 'walnut' ? WALNUT_CHROME : PLUM;
-/** Wood-grain lines on walnut chrome (null in the plum skin). */
+/** Wood-grain lines on walnut chrome (null in the plum skin). Plates behind text are flat (critic R1-1); only
+ * the dock's plank seams use this. */
 export const GRAIN: number | null = SKIN === 'walnut' ? P.plumShadow : null;
+/** Ink and wood highlight of the walnut dock's plank seams. */
+export const SEAM = { ink: P.ink, lit: P.soil, knot: P.plumShadow };
 
 export const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;

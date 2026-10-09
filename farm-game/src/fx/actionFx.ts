@@ -14,11 +14,13 @@ export function playActionFx(
   res: Success,
   player: PlayerState,
   equipped?: string,
+  /** The player is shown in a tool-use pose, so the swinging tool icon would be a second tool. */
+  posed = false,
 ): void {
   const { x, y } = FarmRenderer.center(res.tx, res.ty);
   const def = equipped ? items[equipped] : undefined;
   if (def?.type === 'tool') {
-    fx.swing(player.x, player.y, def.icon, player.facing);
+    if (!posed) fx.swing(player.x, player.y, def.icon, player.facing);
     audio.play('swing');
   }
   haptic(res.kind === 'harvest' ? 'success' : 'tick');

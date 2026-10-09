@@ -2,6 +2,7 @@
 // Tile ids follow PLACEHOLDER_TILES order in src/config.ts (gid = index + 1).
 // Layout is portrait-first: every map is taller than it is wide, and exits sit on the long axis.
 import { writeFileSync } from 'node:fs';
+import { artLayers, bakedTiles, spawnTiles } from './map-art.mjs';
 
 const T = {
   grass: 1,
@@ -74,8 +75,13 @@ const door = (name, tx, ty, targetMap, spawnTx, spawnTy, facing) =>
 /** A named area where daily spawns (weeds, forageables) may appear. */
 const zone = (type, name, tx, ty, tw, th) => obj(type, name, tx, ty, tw, th);
 
-function toTmj({ w, h, ground }, objects) {
+/** Tile layers drawn over the ground by the art tileset (see scripts/map-art.mjs), in draw order. */
+const ART_LAYERS = ['detail', 'shade', 'props', 'roof', 'overhead'];
+
+function toTmj({ w, h, ground }, objects, art) {
   const collision = ground.map((row) => row.map((t) => (SOLID.has(t) ? t : 0)));
+  // Solid props (barrels, lamps...) block like walls; they are only ever placed on open, unreserved ground.
+  if (art) for (const i of art.solid) collision[Math.floor(i / w)][i % w] ||= T.rock;
   const layer = (id, name, data, visible) => ({
     id,
     name,
@@ -100,10 +106,13 @@ function toTmj({ w, h, ground }, objects) {
     type: 'map',
     tilewidth: 16,
     tileheight: 16,
-    nextlayerid: 4,
-    nextobjectid: nextId,
+    nextlayerid: 4 + (art ? ART_LAYERS.length + 1 : 0),
+    nextobjectid: nextId + (art ? art.lights.length : 0),
     layers: [
       layer(1, 'ground', ground, true),
+      ...(art
+        ? ART_LAYERS.map((n, k) => ({ ...layer(4 + k, n, [], true), data: art.layers[n] }))
+        : []),
       layer(2, 'collision', collision, false),
       {
         id: 3,
@@ -116,18 +125,44 @@ function toTmj({ w, h, ground }, objects) {
         draworder: 'topdown',
         objects,
       },
+      ...(art
+        ? [
+            {
+              id: 4 + ART_LAYERS.length,
+              name: 'lights',
+              type: 'objectgroup',
+              x: 0,
+              y: 0,
+              opacity: 1,
+              visible: false,
+              draworder: 'topdown',
+              objects: art.lights.map((l, k) => ({
+                id: nextId + k,
+                name: l.type,
+                type: 'light',
+                x: l.tx * 16 + 8,
+                y: l.ty * 16 + 8,
+                width: 0,
+                height: 0,
+                point: true,
+                rotation: 0,
+                visible: true,
+              })),
+            },
+          ]
+        : []),
     ],
     tilesets: [
       {
         firstgid: 1,
         name: 'placeholder',
-        image: '../tilesets/placeholder.png',
-        imagewidth: TILE_COUNT * 16,
-        imageheight: 16,
+        image: art ? '../tilesets/tiles.png' : '../tilesets/placeholder.png',
+        imagewidth: (art ? art.columns : TILE_COUNT) * 16,
+        imageheight: (art ? art.rows : 1) * 16,
         tilewidth: 16,
         tileheight: 16,
-        tilecount: TILE_COUNT,
-        columns: TILE_COUNT,
+        tilecount: art ? art.tilecount : TILE_COUNT,
+        columns: art ? art.columns : TILE_COUNT,
         margin: 0,
         spacing: 0,
       },
@@ -135,10 +170,32 @@ function toTmj({ w, h, ground }, objects) {
   };
 }
 
+/** Maps are collected first, so each map's art knows where the other maps' doors drop the player. */
+const pending = [];
 function write(name, map, objects) {
-  const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
-  writeFileSync(out, JSON.stringify(toTmj(map, objects), null, 1) + '\n');
-  console.log(`wrote ${name}.tmj ${map.w}x${map.h}`);
+  pending.push({ name, map, objects, firstId: nextId });
+}
+function flush() {
+  const all = Object.fromEntries(pending.map((p) => [p.name, p.objects]));
+  for (const { name, map, objects, firstId } of pending) {
+    nextId = firstId;
+    const art = artLayers(name, map, objects, spawnTiles(name, all));
+    const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
+    writeFileSync(out, JSON.stringify(toTmj(map, objects, art), null, 1) + '\n');
+    console.log(
+      `wrote ${name}.tmj ${map.w}x${map.h}` +
+        (art ? ` (+${art.solid.size} solid props, ${art.lights.length} lights)` : ''),
+    );
+  }
+  // The baked tiles these maps use: art-src/tools/build.py renders them into the tileset.
+  const { recipes, missing } = bakedTiles();
+  const list = new URL('../art-src/map-tiles.json', import.meta.url);
+  writeFileSync(list, JSON.stringify(recipes, null, 1) + '\n');
+  if (missing.length)
+    console.warn(
+      `${missing.length} baked tiles are not in the tileset yet: run \`npm run art:maps\` ` +
+        '(generate-maps, then art-src/tools/build.py --tiles, then generate-maps again)',
+    );
 }
 
 // Deterministic scatter so regenerated maps are stable.
@@ -342,3 +399,5 @@ const inside = (x, y, [rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && 
     door('to_woods_10', 10, h - 1, 'woods', 10, 1, 'down'),
   ]);
 }
+
+flush();

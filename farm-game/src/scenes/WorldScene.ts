@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { addRoofs } from '../art/decor';
+import { MapArt, tilesetFor } from '../art/mapLayers';
+import { hasArt } from '../art/registry';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
   ACTION_LOCK_MS,
@@ -11,13 +12,14 @@ import {
   SEASON_TINT,
   tileKind,
   TILE_SIZE,
-  TILESET_KEY,
   VOID_COLOR,
   WORLD_VIEW,
 } from '../config';
 import { items, mapsData } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
+import { parseLights, publishGlow } from '../fx/NightGlow';
+import { Ambient } from '../fx/Ambient';
 import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
@@ -60,6 +62,16 @@ import {
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
 
+/** Tool-use poses by tool item (chars atlas, from the Flow sheet npcs4). */
+const TOOL_POSES: Record<string, string> = {
+  hoe: 'player_use_hoe',
+  watering_can: 'player_use_can',
+  fishing_rod: 'player_use_rod',
+};
+
+/** Palette slot 0 (ink): the outline colour, also the void around indoor maps. */
+const INK_HEX = '#2a1a24';
+
 /** Quiet time before the goal arrow appears. */
 const GUIDE_AFTER_MS = 14_000;
 
@@ -75,6 +87,11 @@ export abstract class WorldScene extends Phaser.Scene {
   private highlight!: TileHighlight;
   private ground!: Phaser.Tilemaps.TilemapLayer;
   private farm: FarmRenderer | null = null;
+  private mapArt: MapArt | null = null;
+  private ambient: Ambient | null = null;
+  /** The tool-use pose shown for a moment after a tool action (art only; see toolPose). */
+  private pose: Phaser.GameObjects.Image | null = null;
+  private poseUntil = 0;
   protected fx!: Effects;
   private transitioning = false;
   /** After a door, ignore held input until it is released once, so doors never bounce. */
@@ -100,6 +117,8 @@ export abstract class WorldScene extends Phaser.Scene {
       throw new Error(`State says player is on "${state.player.map}" but scene is "${this.mapId}"`);
     }
     this.transitioning = false;
+    this.pose = null; // the scene object is reused across visits; its old images are gone
+    this.poseUntil = 0;
     this.inputLocked = true;
     this.actionLock = 0;
     this.heldFailed = false;
@@ -121,14 +140,22 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     const map = this.make.tilemap({ key: mapCacheKey(this.mapId) });
-    const tileset = map.addTilesetImage('placeholder', TILESET_KEY, TILE_SIZE, TILE_SIZE, 0, 0);
+    const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
+    const look = tilesetFor(this.textures, state.time.season, outdoor);
+    const tileset = map.addTilesetImage('placeholder', look.key, TILE_SIZE, TILE_SIZE, 0, 0);
     if (!tileset) throw new Error('Tileset "placeholder" missing from map');
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
-    addRoofs(this, layer, !!mapsData.maps[this.mapId]?.farmland);
+    publishGlow(
+      this.mapId,
+      outdoor,
+      parseLights(raw as unknown as Parameters<typeof parseLights>[0]),
+      this.cameras.main,
+    );
+    this.mapArt = new MapArt(map, tileset, look.tinted ? SEASON_TINT[state.time.season] : 0xffffff);
 
-    if (mapsData.maps[this.mapId]?.outdoor && SEASON_TINT[state.time.season] !== 0xffffff) {
+    if (look.tinted && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add
         .rectangle(0, 0, map.widthInPixels, map.heightInPixels, SEASON_TINT[state.time.season])
         .setOrigin(0)
@@ -137,6 +164,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.fx = new Effects(this);
+    this.ambient = new Ambient(this, this.mapId, outdoor);
     if (this.mapId === 'farm') {
       this.farm = new FarmRenderer(this);
       this.farm.sync(state, false);
@@ -207,10 +235,14 @@ export abstract class WorldScene extends Phaser.Scene {
       this.npcs?.destroy();
       this.npcs = null;
       this.game.events.emit(EVT_INTERACT_TARGET, null);
+      publishGlow(this.mapId, false, [], null);
+      this.ambient?.destroy();
+      this.ambient = null;
     });
   }
 
   update(time: number, delta: number): void {
+    this.ambient?.update(time, getState());
     if (this.transitioning) return;
     const state = getState();
     const player = state.player;
@@ -242,6 +274,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.syncSprite(moving);
 
     const here = playerTile(player);
+    this.mapArt?.follow(here.tx, here.ty);
     const door = objectAt(this.objects, here.tx, here.ty, 'door');
     if (door) {
       this.useDoor(door);
@@ -315,7 +348,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const cam = this.cameras.main;
     // The world only draws between the HUD and the dock, so nothing is ever hidden behind a control.
     cam.setViewport(WORLD_VIEW.x, WORLD_VIEW.y, WORLD_VIEW.w, WORLD_VIEW.h);
-    cam.setBackgroundColor(VOID_COLOR);
+    // Around a small room, the void is the ink of the outline palette, so the walls read as a framed box.
+    cam.setBackgroundColor(mapsData.maps[this.mapId]?.outdoor ? VOID_COLOR : INK_HEX);
     // Maps smaller than the view get bounds equal to the view, centered on the map.
     const bw = Math.max(mapW, WORLD_VIEW.w);
     const bh = Math.max(mapH, WORLD_VIEW.h);
@@ -331,6 +365,12 @@ export abstract class WorldScene extends Phaser.Scene {
     const p = getState().player;
     this.sprite.setPosition(p.x, p.y);
     this.sprite.setDepth(10 + p.y);
+    const posing = !!this.pose && this.time.now < this.poseUntil && !moving;
+    this.sprite.setVisible(!posing);
+    this.pose
+      ?.setVisible(posing)
+      .setPosition(p.x, p.y)
+      .setDepth(10 + p.y);
     this.shadow.setPosition(p.x, p.y - 2).setDepth(9 + p.y);
     if (moving) {
       this.sprite.anims.play(`player_walk_${p.facing}`, true);
@@ -338,6 +378,22 @@ export abstract class WorldScene extends Phaser.Scene {
       this.sprite.anims.stop();
       this.sprite.setFrame(playerIdleFrame(p.facing));
     }
+  }
+
+  /**
+   * For a moment after a tool action, show the player's tool-use pose (hoe raised, can pouring, rod cast) when
+   * that art exists. Facing up keeps the walk sprite (there is no back-view pose); left mirrors the right one.
+   */
+  private toolPose(item?: string): boolean {
+    const key = item ? TOOL_POSES[item] : undefined;
+    const p = getState().player;
+    if (!key || p.facing === 'up' || !hasArt(key)) return false;
+    if (key === TOOL_POSES['hoe'] && p.facing !== 'down') return false;
+    this.pose ??= this.add.image(0, 0, key).setOrigin(0.5, 1);
+    this.pose.setTexture(key).setFlipX(p.facing === 'left');
+    this.poseUntil = this.time.now + ACTION_LOCK_MS.ok + 60;
+    this.syncSprite(false);
+    return true;
   }
 
   private footstep(): void {
@@ -478,7 +534,8 @@ export abstract class WorldScene extends Phaser.Scene {
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.heldFailed = false;
-      playActionFx(this.fx, res, getState().player, stack?.item);
+      const posed = this.toolPose(stack?.item);
+      playActionFx(this.fx, res, getState().player, stack?.item, posed);
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;

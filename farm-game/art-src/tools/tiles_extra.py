@@ -2,18 +2,17 @@
 
 The map generator (scripts/map-art.mjs) reads `public/assets/tilesets/tiles.json` (tile name -> index) and fills
 these layers, all purely visual except `props`, whose tiles are also added to the collision layer:
-  detail   ground variants, edge/transition overlays (grass creeping onto paths, shorelines, rock masses)
-  shade    soft dithered drop shadows, flat decor (wildflowers, pebbles, puddles, rugs)
-  roof     roofs over building blocks (all but the facade row)
-  props    upright props on their own solid tile (barrels, crates, lamps, furniture, tree bases)
-  overhead what you walk behind: tree canopies, lamp tops, roof eaves
-Edges use a 4-bit mask of the neighbours that differ: N=1, E=2, S=4, W=8.
+  detail   opaque ground under objects, autotiled transitions (grass creeping onto paths, shorelines, the forest
+           mass, rock masses, fences, cobbles), ground variation
+  shade    dithered drop shadows, flat flora and decor (wildflowers, pebbles, lilies, reeds, rugs)
+  roof     roofs over building blocks (all but the facade row), facade decor (windows, doors, a forge)
+  props    upright props on their own tile (barrels, lamps, furniture, tree trunks)
+  overhead what you walk behind: tree canopies, lamp tops, roof ridges, the chimney
+Most new tiles are authored in maptiles.py; Flow crops supply the props and furniture.
 """
 from __future__ import annotations
 
 import numpy as np
-
-import pixelart as px
 
 T = 16
 N, E, S, W = 1, 2, 4, 8
@@ -27,66 +26,8 @@ def _h(*v: int) -> int:
     return h
 
 
-def _dist(x: int, y: int, mask: int) -> int:
-    d = 99
-    if mask & N:
-        d = min(d, y)
-    if mask & S:
-        d = min(d, T - 1 - y)
-    if mask & W:
-        d = min(d, x)
-    if mask & E:
-        d = min(d, T - 1 - x)
-    return d
-
-
-def _along(x: int, y: int, mask: int) -> int:
-    """Coordinate along the nearest masked edge (for the ragged profile)."""
-    best, a = 99, 0
-    for bit, d, along in ((N, y, x), (S, T - 1 - y, x), (W, x, y), (E, T - 1 - x, y)):
-        if mask & bit and d < best:
-            best, a = d, along + bit * 17
-    return a
-
-
-def creep(P, mask: int, grass_tex: np.ndarray, salt: int) -> np.ndarray:
-    """Grass creeping 1-3 px onto a path/dirt tile from the masked sides, with a dark lip."""
-    t = np.full((T, T), -1, dtype=np.int32)
-    lip = P.name("leaf dark")
-    for y in range(T):
-        for x in range(T):
-            d = _dist(x, y, mask)
-            if d > 4:
-                continue
-            a = _along(x, y, mask)
-            reach = 1 + _h(a // 2, salt) % 3  # 1..3 px, in 2 px steps so it reads as tufts
-            if d < reach:
-                t[y, x] = grass_tex[y, x]
-            elif d == reach:
-                t[y, x] = lip
-    return t
-
-
-def shore(P, mask: int) -> np.ndarray:
-    """Water edge: an earthy bank where land is to the north, foam along every land side."""
-    t = np.full((T, T), -1, dtype=np.int32)
-    foam, deep, bank, bank_d = P.name("ice white"), P.name("dusk blue"), P.name("soil"), P.name("earth dark")
-    for y in range(T):
-        for x in range(T):
-            d = _dist(x, y, mask)
-            if mask & N and y <= 1:
-                t[y, x] = bank if y == 0 else bank_d
-            elif d == (2 if mask & N and y == 2 else 0) and (x + y) % 3 != 0:
-                t[y, x] = foam
-            elif d == 1 and (x * 3 + y) % 4 == 0:
-                t[y, x] = foam
-            elif d == 2 and (x + 2 * y) % 5 == 0:
-                t[y, x] = deep
-    return t
-
-
 def rock_mass(P, mask: int, salt: int) -> np.ndarray:
-    """Mine wall seen from above: rock top, a carved face where the floor is south, ink rims elsewhere."""
+    """Mine wall seen from above: a rock top, a carved face where the floor is south, ink rims elsewhere."""
     top, top_l, top_d = P.name("stone dark"), P.name("taupe"), P.name("plum shadow")
     face, face_l, ink = P.name("stone"), P.name("stone lt"), P.outline
     t = np.full((T, T), top, dtype=np.int32)
@@ -95,11 +36,13 @@ def rock_mass(P, mask: int, salt: int) -> np.ndarray:
         x, y = r.integers(0, T, 2)
         t[y, x] = top_l if r.integers(0, 2) else top_d
     if mask & S:
-        for y in range(10, T):
+        for y in range(9, T):
             for x in range(T):
                 t[y, x] = face
-                if (x + _h(x, salt)) % 5 == 0:
+                if (x + _h(x, salt)) % 5 == 0 and y > 10:
                     t[y, x] = top_d  # vertical cracks in the face
+                if y == T - 2 and (x + salt) % 3 == 0:
+                    t[y, x] = P.name("taupe")
         t[10, :] = face_l
         t[9, :] = ink
         t[T - 1, :] = ink
@@ -114,17 +57,6 @@ def rock_mass(P, mask: int, salt: int) -> np.ndarray:
     return t
 
 
-def floor_shadow(P) -> np.ndarray:
-    """Dithered shadow on the top rows of a tile (under a wall, a tree, a facade)."""
-    t = np.full((T, T), -1, dtype=np.int32)
-    ink = P.outline
-    for y in range(4):
-        for x in range(T):
-            if y == 0 or (y == 1 and (x + y) % 2 == 0) or (y >= 2 and (x + 2 * y) % 4 == 0):
-                t[y, x] = ink
-    return t
-
-
 def split_v(img: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """A 16x32 sprite -> (top tile, bottom tile)."""
     return img[:T], img[T:]
@@ -134,57 +66,111 @@ def split_h(img: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return img[:, :T], img[:, T:]
 
 
-def under(base: np.ndarray, spr: np.ndarray) -> np.ndarray:
-    out = base.copy()
-    out[spr >= 0] = spr[spr >= 0]
-    return out
+# Per-season drawn overrides {season: {tile name: index tile}}, filled by build_extra (see seasons.py).
+SEASON_OVERRIDES: dict[str, dict[str, np.ndarray]] = {}
 
 
 def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.ndarray]:
     """All extra tiles by name, in a stable order (dict insertion order = tileset order)."""
+    import maptiles as mt
+
     out: dict[str, np.ndarray] = {}
     grass_tex = base["grass"]
 
-    # --- edges (15 masks each) ---
-    for m in range(1, 16):
-        out[f"edge_path_{m}"] = creep(P, m, grass_tex, 3)
-    for m in range(1, 16):
-        out[f"edge_dirt_{m}"] = creep(P, m, grass_tex, 7)
-    for m in range(1, 16):
-        out[f"shore_{m}"] = shore(P, m)
-    for m in range(0, 16):
-        out[f"rock_{m}"] = rock_mass(P, m, 40 + m)
+    # --- autotiled transitions (blob masks, see maptiles.canon) ---
+    for m in mt.BLOB:
+        out[f"edge_path_{m}"] = mt.creep(P, m, grass_tex, "wood", 3)
+    for m in mt.BLOB:
+        out[f"edge_dirt_{m}"] = mt.creep(P, m, grass_tex, "soil", 7)
+    for m in mt.BLOB:
+        out[f"shore_{m}"] = mt.shore(P, m, grass_tex, 11)
+    rock_top = np.full((T, T), P.name("stone dark"), dtype=np.int32)
+    mt.speckle(rock_top, P.name("plum shadow"), 6, 41, ((0, 0), (1, 0)))
+    mt.speckle(rock_top, P.name("taupe"), 3, 42)
+    out["rock_0"] = rock_top
+    # --- the forest mass (tree tiles joined to the map edge) ---
+    tex = mt.canopy_texture(P, 5)
+    out["canopy_0"] = tex.copy()
+    for m in mt.BLOB:
+        out[f"canopy_{m}"] = mt.canopy(P, m, tex, m % 7)
+    for k in range(3):
+        out[f"canopy_over_{k}"] = mt.canopy_overhang(P, tex, k * 2 + 1)
+    out["canopy_shade_n"] = mt.canopy_shadow(P, "n")
+    out["canopy_shade_w"] = mt.canopy_shadow(P, "w")
+    # --- fences (4-bit fence-neighbour mask), cobbles, interior walls ---
+    for m in range(16):
+        out[f"fence_{m}"] = mt.fence(P, m)
+    for m in range(16):
+        out[f"cobble_{m}"] = mt.cobble(P, m, m)
+    out["wall_face"] = mt.wall_face(P)
+    for m in range(16):
+        out[f"wall_top_{m}"] = mt.wall_top(P, m)
 
-    # --- shade + flat decor (transparent overlays) ---
-    out["shade_n"] = floor_shadow(P)
-    out["rose_1"] = make({"src": "ambient1a/decor_rose", "size": [T, T], "fit": [8, 9], "anchor": "center"})
-    out["rose_2"] = make({"src": "ambient1a/decor_rose_clump", "size": [T, T], "fit": [13, 11], "anchor": "center"})
-    out["tallgrass"] = make({"src": "ambient1a/decor_tallgrass", "size": [T, T], "fit": [12, 12], "anchor": "center"})
-    out["pebbles"] = make({"src": "items5a/decor_pebbles", "size": [T, T], "fit": [12, 8], "anchor": "center"})
-    out["puddle"] = make({"src": "ambient1a/decor_puddle", "size": [T, T], "fit": [14, 8], "anchor": "center"})
-    out["rubble"] = make({"src": "ambient1a/decor_rock", "size": [T, T], "fit": [9, 7], "anchor": "center"})
+    # --- opaque ground bases (detail layer, under objects and over the placeholder object tiles) ---
+    out["base_grass"] = grass_tex.copy()
+    out["base_grass_2"] = mt.grass_base(P, 31)
+    # opaque grass variants for the detail layer: plain ones break the 16 px repeat, lush ones make patches
+    for k in range(4):
+        out[f"grass_{k}"] = mt.grass_base(P, 400 + k * 7)
+    for k in range(3):
+        g = mt.grass_base(P, 500 + k * 7)
+        blades = mt.grass_patch(P, 10 + k * 3, 600 + k)
+        g[blades >= 0] = blades[blades >= 0]
+        out[f"lush_{k}"] = g
+    out["base_water"] = mt.water_base(P, 900, 2)
+    for k in range(3):
+        out[f"water_{k}"] = mt.water_base(P, 910 + k, 1 + k % 2)
+    out["base_stone"] = base["stone"].copy()
+    out["base_path"] = base["path"].copy()
+    out["base_floor"] = base["floor"].copy()
+    for k, mood in enumerate(("calm", "earth", "worn", "dark")):
+        out[f"stone_{k}"] = mt.mine_floor(P, 700 + k * 5, mood)
+    bed = make({"src": "world1b/tile_bed", "size": [32, 32], "fit": [24, 31], "anchor": "center"})
+    out["bed_tl"], out["bed_tr"] = split_h(bed[:T])
+    out["bed_bl"], out["bed_br"] = split_h(bed[T:])
+
+    # --- shade: dithered drop shadows (light top-left) ---
+    for g in ("grass", "path", "stone", "floor", "dirt"):
+        out[f"shade_n_{g}"] = mt.ground_shadow(P, "n", g)
+        out[f"shade_e_{g}"] = mt.ground_shadow(P, "e", g)
+
+    # --- ground variation and flora: no outlines, low contrast ---
+    for k, (dens, seed) in enumerate(((5, 1), (6, 2), (9, 3), (12, 4))):
+        out[f"gv_{k}"] = mt.grass_patch(P, dens, 100 + seed)
+    for kind in ("rose", "daisy", "butter", "lilac"):
+        for k in range(2):
+            out[f"bloom_{kind}_{k}"] = mt.bloom(P, kind, 200 + k * 17 + len(kind))
+
+    def flat(src, fit, to="leaf dark", anchor="center"):
+        return mt.strip_outline(P, make({"src": src, "size": [T, T], "fit": list(fit), "anchor": anchor}), to)
+
+    out["rose_1"] = flat("ambient1a/decor_rose", (8, 9))
+    out["rose_2"] = flat("ambient1a/decor_rose_clump", (13, 11))
+    out["tallgrass"] = flat("nature2a/n2_tallgrass", (12, 11))
+    out["pebbles"] = mt.pebbles(P, 1)
+    out["pebbles_2"] = mt.pebbles(P, 2)
+    out["puddle"] = mt.puddle(P, 0)
+    for k in range(3):
+        out[f"path_{k}"] = mt.path_base(P, 800 + k * 3)
+    out["path_worn"] = mt.path_worn(P, 811, False)
+    out["path_ruts"] = mt.path_worn(P, 812, True)
+    for kind in ("h", "v", "ne", "nw", "se", "sw"):
+        out[f"rail_{kind}"] = mt.rail(P, kind)
+    out["rubble"] = mt.rubble(P, 3)
+    out["rubble_2"] = mt.rubble(P, 8)
+    for k in range(3):
+        out[f"cracks_{k}"] = mt.cracks(P, 300 + k)
+    out["stepping"] = mt.stepping_stone(P)
     rug = make({"src": "interior1a/int_rug", "size": [32, 32], "fit": [30, 22], "anchor": "center"})
     out["rug_tl"], out["rug_tr"] = split_h(rug[:T])
     out["rug_bl"], out["rug_br"] = split_h(rug[T:])
-
-    # --- ground variants (detail, transparent) ---
-    v1 = np.full((T, T), -1, dtype=np.int32)
-    for x, y in ((3, 4), (4, 4), (4, 3), (10, 9), (11, 9), (11, 8), (6, 12), (7, 12)):
-        v1[y, x] = P.name("leaf mid")
-    out["grass_v1"] = v1
-    v2 = np.full((T, T), -1, dtype=np.int32)
-    for x, y in ((2, 9), (3, 8), (9, 3), (12, 12), (13, 11), (7, 6)):
-        v2[y, x] = P.name("new leaf")
-    out["grass_v2"] = v2
-    v3 = np.full((T, T), -1, dtype=np.int32)
-    for x, y in ((5, 5), (11, 10)):
-        v3[y, x] = P.name("parchment")
-        v3[y + 1, x] = P.name("leaf dark")
-    out["grass_v3"] = v3
-    sv = np.full((T, T), -1, dtype=np.int32)
-    for x, y in ((3, 5), (4, 6), (5, 6), (6, 7), (11, 3), (12, 4)):
-        sv[y, x] = P.name("stone dark")
-    out["stone_v1"] = sv
+    # water decor
+    out["lily_0"] = make({"src": "village2a/p2_lily", "size": [T, T], "fit": [13, 10], "anchor": "center"})
+    out["lily_1"] = np.fliplr(make({"src": "village2a/p2_lily", "size": [T, T], "fit": [10, 8], "anchor": "center"}))
+    out["reeds_n"] = make({"src": "village2a/p2_reeds", "size": [T, T], "fit": [14, 15]})
+    out["reeds_s"] = make({"src": "village2a/p2_reeds", "size": [T, T], "fit": [12, 13]})
+    boat = make({"src": "village2a/p2_boat", "size": [T, 32], "fit": [13, 28], "anchor": "center"})
+    out["boat_t"], out["boat_b"] = split_v(boat)
 
     # --- props: single solid tiles, transparent background, bottom-anchored ---
     def prop(name, src, fit, anchor="bottom"):
@@ -196,7 +182,7 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     prop("p_trough", "items6a/decor_trough", (16, 9))
     prop("p_signpost", "items5a/decor_signpost", (13, 16))
     prop("p_logs", "items5a/decor_logs", (15, 12))
-    prop("p_stump", "items5a/decor_stump", (14, 12))
+    prop("p_stump", "nature2a/n2_stump", (14, 13))
     prop("p_rock", "ambient1a/decor_rock", (13, 11))
     prop("p_mosslog", "ambient1a/decor_log", (16, 10))
     prop("p_applecrates", "land1a/decor_apple_crates", (15, 15))
@@ -207,13 +193,55 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     prop("p_crystal", "items6a/decor_crystal", (13, 13))
     prop("p_torch", "items6a/decor_torch", (8, 12), "center")
     prop("p_flowerbox", "items6a/decor_flowerbox", (14, 7))
-    # facade windows (drawn over a wall tile; lit at night by the glow pass)
+    # village life (Flow sheet village2): who lives where
+    prop("p_anvil", "village2a/p2_anvil", (14, 15))
+    prop("p_coal", "village2a/p2_coal", (14, 11))
+    prop("p_netrack", "village2a/p2_netrack", (16, 16))
+    prop("p_bucket", "village2a/p2_bucket", (10, 11))
+    prop("p_toolrack", "village2a/p2_toolrack", (16, 14))
+    prop("p_firewood", "village2a/p2_firewood", (15, 14))
+    prop("p_fishcrate", "village2a/p2_fishcrate", (14, 13))
+    prop("p_sign_sprout", "village2a/p2_sign_sprout", (15, 15))
+    prop("p_board", "items7b/board_sprout", (16, 15))  # the town's orders board: carved sprout, a rose on top
+    prop("p_cat", "village2a/p2_cat", (13, 9))
+    prop("p_flowerbed", "village2a/p2_windowbox", (16, 10))
+    # nature (Flow sheet nature2)
+    prop("p_boulder", "nature2a/n2_boulder", (15, 12))
+    prop("p_rocks", "nature2a/n2_rocks", (14, 10))
+    prop("p_hollowlog", "nature2a/n2_hollowlog", (16, 10))
+    prop("p_rootstump", "nature2a/n2_stump", (15, 14))
+    # bushes and ferns: transparent bases (R2-3: the detail layer paints the ground under them)
+    bush = make({"src": "land1a/decor_bush", "size": [T, T], "fit": [16, 14]})
+    out["bush_big"] = bush
+    out["bush_berry"] = make({"src": "nature2a/n2_berrybush", "size": [T, T], "fit": [15, 14]})
+    out["bush_rose"] = make({"src": "nature2a/n2_pinkbush", "size": [T, T], "fit": [15, 14]})
+    out["bush_small"] = make({"src": "land1a/decor_bush", "size": [T, T], "fit": [12, 10]})
+    out["fern"] = make({"src": "nature2a/n2_ferns", "size": [T, T], "fit": [15, 13]})
+    out["fern_flat"] = flat("nature2a/n2_ferns", (13, 11))
+    # flower patches (flat ground flora: outline softened to leaf dark so they sit in the grass)
+    for kind in ("roses", "daisies", "buttercups", "lavender"):
+        out[f"patch_{kind}"] = flat(f"nature2a/n2_{kind}", (14, 12))
+    # facade decor (over wall tiles; windows are lit at night by the glow pass)
     win = make({"src": "interior1a/int_window", "size": [T, T], "fit": [10, 9], "anchor": "center"})
     out["f_window"] = np.roll(win, -2, axis=0)
     box = make({"src": "items6a/decor_flowerbox", "size": [T, T], "fit": [14, 5]})
     wb = out["f_window"].copy()
     wb[box >= 0] = box[box >= 0]
     out["f_window_box"] = wb
+    for name, (key, rows) in mt.FACADE.items():
+        out[name] = mt.draw(P, rows, key, anchor_bottom=name != "f_lantern")
+    out["f_lantern"] = make({"src": "village2a/p2_lantern", "size": [T, T], "fit": [9, 13], "anchor": "center"})
+    box = make({"src": "village2a/p2_windowbox", "size": [T, T], "fit": [14, 7]})
+    wb = out["f_window"].copy()
+    wb[box >= 0] = box[box >= 0]
+    out["f_window_box"] = wb
+    vane = make({"src": "village2a/p2_weathervane", "size": [T, T], "fit": [12, 16]})
+    out["vane"] = vane
+    out["cave_l"] = mt.cave_mouth(P, "l")
+    out["cave_r"] = mt.cave_mouth(P, "r")
+    for part in "lcr":
+        out[f"lintel_{part}"] = mt.mine_lintel(P, part)
+    out["boat_l"], out["boat_r"] = mt.boat(P)
     # interior
     prop("i_fireplace", "interior1a/int_fireplace", (16, 16))
     prop("i_window", "interior1a/int_window", (13, 13), "center")
@@ -242,16 +270,20 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     tall("t_well", "world1b/obj_well", (16, 22))
     tall("t_beams", "land1a/decor_mine_beams", (16, 26))
     tall("t_scarecrow", "items5a/decor_scarecrow", (16, 24))
-    # trees: the base tile is opaque (grass behind), so it hides the small placeholder tree tile below it
+    # standalone trees: transparent bases (R2-3), canopy top drawn overhead
     for kind in ("oak", "pine", "birch"):
         img = make({"src": f"land1a/decor_{kind}", "size": [T, 32], "fit": [16, 30]})
-        top, bot = split_v(img)
-        out[f"tree_{kind}_top"] = top
-        out[f"tree_{kind}_base"] = under(base["grass"], bot)
-    bush = make({"src": "land1a/decor_bush", "size": [T, T], "fit": [16, 14]})
-    out["bush_big"] = under(base["grass"], bush)
+        out[f"tree_{kind}_top"], out[f"tree_{kind}_base"] = split_v(img)
+    oak = make({"src": "nature2a/n2_oak", "size": [48, 64], "fit": [46, 52]})
+    out.update(mt.tiles_of(oak, "bigoak"))
     wide = make({"src": "land1a/decor_laundry", "size": [32, T], "fit": [32, 16]})
     out["w_laundry_l"], out["w_laundry_r"] = split_h(wide)
+
+    # --- seasonal clumps: empty in spring, drawn per season ---
+    for k in range(3):
+        out[f"seasonal_{k}"] = np.full((T, T), -1, dtype=np.int32)
+        for season in ("summer", "fall", "winter"):
+            SEASON_OVERRIDES.setdefault(season, {})[f"seasonal_{k}"] = mt.seasonal(P, season, k)
 
     # --- roofs (roof layer) and eaves (overhead) ---
     for style in ("red", "slate"):
@@ -260,4 +292,41 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
                 out[f"roof_{style}_{row}{col}"] = roof_fn(P, style, row, col)
         for col in "lcr":
             out[f"eave_{style}_{col}"] = roof_fn(P, style, "e", col)
+        # the eave's shadow on the facade's top rows (shade layer, under windows and doors)
+        if style == "red":
+            es = np.full((T, T), -1, dtype=np.int32)
+            es[0, :] = P.name("plum shadow")
+            es[1, ::2] = P.name("plum shadow")
+            out["eave_shadow"] = es
+            SEASON_OVERRIDES.setdefault("winter", {})["eave_shadow"] = mt.icicles(P, es)
+        # a chimney on the roof's top row: composited so the roof and ridge layers hold one tile per cell
+        ctop, cbase = mt.chimney(P)
+        roof_t, eave = out[f"roof_{style}_tc"].copy(), out[f"eave_{style}_c"].copy()
+        roof_t[cbase >= 0] = cbase[cbase >= 0]
+        eave[ctop >= 0] = ctop[ctop >= 0]
+        out[f"chimney_base_{style}"], out[f"chimney_top_{style}"] = roof_t, eave
+        vane = out[f"eave_{style}_c"].copy()
+        v = out["vane"]
+        vane[v >= 0] = v[v >= 0]
+        out[f"vane_{style}"] = vane
+        # winter: the roof as a snow mass; the chimney stays brick with a snow cap
+        W = SEASON_OVERRIDES.setdefault("winter", {})
+        for row in "tmbe":
+            for i, col in enumerate("lcr"):
+                name = f"roof_{style}_{row}{col}" if row != "e" else f"eave_{style}_{col}"
+                W[name] = mt.snow_roof(P, out[name], row, col, i)
+        st = W[f"roof_{style}_tc"].copy()
+        st[cbase >= 0] = cbase[cbase >= 0]
+        W[f"chimney_base_{style}"] = st
+        se = W[f"eave_{style}_c"].copy()
+        cap = ctop.copy()
+        rows = np.where((ctop >= 0).any(1))[0]
+        if len(rows):
+            band = cap[rows[0] : rows[0] + 2]
+            band[band >= 0] = P.name("ice white")
+        se[cap >= 0] = cap[cap >= 0]
+        W[f"chimney_top_{style}"] = se
+        sv = W[f"eave_{style}_c"].copy()
+        sv[v >= 0] = v[v >= 0]
+        W[f"vane_{style}"] = sv
     return out

@@ -12,7 +12,7 @@ import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
 import { hitSize } from './hit';
-import { CH, GRAIN, SKIN } from './theme';
+import { CH, SEAM, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
 
@@ -27,6 +27,8 @@ export const HOTBAR_Y = GAME_HEIGHT - SLOT - 5;
 interface Toast {
   label: Label;
   bg: Phaser.GameObjects.Rectangle;
+  /** Walnut skin: the plate's lit top edge. */
+  lit?: Phaser.GameObjects.Rectangle;
   text: string;
   born: number;
 }
@@ -84,13 +86,20 @@ export class Hud {
       panels.fillStyle(CH.cream, 0.55).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
       panels.fillStyle(CH.panelLight, 0.5).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
     } else {
-      // Walnut dock: wood plate with an ink seam and a lit top edge, grain kept sparse behind the controls.
+      // Walnut dock (critic R1-1): full-width planks 14 px tall, each seam a 1 px ink line over a 1 px
+      // highlight, and two small knots far from the controls; no grain behind anything you read.
       panels.fillStyle(CH.panel, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
       panels.fillStyle(CH.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
       panels.fillStyle(CH.rim, 1).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
-      if (GRAIN !== null)
-        for (let gy = DOCK_Y + 7; gy < GAME_HEIGHT - 2; gy += 9)
-          panels.fillStyle(GRAIN, 1).fillRect(((gy * 13) % 97) + 4, gy, 12 + ((gy * 7) % 20), 1);
+      for (let gy = DOCK_Y + 16; gy < GAME_HEIGHT - 2; gy += 14) {
+        panels.fillStyle(SEAM.ink, 1).fillRect(0, gy, GAME_WIDTH, 1);
+        panels.fillStyle(SEAM.lit, 1).fillRect(0, gy + 1, GAME_WIDTH, 1);
+      }
+      for (const [kx, ky] of [[182, GAME_HEIGHT - 8]] as const)
+        panels
+          .fillStyle(SEAM.knot, 1)
+          .fillRect(kx, ky, 3, 2)
+          .fillRect(kx + 1, ky - 1, 1, 1);
     }
     // Dark band above the world too, so the HUD reads as its own strip.
     panels.fillStyle(CH.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
@@ -365,7 +374,17 @@ export class Hud {
       dup.born = now; // keep it alive instead of stacking spam
       return;
     }
-    const color = kind === 'warn' ? CH.warn : kind === 'good' ? CH.green : CH.cream;
+    // walnut (critic R0-3): parchment text with its ink shadow on a walnut plate; gold only to stress a warning
+    const color =
+      SKIN === 'plum'
+        ? kind === 'warn'
+          ? CH.warn
+          : kind === 'good'
+            ? CH.green
+            : CH.cream
+        : kind === 'warn'
+          ? CH.gold
+          : CH.cream;
     const label = new Label(this.scene, GAME_WIDTH / 2, DOCK_Y - 14, text, {
       color,
       align: 'center',
@@ -382,12 +401,26 @@ export class Hud {
         SKIN === 'plum' ? 0.72 : 0.95,
       )
       .setDepth(79);
-    if (SKIN !== 'plum') bg.setStrokeStyle(1, CH.ink);
-    this.toasts.push({ label, bg, text, born: now });
+    let lit: Phaser.GameObjects.Rectangle | undefined;
+    if (SKIN !== 'plum') {
+      bg.setStrokeStyle(1, CH.ink);
+      // the plate's lit top edge
+      lit = this.scene.add
+        .rectangle(
+          label.x,
+          label.y - (label.textHeight + 5) / 2 + 1,
+          label.textWidth + 8,
+          1,
+          CH.rim,
+        )
+        .setDepth(79.5);
+    }
+    this.toasts.push({ label, bg, lit, text, born: now });
     if (this.toasts.length > 3) {
       const old = this.toasts.shift();
       old?.label.destroy();
       old?.bg.destroy();
+      old?.lit?.destroy();
     }
   }
 
@@ -397,11 +430,13 @@ export class Hud {
       if (age > 2800) {
         t.label.destroy();
         t.bg.destroy();
+        t.lit?.destroy();
         return false;
       }
       const a = age > 2200 ? 1 - (age - 2200) / 600 : 1;
       t.label.setAlpha(a);
-      t.bg.setAlpha(0.72 * a);
+      t.bg.setAlpha((SKIN === 'plum' ? 0.72 : 1) * a); // walnut: an opaque plate, never a grey veil
+      t.lit?.setAlpha(a);
       return true;
     });
     // Newest sits on the bottom; older ones stack upward by their real (wrapped) height.
@@ -413,6 +448,9 @@ export class Hud {
       t.bg
         .setPosition(t.label.x, t.label.y + t.label.textHeight / 2)
         .setSize(t.label.textWidth + 10, t.label.textHeight + 5);
+      t.lit
+        ?.setPosition(t.bg.x, Math.round(t.bg.y - t.bg.height / 2) + 1)
+        .setSize(t.bg.width - 2, 1);
     }
   }
 

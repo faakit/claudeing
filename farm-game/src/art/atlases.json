@@ -1,4 +1,5 @@
 {
+  "seasons": ["summer", "fall", "winter"],
   "tileset": true,
   "atlases": ["world", "ui", "chars"]
 }

@@ -8,3 +8,16 @@ Changes made on top of the Flow output, all in code so they re-run (`art-src/spr
 - Crops: stage 0 of every crop is an authored seed mound, not Flow output.
 - Animals: second idle frame from the "head down" pose of the same prompt.
 - All sprites: background keyed out, re-gridded, quantized to the 32-colour palette, outline redrawn in palette ink.
+- Round 2 (hand edits as `recolor` and `pixfix` lists in `art-src/sprites.json`, applied by `build.py` before the idle
+  bob; left frames mirror the coordinates):
+  - Clay (critic R1-7): jacket recoloured from blue to the rival's red (sky -> red, water and dusk blue -> wine, night
+    navy -> plum shadow), neckerchief to a cream cravat (red -> parchment, wine -> sand); a gold cowlick on every view
+    and a straw in his mouth in the side view, so his silhouette is his own at 1x.
+  - Mara side view (R1-8): the grey blob behind the skirt removed, skirt and hem redrawn, two legs and shoes instead
+    of one stub (rows 24-31).
+  - Finn side view (R1-8): the grey hip patch repainted as sleeve, the grey band under the coat as trousers.
+  - Rosa side view (R1-8): skin/brown specks on the hem repainted lilac.
+- Rare crops (crops4 b) and their items (items7 a): stage 0 is the authored seed mound like every crop.
+- Tool-use poses (npcs4 a, row 3): rows trimmed below the waist (hoe -3, can -2, rod -3) so the poses stand on the
+  player's baseline; shown for a moment after a tool action (down for the hoe; left mirrors right).
+- The white butterfly is not used (it read as a letter at 1x); the snowflake and the last sparkle frame are authored.

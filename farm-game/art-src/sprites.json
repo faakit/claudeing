@@ -901,10 +901,14 @@
   "group": "world"
  },
  "obj_sign": {
-  "src": "crops3b/obj_sign",
+  "src": "village2a/p2_sign_sprout",
   "size": [
    16,
    16
+  ],
+  "fit": [
+   15,
+   15
   ],
   "group": "world"
  },
@@ -1329,7 +1333,809 @@
   ],
   "group": "chars",
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "pixfix": [
+   [
+    0,
+    24,
+    "clear"
+   ],
+   [
+    1,
+    24,
+    "clear"
+   ],
+   [
+    2,
+    24,
+    "clear"
+   ],
+   [
+    3,
+    24,
+    "clear"
+   ],
+   [
+    4,
+    24,
+    "clear"
+   ],
+   [
+    5,
+    24,
+    "clear"
+   ],
+   [
+    6,
+    24,
+    "clear"
+   ],
+   [
+    7,
+    24,
+    "clear"
+   ],
+   [
+    8,
+    24,
+    "ink"
+   ],
+   [
+    9,
+    24,
+    "soil"
+   ],
+   [
+    10,
+    24,
+    "soil"
+   ],
+   [
+    11,
+    24,
+    "soil"
+   ],
+   [
+    12,
+    24,
+    "taupe"
+   ],
+   [
+    13,
+    24,
+    "parchment"
+   ],
+   [
+    14,
+    24,
+    "parchment"
+   ],
+   [
+    15,
+    24,
+    "ink"
+   ],
+   [
+    16,
+    24,
+    "clear"
+   ],
+   [
+    17,
+    24,
+    "clear"
+   ],
+   [
+    18,
+    24,
+    "clear"
+   ],
+   [
+    19,
+    24,
+    "clear"
+   ],
+   [
+    0,
+    25,
+    "clear"
+   ],
+   [
+    1,
+    25,
+    "clear"
+   ],
+   [
+    2,
+    25,
+    "clear"
+   ],
+   [
+    3,
+    25,
+    "clear"
+   ],
+   [
+    4,
+    25,
+    "clear"
+   ],
+   [
+    5,
+    25,
+    "clear"
+   ],
+   [
+    6,
+    25,
+    "clear"
+   ],
+   [
+    7,
+    25,
+    "clear"
+   ],
+   [
+    8,
+    25,
+    "ink"
+   ],
+   [
+    9,
+    25,
+    "skin light"
+   ],
+   [
+    10,
+    25,
+    "skin light"
+   ],
+   [
+    11,
+    25,
+    "soil"
+   ],
+   [
+    12,
+    25,
+    "parchment"
+   ],
+   [
+    13,
+    25,
+    "parchment"
+   ],
+   [
+    14,
+    25,
+    "parchment"
+   ],
+   [
+    15,
+    25,
+    "ink"
+   ],
+   [
+    16,
+    25,
+    "clear"
+   ],
+   [
+    17,
+    25,
+    "clear"
+   ],
+   [
+    18,
+    25,
+    "clear"
+   ],
+   [
+    19,
+    25,
+    "clear"
+   ],
+   [
+    0,
+    26,
+    "clear"
+   ],
+   [
+    1,
+    26,
+    "clear"
+   ],
+   [
+    2,
+    26,
+    "clear"
+   ],
+   [
+    3,
+    26,
+    "clear"
+   ],
+   [
+    4,
+    26,
+    "clear"
+   ],
+   [
+    5,
+    26,
+    "clear"
+   ],
+   [
+    6,
+    26,
+    "clear"
+   ],
+   [
+    7,
+    26,
+    "clear"
+   ],
+   [
+    8,
+    26,
+    "ink"
+   ],
+   [
+    9,
+    26,
+    "soil"
+   ],
+   [
+    10,
+    26,
+    "plum shadow"
+   ],
+   [
+    11,
+    26,
+    "parchment"
+   ],
+   [
+    12,
+    26,
+    "parchment"
+   ],
+   [
+    13,
+    26,
+    "parchment"
+   ],
+   [
+    14,
+    26,
+    "parchment"
+   ],
+   [
+    15,
+    26,
+    "parchment"
+   ],
+   [
+    16,
+    26,
+    "ink"
+   ],
+   [
+    17,
+    26,
+    "clear"
+   ],
+   [
+    18,
+    26,
+    "clear"
+   ],
+   [
+    19,
+    26,
+    "clear"
+   ],
+   [
+    0,
+    27,
+    "clear"
+   ],
+   [
+    1,
+    27,
+    "clear"
+   ],
+   [
+    2,
+    27,
+    "clear"
+   ],
+   [
+    3,
+    27,
+    "clear"
+   ],
+   [
+    4,
+    27,
+    "clear"
+   ],
+   [
+    5,
+    27,
+    "clear"
+   ],
+   [
+    6,
+    27,
+    "clear"
+   ],
+   [
+    7,
+    27,
+    "clear"
+   ],
+   [
+    8,
+    27,
+    "ink"
+   ],
+   [
+    9,
+    27,
+    "soil"
+   ],
+   [
+    10,
+    27,
+    "plum shadow"
+   ],
+   [
+    11,
+    27,
+    "parchment"
+   ],
+   [
+    12,
+    27,
+    "parchment"
+   ],
+   [
+    13,
+    27,
+    "parchment"
+   ],
+   [
+    14,
+    27,
+    "parchment"
+   ],
+   [
+    15,
+    27,
+    "parchment"
+   ],
+   [
+    16,
+    27,
+    "ink"
+   ],
+   [
+    17,
+    27,
+    "clear"
+   ],
+   [
+    18,
+    27,
+    "clear"
+   ],
+   [
+    19,
+    27,
+    "clear"
+   ],
+   [
+    0,
+    28,
+    "clear"
+   ],
+   [
+    1,
+    28,
+    "clear"
+   ],
+   [
+    2,
+    28,
+    "clear"
+   ],
+   [
+    3,
+    28,
+    "clear"
+   ],
+   [
+    4,
+    28,
+    "clear"
+   ],
+   [
+    5,
+    28,
+    "clear"
+   ],
+   [
+    6,
+    28,
+    "clear"
+   ],
+   [
+    7,
+    28,
+    "clear"
+   ],
+   [
+    8,
+    28,
+    "ink"
+   ],
+   [
+    9,
+    28,
+    "plum shadow"
+   ],
+   [
+    10,
+    28,
+    "plum shadow"
+   ],
+   [
+    11,
+    28,
+    "plum shadow"
+   ],
+   [
+    12,
+    28,
+    "plum shadow"
+   ],
+   [
+    13,
+    28,
+    "plum shadow"
+   ],
+   [
+    14,
+    28,
+    "plum shadow"
+   ],
+   [
+    15,
+    28,
+    "plum shadow"
+   ],
+   [
+    16,
+    28,
+    "ink"
+   ],
+   [
+    17,
+    28,
+    "clear"
+   ],
+   [
+    18,
+    28,
+    "clear"
+   ],
+   [
+    19,
+    28,
+    "clear"
+   ],
+   [
+    0,
+    29,
+    "clear"
+   ],
+   [
+    1,
+    29,
+    "clear"
+   ],
+   [
+    2,
+    29,
+    "clear"
+   ],
+   [
+    3,
+    29,
+    "clear"
+   ],
+   [
+    4,
+    29,
+    "clear"
+   ],
+   [
+    5,
+    29,
+    "clear"
+   ],
+   [
+    6,
+    29,
+    "clear"
+   ],
+   [
+    7,
+    29,
+    "clear"
+   ],
+   [
+    8,
+    29,
+    "clear"
+   ],
+   [
+    9,
+    29,
+    "ink"
+   ],
+   [
+    10,
+    29,
+    "earth dark"
+   ],
+   [
+    11,
+    29,
+    "ink"
+   ],
+   [
+    12,
+    29,
+    "ink"
+   ],
+   [
+    13,
+    29,
+    "earth dark"
+   ],
+   [
+    14,
+    29,
+    "ink"
+   ],
+   [
+    15,
+    29,
+    "clear"
+   ],
+   [
+    16,
+    29,
+    "clear"
+   ],
+   [
+    17,
+    29,
+    "clear"
+   ],
+   [
+    18,
+    29,
+    "clear"
+   ],
+   [
+    19,
+    29,
+    "clear"
+   ],
+   [
+    0,
+    30,
+    "clear"
+   ],
+   [
+    1,
+    30,
+    "clear"
+   ],
+   [
+    2,
+    30,
+    "clear"
+   ],
+   [
+    3,
+    30,
+    "clear"
+   ],
+   [
+    4,
+    30,
+    "clear"
+   ],
+   [
+    5,
+    30,
+    "clear"
+   ],
+   [
+    6,
+    30,
+    "clear"
+   ],
+   [
+    7,
+    30,
+    "clear"
+   ],
+   [
+    8,
+    30,
+    "clear"
+   ],
+   [
+    9,
+    30,
+    "ink"
+   ],
+   [
+    10,
+    30,
+    "earth dark"
+   ],
+   [
+    11,
+    30,
+    "earth dark"
+   ],
+   [
+    12,
+    30,
+    "ink"
+   ],
+   [
+    13,
+    30,
+    "earth dark"
+   ],
+   [
+    14,
+    30,
+    "earth dark"
+   ],
+   [
+    15,
+    30,
+    "ink"
+   ],
+   [
+    16,
+    30,
+    "clear"
+   ],
+   [
+    17,
+    30,
+    "clear"
+   ],
+   [
+    18,
+    30,
+    "clear"
+   ],
+   [
+    19,
+    30,
+    "clear"
+   ],
+   [
+    0,
+    31,
+    "clear"
+   ],
+   [
+    1,
+    31,
+    "clear"
+   ],
+   [
+    2,
+    31,
+    "clear"
+   ],
+   [
+    3,
+    31,
+    "clear"
+   ],
+   [
+    4,
+    31,
+    "clear"
+   ],
+   [
+    5,
+    31,
+    "clear"
+   ],
+   [
+    6,
+    31,
+    "clear"
+   ],
+   [
+    7,
+    31,
+    "clear"
+   ],
+   [
+    8,
+    31,
+    "clear"
+   ],
+   [
+    9,
+    31,
+    "ink"
+   ],
+   [
+    10,
+    31,
+    "ink"
+   ],
+   [
+    11,
+    31,
+    "ink"
+   ],
+   [
+    12,
+    31,
+    "ink"
+   ],
+   [
+    13,
+    31,
+    "ink"
+   ],
+   [
+    14,
+    31,
+    "ink"
+   ],
+   [
+    15,
+    31,
+    "ink"
+   ],
+   [
+    16,
+    31,
+    "clear"
+   ],
+   [
+    17,
+    31,
+    "clear"
+   ],
+   [
+    18,
+    31,
+    "clear"
+   ],
+   [
+    19,
+    31,
+    "clear"
+   ]
+  ]
  },
  "npc_mara_right_1": {
   "src": "npcs3b/mara_right",
@@ -1340,7 +2146,809 @@
   "group": "chars",
   "bob": 7,
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "pixfix": [
+   [
+    0,
+    24,
+    "clear"
+   ],
+   [
+    1,
+    24,
+    "clear"
+   ],
+   [
+    2,
+    24,
+    "clear"
+   ],
+   [
+    3,
+    24,
+    "clear"
+   ],
+   [
+    4,
+    24,
+    "clear"
+   ],
+   [
+    5,
+    24,
+    "clear"
+   ],
+   [
+    6,
+    24,
+    "clear"
+   ],
+   [
+    7,
+    24,
+    "clear"
+   ],
+   [
+    8,
+    24,
+    "ink"
+   ],
+   [
+    9,
+    24,
+    "soil"
+   ],
+   [
+    10,
+    24,
+    "soil"
+   ],
+   [
+    11,
+    24,
+    "soil"
+   ],
+   [
+    12,
+    24,
+    "taupe"
+   ],
+   [
+    13,
+    24,
+    "parchment"
+   ],
+   [
+    14,
+    24,
+    "parchment"
+   ],
+   [
+    15,
+    24,
+    "ink"
+   ],
+   [
+    16,
+    24,
+    "clear"
+   ],
+   [
+    17,
+    24,
+    "clear"
+   ],
+   [
+    18,
+    24,
+    "clear"
+   ],
+   [
+    19,
+    24,
+    "clear"
+   ],
+   [
+    0,
+    25,
+    "clear"
+   ],
+   [
+    1,
+    25,
+    "clear"
+   ],
+   [
+    2,
+    25,
+    "clear"
+   ],
+   [
+    3,
+    25,
+    "clear"
+   ],
+   [
+    4,
+    25,
+    "clear"
+   ],
+   [
+    5,
+    25,
+    "clear"
+   ],
+   [
+    6,
+    25,
+    "clear"
+   ],
+   [
+    7,
+    25,
+    "clear"
+   ],
+   [
+    8,
+    25,
+    "ink"
+   ],
+   [
+    9,
+    25,
+    "skin light"
+   ],
+   [
+    10,
+    25,
+    "skin light"
+   ],
+   [
+    11,
+    25,
+    "soil"
+   ],
+   [
+    12,
+    25,
+    "parchment"
+   ],
+   [
+    13,
+    25,
+    "parchment"
+   ],
+   [
+    14,
+    25,
+    "parchment"
+   ],
+   [
+    15,
+    25,
+    "ink"
+   ],
+   [
+    16,
+    25,
+    "clear"
+   ],
+   [
+    17,
+    25,
+    "clear"
+   ],
+   [
+    18,
+    25,
+    "clear"
+   ],
+   [
+    19,
+    25,
+    "clear"
+   ],
+   [
+    0,
+    26,
+    "clear"
+   ],
+   [
+    1,
+    26,
+    "clear"
+   ],
+   [
+    2,
+    26,
+    "clear"
+   ],
+   [
+    3,
+    26,
+    "clear"
+   ],
+   [
+    4,
+    26,
+    "clear"
+   ],
+   [
+    5,
+    26,
+    "clear"
+   ],
+   [
+    6,
+    26,
+    "clear"
+   ],
+   [
+    7,
+    26,
+    "clear"
+   ],
+   [
+    8,
+    26,
+    "ink"
+   ],
+   [
+    9,
+    26,
+    "soil"
+   ],
+   [
+    10,
+    26,
+    "plum shadow"
+   ],
+   [
+    11,
+    26,
+    "parchment"
+   ],
+   [
+    12,
+    26,
+    "parchment"
+   ],
+   [
+    13,
+    26,
+    "parchment"
+   ],
+   [
+    14,
+    26,
+    "parchment"
+   ],
+   [
+    15,
+    26,
+    "parchment"
+   ],
+   [
+    16,
+    26,
+    "ink"
+   ],
+   [
+    17,
+    26,
+    "clear"
+   ],
+   [
+    18,
+    26,
+    "clear"
+   ],
+   [
+    19,
+    26,
+    "clear"
+   ],
+   [
+    0,
+    27,
+    "clear"
+   ],
+   [
+    1,
+    27,
+    "clear"
+   ],
+   [
+    2,
+    27,
+    "clear"
+   ],
+   [
+    3,
+    27,
+    "clear"
+   ],
+   [
+    4,
+    27,
+    "clear"
+   ],
+   [
+    5,
+    27,
+    "clear"
+   ],
+   [
+    6,
+    27,
+    "clear"
+   ],
+   [
+    7,
+    27,
+    "clear"
+   ],
+   [
+    8,
+    27,
+    "ink"
+   ],
+   [
+    9,
+    27,
+    "soil"
+   ],
+   [
+    10,
+    27,
+    "plum shadow"
+   ],
+   [
+    11,
+    27,
+    "parchment"
+   ],
+   [
+    12,
+    27,
+    "parchment"
+   ],
+   [
+    13,
+    27,
+    "parchment"
+   ],
+   [
+    14,
+    27,
+    "parchment"
+   ],
+   [
+    15,
+    27,
+    "parchment"
+   ],
+   [
+    16,
+    27,
+    "ink"
+   ],
+   [
+    17,
+    27,
+    "clear"
+   ],
+   [
+    18,
+    27,
+    "clear"
+   ],
+   [
+    19,
+    27,
+    "clear"
+   ],
+   [
+    0,
+    28,
+    "clear"
+   ],
+   [
+    1,
+    28,
+    "clear"
+   ],
+   [
+    2,
+    28,
+    "clear"
+   ],
+   [
+    3,
+    28,
+    "clear"
+   ],
+   [
+    4,
+    28,
+    "clear"
+   ],
+   [
+    5,
+    28,
+    "clear"
+   ],
+   [
+    6,
+    28,
+    "clear"
+   ],
+   [
+    7,
+    28,
+    "clear"
+   ],
+   [
+    8,
+    28,
+    "ink"
+   ],
+   [
+    9,
+    28,
+    "plum shadow"
+   ],
+   [
+    10,
+    28,
+    "plum shadow"
+   ],
+   [
+    11,
+    28,
+    "plum shadow"
+   ],
+   [
+    12,
+    28,
+    "plum shadow"
+   ],
+   [
+    13,
+    28,
+    "plum shadow"
+   ],
+   [
+    14,
+    28,
+    "plum shadow"
+   ],
+   [
+    15,
+    28,
+    "plum shadow"
+   ],
+   [
+    16,
+    28,
+    "ink"
+   ],
+   [
+    17,
+    28,
+    "clear"
+   ],
+   [
+    18,
+    28,
+    "clear"
+   ],
+   [
+    19,
+    28,
+    "clear"
+   ],
+   [
+    0,
+    29,
+    "clear"
+   ],
+   [
+    1,
+    29,
+    "clear"
+   ],
+   [
+    2,
+    29,
+    "clear"
+   ],
+   [
+    3,
+    29,
+    "clear"
+   ],
+   [
+    4,
+    29,
+    "clear"
+   ],
+   [
+    5,
+    29,
+    "clear"
+   ],
+   [
+    6,
+    29,
+    "clear"
+   ],
+   [
+    7,
+    29,
+    "clear"
+   ],
+   [
+    8,
+    29,
+    "clear"
+   ],
+   [
+    9,
+    29,
+    "ink"
+   ],
+   [
+    10,
+    29,
+    "earth dark"
+   ],
+   [
+    11,
+    29,
+    "ink"
+   ],
+   [
+    12,
+    29,
+    "ink"
+   ],
+   [
+    13,
+    29,
+    "earth dark"
+   ],
+   [
+    14,
+    29,
+    "ink"
+   ],
+   [
+    15,
+    29,
+    "clear"
+   ],
+   [
+    16,
+    29,
+    "clear"
+   ],
+   [
+    17,
+    29,
+    "clear"
+   ],
+   [
+    18,
+    29,
+    "clear"
+   ],
+   [
+    19,
+    29,
+    "clear"
+   ],
+   [
+    0,
+    30,
+    "clear"
+   ],
+   [
+    1,
+    30,
+    "clear"
+   ],
+   [
+    2,
+    30,
+    "clear"
+   ],
+   [
+    3,
+    30,
+    "clear"
+   ],
+   [
+    4,
+    30,
+    "clear"
+   ],
+   [
+    5,
+    30,
+    "clear"
+   ],
+   [
+    6,
+    30,
+    "clear"
+   ],
+   [
+    7,
+    30,
+    "clear"
+   ],
+   [
+    8,
+    30,
+    "clear"
+   ],
+   [
+    9,
+    30,
+    "ink"
+   ],
+   [
+    10,
+    30,
+    "earth dark"
+   ],
+   [
+    11,
+    30,
+    "earth dark"
+   ],
+   [
+    12,
+    30,
+    "ink"
+   ],
+   [
+    13,
+    30,
+    "earth dark"
+   ],
+   [
+    14,
+    30,
+    "earth dark"
+   ],
+   [
+    15,
+    30,
+    "ink"
+   ],
+   [
+    16,
+    30,
+    "clear"
+   ],
+   [
+    17,
+    30,
+    "clear"
+   ],
+   [
+    18,
+    30,
+    "clear"
+   ],
+   [
+    19,
+    30,
+    "clear"
+   ],
+   [
+    0,
+    31,
+    "clear"
+   ],
+   [
+    1,
+    31,
+    "clear"
+   ],
+   [
+    2,
+    31,
+    "clear"
+   ],
+   [
+    3,
+    31,
+    "clear"
+   ],
+   [
+    4,
+    31,
+    "clear"
+   ],
+   [
+    5,
+    31,
+    "clear"
+   ],
+   [
+    6,
+    31,
+    "clear"
+   ],
+   [
+    7,
+    31,
+    "clear"
+   ],
+   [
+    8,
+    31,
+    "clear"
+   ],
+   [
+    9,
+    31,
+    "ink"
+   ],
+   [
+    10,
+    31,
+    "ink"
+   ],
+   [
+    11,
+    31,
+    "ink"
+   ],
+   [
+    12,
+    31,
+    "ink"
+   ],
+   [
+    13,
+    31,
+    "ink"
+   ],
+   [
+    14,
+    31,
+    "ink"
+   ],
+   [
+    15,
+    31,
+    "ink"
+   ],
+   [
+    16,
+    31,
+    "clear"
+   ],
+   [
+    17,
+    31,
+    "clear"
+   ],
+   [
+    18,
+    31,
+    "clear"
+   ],
+   [
+    19,
+    31,
+    "clear"
+   ]
+  ]
  },
  "npc_mara_left_0": {
   "src": "npcs3b/mara_right",
@@ -1351,7 +2959,809 @@
   "group": "chars",
   "flip": true,
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "pixfix": [
+   [
+    0,
+    24,
+    "clear"
+   ],
+   [
+    1,
+    24,
+    "clear"
+   ],
+   [
+    2,
+    24,
+    "clear"
+   ],
+   [
+    3,
+    24,
+    "clear"
+   ],
+   [
+    4,
+    24,
+    "clear"
+   ],
+   [
+    5,
+    24,
+    "clear"
+   ],
+   [
+    6,
+    24,
+    "clear"
+   ],
+   [
+    7,
+    24,
+    "clear"
+   ],
+   [
+    8,
+    24,
+    "ink"
+   ],
+   [
+    9,
+    24,
+    "soil"
+   ],
+   [
+    10,
+    24,
+    "soil"
+   ],
+   [
+    11,
+    24,
+    "soil"
+   ],
+   [
+    12,
+    24,
+    "taupe"
+   ],
+   [
+    13,
+    24,
+    "parchment"
+   ],
+   [
+    14,
+    24,
+    "parchment"
+   ],
+   [
+    15,
+    24,
+    "ink"
+   ],
+   [
+    16,
+    24,
+    "clear"
+   ],
+   [
+    17,
+    24,
+    "clear"
+   ],
+   [
+    18,
+    24,
+    "clear"
+   ],
+   [
+    19,
+    24,
+    "clear"
+   ],
+   [
+    0,
+    25,
+    "clear"
+   ],
+   [
+    1,
+    25,
+    "clear"
+   ],
+   [
+    2,
+    25,
+    "clear"
+   ],
+   [
+    3,
+    25,
+    "clear"
+   ],
+   [
+    4,
+    25,
+    "clear"
+   ],
+   [
+    5,
+    25,
+    "clear"
+   ],
+   [
+    6,
+    25,
+    "clear"
+   ],
+   [
+    7,
+    25,
+    "clear"
+   ],
+   [
+    8,
+    25,
+    "ink"
+   ],
+   [
+    9,
+    25,
+    "skin light"
+   ],
+   [
+    10,
+    25,
+    "skin light"
+   ],
+   [
+    11,
+    25,
+    "soil"
+   ],
+   [
+    12,
+    25,
+    "parchment"
+   ],
+   [
+    13,
+    25,
+    "parchment"
+   ],
+   [
+    14,
+    25,
+    "parchment"
+   ],
+   [
+    15,
+    25,
+    "ink"
+   ],
+   [
+    16,
+    25,
+    "clear"
+   ],
+   [
+    17,
+    25,
+    "clear"
+   ],
+   [
+    18,
+    25,
+    "clear"
+   ],
+   [
+    19,
+    25,
+    "clear"
+   ],
+   [
+    0,
+    26,
+    "clear"
+   ],
+   [
+    1,
+    26,
+    "clear"
+   ],
+   [
+    2,
+    26,
+    "clear"
+   ],
+   [
+    3,
+    26,
+    "clear"
+   ],
+   [
+    4,
+    26,
+    "clear"
+   ],
+   [
+    5,
+    26,
+    "clear"
+   ],
+   [
+    6,
+    26,
+    "clear"
+   ],
+   [
+    7,
+    26,
+    "clear"
+   ],
+   [
+    8,
+    26,
+    "ink"
+   ],
+   [
+    9,
+    26,
+    "soil"
+   ],
+   [
+    10,
+    26,
+    "plum shadow"
+   ],
+   [
+    11,
+    26,
+    "parchment"
+   ],
+   [
+    12,
+    26,
+    "parchment"
+   ],
+   [
+    13,
+    26,
+    "parchment"
+   ],
+   [
+    14,
+    26,
+    "parchment"
+   ],
+   [
+    15,
+    26,
+    "parchment"
+   ],
+   [
+    16,
+    26,
+    "ink"
+   ],
+   [
+    17,
+    26,
+    "clear"
+   ],
+   [
+    18,
+    26,
+    "clear"
+   ],
+   [
+    19,
+    26,
+    "clear"
+   ],
+   [
+    0,
+    27,
+    "clear"
+   ],
+   [
+    1,
+    27,
+    "clear"
+   ],
+   [
+    2,
+    27,
+    "clear"
+   ],
+   [
+    3,
+    27,
+    "clear"
+   ],
+   [
+    4,
+    27,
+    "clear"
+   ],
+   [
+    5,
+    27,
+    "clear"
+   ],
+   [
+    6,
+    27,
+    "clear"
+   ],
+   [
+    7,
+    27,
+    "clear"
+   ],
+   [
+    8,
+    27,
+    "ink"
+   ],
+   [
+    9,
+    27,
+    "soil"
+   ],
+   [
+    10,
+    27,
+    "plum shadow"
+   ],
+   [
+    11,
+    27,
+    "parchment"
+   ],
+   [
+    12,
+    27,
+    "parchment"
+   ],
+   [
+    13,
+    27,
+    "parchment"
+   ],
+   [
+    14,
+    27,
+    "parchment"
+   ],
+   [
+    15,
+    27,
+    "parchment"
+   ],
+   [
+    16,
+    27,
+    "ink"
+   ],
+   [
+    17,
+    27,
+    "clear"
+   ],
+   [
+    18,
+    27,
+    "clear"
+   ],
+   [
+    19,
+    27,
+    "clear"
+   ],
+   [
+    0,
+    28,
+    "clear"
+   ],
+   [
+    1,
+    28,
+    "clear"
+   ],
+   [
+    2,
+    28,
+    "clear"
+   ],
+   [
+    3,
+    28,
+    "clear"
+   ],
+   [
+    4,
+    28,
+    "clear"
+   ],
+   [
+    5,
+    28,
+    "clear"
+   ],
+   [
+    6,
+    28,
+    "clear"
+   ],
+   [
+    7,
+    28,
+    "clear"
+   ],
+   [
+    8,
+    28,
+    "ink"
+   ],
+   [
+    9,
+    28,
+    "plum shadow"
+   ],
+   [
+    10,
+    28,
+    "plum shadow"
+   ],
+   [
+    11,
+    28,
+    "plum shadow"
+   ],
+   [
+    12,
+    28,
+    "plum shadow"
+   ],
+   [
+    13,
+    28,
+    "plum shadow"
+   ],
+   [
+    14,
+    28,
+    "plum shadow"
+   ],
+   [
+    15,
+    28,
+    "plum shadow"
+   ],
+   [
+    16,
+    28,
+    "ink"
+   ],
+   [
+    17,
+    28,
+    "clear"
+   ],
+   [
+    18,
+    28,
+    "clear"
+   ],
+   [
+    19,
+    28,
+    "clear"
+   ],
+   [
+    0,
+    29,
+    "clear"
+   ],
+   [
+    1,
+    29,
+    "clear"
+   ],
+   [
+    2,
+    29,
+    "clear"
+   ],
+   [
+    3,
+    29,
+    "clear"
+   ],
+   [
+    4,
+    29,
+    "clear"
+   ],
+   [
+    5,
+    29,
+    "clear"
+   ],
+   [
+    6,
+    29,
+    "clear"
+   ],
+   [
+    7,
+    29,
+    "clear"
+   ],
+   [
+    8,
+    29,
+    "clear"
+   ],
+   [
+    9,
+    29,
+    "ink"
+   ],
+   [
+    10,
+    29,
+    "earth dark"
+   ],
+   [
+    11,
+    29,
+    "ink"
+   ],
+   [
+    12,
+    29,
+    "ink"
+   ],
+   [
+    13,
+    29,
+    "earth dark"
+   ],
+   [
+    14,
+    29,
+    "ink"
+   ],
+   [
+    15,
+    29,
+    "clear"
+   ],
+   [
+    16,
+    29,
+    "clear"
+   ],
+   [
+    17,
+    29,
+    "clear"
+   ],
+   [
+    18,
+    29,
+    "clear"
+   ],
+   [
+    19,
+    29,
+    "clear"
+   ],
+   [
+    0,
+    30,
+    "clear"
+   ],
+   [
+    1,
+    30,
+    "clear"
+   ],
+   [
+    2,
+    30,
+    "clear"
+   ],
+   [
+    3,
+    30,
+    "clear"
+   ],
+   [
+    4,
+    30,
+    "clear"
+   ],
+   [
+    5,
+    30,
+    "clear"
+   ],
+   [
+    6,
+    30,
+    "clear"
+   ],
+   [
+    7,
+    30,
+    "clear"
+   ],
+   [
+    8,
+    30,
+    "clear"
+   ],
+   [
+    9,
+    30,
+    "ink"
+   ],
+   [
+    10,
+    30,
+    "earth dark"
+   ],
+   [
+    11,
+    30,
+    "earth dark"
+   ],
+   [
+    12,
+    30,
+    "ink"
+   ],
+   [
+    13,
+    30,
+    "earth dark"
+   ],
+   [
+    14,
+    30,
+    "earth dark"
+   ],
+   [
+    15,
+    30,
+    "ink"
+   ],
+   [
+    16,
+    30,
+    "clear"
+   ],
+   [
+    17,
+    30,
+    "clear"
+   ],
+   [
+    18,
+    30,
+    "clear"
+   ],
+   [
+    19,
+    30,
+    "clear"
+   ],
+   [
+    0,
+    31,
+    "clear"
+   ],
+   [
+    1,
+    31,
+    "clear"
+   ],
+   [
+    2,
+    31,
+    "clear"
+   ],
+   [
+    3,
+    31,
+    "clear"
+   ],
+   [
+    4,
+    31,
+    "clear"
+   ],
+   [
+    5,
+    31,
+    "clear"
+   ],
+   [
+    6,
+    31,
+    "clear"
+   ],
+   [
+    7,
+    31,
+    "clear"
+   ],
+   [
+    8,
+    31,
+    "clear"
+   ],
+   [
+    9,
+    31,
+    "ink"
+   ],
+   [
+    10,
+    31,
+    "ink"
+   ],
+   [
+    11,
+    31,
+    "ink"
+   ],
+   [
+    12,
+    31,
+    "ink"
+   ],
+   [
+    13,
+    31,
+    "ink"
+   ],
+   [
+    14,
+    31,
+    "ink"
+   ],
+   [
+    15,
+    31,
+    "ink"
+   ],
+   [
+    16,
+    31,
+    "clear"
+   ],
+   [
+    17,
+    31,
+    "clear"
+   ],
+   [
+    18,
+    31,
+    "clear"
+   ],
+   [
+    19,
+    31,
+    "clear"
+   ]
+  ]
  },
  "npc_mara_left_1": {
   "src": "npcs3b/mara_right",
@@ -1363,7 +3773,809 @@
   "flip": true,
   "bob": 7,
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "pixfix": [
+   [
+    0,
+    24,
+    "clear"
+   ],
+   [
+    1,
+    24,
+    "clear"
+   ],
+   [
+    2,
+    24,
+    "clear"
+   ],
+   [
+    3,
+    24,
+    "clear"
+   ],
+   [
+    4,
+    24,
+    "clear"
+   ],
+   [
+    5,
+    24,
+    "clear"
+   ],
+   [
+    6,
+    24,
+    "clear"
+   ],
+   [
+    7,
+    24,
+    "clear"
+   ],
+   [
+    8,
+    24,
+    "ink"
+   ],
+   [
+    9,
+    24,
+    "soil"
+   ],
+   [
+    10,
+    24,
+    "soil"
+   ],
+   [
+    11,
+    24,
+    "soil"
+   ],
+   [
+    12,
+    24,
+    "taupe"
+   ],
+   [
+    13,
+    24,
+    "parchment"
+   ],
+   [
+    14,
+    24,
+    "parchment"
+   ],
+   [
+    15,
+    24,
+    "ink"
+   ],
+   [
+    16,
+    24,
+    "clear"
+   ],
+   [
+    17,
+    24,
+    "clear"
+   ],
+   [
+    18,
+    24,
+    "clear"
+   ],
+   [
+    19,
+    24,
+    "clear"
+   ],
+   [
+    0,
+    25,
+    "clear"
+   ],
+   [
+    1,
+    25,
+    "clear"
+   ],
+   [
+    2,
+    25,
+    "clear"
+   ],
+   [
+    3,
+    25,
+    "clear"
+   ],
+   [
+    4,
+    25,
+    "clear"
+   ],
+   [
+    5,
+    25,
+    "clear"
+   ],
+   [
+    6,
+    25,
+    "clear"
+   ],
+   [
+    7,
+    25,
+    "clear"
+   ],
+   [
+    8,
+    25,
+    "ink"
+   ],
+   [
+    9,
+    25,
+    "skin light"
+   ],
+   [
+    10,
+    25,
+    "skin light"
+   ],
+   [
+    11,
+    25,
+    "soil"
+   ],
+   [
+    12,
+    25,
+    "parchment"
+   ],
+   [
+    13,
+    25,
+    "parchment"
+   ],
+   [
+    14,
+    25,
+    "parchment"
+   ],
+   [
+    15,
+    25,
+    "ink"
+   ],
+   [
+    16,
+    25,
+    "clear"
+   ],
+   [
+    17,
+    25,
+    "clear"
+   ],
+   [
+    18,
+    25,
+    "clear"
+   ],
+   [
+    19,
+    25,
+    "clear"
+   ],
+   [
+    0,
+    26,
+    "clear"
+   ],
+   [
+    1,
+    26,
+    "clear"
+   ],
+   [
+    2,
+    26,
+    "clear"
+   ],
+   [
+    3,
+    26,
+    "clear"
+   ],
+   [
+    4,
+    26,
+    "clear"
+   ],
+   [
+    5,
+    26,
+    "clear"
+   ],
+   [
+    6,
+    26,
+    "clear"
+   ],
+   [
+    7,
+    26,
+    "clear"
+   ],
+   [
+    8,
+    26,
+    "ink"
+   ],
+   [
+    9,
+    26,
+    "soil"
+   ],
+   [
+    10,
+    26,
+    "plum shadow"
+   ],
+   [
+    11,
+    26,
+    "parchment"
+   ],
+   [
+    12,
+    26,
+    "parchment"
+   ],
+   [
+    13,
+    26,
+    "parchment"
+   ],
+   [
+    14,
+    26,
+    "parchment"
+   ],
+   [
+    15,
+    26,
+    "parchment"
+   ],
+   [
+    16,
+    26,
+    "ink"
+   ],
+   [
+    17,
+    26,
+    "clear"
+   ],
+   [
+    18,
+    26,
+    "clear"
+   ],
+   [
+    19,
+    26,
+    "clear"
+   ],
+   [
+    0,
+    27,
+    "clear"
+   ],
+   [
+    1,
+    27,
+    "clear"
+   ],
+   [
+    2,
+    27,
+    "clear"
+   ],
+   [
+    3,
+    27,
+    "clear"
+   ],
+   [
+    4,
+    27,
+    "clear"
+   ],
+   [
+    5,
+    27,
+    "clear"
+   ],
+   [
+    6,
+    27,
+    "clear"
+   ],
+   [
+    7,
+    27,
+    "clear"
+   ],
+   [
+    8,
+    27,
+    "ink"
+   ],
+   [
+    9,
+    27,
+    "soil"
+   ],
+   [
+    10,
+    27,
+    "plum shadow"
+   ],
+   [
+    11,
+    27,
+    "parchment"
+   ],
+   [
+    12,
+    27,
+    "parchment"
+   ],
+   [
+    13,
+    27,
+    "parchment"
+   ],
+   [
+    14,
+    27,
+    "parchment"
+   ],
+   [
+    15,
+    27,
+    "parchment"
+   ],
+   [
+    16,
+    27,
+    "ink"
+   ],
+   [
+    17,
+    27,
+    "clear"
+   ],
+   [
+    18,
+    27,
+    "clear"
+   ],
+   [
+    19,
+    27,
+    "clear"
+   ],
+   [
+    0,
+    28,
+    "clear"
+   ],
+   [
+    1,
+    28,
+    "clear"
+   ],
+   [
+    2,
+    28,
+    "clear"
+   ],
+   [
+    3,
+    28,
+    "clear"
+   ],
+   [
+    4,
+    28,
+    "clear"
+   ],
+   [
+    5,
+    28,
+    "clear"
+   ],
+   [
+    6,
+    28,
+    "clear"
+   ],
+   [
+    7,
+    28,
+    "clear"
+   ],
+   [
+    8,
+    28,
+    "ink"
+   ],
+   [
+    9,
+    28,
+    "plum shadow"
+   ],
+   [
+    10,
+    28,
+    "plum shadow"
+   ],
+   [
+    11,
+    28,
+    "plum shadow"
+   ],
+   [
+    12,
+    28,
+    "plum shadow"
+   ],
+   [
+    13,
+    28,
+    "plum shadow"
+   ],
+   [
+    14,
+    28,
+    "plum shadow"
+   ],
+   [
+    15,
+    28,
+    "plum shadow"
+   ],
+   [
+    16,
+    28,
+    "ink"
+   ],
+   [
+    17,
+    28,
+    "clear"
+   ],
+   [
+    18,
+    28,
+    "clear"
+   ],
+   [
+    19,
+    28,
+    "clear"
+   ],
+   [
+    0,
+    29,
+    "clear"
+   ],
+   [
+    1,
+    29,
+    "clear"
+   ],
+   [
+    2,
+    29,
+    "clear"
+   ],
+   [
+    3,
+    29,
+    "clear"
+   ],
+   [
+    4,
+    29,
+    "clear"
+   ],
+   [
+    5,
+    29,
+    "clear"
+   ],
+   [
+    6,
+    29,
+    "clear"
+   ],
+   [
+    7,
+    29,
+    "clear"
+   ],
+   [
+    8,
+    29,
+    "clear"
+   ],
+   [
+    9,
+    29,
+    "ink"
+   ],
+   [
+    10,
+    29,
+    "earth dark"
+   ],
+   [
+    11,
+    29,
+    "ink"
+   ],
+   [
+    12,
+    29,
+    "ink"
+   ],
+   [
+    13,
+    29,
+    "earth dark"
+   ],
+   [
+    14,
+    29,
+    "ink"
+   ],
+   [
+    15,
+    29,
+    "clear"
+   ],
+   [
+    16,
+    29,
+    "clear"
+   ],
+   [
+    17,
+    29,
+    "clear"
+   ],
+   [
+    18,
+    29,
+    "clear"
+   ],
+   [
+    19,
+    29,
+    "clear"
+   ],
+   [
+    0,
+    30,
+    "clear"
+   ],
+   [
+    1,
+    30,
+    "clear"
+   ],
+   [
+    2,
+    30,
+    "clear"
+   ],
+   [
+    3,
+    30,
+    "clear"
+   ],
+   [
+    4,
+    30,
+    "clear"
+   ],
+   [
+    5,
+    30,
+    "clear"
+   ],
+   [
+    6,
+    30,
+    "clear"
+   ],
+   [
+    7,
+    30,
+    "clear"
+   ],
+   [
+    8,
+    30,
+    "clear"
+   ],
+   [
+    9,
+    30,
+    "ink"
+   ],
+   [
+    10,
+    30,
+    "earth dark"
+   ],
+   [
+    11,
+    30,
+    "earth dark"
+   ],
+   [
+    12,
+    30,
+    "ink"
+   ],
+   [
+    13,
+    30,
+    "earth dark"
+   ],
+   [
+    14,
+    30,
+    "earth dark"
+   ],
+   [
+    15,
+    30,
+    "ink"
+   ],
+   [
+    16,
+    30,
+    "clear"
+   ],
+   [
+    17,
+    30,
+    "clear"
+   ],
+   [
+    18,
+    30,
+    "clear"
+   ],
+   [
+    19,
+    30,
+    "clear"
+   ],
+   [
+    0,
+    31,
+    "clear"
+   ],
+   [
+    1,
+    31,
+    "clear"
+   ],
+   [
+    2,
+    31,
+    "clear"
+   ],
+   [
+    3,
+    31,
+    "clear"
+   ],
+   [
+    4,
+    31,
+    "clear"
+   ],
+   [
+    5,
+    31,
+    "clear"
+   ],
+   [
+    6,
+    31,
+    "clear"
+   ],
+   [
+    7,
+    31,
+    "clear"
+   ],
+   [
+    8,
+    31,
+    "clear"
+   ],
+   [
+    9,
+    31,
+    "ink"
+   ],
+   [
+    10,
+    31,
+    "ink"
+   ],
+   [
+    11,
+    31,
+    "ink"
+   ],
+   [
+    12,
+    31,
+    "ink"
+   ],
+   [
+    13,
+    31,
+    "ink"
+   ],
+   [
+    14,
+    31,
+    "ink"
+   ],
+   [
+    15,
+    31,
+    "ink"
+   ],
+   [
+    16,
+    31,
+    "clear"
+   ],
+   [
+    17,
+    31,
+    "clear"
+   ],
+   [
+    18,
+    31,
+    "clear"
+   ],
+   [
+    19,
+    31,
+    "clear"
+   ]
+  ]
  },
  "npc_finn_down_0": {
   "src": "npcs3b/finn_down",
@@ -1415,7 +4627,44 @@
   ],
   "group": "chars",
   "noscale": true,
-  "drop_rows": 2
+  "drop_rows": 2,
+  "pixfix": [
+   [
+    8,
+    24,
+    "water"
+   ],
+   [
+    9,
+    24,
+    "water"
+   ],
+   [
+    10,
+    24,
+    "water"
+   ],
+   [
+    11,
+    25,
+    "sky"
+   ],
+   [
+    10,
+    26,
+    "dusk blue"
+   ],
+   [
+    11,
+    26,
+    "dusk blue"
+   ],
+   [
+    12,
+    26,
+    "dusk blue"
+   ]
+  ]
  },
  "npc_finn_right_1": {
   "src": "npcs3b/finn_right",
@@ -1426,7 +4675,44 @@
   "group": "chars",
   "bob": 7,
   "noscale": true,
-  "drop_rows": 2
+  "drop_rows": 2,
+  "pixfix": [
+   [
+    8,
+    24,
+    "water"
+   ],
+   [
+    9,
+    24,
+    "water"
+   ],
+   [
+    10,
+    24,
+    "water"
+   ],
+   [
+    11,
+    25,
+    "sky"
+   ],
+   [
+    10,
+    26,
+    "dusk blue"
+   ],
+   [
+    11,
+    26,
+    "dusk blue"
+   ],
+   [
+    12,
+    26,
+    "dusk blue"
+   ]
+  ]
  },
  "npc_finn_left_0": {
   "src": "npcs3b/finn_right",
@@ -1437,7 +4723,44 @@
   "group": "chars",
   "flip": true,
   "noscale": true,
-  "drop_rows": 2
+  "drop_rows": 2,
+  "pixfix": [
+   [
+    8,
+    24,
+    "water"
+   ],
+   [
+    9,
+    24,
+    "water"
+   ],
+   [
+    10,
+    24,
+    "water"
+   ],
+   [
+    11,
+    25,
+    "sky"
+   ],
+   [
+    10,
+    26,
+    "dusk blue"
+   ],
+   [
+    11,
+    26,
+    "dusk blue"
+   ],
+   [
+    12,
+    26,
+    "dusk blue"
+   ]
+  ]
  },
  "npc_finn_left_1": {
   "src": "npcs3b/finn_right",
@@ -1449,7 +4772,44 @@
   "flip": true,
   "bob": 7,
   "noscale": true,
-  "drop_rows": 2
+  "drop_rows": 2,
+  "pixfix": [
+   [
+    8,
+    24,
+    "water"
+   ],
+   [
+    9,
+    24,
+    "water"
+   ],
+   [
+    10,
+    24,
+    "water"
+   ],
+   [
+    11,
+    25,
+    "sky"
+   ],
+   [
+    10,
+    26,
+    "dusk blue"
+   ],
+   [
+    11,
+    26,
+    "dusk blue"
+   ],
+   [
+    12,
+    26,
+    "dusk blue"
+   ]
+  ]
  },
  "npc_rosa_down_0": {
   "src": "npcs3b/rosa_down",
@@ -1501,7 +4861,24 @@
   ],
   "group": "chars",
   "noscale": true,
-  "drop_rows": 5
+  "drop_rows": 5,
+  "pixfix": [
+   [
+    9,
+    26,
+    "lilac"
+   ],
+   [
+    10,
+    26,
+    "lilac"
+   ],
+   [
+    11,
+    26,
+    "lilac"
+   ]
+  ]
  },
  "npc_rosa_right_1": {
   "src": "npcs3b/rosa_right",
@@ -1512,7 +4889,24 @@
   "group": "chars",
   "bob": 7,
   "noscale": true,
-  "drop_rows": 5
+  "drop_rows": 5,
+  "pixfix": [
+   [
+    9,
+    26,
+    "lilac"
+   ],
+   [
+    10,
+    26,
+    "lilac"
+   ],
+   [
+    11,
+    26,
+    "lilac"
+   ]
+  ]
  },
  "npc_rosa_left_0": {
   "src": "npcs3b/rosa_right",
@@ -1523,7 +4917,24 @@
   "group": "chars",
   "flip": true,
   "noscale": true,
-  "drop_rows": 5
+  "drop_rows": 5,
+  "pixfix": [
+   [
+    9,
+    26,
+    "lilac"
+   ],
+   [
+    10,
+    26,
+    "lilac"
+   ],
+   [
+    11,
+    26,
+    "lilac"
+   ]
+  ]
  },
  "npc_rosa_left_1": {
   "src": "npcs3b/rosa_right",
@@ -1535,7 +4946,24 @@
   "flip": true,
   "bob": 7,
   "noscale": true,
-  "drop_rows": 5
+  "drop_rows": 5,
+  "pixfix": [
+   [
+    9,
+    26,
+    "lilac"
+   ],
+   [
+    10,
+    26,
+    "lilac"
+   ],
+   [
+    11,
+    26,
+    "lilac"
+   ]
+  ]
  },
  "npc_orin_down_0": {
   "src": "npcs4b/orin_down",
@@ -2026,7 +5454,52 @@
   ],
   "group": "chars",
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    9,
+    4,
+    "gold"
+   ],
+   [
+    10,
+    4,
+    "gold"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "ink"
+   ],
+   [
+    11,
+    3,
+    "gold"
+   ],
+   [
+    11,
+    2,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_down_1": {
   "src": "npcs4a/clay_down",
@@ -2037,7 +5510,52 @@
   "group": "chars",
   "noscale": true,
   "drop_rows": 4,
-  "bob": 7
+  "bob": 7,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    9,
+    4,
+    "gold"
+   ],
+   [
+    10,
+    4,
+    "gold"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "ink"
+   ],
+   [
+    11,
+    3,
+    "gold"
+   ],
+   [
+    11,
+    2,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_up_0": {
   "src": "npcs4a/clay_up",
@@ -2047,7 +5565,52 @@
   ],
   "group": "chars",
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    9,
+    4,
+    "gold"
+   ],
+   [
+    10,
+    4,
+    "gold"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "ink"
+   ],
+   [
+    11,
+    3,
+    "gold"
+   ],
+   [
+    11,
+    2,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_up_1": {
   "src": "npcs4a/clay_up",
@@ -2058,7 +5621,52 @@
   "group": "chars",
   "noscale": true,
   "drop_rows": 4,
-  "bob": 7
+  "bob": 7,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    9,
+    4,
+    "gold"
+   ],
+   [
+    10,
+    4,
+    "gold"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "ink"
+   ],
+   [
+    11,
+    3,
+    "gold"
+   ],
+   [
+    11,
+    2,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_right_0": {
   "src": "npcs4a/clay_right",
@@ -2068,7 +5676,97 @@
   ],
   "group": "chars",
   "noscale": true,
-  "drop_rows": 4
+  "drop_rows": 4,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    11,
+    4,
+    "gold"
+   ],
+   [
+    12,
+    4,
+    "gold"
+   ],
+   [
+    11,
+    3,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "gold"
+   ],
+   [
+    10,
+    2,
+    "ink"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    14,
+    12,
+    "sand"
+   ],
+   [
+    15,
+    12,
+    "sand"
+   ],
+   [
+    16,
+    11,
+    "sand"
+   ],
+   [
+    17,
+    10,
+    "gold"
+   ],
+   [
+    15,
+    13,
+    "ink"
+   ],
+   [
+    16,
+    12,
+    "ink"
+   ],
+   [
+    17,
+    11,
+    "ink"
+   ],
+   [
+    18,
+    10,
+    "ink"
+   ],
+   [
+    17,
+    9,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_right_1": {
   "src": "npcs4a/clay_right",
@@ -2079,7 +5777,97 @@
   "group": "chars",
   "noscale": true,
   "drop_rows": 4,
-  "bob": 7
+  "bob": 7,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    11,
+    4,
+    "gold"
+   ],
+   [
+    12,
+    4,
+    "gold"
+   ],
+   [
+    11,
+    3,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "gold"
+   ],
+   [
+    10,
+    2,
+    "ink"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    14,
+    12,
+    "sand"
+   ],
+   [
+    15,
+    12,
+    "sand"
+   ],
+   [
+    16,
+    11,
+    "sand"
+   ],
+   [
+    17,
+    10,
+    "gold"
+   ],
+   [
+    15,
+    13,
+    "ink"
+   ],
+   [
+    16,
+    12,
+    "ink"
+   ],
+   [
+    17,
+    11,
+    "ink"
+   ],
+   [
+    18,
+    10,
+    "ink"
+   ],
+   [
+    17,
+    9,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_left_0": {
   "src": "npcs4a/clay_right",
@@ -2090,7 +5878,97 @@
   "group": "chars",
   "noscale": true,
   "drop_rows": 4,
-  "flip": true
+  "flip": true,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    11,
+    4,
+    "gold"
+   ],
+   [
+    12,
+    4,
+    "gold"
+   ],
+   [
+    11,
+    3,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "gold"
+   ],
+   [
+    10,
+    2,
+    "ink"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    14,
+    12,
+    "sand"
+   ],
+   [
+    15,
+    12,
+    "sand"
+   ],
+   [
+    16,
+    11,
+    "sand"
+   ],
+   [
+    17,
+    10,
+    "gold"
+   ],
+   [
+    15,
+    13,
+    "ink"
+   ],
+   [
+    16,
+    12,
+    "ink"
+   ],
+   [
+    17,
+    11,
+    "ink"
+   ],
+   [
+    18,
+    10,
+    "ink"
+   ],
+   [
+    17,
+    9,
+    "ink"
+   ]
+  ]
  },
  "npc_clay_left_1": {
   "src": "npcs4a/clay_right",
@@ -2102,6 +5980,650 @@
   "noscale": true,
   "drop_rows": 4,
   "flip": true,
-  "bob": 7
+  "bob": 7,
+  "recolor": {
+   "sky": "red",
+   "water": "wine",
+   "dusk blue": "wine",
+   "night navy": "plum shadow",
+   "red": "parchment",
+   "wine": "sand"
+  },
+  "pixfix": [
+   [
+    11,
+    4,
+    "gold"
+   ],
+   [
+    12,
+    4,
+    "gold"
+   ],
+   [
+    11,
+    3,
+    "ink"
+   ],
+   [
+    12,
+    3,
+    "ink"
+   ],
+   [
+    10,
+    3,
+    "gold"
+   ],
+   [
+    10,
+    2,
+    "ink"
+   ],
+   [
+    9,
+    3,
+    "ink"
+   ],
+   [
+    14,
+    12,
+    "sand"
+   ],
+   [
+    15,
+    12,
+    "sand"
+   ],
+   [
+    16,
+    11,
+    "sand"
+   ],
+   [
+    17,
+    10,
+    "gold"
+   ],
+   [
+    15,
+    13,
+    "ink"
+   ],
+   [
+    16,
+    12,
+    "ink"
+   ],
+   [
+    17,
+    11,
+    "ink"
+   ],
+   [
+    18,
+    10,
+    "ink"
+   ],
+   [
+    17,
+    9,
+    "ink"
+   ]
+  ]
+ },
+ "crop_strawberry_0": {
+  "authored": "seed_mound",
+  "group": "world"
+ },
+ "crop_strawberry_1": {
+  "src": "crops4b/crop_strawberry_1",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_strawberry_2": {
+  "src": "crops4b/crop_strawberry_2",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_strawberry_3": {
+  "src": "crops4b/crop_strawberry_3",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_strawberry_4": {
+  "src": "crops4b/crop_strawberry_4",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "item_strawberry_seed": {
+  "src": "items7a/strawberry_seed",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_strawberry": {
+  "src": "items7a/strawberry",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "crop_blueberry_0": {
+  "authored": "seed_mound",
+  "group": "world"
+ },
+ "crop_blueberry_1": {
+  "src": "crops4b/crop_blueberry_1",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_blueberry_2": {
+  "src": "crops4b/crop_blueberry_2",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_blueberry_3": {
+  "src": "crops4b/crop_blueberry_3",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_blueberry_4": {
+  "src": "crops4b/crop_blueberry_4",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "item_blueberry_seed": {
+  "src": "items7a/blueberry_seed",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_blueberry": {
+  "src": "items7a/blueberry",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "crop_cranberry_0": {
+  "authored": "seed_mound",
+  "group": "world"
+ },
+ "crop_cranberry_1": {
+  "src": "crops4b/crop_cranberry_1",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_cranberry_2": {
+  "src": "crops4b/crop_cranberry_2",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_cranberry_3": {
+  "src": "crops4b/crop_cranberry_3",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_cranberry_4": {
+  "src": "crops4b/crop_cranberry_4",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "item_cranberry_seed": {
+  "src": "items7a/cranberry_seed",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_cranberry": {
+  "src": "items7a/cranberry",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "crop_snowpea_0": {
+  "authored": "seed_mound",
+  "group": "world"
+ },
+ "crop_snowpea_1": {
+  "src": "crops4b/crop_snowpea_1",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_snowpea_2": {
+  "src": "crops4b/crop_snowpea_2",
+  "size": [
+   16,
+   16
+  ],
+  "group": "world"
+ },
+ "crop_snowpea_3": {
+  "src": "crops4b/crop_snowpea_3",
+  "size": [
+   16,
+   24
+  ],
+  "group": "world"
+ },
+ "crop_snowpea_4": {
+  "src": "crops4b/crop_snowpea_4",
+  "size": [
+   16,
+   24
+  ],
+  "group": "world"
+ },
+ "item_snowpea_seed": {
+  "src": "items7a/snowpea_seed",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_snowpea": {
+  "src": "items7a/snowpea",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "obj_landmark_seedexchange": {
+  "src": "items7a/obj_landmark_seedexchange",
+  "size": [
+   16,
+   22
+  ],
+  "group": "world"
+ },
+ "fx_petal": {
+  "src": "ambient1a/fx_petal",
+  "size": [
+   5,
+   5
+  ],
+  "fit": [
+   5,
+   5
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_leaf_o": {
+  "src": "ambient1a/fx_leaf_o",
+  "size": [
+   7,
+   7
+  ],
+  "fit": [
+   7,
+   7
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_leaf_r": {
+  "src": "ambient1a/fx_leaf_r",
+  "size": [
+   7,
+   7
+  ],
+  "fit": [
+   7,
+   7
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_firefly": {
+  "src": "ambient1a/fx_firefly",
+  "size": [
+   5,
+   5
+  ],
+  "fit": [
+   5,
+   5
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_seed": {
+  "src": "ambient1a/fx_seed",
+  "size": [
+   7,
+   7
+  ],
+  "fit": [
+   7,
+   7
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_butterfly_w0": {
+  "src": "ambient1a/fx_butterfly_w0",
+  "size": [
+   9,
+   8
+  ],
+  "fit": [
+   9,
+   8
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_butterfly_w1": {
+  "src": "ambient1a/fx_butterfly_w1",
+  "size": [
+   5,
+   8
+  ],
+  "fit": [
+   5,
+   8
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_butterfly_o0": {
+  "src": "ambient1a/fx_butterfly_o0",
+  "size": [
+   9,
+   8
+  ],
+  "fit": [
+   9,
+   8
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_butterfly_o1": {
+  "src": "ambient1a/fx_butterfly_o1",
+  "size": [
+   5,
+   8
+  ],
+  "fit": [
+   5,
+   8
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_sparkle_0": {
+  "src": "fx2a/fx_sparkle_0",
+  "size": [
+   3,
+   3
+  ],
+  "fit": [
+   3,
+   3
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_sparkle_1": {
+  "src": "fx2a/fx_sparkle_1",
+  "size": [
+   7,
+   7
+  ],
+  "fit": [
+   7,
+   7
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_sparkle_2": {
+  "src": "fx2a/fx_sparkle_2",
+  "size": [
+   11,
+   11
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_dust_0": {
+  "src": "fx2a/fx_dust_0",
+  "size": [
+   5,
+   5
+  ],
+  "fit": [
+   5,
+   5
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_dust_1": {
+  "src": "fx2a/fx_dust_1",
+  "size": [
+   8,
+   7
+  ],
+  "fit": [
+   8,
+   7
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_dust_2": {
+  "src": "fx2a/fx_dust_2",
+  "size": [
+   10,
+   9
+  ],
+  "fit": [
+   10,
+   9
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_dust_3": {
+  "src": "fx2a/fx_dust_3",
+  "size": [
+   11,
+   10
+  ],
+  "fit": [
+   11,
+   10
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_splash_0": {
+  "src": "fx2a/fx_splash_0",
+  "size": [
+   9,
+   4
+  ],
+  "fit": [
+   9,
+   4
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_splash_1": {
+  "src": "fx2a/fx_splash_1",
+  "size": [
+   10,
+   8
+  ],
+  "fit": [
+   10,
+   8
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_splash_2": {
+  "src": "fx2a/fx_splash_2",
+  "size": [
+   12,
+   11
+  ],
+  "fit": [
+   12,
+   11
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_splash_3": {
+  "src": "fx2a/fx_splash_3",
+  "size": [
+   12,
+   11
+  ],
+  "fit": [
+   12,
+   11
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_ember": {
+  "src": "fx2a/fx_ember",
+  "size": [
+   4,
+   5
+  ],
+  "fit": [
+   4,
+   5
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "fx_glint": {
+  "src": "fx2a/fx_glint",
+  "size": [
+   7,
+   7
+  ],
+  "fit": [
+   7,
+   7
+  ],
+  "anchor": "center",
+  "group": "ui",
+  "island": 0
+ },
+ "player_use_hoe": {
+  "src": "npcs4a/pose_hoe",
+  "size": [
+   32,
+   32
+  ],
+  "group": "chars",
+  "noscale": true,
+  "drop_rows": 3
+ },
+ "player_use_can": {
+  "src": "npcs4a/pose_can",
+  "size": [
+   32,
+   32
+  ],
+  "group": "chars",
+  "noscale": true,
+  "drop_rows": 2
+ },
+ "player_use_rod": {
+  "src": "npcs4a/pose_rod",
+  "size": [
+   32,
+   32
+  ],
+  "group": "chars",
+  "noscale": true,
+  "drop_rows": 3
  }
 }
