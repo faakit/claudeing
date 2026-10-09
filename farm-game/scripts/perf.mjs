@@ -146,14 +146,64 @@ try {
     const sfxBefore = await page.evaluate(() => window.__farm.audio.debugInfo().sfx?.played ?? 0);
     await sample('full field + 20 sound effects a second', () =>
       page.evaluate(() => {
-        const cues = ['water', 'till', 'stepGrass', 'harvest', 'coin', 'cut', 'plant', 'tick', 'stepGrass', 'swing'];
+        const cues = [
+          'water',
+          'till',
+          'stepGrass',
+          'harvest',
+          'coin',
+          'cut',
+          'plant',
+          'tick',
+          'stepGrass',
+          'swing',
+        ];
         let i = 0;
-        window.__sfxStorm = setInterval(() => window.__farm.audio.play(cues[i++ % cues.length]), 50);
+        window.__sfxStorm = setInterval(
+          () => window.__farm.audio.play(cues[i++ % cues.length]),
+          50,
+        );
       }),
     );
     await page.evaluate(() => clearInterval(window.__sfxStorm));
-    const sfxPlayed = (await page.evaluate(() => window.__farm.audio.debugInfo().sfx?.played ?? 0)) - sfxBefore;
+    const sfxPlayed =
+      (await page.evaluate(() => window.__farm.audio.debugInfo().sfx?.played ?? 0)) - sfxBefore;
     sfxCounts.push({ throttle: `${rate}x`, played: sfxPlayed });
+    // Tap-to-walk: the farmer keeps walking long routes across the field with path dots and a goal marker
+    // (a new far tap every 1.2 s), and the tap planner (intent + breadth-first path) is timed.
+    await sample('tap-walking long routes (path dots)', async () => {
+      await page.evaluate(() => {
+        const f = window.__farm;
+        const corners = [
+          [12, 160],
+          [188, 280],
+          [12, 280],
+          [188, 160],
+        ];
+        let i = 0;
+        clearInterval(window.__tapWalk);
+        window.__tapWalk = setInterval(() => {
+          const [x, y] = corners[i++ % corners.length];
+          f.inputHub.emit('tap', { x, y });
+        }, 1200);
+      });
+    });
+    const planMs = await page.evaluate(() => {
+      clearInterval(window.__tapWalk);
+      const w = window.__farm.game.scene.getScenes(true).find((sc) => sc.grid);
+      if (typeof w.planTap !== 'function') return 0;
+      const t0 = performance.now();
+      for (let i = 0; i < 40; i++) w.planTap(i % 2 ? 12 : 188, i % 2 ? 160 : 280);
+      return (performance.now() - t0) / 40;
+    });
+    results.push({
+      throttle: `${rate}x`,
+      scene: 'tap planner (intent + path), ms per tap',
+      fps: '',
+      'JS ms/frame': '',
+      'draws/frame': '',
+      'plan ms': (planMs / rate).toFixed(2),
+    });
     // Atmosphere: night glow over the lit town, and ambient life (fireflies at night, petals and butterflies).
     const visit = (map, scene, tx, ty, minutes, season) =>
       page.evaluate(
@@ -202,11 +252,12 @@ if (quiet.length > 0) {
 }
 
 // Regression budgets (hardware-independent): fail loudly if the renderer gets heavier.
-const BUDGET = { drawsPerFrame: 12, jsMsPerFrame: 3.5 };
+const BUDGET = { drawsPerFrame: 12, jsMsPerFrame: 3.5 }; // and a tap's planning <= 2 ms (CPU-normalised)
 const bad = results.filter(
   (r) =>
     Number(r['draws/frame']) > BUDGET.drawsPerFrame ||
-    Number(r['JS ms/frame']) > BUDGET.jsMsPerFrame,
+    Number(r['JS ms/frame']) > BUDGET.jsMsPerFrame ||
+    Number(r['plan ms'] ?? 0) > 2,
 );
 if (bad.length > 0) {
   console.error(

@@ -161,3 +161,25 @@ export function buyUpgrade(
   addStat(state, 'upgrades');
   return 'ok';
 }
+
+/** Goods "Ship all" sends: what you grow, catch, gather and make. Never seeds, tools or crafting stock. */
+const PRODUCE = new Set(['crop', 'fish', 'forage', 'preserve', 'product']);
+export const isProduce = (itemId: string): boolean => PRODUCE.has(items[itemId]?.type ?? '');
+
+/**
+ * One tap at the bin: ship every stack of produce in the bag. Returns how many items moved and what
+ * they will earn. Anything shipped by mistake comes back with the bin's "-" until morning.
+ */
+export function shipAllProduce(state: GameState): { count: number; gold: number } {
+  let count = 0;
+  let gold = 0;
+  const refs = new Map<string, ItemRef>();
+  for (const st of state.inventory.slots)
+    if (st && isProduce(st.item) && isShippable(st)) refs.set(keyOf(st), refOf(st));
+  for (const ref of refs.values()) {
+    const n = shipStack(state, ref, countStack(state, ref));
+    count += n;
+    gold += n * sellValue(ref);
+  }
+  return { count, gold };
+}

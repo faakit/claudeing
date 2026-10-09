@@ -31,6 +31,7 @@ import { buildAlmanac } from './AlmanacTab';
 import { TAB_LABELS } from './tabLabels';
 import { buildCraft } from './CraftTab';
 import { buildSkills } from './SkillsTab';
+import { buildControlsPage, controlsPage, drawHelpCard } from './ControlsTab';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -151,12 +152,12 @@ export class MenuPanel extends Modal {
     this.rebuild();
   }
 
-  get selectedCursor(): number | null {
-    return this.cursor;
-  }
-
   clearCursor(): void {
     this.cursor = null;
+  }
+
+  get selectedCursor(): number | null {
+    return this.cursor;
   }
 
   get quit(): 'idle' | 'confirm' | 'unsaved' {
@@ -247,7 +248,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
   else if (cur && cursor !== null && cursor >= game.hotbarSlots)
     c.button(
-      110,
+      s.settings.leftHanded ? 8 : 110, // on the thumb's side
       y0 - 26,
       82,
       22,
@@ -255,6 +256,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       () => {
         equipFromBag(getState(), cursor);
         audio.play('select');
+        menu.clearCursor(); // the item left the bag: reopening must not show a stale selection
         c.close();
       },
       { textColor: C.green, rim: C.green },
@@ -358,6 +360,11 @@ function buildGoals(c: MenuTabContext): void {
 }
 
 function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
+  if (controlsPage.open)
+    return buildControlsPage(c, () => {
+      controlsPage.open = false;
+      c.rebuild();
+    });
   const s = getState();
   const apply = () => audio.setVolumes(s.settings.music, s.settings.sfx, s.settings.muted);
   const volumeRow = (y: number, name: string, key: 'music' | 'sfx') => {
@@ -375,9 +382,15 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     c.button(146, y, 24, 22, '+', () => step(0.1));
     c.label(174, y + 8, `${Math.round(s.settings[key] * 100)}%`, C.creamDim);
   };
-  let y = c.top + 4;
-  volumeRow(y, 'Music', 'music');
-  volumeRow((y += 26), 'Sound', 'sfx');
+  // Laid out from the bottom of the tab area up (the rows end right above the tab strip, where the thumb
+  // already is) rather than from the top of a tall sheet.
+  const STACK_H = 26 + 32 + 26 + 26 + 26 + 32 + 22;
+  let y = Math.max(c.top + 4, c.bottom - STACK_H);
+  // How to play, two taps from anywhere (Menu, Opts), in the space above the rows.
+  if (y - c.top >= 60) drawHelpCard(c, 8, c.top);
+  // The volume rows go last, nearest the tabs: their small -/+ buttons sit at both edges, which only the
+  // lowest rows keep in reach for either thumb.
+  y -= 26 + 6;
 
   const half = 92;
   const pair = (
@@ -426,14 +439,25 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     c.label(100, y + 12, 'Home Screen', C.creamDim);
   }
   y += 26;
-  pair(y, [
-    s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
-    () => {
-      toggleReduceMotion(s);
-      gameEvents.emit('settingsChanged', undefined);
-      c.rebuild();
-    },
-  ]);
+  pair(
+    y,
+    [
+      s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
+      () => {
+        toggleReduceMotion(s);
+        gameEvents.emit('settingsChanged', undefined);
+        c.rebuild();
+      },
+    ],
+    [
+      'Controls...',
+      () => {
+        controlsPage.open = true;
+        c.rebuild();
+      },
+      C.gold,
+    ],
+  );
   y += 26;
   const saveBtn: Button = c.button(8, y, half, 22, 'Save now', () => {
     void saveNow().then((ok) => {
@@ -464,9 +488,11 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     { textColor: q === 'idle' ? C.cream : C.warn },
   );
   y += 32;
+  volumeRow(y, 'Music', 'music');
+  volumeRow((y += 26), 'Sound', 'sfx');
   c.label(
     8,
-    y,
+    y + 26,
     'Your game saves automatically when you sleep, change maps, or leave the page.',
     C.creamDim,
     1,

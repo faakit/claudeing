@@ -18,6 +18,8 @@ import { installWebLifecycle, lifecycle } from './platform/lifecycle';
 import { initNative, isNative } from './platform/native';
 import { gameEvents } from './systems/events';
 import { inputHub } from './input/InputHub';
+import { setHapticsEnabled } from './platform/haptics';
+import { controlsLog } from './input/controlsLog';
 
 suppressBrowserGestures();
 audio.installAutoUnlock();
@@ -70,5 +72,7 @@ if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
     gameEvents,
     inputHub,
     audio,
+    haptics: { setHapticsEnabled },
+    controls: controlsLog,
   };
 }

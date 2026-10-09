@@ -9,6 +9,7 @@ import {
   FADE_COLOR,
   FADE_MS,
   MAX_CLOCK_DT_MS,
+  PLAYER_SPEED,
   SEASON_TINT,
   tileKind,
   TILE_SIZE,
@@ -20,15 +21,23 @@ import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient } from '../fx/Ambient';
-import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
+import { TileHighlight } from '../fx/TileHighlight';
+import { markerKind, type MarkerKind } from '../ui/targetMarker';
+import { findPath, pathToFace } from '../systems/pathfind';
+import { createWork, nextWork, type WorkQueue } from '../systems/workQueue';
+import { compensateTouch, tapIntent, type TapIntent, type TapWorld } from '../systems/tapIntent';
+import { cssPerLogical } from '../ui/hit';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
+import { controlsLog } from '../input/controlsLog';
+import { DIR_VECTORS } from '../systems/direction';
+import { TIPS } from '../ui/controlTips';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
-import { spawnPosition, type GameState } from '../state/GameState';
+import { spawnPosition, type Direction, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { nodeTiles } from '../systems/mining';
@@ -37,14 +46,22 @@ import { landmarkAt, landmarksOn } from '../systems/projects';
 import { mailboxAt } from '../systems/mail';
 import { mail } from '../data';
 import { projects } from '../data';
-import { performBest, pickBest, planAction, type TileInfo } from '../systems/actions';
+import { type TileInfo } from '../systems/actions';
+import { actOn, chooseAction } from '../systems/autoTool';
 import { gameEvents, toast } from '../systems/events';
 import { currentGoal } from '../systems/goals';
-import { getSoil, isMature } from '../systems/farming';
-import { forageAt } from '../systems/forage';
-import { selectedStack } from '../systems/inventory';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
-import { faceDirection, isTileBlocked, stepPlayer, type CollisionGrid } from '../systems/movement';
+import {
+  createMoveState,
+  createRoute,
+  faceDirection,
+  isTileBlocked,
+  stepMove,
+  stepRoute,
+  type CollisionGrid,
+  type MoveState,
+  type Route,
+} from '../systems/movement';
 import { tickTime } from '../systems/time';
 import {
   adjacentDirection,
@@ -72,6 +89,8 @@ const TOOL_POSES: Record<string, string> = {
 /** Palette slot 0 (ink): the outline colour, also the void around indoor maps. */
 const INK_HEX = '#2a1a24';
 
+/** Uses a painted tile may get in one visit (till, plant, water). */
+const WORK_USES_PER_TILE = 3;
 /** Quiet time before the goal arrow appears. */
 const GUIDE_AFTER_MS = 14_000;
 
@@ -101,6 +120,24 @@ export abstract class WorldScene extends Phaser.Scene {
   private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
   private heldFailed = false;
+  /** Uses so far in the current Action hold: later ones tick the haptic less often. */
+  private holdUses = 0;
+  /** The kind of step the current hold started with (it repeats only that). */
+  private holdKind: string | null = null;
+  /** What the marker and Action icon showed last frame (debug log: did the act match?). */
+  private lastMark: { slot: number | null; plan: string | null; tx: number; ty: number } | null =
+    null;
+  /** A tap's walk in progress, and what to do on arrival (runtime only). */
+  private route: Route | null = null;
+  private routeEnd: { intent: TapIntent; face: Direction | null } | null = null;
+  /** A tap preview is showing (touch held still on the world). */
+  private preview = false;
+  /** The line being painted from Action (finger down), and the painted line being worked (runtime only). */
+  private painting: TileCoord[] | null = null;
+  private paintDir: Direction | null = null;
+  private work: WorkQueue | null = null;
+  /** Turn-in-place and settle-on-release state (runtime only). */
+  private move: MoveState = createMoveState();
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
 
@@ -123,6 +160,12 @@ export abstract class WorldScene extends Phaser.Scene {
     this.actionLock = 0;
     this.heldFailed = false;
     this.lastTarget = undefined;
+    this.move = createMoveState();
+    this.route = null;
+    this.routeEnd = null;
+    this.preview = false;
+    this.work = null;
+    this.painting = null;
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
@@ -197,6 +240,10 @@ export abstract class WorldScene extends Phaser.Scene {
     this.cleanup.push(
       inputHub.on('interact', () => this.onInteract()),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
+      inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
+      inputHub.on('tapCancel', () => this.onTapCancel()),
+      inputHub.on('paintLine', (p) => this.onPaintLine(p.dir, p.tiles)),
+      inputHub.on('paintEnd', (p) => this.onPaintEnd(p.commit)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
@@ -270,7 +317,28 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     if (this.actionLock > 0) dir = null; // a swing roots you for a moment
 
-    const { moving } = stepPlayer(player, dir, delta, this.grid);
+    // A tap's walk runs until the stick or a key takes over (they always win, at once).
+    let moving: boolean;
+    if (!this.route && this.work && dir === null && this.actionLock <= 0) this.startNextWork();
+    if (this.route && dir === null && this.actionLock <= 0) moving = this.followRoute(delta);
+    else {
+      if ((this.route || this.work) && dir !== null) {
+        this.work = null;
+        this.highlight.showPaint(null);
+        this.cancelRoute();
+      }
+      // Two-speed stick (Options): a gentle push walks at half speed for fine positioning.
+      const slow = state.settings.controls.twoSpeed && inputHub.stickSlow && dir !== null;
+      moving = stepMove(
+        player,
+        this.move,
+        dir,
+        delta,
+        this.grid,
+        undefined,
+        slow ? PLAYER_SPEED / 2 : PLAYER_SPEED,
+      ).moving;
+    }
     this.syncSprite(moving);
 
     const here = playerTile(player);
@@ -281,8 +349,11 @@ export abstract class WorldScene extends Phaser.Scene {
       return;
     }
 
-    if (!inputHub.actionHeld) this.heldFailed = false;
-    else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
+    if (!inputHub.actionHeld) {
+      this.heldFailed = false;
+      this.holdUses = 0;
+      this.holdKind = null;
+    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
 
     this.updateNpcs(state);
     this.updateTarget();
@@ -483,16 +554,24 @@ export abstract class WorldScene extends Phaser.Scene {
     return null;
   }
 
-  /** The tile the equipped item would act on right now (first that works), else the one faced. */
-  private actionTile(): { tile: TileCoord; works: boolean } {
+  /**
+   * The tile Action would act on right now and with which hotbar slot (auto tool may pick another item than
+   * the one in hand), else the tile faced.
+   */
+  private actionTile(): { tile: TileCoord; plan: string | null; slot: number | null } {
     const state = getState();
     const cands = this.candidates();
-    const best = pickBest(
+    const best = chooseAction(
       state,
       cands.map((t) => this.tileInfo(t)),
     );
-    if (best) return { tile: { tx: best.tile.tx, ty: best.tile.ty }, works: true };
-    return { tile: facingTile(state.player), works: false };
+    if (best)
+      return {
+        tile: { tx: best.tile.tx, ty: best.tile.ty },
+        plan: best.plan.kind,
+        slot: best.slot,
+      };
+    return { tile: facingTile(state.player), plan: null, slot: null };
   }
 
   private updateTarget(): void {
@@ -503,39 +582,80 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
-  private highlightKind(t: TileCoord, works: boolean): HighlightKind {
-    if (this.interactableAt(t)) return 'interactive';
-    const state = getState();
-    const crop = getSoil(state, t.tx, t.ty)?.crop;
-    if ((crop && isMature(crop)) || forageAt(state, this.mapId, t.tx, t.ty)) return 'harvest';
-    if (works) return 'free';
-    return isTileBlocked(this.grid, t.tx, t.ty) ? 'solid' : 'free';
-  }
-
+  /** The marker shows where Action will act, in a shape and colour that say whether it will. */
   private updateHighlight(time: number): void {
     const interact = this.interactTile();
     const act = this.actionTile();
-    const t = interact && !act.works ? interact.tile : act.tile;
-    this.highlight.update(this.inMap(t) ? t : null, this.highlightKind(t, act.works), time);
+    const t = interact && !act.plan ? interact.tile : act.tile;
+    inputHub.actionSlot = act.slot;
+    this.lastMark = { slot: act.slot, plan: act.plan, tx: act.tile.tx, ty: act.tile.ty };
+    const kind: MarkerKind = markerKind({
+      planKind: act.plan,
+      interactable: !act.plan && interact !== null,
+    });
+    this.highlight.update(this.inMap(t) ? t : null, kind, time);
   }
 
   // ---- actions ----
 
-  private tryAction(only?: TileCoord): void {
+  private tryAction(only?: TileCoord, quietHaptic = false): void {
     const state = getState();
     const tiles = only ? [only] : this.candidates();
     if (tiles.length === 0) return;
-    const stack = selectedStack(state);
-    const res = performBest(
+    // A held Action repeats only the kind of step it started with, and simply stops (no buzz) when there
+    // is no more of it in reach: a hold that starts by tilling only tills.
+    const repeating = !only && inputHub.actionHeld && this.holdUses > 0 && this.holdKind !== null;
+    const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
+      repeating ? { kind: this.holdKind!, quiet: true } : {},
     );
+    if (!res.ok && repeating) {
+      this.heldFailed = true;
+      return;
+    }
+    const stack = state.inventory.slots[res.slot] ?? null;
+    if (!only && this.lastMark)
+      controlsLog.push({
+        kind: 'act',
+        t: this.time.now,
+        ok: res.ok,
+        marked: this.lastMark,
+        used: {
+          slot: res.slot,
+          plan: res.ok ? res.kind : null,
+          tx: res.tile.tx,
+          ty: res.tile.ty,
+        },
+      });
     this.highlight.pulse();
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.heldFailed = false;
       const posed = this.toolPose(stack?.item);
       playActionFx(this.fx, res, getState().player, stack?.item, posed);
+      // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
+      if (quietHaptic) {
+        /* a painted row: no buzz per use */
+      } else if (res.kind === 'harvest') haptic('medium');
+      else haptic('tick', { repeat: inputHub.actionHeld && this.holdUses > 0 });
+      if (inputHub.actionHeld) {
+        if (this.holdUses === 0) this.holdKind = res.kind;
+        this.holdUses++;
+      }
+      // First-run tip: after a few tiles tilled one at a time with Action, teach painting a row (once).
+      if (
+        !only &&
+        res.kind === 'till' &&
+        state.settings.controls.paint &&
+        !state.stats['tip.paint']
+      ) {
+        state.stats['tip.tills'] = (state.stats['tip.tills'] ?? 0) + 1;
+        if (state.stats['tip.tills'] >= 3) {
+          state.stats['tip.paint'] = 1;
+          toast(TIPS.paint, 'info');
+        }
+      }
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;
@@ -551,6 +671,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!hit?.type) return;
     this.highlight.pulse();
     audio.play('ui');
+    haptic('tick');
     if (hit.type.startsWith('plot:'))
       return void gameEvents.emit('buyPlot', { id: hit.type.slice(5) });
     if (hit.type.startsWith('npc:')) {
@@ -594,21 +715,301 @@ export abstract class WorldScene extends Phaser.Scene {
     this.things?.sync(state, true);
   }
 
-  /** Tapping a tile next to the player turns toward it and uses the equipped item there. */
-  private onTap(x: number, y: number): void {
-    if (this.transitioning || runtime.blocked || this.actionLock > 0) return;
-    // Taps arrive in screen space; only the world viewport shows tiles.
-    if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return;
+  // ---- tap to move (M4) ----
+
+  /** Screen (logical) point -> world point, or null outside the world view. */
+  private worldPoint(x: number, y: number): { x: number; y: number } | null {
+    if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return null;
     const cam = this.cameras.main;
-    const wx = x - cam.x + cam.scrollX;
-    const wy = y - cam.y + cam.scrollY;
-    const target = { tx: Math.floor(wx / TILE_SIZE), ty: Math.floor(wy / TILE_SIZE) };
+    return { x: x - cam.x + cam.scrollX, y: y - cam.y + cam.scrollY };
+  }
+
+  /** The world as tap intent sees it. */
+  private tapWorld(): TapWorld {
+    return {
+      tileSize: TILE_SIZE,
+      spriteTarget: (x, y) => this.spriteTargetAt(x, y),
+      inMap: (t) => this.inMap(t),
+      blocked: (t) => isTileBlocked(this.grid, t.tx, t.ty),
+      interactable: (t) => this.interactableAt(t),
+      actKind: (t) => chooseAction(getState(), [this.tileInfo(t)])?.plan.kind ?? null,
+    };
+  }
+
+  private isDoor = (tx: number, ty: number): boolean => !!objectAt(this.objects, tx, ty, 'door');
+
+  /**
+   * The interact target whose drawn sprite covers a world point: villagers and machines are drawn taller than
+   * their tile, so a tap on a head opens the right sheet. Only y-sorted sprites (depth >= 9) count; the topmost
+   * wins. The farmer's own sprite never does.
+   */
+  private spriteTargetAt(x: number, y: number): { tile: TileCoord; type: string } | null {
+    let best: { tile: TileCoord; type: string; depth: number } | null = null;
+    for (const o of this.children.list) {
+      if (o === this.sprite || o === this.shadow || (o.type !== 'Image' && o.type !== 'Sprite'))
+        continue;
+      const g = o as Phaser.GameObjects.Image;
+      if (!g.visible || g.depth < 9 || g.depth >= 9000 || (best && g.depth <= best.depth)) continue;
+      const b = g.getBounds();
+      if (!b.contains(x, y)) continue;
+      const tile = {
+        tx: Math.floor(b.centerX / TILE_SIZE),
+        ty: Math.floor((b.bottom - 1) / TILE_SIZE),
+      };
+      const type = this.interactableAt(tile);
+      if (type) best = { tile, type, depth: g.depth };
+    }
+    return best ? { tile: best.tile, type: best.type } : null;
+  }
+
+  /** Where a tap at (x, y) leads: the intent and the walk to do it, or null path when it cannot. */
+  private planTap(
+    x: number,
+    y: number,
+  ): { intent: TapIntent; path: TileCoord[] | null; face: Direction | null } | null {
+    if (!this.worldPoint(x, y)) return null; // outside the world view: not a world tap
+    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
+    const w = this.worldPoint(c.x, c.y) ?? this.worldPoint(x, y)!;
+    const intent = tapIntent(this.tapWorld(), w.x, w.y);
+    if (intent.kind === 'none') return { intent, path: null, face: null };
+    const here = playerTile(getState().player);
+    const avoid = (tx: number, ty: number) => this.isDoor(tx, ty);
+    // Your own tile: nothing to walk to, and stepping off just to work it would surprise.
+    if (intent.target.tx === here.tx && intent.target.ty === here.ty)
+      return { intent, path: null, face: null };
+    if (intent.kind === 'walk') {
+      return { intent, path: findPath(this.grid, here, [intent.target], { avoid }), face: null };
+    }
+    const r = pathToFace(this.grid, here, intent.target, { avoid });
+    return { intent, path: r?.path ?? null, face: r?.face ?? null };
+  }
+
+  private intentMarker(intent: TapIntent): MarkerKind {
+    if (intent.kind === 'interact') return 'interact';
+    if (intent.kind === 'act') return markerKind({ planKind: intent.plan, interactable: false });
+    return 'none';
+  }
+
+  /** A touch held still on the world: show where a tap would lead before the finger lifts. */
+  private onTapPreview(x: number, y: number): void {
+    if (this.transitioning || runtime.blocked || !getState().settings.controls.tapToMove) return;
+    const plan = this.planTap(x, y);
+    if (!plan) return;
+    this.preview = true;
+    if (plan.path)
+      this.highlight.showPlan(plan.path, plan.intent.target, this.intentMarker(plan.intent));
+    else this.highlight.showPlan(null, null, 'none');
+  }
+
+  private onTapCancel(): void {
+    if (!this.preview) return;
+    this.preview = false;
+    if (!this.route) this.highlight.showPlan(null, null, 'none');
+  }
+
+  /**
+   * A tap on the world. With tap-to-move: walk there and do the obvious thing (interact, act with the auto
+   * tool, or just walk). Without: the old rule, the 4 tiles next to the player only.
+   */
+  private onTap(x: number, y: number): void {
+    this.preview = false;
+    if (this.transitioning || runtime.blocked) return;
+    if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
+    // A new tap replaces a painted row in progress.
+    if (this.work) {
+      this.work = null;
+      this.highlight.showPaint(null);
+    }
+    const plan = this.planTap(x, y);
+    if (!plan) return;
+    if (!plan.path) {
+      // Nothing to do there, or no way to get there: answer anyway, never silently.
+      this.cancelRoute();
+      this.highlight.ping(plan.intent.target.tx, plan.intent.target.ty);
+      audio.play('select');
+      if (plan.intent.kind !== 'none' && !this.onPlayerTile(plan.intent.target)) {
+        toast("Can't get there.", 'warn');
+        haptic('error');
+      }
+      controlsLog.push({ kind: 'silent', t: this.time.now, detail: plan.intent.kind });
+      return;
+    }
+    this.route = createRoute(plan.path);
+    this.routeEnd = { intent: plan.intent, face: plan.face };
+    this.highlight.showPlan(plan.path, plan.intent.target, this.intentMarker(plan.intent));
+    if (plan.path.length > 1) audio.play('target'); // a walk target set (soft; throttled by the audio engine)
+    controlsLog.push({
+      kind: 'route',
+      t: this.time.now,
+      detail: `${plan.intent.kind}@${plan.intent.target.tx},${plan.intent.target.ty} in ${plan.path.length - 1}`,
+    });
+    // Already there: act now, or, mid-swing, as soon as the swing ends (the route waits for the lock), so a
+    // quick second tap is buffered, never dropped.
+    if (plan.path.length === 1 && this.actionLock <= 0) this.arrive();
+  }
+
+  private onPlayerTile(t: TileCoord): boolean {
+    const here = playerTile(getState().player);
+    return here.tx === t.tx && here.ty === t.ty;
+  }
+
+  /** One frame of a tap's walk. */
+  private followRoute(delta: number): boolean {
+    const route = this.route!;
+    const end = this.routeEnd!;
+    const res = stepRoute(getState().player, this.move, route, delta, this.grid);
+    if (res === 'blocked') {
+      this.cancelRoute();
+      this.highlight.ping(end.intent.target.tx, end.intent.target.ty);
+      audio.play('error');
+      haptic('error');
+      return false;
+    }
+    if (res === 'arrived') {
+      this.arrive();
+      return false;
+    }
+    this.highlight.showPlan(route.path, end.intent.target, this.intentMarker(end.intent), route.i);
+    return true;
+  }
+
+  /** At the end of a tap's walk: face the target and do it. */
+  private arrive(): void {
+    const end = this.routeEnd;
+    this.cancelRoute();
+    if (!end) return;
+    const player = getState().player;
+    if (end.face) faceDirection(player, end.face);
+    this.syncSprite(false);
+    const target = end.intent.target;
+    if (end.intent.kind === 'interact') this.onInteract(target);
+    else if (end.intent.kind === 'act') {
+      // A painted row buzzed once per tile when it was drawn, and once on commit: working it is quiet.
+      this.tryAction(target, this.work !== null);
+      // A painted tile is worked until it is done for today (till, plant, water: at most 3 uses), so one
+      // pass over grass leaves a planted, watered row. Each use waits for the swing like a held Action.
+      const w = this.work;
+      if (w && w.tileUses < WORK_USES_PER_TILE - 1 && this.actKindAt(target)) {
+        w.tileUses++;
+        this.route = createRoute([playerTile(player)]);
+        this.routeEnd = end;
+      } else if (w) w.tileUses = 0;
+    }
+  }
+
+  private cancelRoute(): void {
+    this.route = null;
+    this.routeEnd = null;
+    if (!this.preview) this.highlight.showPlan(null, null, 'none');
+  }
+
+  // ---- paint a row from Action (M5, as ruled 2026-10-09) ----
+
+  /** What Action would do on a tile right now (auto tool), if anything. */
+  private actKindAt(t: TileCoord): string | null {
+    return chooseAction(getState(), [this.tileInfo(t)])?.plan.kind ?? null;
+  }
+
+  private paintMarks(tiles: readonly TileCoord[]): { tx: number; ty: number; kind: MarkerKind }[] {
+    return tiles.map((t) => ({
+      ...t,
+      kind: markerKind({ planKind: this.actKindAt(t), interactable: false }),
+    }));
+  }
+
+  /**
+   * Painting a row from Action (ruling 2026-10-09): the line runs straight from the tile next to the farmer in
+   * the drag's direction, as many tiles as the drag is long. Shown live; nothing changes until the lift.
+   */
+  private paintLineTiles(dir: Direction, tiles: number): TileCoord[] {
+    const here = playerTile(getState().player);
+    const v = DIR_VECTORS[dir];
+    const out: TileCoord[] = [];
+    for (let i = 1; i <= tiles; i++) {
+      const t = { tx: here.tx + v.x * i, ty: here.ty + v.y * i };
+      if (!this.inMap(t)) break;
+      out.push(t);
+    }
+    return out;
+  }
+
+  private onPaintLine(dir: Direction | null, tiles: number): void {
+    if (this.transitioning || runtime.blocked) return;
+    if (this.work) this.work = null;
+    this.cancelRoute();
+    if (!dir || tiles === 0) {
+      this.painting = [];
+      this.highlight.showPaint(null);
+      return;
+    }
+    faceDirection(getState().player, dir);
+    this.syncSprite(false);
+    this.painting = this.paintLineTiles(dir, tiles);
+    this.paintDir = dir;
+    this.highlight.showPaint(this.paintMarks(this.painting));
+  }
+
+  private onPaintEnd(commit: boolean): void {
+    const tiles = this.painting;
+    this.painting = null;
+    if (!commit || !tiles?.length || !this.paintDir) {
+      this.highlight.showPaint(null);
+      controlsLog.push({ kind: 'paint', t: this.time.now, detail: 'cancel' });
+      return;
+    }
+    controlsLog.push({ kind: 'paint', t: this.time.now, detail: `work ${tiles.length}` });
+    this.work = createWork(tiles);
+    this.highlight.showPaint(this.paintMarks(tiles));
+  }
+
+  /** Between tiles of a painted row: walk to the next tile that still has work, or finish. */
+  private startNextWork(): void {
+    const w = this.work!;
+    const state = getState();
+    const next = nextWork(
+      w,
+      (t) => this.actKindAt(t) !== null,
+      () => (state.energy <= 0 ? 'Too tired! Go to bed.' : null),
+    );
+    if ('stop' in next) {
+      this.work = null;
+      this.highlight.showPaint(null);
+      if (next.stop) toast(next.stop, 'warn');
+      else if (w.skipped > 0)
+        toast(`${w.skipped} tile${w.skipped > 1 ? 's' : ''} had nothing left to do.`, 'info');
+      return;
+    }
+    this.highlight.showPaint(this.paintMarks(w.tiles), w.i);
+    const here = playerTile(state.player);
+    const r = pathToFace(this.grid, here, next.tile, { avoid: (tx, ty) => this.isDoor(tx, ty) });
+    if (!r) {
+      w.skipped++;
+      w.i++;
+      return;
+    }
+    const plan = this.actKindAt(next.tile) ?? 'till';
+    this.route = createRoute(r.path);
+    this.routeEnd = { intent: { kind: 'act', target: next.tile, plan }, face: r.face };
+    w.i++;
+    w.done++;
+  }
+
+  /** Tap-to-move off: tapping a tile next to the player turns toward it and uses Action there. */
+  private onTapAdjacent(x: number, y: number): void {
+    const w = this.worldPoint(x, y);
+    if (!w) return;
+    const target = { tx: Math.floor(w.x / TILE_SIZE), ty: Math.floor(w.y / TILE_SIZE) };
     const player = getState().player;
     const dir = adjacentDirection(playerTile(player), target);
-    if (!dir) return;
+    if (!dir) {
+      // Nothing to do from here: answer anyway, so a tap is never silent.
+      this.highlight.ping(target.tx, target.ty);
+      audio.play('select');
+      return;
+    }
     faceDirection(player, dir);
     this.syncSprite(false);
-    if (this.interactableAt(target) && !planAction(getState(), this.tileInfo(target)).ok)
+    if (this.interactableAt(target) && !chooseAction(getState(), [this.tileInfo(target)]))
       this.onInteract(target);
     else this.tryAction(target);
   }

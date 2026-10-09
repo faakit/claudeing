@@ -1,24 +1,18 @@
 import Phaser from 'phaser';
-import {
-  DOCK_Y,
-  EVT_INTERACT_TARGET,
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  TAP_MAX_MOVE,
-  TAP_MAX_MS,
-  UI_LAYOUT,
-  WORLD_VIEW,
-} from '../config';
+import { EVT_INTERACT_TARGET, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../config';
 import { game, mapsData } from '../data';
 import { NightGlow } from '../fx/NightGlow';
 import { RainLayer } from '../fx/RainLayer';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
+import { ActionPress, type ActionEvent } from '../input/gesture';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { TouchButton } from '../input/TouchButton';
 import { VirtualJoystick } from '../input/VirtualJoystick';
+import { WorldTouch } from '../input/WorldTouch';
 import { audio } from '../platform/audio';
+import { haptic } from '../platform/haptics';
 import { lifecycle } from '../platform/lifecycle';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
@@ -27,6 +21,7 @@ import { gameEvents, type PanelType } from '../systems/events';
 import { addStat, currentGoal, stat } from '../systems/goals';
 import { cycleSlot, selectSlot, selectedStack } from '../systems/inventory';
 import { iconKey, refOf } from '../systems/itemRef';
+import { STICK_RADIUS } from '../systems/settings';
 import { seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { mixColor } from '../ui/color';
@@ -34,6 +29,9 @@ import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
 import { Label } from '../ui/font';
 import { MOVE_PANEL } from '../systems/placeables';
 import { Hud } from '../ui/Hud';
+import { ToolRing } from '../ui/ToolRing';
+import { TIPS } from '../ui/controlTips';
+import { dockLayout, resolveTouch, type DockLayout, type DockSpot } from '../ui/layout';
 import {
   BinPanel,
   BoardPanel,
@@ -59,8 +57,6 @@ import { WorldScene } from './WorldScene';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
-/** How long Action must be held before it starts working (a swipe cancels it). */
-const HOLD_ACTION_MS = 110;
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
 
@@ -120,7 +116,14 @@ export class UIScene extends Phaser.Scene {
   private interactButton: TouchButton | null = null;
   private interactIcon: Phaser.GameObjects.Graphics | null = null;
   private interactType: string | null = null;
-  private taps = new Map<number, { x: number; y: number; t: number }>();
+  private worldTouch!: WorldTouch;
+  private ring!: ToolRing;
+  private lastSelectedForTip = -1;
+  /** The last selection change came from the ring (it does not count toward the ring tip). */
+  private ringPicked = false;
+  private joystick!: VirtualJoystick;
+  /** Current dock geometry (mirrored in left-handed mode). */
+  layout: DockLayout = dockLayout(false);
   private hud!: Hud;
   private tint!: Phaser.GameObjects.Rectangle;
   private blackout!: Phaser.GameObjects.Rectangle;
@@ -138,8 +141,11 @@ export class UIScene extends Phaser.Scene {
   private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
   private lateWarnedDay = -1;
-  private swiped = false;
-  private holdTimer: Phaser.Time.TimerEvent | null = null;
+  /** The Action press in progress: when it began, its vertical travel, and when that last changed. */
+  private actionPress: ActionPress | null = null;
+  private actionPointer: number | null = null;
+  /** Tiles in the line being painted from Action (one tick per tile added). */
+  private paintTiles = 0;
   private actionIcon: Phaser.GameObjects.Image | null = null;
   private actionIconKey = '';
   private lastSeason = '';
@@ -156,7 +162,6 @@ export class UIScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.taps.clear();
     this.cleanup = [];
     this.controls = [];
     this.interactButton = null;
@@ -166,7 +171,7 @@ export class UIScene extends Phaser.Scene {
     this.sleeping = false;
     this.input.addPointer(2); // mouse + a thumb + a spare for multi-touch
     new KeyboardInput(this, inputHub);
-    new VirtualJoystick(this, inputHub);
+    this.joystick = new VirtualJoystick(this, inputHub);
     wireAutosave();
 
     this.tint = this.add
@@ -183,9 +188,15 @@ export class UIScene extends Phaser.Scene {
     this.glow = new NightGlow(this, 1.5); // lights over the day tint, under the rain and the HUD
     this.rain = new RainLayer(this, 2);
     this.hud = new Hud(this, getState);
+    this.ring = new ToolRing(this, getState, (c) => {
+      if (c.kind === 'bag') return this.menu.openTab('bag');
+      this.ringPicked = true;
+      getState().stats['tip.ring'] = 1; // found the ring: no need to teach it
+      selectSlot(getState(), c.slot);
+      haptic('tick');
+    });
     this.buildControls();
     this.buildPanels();
-    this.buildDragHint();
 
     const fresh = getState();
     if (
@@ -197,11 +208,18 @@ export class UIScene extends Phaser.Scene {
     ) {
       fresh.stats['tip.welcome'] = 1;
       this.time.delayedCall(900, () =>
-        this.hud.toast('Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.', 'good'),
+        this.hud.toast(
+          getState().settings.controls.autoTool
+            ? 'Welcome to Tiny Acre! Face the grass and tap Action to till soil.'
+            : 'Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.',
+          'good',
+        ),
       );
       this.time.delayedCall(4200, () =>
         this.hud.toast(
-          'Drag anywhere low on the screen to walk. Hold Action to keep working.',
+          getState().settings.controls.tapToMove
+            ? 'Tap a tile to walk there and work it. Or drag low on the screen to steer.'
+            : 'Drag anywhere low on the screen to walk. Hold Action to keep working.',
           'info',
         ),
       );
@@ -255,7 +273,10 @@ export class UIScene extends Phaser.Scene {
       audio.setRain(0);
       audio.setNight(0);
     });
-    this.setupTaps();
+    this.worldTouch = new WorldTouch(this, inputHub, this.joystick, () => {
+      this.idleMs = 0;
+      audio.unlock();
+    });
   }
 
   update(time: number, delta: number): void {
@@ -266,7 +287,10 @@ export class UIScene extends Phaser.Scene {
       this.dragHint = null;
     }
     this.hud.update(time);
+    this.updateHold();
+    this.worldTouch.update();
     this.updateActionIcon();
+    this.updateRingTip(s);
     this.updateIdleHint(delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather !== 'sunny';
@@ -317,44 +341,63 @@ export class UIScene extends Phaser.Scene {
     this.controls.forEach((c) => c.destroy());
     this.controls = [];
     this.interactIcon?.destroy();
-    const { actionRadius: ar, interactRadius: ir, menuRadius: mr, edge } = UI_LAYOUT;
-    const left = getState().settings.leftHanded;
-    const x = (rightHandedX: number) => (left ? GAME_WIDTH - rightHandedX : rightHandedX);
+    this.layout = dockLayout(getState().settings.leftHanded);
+    this.joystick.setRadius(STICK_RADIUS[getState().settings.controls.stickSize]);
+    const L = this.layout;
+    // Touch circles overlap at their margins; a touch always goes to the button it is drawn on, else to
+    // the relatively nearest one (so Interact can never steal any of Action's disc).
+    const spots = (): (DockSpot & { enabled: boolean })[] =>
+      [L.action, L.interact, L.menu].map((sp) => ({
+        ...sp,
+        enabled: sp.id !== 'interact' || (this.interactButton?.isEnabled ?? false),
+      }));
+    const owns = (id: DockSpot['id']) => (x: number, y: number) =>
+      resolveTouch(x, y, spots()) === id;
 
     // Action sits low in the corner where the resting thumb lands; Interact is a short slide away.
-    const action = new TouchButton(
-      this,
-      x(GAME_WIDTH - edge - ar),
-      DOCK_Y + 8 + ar,
-      ar,
-      () => undefined, // the icon is the equipped item, drawn below
-      () => this.pressAction(),
-      () => this.releaseAction(),
-      (step) => {
-        this.swiped = true;
-        cycleSlot(getState(), step);
-        audio.play('select');
+    const action = new TouchButton(this, {
+      x: L.action.x,
+      y: L.action.y,
+      radius: L.action.r,
+      hit: L.action.hit,
+      icon: () => undefined, // the icon is the equipped item, drawn below
+      owns: owns('action'),
+      // Tap, swipe, flick and hold-then-drag are told apart by ActionPress (input/gesture.ts).
+      releaseOnOut: false,
+      onPress: () => this.pressAction(),
+      onRelease: () => this.releaseAction(),
+      onMove: (dx, dy, pointerId) => {
+        this.actionPointer = pointerId;
+        this.actionEvents(this.actionPress?.move(dx, dy) ?? []);
       },
-      () => this.holdTimer?.remove(),
-    );
+    });
     this.actionIcon?.destroy();
     this.actionIcon = this.add
       .image(action.view.x, action.view.y, 'ui_coin')
       .setDepth(91)
       .setScale(1.9);
     this.actionIconKey = '';
-    this.interactButton = new TouchButton(
-      this,
-      x(GAME_WIDTH - edge - ar - ir - 20),
-      DOCK_Y + 34 + ir,
-      ir,
-      () => undefined,
-      () => inputHub.emit('interact', undefined),
-    );
-    // Menu is rarely needed, so it lives up and away from the working corner: no accidental taps.
-    const menu = new TouchButton(this, x(edge + mr + 2), DOCK_Y + 12 + mr, mr, drawMenuIcon, () =>
-      this.toggleMenu(),
-    );
+    // Interact and Menu act on a clean release, and a drag that starts on them walks instead.
+    this.interactButton = new TouchButton(this, {
+      x: L.interact.x,
+      y: L.interact.y,
+      radius: L.interact.r,
+      hit: L.interact.hit,
+      icon: () => undefined,
+      fireOn: 'release',
+      owns: owns('interact'),
+      onPress: () => inputHub.emit('interact', undefined),
+    });
+    const menu = new TouchButton(this, {
+      x: L.menu.x,
+      y: L.menu.y,
+      radius: L.menu.r,
+      hit: L.menu.hit,
+      icon: drawMenuIcon,
+      fireOn: 'release',
+      owns: owns('menu'),
+      onPress: () => this.toggleMenu(),
+    });
     this.controls.push(action, this.interactButton, menu);
 
     this.interactIcon = this.add.graphics().setDepth(91);
@@ -363,42 +406,114 @@ export class UIScene extends Phaser.Scene {
     this.interactButton.setEnabled(false);
     this.interactIcon.setAlpha(0);
     this.setInteractTarget(this.interactType);
+    this.buildDragHint();
   }
 
-  /**
-   * A press on Action only starts working after a beat, so a swipe to change tool never swings the old one.
-   * A quick tap still acts once, on release.
-   */
+  /** A press on Action: what it becomes (tap, swipe, ring, paint) is decided as the finger moves. */
   private pressAction(): void {
-    this.swiped = false;
-    this.holdTimer?.remove();
-    this.holdTimer = this.time.delayedCall(HOLD_ACTION_MS, () => {
-      if (!this.swiped) inputHub.actionHeld = true;
-    });
+    this.actionPress = new ActionPress(this.time.now);
+    this.paintTiles = 0;
+  }
+
+  /** Each frame: the paint arm (held still 300 ms). */
+  private updateHold(): void {
+    if (this.actionPress) this.actionEvents(this.actionPress.update(this.time.now));
   }
 
   private releaseAction(): void {
-    const wasHeld = inputHub.actionHeld;
-    this.holdTimer?.remove();
-    this.holdTimer = null;
-    if (!this.swiped && !wasHeld) {
-      // a tap: one action, held for just long enough for the world to see it
-      inputHub.actionHeld = true;
-      this.time.delayedCall(70, () => (inputHub.actionHeld = false));
-      return;
-    }
-    inputHub.actionHeld = false;
+    const p = this.actionPress;
+    this.actionPress = null;
+    if (p) this.actionEvents(p.up());
   }
 
-  /** Show the equipped item on the Action button, so the button says what it will do. */
+  private actionEvents(events: ActionEvent[]): void {
+    for (const e of events) {
+      if (e.type === 'step') {
+        cycleSlot(getState(), e.dir, true);
+        audio.play('select');
+        haptic('tick');
+      } else if (e.type === 'ring') {
+        // A sideways flick: the tool ring opens under the same finger; nothing is used.
+        this.ring.open(
+          this.actionPointer ?? 0,
+          { x: this.layout.action.x, y: this.layout.action.y },
+          getState().settings.leftHanded,
+        );
+      } else if (e.type === 'tap') {
+        // one action, held for just long enough for the world to see it
+        inputHub.actionHeld = true;
+        this.time.delayedCall(70, () => (inputHub.actionHeld = false));
+      } else if (e.type === 'arm') {
+        haptic('tick'); // armed: the press pops (visible twin) and the farmer waits for the drag
+        this.pulseAction();
+        inputHub.emit('paintLine', { dir: null, tiles: 0 });
+      } else if (e.type === 'paint') {
+        if (e.tiles > this.paintTiles) {
+          haptic('tick'); // one light tick per tile added
+          audio.play('tick'); // rate-limited and footstep-aware in the audio engine
+        }
+        this.paintTiles = e.tiles;
+        inputHub.emit('paintLine', { dir: e.dir, tiles: e.tiles });
+      } else if (e.type === 'commit') {
+        haptic('medium'); // the confirm: the row will be worked
+        audio.play('confirm');
+        inputHub.emit('paintEnd', { commit: true });
+      } else if (e.type === 'cancel') {
+        inputHub.emit('paintEnd', { commit: false });
+      }
+    }
+  }
+
+  /** The Action icon pops (paint armed); skipped in Calm mode. */
+  private pulseAction(): void {
+    if (!this.actionIcon || getState().settings.reduceMotion) return;
+    this.tweens.killTweensOf(this.actionIcon);
+    this.actionIcon.setScale(2.4);
+    this.tweens.add({ targets: this.actionIcon, scale: 1.9, duration: 160, ease: 'Back.easeOut' });
+  }
+
+  /** First-run tip: after a few tool changes by swipe or hotbar, teach the tool ring (once). */
+  private updateRingTip(s: ReturnType<typeof getState>): void {
+    const sel = s.inventory.selected;
+    if (this.lastSelectedForTip === -1 || sel === this.lastSelectedForTip) {
+      this.lastSelectedForTip = sel;
+      return;
+    }
+    this.lastSelectedForTip = sel;
+    if (s.stats['tip.ring'] || this.ring.isOpen || this.ringPicked) {
+      this.ringPicked = false;
+      return;
+    }
+    s.stats['tip.swaps'] = (s.stats['tip.swaps'] ?? 0) + 1;
+    if (s.stats['tip.swaps'] >= 3) {
+      s.stats['tip.ring'] = 1;
+      this.hud.toast(TIPS.ring, 'info');
+    }
+  }
+
+  /** Show the item Action will use on the Action button, so the button says what it will do. */
   private updateActionIcon(): void {
     const s = getState();
-    const stack = selectedStack(s);
+    // What Action will use on the marked tile (auto tool may pick another item), else what is in hand.
+    const slot = inputHub.actionSlot ?? s.inventory.selected;
+    const stack = s.inventory.slots[slot] ?? selectedStack(s);
     const key = stack ? iconKey(refOf(stack)) : '';
     if (key === this.actionIconKey || !this.actionIcon) return;
+    const changed = this.actionIconKey !== '';
     this.actionIconKey = key;
     this.actionIcon.setVisible(!!key);
     if (key) this.actionIcon.setTexture(key);
+    // A tool swap (yours or auto tool's) pops the icon, so the change is seen, not only felt.
+    if (changed && key && !s.settings.reduceMotion) {
+      this.tweens.killTweensOf(this.actionIcon);
+      this.actionIcon.setScale(2.3);
+      this.tweens.add({
+        targets: this.actionIcon,
+        scale: 1.9,
+        duration: 140,
+        ease: 'Back.easeOut',
+      });
+    }
   }
 
   /** A faint ring in the thumb zone on a fresh game: shows where to drag. Gone after the first step. */
@@ -406,9 +521,7 @@ export class UIScene extends Phaser.Scene {
     this.dragHint?.destroy();
     this.dragHint = null;
     if (stat(getState(), 'moved') > 0) return;
-    const left = getState().settings.leftHanded;
-    const cx = left ? GAME_WIDTH - 64 : 64;
-    const cy = DOCK_Y + 56;
+    const { x: cx, y: cy } = this.layout.dragHint;
     const ring = this.add.graphics();
     ring.lineStyle(2, 0xf4ead2, 0.45).strokeCircle(0, 0, 24);
     ring.fillStyle(0xf4ead2, 0.18).fillCircle(0, 0, 10);
@@ -448,24 +561,6 @@ export class UIScene extends Phaser.Scene {
       );
     }
     this.tweens.add({ targets: this.interactIcon, alpha: type !== null ? 1 : 0, duration: 140 });
-  }
-
-  /** A short, nearly stationary touch on the world counts as a tap (not a joystick drag). */
-  private setupTaps(): void {
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      this.idleMs = 0;
-      audio.unlock();
-      if (this.input.hitTestPointer(p).length > 0) return; // started on a button
-      this.taps.set(p.id, { x: p.x, y: p.y, t: p.downTime });
-    });
-    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      const down = this.taps.get(p.id);
-      this.taps.delete(p.id);
-      if (!down) return;
-      const quick = p.upTime - down.t <= TAP_MAX_MS;
-      const still = Math.hypot(p.x - down.x, p.y - down.y) <= TAP_MAX_MOVE;
-      if (quick && still) inputHub.emit('tap', { x: p.x, y: p.y });
-    });
   }
 
   // ---- panels ----

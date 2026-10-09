@@ -4,7 +4,14 @@ import { audio } from '../../platform/audio';
 import { toast } from '../../systems/events';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
-import { isShippable, shipStack, shippingValue, unshipStack } from '../../systems/economy';
+import {
+  isProduce,
+  isShippable,
+  shipAllProduce,
+  shipStack,
+  shippingValue,
+  unshipStack,
+} from '../../systems/economy';
 import { countStack } from '../../systems/inventory';
 import {
   displayName,
@@ -84,9 +91,12 @@ export class BinPanel extends Modal {
       });
     }
     const footerY = 34 + ROWS * ROW_H + 4;
+    // Left-handed: Ship all on the left (by the thumb), the page arrows on the right.
+    const left = this.leftHanded;
+    const pagerX = left ? this.panelW - 60 : 8;
     if (pages > 1) {
       this.button(
-        8,
+        pagerX,
         footerY,
         24,
         20,
@@ -94,7 +104,7 @@ export class BinPanel extends Modal {
         () => ((this.page = (this.page + pages - 1) % pages), this.rebuild()),
       );
       this.button(
-        36,
+        pagerX + 28,
         footerY,
         24,
         20,
@@ -102,14 +112,18 @@ export class BinPanel extends Modal {
         () => ((this.page = (this.page + 1) % pages), this.rebuild()),
       );
     }
-    this.label(
-      this.panelW - 8,
-      footerY + 6,
-      `In bin: ${fmt(shippingValue(s))}g`,
-      C.gold,
-      1,
-      'right',
-    );
+    this.label(this.panelW - 8, 8, `In bin: ${fmt(shippingValue(s))}g`, C.gold, 1, 'right');
+    // One tap ships every crop, fish, wild good and product (one-thumb: low in the sheet, by the thumb).
+    const produce = list.some((r) => countStack(s, r) > 0 && isProduce(r.item));
+    this.button(left ? 8 : this.panelW - 8 - 92, footerY, 92, 20, 'Ship all produce', () => {
+      const res = shipAllProduce(getState());
+      if (res.count === 0) audio.play('error');
+      else {
+        audio.play('coin');
+        haptic('tick');
+      }
+      this.rebuild();
+    }).setEnabled(produce);
     this.closeButton('Done');
   }
 

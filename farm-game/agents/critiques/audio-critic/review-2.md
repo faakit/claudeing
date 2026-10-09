@@ -9,7 +9,6 @@ ambience, wind1 = CC0. Dripping-water-loop: author Independent.nu, submitted by 
 unreachable) -> F22 blocker. Crickets page carries attribution notice "Ted Kerr" -> credit.
 
 Measurements (my renders through the game's own renderOffline, default settings; tools/ scripts):
-
 - Music integrated: spring day -26.0, summer -25.2, fall -25.7, festival -24.4, winter night -29.7 LUFS; no clipping anywhere.
 - Stress (festival, music 1, sfx 1, rain, 60 cues in 15 s): -13.6 LUFS, TP -0.3 dBTP, 0 clipped samples.
 - SFX max momentary (K-weighted, 400 ms) at output: buy -15.5, coin -16.3, refill -16.8, water -18.2, order -18.2, goal -18.6,

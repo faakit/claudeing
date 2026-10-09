@@ -1,0 +1,468 @@
+{
+  "M0": {
+    "_note": "Before the controls work (PLAN-CONTROLS.md, bench.json): a perfect bot on iPhone 13.",
+    "plot3x3": {
+      "gestures": 26,
+      "travelMm": 1150,
+      "toolChanges": 2
+    },
+    "switchSwipe": {
+      "gestures": 5
+    },
+    "switchHotbar": {
+      "gestures": 2
+    },
+    "bagUse": {
+      "gestures": 5
+    },
+    "sell": {
+      "gestures": 6
+    },
+    "villager": {
+      "gestures": 5
+    },
+    "machine": {
+      "gestures": 3
+    },
+    "fish": {
+      "gestures": 20
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10
+    }
+  },
+  "M1": {
+    "_note": "Quick wins: Action owns its disc, release-acting Menu/Interact, swipe skips empty slots, Ship all.",
+    "plot3x3": {
+      "gestures": 26,
+      "travelMm": 1150,
+      "toolChanges": 2
+    },
+    "switchSwipe": {
+      "gestures": 1
+    },
+    "switchHotbar": {
+      "gestures": 2
+    },
+    "bagUse": {
+      "gestures": 5
+    },
+    "sell": {
+      "gestures": 4
+    },
+    "villager": {
+      "gestures": 5
+    },
+    "machine": {
+      "gestures": 3
+    },
+    "fish": {
+      "gestures": 20
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10
+    }
+  },
+  "M2": {
+    "_note": "Grid feel: turn in place, settle on release. Human-like stops (task@human, reaction > 0) need no corrections.",
+    "plot3x3": {
+      "gestures": 26,
+      "travelMm": 1150,
+      "toolChanges": 2
+    },
+    "switchSwipe": {
+      "gestures": 1
+    },
+    "switchHotbar": {
+      "gestures": 2
+    },
+    "bagUse": {
+      "gestures": 5
+    },
+    "sell": {
+      "gestures": 4
+    },
+    "villager": {
+      "gestures": 5
+    },
+    "machine": {
+      "gestures": 3
+    },
+    "fish": {
+      "gestures": 20
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10
+    },
+    "plot3x3@human": {
+      "gestures": 26,
+      "travelMm": 1150,
+      "toolChanges": 2,
+      "corrections": 0
+    },
+    "sell@human": {
+      "gestures": 4,
+      "corrections": 0
+    },
+    "villager@human": {
+      "gestures": 5,
+      "corrections": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0
+    }
+  },
+  "M3": {
+    "_note": "Auto tool: no tool changes for farm work; every act matches the marker and the Action icon. Owner ruling: seeds are never picked for you until you planted some, so the plot loop taps the seeds once.",
+    "plot3x3": {
+      "gestures": 25,
+      "travelMm": 1150,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 20,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 25,
+      "travelMm": 1150,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
+  },
+  "M4": {
+    "_note": "Tap to walk and act: errands are one tap to open the sheet. The jar starts 7 rows below the door, off screen: one tap on the way, one on the jar, Load (3).",
+    "plot3x3": {
+      "gestures": 25,
+      "travelMm": 1150,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 20,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 25,
+      "travelMm": 1150,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
+  },
+  "M5": {
+    "_note": "Paint a row: the 3x3 plot is two taps to get there and two paints (prepare, harvest).",
+    "plot3x3": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 20,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
+  },
+  "M6": {
+    "_note": "Tool ring: the rod and the bag are one drag away (fish fixed cost 4 + bite + reel holds).",
+    "plot3x3": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 16,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
+  },
+  "M7": {
+    "_note": "Ruling 2026-10-09: rows are painted from Action as straight lines (a tap beside each row and one hold-then-drag), so the 3x3 plot is 2 hops + seeds + 6 rows x (tap + paint) = 15 gestures.",
+    "plot3x3": {
+      "gestures": 16,
+      "travelMm": 650,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 16,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 16,
+      "travelMm": 650,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
+  }
+}

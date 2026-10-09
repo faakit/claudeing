@@ -471,3 +471,265 @@ The critic played the build at `3e1b9c5` (two 16-day real-input runs, probes, a 
 - **F4 the cart resold store goods:** it never offers what the store sells that day, nor seeds that cannot ripen this season (without a greenhouse); its pool is rare seeds, bars, quartz, cloth, a ruby, amethyst, rich fertilizer and a quality sprinkler, each with a one-line use shown when bought ("Bought Quartz. For the Library and Greenhouse."); its sheet closes back to the board.
 - **F6** the bag cursor clears after any Eat tap, and "Not hungry" is drawn dim. **F7** batch cooking ("x3") uses plain-quality ingredients only and toasts the real count. **F8** goal and tip text say "Make", not "Craft"; the pre-Clay notice says "Requests stay a few days."; the statue page says "Next level: ... Now +2%."
 - **Sim:** the median rose 16% across critique 7 and 8 work; measured, it is about 9k of eggs (180 a year from the bot's hens), about 7k more of board requests, and more jars kept busy along a richer early path. Repinned at 213,730.
+
+## One-thumb controls (PLAN-CONTROLS.md, owner decisions 2026-10-08)
+
+Owner decisions: tap-to-move and auto tool on by default (both can be turned off; the floating stick always
+works); auto tool never picks the rod or placeables; row work is a ~250 ms long-press then drag; Menu moves
+into thumb reach once it acts on release; the 8-slot hotbar stays for now; light haptics, on by default;
+iPhone 13/14 and Pixel 7 are the primary phones, the SE must pass; right-handed default, left-handed as good.
+
+### M1 quick wins
+
+- **Dock geometry is pure (`ui/layout.ts`) and every button owns its drawn disc:** `resolveTouch` gives a touch
+  to the button it is drawn on, else (in overlapping touch margins) to the higher priority (Action), else to the
+  relatively nearer one. Action moved 6 px in (12 px from the screen edge, clear of Android's back-swipe strip),
+  Interact moved down-left to (104, 338) so Action owns its whole touch circle without covering any of
+  Interact's disc. Measured: 0% of Action's disc and 0% of its touch circle go to Interact (was 10.8% of the
+  disc). With 2.5 mm Gaussian jitter around aims spread over Action's whole disc, 0.6 to 0.8% still land beyond
+  Action's circle near Interact: a thumb that physically lands on Interact presses Interact.
+- **Menu and Interact act on a clean release** (`TouchButton` `fireOn: 'release'`): cancelled once the finger
+  travels past the 8 px tap tolerance, and such a touch may become a joystick drag ("pass-through"), so a drag
+  that starts on them never opens anything. Action and the hotbar still act on touch-down (speed).
+- **Menu moved into the thumb arc** (58, 304), mirrored for the left hand: comfortable for both hands on iPhone
+  13, Pixel 7 and SE in the reach model (was a stretch on the big phones), far from Action's resting arc.
+- **A tap never walks:** gesture thresholds live in `input/gesture.ts`. The stick engages only past 9 px (was 6),
+  wider than the 8 px tap tolerance, and a world touch that engaged the stick is never a tap (max travel, not
+  the end point, decides). A still touch is a tap however long it lasted (a 300 ms tap acts like a 120 ms one).
+- **Hold survives a rolling pad:** the old rule cancelled a pending hold after 4 px of vertical drift (1.3 mm on
+  iPhone 13). Now a held press starts after 110 ms unless the finger has strayed 1.5+ px vertically and is still
+  moving (no 0.5 px of vertical change for 60 ms = settled): that is a swipe on its way to a 14 px tool step. A
+  pad that rolls and settles starts working at once. Swipes from 60 ms to 1 s for 18 px never act (unit test at
+  a phone's 16 ms move rate; e2e at true speed). A tool step needs 14 px of mostly vertical travel.
+- **Swipes skip empty slots** (`cycleSlot(state, step, skipEmpty)`); keyboard and wheel cycling still visit all.
+- **The marker says yes or no in shape as well as colour:** 2 px brackets in the action's colour (white work,
+  green gather, gold interact) when Action will act; four dim corner dots when it will not (`ui/targetMarker.ts`).
+- **No silent world taps:** a tap with nothing to do from where you stand shows a fading ring on that tile and a
+  soft click (M4 turns it into a walk).
+- **Haptics (owner decision 6):** a `medium` kind (ripe harvest, level-up) joins `tick`, `success` and `error`.
+  Every kind is throttled (tick 120 ms, medium 250, success 300, error 400) and a held action's later uses tick
+  at most every 450 ms. Ticks on a successful tile action, a tool swipe, a slot tap and when Interact opens
+  something. Vibration off means zero calls. Each pulse has a visible twin (effects, marker pop, hotbar).
+- **Bin "Ship all produce":** one button low in the sheet ships every crop, fish, wild good, preserve and
+  product; never seeds, tools, ores or crafting stock. Per-row All/+/- stay, so a mistake comes back with "-".
+- **One-thumb benchmark and controls e2e:** `npm run bench:thumb` (thresholds per milestone in
+  `scripts/bench-thresholds.json`, exits 1 on a regression) and `npm run e2e:controls` (in `verify`: iPhone 13
+  and SE, both hands).
+
+### M2 grid feel
+
+- **Turn in place, only from a standstill:** a push in a new direction turns at once and walks only after
+  90 ms (`TURN_HOLD_MS`); pushing the way you face walks at once; a direction change while walking adds 0 ms.
+  Runtime state only (`MoveState` in `systems/movement.ts`), never saved.
+- **Settle on release:** the farmer glides along the walking axis (110 px/s, at most 120 ms) to a tile centre:
+  back to the last centre passed if it was less than 13 px ago (`SETTLE_BACK_PX`; 203 ms of walking), else on
+  to the next one; never into a blocked tile. 13 rather than the plan's 12 because a release 180 ms after the
+  sprite looked centred lands 11.5 to 12.3 px past it once frames quantize. The cost: letting go more than
+  3 px before a centre (about 50 ms early) settles forward onto that tile, which is what was aimed at.
+  A release 250 ms late is a full tile (16 px at 4 tiles/s) and cannot be told apart from a deliberate step.
+- **Flicks are turns:** with turn-in-place plus settle, any flick up to 200 ms in a new direction ends on the
+  starting tile, facing the new way.
+- **Joystick axis hysteresis 1.25 -> 1.6:** a thumb held at 40 to 50 degrees with about 1 mm of drift
+  flipped axis 2.0 to 2.4 times a second; now about 0.7 to 1.0 (unit-tested model). Choosing a new axis now
+  needs a push about 58 degrees off the old one.
+
+### M3 auto tool and control settings
+
+- **Auto tool is a mode, not an override:** with a farm item in hand (hoe, can, scythe, pickaxe, seeds) or an
+  empty hand, Action uses whichever hotbar farm item does the most valuable thing on the tiles in reach (the
+  action handlers' priorities: harvest beats planting beats tools; then the tile in front; then the item:
+  seeds, can, scythe, pickaxe, hoe). Holding anything else (the rod, a placeable, fertilizer, goods) is an
+  explicit choice and Action does exactly what that item does, as before (owner decision 2: fishing and placing
+  stay deliberate). Off in Options > Controls means "the item in hand only".
+- **The hotbar selection never changes:** the Action icon shows what will be used (and pops when it changes);
+  the marker shows where. Handlers read the selected slot, so a choice is planned and run with its slot
+  selected for that instant (`withSelected`): no action handler changed, the registry API is unchanged.
+- **One seed kind at a time:** the seed in hand, else the last seed planted (remembered in the save), else the
+  first seed on the hotbar. A mixed hotbar never plants a surprise kind.
+- **A held Action on grass now finishes the tile in front** (till, plant, water) before the sides, because
+  planting outranks tilling. One hold prepares a tile completely.
+- **Registry:** `registerAutoItem({ id, priority, eligible })` so a mechanic can make its tool auto-pickable
+  without touching core files (docs/EXTENDING.md).
+- **Save version 16:** `settings.controls` (autoTool, tapToMove, paint: on; stickSize 'm'; twoSpeed off) and
+  `controls.lastSeed`; the migration adds the owner defaults, `sanitize` clamps each field (a real v15 save is a
+  test fixture). All later control options ride in this block, so M4 to M7 need no further bump.
+- **Options > Controls** (a page behind a "Controls..." button, laid out from the bottom up near the tabs):
+  Auto tool, Stick size S/M/L (radius 18/24/32), Left hand, Vibrate. Switches appear as their milestones ship.
+- **Haptic merge:** two pulses within 80 ms merge (a tile worked and a goal completed in the same frame buzz
+  once); a stronger pulse replaces a weaker one, never the reverse.
+
+### M4 tap a tile to walk there and act
+
+- **One world-touch handler (`input/WorldTouch.ts`):** a touch that starts on the world view and stays within
+  8 px is a tap whatever its length; after 100 ms still it previews (path dots and a goal marker in the intent's
+  colour); release commits. A touch that moves past 9 px is the stick and never a tap (the preview is
+  dropped). Touches that start in the dock or on a sheet never reach the world. The tile is read where the
+  finger landed (touch-down), not where a rolling pad lifted.
+- **What a tap means (`systems/tapIntent.ts`, pure):** interact with the thing on the tile > act on the tile
+  (what the auto tool would do there) > walk onto it. Interact targets are magnets for 3 mm around their tile
+  (converted per screen) when the tap would only walk or hit something solid; a tap that would act stays an act
+  (tilling round a sprinkler never opens it). **Acts never snap:** a miss next to a crop walks, it never works a
+  different tile, so a sloppy tap can never harvest, water or plant the wrong thing. Your own tile is never
+  worked by a tap. Measured (e2e, 200 taps each, 1.5 mm toward the thumb base): a lone machine 100% at 1.5 mm
+  and 89-97% at 2.5 mm; the bin, which has the mailbox beside it, opens the bin or the mailbox 100% / 94-97%;
+  a single crop tile 64-86% / 36-49% (a 4-5 mm tile under a 2.5 mm spread), and 0 wrong-tile acts.
+- **Touch offset compensation:** thumbs land below and toward the thumb base. Taps on the world are read about
+  0.7 mm up and 0.7 mm away from the holding side (mirrored for the left hand), using the CSS reference pixel
+  (about 6.3 CSS px per mm), half of the 1.5 mm offset the controls critic models. Not measured on a real hand.
+- **Walking (`systems/pathfind.ts`, `stepRoute`):** breadth-first 4-way search on the collision grid (well under
+  2 ms on a 60x60 map), to a tile next to the target from which the farmer faces it; doors are entered only
+  when tapped. The walk follows tile centres through the same collision as the stick. The stick or a key
+  cancels it at once; a second tap retargets; a villager stepping in the way stops it with a refusal ring.
+  Unreachable: a ring, an error pulse and "Can't get there."
+- **Off switch:** Options > Controls > Tap to walk OFF restores the old rule (only the 4 tiles next to you).
+- **The target marker lies on the ground** (`MARKER_DEPTH` 0.95: above the ground, soil, tint and flat decor,
+  below every y-sorted sprite at 9 + y). It always was under the farmer; facing up, its brackets peeked out
+  beside the head and read as drawn over it, so acting markers now also wash the tile faintly, which reads as
+  ground. An e2e check pins the order.
+- **Bag fix:** after "Use now" the bag's selection cursor is cleared (it stayed on the emptied cell, so reopening the bag and tapping that cell deselected it instead of opening the card; found by the benchmark).
+
+### Controls review 1 fixes (before M4 landed)
+
+- **One threshold for still and stick (F2):** a touch is still exactly while its travel stays under 9 px, and
+  the stick engages at 9 px; the stick zone now covers the whole world view and the dock, so every touch off a
+  button is a tap or the stick, never nothing. Release buttons (Menu, Interact) cancel at the same 9 px.
+- **Nudges are steps (F3):** the first tile of a walk from a tile centre commits after 4 px
+  (`FIRST_STEP_COMMIT_PX`); the 13 px settle-back applies only once the walk has passed a centre. A push the way
+  you face of 100 ms or more is exactly one tile; a new-direction push of 150 ms or less turns in place (turn
+  hold 90 -> 100 ms); no push under 250 ms slides back more than 4 px (unit tests in whole 16 ms frames).
+- **Taps during a swing are buffered, not dropped (F5):** the walk (even a zero-length one) waits for the swing
+  lock and then acts.
+- **Menu radius 14 -> 16 (touch 24), Interact at (98, 342) (F6, F7):** with 2.5 mm jitter around aims over
+  Action's whole disc, Interact presses stay under 1% on all five phones (SE was 1.3-1.8%).
+- **Hold settle needs 2 rendered frames (F9)** as well as 60 ms without vertical movement, so one long frame
+  that holds touch events back never starts a hold mid-swipe.
+- **The "nothing to do" dots are stronger (F10):** 2x2 at full colour on a darker 4x4 underlay, 85% alpha.
+- **Settle window and reaction spread (F4, not met by design):** a tile is 250 ms of walking. Releases at
+  sprite-centre + 180 +- 30 ms land 9.6 to 13.4 px late, anticipation (-40 +- 30 ms) 0.6 to 4.5 px early: 18 px
+  of spread for a 16 px tile, so no position rule can catch both. With the back window at 13 px the model gives
+  about 78% at 180 +- 30, 99.7% at 120 +- 30 and about 59% for anticipation; 14 px would give 90% / 38%. Kept at
+  13 (the bench now has REACTION_SD and negative REACTION_MS to measure it). Tap-to-walk makes exact stick stops
+  unnecessary for errands, and the two-speed stick (M7) is the precision answer.
+
+### M5 paint a row
+
+- **Gesture (owner decision 3):** a world touch held still 250 ms on a tile Action can work arms painting (a
+  tick, a marker pop and the tile washed); from then the same finger paints instead of steering. Every tile it
+  enters joins the row (4-way, gaps filled in straight lines, at most 12, only tiles with something to do);
+  stepping back onto the previous tile takes the last one off. Lifting on the dock, or back on the first tile
+  after a loop, cancels with nothing worked. A drag that leaves the 9 px deadzone before 250 ms is the stick and
+  can never arm. A long-press without a drag works its one tile, exactly as a tap would.
+- **Working the row (`systems/workQueue.ts`):** the farmer walks to each tile in the order painted and works it
+  **until it is done for today** (on grass: till, plant, water; at most 3 uses, each waiting for the swing like
+  a held Action), so one pass over grass leaves a planted, watered row and the 3x3 plot is two paints (prepare,
+  then harvest). Energy is exactly that of single presses. Tiles with nothing left are skipped (one toast at
+  the end); out of energy stops the row with one toast. The stick, a tap or a new paint cancels the rest.
+- **Your own tile counts when painting** (painting is deliberate; the farmer steps off to work it), unlike a tap.
+- **Options > Controls > Paint rows** turns it off (a long-press is then a plain tap).
+
+### Owner rulings after controls review 2 (2026-10-09)
+
+These replace the M3 and M4 entries above where they differ.
+
+1. **A tap does only the obvious, harmless thing:** harvest, pick up forage, water a dry crop, clear weeds,
+   mine a node, refill the can, cast the rod you hold (`TAP_ACTS`), or open and talk to things. A tap on grass
+   or empty tilled soil just walks there; it never tills or plants. Tilling and planting go through Action or a
+   painted row (paint is the deliberate way to work ground).
+2. **A held Action repeats only the kind of step it started with:** a hold that starts by tilling only tills,
+   one that starts by watering only waters, and it stops quietly (no error pulse) when there is no more of that
+   step in reach. No till-then-plant-then-water chain in one hold.
+3. **Seeds and explicit items:** what you hold always wins whenever it can act; auto tool fills in only when it
+   cannot. Seeds: the selected seed, else the seed you planted last (anywhere in the bag), else none: Action on
+   empty soil then says "Pick seeds on the hotbar first." with the error pulse. Never the first seed on the
+   hotbar.
+4. **No magnets:** a tap on a walkable tile next to the bin, the mailbox or any interactable walks there. Only a
+   tap on the object's own tile, or on its drawn sprite (a villager's head, a tall machine: the topmost
+   y-sorted sprite under the finger), opens it. Accuracy is then the tile's own size: on an iPhone 13 (5 mm
+   tiles, the critic's 1.5 mm thumb offset) the bin opens on 97% of 1 mm-spread taps and 80% at 1.5 mm, and
+   centre taps beside it walk 96%; on the SE (4 mm tiles) 88% / 64-68% / 88%.
+5. **Painting a row is unchanged by ruling 2** (it is a deliberate gesture, not a hold): each painted tile is
+   worked until done for today, with the seed rule above (no chosen seed: tilled and watered, not planted).
+   One constant (`WORK_USES_PER_TILE`) turns it into one step per tile if the owner prefers.
+
+### M6 reach and handedness
+
+- **Tool ring (`ui/ToolRing.ts`, geometry in `ui/layout.ts`):** a sideways flick on Action (14 px, clearly
+  horizontal, toward the middle of the screen or not) opens the 8 hotbar slots and "Bag" on an arc around
+  Action (radius 50, from upper-left to lower-left; mirrored for the left hand). The same finger slides and lets
+  go: items are picked by angle, a whole 19-degree sector, not by hitting the drawn disc; letting go in the
+  middle or toward the screen edge cancels, empty slots cannot be picked. Every item centre is comfortable for
+  both hands on all five phones (unit test). A flick never acts; vertical swipes never open the ring (unit
+  test and e2e). The rod is one drag away (fishing's fixed cost 7 -> 4), the bag too.
+- **Mirrored sheets:** `Modal.row` lays its buttons from the thumb's edge (`rowLayout`): left-handed, the
+  primary button sits at the left edge and the icon and text follow; the same room for text either way. The
+  bin's "Ship all produce" and the bag's "Use now" move to the left too; page arrows keep their order. Reach map
+  (iPhone 13): left-thumb targets outside the comfortable zone on the bin, board, gift, jar and shop sheets
+  went from 27 of 40 to 4 of 41 (the shop's top tabs and one arrow); the right thumb is unchanged.
+- **Options rows sit low:** the Options tab lays out from the tab strip up.
+- **Not done:** bag cells on the SE stay 37 CSS px. Eight columns on a 323 CSS px wide canvas cannot reach
+  44 px (8 x 44 = 352); a 7-column bag would break the hotbar row's mapping. Left for the owner and the UI skin.
+
+### Controls review 3 fixes (painting)
+
+- **A slow tap is a tap (B1):** a paint that never left its first tile commits as a tap at the point the finger
+  landed (walk, or one of the tap's obvious acts). Still touches of 240-600 ms on grass work nothing.
+- **Resting before steering never paints (B2):** the arm moved from 250 to 300 ms; touches that land in the
+  thumb's rest band (the lowest 44 px of the world view, right above the dock) never arm; and after arming, a
+  push that gets 28 px from the start within 150 ms of leaving it is steering: the row is dropped quietly and
+  the stick takes the finger from where it landed. A deliberate paint moves about a tile per 100-150 ms and
+  passes. e2e: rests of 100-500 ms then a push walk and work 0 tiles; a 330 ms hold then a tile-by-tile drag
+  paints exactly the row.
+- **Line lock (M3):** the finger's main direction from where it landed (decided 3/4 of a tile out) and then the
+  last two tiles set a line; the finger stays on it until it is a whole tile off (the next row's centre),
+  measured from the landing height. Unit model (smooth wobble): a 3-tile row is exact 95%+ at 1.5 mm and 90%+
+  at 2 mm.
+- **Back to the start cancels (M4):** a row that grew to 2+ tiles and was dragged back to only its first tile
+  works nothing.
+- **Quieter rows (N6):** a painted row ticks once per finished tile (a ripe harvest stays medium), not per use.
+
+### M7 polish
+
+- **Help card two taps away:** Options shows a 2 x 2 card at the top (tap a tile: walk + do; hold, drag: a whole
+  row; drag low: steer; flick Action: tool ring). Menu, then Opts.
+- **First-run tips, once each:** after the third tile tilled one at a time with Action, "hold a tile a moment,
+  then drag, to work a whole row"; after the third tool change by swipe or hotbar (not by the ring), "flick
+  Action sideways for a ring of all your tools". The welcome tips say tap to walk and Action to till.
+- **Fine stick (two-speed, off by default):** with it on, a push under half the stick's radius walks at half
+  speed (Options > Controls).
+- **Perf:** a tap-walking scenario (long routes with path dots) joins the perf run, and the tap planner (intent
+  plus breadth-first path) is timed: about 0.2 ms per tap, budget 2 ms.
+- **Haptics:** native taps map tick to a light impact, medium to a medium impact, errors to the error
+  notification (a double pulse); the web uses the same patterns through `navigator.vibrate`. Strength is the
+  owner's call on a real phone.
+
+### Coordinator ruling after reviews 3 and 4 (2026-10-09): painting moves to Action
+
+This replaces the M5 world long-press and the review-3 fixes above (rest band, steer check, line lock).
+
+- **World touches never paint or till by duration.** A still world touch is a tap however long it lasts (walk,
+  plus the tap's obvious acts); a touch that reaches the 9 px deadzone is the stick. World long-press painting
+  is gone (`WorldTouch` no longer arms anything).
+- **Rows are painted from Action** (`ActionPress` in `input/gesture.ts`, pure and unit-tested): hold Action
+  still 300 ms (a tick and an icon pop), then drag. The drag direction picks a straight line from the farmer
+  (the tiles next to it that way; 4 directions with 1.6 hysteresis, so a 2-3 mm wobble never switches line)
+  and its length the number of tiles (the first at 8 px, one more per 10 px, up to 12; small because Action is
+  40 px from the screen edge on its thumb's side). The line is previewed live; lifting commits, lifting near
+  the start cancels with nothing done. A line can only ever be straight, so a wobble cannot add a neighbouring
+  row. Haptics: one tick per tile added while drawing, one medium confirm on commit, nothing while the farmer
+  works it. The farmer still works each painted tile until it is done for today (ruling 5 above).
+- **Holding Action no longer repeats it on touch** (the hold now arms painting): a tap acts once; Space held on a
+  keyboard still repeats for desktop testing. A press that wandered 9 px in any direction and did not become a
+  swipe or a flick does nothing on release.
+- **Action's four gestures:** tap (lift before 300 ms, under 9 px) acts once; a mostly vertical 14 px swipe
+  changes tool; a clearly sideways 14 px flick opens the tool ring and never acts; hold-then-drag paints.
+- **Tool ring:** only the hotbar's filled slots and Bag are on the arc (bigger sectors); radius 56 from straight
+  up round to low; the finger's aim is corrected for the thumb-base pull (`compensateTouch`); sectors have gaps
+  (0.44 of a step each side), so a miss between items picks nothing. Slide, rest 80 ms on the highlighted item
+  and lift to pick; a flick lifted at once (within 120 ms, or without resting on an item) leaves the ring open
+  as a tap menu (tap an item, tap elsewhere to close): never a silent pick. Model (7 items, 1.5 mm thumb-base
+  pull): 93% right / 1% neighbour at 2 mm on an iPhone 13, 85% / 6% on the SE.
+- **Options:** the volume rows sit last, right above the tab strip, so both thumbs reach their -/+ buttons.
+- **Cost:** the 3x3 plot loop is now 15 gestures (a tap beside each row and one paint per row, twice), 590-610
+  mm of thumb travel and about 21 s on an iPhone 13; it was 26 / 933 mm / 20 s before the controls work and 5 /
+  ~230 mm / 16 s with world painting. A paint that could turn (serpentine) or a 3-wide swath would bring it back
+  to about 5; both are owner questions in `agents/NEXT-STEPS-CONTROLS.md`.

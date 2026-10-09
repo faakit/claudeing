@@ -1,0 +1,55 @@
+{
+ "cases": [
+  {
+   "case": "hoe, front already tilled: tills a side tile instead",
+   "front": "10,18",
+   "markerBefore": "9,18",
+   "changed": [
+    "9,18"
+   ]
+  },
+  {
+   "case": "seeds, front planted: plants the left neighbour",
+   "front": "10,18",
+   "markerBefore": "9,18",
+   "changed": [
+    "9,18"
+   ]
+  },
+  {
+   "case": "can, front watered: waters a side tile",
+   "front": "10,18",
+   "markerBefore": "9,18",
+   "changed": [
+    "9,18"
+   ]
+  },
+  {
+   "case": "seeds in hand, ripe crop at the side: harvests the side, does not plant the front",
+   "front": "10,18",
+   "markerBefore": "11,18",
+   "changed": [
+    "11,18"
+   ]
+  },
+  {
+   "case": "sprinkler, front holds a jar: placed on a side tile",
+   "front": "10,18",
+   "markerBefore": "9,18",
+   "changed": [
+    "sprinkler@9,18"
+   ]
+  },
+  {
+   "case": "hoe on open grass, hold 1 s: works a 3-wide strip, not a line",
+   "front": "10,18",
+   "markerBefore": "10,18",
+   "changed": [
+    "10,18",
+    "9,18",
+    "11,18"
+   ]
+  }
+ ],
+ "markerNote": "Marker = 1 logical px corner brackets (about 0.3 mm on an iPhone 13). \"free\" (white) is drawn both when the action will work and when it will not but the tile is walkable; only blocked tiles get the faint \"solid\" style."
+}

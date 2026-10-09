@@ -7,8 +7,19 @@ export interface TapPoint {
 export interface InputEvents {
   action: undefined;
   interact: undefined;
-  /** Short touch in logical screen coordinates. */
+  /** A still touch on the world lifted (logical screen coordinates): commit a tap. */
   tap: TapPoint;
+  /** A touch on the world has been still for a moment: preview what a tap there would do. */
+  tapPreview: TapPoint;
+  /** The previewed touch turned into a drag (the stick) or left the world: drop the preview. */
+  tapCancel: undefined;
+  /**
+   * Painting a row from Action (held still, then dragged): the line's direction and length so far, live.
+   * Null direction / 0 tiles = armed but nothing chosen yet.
+   */
+  paintLine: { dir: Direction | null; tiles: number };
+  /** The painting finger lifted: work the line (`commit`), or drop it. */
+  paintEnd: { commit: boolean };
   /** Hotbar slot picked by number key (0-based). */
   slot: number;
   /** Cycle the hotbar by +1 / -1 (wheel, Tab). */
@@ -29,6 +40,13 @@ export class InputHub {
   private stick: Direction | null = null;
   /** True while the Action button or Space is held, so tools repeat. */
   actionHeld = false;
+  /**
+   * The hotbar slot Action would use right now (auto tool may pick another than the selected one), set
+   * by the world each frame so the Action button can show it. Null when Action has nothing to do.
+   */
+  actionSlot: number | null = null;
+  /** The stick is pushed less than halfway (the two-speed stick walks at half speed then). */
+  stickSlow = false;
   private listeners = new Map<keyof InputEvents, Set<Listener<never>>>();
 
   /** Joystick wins over keyboard; among keys the most recently pressed wins. */
@@ -53,6 +71,7 @@ export class InputHub {
   clearHeld(): void {
     this.keys = [];
     this.stick = null;
+    this.stickSlow = false;
     this.actionHeld = false;
   }
 

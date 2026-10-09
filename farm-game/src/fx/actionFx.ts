@@ -1,6 +1,5 @@
 import { items } from '../data';
 import { audio } from '../platform/audio';
-import { haptic } from '../platform/haptics';
 import type { PlayerState } from '../state/GameState';
 import type { ActionResult } from '../systems/actions';
 import { FarmRenderer } from '../game/FarmRenderer';
@@ -23,7 +22,6 @@ export function playActionFx(
     if (!posed) fx.swing(player.x, player.y, def.icon, player.facing);
     audio.play('swing');
   }
-  haptic(res.kind === 'harvest' ? 'success' : 'tick');
   const above = player.y - 30;
   switch (res.kind) {
     case 'till':

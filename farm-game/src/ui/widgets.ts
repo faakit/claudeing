@@ -4,6 +4,8 @@ import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
 import { fitRow, Label } from './font';
+import { rowLayout } from './layout';
+import { getState } from '../state/store';
 import { C, CH, SKIN } from './theme';
 
 /**
@@ -319,6 +321,11 @@ export abstract class Modal {
     this.panelH = Math.min(h, GAME_HEIGHT - 60);
   }
 
+  /** Left-handed mode: sheet rows put their buttons on the left (`rowLayout`). */
+  protected get leftHanded(): boolean {
+    return getState().settings.leftHanded;
+  }
+
   /** Enter key: run the dialog's primary action. Dialogs without one ignore it. */
   confirm(): void {}
 
@@ -406,20 +413,18 @@ export abstract class Modal {
 
   /** Lay out one list row at `y`. Returns the y of the next row. */
   protected row(y: number, spec: RowSpec): number {
-    if (spec.icon) this.icon(15, y + 12, spec.icon);
-    const right = (spec.buttons ?? []).reduce((w, b) => w + (b.width ?? 44) + 3, 0);
-    const maxText = this.panelW - 8 - 28 - right - 2;
-    this.label(28, y + 3, fitRow(spec.title, maxText));
-    if (spec.sub) this.label(28, y + 14, fitRow(spec.sub, maxText), spec.subColor ?? C.creamDim);
-    let x = this.panelW - 8;
-    for (const b of spec.buttons ?? []) {
-      const w = b.width ?? 44;
-      x -= w;
-      this.button(x, y, w, 22, b.label, b.onClick, { textColor: b.color ?? C.cream }).setEnabled(
-        b.enabled !== false,
-      );
-      x -= 3;
-    }
+    // Buttons sit on the thumb's side (mirrored for the left hand); icon and text take the other side.
+    const widths = (spec.buttons ?? []).map((b) => b.width ?? 44);
+    const L = rowLayout(this.panelW, widths, this.leftHanded);
+    if (spec.icon) this.icon(L.iconX, y + 12, spec.icon);
+    this.label(L.textX, y + 3, fitRow(spec.title, L.maxText));
+    if (spec.sub)
+      this.label(L.textX, y + 14, fitRow(spec.sub, L.maxText), spec.subColor ?? C.creamDim);
+    (spec.buttons ?? []).forEach((b, i) => {
+      this.button(L.buttonXs[i]!, y, widths[i]!, 22, b.label, b.onClick, {
+        textColor: b.color ?? C.cream,
+      }).setEnabled(b.enabled !== false);
+    });
     return y + ROW_H;
   }
 }

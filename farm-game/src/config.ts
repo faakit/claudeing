@@ -10,8 +10,11 @@ export const HUD_H = 74; // read-only info at the top, out of thumb reach on pur
 export const DOCK_H = 112; // controls + hotbar
 export const DOCK_Y = GAME_HEIGHT - DOCK_H;
 export const WORLD_VIEW = { x: 0, y: HUD_H, w: GAME_WIDTH, h: DOCK_Y - HUD_H } as const;
-/** The floating joystick may start anywhere below this line (the lower ~60% of the screen). */
-export const THUMB_ZONE_Y = 150;
+/**
+ * The floating joystick may start anywhere below this line: the whole world view and the dock, so every touch
+ * off a button is either a tap or the stick (never nothing).
+ */
+export const THUMB_ZONE_Y = HUD_H;
 
 export const MAP_KEYS = { farm: 'map_farm' } as const;
 export const TILESET_KEY = 'tiles_placeholder';
@@ -56,6 +59,17 @@ export const CORNER_ASSIST_PX = 4;
 /** Clamp for frame deltas so a lag spike can never tunnel through a wall. */
 export const MAX_FRAME_MS = 50;
 export const WALK_FPS = 8;
+/** Turn in place: from a standstill, a push in a new direction walks only after this long (a flick turns). */
+export const TURN_HOLD_MS = 100;
+/**
+ * The first tile of a walk from a tile centre: a release this far along commits to the next tile (a nudge is a
+ * step); after the walk has passed a centre, SETTLE_BACK_PX applies.
+ */
+export const FIRST_STEP_COMMIT_PX = 4;
+/** Settle on release: glide back to the last tile centre passed if it is closer than this, else forward. */
+export const SETTLE_BACK_PX = 13;
+/** Settle glide speed, px/s (the longest glide, 13 px back, takes under 120 ms). */
+export const SETTLE_SPEED = 110;
 
 // --- Camera & transitions ---
 export const CAMERA_LERP = 0.12;
@@ -63,11 +77,9 @@ export const FADE_MS = 180;
 export const FADE_COLOR = { r: 16, g: 12, b: 28 } as const;
 export const VOID_COLOR = '#14101f';
 
-// --- Touch controls (logical px at 480x270) ---
-export const JOYSTICK = { radius: 24, deadzone: 6, axisBias: 1.25 } as const;
-export const TAP_MAX_MS = 250;
-export const TAP_MAX_MOVE = 8;
-export const UI_LAYOUT = { actionRadius: 28, interactRadius: 21, menuRadius: 14, edge: 6 } as const;
+// --- Touch controls (logical px) ---
+// Gesture thresholds live in input/gesture.ts and the dock geometry in ui/layout.ts (both pure, tested).
+export const JOYSTICK = { radius: 24, axisBias: 1.6 } as const;
 export const EVT_INTERACT_TARGET = 'interact-target';
 
 // --- Time (M2) ---
