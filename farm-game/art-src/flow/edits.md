@@ -18,3 +18,6 @@ Changes made on top of the Flow output, all in code so they re-run (`art-src/spr
   - Finn side view (R1-8): the grey hip patch repainted as sleeve, the grey band under the coat as trousers.
   - Rosa side view (R1-8): skin/brown specks on the hem repainted lilac.
 - Rare crops (crops4 b) and their items (items7 a): stage 0 is the authored seed mound like every crop.
+- Tool-use poses (npcs4 a, row 3): rows trimmed below the waist (hoe -3, can -2, rod -3) so the poses stand on the
+  player's baseline; shown for a moment after a tool action (down for the hoe; left mirrors right).
+- The white butterfly is not used (it read as a letter at 1x); the snowflake and the last sparkle frame are authored.

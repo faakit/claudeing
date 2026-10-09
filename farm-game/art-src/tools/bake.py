@@ -423,31 +423,35 @@ def rock(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
 
 
 def occlusion(P, recipe: list[str]) -> np.ndarray:
-    """Cavern floor darkening toward the rock around it (dithered stone dark, densest at the wall foot)."""
+    """Cavern floor darkening at the foot of the rock: a flat 2 px band of stone dark hugging the rock, with a
+    checker only on its 1 px outer edge (critic R4-3: darkness as bands, not screen-door dither)."""
     seed, x, y, nb = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
     inside = window_mask(nb, 3)  # '1' = rock
     X, Y = grid(3, x - 1, y - 1)
-    d = -blur(sdf(inside), 1.5) + (vnoise(X, Y, 4.0, seed) - 0.5) * 2.0  # distance out from the rock
+    d = -blur(sdf(inside), 1.2) + (vnoise(X, Y, 5.0, seed) - 0.5) * 1.2  # distance out from the rock
     t = np.full((3 * T, 3 * T), -1, dtype=np.int32)
-    xi, yi = X.astype(int), Y.astype(int)
-    bayer = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0
-    thr = bayer[yi % 4, xi % 4]
-    dens = np.clip((6.0 - d) / 6.0, 0, 1) * 0.55
-    t[(~inside) & (thr < dens)] = P.name("stone dark")
+    checker = ((X + Y).astype(int) % 2) == 0
+    t[(~inside) & (d < 2.0)] = P.name("stone dark")
+    t[(~inside) & (d >= 2.0) & (d < 3.0) & checker] = P.name("stone dark")
     return centre(t, 3).copy()
 
 
 def floor_dark(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
-    """Cavern floor with a darker pocket: darkness given at the tile's four corners (0-9, from the torch distance
-    and a smooth noise in the map generator), interpolated per pixel and dithered with stone dark."""
+    """Cavern floor with a darker pocket: darkness given at the tile's four corners (0-9, from the distance to the
+    torches and the entrance and a smooth noise, in the map generator), interpolated per pixel and drawn as a flat
+    band of stone dark with a checker only on the 1 px line where it starts."""
     seed, x, y, c = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
     c00, c10, c01, c11 = (int(ch) / 9.0 for ch in c)
     X, Y = grid(1, x, y)
     fx, fy = (X - x * T) / T, (Y - y * T) / T
     dark = (c00 * (1 - fx) + c10 * fx) * (1 - fy) + (c01 * (1 - fx) + c11 * fx) * fy
-    dark = dark + (vnoise(X, Y, 3.0, seed) - 0.5) * 0.25
-    bayer = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0
-    thr = bayer[Y.astype(int) % 4, X.astype(int) % 4]
+    dark = dark + (vnoise(X, Y, 4.0, seed) - 0.5) * 0.18
+    checker = ((X + Y).astype(int) % 2) == 0
     t = floor.copy()
-    t[thr < dark * 0.5] = P.name("stone dark")
+    band1 = dark >= 0.4
+    edge1 = (dark >= 0.36) & (dark < 0.4) & checker
+    t[band1 | edge1] = P.name("stone dark")  # one flat band: a deeper one read as a puddle or a stain
+    # keep a few grit pixels inside the bands so they read as floor, not paint
+    grit = (floor == P.name("taupe")) | (floor == P.name("stone lt"))
+    t[band1 & grit] = P.name("stone")
     return t

@@ -36,14 +36,28 @@ describe('night glow shapes', () => {
   it('steps down from the core in three rings with a dithered edge, nothing outside', () => {
     const lamp = GLOW_SHAPES.lamp!;
     expect(glowPixel(lamp, 0, 0)!.alpha).toBe(lamp.alphas[0]);
-    expect(glowPixel(lamp, 8, 0)!.alpha).toBe(lamp.alphas[1]);
-    expect(glowPixel(lamp, 14, 0)!.alpha).toBe(lamp.alphas[2]);
+    expect(glowPixel(lamp, 3, 0)!.alpha).toBe(lamp.alphas[1]);
+    expect(glowPixel(lamp, 8, 0)!.alpha).toBe(lamp.alphas[2]);
+    expect(glowPixel(lamp, 13, 0)!.alpha).toBe(lamp.alphas[3]);
     expect(glowPixel(lamp, 30, 0)).toBeNull();
+    // only the bulb is bright: every ring outside the core stays low, so nothing clips to white
+    for (const sh of Object.values(GLOW_SHAPES))
+      sh.alphas.slice(1).forEach((x) => expect(x).toBeLessThan(0.5));
     // across a ring edge, neighbouring pixels alternate (checker dither), never a smooth gradient
-    const r = lamp.radii[0]!;
+    const r = lamp.radii[1]!;
     const a = glowPixel(lamp, r, 0)!.alpha;
     const b = glowPixel(lamp, r, 1)!.alpha;
     expect(a).not.toBe(b);
+  });
+  it('spills window light as stripes on the ground below the pane, not as a disc on the wall', () => {
+    const win = GLOW_SHAPES.window!;
+    expect(glowPixel(win, 0, 1)).not.toBeNull(); // the pane
+    expect(glowPixel(win, 0, 6)).toBeNull(); // the gap under the sill
+    expect(glowPixel(win, 0, 10)).toBeNull(); // nothing on the wall below the window
+    expect(glowPixel(win, 0, 12)).not.toBeNull(); // first stripe, on the ground
+    expect(glowPixel(win, 0, 13)).toBeNull(); // stripes on every other row
+    expect(glowPixel(win, 8, 22)).not.toBeNull(); // wider further down
+    expect(glowPixel(win, 8, 12)).toBeNull();
   });
   it('every map light has a shape, and maps light their lamps and windows', () => {
     let count = 0;

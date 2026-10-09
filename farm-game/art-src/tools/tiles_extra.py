@@ -66,6 +66,10 @@ def split_h(img: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return img[:, :T], img[:, T:]
 
 
+# Per-season drawn overrides {season: {tile name: index tile}}, filled by build_extra (see seasons.py).
+SEASON_OVERRIDES: dict[str, dict[str, np.ndarray]] = {}
+
+
 def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.ndarray]:
     """All extra tiles by name, in a stable order (dict insertion order = tileset order)."""
     import maptiles as mt
@@ -198,6 +202,7 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     prop("p_firewood", "village2a/p2_firewood", (15, 14))
     prop("p_fishcrate", "village2a/p2_fishcrate", (14, 13))
     prop("p_sign_sprout", "village2a/p2_sign_sprout", (15, 15))
+    prop("p_board", "items7b/board_sprout", (16, 15))  # the town's orders board: carved sprout, a rose on top
     prop("p_cat", "village2a/p2_cat", (13, 9))
     prop("p_flowerbed", "village2a/p2_windowbox", (16, 10))
     # nature (Flow sheet nature2)
@@ -274,6 +279,12 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     wide = make({"src": "land1a/decor_laundry", "size": [32, T], "fit": [32, 16]})
     out["w_laundry_l"], out["w_laundry_r"] = split_h(wide)
 
+    # --- seasonal clumps: empty in spring, drawn per season ---
+    for k in range(3):
+        out[f"seasonal_{k}"] = np.full((T, T), -1, dtype=np.int32)
+        for season in ("summer", "fall", "winter"):
+            SEASON_OVERRIDES.setdefault(season, {})[f"seasonal_{k}"] = mt.seasonal(P, season, k)
+
     # --- roofs (roof layer) and eaves (overhead) ---
     for style in ("red", "slate"):
         for row in "tmb":
@@ -287,14 +298,35 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
             es[0, :] = P.name("plum shadow")
             es[1, ::2] = P.name("plum shadow")
             out["eave_shadow"] = es
+            SEASON_OVERRIDES.setdefault("winter", {})["eave_shadow"] = mt.icicles(P, es)
         # a chimney on the roof's top row: composited so the roof and ridge layers hold one tile per cell
         ctop, cbase = mt.chimney(P)
         roof_t, eave = out[f"roof_{style}_tc"].copy(), out[f"eave_{style}_c"].copy()
         roof_t[cbase >= 0] = cbase[cbase >= 0]
         eave[ctop >= 0] = ctop[ctop >= 0]
         out[f"chimney_base_{style}"], out[f"chimney_top_{style}"] = roof_t, eave
-        vane = eave.copy() if False else out[f"eave_{style}_c"].copy()
+        vane = out[f"eave_{style}_c"].copy()
         v = out["vane"]
         vane[v >= 0] = v[v >= 0]
         out[f"vane_{style}"] = vane
+        # winter: the roof as a snow mass; the chimney stays brick with a snow cap
+        W = SEASON_OVERRIDES.setdefault("winter", {})
+        for row in "tmbe":
+            for i, col in enumerate("lcr"):
+                name = f"roof_{style}_{row}{col}" if row != "e" else f"eave_{style}_{col}"
+                W[name] = mt.snow_roof(P, out[name], row, col, i)
+        st = W[f"roof_{style}_tc"].copy()
+        st[cbase >= 0] = cbase[cbase >= 0]
+        W[f"chimney_base_{style}"] = st
+        se = W[f"eave_{style}_c"].copy()
+        cap = ctop.copy()
+        rows = np.where((ctop >= 0).any(1))[0]
+        if len(rows):
+            band = cap[rows[0] : rows[0] + 2]
+            band[band >= 0] = P.name("ice white")
+        se[cap >= 0] = cap[cap >= 0]
+        W[f"chimney_top_{style}"] = se
+        sv = W[f"eave_{style}_c"].copy()
+        sv[v >= 0] = v[v >= 0]
+        W[f"vane_{style}"] = sv
     return out

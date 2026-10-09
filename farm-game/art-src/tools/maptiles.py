@@ -1031,3 +1031,92 @@ def tiles_of(img: np.ndarray, name: str) -> dict[str, np.ndarray]:
             if (t >= 0).any():
                 out[f"{name}_{i}_{j}"] = t.copy()
     return out
+
+
+# ---------------------------------------------------------------- winter roofs and seasonal clumps
+
+
+def snow_roof(P, roof_tile: np.ndarray, row: str, col: str, salt: int = 0) -> np.ndarray:
+    """A clay (or slate) roof under snow, drawn as a mass (critic R4-4): flat ice white with one or two soft
+    sky-blue lumps, the ridge a rounded mound with an ink outline (row e, overhead), and at the eave a rounded
+    overhang lip over a strip of the roof's own tiles peeking out above the ink eave line."""
+    snow, shade, ink = P.name("ice white"), P.name("sky"), P.outline
+    if row == "e":
+        t = empty()
+        for x in range(T):
+            top = 11
+            if col == "l" and x < 2:
+                top = 13 - x
+            if col == "r" and x > T - 3:
+                top = 13 - (T - 1 - x)
+            t[top, x] = ink
+            t[top + 1 : T, x] = snow
+        t[T - 1, 3::5] = shade
+        if col == "l":
+            t[13:, 0] = ink
+        if col == "r":
+            t[13:, T - 1] = ink
+        return t
+    t = np.full((T, T), snow, dtype=np.int32)
+    lumps = ((3 + salt % 4, 4, 4),) if row == "b" else ((2 + salt % 5, 5, 4), (9 - salt % 3, 11, 5))
+    for x0, y0, w in lumps:
+        t[y0, x0 : x0 + w] = shade  # the soft underside of a lump
+    if row == "b":
+        for x in range(T):
+            lip = 8 + (1 if (x // 4) % 2 == 0 else 0)
+            t[lip, x] = shade
+            t[lip + 1 : 14, x] = roof_tile[lip + 1 : 14, x]
+        t[14, :] = roof_tile[14, :]
+        t[15, :] = ink
+    if col == "l":
+        t[:, 0] = ink
+        t[:, 1] = np.where(t[:, 1] == snow, shade, t[:, 1])
+    if col == "r":
+        t[:, T - 1] = ink
+        t[:, T - 2] = np.where(t[:, T - 2] == snow, shade, t[:, T - 2])
+    return t
+
+
+def icicles(P, base: np.ndarray) -> np.ndarray:
+    """The eave shadow in winter: icicles hanging over the facade's top rows."""
+    t = base.copy()
+    for x, n in ((2, 3), (6, 2), (9, 4), (13, 2)):
+        for y in range(n):
+            t[y, x] = P.name("ice white") if y < n - 1 else P.name("sky")
+    return t
+
+
+def seasonal(P, season: str, k: int) -> np.ndarray:
+    """Clumps that exist only in one season (empty in spring): dry grass with gold heads in summer, a scatter
+    of fallen leaves in fall, a small drift in winter. Placed under and downwind of trees by the map generator."""
+    t = empty()
+    r = np.random.default_rng(1000 + k * 7 + len(season))
+    if season == "summer":
+        for _ in range(6 + k):
+            x, y = int(r.integers(2, 14)), int(r.integers(8, 15))
+            hgt = int(r.integers(3, 7))
+            for j in range(hgt):
+                t[y - j, x] = P.name("sand") if j < hgt - 1 else P.name("gold")
+            t[y, x] = P.name("wood")
+        if k == 0:  # a small sunflower
+            t[2:9, 7] = P.name("leaf mid")
+            t[2, 6:9] = P.name("gold")
+            t[1, 7] = P.name("gold")
+            t[3, 7] = P.name("orange")
+            t[2, 7] = P.name("soil")
+    elif season == "fall":
+        cols = [P.name(c) for c in ("orange", "red", "gold", "wine", "orange")]
+        for _ in range(9 + k * 2):
+            x, y = int(r.integers(1, 14)), int(r.integers(3, 15))
+            c = cols[int(r.integers(0, len(cols)))]
+            t[y, x] = c
+            t[y, x + 1] = c if r.random() < 0.6 else P.name("soil")
+    elif season == "winter":
+        cx = 4 + k * 3
+        for x in range(cx - 4, cx + 5):
+            if 0 <= x < T:
+                hgt = 3 - abs(x - cx) // 2
+                for j in range(max(hgt, 0)):
+                    t[13 - j, x] = P.name("ice white")
+                t[14, x] = P.name("sky")
+    return t

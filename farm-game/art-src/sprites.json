@@ -901,10 +901,14 @@
   "group": "world"
  },
  "obj_sign": {
-  "src": "crops3b/obj_sign",
+  "src": "village2a/p2_sign_sprout",
   "size": [
    16,
    16
+  ],
+  "fit": [
+   15,
+   15
   ],
   "group": "world"
  },
@@ -6591,5 +6595,35 @@
   "anchor": "center",
   "group": "ui",
   "island": 0
+ },
+ "player_use_hoe": {
+  "src": "npcs4a/pose_hoe",
+  "size": [
+   32,
+   32
+  ],
+  "group": "chars",
+  "noscale": true,
+  "drop_rows": 3
+ },
+ "player_use_can": {
+  "src": "npcs4a/pose_can",
+  "size": [
+   32,
+   32
+  ],
+  "group": "chars",
+  "noscale": true,
+  "drop_rows": 2
+ },
+ "player_use_rod": {
+  "src": "npcs4a/pose_rod",
+  "size": [
+   32,
+   32
+  ],
+  "group": "chars",
+  "noscale": true,
+  "drop_rows": 3
  }
 }

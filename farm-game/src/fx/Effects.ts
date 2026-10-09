@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { PX_TEXTURE } from '../art/gameArt';
+import { ATLAS_FILES } from '../art/manifest';
 import { getState } from '../state/store';
 import { Label } from '../ui/font';
 
@@ -55,9 +56,33 @@ export class Effects {
     }
   }
 
+  /**
+   * A short hand-drawn flipbook (fx_<name>_0..3 in the ui atlas: sparkle, dust, splash), played once in steps.
+   * Returns false when the art is missing, so the caller keeps its pixel burst.
+   */
+  private flipbook(x: number, y: number, name: string, fps = 14, depth = 9000): boolean {
+    const atlas = ATLAS_FILES.ui.key;
+    if (!this.scene.textures.exists(atlas) || !this.scene.textures.get(atlas).has(`fx_${name}_0`))
+      return false;
+    const img = this.scene.add.image(Math.round(x), Math.round(y), atlas, `fx_${name}_0`);
+    img.setDepth(depth).setOrigin(0.5, 1);
+    let f = 0;
+    this.scene.time.addEvent({
+      delay: 1000 / fps,
+      repeat: 3,
+      callback: () => {
+        f += 1;
+        if (f > 3) img.destroy();
+        else img.setFrame(`fx_${name}_${f}`);
+      },
+    });
+    return true;
+  }
+
   dust(x: number, y: number): void {
+    const drawn = this.flipbook(x, y + 6, 'dust');
     this.burst(x, y, {
-      count: 9,
+      count: drawn ? 4 : 9,
       color: [0x8a6a43, 0xa88858, 0x6b4a2b],
       speed: 34,
       life: 420,
@@ -67,8 +92,9 @@ export class Effects {
     });
   }
   splash(x: number, y: number): void {
+    const drawn = this.flipbook(x, y + 6, 'splash');
     this.burst(x, y, {
-      count: 11,
+      count: drawn ? 5 : 11,
       color: [0x6fa3e0, 0xb8d8f8, 0x3b78c4],
       speed: 30,
       life: 460,
@@ -89,8 +115,9 @@ export class Effects {
     });
   }
   sparkle(x: number, y: number, color: number): void {
+    const drawn = this.flipbook(x, y + 5, 'sparkle', 16, 9100);
     this.burst(x, y, {
-      count: 14,
+      count: drawn ? 8 : 14,
       color: [color, 0xffffff, 0xf4d35e],
       speed: 44,
       life: 560,

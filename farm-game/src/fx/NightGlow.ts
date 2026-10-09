@@ -5,8 +5,7 @@ import { glowFor } from '../ui/daylight';
 
 /**
  * Night glow: stepped, dithered pixel-art light pools drawn additively over the day tint at the map's `lights`
- * (lamps, windows, the forge and fireplace, torches, crystals), a soft halo around the player outdoors, and
- * fireflies on warm nights. It lives in the UI scene, right above the tint, because light has to brighten what
+ * (lamps, windows, the forge and fireplace, torches, crystals) and fireflies on warm nights. It lives in the UI scene, right above the tint, because light has to brighten what
  * the tint darkened; the world scene publishes its lights and camera through `glowSource`.
  */
 export interface GlowLight {
@@ -43,22 +42,48 @@ export function parseLights(map: {
     .map((o) => ({ kind: o.name, x: o.x, y: o.y }));
 }
 
-type Shape = { radii: number[]; colors: number[]; alphas: number[]; squash?: number; dy?: number };
-/** Three stepped rings per light, warm palette colours (lamp, gold, orange; ice and sky for crystals). */
+type Shape = {
+  radii: number[];
+  colors: number[];
+  alphas: number[];
+  squash?: number;
+  dy?: number;
+  /** Window light: a lit pane, then a warm trapezoid of stepped stripes on the ground below. */
+  spill?: boolean;
+};
+/**
+ * Light pools built from the warm ramp (critic R4-1): lamp or gold only on the source pixels, then low orange,
+ * red and wine rings, so light warms the grass instead of turning it lime, and nothing clips to white but the
+ * bulb or flame itself. Crystals keep a cool ramp.
+ */
 export const GLOW_SHAPES: Record<string, Shape> = {
-  lamp: { radii: [5, 10, 16], colors: [0xfff0a0, 0xf4cc3c, 0xe48c24], alphas: [0.8, 0.45, 0.2] },
-  window: {
-    radii: [4, 8, 12],
-    colors: [0xfff0a0, 0xf4cc3c, 0xe48c24],
-    alphas: [0.75, 0.4, 0.16],
-    squash: 0.7,
-    dy: 5,
+  lamp: {
+    radii: [1.5, 5, 10, 15],
+    colors: [0xfff0a0, 0xe48c24, 0xcc3a2a, 0x8c1c2c],
+    alphas: [0.9, 0.3, 0.2, 0.12],
   },
-  fire: { radii: [5, 10, 15], colors: [0xf4cc3c, 0xe48c24, 0xcc3a2a], alphas: [0.85, 0.45, 0.2] },
-  torch: { radii: [3, 7, 12], colors: [0xf4cc3c, 0xe48c24, 0xcc3a2a], alphas: [0.85, 0.45, 0.2] },
-  crystal: { radii: [3, 7, 11], colors: [0xd6ecf0, 0x72aadc, 0x3c74b4], alphas: [0.7, 0.35, 0.15] },
-  halo: { radii: [8, 16, 26], colors: [0xfff0a0, 0xf4cc3c, 0xe48c24], alphas: [0.25, 0.14, 0.07] },
-  firefly: { radii: [1, 2, 4], colors: [0xfff0a0, 0xb4d45a, 0xb4d45a], alphas: [1, 0.55, 0.22] },
+  window: {
+    radii: [3],
+    colors: [0xf4cc3c, 0xe48c24, 0xcc3a2a],
+    alphas: [0.5, 0.3, 0.16],
+    spill: true,
+  },
+  fire: {
+    radii: [1.5, 5, 10, 15],
+    colors: [0xf4cc3c, 0xe48c24, 0xcc3a2a, 0x8c1c2c],
+    alphas: [0.9, 0.34, 0.26, 0.18],
+  },
+  torch: {
+    radii: [1, 3.5, 7, 11],
+    colors: [0xf4cc3c, 0xe48c24, 0xcc3a2a, 0x8c1c2c],
+    alphas: [0.9, 0.34, 0.26, 0.18],
+  },
+  crystal: {
+    radii: [1.5, 4, 8],
+    colors: [0xd6ecf0, 0x72aadc, 0x2e4a7a],
+    alphas: [0.8, 0.3, 0.2],
+  },
+  firefly: { radii: [1, 2, 4], colors: [0xfff0a0, 0xb4d45a, 0xb4d45a], alphas: [1, 0.45, 0.18] },
 };
 const FIRE_KINDS = new Set(['fire', 'torch']);
 
@@ -71,6 +96,7 @@ export function glowPixel(
   dx: number,
   dy: number,
 ): { color: number; alpha: number } | null {
+  if (shape.spill) return spillPixel(shape, dx, dy);
   const d = Math.hypot(dx, dy / (shape.squash ?? 1));
   const checker = (Math.abs(Math.round(dx)) + Math.abs(Math.round(dy))) % 2 === 0;
   for (let i = 0; i < shape.radii.length; i++) {
@@ -82,12 +108,32 @@ export function glowPixel(
   return null;
 }
 
+/**
+ * Window light, with (dx, dy) from the frame's top-centre: the lit pane (6x5) at the top, then, past the facade, a
+ * trapezoid on the ground below that widens from 8 to 18 px over 12 rows, drawn as stripes on every other row and fading in two steps.
+ */
+export const SPILL = { w: 19, h: 24, paneW: 6, paneH: 5, gap: 7 };
+function spillPixel(shape: Shape, dx: number, dy: number): { color: number; alpha: number } | null {
+  if (dy < SPILL.paneH) {
+    return Math.abs(dx) <= SPILL.paneW / 2 - 0.5
+      ? { color: shape.colors[0]!, alpha: shape.alphas[0]! }
+      : null;
+  }
+  const r = dy - SPILL.paneH - SPILL.gap;
+  if (r < 0 || r >= SPILL.h - SPILL.paneH - SPILL.gap || r % 2 === 1) return null;
+  const half = 4 + (r * 5) / 12;
+  if (Math.abs(dx) > half) return null;
+  const near = r < 6;
+  return { color: shape.colors[near ? 1 : 2]!, alpha: shape.alphas[near ? 1 : 2]! };
+}
+
 const TEXTURE = 'fx_glow';
 
 function ensureTexture(scene: Phaser.Scene): void {
   if (scene.textures.exists(TEXTURE)) return;
   const frames = Object.entries(GLOW_SHAPES).map(([k, s]) => {
-    const r = s.radii[s.radii.length - 1]! + 1;
+    if (s.spill) return { k, s, w: SPILL.w, h: SPILL.h };
+    const r = Math.ceil(s.radii[s.radii.length - 1]!) + 1;
     return { k, s, w: 2 * r + 1, h: 2 * Math.ceil(r * (s.squash ?? 1)) + 1 };
   });
   const W = frames.reduce((a, f) => a + f.w + 1, 0);
@@ -98,7 +144,7 @@ function ensureTexture(scene: Phaser.Scene): void {
   let x0 = 0;
   for (const { k, s, w, h } of frames) {
     const cx = (w - 1) / 2;
-    const cy = (h - 1) / 2;
+    const cy = s.spill ? 0 : (h - 1) / 2;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         const p = glowPixel(s, x - cx, y - cy);
@@ -128,7 +174,6 @@ interface Fly {
 
 export class NightGlow {
   private glows: Glow[] = [];
-  private halo: Phaser.GameObjects.Image;
   private flies: Fly[] = [];
   private version = -1;
 
@@ -137,7 +182,6 @@ export class NightGlow {
     private readonly depth: number,
   ) {
     ensureTexture(scene);
-    this.halo = this.make('halo');
     for (let i = 0; i < 8; i++)
       this.flies.push({ img: this.make('firefly'), bx: 0, by: 0, ph: i * 1.7 });
   }
@@ -202,11 +246,14 @@ export class NightGlow {
       }
       const a = amount * (calm ? 1 : g.flicker);
       if (!cam) g.img.setVisible(false);
-      else this.place(g.img, g.light.x, g.light.y + (g.shape.dy ?? 0), a);
+      else
+        this.place(
+          g.img,
+          g.light.x,
+          g.light.y + (g.shape.spill ? SPILL.h / 2 - 5 : (g.shape.dy ?? 0)),
+          a,
+        );
     }
-    const p = state.player;
-    if (cam && glowSource.outdoor && amount > 0) this.place(this.halo, p.x, p.y - 12, amount);
-    else this.halo.setVisible(false);
     this.updateFlies(time, state, amount, calm);
   }
 

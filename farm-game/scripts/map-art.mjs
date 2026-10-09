@@ -479,6 +479,7 @@ export function artLayers(name, m, objects, extraReserved = []) {
   const waterish = (k, x, y) => k === 'water' || wet(x, y);
 
   const torches = (C.props ?? []).filter(([n]) => n === 'p_torch').map(([, x, y]) => [x, y]);
+  if (C.lintel) torches.push([C.lintel[0] + 0.5, C.lintel[1]]); // daylight at the mine's mouth
   /** Floor darkness 0-9 at a tile corner: pockets of noise, fading in from 5 to 8 tiles away from any torch. */
   const darkness = (cx, cy) => {
     const d = Math.min(99, ...torches.map(([tx, ty]) => Math.hypot(tx + 0.5 - cx, ty + 0.5 - cy)));
@@ -604,6 +605,9 @@ export function artLayers(name, m, objects, extraReserved = []) {
         else set('props', x, y, 'bush_big');
       } else if (k === 'fence') {
         set('props', x, y, `fence_${mask4(x, y, (n) => n === 'fence', false)}`);
+      } else if (k === 'board') {
+        set('detail', x, y, 'base_grass');
+        set('props', x, y, 'p_board');
       }
     }
 
@@ -703,6 +707,21 @@ export function artLayers(name, m, objects, extraReserved = []) {
         const f = (hash(x, y, 57) % 1000) / 1000;
         if (nearWood && f < C.groveEdge)
           set('props', x, y, f < C.groveEdge / 2 ? 'fern_flat' : 'tallgrass');
+      }
+  // seasonal clumps under and downwind (south and east) of trees: invisible in spring; dry grass in summer,
+  // leaf litter in fall, small drifts in winter (art-src/tools/seasons.py draws them per season)
+  if (C.trees.length)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (kind(x, y) !== 'grass' || L.props[y * w + x]) continue;
+        if (C.props.some(([, px, py]) => px === x && py === y)) continue;
+        const byTree = [
+          [0, -1],
+          [-1, 0],
+          [-1, -1],
+        ].some(([dx, dy]) => kind(x + dx, y + dy) === 'tree');
+        const f = (hash(x, y, 61) % 1000) / 1000;
+        if (byTree && f < 0.55) set('props', x, y, `seasonal_${hash(x, y, 62) % 3}`);
       }
   // the forest's edge: crowns spilling over the open tiles around it (under the player, or overhead where the
   // wood is south of the tile so you walk behind it), with its shadow cast down-right

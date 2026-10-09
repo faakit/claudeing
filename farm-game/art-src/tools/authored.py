@@ -428,6 +428,11 @@ def build(pal, outline, groups, specs, make, names=None):
     slot: dict[bytes, int] = {}
     for n, tile in [(n, tiles[n]) for n in TILE_ORDER] + list(extra.items()):
         key = tile.astype(np.int32).tobytes()
+        if n.startswith("seasonal_"):  # empty in spring, drawn in other seasons: always its own slot
+            allt.append(tile)
+            slot_names.append(n)
+            index[n] = len(allt) - 1
+            continue
         if n not in TILE_ORDER and not (tile >= 0).any():
             index[n] = -1  # fully transparent: the map generator leaves the cell empty
             continue
@@ -446,7 +451,7 @@ def build(pal, outline, groups, specs, make, names=None):
         sheet[y * T : (y + 1) * T, x * T : (x + 1) * T] = tile
     import seasons
 
-    season_rgba = {k: px.idx_to_rgba(v, pal) for k, v in seasons.season_sheets(sheet, slot_names, cols, P.names).items()}
+    season_rgba = {k: px.idx_to_rgba(v, pal) for k, v in seasons.season_sheets(sheet, slot_names, cols, P.names, tiles_extra.SEASON_OVERRIDES).items()}
     for key, (colours, rows) in GLYPHS.items():
         groups["ui"][key] = px.idx_to_rgba(glyph(P, colours, rows), pal)
     seed = px.idx_to_rgba(seed_mound(P), pal)

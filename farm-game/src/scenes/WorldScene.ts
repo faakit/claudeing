@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { MapArt, tilesetFor } from '../art/mapLayers';
+import { hasArt } from '../art/registry';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
   ACTION_LOCK_MS,
@@ -61,6 +62,13 @@ import {
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
 
+/** Tool-use poses by tool item (chars atlas, from the Flow sheet npcs4). */
+const TOOL_POSES: Record<string, string> = {
+  hoe: 'player_use_hoe',
+  watering_can: 'player_use_can',
+  fishing_rod: 'player_use_rod',
+};
+
 /** Palette slot 0 (ink): the outline colour, also the void around indoor maps. */
 const INK_HEX = '#2a1a24';
 
@@ -81,6 +89,9 @@ export abstract class WorldScene extends Phaser.Scene {
   private farm: FarmRenderer | null = null;
   private mapArt: MapArt | null = null;
   private ambient: Ambient | null = null;
+  /** The tool-use pose shown for a moment after a tool action (art only; see toolPose). */
+  private pose: Phaser.GameObjects.Image | null = null;
+  private poseUntil = 0;
   protected fx!: Effects;
   private transitioning = false;
   /** After a door, ignore held input until it is released once, so doors never bounce. */
@@ -106,6 +117,8 @@ export abstract class WorldScene extends Phaser.Scene {
       throw new Error(`State says player is on "${state.player.map}" but scene is "${this.mapId}"`);
     }
     this.transitioning = false;
+    this.pose = null; // the scene object is reused across visits; its old images are gone
+    this.poseUntil = 0;
     this.inputLocked = true;
     this.actionLock = 0;
     this.heldFailed = false;
@@ -352,6 +365,12 @@ export abstract class WorldScene extends Phaser.Scene {
     const p = getState().player;
     this.sprite.setPosition(p.x, p.y);
     this.sprite.setDepth(10 + p.y);
+    const posing = !!this.pose && this.time.now < this.poseUntil && !moving;
+    this.sprite.setVisible(!posing);
+    this.pose
+      ?.setVisible(posing)
+      .setPosition(p.x, p.y)
+      .setDepth(10 + p.y);
     this.shadow.setPosition(p.x, p.y - 2).setDepth(9 + p.y);
     if (moving) {
       this.sprite.anims.play(`player_walk_${p.facing}`, true);
@@ -359,6 +378,22 @@ export abstract class WorldScene extends Phaser.Scene {
       this.sprite.anims.stop();
       this.sprite.setFrame(playerIdleFrame(p.facing));
     }
+  }
+
+  /**
+   * For a moment after a tool action, show the player's tool-use pose (hoe raised, can pouring, rod cast) when
+   * that art exists. Facing up keeps the walk sprite (there is no back-view pose); left mirrors the right one.
+   */
+  private toolPose(item?: string): boolean {
+    const key = item ? TOOL_POSES[item] : undefined;
+    const p = getState().player;
+    if (!key || p.facing === 'up' || !hasArt(key)) return false;
+    if (key === TOOL_POSES['hoe'] && p.facing !== 'down') return false;
+    this.pose ??= this.add.image(0, 0, key).setOrigin(0.5, 1);
+    this.pose.setTexture(key).setFlipX(p.facing === 'left');
+    this.poseUntil = this.time.now + ACTION_LOCK_MS.ok + 60;
+    this.syncSprite(false);
+    return true;
   }
 
   private footstep(): void {
@@ -499,7 +534,8 @@ export abstract class WorldScene extends Phaser.Scene {
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.heldFailed = false;
-      playActionFx(this.fx, res, getState().player, stack?.item);
+      const posed = this.toolPose(stack?.item);
+      playActionFx(this.fx, res, getState().player, stack?.item, posed);
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;

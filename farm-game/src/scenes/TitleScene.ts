@@ -34,7 +34,7 @@ export class TitleScene extends Phaser.Scene {
     hideSplash(); // first real screen is up: drop the native splash
     this.confirmNew = false;
     this.buttons = [];
-    this.cameras.main.setBackgroundColor('#1b1530');
+    this.cameras.main.setBackgroundColor('#1e2848');
     this.drawBackdrop();
 
     const title = new Label(this, GAME_WIDTH / 2, 52, 'TINY', {
@@ -149,53 +149,69 @@ export class TitleScene extends Phaser.Scene {
     this.scene.launch('UI');
   }
 
+  /**
+   * Dusk over the valley, on the palette: sky bands from night navy to orange with dithered seams, a low sun,
+   * plum hills, a field of crops at 1x (no scaling or rotation, so pixels stay square) and the valley's rose-pink
+   * wildflowers along the front. The crops sway by stepping 1 px, never by rotating.
+   */
   private drawBackdrop(): void {
     const g = this.add.graphics();
-    const bands = [0x2a1f4a, 0x3d2a5c, 0x5a3a6a, 0x8a4a6a, 0xc0645a, 0xe08a5a];
-    bands.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 46, GAME_WIDTH, 50));
-    g.fillStyle(0xf4d35e, 1).fillCircle(150, 300, 26); // low sun
-    g.fillStyle(0xffe9a0, 0.5).fillCircle(150, 300, 33);
-    g.fillStyle(0x3b2a52, 1);
+    const bands = [0x1e2848, 0x2e4a7a, 0x8c5ca4, 0xe07a8a, 0xe48c24];
+    const bandH = 68;
+    bands.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * bandH, GAME_WIDTH, bandH));
+    // dithered seam between two bands: a checker row of each colour
+    for (let i = 1; i < bands.length; i++)
+      for (let x = 0; x < GAME_WIDTH; x++) {
+        g.fillStyle(x % 2 ? bands[i - 1]! : bands[i]!, 1).fillRect(x, i * bandH, 1, 1);
+        g.fillStyle(x % 2 ? bands[i]! : bands[i - 1]!, 1).fillRect(x, i * bandH - 1, 1, 1);
+      }
+    g.fillStyle(0xf4cc3c, 1).fillCircle(96, 292, 22); // low sun, setting in the notch between the hills
+    g.fillStyle(0xfff0a0, 1).fillCircle(92, 288, 9);
+    g.fillStyle(0x4a2a40, 1);
     g.fillTriangle(-30, 340, 50, 262, 130, 340).fillTriangle(60, 340, 140, 252, 230, 340);
-    g.fillStyle(0x2c4a3a, 1).fillRect(0, 336, GAME_WIDTH, 64);
-    g.fillStyle(0x3a6a44, 1).fillRect(0, 336, GAME_WIDTH, 3);
-    // soil with crops in every growth stage, swaying gently
-    g.fillStyle(0x5e4025, 1).fillRect(0, 366, GAME_WIDTH, 34);
-    g.fillStyle(0x7a5530, 1).fillRect(0, 366, GAME_WIDTH, 2);
+    g.fillStyle(0x1f4a40, 1).fillRect(0, 336, GAME_WIDTH, 64);
+    g.fillStyle(0x2e6a3e, 1).fillRect(0, 336, GAME_WIDTH, 2);
+    // soil with crops in every growth stage
+    g.fillStyle(0x4c2c1c, 1).fillRect(0, 366, GAME_WIDTH, 34);
+    g.fillStyle(0x7c442c, 1).fillRect(0, 366, GAME_WIDTH, 2);
     const ids = Object.keys(crops);
     for (let i = 0; i < 12; i++) {
       const id = ids[i % ids.length]!;
       const total = crops[id]!.stageDays.length;
       const stage = (i * 3) % (total + 1);
-      const img = this.add
-        .image(10 + i * 16, 390, CROPS_TEXTURE, cropFrame(id, stage))
-        .setOrigin(0.5, 1)
-        .setScale(1.3);
-      this.tweens.add({
-        targets: img,
-        angle: { from: -3, to: 3 },
-        duration: 1400 + (i % 5) * 200,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-        delay: i * 60,
+      const x0 = 10 + i * 16;
+      const img = this.add.image(x0, 390, CROPS_TEXTURE, cropFrame(id, stage)).setOrigin(0.5, 1);
+      this.time.addEvent({
+        delay: 700 + (i % 5) * 130,
+        loop: true,
+        callback: () => img.setX(img.x === x0 ? x0 + 1 : x0),
       });
     }
-    // fireflies
+    // the valley's rose-pink wildflowers along the field's edge
+    for (let i = 0; i < 16; i++) {
+      const x = 4 + i * 12 + ((i * 7) % 5);
+      const y = 350 + ((i * 5) % 9);
+      g.fillStyle(0x2e6a3e, 1).fillRect(x, y + 1, 1, 3);
+      g.fillStyle(0xe07a8a, 1)
+        .fillRect(x - 1, y, 3, 1)
+        .fillRect(x, y - 1, 1, 3);
+      g.fillStyle(0xf4cc3c, 1).fillRect(x, y, 1, 1);
+    }
+    // fireflies, blinking in steps
     for (let i = 0; i < 14; i++) {
       const f = this.add
-        .rectangle(Math.random() * GAME_WIDTH, 260 + Math.random() * 100, 2, 2, 0xf4ead2)
+        .rectangle(
+          Math.round(Math.random() * GAME_WIDTH),
+          Math.round(260 + Math.random() * 90),
+          1,
+          1,
+          0xfff0a0,
+        )
         .setAlpha(0);
-      this.tweens.add({
-        targets: f,
-        alpha: { from: 0, to: 0.9 },
-        x: f.x + (Math.random() - 0.5) * 40,
-        y: f.y - 12 - Math.random() * 20,
-        duration: 1800 + Math.random() * 1600,
-        yoyo: true,
-        repeat: -1,
-        delay: Math.random() * 2000,
-        ease: 'Sine.easeInOut',
+      this.time.addEvent({
+        delay: 300 + Math.random() * 500,
+        loop: true,
+        callback: () => f.setAlpha([0, 0.5, 1, 0.5][Math.floor(Math.random() * 4)]!),
       });
     }
   }

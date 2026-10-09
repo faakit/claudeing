@@ -224,6 +224,16 @@ export function artManifest(): ArtEntry[] {
   for (const [k, w, h] of UI_GLYPHS)
     add({ texture: k, w, h, group: 'ui', kind: 'ui glyph', from: 'gameArt.ts' });
   add({ texture: 'fx_px', w: 2, h: 2, group: 'ui', kind: 'fx particle pixel', from: 'gameArt.ts' });
+  for (const k of ['player_use_hoe', 'player_use_can', 'player_use_rod'])
+    add({
+      texture: k,
+      w: 32,
+      h: 32,
+      group: 'chars',
+      kind: 'player tool pose',
+      from: 'WorldScene',
+      optional: true,
+    });
   for (const [k, w, h] of FX_SPRITES)
     add({ texture: k, w, h, group: 'ui', kind: 'fx / ambient', from: 'fx/*', optional: true });
   add({

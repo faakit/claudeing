@@ -126,7 +126,7 @@ export class Ambient {
         .setDepth(4000);
     }
     for (let i = 0; i < plan.butterflies; i++) {
-      const kind = i % 2 ? 'o' : 'w';
+      const kind = 'o'; // the white one read as a letter at 1x
       if (!tex.has(`fx_butterfly_${kind}0`)) continue;
       this.flies.push({
         img: this.scene.add.image(0, 0, ATLAS, `fx_butterfly_${kind}0`).setDepth(4000),
