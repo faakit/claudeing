@@ -7,6 +7,9 @@ import type { AudioManifest, MusicData, MusicSlot, Zone } from './types';
 export const MANIFEST = manifestData as unknown as AudioManifest;
 export const MUSIC = musicData as unknown as MusicData;
 
+/** A jingle (game cue) or a sting (engine moment) by name. */
+export const jingleOrSting = (name: string) => MUSIC.jingles[name] ?? MUSIC.stings[name];
+
 /** Sound effect cues played by the sampler as short in-key jingles instead of from a file. */
 export const JINGLE_CUES = new Set(Object.keys(MUSIC.jingles));
 
@@ -38,7 +41,9 @@ export function slotInstruments(slot: MusicSlot): string[] {
 
 /** Instruments the event jingles use (loaded early, with the sound effects). */
 export function jingleInstruments(): string[] {
-  return [...new Set(Object.values(MUSIC.jingles).flatMap((j) => j.parts.map((p) => p.inst)))];
+  return [
+    ...new Set([...Object.values(MUSIC.jingles), ...Object.values(MUSIC.stings)].flatMap((j) => j.parts.map((p) => p.inst))),
+  ];
 }
 
 /** Every file of every kind, in a sensible download order: sfx, jingles, title, then the rest. */

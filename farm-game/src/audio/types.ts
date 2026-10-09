@@ -126,6 +126,8 @@ export interface Piece {
   /** Sections played once, the first time the piece starts (a sting), before the form loops. */
   intro?: string[];
   form: string[];
+  /** The form from year two on (variation sections), so the second year does not repeat the first. */
+  form2?: string[];
   layers: Layer[];
   /** Melody phrases in note:beats tokens, bars separated by '|'. */
   phrases: Record<string, string>;
@@ -134,6 +136,8 @@ export interface Piece {
 /** A short fanfare played by the sampler for a game event (level up, goal...). Written in C major. */
 export interface Jingle {
   bpm: number;
+  /** Playback level (default 1): motifs and flourishes sit under the event fanfares. */
+  volume?: number;
   parts: { inst: string; notes: string; gain?: number }[];
 }
 
@@ -141,6 +145,8 @@ export interface MusicData {
   instruments: Record<string, InstrumentMix>;
   patterns: Record<string, PatternStep[]>;
   jingles: Record<string, Jingle>;
+  /** Musical moments the engine plays itself (villager motifs, dawn and dusk, season and festival stings). */
+  stings: Record<string, Jingle>;
   pieces: Record<string, Piece>;
 }
 
@@ -152,7 +158,9 @@ export type MusicSlot =
   | 'fall'
   | 'winter'
   | 'mine'
-  | 'festival';
+  | 'festival'
+  | 'shop'
+  | 'lullaby';
 
 export const MUSIC_SLOTS: readonly MusicSlot[] = [
   'title',
@@ -162,4 +170,6 @@ export const MUSIC_SLOTS: readonly MusicSlot[] = [
   'winter',
   'mine',
   'festival',
+  'shop',
+  'lullaby',
 ];

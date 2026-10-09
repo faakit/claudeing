@@ -15,6 +15,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsp  # noqa: E402
+import gen_beds  # noqa: E402
 from dsp import SR  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -383,11 +384,13 @@ def build_ambience(raw: str, recipes: dict) -> dict:
                 assert start >= 0, f"{name}: 'from' must leave {pre / SR:.2f} s of pre-roll for the crossfade"
                 seg = x[start : start + pre + body + int(0.1 * SR)].copy()
                 assert len(seg) == pre + body + int(0.1 * SR), f"{name}: source too short for this layer"
-                # Equal-power crossfade: ambience is noise-like, the two ends are uncorrelated.
+                # Equal-power crossfade: ambience is noise-like, the two ends are uncorrelated. A periodic
+                # bed (the clock: body a whole number of periods) has identical ends: equal-gain instead.
                 e = pre + body
                 t = np.linspace(0, np.pi / 2, xfade)
+                fo, fi = (np.cos(t) ** 2, np.sin(t) ** 2) if r.get("correlated") else (np.cos(t), np.sin(t))
                 y = seg.copy()
-                y[e - xfade : e] = seg[e - xfade : e] * np.cos(t) + seg[pre - xfade : pre] * np.sin(t)
+                y[e - xfade : e] = seg[e - xfade : e] * fo + seg[pre - xfade : pre] * fi
                 y[e : e + int(0.1 * SR)] = seg[pre : pre + int(0.1 * SR)]
                 y = y * (dsp.undb(level) / np.sqrt(np.mean(y[pre:e] ** 2)))
                 tp = dsp.true_peak(y)
@@ -429,6 +432,7 @@ def main() -> None:
     if only in (None, "sfx"):
         manifest["sfx"] = build_sfx(raw, recipes)
     if only in (None, "ambience"):
+        gen_beds.generate(raw)
         manifest["ambience"] = build_ambience(raw, recipes)
     manifest = {k: manifest[k] for k in ("instruments", "sfx", "ambience") if k in manifest}
     os.makedirs(os.path.dirname(MANIFEST), exist_ok=True)

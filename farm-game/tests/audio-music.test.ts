@@ -113,7 +113,7 @@ describe('composed music data', () => {
       }
     }
     // Jingles are written in C and transposed into the key of whatever piece is playing.
-    for (const [cue, j] of Object.entries(MUSIC.jingles))
+    for (const [cue, j] of Object.entries({ ...MUSIC.jingles, ...MUSIC.stings }))
       for (const p of Object.values(MUSIC.pieces))
         for (const part of j.parts)
           for (const n of parseNotes(part.notes)) if (n.midi !== null) check(part.inst, n.midi + p.jingleKey, `jingle ${cue}`);
@@ -179,6 +179,18 @@ describe('sequencer', () => {
     expect(count({ ...ALL, indoor: true }, 'shaker')).toBe(0);
     expect(count({ ...ALL, night: false }, 'pad')).toBe(0);
     expect(count({ ...ALL, day: false }, 'comp')).toBe(0);
+  });
+
+  it('rain drops the percussion, thins the accompaniment to the main beats and rests the melody more', () => {
+    const all = (rain: boolean) => bars('summer', 120, 4, { ...ALL, rain }).flatMap((b) => b.events);
+    const dry = all(false);
+    const wet = all(true);
+    expect(dry.some((e) => e.perc)).toBe(true);
+    expect(wet.some((e) => e.perc)).toBe(false);
+    const comp = (es: typeof dry) => es.filter((e) => e.layer === 'comp');
+    expect(comp(wet).length).toBeLessThan(comp(dry).length / 1.5);
+    for (const e of comp(wet)) expect(Math.round(e.beat) % 2, 'main beats only').toBe(0);
+    expect(wet.filter((e) => e.layer === 'tune').length).toBeLessThan(dry.filter((e) => e.layer === 'tune').length);
   });
 
   it('plays an intro once, with every melody layer, then loops the form', () => {

@@ -1015,16 +1015,16 @@
      "file": "sfx/select-1.mp3",
      "onset": 0.0,
      "dur": 0.04,
-     "tp": -7.73
+     "tp": -9.14
     },
     {
      "file": "sfx/select-2.mp3",
      "onset": 0.0,
      "dur": 0.05,
-     "tp": -7.87
+     "tp": -9.37
     }
    ],
-   "gain": 1.3646,
+   "gain": 1.6218,
    "pitch": 1.0,
    "vol": 1,
    "voices": 2,
@@ -1449,6 +1449,105 @@
    "gain": 1,
    "mode": "shots",
    "every": 28
+  },
+  "clock": {
+   "files": [
+    {
+     "file": "amb/clock.mp3",
+     "onset": 0,
+     "dur": 13.1,
+     "loop": [
+      1.0,
+      13.0
+     ]
+    }
+   ],
+   "gain": 1,
+   "mode": "loop"
+  },
+  "forge": {
+   "files": [
+    {
+     "file": "amb/forge.mp3",
+     "onset": 0,
+     "dur": 17.1,
+     "loop": [
+      1.0,
+      17.0
+     ]
+    }
+   ],
+   "gain": 1,
+   "mode": "loop"
+  },
+  "anvil": {
+   "files": [
+    {
+     "file": "amb/anvil-1.mp3",
+     "onset": 0.0,
+     "dur": 1.6
+    },
+    {
+     "file": "amb/anvil-2.mp3",
+     "onset": 0.0,
+     "dur": 1.6
+    },
+    {
+     "file": "amb/anvil-3.mp3",
+     "onset": 0.0,
+     "dur": 0.73
+    },
+    {
+     "file": "amb/anvil-4.mp3",
+     "onset": 0.0,
+     "dur": 0.12
+    },
+    {
+     "file": "amb/anvil-5.mp3",
+     "onset": 0.0,
+     "dur": 0.24
+    }
+   ],
+   "gain": 1,
+   "mode": "shots",
+   "every": 3.5
+  },
+  "shop": {
+   "files": [
+    {
+     "file": "amb/shop-1.mp3",
+     "onset": 0.002,
+     "dur": 0.59
+    },
+    {
+     "file": "amb/shop-2.mp3",
+     "onset": 0.002,
+     "dur": 0.76
+    },
+    {
+     "file": "amb/shop-3.mp3",
+     "onset": 0.002,
+     "dur": 0.28
+    },
+    {
+     "file": "amb/shop-4.mp3",
+     "onset": 0.002,
+     "dur": 0.65
+    },
+    {
+     "file": "amb/shop-5.mp3",
+     "onset": 0.002,
+     "dur": 0.38
+    },
+    {
+     "file": "amb/shop-6.mp3",
+     "onset": 0.002,
+     "dur": 0.21
+    }
+   ],
+   "gain": 1,
+   "mode": "shots",
+   "every": 5.0
   }
  }
 }

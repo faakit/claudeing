@@ -24,6 +24,9 @@ export interface RenderOptions {
   sfx?: number;
   cues?: { cue: string; at: number }[];
   ambience?: Partial<AmbienceTargets> & { rain?: number };
+  /** Rainy-day arrangement and game year (variation sections from year two). */
+  rain?: boolean;
+  year?: number;
   sampleRate?: number;
 }
 
@@ -69,11 +72,19 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
   );
   const sfx = new SfxPlayer(ctx, bank, g.sfxBus);
   const amb = new Ambience(ctx, bank, g.ambienceBus);
+  // Same thunder ducking as the live engine.
+  amb.onShot = (name, when, dur) => {
+    if (name !== 'thunder') return;
+    g.duck.gain.cancelScheduledValues(when);
+    g.duck.gain.setTargetAtTime(0.5, when, 0.15);
+    g.duck.gain.setTargetAtTime(1, when + Math.min(dur, 3), 0.8);
+  };
   const loads: Promise<unknown>[] = [sfx.preload()];
   if (o.slot) loads.push(music.preload(o.slot));
   for (const k of Object.keys(o.ambience ?? {})) loads.push(amb.preload(k));
   for (const i of jingleInstruments()) for (const z of instrumentFiles(i)) loads.push(bank.load(ctx, z.file, z.onset));
   await Promise.all(loads);
+  music.setMood({ rain: o.rain, year: o.year }, 0);
   if (o.slot) music.setSlot(o.slot, !!o.indoor, 0);
   for (const [k, v] of Object.entries(o.ambience ?? {})) amb.set(k, v ?? 0);
   const cues = [...(o.cues ?? [])].sort((a, b) => a.at - b.at);

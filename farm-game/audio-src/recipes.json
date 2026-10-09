@@ -617,7 +617,7 @@
     ]
    ],
    "repeatDb": 0,
-   "trim": 2.7
+   "trim": 4.2
   },
   "door": {
    "family": "door",
@@ -1026,6 +1026,80 @@
     }
    ],
    "maxLen": 4.4
+  },
+  "clock": {
+   "mode": "loop",
+   "src": "gen/clock",
+   "from": 2.0,
+   "body": 12.0,
+   "level": -44,
+   "hp": 120,
+   "correlated": true
+  },
+  "forge": {
+   "mode": "loop",
+   "src": "gen/forge",
+   "from": 4.0,
+   "body": 16.0,
+   "level": -35,
+   "hp": 50
+  },
+  "anvil": {
+   "mode": "shots",
+   "every": 3.5,
+   "level": -29,
+   "hp": 120,
+   "maxLen": 1.6,
+   "shots": [
+    {
+     "src": "sfx/kenney-impact/impactBell_heavy_000",
+     "shift": -5
+    },
+    {
+     "src": "sfx/kenney-impact/impactBell_heavy_001",
+     "shift": -5
+    },
+    {
+     "src": "sfx/kenney-impact/impactBell_heavy_002",
+     "shift": -4
+    },
+    {
+     "src": "sfx/kenney-impact/impactMetal_heavy_000",
+     "shift": -3
+    },
+    {
+     "src": "sfx/kenney-impact/impactMetal_heavy_001",
+     "shift": -3
+    }
+   ]
+  },
+  "shop": {
+   "mode": "shots",
+   "every": 5.0,
+   "level": -36,
+   "hp": 200,
+   "maxLen": 1.2,
+   "shots": [
+    {
+     "src": "sfx/kenney-rpg/creak1"
+    },
+    {
+     "src": "sfx/kenney-rpg/creak2"
+    },
+    {
+     "src": "sfx/kenney-rpg/creak3"
+    },
+    {
+     "src": "sfx/kenney-rpg/bookFlip1"
+    },
+    {
+     "src": "sfx/kenney-rpg/bookFlip2"
+    },
+    {
+     "src": "sfx/kenney-rpg/handleSmallLeather",
+     "gain": -3
+    }
+   ]
   }
  }
 }

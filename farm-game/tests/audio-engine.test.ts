@@ -217,16 +217,68 @@ describe('audio engine', () => {
   });
 });
 
+describe('musical moments', () => {
+  const ctxOf = () => (audio as unknown as { ctx: FakeAudioContext }).ctx;
+  it('plays a dawn or dusk flourish once when day and night music trade places, outdoors only', () => {
+    const ctx = ctxOf();
+    audio.setMusic('spring', false);
+    audio.setNight(0);
+    let n = ctx.created.length;
+    audio.setNight(0.5);
+    expect(ctx.created.length, 'nothing in between').toBe(n);
+    audio.setNight(0.9);
+    expect(ctx.created.length, 'dusk').toBeGreaterThan(n);
+    n = ctx.created.length;
+    audio.setNight(1);
+    expect(ctx.created.length, 'once').toBe(n);
+    audio.setMusic('spring', true);
+    audio.setNight(0);
+    expect(ctx.created.length, 'not indoors').toBe(n);
+  });
+  it('plays villager motifs and season stings (synth when samples are missing), and ignores unknown names', () => {
+    const ctx = ctxOf();
+    let n = ctx.created.length;
+    audio.motif('clay');
+    expect(ctx.created.length).toBeGreaterThan(n);
+    n = ctx.created.length;
+    audio.motif('nobody');
+    expect(ctx.created.length).toBe(n);
+    audio.seasonSting('fall');
+    expect(ctx.created.length).toBeGreaterThan(n);
+    for (const id of ['mara', 'finn', 'rosa', 'orin', 'clay'])
+      for (const v of ['', '-heart']) expect(MUSIC.stings[`motif-${id}${v}`], `${id}${v}`).toBeDefined();
+    for (const s of ['spring', 'summer', 'fall', 'winter']) {
+      expect(MUSIC.stings[`season-${s}`], s).toBeDefined();
+      expect(MUSIC.stings[`open-${s}`], s).toBeDefined();
+    }
+  });
+});
+
 describe('director', () => {
   const base: Scene = { inGame: true, map: 'farm', outdoor: true, season: 'summer', night: 0, weather: 'sunny', festival: false };
   it('picks title, season (indoors or out), mine and festival music', () => {
     expect(chooseMusic({ ...base, inGame: false }).slot).toBe('title');
-    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false });
-    expect(chooseMusic({ ...base, map: 'house', outdoor: false })).toEqual({ slot: 'summer', indoor: true });
+    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false, rain: false, year: 1 });
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false })).toMatchObject({ slot: 'summer', indoor: true });
     expect(chooseMusic({ ...base, map: 'mine', outdoor: false }).slot).toBe('mine');
     expect(chooseMusic({ ...base, map: 'town', festival: true }).slot).toBe('festival');
     expect(chooseMusic({ ...base, map: 'farm', festival: true }).slot).toBe('summer');
     expect(chooseMusic({ ...base, map: 'town', festival: true, night: 0.8 }).slot).toBe('summer');
+  });
+  it('plays the shop piece in the store, the lullaby in the house at night, and passes rain and year', () => {
+    expect(chooseMusic({ ...base, map: 'town', panel: 'shop' })).toMatchObject({ slot: 'shop', indoor: true });
+    expect(chooseMusic({ ...base, map: 'town', panel: null }).slot).toBe('summer');
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false, night: 0.8 }).slot).toBe('lullaby');
+    expect(chooseMusic({ ...base, map: 'house', outdoor: false, night: 0.3 }).slot).toBe('summer');
+    expect(chooseMusic({ ...base, weather: 'storm', year: 2 })).toMatchObject({ rain: true, year: 2 });
+    expect(chooseMusic({ ...base, weather: 'sunny' }).rain).toBe(false);
+    const shop = chooseAmbience({ ...base, map: 'town', panel: 'shop' });
+    expect(shop.forge).toBeGreaterThan(0);
+    expect(shop.anvil).toBeGreaterThan(0);
+    expect(shop.birds).toBe(0);
+    expect(chooseAmbience({ ...base, map: 'house', outdoor: false, night: 0.9 }).clock).toBeGreaterThan(
+      chooseAmbience({ ...base, map: 'house', outdoor: false, night: 0 }).clock,
+    );
   });
   it('places birds by day, crickets at night, wind in winter, drips in the mine', () => {
     expect(chooseAmbience(base).birds).toBe(1);

@@ -5,11 +5,15 @@ import { audio } from '../platform/audio';
 import { isNative } from '../platform/native';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
+import { gameEvents } from '../systems/events';
 import { festivalToday, hasEntered } from '../systems/festivals';
 import { nightAmount } from '../ui/daylight';
 
 /** How often the director looks at the game (music and ambience change slowly; 4 Hz is plenty). */
 const DIRECTOR_MS = 250;
+
+/** The last panel opened; it counts as open while any modal is up. */
+let lastPanel: string | null = null;
 
 function describe(): Scene {
   if (!runtime.inGame)
@@ -24,6 +28,8 @@ function describe(): Scene {
     night: nightAmount(s.time.minutes),
     weather: s.weather,
     festival: !!fest && !hasEntered(s, fest.id),
+    panel: runtime.modals > 0 ? lastPanel : null,
+    year: s.time.year,
   };
 }
 
@@ -51,13 +57,27 @@ function serviceWorkerSettled(): Promise<unknown> {
  */
 export function wireAudio(game: Phaser.Game): void {
   let last = -Infinity;
+  let specials: number | null = null;
   game.events.on(Phaser.Core.Events.POST_STEP, (time: number) => {
     if (time - last < DIRECTOR_MS) return;
     last = time;
     const scene = describe();
     const m = chooseMusic(scene);
-    audio.setMusic(m.slot, m.indoor);
+    audio.setMusic(m.slot, m.indoor, { rain: m.rain, year: m.year });
     audio.setAmbience(chooseAmbience(scene));
+    // A special order delivered in full: its fanfare follows the order jingle the board plays.
+    const done = runtime.inGame ? (getState().stats['specialsDone'] ?? 0) : null;
+    if (specials !== null && done !== null && done > specials) audio.play('special');
+    specials = done;
+  });
+  // Musical moments: villager motifs, new hearts, the season changing under the sleep screen.
+  gameEvents.on('openPanel', ({ type }) => (lastPanel = type));
+  // The world only emits talkTo when nothing blocks it; the sheet opens on the same event.
+  gameEvents.on('talkTo', ({ id }) => audio.motif(id));
+  gameEvents.on('heartUp', ({ id }) => audio.motif(id, true));
+  gameEvents.on('daySummary', (sum) => {
+    const now = getState().time.season;
+    if (sum.endedSeason !== now) audio.seasonSting(now);
   });
   // Start downloading after the first frames are on screen: the title appears without waiting.
   game.events.once(Phaser.Core.Events.POST_RENDER, () => audio.preload(serviceWorkerSettled()));

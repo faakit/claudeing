@@ -1,4 +1,4 @@
-import { MUSIC, instrumentFiles, sampleFor, slotInstruments } from './assets';
+import { MUSIC, instrumentFiles, jingleOrSting, sampleFor, slotInstruments } from './assets';
 import { SAMPLED_MUSIC_GAIN } from './graph';
 import type { SampleBank } from './bank';
 import { PiecePlayer, catchUp, makeRng } from './sequencer';
@@ -28,6 +28,8 @@ const MAX_VOICES = 40;
 /** How long a piece waits for its samples before starting with whatever it has. */
 const MAX_WAIT = 6;
 const FADE_OUT = 1.6;
+/** A rainy day plays the piece softer (on top of the thinner arrangement). */
+const RAIN_DB = -2.5;
 
 interface Strip {
   gain: GainNode;
@@ -133,6 +135,8 @@ export class MusicPlayer {
   private active: ActivePiece | null = null;
   private fading: ActivePiece[] = [];
   private indoor = false;
+  private rain = false;
+  private year = 1;
   private rng = makeRng(0x7a11ac3e);
   private voices: Voice[] = [];
   /** Notes played from samples / by the synth fallback / skipped, for tests and the report. */
@@ -187,6 +191,22 @@ export class MusicPlayer {
     void this.preload(slot);
   }
 
+  /**
+   * Weather and year: rain thins the arrangement (no percussion, main beats only, more rests) and plays
+   * it 2.5 dB softer; from year two pieces with variation sections play their second form.
+   */
+  setMood(m: { rain?: boolean; year?: number }, now: number): void {
+    const rain = !!m.rain;
+    this.year = m.year ?? this.year;
+    if (rain === this.rain) return;
+    this.rain = rain;
+    if (this.active?.started) this.active.setLevel(this.levelValue(), now, 2);
+  }
+
+  private levelValue(): number {
+    return this.rain ? Math.pow(10, RAIN_DB / 20) : 1;
+  }
+
   /** Fade everything out (title -> silence, music switched off). */
   stop(now: number): void {
     if (this.active) this.retire(this.active, now);
@@ -218,7 +238,7 @@ export class MusicPlayer {
       if (st === 'loading' && now - a.createdAt < MAX_WAIT) return;
       a.started = true;
       a.nextBar = now + 0.12;
-      a.setLevel(1, now, 0.25);
+      a.setLevel(this.levelValue(), now, 0.25);
     }
     const barLen = a.player.secondsPerBar();
     a.nextBar = catchUp(a.nextBar, now, barLen);
@@ -234,6 +254,8 @@ export class MusicPlayer {
         day: o.day,
         night: o.night,
         percHits: (inst) => sampleHitsCount(inst),
+        rain: this.rain,
+        year: this.year,
       });
       this.stats.bars++;
       for (const ev of bar.events) a.queue.push({ t: a.nextBar + ev.beat * spb + ev.jitter, dur: ev.beats * spb, ev });
@@ -281,15 +303,23 @@ export class MusicPlayer {
     }
   }
 
+  /** The key (semitones from C) jingles are transposed to: the playing piece's, or a given slot's. */
+  jingleKey(slot?: MusicSlot): number {
+    const piece = MUSIC.pieces[slot ?? this.active?.slot ?? ''];
+    return piece?.jingleKey ?? 0;
+  }
+
   /**
-   * Play a jingle on the sampler (into the sfx bus), transposed into the current piece's key.
-   * Returns false if none of its instruments can play yet, so the caller uses the synth instead.
+   * Play a jingle on the sampler (into the sfx bus), transposed into the current piece's key (or `key`),
+   * starting `delay` seconds from now. Returns false if none of its instruments can play yet, so the
+   * caller uses the synth instead.
    */
-  jingle(cue: string, now: number, volume = 1): boolean {
-    const j = MUSIC.jingles[cue];
+  jingle(cue: string, now: number, volume = 1, o: { key?: number; delay?: number } = {}): boolean {
+    const j = jingleOrSting(cue);
     if (!j) return false;
-    const piece = this.active ? MUSIC.pieces[this.active.slot] : undefined;
-    const tr = piece?.jingleKey ?? 0;
+    const tr = o.key ?? this.jingleKey();
+    volume *= j.volume ?? 1;
+    const start = now + (o.delay ?? 0);
     const spb = 60 / j.bpm;
     const notes: { inst: string; midi: number; t: number; dur: number; gain: number }[] = [];
     for (const part of j.parts) {
@@ -308,7 +338,7 @@ export class MusicPlayer {
       const d = this.bank.get(p.zone.file, now)!;
       const mix = MUSIC.instruments[n.inst];
       playSample(this.ctx, d, p.zone, this.buses.sfx, {
-        when: now + 0.01 + n.t,
+        when: start + 0.01 + n.t,
         rate: p.rate,
         gain: volume * n.gain * (mix?.gain ?? 0.6) * 0.9,
         dur: n.dur,

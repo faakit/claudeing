@@ -9,13 +9,13 @@
  * everything goes through the same gain buses.
  */
 import { Ambience } from '../audio/ambience';
-import { JINGLE_CUES, allFiles, instrumentFiles, jingleInstruments, slotInstruments, MANIFEST } from '../audio/assets';
+import { JINGLE_CUES, jingleOrSting, allFiles, instrumentFiles, jingleInstruments, slotInstruments, MANIFEST } from '../audio/assets';
 import { SampleBank } from '../audio/bank';
 import type { AmbienceTargets } from '../audio/director';
 import { MusicPlayer } from '../audio/music';
 import { K_MUSIC, K_SFX, buildGraph } from '../audio/graph';
 import { SfxPlayer } from '../audio/sfx';
-import { midiToHz } from '../audio/theory';
+import { midiToHz, parseNotes } from '../audio/theory';
 import type { MusicSlot } from '../audio/types';
 
 export type Sfx =
@@ -44,7 +44,9 @@ export type Sfx =
   | 'target'
   | 'ringOpen'
   | 'ringClose'
-  | 'confirm';
+  | 'confirm'
+  // A special order delivered in full: a bigger fanfare than an ordinary order.
+  | 'special';
 
 /** Every cue id, for tests and tooling (keep in sync with the union above; a test checks it). */
 export const SFX_IDS: readonly Sfx[] = [
@@ -73,6 +75,7 @@ export const SFX_IDS: readonly Sfx[] = [
   'ringOpen',
   'ringClose',
   'confirm',
+  'special',
 ];
 
 // A major pentatonic keeps any random melody pleasant.
@@ -144,6 +147,9 @@ class AudioEngine {
   private homeSlot: MusicSlot = 'spring';
   private indoor = false;
   private ambienceTargets: Partial<AmbienceTargets> = {};
+  private mood: { rain: boolean; year: number } = { rain: false, year: 1 };
+  /** Day or night as last announced (dawn and dusk flourishes play on the change), null until known. */
+  private dayPhase: 'day' | 'night' | null = null;
   private lastEvict = 0;
   readonly bank = new SampleBank(AUDIO_BASE);
   private sfxPlayer: SfxPlayer | null = null;
@@ -240,6 +246,13 @@ class AudioEngine {
 
     this.sfxPlayer = new SfxPlayer(ctx, this.bank, this.sfxBus);
     this.ambience = new Ambience(ctx, this.bank, this.ambienceBus);
+    // The music steps back under each thunderclap (-6 dB, back over about three seconds).
+    this.ambience.onShot = (name, when, dur) => {
+      if (name !== 'thunder') return;
+      this.duck.gain.cancelScheduledValues(when);
+      this.duck.gain.setTargetAtTime(0.5, when, 0.15);
+      this.duck.gain.setTargetAtTime(1, when + Math.min(dur, 3), 0.8);
+    };
     this.musicPlayer = new MusicPlayer(
       ctx,
       this.bank,
@@ -284,6 +297,13 @@ class AudioEngine {
   /** 0 = full day music, 1 = full night music. */
   setNight(amount: number): void {
     this.night = Math.max(0, Math.min(1, amount));
+    // Dawn and dusk: a short flourish when the music turns over (hysteresis so it plays once).
+    const phase = this.night > 0.65 ? 'night' : this.night < 0.35 ? 'day' : this.dayPhase;
+    if (phase && phase !== this.dayPhase) {
+      const first = this.dayPhase === null;
+      this.dayPhase = phase;
+      if (!first && this.slot && SEASON_SLOTS.has(this.slot) && !this.indoor) this.sting(phase === 'day' ? 'dawn' : 'dusk');
+    }
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.dayBus.gain.setTargetAtTime(1 - this.night, t, 0.6);
@@ -406,6 +426,49 @@ class AudioEngine {
     this.playSynth(name);
   }
 
+  /**
+   * A musical moment that is not a game-code cue: a villager's motif, the dawn and dusk flourishes, a
+   * season-change sting, a festival opener. Played on the sampler in the current piece's key (or the
+   * key of `key`'s piece), `delay` seconds from now; the music dips a little under it. Falls back to a
+   * synth rendition of the same notes.
+   */
+  sting(name: string, o: { key?: MusicSlot; delay?: number; volume?: number; duckDb?: number } = {}): void {
+    const ctx = this.ctx;
+    if (!ctx || this.muted || !jingleOrSting(name)) return;
+    const when = ctx.currentTime + (o.delay ?? 0);
+    const duck = Math.pow(10, (o.duckDb ?? -3) / 20);
+    this.duck.gain.setTargetAtTime(duck, when, 0.08);
+    this.duck.gain.setTargetAtTime(1, when + 1.2, 0.5);
+    const key = this.musicPlayer?.jingleKey(o.key) ?? 0;
+    if (this.musicPlayer?.jingle(name, ctx.currentTime, o.volume ?? 1, { key, delay: o.delay ?? 0 })) return;
+    this.synthJingle(name, key, o.delay ?? 0, o.volume ?? 1);
+  }
+
+  /** A villager's motif when their sheet opens; `heart` for the warmer version at a new heart. */
+  motif(npc: string, heart = false): void {
+    this.sting(`motif-${npc}${heart ? '-heart' : ''}`, { delay: heart ? 0.8 : 0.05, duckDb: heart ? -5 : -3 });
+  }
+
+  /** The season-change sting, under the sleep screen, in the new season's key. */
+  seasonSting(season: string): void {
+    if (SEASON_SLOTS.has(season)) this.sting(`season-${season}`, { key: season as MusicSlot, delay: 2.4, duckDb: -6 });
+  }
+
+  private synthJingle(name: string, key: number, delay: number, volume: number): void {
+    const j = jingleOrSting(name);
+    if (!j) return;
+    const spb = 60 / j.bpm;
+    for (const part of j.parts)
+      for (const n of parseNotes(part.notes))
+        if (n.midi !== null)
+          this.tone(midiToHz(n.midi + key), Math.max(0.12, n.beats * spb), {
+            type: 'triangle',
+            gain: 0.1 * volume * (j.volume ?? 1) * (part.gain ?? 1),
+            delay: delay + n.beat * spb,
+            attack: 0.01,
+          });
+  }
+
   /** The original synthesized sound for a cue (the fallback). */
   playSynth(name: Sfx): void {
     if (!this.ctx || this.muted) return;
@@ -506,6 +569,11 @@ class AudioEngine {
         this.tone(1047, 0.04, { gain: 0.06, type: 'triangle' });
         this.tone(1568, 0.05, { gain: 0.06, type: 'triangle', delay: 0.03 });
         break;
+      case 'special':
+        [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) =>
+          this.tone(f, i === 6 ? 0.6 : 0.14, { gain: 0.18, type: 'triangle', delay: i * 0.09 }),
+        );
+        break;
     }
   }
 
@@ -518,8 +586,13 @@ class AudioEngine {
       this.setMusic(season as MusicSlot, this.indoor);
   }
 
-  /** Choose the piece (title, a season, mine, festival) and whether we are indoors. */
-  setMusic(slot: MusicSlot, indoor: boolean): void {
+  /** Choose the piece (title, a season, mine, festival...), whether we are indoors, and the weather and year. */
+  setMusic(slot: MusicSlot, indoor: boolean, mood?: { rain?: boolean; year?: number }): void {
+    const entering = slot !== this.slot;
+    // Each festival opens with its own short fanfare (by season), in the festival's key.
+    if (entering && slot === 'festival' && this.slot !== null) this.sting(`open-${this.homeSlot}`, { key: 'festival' });
+    if (mood) this.mood = { rain: !!mood.rain, year: mood.year ?? this.mood.year };
+    if (this.ctx && this.musicPlayer) this.musicPlayer.setMood(this.mood, this.ctx.currentTime);
     this.slot = slot;
     this.indoor = indoor;
     if (SEASON_SLOTS.has(slot)) {

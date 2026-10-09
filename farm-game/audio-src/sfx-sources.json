@@ -418,5 +418,93 @@
   "author": "Kenney (kenney.nl)",
   "licence": "CC0-1.0",
   "pack": "Kenney Interface Sounds"
+ },
+ "sfx/kenney-rpg/creak1": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/creak1.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/creak2": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/creak2.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/creak3": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/creak3.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/bookFlip1": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/bookFlip1.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/bookFlip2": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/bookFlip2.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/handleSmallLeather": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/handleSmallLeather.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-impact/impactBell_heavy_000": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactBell_heavy_000.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/impactBell_heavy_001": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactBell_heavy_001.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/impactBell_heavy_002": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactBell_heavy_002.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/impactMetal_heavy_000": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactMetal_heavy_000.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/impactMetal_heavy_001": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactMetal_heavy_001.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
  }
 }

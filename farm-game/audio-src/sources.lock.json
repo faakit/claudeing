@@ -47,6 +47,26 @@
   "sha1": "379b553ca9e035d9e3f5005c881459da86233c92",
   "bytes": 7630
  },
+ "sfx/kenney-impact/impactBell_heavy_000": {
+  "sha1": "5c86171ca9b942e1329431c86132fc3c709113b6",
+  "bytes": 13915
+ },
+ "sfx/kenney-impact/impactBell_heavy_001": {
+  "sha1": "b72c83cca0b2a4bb8060f25a0ca21e44399b3dee",
+  "bytes": 15577
+ },
+ "sfx/kenney-impact/impactBell_heavy_002": {
+  "sha1": "d524dd68ec52ed7d8cb510eedb44f60e0d9db664",
+  "bytes": 9252
+ },
+ "sfx/kenney-impact/impactMetal_heavy_000": {
+  "sha1": "af145ddb661aeeff671659ecedddecb1f117abf3",
+  "bytes": 6110
+ },
+ "sfx/kenney-impact/impactMetal_heavy_001": {
+  "sha1": "d86571ae1b4a9d2014371d2a8b65143461f602e0",
+  "bytes": 7279
+ },
  "sfx/kenney-interface/drop_002": {
   "sha1": "c0f735670be0a38a98d2bc3701a4993d0a063c6f",
   "bytes": 6411
@@ -95,6 +115,14 @@
   "sha1": "5dde75b602bb2502bee79aac4d1e323ccd945170",
   "bytes": 5031
  },
+ "sfx/kenney-rpg/bookFlip1": {
+  "sha1": "e46430d1616fbea29545879c1a395590b0fddb1f",
+  "bytes": 18248
+ },
+ "sfx/kenney-rpg/bookFlip2": {
+  "sha1": "3ffd91cdb8b60dd4011d810f8153024ea4b6ec9b",
+  "bytes": 12393
+ },
  "sfx/kenney-rpg/cloth1": {
   "sha1": "8175b60e772ff23d153cc9d23b78b04fdc9d2746",
   "bytes": 16508
@@ -102,6 +130,18 @@
  "sfx/kenney-rpg/cloth2": {
   "sha1": "24b65b9ed97cff70aced31b502d8235b357ccd25",
   "bytes": 11787
+ },
+ "sfx/kenney-rpg/creak1": {
+  "sha1": "095eb25efd7ca901fec1f43288a4ac81e63ecb11",
+  "bytes": 15761
+ },
+ "sfx/kenney-rpg/creak2": {
+  "sha1": "29ba8148d8bed989f8dd0a0963c3568159310a49",
+  "bytes": 19012
+ },
+ "sfx/kenney-rpg/creak3": {
+  "sha1": "54fbb1ea2db9220db319908600d476521ed8ea48",
+  "bytes": 10408
  },
  "sfx/kenney-rpg/doorOpen_1": {
   "sha1": "ad436e0e5255fad32720d964ba7430a4be47f90a",
@@ -134,6 +174,10 @@
  "sfx/kenney-rpg/handleCoins2": {
   "sha1": "6ba974fe74d8dbaab54d923ed8d7d5fe47139432",
   "bytes": 13094
+ },
+ "sfx/kenney-rpg/handleSmallLeather": {
+  "sha1": "6e09c9300cd927083eb8811f56d6d6e3d00bd0eb",
+  "bytes": 10492
  },
  "sfx/kenney-ui/click1": {
   "sha1": "c3337913b1b58c70d28e332aa8de519dfe607b21",

@@ -81,7 +81,93 @@ JINGLES = {
         {"inst": "vibes", "notes": "C5:.5 E5:.5 G5:2"},
         {"inst": "harp", "notes": "C4:.5 E4:.5 G4:2", "gain": 0.7},
         {"inst": "glock", "notes": "r:1 C6:2", "gain": 0.8}]},
+    "special": {"bpm": 140, "volume": 0.85, "parts": [
+        {"inst": "vibes", "notes": "C5:.25 E5:.25 G5:.25 C6:.5 G5:.25 C6:.25 E6:1.5"},
+        {"inst": "harp", "notes": "C4:.5 G4:.5 C5:.5 E5:1.5", "gain": 0.7},
+        {"inst": "glock", "notes": "r:1.5 C6:.5 G6:1.5", "gain": 0.7}]},
 }
+
+# Musical moments the engine plays itself (audio.sting / audio.motif), also written in C. Instruments
+# are limited to the light ones the jingles already keep decoded (harp, vibes, glock, marimba, pizz).
+STINGS = {
+    # Villager motifs, soft, when their sheet opens; "-heart" is the warmer one at a new heart.
+    # Mara (General Store): a welcoming sixth up and a turn home.
+    "motif-mara": {"bpm": 112, "volume": 0.5, "parts": [
+        {"inst": "vibes", "notes": "G5:.5 C6:.5 E6:.5 D6:.5 C6:1.5"},
+        {"inst": "marimba", "notes": "C5:.5 r:.5 G4:.5 r:.5 C5:1", "gain": 0.6}]},
+    "motif-mara-heart": {"bpm": 90, "volume": 0.6, "parts": [
+        {"inst": "vibes", "notes": "G5:.5 C6:.5 E6:.5 D6:.5 C6:2"},
+        {"inst": "harp", "notes": "C4:.25 E4:.25 G4:.25 C5:2.75", "gain": 0.6},
+        {"inst": "glock", "notes": "r:2.5 G6:1.5", "gain": 0.5}]},
+    # Finn (fisherman): a lazy swaying pentatonic line.
+    "motif-finn": {"bpm": 84, "volume": 0.5, "parts": [
+        {"inst": "vibes", "notes": "E5:1 G5:.5 A5:1.5 G5:.5 E5:1.5"},
+        {"inst": "harp", "notes": "C4:1.5 G4:1.5 C5:2", "gain": 0.6}]},
+    "motif-finn-heart": {"bpm": 72, "volume": 0.6, "parts": [
+        {"inst": "vibes", "notes": "E5:1 G5:.5 A5:1.5 C6:2"},
+        {"inst": "harp", "notes": "C4:.25 G4:.25 C5:.25 E5:3.25", "gain": 0.6},
+        {"inst": "glock", "notes": "r:3 E6:2", "gain": 0.5}]},
+    # Rosa (neighbour, knows soil): a plain stepwise rise that settles.
+    "motif-rosa": {"bpm": 96, "volume": 0.5, "parts": [
+        {"inst": "harp", "notes": "C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:1.5"},
+        {"inst": "glock", "notes": "r:3 E6:1.5", "gain": 0.4}]},
+    "motif-rosa-heart": {"bpm": 80, "volume": 0.6, "parts": [
+        {"inst": "harp", "notes": "C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:2"},
+        {"inst": "vibes", "notes": "r:1 E5:1 G5:3", "gain": 0.6},
+        {"inst": "glock", "notes": "r:3 G6:2", "gain": 0.4}]},
+    # Orin (blacksmith): two hammer blows on the tonic, a fifth, an octave.
+    "motif-orin": {"bpm": 100, "volume": 0.55, "parts": [
+        {"inst": "marimba", "notes": "C4:.5 C4:.5 G4:.5 E4:.5 C5:2"},
+        {"inst": "pizz", "notes": "C3:1 G2:1 C3:2", "gain": 0.8}]},
+    "motif-orin-heart": {"bpm": 84, "volume": 0.6, "parts": [
+        {"inst": "marimba", "notes": "C4:.5 C4:.5 G4:.5 E4:.5 C5:2.5"},
+        {"inst": "pizz", "notes": "C3:1 G2:1 C3:2.5", "gain": 0.8},
+        {"inst": "harp", "notes": "r:2 G4:.25 C5:.25 E5:2.5", "gain": 0.6}]},
+    # Clay (the rival): a cheeky chromatic "nyah-nyah".
+    "motif-clay": {"bpm": 150, "volume": 0.35, "parts": [
+        {"inst": "marimba", "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 G5:1"},
+        {"inst": "pizz", "notes": "G3:.25 F#3:.25 G3:.5 E3:.5 A3:.5 G3:1", "gain": 0.8}]},
+    "motif-clay-heart": {"bpm": 120, "volume": 0.42, "parts": [
+        {"inst": "marimba", "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 C6:1.5"},
+        {"inst": "pizz", "notes": "C3:1 G3:1 C3:1.5", "gain": 0.8},
+        {"inst": "glock", "notes": "r:2 E6:1.5", "gain": 0.4}]},
+    # Dawn and dusk, when the day and night music trade places.
+    "dawn": {"bpm": 100, "volume": 0.4, "parts": [
+        {"inst": "harp", "notes": "C4:.25 E4:.25 G4:.25 C5:.25 E5:2"},
+        {"inst": "vibes", "notes": "r:1 C6:2", "gain": 0.6},
+        {"inst": "glock", "notes": "r:1 G6:2", "gain": 0.5}]},
+    "dusk": {"bpm": 80, "volume": 0.4, "parts": [
+        {"inst": "vibes", "notes": "E6:.5 C6:.5 A5:.5 G5:2"},
+        {"inst": "harp", "notes": "C4:3.5", "gain": 0.6}]},
+    # A new season, under the sleep screen, in the new season's key.
+    "season-spring": {"bpm": 96, "volume": 0.8, "parts": [
+        {"inst": "harp", "notes": "C4:.5 G4:.5 C5:.5 E5:.5 G5:2"},
+        {"inst": "glock", "notes": "r:2 C6:2", "gain": 0.6}]},
+    "season-summer": {"bpm": 120, "volume": 0.8, "parts": [
+        {"inst": "marimba", "notes": "G4:.25 A4:.25 C5:.5 D5:.5 E5:.5 G5:1.5"},
+        {"inst": "vibes", "notes": "r:2 E6:1.5", "gain": 0.7}]},
+    "season-fall": {"bpm": 80, "volume": 0.8, "parts": [
+        {"inst": "harp", "notes": "A3:.5 C4:.5 E4:.5 A4:.5 C5:2"},
+        {"inst": "vibes", "notes": "r:1.5 E5:2.5", "gain": 0.7}]},
+    "season-winter": {"bpm": 72, "volume": 1.1, "parts": [
+        {"inst": "glock", "notes": "E6:.5 D6:.5 C6:.5 A5:2"},
+        {"inst": "vibes", "notes": "A4:3.5", "gain": 0.7}]},
+    # Festival openers (one festival per season), in the festival's key.
+    "open-spring": {"bpm": 132, "volume": 0.9, "parts": [
+        {"inst": "marimba", "notes": "C5:.25 E5:.25 G5:.25 C6:.25 G5:.5 C6:1.5"},
+        {"inst": "glock", "notes": "r:1 E6:.5 G6:1.5", "gain": 0.6}]},
+    "open-summer": {"bpm": 120, "volume": 0.9, "parts": [
+        {"inst": "marimba", "notes": "E5:.5 G5:.5 A5:.5 G5:.5 C6:2"},
+        {"inst": "pizz", "notes": "C3:.5 G3:.5 C3:.5 G3:.5 C3:2", "gain": 0.8}]},
+    "open-fall": {"bpm": 116, "volume": 0.9, "parts": [
+        {"inst": "harp", "notes": "C4:.5 E4:.5 G4:.5 C5:.5 E5:.5 G5:1.5"},
+        {"inst": "pizz", "notes": "C3:1 G2:1 C3:2", "gain": 0.8}]},
+    "open-winter": {"bpm": 100, "volume": 1.2, "parts": [
+        {"inst": "glock", "notes": "G5:.5 E6:.5 C6:2"},
+        {"inst": "vibes", "notes": "C5:1 E5:1 G5:2", "gain": 0.7},
+        {"inst": "harp", "notes": "C4:4", "gain": 0.6}]},
+}
+
 
 PIECES = {}
 
@@ -381,10 +467,61 @@ PIECES["festival"] = {
 }
 
 
+# ---------------------------------------------------------------- shop: F major, 96 bpm, a light shuffle
+# While the General Store is open (the smithy next door): a light, jazzy shop tune with ii-V turns and
+# secondary dominants, vibes over marimba and a walking pizzicato bass. Its first phrase quotes Mara.
+PIECES["shop"] = {
+    "key": "F major", "level": 0, "jingleKey": 5, "bpm": 96, "meter": 4, "swing": 0.1,
+    "sections": {
+        "A": {"chords": "F | Dm7 | Gm7 | C7 | F | D7 | Gm7 C7 | F"},
+        "B": {"chords": "Bbmaj7 | Am7 | Gm7 | C7 | Bbmaj7 | A7 | Dm7 G7 | C7"},
+    },
+    "form": ["A", "A", "B", "A"],
+    "layers": [
+        {"id": "comp", "inst": "marimba", "time": "both", "pattern": "marimbaComp", "anchor": 60, "gain": 0.6},
+        {"id": "bass", "inst": "pizz", "time": "both", "pattern": "bassWalk", "anchor": 41, "bass": True, "gain": 0.8},
+        {"id": "tune", "inst": "vibes", "time": "both", "rest": 0.1,
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1"], ["b2"]]}},
+    ],
+    "phrases": {
+        "a1": "C5:.5 F5:.5 A5:.5 G5:.5 F5:1.5 r:.5 | A5:1 F5:.5 D5:.5 C5:2 | Bb4:.5 D5:.5 G5:1 F5:1 D5:1"
+              " | E5:1.5 G5:.5 C5:2",
+        "a1b": "A5:1.5 G5:.5 F5:1 C5:1 | D5:1 F5:1 A5:1 C6:1 | Bb5:1 G5:1 D5:1 F5:1 | E5:1 Bb4:1 G4:1 C5:1",
+        "a2": "F5:1 A5:1 C6:1.5 A5:.5 | F#5:1.5 D5:.5 A5:2 | G5:1 Bb5:1 E5:1 G5:1 | F5:3 r:1",
+        "a2b": "C6:1.5 A5:.5 F5:1 A5:1 | A5:1 F#5:1 D5:1 C6:1 | Bb5:1.5 G5:.5 E5:1 Bb4:1 | A4:1 C5:1 F5:2",
+        "b1": "D5:.5 F5:.5 A5:1 Bb5:.5 A5:.5 F5:1 | E5:1 G5:1 C6:2 | Bb5:1.5 A5:.5 G5:1 D5:1 | E5:1 G5:1 Bb5:2",
+        "b2": "F5:1 A5:1 D6:1 A5:1 | C#6:1.5 A5:.5 E5:2 | F5:1 A5:1 B5:1 D6:1 | C6:2 Bb5:1 G5:1",
+    },
+}
+
+# ---------------------------------------------------------------- lullaby: F major, 54 bpm, 3/4
+# The house at night: almost nothing. Slow harp in threes, a vibraphone line that mostly rests, and the
+# wall clock (ambience) ticking under it.
+PIECES["lullaby"] = {
+    "key": "F major", "level": 3, "jingleKey": 5, "bpm": 54, "meter": 3,
+    "sections": {
+        "A": {"chords": "Fmaj7 | Dm7 | Bbmaj7 | Csus4 C | Fmaj7 | Am7 | Gm7 C | F"},
+        "R": {"chords": "Bbmaj7 | Fmaj7 | Bbmaj7 | Csus4 C"},
+    },
+    "form": ["A", "A", "R"],
+    "layers": [
+        {"id": "comp", "inst": "harp", "time": "both", "pattern": "arp3", "anchor": 53, "gain": 0.5},
+        {"id": "tune", "inst": "vibes", "time": "both", "rest": 0.35, "gain": 0.6,
+         "phrases": {"A": [["la1", "la1b"], ["la2", "la2b"]]}},
+    ],
+    "phrases": {
+        "la1": "A5:3 | F5:2 D5:1 | D5:3 | F5:1.5 E5:1.5",
+        "la1b": "r:1 C5:2 | A5:3 | F5:2 D5:1 | C5:3",
+        "la2": "C6:3 | A5:2 E5:1 | G5:1.5 E5:1.5 | F5:3",
+        "la2b": "E5:3 | E5:1 C5:2 | Bb4:1.5 C5:1.5 | A4:3",
+    },
+}
+
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
     out = os.path.join(here, "..", "..", "src", "audio", "music.json")
     with open(out, "w", encoding="utf8", newline="\n") as f:
-        json.dump({"instruments": INSTRUMENTS, "patterns": PATTERNS, "jingles": JINGLES, "pieces": PIECES}, f, indent=1)
+        json.dump({"instruments": INSTRUMENTS, "patterns": PATTERNS, "jingles": JINGLES, "stings": STINGS, "pieces": PIECES},
+                  f, indent=1)
         f.write("\n")
     print("wrote", os.path.normpath(out))

@@ -15,7 +15,7 @@ const FILTER = process.argv[4] ?? '';
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
-const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm'];
+const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'special'];
 
 const jobs = [];
 for (const s of SEASONS) {
@@ -62,6 +62,30 @@ jobs.push({
 });
 jobs.push({ name: 'tap-rapid-mix', o: { seconds: 6, slot: 'spring', cues: Array.from({ length: 50 }, (_, i) => ({ cue: ['target', 'tick', 'tick', 'tick', 'confirm'][i % 5], at: 0.5 + i * 0.1 })) } });
 jobs.push({ name: 'crickets-long', o: { seconds: 420, ambience: { crickets: 1 } } });
+// Musical moments over the music they will meet in game (cue at 1 s; the rest is context).
+const NPCS = ['mara', 'finn', 'rosa', 'orin', 'clay'];
+for (const n of NPCS)
+  for (const v of ['', '-heart'])
+    jobs.push({ name: `moment-motif-${n}${v}`, o: { seconds: 7, slot: 'spring', cues: [{ cue: `motif-${n}${v}`, at: 1 }] } });
+for (const c of ['dawn', 'dusk']) jobs.push({ name: `moment-${c}`, o: { seconds: 7, slot: 'summer', night: 0.5, cues: [{ cue: c, at: 1 }] } });
+for (const s of SEASONS) {
+  jobs.push({ name: `moment-season-${s}`, o: { seconds: 7, slot: s, cues: [{ cue: `season-${s}`, at: 1 }] } });
+  jobs.push({ name: `moment-open-${s}`, o: { seconds: 8, slot: 'festival', cues: [{ cue: `open-${s}`, at: 0.3 }] } });
+}
+// The same moments alone (no music), for their own loudness. Stings play in C here.
+for (const c of [...NPCS.flatMap((n) => [`motif-${n}`, `motif-${n}-heart`]), 'dawn', 'dusk', ...SEASONS.flatMap((s) => [`season-${s}`, `open-${s}`])])
+  jobs.push({ name: `sting-${c}`, o: { seconds: 5, cues: [{ cue: c, at: 0.2 }] } });
+jobs.push({ name: 'moment-special', o: { seconds: 6, slot: 'spring', cues: [{ cue: 'order', at: 1 }, { cue: 'special', at: 1.5 }] } });
+// Weather, interiors and year two.
+for (const s of SEASONS) jobs.push({ name: `rain-${s}-day`, o: { seconds: 120, slot: s, rain: true, ambience: { rain: 1 } } });
+jobs.push({ name: 'storm-summer', o: { seconds: 90, slot: 'summer', rain: true, ambience: { rain: 1, thunder: 1, wind: 0.8 } } });
+jobs.push({ name: 'shop', o: { seconds: 120, slot: 'shop', indoor: true, ambience: { shop: 0.8, forge: 0.7, anvil: 0.5, clock: 0.4 } } });
+jobs.push({ name: 'shop-music', o: { seconds: 60, slot: 'shop', indoor: true } });
+jobs.push({ name: 'house-night', o: { seconds: 120, slot: 'lullaby', indoor: true, night: 1, ambience: { clock: 0.9 } } });
+jobs.push({ name: 'lullaby-music', o: { seconds: 60, slot: 'lullaby', indoor: true, night: 1 } });
+jobs.push({ name: 'amb-clock', o: { seconds: 30, ambience: { clock: 1 } } });
+jobs.push({ name: 'amb-smithy', o: { seconds: 30, ambience: { forge: 1, anvil: 1 } } });
+for (const s of SEASONS) jobs.push({ name: `year2-${s}-day`, o: { seconds: 240, slot: s, year: 2 } });
 jobs.push({ name: 'music-spring-indoor', o: { seconds: 40, slot: 'spring', indoor: true } });
 for (const s of ['title', 'mine', 'festival']) jobs.push({ name: `music-${s}`, o: { seconds: 60, slot: s } });
 for (const c of SFX) jobs.push({ name: `sfx-${c}`, o: { seconds: 2.5, cues: [{ cue: c, at: 0.2 }] } });
