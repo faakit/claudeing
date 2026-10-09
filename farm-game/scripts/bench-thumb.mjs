@@ -764,19 +764,23 @@ const TASKS = {
 
   /** Open the bag, pick a sprinkler stored there, "Use now", place it with Action. */
   async bagUse(w, page) {
-    await fresh(page, "s.inventory.slots[14] = { item: 'sprinkler', qty: 1 };");
+    // The sprinkler sits in row 2 of the bag, one column in from the thumb's edge: column 7 for the right hand
+    // (slot 14), its mirror, column 2, for the left (slot 9), so both hands reach the same relative spot (round
+    // 3; before, slot 14 for both put the left thumb's target across the sheet). BAG_SLOT overrides.
+    const bagSlot = Number(process.env.BAG_SLOT ?? (w.hand === 'left' ? 9 : 14));
+    await fresh(page, `s.inventory.slots[${bagSlot}] = { item: 'sprinkler', qty: 1 };`);
     await w.walkTo(10, 17, 'down');
     // M6: the ring's Bag is under the thumb; before, the Menu button.
     if (await w.hasRing()) {
       await w.ringPick(8);
       await sleep(200);
     } else await w.tapMenu();
-    const c = await page.evaluate(() => {
+    const c = await page.evaluate((bagSlot) => {
       const m = window.__farm.game.scene.getScene('UI').menu;
       const cells = m.content.list.filter((o) => o.type === 'Zone' && Math.round(o.width) === 23);
-      const b = cells[14].getBounds();
+      const b = cells[bagSlot].getBounds();
       return { x: b.centerX, y: b.centerY };
-    });
+    }, bagSlot);
     await w.thumb.tap(c.x, c.y, 70);
     await sleep(300);
     // Round 3: the same cell again brings it to hand (no reach across the sheet to "Use now").
