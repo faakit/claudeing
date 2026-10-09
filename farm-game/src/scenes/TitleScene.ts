@@ -47,7 +47,55 @@ export class TitleScene extends Phaser.Scene {
       align: 'center',
       color: C.gold,
     });
-    for (const t of [title, title2]) {
+    // the logo as carved, embossed wood: an extruded soil/orange block under each gold letter face, an ink
+    // foot, and the valley's carved sprout standing on the I of TINY
+    const layers: Label[] = [];
+    for (const [word, y] of [
+      ['TINY', 52],
+      ['ACRE', 98],
+    ] as const)
+      for (const [dy, color] of [
+        [4, 0x2a1a24],
+        [3, 0x7c442c],
+        [2, 0x7c442c],
+        [1, 0xe48c24],
+      ] as const) {
+        const l = new Label(this, GAME_WIDTH / 2, y + dy, word, {
+          scale: 6,
+          align: 'center',
+          color,
+          shadow: null,
+        });
+        l.setDepth(0.5); // above the sky, under the gold faces
+        layers.push(l);
+      }
+    title.setDepth(1);
+    title2.setDepth(1);
+    const sprout = this.add.graphics().setDepth(2);
+    {
+      const ix = Math.round(GAME_WIDTH / 2 - title.textWidth / 2 + (title.textWidth / 4) * 1.5);
+      const sy = 44;
+      sprout.fillStyle(0x2a1a24, 1).fillRect(ix - 1, sy - 2, 3, 9);
+      sprout.fillStyle(0x2e6a3e, 1).fillRect(ix, sy - 1, 1, 7);
+      sprout
+        .fillStyle(0x2a1a24, 1)
+        .fillRect(ix - 6, sy - 6, 6, 4)
+        .fillRect(ix + 2, sy - 8, 6, 4);
+      sprout
+        .fillStyle(0x74b043, 1)
+        .fillRect(ix - 5, sy - 5, 4, 2)
+        .fillRect(ix + 3, sy - 7, 4, 2);
+      sprout
+        .fillStyle(0xb4d45a, 1)
+        .fillRect(ix - 5, sy - 5, 1, 1)
+        .fillRect(ix + 3, sy - 7, 1, 1);
+    }
+    for (const t of [
+      title,
+      title2,
+      sprout,
+      ...layers,
+    ] as Phaser.GameObjects.Components.Transform[]) {
       this.tweens.add({
         targets: t,
         y: t.y + 3,
@@ -167,8 +215,41 @@ export class TitleScene extends Phaser.Scene {
       }
     g.fillStyle(0xf4cc3c, 1).fillCircle(96, 292, 22); // low sun, setting in the notch between the hills
     g.fillStyle(0xfff0a0, 1).fillCircle(92, 288, 9);
+    // two hills of different shapes: a low rounded one with a lone tree, a taller one with the farmhouse
     g.fillStyle(0x4a2a40, 1);
-    g.fillTriangle(-30, 340, 50, 262, 130, 340).fillTriangle(60, 340, 140, 252, 230, 340);
+    g.fillPoints(
+      [
+        { x: -10, y: 340 },
+        { x: 10, y: 312 },
+        { x: 34, y: 296 },
+        { x: 62, y: 290 },
+        { x: 92, y: 300 },
+        { x: 122, y: 340 },
+      ],
+      true,
+    );
+    g.fillStyle(0x2a1a24, 1);
+    g.fillPoints(
+      [
+        { x: 66, y: 340 },
+        { x: 104, y: 290 },
+        { x: 132, y: 262 },
+        { x: 156, y: 252 },
+        { x: 178, y: 258 },
+        { x: 210, y: 286 },
+        { x: 220, y: 340 },
+      ],
+      true,
+    );
+    // the lone tree on the low hill
+    g.fillStyle(0x2a1a24, 1).fillRect(39, 282, 3, 9).fillCircle(40, 278, 8).fillCircle(46, 282, 5);
+    // the farmhouse on the tall hill: chimney, roof, one lit window
+    g.fillStyle(0x2a1a24, 1)
+      .fillRect(146, 238, 18, 14)
+      .fillTriangle(142, 240, 155, 228, 168, 240)
+      .fillRect(160, 228, 3, 8);
+    g.fillStyle(0xf4cc3c, 1).fillRect(150, 244, 3, 3);
+    g.fillStyle(0xfff0a0, 1).fillRect(150, 244, 1, 1);
     g.fillStyle(0x1f4a40, 1).fillRect(0, 336, GAME_WIDTH, 64);
     g.fillStyle(0x2e6a3e, 1).fillRect(0, 336, GAME_WIDTH, 2);
     // soil with crops in every growth stage

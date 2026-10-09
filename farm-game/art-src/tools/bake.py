@@ -376,7 +376,7 @@ def rock(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
     seed, x, y, nb = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
     inside = window_mask(nb, 3)
     X, Y = grid(3, x - 1, y - 1)
-    d = blur(sdf(inside), 2.4) + (vnoise(X, Y, 5.0, seed) - 0.5) * 2.0 - 0.6
+    d = rock_field(inside, X, Y, seed)
     rk = d > 0
     S = 3 * T
     face = np.zeros((S, S), dtype=np.int32)  # rows of rock above the floor below (0 = not a face pixel)
@@ -391,7 +391,13 @@ def rock(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
     strata = vnoise(X * 0.6, Y * 2.2, 3.0, seed + 4)
     grit = vnoise(X, Y, 3.5, seed + 6)
     t = np.full((S, S), -1, dtype=np.int32)
-    t[~rk] = floor[(Y[~rk].astype(int)) % T, (X[~rk].astype(int)) % T]
+    # floor around a boulder carries the same darkness band as the floor tiles next to it (no light squares)
+    dk = recipe[5] if len(recipe) > 5 else "0000"
+    o = T
+    t[o : o + T, o : o + T] = floor_band(P, centre(X, 3), centre(Y, 3), seed, dk, floor)
+    t[rk] = -1
+    t[(~rk) & (d > -2.0)] = P.name("stone dark")  # the foot band, as in occlusion()
+    t[(~rk) & (d <= -2.0) & (d > -3.0) & (((X + Y).astype(int) % 2) == 0)] = P.name("stone dark")
     top = rk & (face == 0)
     t[top] = P.name("stone dark")
     t[top & (grit > 0.74) & (((X + Y).astype(int)) % 2 == 0)] = P.name("plum shadow")
@@ -422,36 +428,49 @@ def rock(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
     return centre(t, 3).copy()
 
 
+def rock_field(inside: np.ndarray, X, Y, seed: int) -> np.ndarray:
+    """Signed distance into the drawn rock (rounded corners, world-space wobble); shared by rock() and the
+    occlusion band so the band hugs the rock as drawn, never the square tile."""
+    return blur(sdf(inside), 2.4) + (vnoise(X, Y, 5.0, seed) - 0.5) * 2.0 - 0.6
+
+
 def occlusion(P, recipe: list[str]) -> np.ndarray:
     """Cavern floor darkening at the foot of the rock: a flat 2 px band of stone dark hugging the rock, with a
     checker only on its 1 px outer edge (critic R4-3: darkness as bands, not screen-door dither)."""
     seed, x, y, nb = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
     inside = window_mask(nb, 3)  # '1' = rock
     X, Y = grid(3, x - 1, y - 1)
-    d = -blur(sdf(inside), 1.2) + (vnoise(X, Y, 5.0, seed) - 0.5) * 1.2  # distance out from the rock
+    d = -rock_field(inside, X, Y, seed)  # distance out from the drawn (rounded) rock, same field as rock()
     t = np.full((3 * T, 3 * T), -1, dtype=np.int32)
     checker = ((X + Y).astype(int) % 2) == 0
-    t[(~inside) & (d < 2.0)] = P.name("stone dark")
-    t[(~inside) & (d >= 2.0) & (d < 3.0) & checker] = P.name("stone dark")
+    t[(d >= 0) & (d < 2.0)] = P.name("stone dark")
+    t[(d >= 2.0) & (d < 3.0) & checker] = P.name("stone dark")
     return centre(t, 3).copy()
 
 
-def floor_dark(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
-    """Cavern floor with a darker pocket: darkness given at the tile's four corners (0-9, from the distance to the
-    torches and the entrance and a smooth noise, in the map generator), interpolated per pixel and drawn as a flat
-    band of stone dark with a checker only on the 1 px line where it starts."""
-    seed, x, y, c = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
-    c00, c10, c01, c11 = (int(ch) / 9.0 for ch in c)
-    X, Y = grid(1, x, y)
-    fx, fy = (X - x * T) / T, (Y - y * T) / T
+def floor_band(P, X, Y, seed: int, corners: str, floor: np.ndarray) -> np.ndarray:
+    """Cavern floor at world pixels (X, Y) with the darkness band: darkness given at the tile's four corners (0-9),
+    interpolated; where it passes 0.4 the floor is flat stone dark (a checker only on its 1 px start line) with
+    sparse world-space grit, so the band never shows the floor tile's repeating dashes."""
+    c00, c10, c01, c11 = (int(ch) / 9.0 for ch in corners)
+    x0, y0 = np.floor(X.min() / T) * T, np.floor(Y.min() / T) * T
+    fx, fy = (X - x0) / T, (Y - y0) / T
+    # a window wider than one tile (the rock bake) extrapolates; clamp to the tile's own corners
+    fx, fy = np.clip(fx, 0, 1), np.clip(fy, 0, 1)
     dark = (c00 * (1 - fx) + c10 * fx) * (1 - fy) + (c01 * (1 - fx) + c11 * fx) * fy
-    dark = dark + (vnoise(X, Y, 4.0, seed) - 0.5) * 0.18
-    checker = ((X + Y).astype(int) % 2) == 0
-    t = floor.copy()
-    band1 = dark >= 0.4
-    edge1 = (dark >= 0.36) & (dark < 0.4) & checker
-    t[band1 | edge1] = P.name("stone dark")  # one flat band: a deeper one read as a puddle or a stain
-    # keep a few grit pixels inside the bands so they read as floor, not paint
-    grit = (floor == P.name("taupe")) | (floor == P.name("stone lt"))
-    t[band1 & grit] = P.name("stone")
+    dark = dark + (vnoise(X, Y, 4.0, seed) - 0.5) * 0.12
+    xi, yi = X.astype(int), Y.astype(int)
+    checker = ((xi + yi) % 2) == 0
+    t = floor[yi % T, xi % T].copy()
+    band = dark >= 0.4
+    edge = (dark >= 0.36) & (dark < 0.4) & checker
+    t[band | edge] = P.name("stone dark")
+    grit = (hash2(xi // 3, yi // 2, seed + 17) % 23) == 0
+    t[band & grit] = P.name("stone")
     return t
+
+
+def floor_dark(P, recipe: list[str], floor: np.ndarray) -> np.ndarray:
+    seed, x, y, c = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
+    X, Y = grid(1, x, y)
+    return floor_band(P, X, Y, seed, c, floor)

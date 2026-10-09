@@ -68,6 +68,12 @@ export const GLOW_SHAPES: Record<string, Shape> = {
     alphas: [0.5, 0.3, 0.16],
     spill: true,
   },
+  // a lantern on a wall: rings end on orange and earth dark, never wine, so grey stone stays warm, not pink
+  wall: {
+    radii: [1, 3, 7, 11],
+    colors: [0xfff0a0, 0xf4cc3c, 0xe48c24, 0x4c2c1c],
+    alphas: [0.9, 0.3, 0.2, 0.16],
+  },
   fire: {
     radii: [1.5, 5, 10, 15],
     colors: [0xf4cc3c, 0xe48c24, 0xcc3a2a, 0x8c1c2c],
@@ -101,6 +107,11 @@ export function glowPixel(
   const checker = (Math.abs(Math.round(dx)) + Math.abs(Math.round(dy))) % 2 === 0;
   for (let i = 0; i < shape.radii.length; i++) {
     const r = shape.radii[i]!;
+    // the core is a solid 1-2 px source (no checker diamond); only the outer rings get a dithered edge
+    if (i === 0) {
+      if (d <= r) return { color: shape.colors[0]!, alpha: shape.alphas[0]! };
+      continue;
+    }
     const edge = d > r - 0.6 && d <= r + 0.6;
     if (d <= r - 0.6 || (edge && checker))
       return { color: shape.colors[i]!, alpha: shape.alphas[i]! };

@@ -16,7 +16,7 @@ FOLIAGE_PREFIX = ("canopy:", "tree_oak", "tree_birch", "bush_", "bigoak_")
 FOLIAGE_EXACT = {"tree", "bush", "fern"}
 ROOF_PREFIX = ("roof_", "eave_", "chimney_", "vane_")
 GROUND_PREFIX = (
-    "base_grass", "grass_", "creep:path", "shore:", "path_", "base_path", "pebbles", "cobble_",
+    "base_grass", "grass_", "creep:path", "shore:", "path_", "base_path", "pebbles", "cobble_", "shade_",
 )
 GROUND_EXACT = {"grass", "flower", "fence", "path", "board", "bin", "puddle", "stepping"}
 FLORA_PREFIX = ("bloom_", "patch_", "rose_", "tallgrass", "fern_flat")

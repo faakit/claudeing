@@ -1062,6 +1062,9 @@ def snow_roof(P, roof_tile: np.ndarray, row: str, col: str, salt: int = 0) -> np
     for x0, y0, w in lumps:
         t[y0, x0 : x0 + w] = shade  # the soft underside of a lump
     if row == "b":
+        # the lower slope turns away from the light: a sky band above the lip gives the roof its own value
+        t[5, :] = np.where((np.arange(T) % 2) == 0, shade, t[5, :])
+        t[6:8, :] = shade
         for x in range(T):
             lip = 8 + (1 if (x // 4) % 2 == 0 else 0)
             t[lip, x] = shade

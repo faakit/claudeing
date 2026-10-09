@@ -281,7 +281,7 @@ const LIGHT_OF = {
   i_lamp: 'lamp',
   f_window: 'window',
   f_window_box: 'window',
-  f_lantern: 'lamp',
+  f_lantern: 'wall',
   f_forge: 'fire',
 };
 
@@ -480,13 +480,56 @@ export function artLayers(name, m, objects, extraReserved = []) {
 
   const torches = (C.props ?? []).filter(([n]) => n === 'p_torch').map(([, x, y]) => [x, y]);
   if (C.lintel) torches.push([C.lintel[0] + 0.5, C.lintel[1]]); // daylight at the mine's mouth
-  /** Floor darkness 0-9 at a tile corner: pockets of noise, fading in from 5 to 8 tiles away from any torch. */
+  /**
+   * Floor darkness 0-9 at a tile corner, following the geometry: it rises with the distance from the nearest
+   * light (a straight falloff from 4 to 9 tiles) and is deepest against walls, in bays and at boulder feet.
+   */
+  // only the cavern's outer wall and its bays deepen the dark (boulders get their own foot band)
+  const rockTiles = [];
+  {
+    const seenR = new Set();
+    const stack = [];
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++)
+        if (kind(x, y) === 'rock' && (x === 0 || y === 0 || x === w - 1 || y === h - 1)) {
+          seenR.add(y * w + x);
+          stack.push([x, y]);
+        }
+    while (stack.length) {
+      const [x, y] = stack.pop();
+      rockTiles.push([x + 0.5, y + 0.5]);
+      for (const [nx, ny] of [
+        [x + 1, y],
+        [x - 1, y],
+        [x, y + 1],
+        [x, y - 1],
+      ])
+        if (kind(nx, ny) === 'rock' && !seenR.has(ny * w + nx)) {
+          seenR.add(ny * w + nx);
+          stack.push([nx, ny]);
+        }
+    }
+  }
   const darkness = (cx, cy) => {
     const d = Math.min(99, ...torches.map(([tx, ty]) => Math.hypot(tx + 0.5 - cx, ty + 0.5 - cy)));
-    const far = Math.max(0, Math.min(1, (d - 5) / 3));
-    const n = Math.max(0, Math.min(1, (noise(cx, cy, 4, 83 + w) - 0.45) * 3));
-    return Math.round(9 * far * n);
+    const far = Math.max(0, Math.min(1, (d - 4) / 5));
+    let near = 9;
+    for (const [rx, ry] of rockTiles) {
+      const e = Math.max(Math.abs(rx - cx), Math.abs(ry - cy)) - 0.5;
+      if (e < near) near = e;
+    }
+    const wall = Math.max(0, Math.min(1, 1 - near / 2.5));
+    return Math.round(9 * far * (0.25 + 0.75 * wall));
   };
+  const cornersOf = (x, y) =>
+    [
+      [x, y],
+      [x + 1, y],
+      [x, y + 1],
+      [x + 1, y + 1],
+    ]
+      .map(([cx, cy]) => darkness(cx, cy))
+      .join('');
   // --- detail: ground bases under objects, transitions, variation ---
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -512,18 +555,17 @@ export function artLayers(name, m, objects, extraReserved = []) {
         else set('detail', x, y, bake('water', seed, x, y));
       } else if (k === 'rock') {
         const r = nb(x, y, 3, (n) => n !== 'stone' && n !== 'path', true);
-        set('detail', x, y, r.includes('0') ? bake('rock', seed, x, y, r) : 'rock_0');
+        set(
+          'detail',
+          x,
+          y,
+          r.includes('0') ? bake('rock', seed, x, y, r, cornersOf(x, y)) : 'rock_0',
+        );
       } else if (k === 'stone') {
         const n = noise(x, y, 5, 41 + w);
         // darker pockets of floor far from the torches; worn and earthy patches elsewhere
-        const corners = [
-          [x, y],
-          [x + 1, y],
-          [x, y + 1],
-          [x + 1, y + 1],
-        ].map(([cx, cy]) => darkness(cx, cy));
-        if (corners.some((c) => c > 0))
-          set('detail', x, y, bake('floor', seed, x, y, corners.join('')));
+        const corners = cornersOf(x, y);
+        if (/[1-9]/.test(corners)) set('detail', x, y, bake('floor', seed, x, y, corners));
         else set('detail', x, y, `stone_${n > 0.62 ? 2 : n < 0.35 ? 1 : hash(x, y, 8) % 2}`);
       } else if (k === 'bed') {
         set('detail', x, y, 'base_floor');

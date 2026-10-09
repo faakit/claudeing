@@ -834,10 +834,10 @@
    "name": "placeholder",
    "image": "../tilesets/tiles.png",
    "imagewidth": 512,
-   "imageheight": 896,
+   "imageheight": 928,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 1792,
+   "tilecount": 1856,
    "columns": 32,
    "margin": 0,
    "spacing": 0

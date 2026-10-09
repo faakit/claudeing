@@ -160,10 +160,14 @@ export class Button extends Phaser.GameObjects.Container {
   ) {
     super(scene, x, y);
     this.bg = scene.add.graphics();
+    // walnut: ink text gets no drop shadow (a light shadow under dark glyphs reads as doubled)
+    const dark =
+      SKIN !== 'plum' && [C.cream, C.creamDim, C.warn].includes(style.textColor ?? C.cream);
     this.label = new Label(scene, bw / 2, 0, text, {
       align: 'center',
       color: style.textColor ?? C.cream,
       scale: style.scale ?? 1,
+      ...(dark ? { shadow: null } : {}),
     });
     this.label.setY(Math.round((bh - 7 * (style.scale ?? 1)) / 2));
     // Grow the touch area to >= 44 CSS px, overlapping the visual edge but never by more than 4px
@@ -213,10 +217,12 @@ export class Button extends Phaser.GameObjects.Container {
       this.label.setColor(this.enabled ? (dim ? C.cream : asked) : C.creamDim);
       this.label.setAlpha(1);
       if (!this.enabled && !this.down)
-        for (let i = 4; i < w + h - 8; i += 4)
-          for (let k = 0; k < h - 8; k++) {
-            const px = i - k;
-            if (px >= 4 && px < w - 4) this.bg.fillStyle(C.slotRim, 0.5).fillRect(px, 4 + k, 1, 1);
+        // hatch only a 3 px band inside the frame, so the glyphs stay clean
+        for (let yy = 4; yy < h - 4; yy++)
+          for (let xx = 4; xx < w - 4; xx++) {
+            const band = xx < 7 || xx >= w - 7 || yy < 7 || yy >= h - 7;
+            if (band && (xx + yy) % 3 === 0)
+              this.bg.fillStyle(C.slotRim, 0.5).fillRect(xx, yy, 1, 1);
           }
     }
   }

@@ -156,7 +156,7 @@ try {
         },
         [map, scene, tx, ty, minutes, season],
       );
-    await sample('town at night: lamps, windows, forge, halo', () =>
+    await sample('town at night: lamps, windows, forge', () =>
       visit('town', 'Town', 11, 12, 1380, 'spring'),
     );
     await sample('woods summer night: fireflies + glow', () =>
