@@ -27,7 +27,7 @@ const game = new Phaser.Game({
   parent: 'game',
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
-  backgroundColor: '#1a1c2c',
+  backgroundColor: '#2a1a24',
   // All sound goes through platform/audio.ts and its own AudioContext; Phaser must not make a second one.
   audio: { noAudio: true },
   pixelArt: true,

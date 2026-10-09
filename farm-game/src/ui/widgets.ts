@@ -4,7 +4,7 @@ import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
 import { fitRow, Label } from './font';
-import { C, CH, GRAIN, SKIN } from './theme';
+import { C, CH, SKIN } from './theme';
 
 /**
  * Notched pixel-art panel drawn at (x, y). Plum skin: ink outline, cream rim, soft shadow. Walnut skin: a
@@ -40,13 +40,9 @@ export function drawPanel(
   g.fillStyle(t.ink, 0.35).fillRect(x + 2, y + 2, w, h);
   notch(t.ink, 1, x, y, w, h);
   if (kind === 'chrome') {
+    // flat walnut behind text (critic R1-1): no grain, just a lit top edge
     notch(f, 1, x + 1, y + 1, w - 2, h - 2);
-    g.fillStyle(r, 1).fillRect(x + 2, y + 1, w - 4, 1); // lit top edge
-    if (GRAIN !== null)
-      for (let gy = y + 4; gy < y + h - 2; gy += 3) {
-        const off = ((gy * 7) % 11) + 2;
-        g.fillStyle(GRAIN, 1).fillRect(x + off, gy, Math.max(0, Math.min(w - off - 3, w / 3)), 1);
-      }
+    g.fillStyle(r, 1).fillRect(x + 2, y + 1, w - 4, 1);
     return;
   }
   notch(r, 1, x + 1, y + 1, w - 2, h - 2); // 2 px wood frame
@@ -75,21 +71,40 @@ export function drawSlot(
     g.fillStyle(0xffffff, 0.05).fillRect(x + 2, y + 2, size - 4, 1);
     return;
   }
-  const rimC = selected ? CH.gold : marked ? t.blue : t.slotRim;
+  const rimC = selected ? t.select : marked ? t.blue : t.slotRim;
   g.fillStyle(rimC, 1).fillRect(x + 1, y + 1, size - 2, size - 2);
   g.fillStyle(t.slot, 1).fillRect(x + 2, y + 2, size - 4, size - 4);
   g.fillStyle(t.ink, 0.25).fillRect(x + 2, y + 2, size - 4, 1); // recessed: shadow under the top edge
-  if (selected) {
-    // Shape cue, not only colour: ink corner notches inside the gold ring plus a thicker bottom ledge.
-    for (const [cx, cy] of [
-      [x + 2, y + 2],
-      [x + size - 3, y + 2],
-      [x + 2, y + size - 3],
-      [x + size - 3, y + size - 3],
-    ] as const)
-      g.fillStyle(t.ink, 1).fillRect(cx, cy, 1, 1);
-    g.fillStyle(CH.gold, 1).fillRect(x + 1, y + size - 3, size - 2, 2);
-  }
+  if (selected) drawSelection(g, x, y, size, t.select, t.ink);
+}
+
+/**
+ * The one selection style (critic R1-3), for slots and anything slot-like: a gold ring, 2 px ink notches in
+ * its corners and a 2 px gold ledge along the bottom, so selection never relies on colour alone.
+ */
+export function drawSelection(
+  g: Phaser.GameObjects.Graphics,
+  x: number,
+  y: number,
+  size: number,
+  gold: number = C.select,
+  ink: number = C.ink,
+): void {
+  g.fillStyle(gold, 1)
+    .fillRect(x + 1, y + 1, size - 2, 1)
+    .fillRect(x + 1, y + 1, 1, size - 2)
+    .fillRect(x + size - 2, y + 1, 1, size - 2)
+    .fillRect(x + 1, y + size - 3, size - 2, 2);
+  for (const [cx, cy, dx, dy] of [
+    [x + 2, y + 2, 1, 1],
+    [x + size - 3, y + 2, -1, 1],
+    [x + 2, y + size - 4, 1, -1],
+    [x + size - 3, y + size - 4, -1, -1],
+  ] as const)
+    g.fillStyle(ink, 1)
+      .fillRect(cx, cy, 1, 1)
+      .fillRect(cx + dx, cy, 1, 1)
+      .fillRect(cx, cy + dy, 1, 1);
 }
 
 export function drawBar(
@@ -103,7 +118,9 @@ export function drawBar(
   vertical = false,
 ): void {
   g.fillStyle(C.ink, 1).fillRect(x, y, w, h);
-  g.fillStyle(SKIN === 'plum' ? 0x0c0914 : 0x4a2a40, 1).fillRect(x + 1, y + 1, w - 2, h - 2);
+  // walnut: a plum-shadow track, or a sand one when the fill itself is ink (content progress bars)
+  const track = SKIN === 'plum' ? 0x0c0914 : color === C.ink ? C.slot : 0x4a2a40;
+  g.fillStyle(track, 1).fillRect(x + 1, y + 1, w - 2, h - 2);
   const r = Math.max(0, Math.min(1, ratio));
   if (vertical) {
     const fh = Math.round((h - 2) * r);
@@ -188,6 +205,20 @@ export class Button extends Phaser.GameObjects.Container {
     drawPanel(this.bg, 0, this.down ? 1 : 0, w, h, this.down ? C.ink : fill, rim);
     this.label.setY(Math.round((h - 7 * (style.scale ?? 1)) / 2) + (this.down ? 1 : 0));
     this.label.setAlpha(this.enabled ? 1 : 0.5);
+    if (SKIN !== 'plum') {
+      // walnut (critic R1-4): an enabled button always reads in full ink (or the colour asked for, never the
+      // dim one); a disabled one is dim AND hatched, so it is told apart by shape as well as colour
+      const asked = style.textColor ?? C.cream;
+      const dim = asked === C.creamDim || asked === C.warn; // Close used the warn tone: it read as disabled
+      this.label.setColor(this.enabled ? (dim ? C.cream : asked) : C.creamDim);
+      this.label.setAlpha(1);
+      if (!this.enabled && !this.down)
+        for (let i = 4; i < w + h - 8; i += 4)
+          for (let k = 0; k < h - 8; k++) {
+            const px = i - k;
+            if (px >= 4 && px < w - 4) this.bg.fillStyle(C.slotRim, 0.5).fillRect(px, 4 + k, 1, 1);
+          }
+    }
   }
 
   setLabel(text: string): this {

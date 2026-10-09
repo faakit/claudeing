@@ -12,7 +12,7 @@ import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
 import { hitSize } from './hit';
-import { CH, GRAIN, SKIN } from './theme';
+import { CH, SEAM, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
 
@@ -84,13 +84,23 @@ export class Hud {
       panels.fillStyle(CH.cream, 0.55).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
       panels.fillStyle(CH.panelLight, 0.5).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
     } else {
-      // Walnut dock: wood plate with an ink seam and a lit top edge, grain kept sparse behind the controls.
+      // Walnut dock (critic R1-1): full-width planks 14 px tall, each seam a 1 px ink line over a 1 px
+      // highlight, and two small knots far from the controls; no grain behind anything you read.
       panels.fillStyle(CH.panel, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
       panels.fillStyle(CH.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
       panels.fillStyle(CH.rim, 1).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
-      if (GRAIN !== null)
-        for (let gy = DOCK_Y + 7; gy < GAME_HEIGHT - 2; gy += 9)
-          panels.fillStyle(GRAIN, 1).fillRect(((gy * 13) % 97) + 4, gy, 12 + ((gy * 7) % 20), 1);
+      for (let gy = DOCK_Y + 16; gy < GAME_HEIGHT - 2; gy += 14) {
+        panels.fillStyle(SEAM.ink, 1).fillRect(0, gy, GAME_WIDTH, 1);
+        panels.fillStyle(SEAM.lit, 1).fillRect(0, gy + 1, GAME_WIDTH, 1);
+      }
+      for (const [kx, ky] of [
+        [96, DOCK_Y + 22],
+        [182, GAME_HEIGHT - 8],
+      ] as const)
+        panels
+          .fillStyle(SEAM.knot, 1)
+          .fillRect(kx, ky, 3, 2)
+          .fillRect(kx + 1, ky - 1, 1, 1);
     }
     // Dark band above the world too, so the HUD reads as its own strip.
     panels.fillStyle(CH.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
