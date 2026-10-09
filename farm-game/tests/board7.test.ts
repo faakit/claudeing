@@ -63,7 +63,7 @@ describe('specials after critique 7', () => {
     s.special = makeSpecial(s, def);
     addItem(s, 'cauliflower', 5);
     expect(specialGiveCount(s, 3)).toBe(2);
-    expect(specialGiveCount(s, 9)).toBe(5); // keeping everything would give nothing: give all
+    expect(specialGiveCount(s, 5)).toBe(0); // all spoken for by a request: nothing to give (critique 8)
     giveToSpecial(s, 3);
     expect(countItem(s, 'cauliflower')).toBe(3);
     // Finish it: the same special is not posted again that season.
@@ -73,6 +73,7 @@ describe('specials after critique 7', () => {
     s.time.season = 'spring';
     expect(specialCandidates(s).some((d) => d.id === def.id)).toBe(false);
     expect(measureText('Give 99')).toBeLessThanOrEqual(36);
+    expect(measureText('Saved for a request.')).toBeLessThanOrEqual(200 - 8 - 28 - 43 - 2);
   });
 });
 
@@ -101,9 +102,10 @@ describe('critique 7 small fixes', () => {
   });
 });
 
-it('F2: a day you fill a request, Clay stays home', async () => {
+it('C8 F2: the board keeps score each season, and the leader is rewarded', async () => {
   const { deliverOrder, ensureOrders } = await import('../src/systems/orders');
-  const { rivalNotice, rivalPicks } = await import('../src/systems/rival');
+  const { applyRival, boardTally, rivalMinute, rivalNotice, settleSeason, BOARD_PRIZE } =
+    await import('../src/systems/rival');
   const { addItem } = await import('../src/systems/inventory');
   const { measureText } = await import('../src/ui/fontMetrics');
   const s = newState();
@@ -113,11 +115,45 @@ it('F2: a day you fill a request, Clay stays home', async () => {
     o.from = absoluteDay(s) - 1;
     o.until = absoluteDay(s);
   }
-  expect(rivalPicks(s).length).toBe(1);
-  const o = s.orders.list[0]!;
-  addItem(s, o.item.split('|')[0]!, o.qty);
-  expect(deliverOrder(s, o.id)).toBe('ok');
-  expect(rivalPicks(s)).toEqual([]);
-  expect(rivalNotice(s)).toMatch(/stays home: you won today/);
-  expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
+  const [a] = s.orders.list;
+  addItem(s, a!.item.split('|')[0]!, a!.qty);
+  expect(deliverOrder(s, a!.id)).toBe('ok');
+  s.time.minutes = rivalMinute(s);
+  expect(applyRival(s)).not.toBeNull(); // filling one does not send him home
+  expect(boardTally(s, absoluteDay(s))).toEqual({ you: 1, rival: 1 });
+  expect(measureText('This season: you 99, Clay 99.')).toBeLessThanOrEqual(184);
+  // Lead at the season's end: a prize on the first morning of the next.
+  s.stats[`board.s0.you`] = 5;
+  s.time.season = 'summer';
+  s.time.day = 1;
+  const money = s.money;
+  expect(settleSeason(s)).toMatch(/You beat Clay on the board/);
+  expect(s.money).toBe(money + BOARD_PRIZE);
+  // Behind: no prize, a gloating letter.
+  const t = newState();
+  t.stats['board.s0.rival'] = 4;
+  t.time.season = 'summer';
+  t.time.day = 1;
+  expect(settleSeason(t)).toMatch(/Clay won the board/);
+  expect(t.mail.list.some((l) => l.from === 'clay')).toBe(true);
+  expect(rivalNotice(t)).toBe('This season: you 0, Clay 0.');
+});
+
+it('C8 F3/F5: a crop request never asks for more than your field gives, and a fresh field is asked for', () => {
+  const s = newState();
+  s.farm.tiles['9,16'] = {
+    watered: false,
+    crop: { cropId: 'cauliflower', stage: 2, daysInStage: 0, regrow: false }, // ripe in 6 days
+  };
+  let asked = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    s.rng = seed;
+    for (const o of generateOrders(s))
+      if (o.item.startsWith('cauliflower|')) {
+        asked += 1;
+        expect(o.qty).toBe(1);
+        expect(o.until).toBeGreaterThanOrEqual(absoluteDay(s) + 7);
+      }
+  }
+  expect(asked).toBeGreaterThan(0);
 });

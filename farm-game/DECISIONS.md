@@ -435,3 +435,15 @@ An independent critic played the build at `f27999e` (two 14-day real-input runs,
 - **x5 on dishes** at the workbench (cooks up to five); ingredient lines drop the "1" ("Pumpkin, Egg, Milk") so they fit beside two buttons.
 - **A legend in the bin** gets a warning toast: it can still be taken back out before bed.
 - New texture keys: none (the cart is a sheet, not an object in the world).
+
+## Critique 8 fixes (depth round 2)
+
+The critic played the build at `3e1b9c5` (two 16-day real-input runs, probes, a 42-screen sweep) and wrote `agents/critiques/critique-8.md`: no blocker. Fixed:
+
+- **F1 the special's Give could still empty a same-item request:** goods a fillable request needs are never handed to the special; when all are spoken for, its row says "Saved for a request." and Give is off.
+- **F2 Clay had become harmless (he only took rows nobody would fill):** the "stays home" rule is gone and **the board keeps score each season** instead: a request you fill is a point for you, one left to its last day is a point for Clay. The notice shows "This season: you 3, Clay 1." On the first morning of a season the leader is settled: beat him and the town pays 300g a year of play (and he likes you a little more); lose and he writes to gloat. Leaving requests to expire now costs something, and the rule is the same one the board shows. His letter and chat line were rewritten to match ("Leave a request to its last day and it is mine.").
+- **F3 crop requests asked for more than the field gives:** a crop request asks for at most what you carry plus what ripens before it ends (`cropSupply`).
+- **F5 the first week's board had no crops:** a crop now joins the board up to 7 days before it ripens (`CROP_WAIT`), and the request stays open until a day after.
+- **F4 the cart resold store goods:** it never offers what the store sells that day, nor seeds that cannot ripen this season (without a greenhouse); its pool is rare seeds, bars, quartz, cloth, a ruby, amethyst, rich fertilizer and a quality sprinkler, each with a one-line use shown when bought ("Bought Quartz. For the Library and Greenhouse."); its sheet closes back to the board.
+- **F6** the bag cursor clears after any Eat tap, and "Not hungry" is drawn dim. **F7** batch cooking ("x3") uses plain-quality ingredients only and toasts the real count. **F8** goal and tip text say "Make", not "Craft"; the pre-Clay notice says "Requests stay a few days."; the statue page says "Next level: ... Now +2%."
+- **Sim:** the median rose 16% across critique 7 and 8 work; measured, it is about 9k of eggs (180 a year from the bot's hens), about 7k more of board requests, and more jars kept busy along a richer early path. Repinned at 213,730.

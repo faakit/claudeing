@@ -236,13 +236,13 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
         if (eat(getState(), cursor) === 'full') {
           audio.play('error');
           toast("You're not hungry enough.", 'info');
-        } else {
-          audio.play('select');
-          if (!getState().inventory.slots[cursor]) menu.clearCursor(); // the last one: no stray swap
-        }
+        } else audio.play('select');
+        menu.clearCursor(); // the next slot tap selects, never swaps (critique 8, F6)
         c.rebuild();
       },
-      { textColor: C.green, rim: C.green },
+      tooFullFor(s, cur.item)
+        ? { textColor: C.creamDim, rim: C.creamDim }
+        : { textColor: C.green, rim: C.green },
     );
   // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
   else if (cur && cursor !== null && cursor >= game.hotbarSlots)

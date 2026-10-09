@@ -50,12 +50,13 @@ export class BoardPanel extends Modal {
       y = this.row(y, {
         icon: items[sp.item]?.icon,
         title: specialLabel(sp),
-        sub: specialSub(sp),
+        // When every one you carry is spoken for by a request below, say so instead of offering them.
+        sub: give === 0 && keep > 0 ? 'Saved for a request.' : specialSub(sp),
         subColor: C.gold,
         buttons: [
           {
             label: give > 0 ? `Give ${give}` : 'Give',
-            width: 40,
+            width: 40, // "Give 15" needs the room; the request rows keep 36 for their longer lines
             enabled: have > 0,
             color: have > 0 ? C.green : C.creamDim,
             onClick: () => {

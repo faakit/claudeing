@@ -150,7 +150,7 @@ export class ProjectPanel extends Modal {
       y,
       glory
         ? GLORY_LINE
-        : `When done: ${p.reward}${p.repeat && projectLevel(s, id) > 0 ? ` Now ${repeatNow(p, projectLevel(s, id))}.` : ''}`,
+        : `${p.repeat && projectLevel(s, id) > 0 ? 'Next level' : 'When done'}: ${p.reward}${p.repeat && projectLevel(s, id) > 0 ? ` Now ${repeatNow(p, projectLevel(s, id))}.` : ''}`,
       C.green,
       1,
       'left',

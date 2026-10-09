@@ -2,12 +2,13 @@ import Phaser from 'phaser';
 import { items } from '../../data';
 import { audio } from '../../platform/audio';
 import { getState } from '../../state/store';
-import { buyFromCart, cartLeft, cartPrice, cartStock } from '../../systems/cart';
+import { buyFromCart, cartLeft, cartPrice, cartStock, cartUse } from '../../systems/cart';
+import { gameEvents } from '../../systems/events';
 import { toast } from '../../systems/events';
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
-import { cartSub, CART_INTRO } from './cartText';
+import { cartBought, cartSub, CART_INTRO } from './cartText';
 
 /** The traveling cart's sheet: a few rows, one Buy button each, low on the screen. */
 export class CartPanel extends Modal {
@@ -40,8 +41,10 @@ export class CartPanel extends Modal {
             color: s.money >= price && left > 0 ? C.gold : C.red,
             onClick: () => {
               const res = buyFromCart(getState(), id);
-              if (res === 'ok') audio.play('buy');
-              else {
+              if (res === 'ok') {
+                audio.play('buy');
+                toast(cartBought(items[id]?.name ?? id, cartUse(id)), 'good');
+              } else {
                 audio.play('error');
                 toast(
                   res === 'no_money'
@@ -58,6 +61,18 @@ export class CartPanel extends Modal {
         ],
       });
     }
-    this.closeButton();
+    // Back to the board it was opened from (critique 8, F4).
+    this.button(
+      8,
+      this.panelH - 28,
+      this.panelW - 16,
+      22,
+      'Back to the board',
+      () => {
+        this.close();
+        gameEvents.emit('openPanel', { type: 'board' });
+      },
+      { textColor: C.warn },
+    );
   }
 }

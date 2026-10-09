@@ -1,6 +1,6 @@
 import { items, recipes } from '../../data';
 import { getState } from '../../state/store';
-import { craft, craftBlock } from '../../systems/crafting';
+import { craft, craftBatch, craftBlock, plainBatch } from '../../systems/crafting';
 import { countItem } from '../../systems/inventory';
 import { audio } from '../../platform/audio';
 import { isRecipeUnlocked } from '../../systems/skills';
@@ -32,6 +32,7 @@ export function buildCraft(c: MenuTabContext): void {
     const unlocked = isRecipeUnlocked(s, r);
     const need = recipeNeed(r);
     const block = craftBlock(s, id);
+    const batch = plainBatch(s, id, 5);
     y = c.row(y, {
       icon: items[r.output.item]?.icon,
       title: `${r.name}${r.output.qty > 1 ? ` x${r.output.qty}` : ''}`,
@@ -42,18 +43,15 @@ export function buildCraft(c: MenuTabContext): void {
           ? C.red
           : C.creamDim,
       buttons: [
-        // Dishes come in batches: x5 cooks as many as you have ingredients for, up to five.
-        ...(r.kitchen && unlocked
+        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five.
+        ...(r.kitchen && unlocked && batch >= 2 && block === null
           ? [
               {
-                label: 'x5',
+                label: `x${batch}`,
                 width: 24,
-                enabled: block === null,
-                color: block === null ? C.cream : C.creamDim,
+                color: C.cream,
                 onClick: () => {
-                  let made = 0;
-                  while (made < 5 && craft(getState(), id) === 'ok') made += 1;
-                  audio.play(made > 0 ? 'buy' : 'error');
+                  audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
                   c.rebuild();
                 },
               },

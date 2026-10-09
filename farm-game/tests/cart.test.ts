@@ -64,3 +64,35 @@ describe('the traveling cart', () => {
     expect(measureText('The traveling cart is here!')).toBeLessThanOrEqual(176);
   });
 });
+
+describe('the cart after critique 8 (F4)', () => {
+  it('never sells what the store sells that day, nor seeds that cannot ripen in time', async () => {
+    const { stockFor } = await import('../src/systems/economy');
+    const { crops } = await import('../src/data');
+    for (const greenhouse of [false, true])
+      for (const season of ['spring', 'summer', 'fall', 'winter'] as const)
+        for (const d of cart.days) {
+          const s = newState();
+          if (greenhouse) s.stats['project.greenhouse'] = 1;
+          s.time.season = season;
+          s.time.day = d;
+          const store = stockFor('town_general_store', season, s);
+          for (const id of cartStock(s)) {
+            expect(store, `${id} ${season} ${d}`).not.toContain(id);
+            const plants = items[id]?.plants;
+            if (plants && !greenhouse) {
+              const grow = crops[plants]!.stageDays.reduce((a, b) => a + b, 0);
+              expect(grow).toBeLessThan(28 - d);
+            }
+          }
+        }
+  });
+
+  it('a buy says what the good is for, in at most two lines', async () => {
+    const { cartBought } = await import('../src/ui/panels/cartText');
+    for (const e of cart.stock)
+      expect(measureText(cartBought(items[e.item]!.name, e.use)), e.item).toBeLessThanOrEqual(
+        186 * 2,
+      );
+  });
+});

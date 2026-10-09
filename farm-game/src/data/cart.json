@@ -3,74 +3,17 @@
   "slots": 4,
   "limit": 5,
   "stock": [
-    {
-      "item": "strawberry_seed",
-      "mult": 2
-    },
-    {
-      "item": "blueberry_seed",
-      "mult": 2
-    },
-    {
-      "item": "cranberry_seed",
-      "mult": 2
-    },
-    {
-      "item": "snowpea_seed",
-      "mult": 2
-    },
-    {
-      "item": "melon_seed",
-      "mult": 1.5
-    },
-    {
-      "item": "pumpkin_seed",
-      "mult": 1.5
-    },
-    {
-      "item": "cauliflower_seed",
-      "mult": 1.5
-    },
-    {
-      "item": "tulip_seed",
-      "mult": 1.5
-    },
-    {
-      "item": "speed_gro",
-      "mult": 1.2
-    },
-    {
-      "item": "rich_fertilizer",
-      "price": 60,
-      "mult": 1
-    },
-    {
-      "item": "cherry_sapling",
-      "mult": 1.3
-    },
-    {
-      "item": "plum_sapling",
-      "mult": 1.3
-    },
-    {
-      "item": "copper_bar",
-      "mult": 1,
-      "price": 150
-    },
-    {
-      "item": "iron_bar",
-      "mult": 1,
-      "price": 300
-    },
-    {
-      "item": "quartz",
-      "mult": 1,
-      "price": 250
-    },
-    {
-      "item": "cloth",
-      "mult": 1,
-      "price": 180
-    }
+    { "item": "strawberry_seed", "mult": 2 },
+    { "item": "blueberry_seed", "mult": 2 },
+    { "item": "cranberry_seed", "mult": 2 },
+    { "item": "snowpea_seed", "mult": 2 },
+    { "item": "copper_bar", "mult": 1, "price": 150, "use": "For upgrades and projects." },
+    { "item": "iron_bar", "mult": 1, "price": 300, "use": "For upgrades and projects." },
+    { "item": "quartz", "mult": 1, "price": 250, "use": "For the Library and Greenhouse." },
+    { "item": "cloth", "mult": 1, "price": 180, "use": "For the bag and Fair Hall." },
+    { "item": "ruby", "mult": 1, "price": 900, "use": "For the Market Road." },
+    { "item": "amethyst", "mult": 1, "price": 300, "use": "A gift villagers love." },
+    { "item": "rich_fertilizer", "mult": 1, "price": 60, "use": "Better crop quality." },
+    { "item": "quality_sprinkler", "mult": 1, "price": 600, "use": "Waters 8 tiles." }
   ]
 }

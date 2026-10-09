@@ -497,7 +497,7 @@ export interface CartDef {
   days: number[];
   slots: number;
   limit: number;
-  stock: { item: string; mult: number; price?: number }[];
+  stock: { item: string; mult: number; price?: number; use?: string }[];
 }
 export const cart = cartRaw as unknown as CartDef;
 export const nodes = nodesRaw as unknown as Record<string, NodeDef>;

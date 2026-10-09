@@ -9,7 +9,7 @@ import { preserveOf } from './preserves';
 import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
-import { applyRival } from './rival';
+import { applyRival, scoreFill } from './rival';
 import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
@@ -23,8 +23,23 @@ function seedOnSale(state: GameState, cropId: string): boolean {
   return !entry?.project || isProjectDone(state, entry.project);
 }
 
-/** A crop request waits at most this many days for your crop to ripen. */
-export const CROP_WAIT = 3;
+/**
+ * A crop request waits at most this many days for your crop to ripen (it then stays open until a day after):
+ * a week, so a fresh field is on the board early (critique 8, F5).
+ */
+export const CROP_WAIT = 7;
+
+/** How many of a crop you could hand over within `days`: what you carry plus what ripens by then. */
+export function cropSupply(state: GameState, item: string, days: number): number {
+  let n = countItem(state, item);
+  for (const t of Object.values(state.farm.tiles)) {
+    const crop = t.crop ? crops[t.crop.cropId] : undefined;
+    if (!crop || !t.crop || crop.harvestItem !== item) continue;
+    const left = crop.stageDays.slice(t.crop.stage).reduce((a, b) => a + b, 0) - t.crop.daysInStage;
+    if (left <= days) n += crop.harvestQuantity;
+  }
+  return n;
+}
 
 /**
  * Days until you could hand over each crop: 0 if you carry some, else the fewest growing days left on any
@@ -118,9 +133,20 @@ export function generateOrders(
     const value = sellValue(ref);
     const tier = ordersCfg.tiers.find((t) => value <= t.maxValue) ?? ordersCfg.tiers[0];
     if (!tier) break;
-    // Animal goods: never more than about two days of what the farm makes.
+    // A crop request lasts at least until a day after your crop ripens.
+    const until = Math.max(
+      today + between(state, ordersCfg.days ?? [1, 1]) - 1,
+      today + (ready.get(ref.item) ?? 0) + 1,
+    );
+    // Animal goods: never more than about two days of what the farm makes. Crops: never more than you
+    // carry plus what ripens before the request ends (critique 8, F3).
     const perDay = made.get(ref.item);
-    const qty = Math.min(between(state, tier.qty), perDay ? animalOrderCap(perDay) : 999);
+    const crop = ready.has(ref.item) ? cropSupply(state, ref.item, until - today) : 999;
+    const qty = Math.min(
+      between(state, tier.qty),
+      perDay ? animalOrderCap(perDay) : 999,
+      Math.max(1, crop),
+    );
     const [lo, hi] = ordersCfg.rewardMultiplier;
     const mult = lo + random(state) * (hi - lo);
     const reward = Math.min(
@@ -134,11 +160,7 @@ export function generateOrders(
       reward,
       xp: Math.max(4, Math.round(value * qty * ordersCfg.xpPerValue)),
       done: false,
-      // A crop request lasts at least until a day after your crop ripens.
-      until: Math.max(
-        today + between(state, ordersCfg.days ?? [1, 1]) - 1,
-        today + (ready.get(ref.item) ?? 0) + 1,
-      ),
+      until,
       from: today,
     });
   }
@@ -236,7 +258,7 @@ export function deliverOrder(state: GameState, id: number): DeliverResult {
         : 'farming';
   addXp(state, skill, order.xp);
   addStat(state, 'ordersDone');
-  state.stats['filled.day'] = absoluteDay(state); // Clay sulks on a day you beat him to the board
+  scoreFill(state, absoluteDay(state)); // a point on the season's board against the rival
   toast(`Order done! +${gold}g`, 'good');
   return 'ok';
 }

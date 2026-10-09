@@ -1,4 +1,5 @@
-import { cart, crops, items } from '../data';
+import { cart, crops, game, items } from '../data';
+import { stockFor } from './economy';
 import type { GameState } from '../state/GameState';
 import { gameEvents } from './events';
 import { addStat } from './goals';
@@ -14,12 +15,25 @@ import { absoluteDay } from './time';
  */
 export const cartHere = (state: GameState): boolean => cart.days.includes(state.time.day);
 
-/** Is this stock entry sellable now? Seeds only when they grow this season (or you have a greenhouse). */
+/**
+ * Is this stock entry worth offering now? Never what the store sells today (critique 8, F4); seeds only
+ * when they can still ripen this season (or you have a greenhouse).
+ */
 function fits(state: GameState, item: string): boolean {
+  if (stockFor(STORE, state.time.season, state).includes(item)) return false;
   const plants = items[item]?.plants;
   if (!plants) return true;
-  return !!crops[plants]?.seasons.includes(state.time.season) || ownsGreenhouse(state);
+  if (ownsGreenhouse(state)) return true;
+  const crop = crops[plants];
+  const grow = crop?.stageDays.reduce((a, b) => a + b, 0) ?? Infinity;
+  return !!crop?.seasons.includes(state.time.season) && grow < game.seasonLength - state.time.day;
 }
+
+const STORE = 'town_general_store';
+
+/** What a cart good is for, if the data says. */
+export const cartUse = (item: string): string | undefined =>
+  cart.stock.find((e) => e.item === item)?.use;
 
 /** Today's stock: `slots` entries picked by a hash of the day (the same all day, different each visit). */
 export function cartStock(state: GameState): string[] {

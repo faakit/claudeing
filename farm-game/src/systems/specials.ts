@@ -116,13 +116,13 @@ export type SpecialResult =
 
 /**
  * How many the special's Give hands over now: all it still needs that you carry, minus `keep` (goods held
- * back for a same-item request you can fill: critique 7, F4), unless that would leave nothing to give.
+ * back for a same-item request you can fill: critique 7, F4). Zero when they are all spoken for.
  */
 export function specialGiveCount(state: GameState, keep = 0): number {
   const sp = state.special;
   if (!sp) return 0;
-  const have = countItem(state, sp.item);
-  const spare = have - keep > 0 ? have - keep : have;
+  // Goods a fillable same-item request needs are never handed over here (critique 8, F1).
+  const spare = countItem(state, sp.item) - keep;
   return Math.max(0, Math.min(sp.qty - sp.given, spare));
 }
 

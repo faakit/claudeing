@@ -56,15 +56,17 @@ describe('the rival farmer', () => {
     expect(rivalNotice(s)).toBe('Clay took one today.');
   });
 
-  it('a request you filled first is safe, and that day the rival stays home', () => {
+  it('a request you filled first is safe; the rival still comes for his', () => {
     const s = boardDay();
     const [a, b] = s.orders.list;
     for (const o of [a!, b!]) addItem(s, o.item.split('|')[0]!, o.qty);
     s.time.minutes = 600;
     expect(deliverOrder(s, a!.id)).toBe('ok');
     s.time.minutes = rivalMinute(s) + 10;
-    expect(deliverOrder(s, b!.id)).toBe('ok');
-    expect(s.orders.list.some((o) => o.rival)).toBe(false);
+    const res = deliverOrder(s, b!.id);
+    const gone = s.orders.list.find((o) => o.rival);
+    expect(gone?.id).not.toBe(a!.id);
+    expect(res).toBe(gone?.id === b!.id ? 'done' : 'ok');
     // Without a delivery, a late visit finds his pick gone.
     const t = boardDay();
     t.time.minutes = rivalMinute(t) + 10;

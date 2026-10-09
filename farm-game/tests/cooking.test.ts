@@ -79,3 +79,15 @@ it('a dish row with Make and x5 still shows its ingredients whole', async () => 
   for (const [id, r] of dishes)
     expect(measureText(recipeNeed(r)), id).toBeLessThanOrEqual(200 - 8 - 28 - 41 - 27 - 2);
 });
+
+it('batch cooking uses plain ingredients only and says how many it made (critique 8, F7)', async () => {
+  const { craftBatch, plainBatch } = await import('../src/systems/crafting');
+  const s = newState();
+  s.stats['upgraded.kitchen'] = 1;
+  addItem(s, 'potato', 7);
+  addItem(s, { item: 'potato', q: 2 }, 3);
+  expect(plainBatch(s, 'baked_potato', 5)).toBe(3);
+  expect(craftBatch(s, 'baked_potato', 5)).toBe(3);
+  expect(countItem(s, 'baked_potato')).toBe(3);
+  expect(countItem(s, 'potato')).toBe(4); // the gold ones and one plain are left
+});

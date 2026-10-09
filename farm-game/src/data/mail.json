@@ -166,7 +166,7 @@
       "id": "clay_intro",
       "from": "clay",
       "title": "Hello, neighbour",
-      "text": "Heard there is a new farmer in the valley. I fill requests on the town board too: from tomorrow I take one every day at 2 PM. May the best farmer win.",
+      "text": "Heard there is a new farmer in the valley. I fill requests on the town board too: any you leave to their last day, I take at 2 PM. The board keeps score each season. May the best farmer win.",
       "when": {
         "day": 7
       }

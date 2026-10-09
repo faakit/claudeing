@@ -118,6 +118,7 @@ interface Ledger {
   shipped: number;
   orders: number;
   jarsLoaded: number;
+  eggs: number;
 }
 
 /**
@@ -176,7 +177,7 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
   }
   if (coop) {
     moveIn(s, coop);
-    collect(s, coop);
+    ledger.eggs += collect(s, coop);
     if (countItem(s, 'chicken_feed') < 3) buyItem(s, STORE, 'chicken_feed', 9);
     feed(s, coop);
   }
@@ -239,16 +240,16 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
 /**
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
  * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow, and
- * a coop of three hens, Clay on last days only). Seed 42 alone earned 227,442. A balance change that
+ * a coop of three hens, Clay on last days only, crop requests sized to the field). Seed 42 alone: 228,569. A balance change that
  * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 227_442;
+const SIM_EARNED = 213_730;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
     const s = createInitialState();
     s.rng = 42;
-    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
     const log: string[] = [];
     for (let day = 1; day <= 112; day++) {
       playDay(s, ledger);
@@ -258,7 +259,8 @@ describe('balance simulation (decent player, full year)', () => {
         log.push(
           `day ${day} (${s.time.season} ${s.time.day}): gold ${s.money}, earned ${s.stats['earned'] ?? 0}, ` +
             `shipped ${ledger.shipped}, orders ${ledger.orders}, jars ${ledger.jarsLoaded}, ` +
-            `plots ${s.plots.length}, energy ${maxEnergy(s)}, goal ${goalProgress(s)?.goal.id ?? 'done'}`,
+            `plots ${s.plots.length}, energy ${maxEnergy(s)}, eggs ${ledger.eggs}, ` +
+            `goal ${goalProgress(s)?.goal.id ?? 'done'}`,
         );
     }
     console.log(log.join('\n'));
@@ -285,7 +287,7 @@ describe('balance simulation (decent player, full year)', () => {
     const years = [42, 7, 99, 1234, 2026].map((seed) => {
       const s = createInitialState();
       s.rng = seed;
-      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
       for (let day = 1; day <= 112; day++) {
         playDay(s, ledger);
         endDay(s, { passedOut: false, weedCandidates: [] });
@@ -317,7 +319,7 @@ describe('balance simulation (human-paced)', () => {
     const years = [42, 7, 99].map((seed) => {
       const s = createInitialState();
       s.rng = seed;
-      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
       for (let day = 1; day <= 112; day++) {
         playDay(s, ledger, 150);
         endDay(s, { passedOut: false, weedCandidates: [] });
@@ -337,7 +339,7 @@ describe('balance: early jobs against early farming', () => {
       .map((seed) => {
         const s = createInitialState();
         s.rng = seed;
-        const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+        const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
         for (let day = 1; day <= 14; day++) {
           playDay(s, ledger);
           endDay(s, { passedOut: false, weedCandidates: [] });
@@ -366,7 +368,7 @@ describe('balance simulation (two years, funding projects)', () => {
   it("the late-game sinks absorb a tireless farmer's second year", () => {
     const s = createInitialState();
     s.rng = 42;
-    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0 };
+    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
     const log: string[] = [];
     let sunk = 0;
     for (let day = 1; day <= 224; day++) {

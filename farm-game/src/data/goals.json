@@ -118,7 +118,7 @@
     "stat": "crafted",
     "target": 1,
     "reward": 60,
-    "hint": "Open Menu > Craft. Fertilizer needs fiber from cut weeds."
+    "hint": "Open Menu > Make. Fertilizer needs fiber from cut weeds."
   },
   {
     "id": "place",
