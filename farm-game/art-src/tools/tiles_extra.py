@@ -210,6 +210,10 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     prop("p_rocks", "nature2a/n2_rocks", (14, 10))
     prop("p_hollowlog", "nature2a/n2_hollowlog", (16, 10))
     prop("p_rootstump", "nature2a/n2_stump", (15, 14))
+    # round 3: Flow sheet items7 leftovers, placed as quiet decor (nothing that suggests a new interaction)
+    prop("p_trellis", "items7a/trellis", (14, 16))
+    prop("p_stonelantern", "items7a/stone_lantern", (10, 14))
+    prop("p_stalagmite", "items7a/stalagmite", (10, 14))
     # bushes and ferns: transparent bases (R2-3: the detail layer paints the ground under them)
     bush = make({"src": "land1a/decor_bush", "size": [T, T], "fit": [16, 14]})
     out["bush_big"] = bush

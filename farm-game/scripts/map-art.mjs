@@ -105,6 +105,9 @@ const COMPOSITION = {
       ['p_flowerbed', 10, 8],
       ['p_flowerbed', 11, 8],
       ['p_cat', 11, 9],
+      ['p_trellis', 9, 7],
+      // a bench to sit by the pond
+      ['p_bench', 27, 26],
       ['t_scarecrow', 27, 24],
       ['p_hollowlog', 5, 42],
       ['p_sign_sprout', 17, 42],
@@ -133,7 +136,7 @@ const COMPOSITION = {
     props: [
       ['t_streetlamp', 9, 3],
       ['t_streetlamp', 14, 8],
-      ['t_streetlamp', 9, 15],
+      ['t_streetlamp', 8, 15],
       ['t_streetlamp', 14, 20],
       ['t_streetlamp', 9, 28],
       // Mara's store: stock stacked by the wall
@@ -143,7 +146,7 @@ const COMPOSITION = {
       ['p_crates', 1, 6],
       // the well and a bench: the square
       ['t_well', 9, 12],
-      ['p_bench', 9, 13],
+      ['p_bench', 8, 13],
       // Orin's smithy
       ['p_coal', 2, 19],
       ['p_anvil', 3, 19],
@@ -152,6 +155,9 @@ const COMPOSITION = {
       ['p_flowerbed', 16, 19],
       ['p_flowerbed', 17, 19],
       ['p_flowerpot', 18, 18],
+      ['p_trellis', 19, 18],
+      // a stone lantern across the road from the square
+      ['p_stonelantern', 15, 14],
       // Clay's house
       ['p_wheelbarrow', 20, 5],
       // Finn's things by the river
@@ -223,6 +229,8 @@ const COMPOSITION = {
       ['t_beams', 11, 28, 'rock'],
       ['t_beams', 6, 24],
       ['t_beams', 12, 24],
+      ['p_stalagmite', 2, 10],
+      ['p_stalagmite', 17, 15],
     ],
     // rock bays pushing in from the walls, so the cavern is not a rectangle
     bays: [
@@ -910,6 +918,14 @@ export function artLayers(name, m, objects, extraReserved = []) {
       L.props[i] === 0
     );
   };
+  // MAP_OPEN=<map> node scripts/generate-maps.mjs prints where a hand-placed prop may go ('.' open, '#' not)
+  if (process.env.MAP_OPEN === name)
+    for (let y = 0; y < h; y++)
+      console.log(
+        String(y).padStart(2) +
+          ' ' +
+          Array.from({ length: w }, (_, x) => (open(x, y) ? '.' : '#')).join(''),
+      );
   const place = (n, x, y, on) => {
     if (!open(x, y, on)) {
       console.warn(`map-art: ${name}: skipped ${n} at ${x},${y} (not open)`);

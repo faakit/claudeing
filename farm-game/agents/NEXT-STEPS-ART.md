@@ -1,144 +1,139 @@
-# Art: next steps (handover, round 2, 2026-10-09)
+# Art: next steps (handover, round 3, 2026-10-09)
 
-Branch `art/round2` (from `integration/agents-2026-10-08`), last code commit b321e29, `npm run verify` green (478
-unit tests, e2e, mobile e2e, perf 2-4 draws and <= 1.12 ms JS per frame). Session report:
-`agents/out/art-round2-2026-10-09.md`. Critic notes for this round: `C:/Users/andre/dev/tiny-acre/art-critique/`
-`review-3.md` to `review-6.md` (+ its final round). All judging was done from headless screenshots; nobody has
-looked at this on a phone.
+Branch `art/round3` (from `integration/round2-2026-10-09`). `npm run verify` is green after every commit: 684 unit
+tests, e2e (with a new ambient-anchor check), mobile e2e, controls e2e, and perf at 2-5 draws and at most 1.88 ms JS
+per frame (the busiest farm scene; machine noise varies it run to run) (budget: 12 draws, 3.5 ms). Before and after shots are in `agents/out/art-shots/round3/`
+(git-ignored). Everything was judged from **headless screenshots only**; nobody has looked at this on a phone.
 
 ## Shipped this round
 
-- **Maps pass (R1-10, the owner's main ask).** `scripts/map-art.mjs` writes five art layers (`detail`, `shade`,
-  `props`, `roof`, `overhead`) and a hidden `lights` object group into every map; `src/art/mapLayers.ts` draws them
-  (one shared tileset texture; overhead tiles fade to 45% around the player). The runtime `decor.ts` is gone.
-  - Transitions are **baked in world space**: the generator lists the tiles it needs in `art-src/map-tiles.json`,
-    and `art-src/tools/bake.py` renders them: forest crowns (mixed oak, birch and pine) with trunks and a
-    walk-behind overhang; shores with 14 px rounded corners, coves and foam; grass creeping onto paths; mine rock
-    with faces; dark floor bands; world-space water. After any map change, run **`npm run art:maps`** (it
-    generates, renders the new tiles, then generates again). A test fails if a requested tile is missing.
-  - Composition per map lives in `COMPOSITION` in `map-art.mjs`:
-    - Farm: yard vignettes, chimney and weathervane, window boxes, copses at the fence.
-    - Town: the square with its well and bench, lamps, Mara's stock, Orin's forge facade with anvil and coal,
-      Rosa's planters, Finn's boat and net rack, sprout signs.
-    - Woods: groves, the old oak, the cave mouth, ferns at the grove edges.
-    - Mine: bays, beams, the rail, torches, wall crystals.
-    - House: wallpaper, bed, furniture, rug, and an ink void around the room.
-  - **Gameplay geometry is unchanged.** New collision comes only from props, groves and bays. They sit on open
-    ground outside every zone, door, door spawn, plot (+1), plot sign, landmark, mailbox, start/wake and villager
-    spot; a test checks this. Water tiles are untouched (coordinator ruling: ponds stay rounded rectangles drawn
-    in the visual layers).
-- **Roofs (R2-1):** staggered courses, a wine shadow under each course, orange glints, a 3 px sand ridge cap
-  outlined in ink and drawn overhead, an eave line and a facade shadow.
-- **Clay (R1-7):** a red jacket, a cream cravat, a cowlick and a straw in side view.
-- **Seams (R1-8)** fixed on Mara, Finn and Rosa, using new `recolor` and `pixfix` spec options in `build.py`;
-  logged in `art-src/flow/edits.md`.
-- **Atmosphere (R1-9):**
-  - Per-season tilesets replace the season multiply. They are palette swaps by category
-    (`art-src/tools/seasons.py`), with drawn winter roofs as snow masses and seasonal clumps under trees (dry
-    grass, leaf litter, drifts).
-  - Dusk keys moved to rose-lilac.
-  - A stepped night glow (`src/fx/NightGlow.ts`) is drawn in the UI scene above the day tint: warm-ramp rings,
-    window light as stripes on the ground, a wall-lantern kind, fireflies.
-  - Ambient particles (`src/fx/Ambient.ts`).
-  - Reduced motion is respected; there are 3 new perf scenarios.
-- **FX:** sparkle, dust and splash flipbooks, and **tool-use poses** (hoe, can, rod) for about 260 ms after a tool
-  action.
-- **Signatures:** the title backdrop is on the palette, with hills, a farmhouse, a row of roses and an embossed wood
-  logo with the carved sprout; the town board and the plot signs carry the carved sprout.
-- **Walnut is the default skin** (approved by the critic in review 6): flat plates, a plank dock, sand slots, one
-  selection style, ink button text, hatched disabled buttons, ink headings and prices, an ink letterbox and a
-  walnut toast plate. `?skin=plum` keeps the old UI. Only tokens, colours and drawing helpers changed.
-- **New art for the depth branch's keys:** the rare crops (strawberry, blueberry, cranberry, snow pea), their
-  items, and the seed exchange landmark.
-
-## Coverage
-
-331 of 332 manifest keys have art (`agents/out/art-manifest.md`); `fx_shadow` stays generated on purpose. New keys
-from other branches show up in the manifest after a merge (`node art-src/tools/manifest.mjs`).
-
-## Merge notes (for the coordinator)
-
-- A trial merge of `origin/controls/one-thumb` conflicts only in `src/scenes/WorldScene.ts`, in 3 small hunks: the
-  imports, a const block above the class, and the `playActionFx` call. There, art passes `posed` from
-  `toolPose()` and controls adds haptics and hold counting; keep both.
-- `theme.ts`, `widgets.ts` and `Hud.ts` merged cleanly. The UIScene hook is 4 lines (`NightGlow` at depth 1.5).
-- After merging, run `npm run art:maps` only if a branch changed `scripts/generate-maps.mjs`, then commit the
-  regenerated maps, the tileset and `art-src/map-tiles.json`.
-
-## Open critic findings (by severity)
-
-Nothing is blocking. The critic's final round may add to this list.
-
-**Minor.** All of these were addressed once in b321e29; the critic has not judged them again yet:
-
-- Mine darkness now follows the outer wall and the bays, with a straight falloff from the torches. Check that it no
-  longer reads as a stain and that ore nodes stay readable inside the band.
-- Wall lantern on stone: a new `wall` glow kind (orange and earth-dark rings, a solid core). Check the farmhouse
-  door at night again.
-- Winter roof against the ground: a sky band on the lower roof slope and cast shadows on the snow. Check that the
-  house keeps its mass; the roof may read a little striped (lumps plus band), so simplify it if needed.
-- Title: the hills, the farmhouse and the embossed logo with the sprout are new; judge them at phone scale.
-- Tool-pose head: about 2 px smaller than the player's (the Flow pose sheet's proportions). Fix it when the poses
-  are redone.
-
-**Accepted per coordinator rulings:**
-
-- R3-1: ponds stay rounded rectangles.
-- R3-2: woods groves only outside the forage zones.
-- R3-6: the target marker belongs to the controls agent.
-
-## Next batches (priority order)
-
-1. **The critic's final round:** address its findings first (shots in `agents/out/art-shots/round2/final/`).
-2. **Skin the controls agent's new UI after the merge** (tool ring, target-marker states, help card, controls tab)
-   through the `C`, `CH` and `select` tokens and `drawSlot`, `drawSelection` and `drawPanel`, with no geometry
-   changes. Check the toast plate, the ring and the marker over grass, snow and night.
-3. **Redo the tool poses:**
-   - A Flow sheet with the player as the reference image, in all 4 directions: hoe, can, rod, scythe, pickaxe.
-   - Build it on the native grid with `noscale` and `drop_rows`, like the villagers.
-   - The hook is `WorldScene.toolPose()` with `TOOL_POSES`. Then drop the rule that facing up has no pose.
-4. **Maps polish:**
-   - A few more landmarks per map: a fishing pier in town (only if the coordinator allows a walkable tile change),
-     mushroom and stump clusters in the woods glade.
-   - Seasonal water: a winter ice edge on shore tiles only.
-   - Lilies and reeds cleared in winter, via `seasons.py` categories.
-5. **Mine depth:** ore veins in the wall faces (bake them into the `rock` tiles), stalagmites from the unused
-   `items7` crop, and crystal glints animated in steps.
-6. **Unused generated art** (crops in `art-src/flow/crops/`):
-   - `items7a`: stalagmite, hook lantern, crystals, water pump, stone lantern, rose trellis (good for the town and
-     the farm yard).
-   - `nature2a`: the mushroom ring. Keep it off forage zones, where it would pass for forage. (The daisy,
-     buttercup and lavender patches are already used.)
-   - `fx2a`: ember, glint and glow.
-
-How to run things:
-
-- `npm run art:maps`: maps plus baked tiles.
-- `python art-src/tools/build.py`: everything (about 2 minutes).
-- `python art-src/tools/mapview.py <dir> 2`: whole-map renders.
-- `node art-src/tools/shots2.mjs <dir> <prefix>`: every view at day, dusk and night, every season, 1x and phone.
-  Filter with `VIEWS`, `TIMES`, `SEASONS` and `SIZES`.
-- `ONLY=title,farm,inventory,shop,board node art-src/tools/shots.mjs <dir> <prefix>`: UI shots.
-
-Keep raw Flow files in `C:/Users/andre/dev/tiny-acre/flow-raw/`, and log prompts in `art-src/flow/prompts.json`
-(then run `prompts_md.py`).
-
-Windows notes: write files from Python with `newline=''` (CRLF crept in once), and shell heredocs collapse
-backslashes, so put any script that contains `\n` in a file.
+1. **Butterflies and particles no longer follow the screen (owner's bug).** `src/fx/Ambient.ts`:
+   - The emitter sits still at the world origin. Only its emit zone (`EmitArea`) follows the camera's view, so new
+     petals, leaves, snow and dust appear in view while live ones keep their world position. (Since Phaser 3.60,
+     live particles move with their emitter, so the old per-frame `setPosition` dragged them along.)
+   - Butterflies (`Flock`, pure and seeded) fly in world space around flower patches. Each one roams about 20 px
+     around its patch with steering and jitter, plus a 1 px flutter. When the player gets more than 230 px from its
+     patch, it picks a patch near the player and enters from just outside the view. With no patch nearby, it uses
+     open ground near the player.
+   - The patches come from a new hidden `blooms` object group that `scripts/map-art.mjs` writes into every map:
+     one point per 4x4 block with 2 or more flower tiles (ground flowers, bloom and patch flora, flower beds).
+     The farm has 13, the town 19, the woods 13; the mine and the house have none.
+   - **How it is proven:**
+     - `tests/ambient-anchor.test.ts`: the emitter stays at (0,0) and is never repositioned while the zone tracks
+       a scrolling view. A butterfly flies the identical path under a still camera and under a panning one. It
+       re-homes off-screen when the player is far away. Reduced motion clears everything.
+     - A new e2e check in `scripts/e2e.mjs` (step 6b) freezes the motes in a real browser, scrolls the camera 64 px
+       and measures a mote shift of 0 px; the butterflies move less than 16 px, all of it their own flight.
+     - `agents/probes/ambient-anchor.mjs` (with `SEASON=winter`) does the same with before and after shots.
+   - Day and night, the seasons and reduced motion go through the same `ambientPlan`. Perf for "woods spring day:
+     petals + butterflies" stays at 2 draws and 0.76-1.18 ms across the runs and throttles.
+2. **The 21 placeholder keys now have art.** There were no Flow downloads (see below), so everything is drawn by
+   hand in `art-src/tools/drawn.py`: character grids over the palette names, with explicit ink outlines. The keys:
+   - tulip bulbs, the tulip, and the tulip growth (stage 0 is the shared seed mound);
+   - parsnip soup, baked potato, fish stew, berry tart, kale salad, pumpkin pie;
+   - the four legendary fish (Glimmer Trout, Sun Carp, Old Whiskers, Ice Pike);
+   - the scarecrow item and the placed 16x24 object;
+   - the Founder's Statue.
+   The manifest now has 361 entries, 360 with art; `fx_shadow` stays generated on purpose.
+3. **The statue grows with its level.** There are five frames: `obj_landmark_statue` (a bust on a low plinth), then
+   `obj_landmark_statue_2` to `_5` (the full figure, a plaque, a wreath and two tiers, then gold trim, the gold
+   sprout and rose flowers at its foot).
+   - `landmarkLevelKey()` in `src/art/manifest.ts` picks the frame from `project.statue.level`, capped at
+     `repeat.perkLevels`, which is 5.
+   - `ObjectsRenderer.syncLandmarkLevels()` swaps the frame when funding raises the level. After the first level,
+     funding fires no map event, so this is a cheap per-frame check called from `WorldScene.update`.
+   - Shots: `round3/after/r3_statue_l1.png` to `l5.png`.
+4. **The doubled "New Game" label (R6-2): the real cause.**
+   - `TitleScene` passes chrome tokens (`CH`) to `Button`, so the label was parchment (`CH.cream`) on the sand
+     button face.
+   - `Button` drops the drop shadow only for the content tokens (`C.cream` etc. are ink in walnut), so the light
+     label got an ink 1 px shadow. Light letters with a dark offset on sand read as doubled.
+   - Fix: the title buttons use the content tokens, like every in-game button. The labels are ink, Continue is leaf
+     dark, and "Erase save?" is wine. `widgets.ts` is untouched.
+   - Comparison: `round3/title-button-before-after.png`.
+5. **Tool poses redone on the player's own frames (R5-5).** `player_use_hoe` (facing down, hoe overhead) and
+   `player_use_can` and `player_use_rod` (facing right; left mirrors) are now `player_idle_down_0` or
+   `player_idle_right_0` with edited arms and a drawn tool. The head is pixel-identical to the walking sprite.
+   Shots: `round3/r3_poses.png`. The old Flow pose specs are gone from `sprites.json`.
+6. **Coach-mark sprites for the onboarding agent (ui atlas, listed in `COACH_SPRITES`):**
+   - `ui_coach_hand` (13x17): a pointing hand, finger up; flip Y to point down. The cuff is the player's blue.
+   - `ui_coach_ring` (16x16): a gold ring with ink rims inside and out.
+   - `ui_coach_ring_wide` (22x22): a thinner, broken lamp and gold ring, for a stepped pulse between the two frames
+     (no soft glow).
+   - `ui_coach_bubble` (12x12): a nine-slice source with 4 px corners, parchment with a plum-shadow bottom.
+   - `ui_coach_bubble_tail` (7x4): sits under the bubble and overlaps its bottom outline row.
+   - All are optional manifest entries, so nothing breaks if the names change at merge. Mock:
+     `round3/coach-marks-mock.png`.
+7. **Polish:**
+   - **Winter water:** lilies and reeds clear in winter (new `aquatic` category in `seasons.py`), and the shore
+     tiles freeze. Water becomes sky-blue ice on the `shore:` baked tiles only, so open water stays water. See
+     `round3/town-pond-winter-after.png`.
+   - **New decor props** from the Flow sheet `items7`:
+     - a rose trellis by the farmhouse and by Rosa's cottage;
+     - a stone lantern across the road from the town square;
+     - two stalagmites against the mine walls.
+     I left out the pump and the hook lantern, because they could suggest an interaction that doesn't exist.
+   - **Town square:** the bench and one street lamp had been skipped since round 2, because the statue's reserved
+     tiles covered them. They now stand one tile west, and the lamp is lit again (15 lights).
+   - **A bench by the farm pond.**
+   - **`MAP_OPEN=<map> node scripts/generate-maps.mjs`** prints where hand-placed props may go. Most open grass is
+     reserved (weed, forage and ore zones, farm plots plus a margin, villager spots), so it is off-limits.
+   - **`python art-src/tools/build.py --sprites`** rebuilds only the atlases, in about 1 minute instead of 5. The
+     tileset and `atlases.json` are left alone.
 
 ## Flow usage
 
-5 generations this round, 2 images each, 1:1, model Nano Banana 2.1, on the owner's account in the project
-"out. 08 - 07:06": `village2`, `nature2`, `fx2`, `crops4`, `items7`. No quota, credit or error message appeared.
-The browser pane was signed out at first, so nothing was generated then; the owner signed in again mid-session.
-24 prompts are logged in total (`art-src/flow/prompts.md`).
+- One prompt (`items8`: tulips, dishes, legends, scarecrow) was submitted in the owner's Flow project
+  "out. 08 - 07:06". No quota or error message appeared. It is logged as entry 25 in `art-src/flow/prompts.md`.
+- **Nothing was downloaded.** My safety rules require the owner's own go-ahead in chat before downloading files,
+  and a coordinator instruction doesn't count. So I stopped generating and drew the keys by hand.
+- The two outputs are still in the Flow project if the owner wants Flow versions. To use them: download to
+  `flow-raw/items8-{a,b}.jpg`, run `extract.py`, and add `src` specs to `sprites.json`. The hand-drawn versions
+  are overridden only if their keys are dropped from `drawn.build()`.
+
+## Merge notes (for the coordinator)
+
+- Shared files I touched, each in a few lines:
+  - `src/scenes/WorldScene.ts`: the `parseBlooms` import, the Ambient constructor argument, and a
+    `syncLandmarkLevels` call next to `ambient.update`.
+  - `src/game/ObjectsRenderer.ts`: `syncLandmarks` and the new `syncLandmarkLevels`.
+  - `src/scenes/TitleScene.ts`: the button label tokens.
+  - `scripts/e2e.mjs`: the new step 6b, in its own browser context before step 7.
+- The maps changed: there is a new `blooms` group, new props, a moved bench and lamp, and the tile gids shifted
+  because the tileset grew. After merging any branch that changes `scripts/generate-maps.mjs`, run
+  `npm run art:maps` and commit the maps, the tilesets and `art-src/map-tiles.json`.
+- **Coach-mark names:** the onboarding branch was told `ui_coach_hand` and `ui_coach_ring`. Mine add
+  `ui_coach_ring_wide`, `ui_coach_bubble` and `ui_coach_bubble_tail`. Rename them in `COACH_SPRITES` and in
+  `drawn.build()` if theirs differ.
+- **Optional, for the depth agent:** emitting `placedChanged` on every statue level-up in `systems/projects.ts`
+  would let the renderer drop the per-frame level check.
+
+## Open items (by priority)
+
+1. **The critic's eye on round 3:** the hand-drawn dishes and fish, the statue's growth, the new poses, the coach
+   marks (mock only: the onboarding UI isn't merged here), and the winter ice rim.
+2. **Poses:**
+   - add a hoe pose for left and right (`toolPose` still shows the hoe only facing down);
+   - add back-view poses, then drop the rule that facing up has no pose;
+   - add scythe and pickaxe poses.
+   Draw them in `drawn.poses()` on `player_walk_*` frames.
+3. **Statue:** it is 16 px wide, so even level 5 is modest in the square. If the coordinator allows, a 2-tile-wide
+   level 5 needs a footprint change (`projects.json` landmark plus collision).
+4. **Earlier batches still open:** mine depth (ore veins baked into rock faces, crystal glints in steps), woods
+   glade clusters (keep the mushroom ring off forage zones, or skip it, since mushrooms are forage), and the
+   unused `fx2a` ember, glint and glow.
+5. **Winter:** paths keep their summer sand (the `path` category isn't snowed). Consider a light snow remap on
+   `creep:path` and the path base.
+
+How to run things: `npm run art:maps` (maps plus baked tiles), `python art-src/tools/build.py` (everything, about 5
+minutes on this machine) or `--sprites`, `python art-src/tools/mapview.py <dir> 2 [tileset.png]` (whole maps),
+`node art-src/tools/shots2.mjs` and `shots.mjs` (views), `node agents/probes/art-round3.mjs` (this round's staged
+shots), `node agents/probes/ambient-anchor.mjs` (the anchor proof).
 
 ## Questions for the owner
 
-- **Look on a phone:** the maps, the night glow and the walnut UI were judged only from headless screenshots.
-- **Ponds:** keep the rectangular water tiles (fishing) with visual rounding, or allow reshaping the water tiles so
-  ponds can be truly round? That needs the fishing spots checked again.
-- **New collision from art:** props, copses and rock bays add a little collision on open, unreserved ground (never
-  in zones, plots or paths). Keep it, or should art never add collision?
-- **Flow licensing before any store release:** re-verify Google's terms (see `ASSETS.md`). This is not legal
-  advice.
+- **Flow downloads:** may I download Flow outputs in future rounds? If so, say so in chat yourself. Until then,
+  art is drawn by hand.
+- **Look on a phone:** everything since round 2 has been judged only from headless screenshots.
+- **Ponds, art-added collision, Flow licensing:** these are unchanged from round 2 (see `ASSETS.md`); this is
+  not legal advice.

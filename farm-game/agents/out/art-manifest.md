@@ -155,7 +155,7 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `obj_landmark_bathhouse` |  | 16x16 | min | town landmark bathhouse | projects.json | art (atlas_world 16x22) |
 | `obj_landmark_fairhall` |  | 16x16 | min | town landmark fairhall | projects.json | art (atlas_world 16x22) |
 | `obj_landmark_market` |  | 16x16 | min | town landmark market | projects.json | art (atlas_world 16x22) |
-| `obj_landmark_statue` |  | 16x16 | min | town landmark statue | projects.json | art (atlas_world 16x14) |
+| `obj_landmark_statue` |  | 16x16 | min | town landmark statue | projects.json | art (atlas_world 16x16) |
 | `obj_landmark_statue_2` |  | 16x16 | min | town landmark statue level 2 | projects.json | art (atlas_world 16x21) |
 | `obj_landmark_statue_3` |  | 16x16 | min | town landmark statue level 3 | projects.json | art (atlas_world 16x25) |
 | `obj_landmark_statue_4` |  | 16x16 | min | town landmark statue level 4 | projects.json | art (atlas_world 16x29) |
