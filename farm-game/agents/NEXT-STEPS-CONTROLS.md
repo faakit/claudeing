@@ -91,6 +91,25 @@ the 3 rows a tap beside it and one paint from Action, twice (prepare, harvest). 
 by the ruling) it was 5 gestures and about 230 mm. Human-like stops (release 120 / 180 ms after the sprite
 looks centred, M2 on): 0 corrections everywhere (51 gestures and 25 corrections at 180 ms before M2).
 
+## Critic's final round (review 5, on `cb5dce5`)
+
+No blocker open; every review-3 and review-4 blocker verified fixed (world touches 0/112 worked, rest-then-steer
+0/96 painted, ring 0 acts in 460+ gestures, ring picks 98-100% at 1.2 mm, 2-3 vibrations per painted row).
+Write-ups: `C:/Users/andre/dev/tiny-acre/controls-critique/review-5.md` and `final.md`. Still open:
+
+- **Major, do first:** a still Action press of 290 ms or more arms painting and, lifted without a drag, does
+  nothing. Two strings still teach the old hold and must change with whatever the owner picks for question 3:
+  `src/ui/panels/MenuPanel.ts` (around line 271, "Tip: hold Action to keep working.") and
+  `src/scenes/UIScene.ts` (around line 215, the welcome toast when tap-to-walk is off). The critic suggests: an
+  armed lift with no drag acts once (one line in `ActionPress.up`: return `tap` instead of `cancel` when no
+  direction was ever chosen; keep `cancel` when the drag went out and came back).
+- **Major, owner trade-off:** plot3x3 is 15 gestures and 470-612 mm (serpentine in next steps 3).
+- **Minor:** a ring slide resting 22-35 px out can pick the 180-degree item (raise `RING.dead` to about 36);
+  ring at 2 mm on SE left is 81% (misses mostly pick nothing); Options Sound (right thumb) and Vibrate (left
+  thumb) toggles are hard to reach; an Action press that rolls 9 px or more does nothing, silently (give it a
+  ring ping); left-hand bagUse travel 195 mm vs 119 mm before; the `PAINT_STEP_PX` comment once said 14 px (the
+  code and DECISIONS say 10).
+
 ## Open critic findings (controls critic, rounds 1-4), by severity
 
 The critic's write-ups are in `C:/Users/andre/dev/tiny-acre/controls-critique/review-*.md`; its final round on
