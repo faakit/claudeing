@@ -492,5 +492,13 @@
     "target": 1,
     "reward": 1500,
     "hint": "Finn knows where the four legends of the valley hide."
+  },
+  {
+    "id": "board1",
+    "text": "Beat Clay on the board",
+    "stat": "boardWins",
+    "target": 1,
+    "reward": 1000,
+    "hint": "Fill more requests in a season than Clay takes."
   }
 ]
