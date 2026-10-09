@@ -34,7 +34,7 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
    - the four legendary fish (Glimmer Trout, Sun Carp, Old Whiskers, Ice Pike);
    - the scarecrow item and the placed 16x24 object;
    - the Founder's Statue.
-   The manifest now has 361 entries, 360 with art; `fx_shadow` stays generated on purpose.
+     The manifest now has 361 entries, 360 with art; `fx_shadow` stays generated on purpose.
 3. **The statue grows with its level.** There are five frames: `obj_landmark_statue` (a bust on a low plinth), then
    `obj_landmark_statue_2` to `_5` (the full figure, a plaque, a wreath and two tiers, then gold trim, the gold
    sprout and rose flowers at its foot).
@@ -72,7 +72,7 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
      - a rose trellis by the farmhouse and by Rosa's cottage;
      - a stone lantern across the road from the town square;
      - two stalagmites against the mine walls.
-     I left out the pump and the hook lantern, because they could suggest an interaction that doesn't exist.
+       I left out the pump and the hook lantern, because they could suggest an interaction that doesn't exist.
    - **Town square:** the bench and one street lamp had been skipped since round 2, because the statue's reserved
      tiles covered them. They now stand one tile west, and the lamp is lit again (15 lights).
    - **A bench by the farm pond.**
@@ -116,7 +116,7 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
    - add a hoe pose for left and right (`toolPose` still shows the hoe only facing down);
    - add back-view poses, then drop the rule that facing up has no pose;
    - add scythe and pickaxe poses.
-   Draw them in `drawn.poses()` on `player_walk_*` frames.
+     Draw them in `drawn.poses()` on `player_walk_*` frames.
 3. **Statue:** it is 16 px wide, so even level 5 is modest in the square. If the coordinator allows, a 2-tile-wide
    level 5 needs a footprint change (`projects.json` landmark plus collision).
 4. **Earlier batches still open:** mine depth (ore veins baked into rock faces, crystal glints in steps), woods
