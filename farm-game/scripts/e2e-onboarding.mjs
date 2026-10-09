@@ -32,8 +32,8 @@ const { url, stop } = await startPreview(PORT);
 const browser = await launch();
 const results = [];
 
-async function run(p, hand) {
-  const tag = `${p.id} ${hand}`;
+async function run(p, hand, deviant = false) {
+  const tag = `${p.id} ${hand}${deviant ? ' wanderer' : ''}`;
   const ctx = await browser.newContext({
     viewport: { width: p.w, height: p.h },
     deviceScaleFactor: p.dpr,
@@ -57,7 +57,7 @@ async function run(p, hand) {
   await sleep(600);
   const geo = await geometry(page);
   const t = new Thumb(cdp, geo, p, hand);
-  const shotDir = SHOTS ? `${SHOTS}/${p.id}-${hand}` : '';
+  const shotDir = SHOTS ? `${SHOTS}/${p.id}-${hand}${deviant ? '-wanderer' : ''}` : '';
   if (shotDir) mkdirSync(shotDir, { recursive: true });
   const shot = async (name) => shotDir && page.screenshot({ path: `${shotDir}/${name}.png` });
 
@@ -133,6 +133,24 @@ async function run(p, hand) {
     );
   }
 
+  if (deviant) {
+    // A player who ignores the guide at first: presses Action on the wrong grass and wanders south.
+    const L = first.action;
+    await t.tap(L.x, L.y, 70);
+    await sleep(400);
+    const k = await coach();
+    check(
+      `${tag}: a refusal shows in the coach line, not as a second message`,
+      k.coach?.refusals === 1,
+      JSON.stringify(k.coach),
+    );
+    for (let i = 0; i < 3; i++) {
+      await t.tap(150, 280, 70);
+      await sleep(250);
+      await settle();
+    }
+  }
+  let openedMenu = false;
   let step = null;
   let stepSince = Date.now();
   let firstHarvestS = null;
@@ -140,8 +158,10 @@ async function run(p, hand) {
   let lastGoal = first.goal;
   let guard = 0;
   let paintSeen = false;
+  let dayOne = null;
   while (guard++ < 400) {
     const c = await coach();
+    if (c.day === 2 && !dayOne) dayOne = { s: Math.round((Date.now() - t0) / 1000), ...t.ledger() };
     if (c.goal !== lastGoal && firstGoalS === null) firstGoalS = (Date.now() - t0) / 1000;
     lastGoal = c.goal;
     // The morning summary is a sheet to acknowledge (no coach mark): tap its Wake up button.
@@ -167,6 +187,21 @@ async function run(p, hand) {
     }
     if (!k || !k.visible || !k.aim) {
       await sleep(400);
+      continue;
+    }
+    if (deviant && k.step === 'ship' && !openedMenu) {
+      // ...and opens the Menu in the middle of a step: the coach must lead back out.
+      openedMenu = true;
+      const L =
+        c.coach && (await page.evaluate(() => window.__farm.game.scene.getScene('UI').layout.menu));
+      await t.tap(L.x, L.y, 70);
+      await sleep(600);
+      const k2 = await coach();
+      check(
+        `${tag}: with the Menu open mid-step, the coach points at its close button`,
+        k2.coach?.text === 'Close this to carry on.' && k2.coach?.aim,
+        JSON.stringify(k2.coach),
+      );
       continue;
     }
     const a = k.aim;
@@ -241,7 +276,7 @@ async function run(p, hand) {
     timeline,
   };
   console.log(
-    `      ${tag}: ${seconds} s, ${ledger.gestures} gestures (${ledger.taps} taps, ${ledger.drags} drags, ${ledger.holds} holds), first harvest ${firstHarvestS} s, first goal ${firstGoalS} s`,
+    `      ${tag}: ${seconds} s, ${ledger.gestures} gestures (${ledger.taps} taps, ${ledger.drags} drags, ${ledger.holds} holds), first harvest ${firstHarvestS} s, first goal ${firstGoalS} s; day 1: ${dayOne?.s} s, ${dayOne?.gestures} gestures`,
   );
   results.push(r);
   await ctx.close();
@@ -249,15 +284,19 @@ async function run(p, hand) {
 
 const combos = [];
 for (const p of PROFILES.filter((x) => which.includes(x.id)))
-  for (const hand of hands) combos.push([p, hand]);
+  for (const hand of hands) combos.push([p, hand, false]);
+// One player who wanders off and opens the Menu mid-step (recovery).
+if (which.includes('i13') && hands.includes('right')) combos.push([PROFILES[0], 'right', true]);
 const PARALLEL = Number(process.env.E2E_ONBOARDING_PARALLEL ?? 2);
 try {
   const queue = [...combos];
   await Promise.all(
     Array.from({ length: Math.min(PARALLEL, queue.length) }, async () => {
       while (queue.length) {
-        const [p, hand] = queue.shift();
-        await run(p, hand).catch((e) => check(`${p.id} ${hand}: run finished`, false, String(e)));
+        const [p, hand, deviant] = queue.shift();
+        await run(p, hand, deviant).catch((e) =>
+          check(`${p.id} ${hand}: run finished`, false, String(e)),
+        );
       }
     }),
   );

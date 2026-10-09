@@ -22,6 +22,7 @@ import { toggleLeftHanded } from '../systems/settings';
 import {
   advance,
   COACH_LINE_PX,
+  rewriteRefusal,
   coachView,
   setCoachContext,
   skipStep,
@@ -43,7 +44,6 @@ import { Button, drawPanel, type Modal } from './widgets';
 
 export const COACH_RING = 'ui_coach_ring';
 export const COACH_HAND = 'ui_coach_hand';
-
 
 /** After this long on one step without finishing it, the marks escalate (a travelling hand, a bigger ring). */
 export const ESCALATE_MS = 15_000;
@@ -85,6 +85,28 @@ const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number;
   };
 
 const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] } as const;
+
+/**
+ * Where the straight way from `from` to `to` leaves the box (the last point inside it); `from` is clamped into
+ * the box first. Pure, so a test can check the arrow never sits on the farmer's own tile.
+ */
+export function edgePoint(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  box: { x0: number; x1: number; y0: number; y1: number },
+): { x: number; y: number } {
+  const fx = Math.max(box.x0, Math.min(box.x1, from.x));
+  const fy = Math.max(box.y0, Math.min(box.y1, from.y));
+  const dx = to.x - fx;
+  const dy = to.y - fy;
+  let t = 1;
+  if (dx > 0) t = Math.min(t, (box.x1 - fx) / dx);
+  if (dx < 0) t = Math.min(t, (box.x0 - fx) / dx);
+  if (dy > 0) t = Math.min(t, (box.y1 - fy) / dy);
+  if (dy < 0) t = Math.min(t, (box.y0 - fy) / dy);
+  t = Math.max(0, t);
+  return { x: Math.round(fx + dx * t), y: Math.round(fy + dy * t) };
+}
 
 /** Draw the placeholder ring and hand once (the art agent can replace them by key). */
 export function ensureCoachTextures(scene: Phaser.Scene): void {
@@ -136,6 +158,7 @@ export class CoachMarks {
   private aim: { x: number; y: number; kind: string; dir?: string } | null = null;
   private stillMs = 0;
   private refusals = 0;
+  private progressKey = '';
   private lastTile = '';
   private cleanup: (() => void)[] = [];
 
@@ -191,7 +214,7 @@ export class CoachMarks {
   /** The Hud's toast hook: while a step shows, a refusal appears in the coach line, not as a second message. */
   intercept(text: string, kind: 'info' | 'warn' | 'good'): boolean {
     if (kind !== 'warn' || !this.active) return false;
-    this.flash = { text, until: this.scene.time.now + 2400 };
+    this.flash = { text: rewriteRefusal(text), until: this.scene.time.now + 2400 };
     this.refusals++;
     return true;
   }
@@ -237,6 +260,12 @@ export class CoachMarks {
     } else if (!current) this.stepId = null;
     if (!runtime.blocked) this.stepMs += delta;
     this.view = current ? coachView(s, world, facts, current) : null;
+    // Progress (a count moving, the target changing) restarts the stall clock that escalates the marks.
+    const progress = this.view ? `${this.view.count}|${JSON.stringify(this.view.pointer)}` : '';
+    if (progress !== this.progressKey) {
+      this.progressKey = progress;
+      this.stepMs = 0;
+    }
     // While a sheet is open, only a step that points inside it (or into the HUD) shows.
     const sheet = facts.panel !== null;
     const inSheet = this.view?.pointer?.kind === 'button';
@@ -263,7 +292,9 @@ export class CoachMarks {
   // ---- drawing ----
 
   private welcomeVisible(): boolean {
-    return !stepDone(getState(), 'harvest') && this.view?.step.id === 'harvest';
+    // Only until the first thing is done: then the strip gets out of the way of the world.
+    const s = getState();
+    return this.view?.step.id === 'harvest' && !stepDone(s, 'harvest') && !s.stats['harvested'];
   }
 
   private lineText(): string {
@@ -294,7 +325,16 @@ export class CoachMarks {
       } else this.tagLabel.setVisible(false);
     } else this.tagLabel.setVisible(false);
     // Welcome strip (the first step only).
-    const welcomeOn = this.welcomeVisible();
+    // The strip gives way when the target would sit under it or off screen (the player wandered first).
+    const p = view.pointer;
+    const sc = p?.kind === 'tile' ? world.screen(p.tx, p.ty) : null;
+    const clear =
+      !sc ||
+      (sc.y > y + WELCOME_H + BAR_H + 12 &&
+        sc.y < WORLD_VIEW.y + WORLD_VIEW.h &&
+        sc.x > 0 &&
+        sc.x < GAME_WIDTH);
+    const welcomeOn = this.welcomeVisible() && clear;
     if (welcomeOn && !this.welcomeParts.length) this.buildWelcome();
     if (!welcomeOn && this.welcomeParts.length) this.dropWelcome();
     if (welcomeOn) {
@@ -357,10 +397,12 @@ export class CoachMarks {
       const minY = Math.max(WORLD_VIEW.y + 8, topY + 4);
       const maxY = WORLD_VIEW.y + WORLD_VIEW.h - 8;
       if (sc.x < 6 || sc.x > GAME_WIDTH - 6 || sc.y < minY || sc.y > maxY) {
-        const cx = Math.max(10, Math.min(GAME_WIDTH - 10, sc.x));
-        const cy = Math.max(minY + 4, Math.min(maxY - 2, sc.y));
-        edge = { x: cx, y: cy, ang: Math.atan2(sc.y - cy, sc.x - cx) };
-        at = { x: cx, y: cy };
+        // Off screen (or under the coach's own strip): an arrow where the way to it leaves the visible world,
+        // so tapping the arrow always walks the farmer toward the target.
+        const me = world.screen(world.tile.tx, world.tile.ty);
+        const e = edgePoint(me, sc, { x0: 10, x1: GAME_WIDTH - 10, y0: minY + 4, y1: maxY - 2 });
+        edge = { x: e.x, y: e.y, ang: Math.atan2(sc.y - e.y, sc.x - e.x) };
+        at = { x: e.x, y: e.y };
       } else at = sc;
       r = 9;
       this.aim = edge

@@ -563,6 +563,8 @@ export interface TutorialData {
     forage: { item: string; tile: [number, number] }[];
   };
   steps: TutorialStep[];
+  /** Refusals the coach line rewords while the guide runs (game text -> guide text). */
+  refusals?: Record<string, string>;
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];

@@ -670,6 +670,11 @@ export function coachView(
   };
 }
 
+/** A refusal said in the coach line, in the guide's words where the game's would mislead a beginner. */
+export function rewriteRefusal(text: string): string {
+  return data().refusals?.[text] ?? text;
+}
+
 /** The speaker's name and the welcome line (shown while the first step runs). */
 export function welcome(): { name: string; npc: string; text: string } {
   const d = data();
@@ -685,6 +690,7 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
     for (const a of st.alt ?? []) out.push(a.text);
   }
   const dirs = ['up', 'down', 'left', 'right'];
+  out.push(...Object.values(data().refusals ?? {}));
   const names = Object.values(npcs).map((n) => n.name);
   return out.flatMap((t) =>
     t.includes('{dir}')

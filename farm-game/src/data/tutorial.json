@@ -622,5 +622,9 @@
       "leave": true,
       "optional": true
     }
-  ]
+  ],
+  "refusals": {
+    "Not your land yet. Buy it at a sign.": "Not your land yet. Follow the ring.",
+    "Pick seeds on the hotbar first.": "Tap the seed packet on the hotbar."
+  }
 }
