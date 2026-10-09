@@ -94,7 +94,7 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
   c.label(
     8,
     c.top + 4,
-    'Tap a tile to walk there (and harvest, water, open...). Hold Action, then drag, to work a straight row. Flick Action sideways for the tool ring. Auto tool picks the hoe, seeds, can, scythe or pickaxe.',
+    'Tap a tile to walk there (and harvest, water, open...). Hold Action, then drag, to work a row; turn as you drag for a whole plot. Flick Action sideways for the tool ring. Auto tool picks the hoe, seeds, can, scythe or pickaxe.',
     C.creamDim,
     1,
     'left',

@@ -282,9 +282,10 @@ function makeWorld(page, thumb, L, reactionMs) {
         items.push(8);
         const n = items.length;
         const t = n <= 1 ? 0.5 : items.indexOf(i) / (n - 1);
-        let deg = 270 + (100 - 270) * t;
+        const R = window.__farm.controls.ringGeometry ?? { radius: 56, from: 270, to: 100 };
+        let deg = R.from + (R.to - R.from) * t;
         if (left) deg = 180 - deg;
-        return (deg * Math.PI) / 180;
+        return { a: (deg * Math.PI) / 180, r: R.radius };
       },
       { i, left: hand === 'left' },
     );
@@ -294,7 +295,7 @@ function makeWorld(page, thumb, L, reactionMs) {
     await sleep(16);
     await thumb.move(ACTION.x + inward * 18, ACTION.y);
     await sleep(60);
-    await thumb.move(ACTION.x + Math.cos(at) * 56, ACTION.y + Math.sin(at) * 56);
+    await thumb.move(ACTION.x + Math.cos(at.a) * at.r, ACTION.y + Math.sin(at.a) * at.r);
     await sleep(140); // rest on the item before lifting (a quick lift leaves the ring open as a menu)
     await thumb.up();
     if (i < 8) thumb.toolChanges++;
@@ -527,69 +528,130 @@ const TASKS = {
     if (actionPaint) {
       const right = w.hand !== 'left';
       const toMid = right ? -1 : 1;
-      const standX = right ? 12 : 8; // 12 is the plot's spare right column; 8 is just outside it
-      const paintRow = async (ty) => {
-        await w.settleCamera();
-        await w.tapTile(standX, ty);
-        await sleep(150);
-        await page
+      // Round 3: a painted path may turn corners, so the whole plot is one serpentine from Action. Stand by the
+      // plot's bottom corner on the thumb's side (right hand: 12,20; left: 8,20) and draw toward the middle of
+      // the screen, then up a row, back, up a row, across: the finger stays in the comfortable arc above Action.
+      const standX = right ? 12 : 8;
+      // The game's own paint geometry, so the bench follows the constants.
+      const G = await page.evaluate(() => window.__farm.controls.paintGeometry ?? null);
+      const step = G?.step ?? 10;
+      const first = G?.deadzone ?? 8;
+      const turn = G?.turn ?? 14;
+      const at = (n, turned = false) => (turned ? turn : first) + step * (n - 1) + step / 2;
+      const serp = !!G; // builds before round 3 paint straight rows only
+      const routeDone = () =>
+        page
           .waitForFunction(
             () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
             null,
             { timeout: 8000, polling: 50 },
           )
           .catch(() => undefined);
-        await w.thumb.down(w.ACTION.x, w.ACTION.y);
-        await sleep(340);
-        for (const d of [6, 12, 20, 27, 31]) {
-          await w.thumb.move(w.ACTION.x + toMid * d, w.ACTION.y);
-          await sleep(45);
-        }
-        await w.thumb.up();
-        await page
+      const workDone = () =>
+        page
           .waitForFunction(
             () => {
               const sc = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
               return sc.work === null && sc.route === null && sc.painting === null;
             },
             null,
-            { timeout: 20000, polling: 100 },
+            { timeout: 30000, polling: 100 },
           )
           .catch(() => undefined);
-      };
-      for (const [tx, ty] of [
-        [standX, 13],
-        [standX, 16],
-      ]) {
+      /** Tap a tile to walk there, hopping 5 rows at a time while it is off screen (as a person would). */
+      const tapWalk = async (tx, ty) => {
+        for (let hop = 0; hop < 4; hop++) {
+          await w.settleCamera();
+          const c = await tileScreen(page, tx, ty);
+          if (c.y >= 84 && c.y <= 278) break;
+          const p = await w.tile();
+          await w.tapTile(tx, c.y > 278 ? p.ty + 5 : p.ty - 5);
+          await sleep(150);
+          await routeDone();
+        }
         await w.settleCamera();
         await w.tapTile(tx, ty);
         await sleep(150);
-        await page
-          .waitForFunction(
-            () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
-            null,
-            { timeout: 8000, polling: 50 },
-          )
-          .catch(() => undefined);
-      }
+        await routeDone();
+      };
+      /** Hold Action until it arms, draw through the corners (dx, dy from Action) at a deliberate pace, lift. */
+      const paintPath = async (corners) => {
+        await w.thumb.down(w.ACTION.x, w.ACTION.y);
+        await sleep(340);
+        let prev = [0, 0];
+        for (const c of corners) {
+          const len = Math.hypot(c[0] - prev[0], c[1] - prev[1]);
+          const n = Math.max(2, Math.round(len / 5));
+          for (let k = 1; k <= n; k++) {
+            await w.thumb.move(
+              w.ACTION.x + prev[0] + ((c[0] - prev[0]) * k) / n,
+              w.ACTION.y + prev[1] + ((c[1] - prev[1]) * k) / n,
+            );
+            await sleep(30);
+          }
+          prev = c;
+          await sleep(60); // a person slows into each corner
+        }
+        await sleep(150); // and sees the preview before lifting
+        await w.thumb.up();
+        await workDone();
+      };
+      // the whole 3x3 (serpentine), or one straight row (older builds)
+      const plotPath = [
+        [toMid * at(3), 0],
+        [toMid * at(3), -at(1, true)],
+        [toMid * (at(3) - at(2, true)), -at(1, true)],
+        [toMid * (at(3) - at(2, true)), -2 * at(1, true)],
+        [toMid * at(3), -2 * at(1, true)],
+      ];
       const t0 = Date.now();
       const travelBefore = w.thumb.ledger().travelMm;
-      await w.tapSlot(5); // the seeds, once (never chosen for you)
-      for (const ty of [18, 19, 20]) await paintRow(ty);
+      const pass = async () => {
+        if (serp) {
+          await tapWalk(standX, 20);
+          await paintPath(plotPath);
+        } else
+          for (const ty of [18, 19, 20]) {
+            await tapWalk(standX, ty);
+            await paintPath([[toMid * 31, 0]]);
+          }
+      };
+      // getting there: the plot starts 10 rows below the door
+      await tapWalk(standX, 20);
+      const travelThere = w.thumb.ledger().travelMm - travelBefore;
+      // The seeds, once (never chosen for you): the hotbar slot is a short hop for the right thumb; for the left
+      // thumb it is across the screen, so it flicks the tool ring instead.
+      if (!right && (await w.hasRing())) await w.ringPick(5);
+      else await w.tapSlot(5);
+      await paintPath(serp ? plotPath : [[toMid * 31, 0]]);
+      if (!serp)
+        for (const ty of [19, 18]) {
+          await tapWalk(standX, ty);
+          await paintPath([[toMid * 31, 0]]);
+        }
       const tilled = await farmCount(page, 'tilled');
       const planted = await farmCount(page, 'planted');
       const watered = await farmCount(page, 'watered');
+      const after1 = await w.tile();
       await ripen(page);
-      for (const ty of [18, 19, 20]) await paintRow(ty);
+      await pass();
       const harvested = await farmCount(page, 'harvested');
       return {
-        ok: tilled >= 9 && planted === 9 && watered === 9 && harvested >= 9,
-        mode: 'action-paint',
-        plotTravelMm: w.thumb.ledger().travelMm - travelBefore,
+        ok: tilled === 9 && planted === 9 && watered === 9 && harvested >= 9,
+        mode: serp ? 'serpentine' : 'action-paint',
+        after1: `${after1.tx},${after1.ty} ${after1.facing}`,
+        travelThereMm: travelThere,
+        plotTravelMm: w.thumb.ledger().travelMm - travelBefore - travelThere,
         tilled,
         planted,
         watered,
         harvested,
+        log:
+          tilled === 9 && harvested >= 9
+            ? undefined
+            : await page.evaluate(() =>
+                window.__farm.controls.entries.filter((e) => e.kind !== 'act').slice(-8),
+              ),
         seconds: (Date.now() - t0) / 1000,
       };
     }
@@ -717,7 +779,10 @@ const TASKS = {
     });
     await w.thumb.tap(c.x, c.y, 70);
     await sleep(300);
-    await w.tapText(/^Use now$/);
+    // Round 3: the same cell again brings it to hand (no reach across the sheet to "Use now").
+    if (process.env.BAG_USE_NOW) await w.tapText(/^Use now$/);
+    else await w.thumb.tap(c.x, c.y, 70);
+    await sleep(300);
     await w.tapAction();
     await sleep(300);
     const placed = await page.evaluate(() =>

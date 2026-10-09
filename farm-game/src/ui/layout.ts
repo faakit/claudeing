@@ -142,19 +142,32 @@ export function rowLayout(
 
 /** The tool ring: 8 hotbar slots and "Bag" on an arc around Action, on the side away from the screen edge. */
 export const RING = {
-  /** Distance of the item centres from Action's centre. */
-  radius: 56,
+  /**
+   * Distance of the item centres from Action's centre. Round 3: 56 -> 60 and a wider arc, so 7 items sit
+   * 9 mm apart even on an SE (8 mm before): enough that a 2 mm scatter picks right 88%+ and a neighbour < 2%.
+   */
+  radius: 60,
   /** Item disc radius. */
   itemR: 12,
-  /** Arc (screen angles, y down, right-handed): from straight up (270) round the left to low (100). */
-  from: 270,
-  to: 100,
-  /** Fingers nearer the centre than this pick nothing (release there cancels). */
-  dead: 22,
+  /** Arc (screen angles, y down, right-handed): from a little right of straight up (285) round the left to low. */
+  from: 285,
+  to: 105,
+  /**
+   * Fingers nearer the centre than this pick nothing (a rest there leaves the tap menu). 36 px is well past a
+   * flick's 14-26 px and well short of the items at 60 (round 3; was 22, which let a slide resting short of
+   * the items pick the one it pointed at).
+   */
+  dead: 36,
 } as const;
 
 /** Half-width of a pick sector, in item steps (0.5 would leave no gap between neighbours). */
-export const RING_SECTOR = 0.44;
+export const RING_SECTOR = 0.4;
+/**
+ * A finger resting on a ring item sits about 1.5 mm toward the thumb base (0.9 mm toward the holding side,
+ * 1.2 mm down: the controls critic's thumb model); ring picks correct for all of it (taps on the world correct
+ * for 0.7 mm, see `compensateTouch`). In CSS-reference mm.
+ */
+export const RING_PULL_MM = { side: 0.9, down: 1.2 } as const;
 
 /** Centre of ring item `i` of `n` (logical px). Left-handed mirrors the arc. */
 export function ringItem(

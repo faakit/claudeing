@@ -2,6 +2,9 @@
  * Debug instrumentation for controls (PLAN-CONTROLS.md section 5): a short log of what touches and actions did,
  * exposed as `window.__farm.controls` with `?debug`. Never saved; capped so it cannot grow.
  */
+import { RING } from '../ui/layout';
+import { PAINT_DEADZONE, PAINT_STEP_PX, PAINT_TURN_PX } from './gesture';
+
 export interface ActLog {
   kind: 'act';
   t: number;
@@ -12,7 +15,8 @@ export interface ActLog {
   used: { slot: number; plan: string | null; tx: number; ty: number };
 }
 export interface TouchLog {
-  kind: 'tap' | 'route' | 'paint' | 'silent';
+  /** 'press': how an Action press resolved (tap, rolled tap, reject), round 3. */
+  kind: 'tap' | 'route' | 'paint' | 'silent' | 'press';
   t: number;
   detail: string;
 }
@@ -20,8 +24,14 @@ export type ControlsEntry = ActLog | TouchLog;
 
 const MAX = 400;
 
+/** The paint gesture's geometry, for the benchmark and probes (logical px from Action). */
+const paintGeometry = { step: PAINT_STEP_PX, deadzone: PAINT_DEADZONE, turn: PAINT_TURN_PX };
+
 export const controlsLog = {
   entries: [] as ControlsEntry[],
+  paintGeometry,
+  /** The tool ring's arc (logical px, screen degrees), for the benchmark and probes. */
+  ringGeometry: { radius: RING.radius, from: RING.from, to: RING.to, dead: RING.dead },
   push(e: ControlsEntry): void {
     this.entries.push(e);
     if (this.entries.length > MAX) this.entries.splice(0, this.entries.length - MAX);

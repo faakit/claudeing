@@ -23,7 +23,7 @@ import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient } from '../fx/Ambient';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
-import { findPath, pathToFace } from '../systems/pathfind';
+import { findPath, pathToFace, pathToFaceAny } from '../systems/pathfind';
 import { createWork, nextWork, type WorkQueue } from '../systems/workQueue';
 import { compensateTouch, tapIntent, type TapIntent, type TapWorld } from '../systems/tapIntent';
 import { cssPerLogical } from '../ui/hit';
@@ -32,7 +32,7 @@ import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
 import { controlsLog } from '../input/controlsLog';
-import { DIR_VECTORS } from '../systems/direction';
+import { pathTiles } from '../input/gesture';
 import { TIPS } from '../ui/controlTips';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
@@ -242,7 +242,7 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
       inputHub.on('tapCancel', () => this.onTapCancel()),
-      inputHub.on('paintLine', (p) => this.onPaintLine(p.dir, p.tiles)),
+      inputHub.on('paintLine', (p) => this.onPaintLine(p.dir, p.tiles, p.path)),
       inputHub.on('paintEnd', (p) => this.onPaintEnd(p.commit)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
@@ -733,7 +733,32 @@ export abstract class WorldScene extends Phaser.Scene {
       blocked: (t) => isTileBlocked(this.grid, t.tx, t.ty),
       interactable: (t) => this.interactableAt(t),
       actKind: (t) => chooseAction(getState(), [this.tileInfo(t)])?.plan.kind ?? null,
+      door: (t) => this.isDoor(t.tx, t.ty),
     };
+  }
+
+  /**
+   * Every tile of the interactable thing on `t` (a bed or a counter covers several): the connected tiles
+   * around it with the same interact type, at most 2 away.
+   */
+  private footprint(t: TileCoord, type: string): TileCoord[] {
+    const out: TileCoord[] = [t];
+    const seen = new Set([`${t.tx},${t.ty}`]);
+    for (let i = 0; i < out.length; i++) {
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ] as const) {
+        const n = { tx: out[i]!.tx + dx, ty: out[i]!.ty + dy };
+        const k = `${n.tx},${n.ty}`;
+        if (seen.has(k) || Math.abs(n.tx - t.tx) > 2 || Math.abs(n.ty - t.ty) > 2) continue;
+        seen.add(k);
+        if (this.inMap(n) && this.interactableAt(n) === type) out.push(n);
+      }
+    }
+    return out;
   }
 
   private isDoor = (tx: number, ty: number): boolean => !!objectAt(this.objects, tx, ty, 'door');
@@ -780,12 +805,20 @@ export abstract class WorldScene extends Phaser.Scene {
     if (intent.kind === 'walk') {
       return { intent, path: findPath(this.grid, here, [intent.target], { avoid }), face: null };
     }
+    if (intent.kind === 'interact') {
+      // A bed or a counter is reached from whichever side is open (its top half is often against a wall).
+      const r = pathToFaceAny(this.grid, here, this.footprint(intent.target, intent.type), {
+        avoid,
+      });
+      if (!r) return { intent, path: null, face: null };
+      return { intent: { ...intent, target: r.target }, path: r.path, face: r.face };
+    }
     const r = pathToFace(this.grid, here, intent.target, { avoid });
     return { intent, path: r?.path ?? null, face: r?.face ?? null };
   }
 
   private intentMarker(intent: TapIntent): MarkerKind {
-    if (intent.kind === 'interact') return 'interact';
+    if (intent.kind === 'interact' || (intent.kind === 'walk' && intent.door)) return 'interact';
     if (intent.kind === 'act') return markerKind({ planKind: intent.plan, interactable: false });
     return 'none';
   }
@@ -918,22 +951,22 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /**
-   * Painting a row from Action (ruling 2026-10-09): the line runs straight from the tile next to the farmer in
-   * the drag's direction, as many tiles as the drag is long. Shown live; nothing changes until the lift.
+   * Painting from Action (ruling 2026-10-09, corners in round 3): the path runs from the tile next to the farmer,
+   * one tile per step of the drag, turning where the drag turned. Shown live; nothing changes until the lift.
    */
-  private paintLineTiles(dir: Direction, tiles: number): TileCoord[] {
-    const here = playerTile(getState().player);
-    const v = DIR_VECTORS[dir];
+  private paintLineTiles(dir: Direction, tiles: number, path?: readonly Direction[]): TileCoord[] {
     const out: TileCoord[] = [];
-    for (let i = 1; i <= tiles; i++) {
-      const t = { tx: here.tx + v.x * i, ty: here.ty + v.y * i };
+    for (const t of pathTiles(
+      playerTile(getState().player),
+      path ?? Array<Direction>(tiles).fill(dir),
+    )) {
       if (!this.inMap(t)) break;
       out.push(t);
     }
     return out;
   }
 
-  private onPaintLine(dir: Direction | null, tiles: number): void {
+  private onPaintLine(dir: Direction | null, tiles: number, path?: Direction[]): void {
     if (this.transitioning || runtime.blocked) return;
     if (this.work) this.work = null;
     this.cancelRoute();
@@ -942,9 +975,9 @@ export abstract class WorldScene extends Phaser.Scene {
       this.highlight.showPaint(null);
       return;
     }
-    faceDirection(getState().player, dir);
+    faceDirection(getState().player, path?.[0] ?? dir);
     this.syncSprite(false);
-    this.painting = this.paintLineTiles(dir, tiles);
+    this.painting = this.paintLineTiles(dir, tiles, path);
     this.paintDir = dir;
     this.highlight.showPaint(this.paintMarks(this.painting));
   }

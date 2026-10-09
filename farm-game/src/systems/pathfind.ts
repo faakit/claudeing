@@ -85,3 +85,23 @@ export function pathToFace(
   const stand = path[path.length - 1]!;
   return { path, face: adjacentDirection(stand, target)! };
 }
+
+/**
+ * A walk that ends next to any tile of a multi-tile target (a bed, a counter), facing it: the shortest path to
+ * an open neighbour of any of its tiles. Returns the tile faced too. Null when no side can be reached.
+ */
+export function pathToFaceAny(
+  grid: CollisionGrid,
+  from: TileCoord,
+  targets: readonly TileCoord[],
+  opts: PathOptions = {},
+): { path: TileCoord[]; face: Direction; target: TileCoord } | null {
+  const inTarget = (t: TileCoord) => targets.some((g) => g.tx === t.tx && g.ty === t.ty);
+  const stands = targets.flatMap(standTiles).filter((t) => !inTarget(t));
+  const path = findPath(grid, from, stands, opts);
+  if (!path) return null;
+  const stand = path[path.length - 1]!;
+  // face the target tile next to where the walk ends (the first, in the targets' order)
+  const target = targets.find((g) => adjacentDirection(stand, g) !== null)!;
+  return { path, face: adjacentDirection(stand, target)!, target };
+}

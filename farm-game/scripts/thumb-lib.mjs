@@ -263,6 +263,10 @@ export class Thumb {
     const { x, y } = toCss(this.geo, lx, ly);
     this.zones[zoneAt(this.p, this.hand, x, y).zone]++;
     if (this.last) this.air += Math.hypot(x - this.last.x, y - this.last.y);
+    if (process.env.THUMB_TRACE && this.last)
+      console.log(
+        `  touch at ${lx.toFixed(0)},${ly.toFixed(0)}: air ${Math.round(Math.hypot(x - this.last.x, y - this.last.y) * mmPerCss(this.p))} mm, contact so far ${Math.round(this.contact * mmPerCss(this.p))} mm`,
+      );
     this.last = { x, y };
     this.downT = Date.now();
     this.pathLen = 0;

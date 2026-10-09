@@ -272,37 +272,50 @@ describe('tool ring', () => {
 });
 
 describe('tool ring accuracy (model)', () => {
-  it('with 7 items, a slide aimed at each item picks it >= 95% at 1.2 mm and >= 85% at 2 mm; misses pick nothing more often than a neighbour', async () => {
-    const { ringItem, ringPick } = await import('../src/ui/layout');
-    const { compensateTouch } = await import('../src/systems/tapIntent');
+  it('with 7 items, a slide picks its item >= 98% at 1.2 mm and >= 90% (SE, Fold 85%) at 2 mm; a neighbour <= 2%', async () => {
+    const { ringItem, ringPick, RING_PULL_MM } = await import('../src/ui/layout');
+    const { canvasRect } = await import('../src/ui/reach');
     let seed = 11;
     const u = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
     const g = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
-    for (const p of [PHONES[0]!, PHONES[2]!])
+    for (const p of PHONES)
       for (const left of [false, true]) {
         const px = logicalPerMm(p);
-        const k = 1 / (px * ((25.4 / p.ppi) * p.dpr)); // css px per logical px
+        const ref = 6.3 / canvasRect(p).k; // the game's CSS-reference mm, in logical px
+        const c0 = { x: left ? 40 : 160, y: 336 };
         for (const [mm, need] of [
-          [1.2, 0.95],
-          [2, 0.85],
+          [1.2, 0.98],
+          [2, p.id === 'se' || p.id === 'fold' ? 0.85 : 0.9],
         ] as const) {
           let right = 0;
           let wrong = 0;
           const n = 7;
-          for (let r = 0; r < 700; r++) {
+          const N = 2100;
+          for (let r = 0; r < N; r++) {
             const i = r % n;
-            const it = ringItem({ x: 160, y: 324 }, i, n, left);
-            const off = 1.06 * px; // the 1.5 mm pull toward the thumb base, split over x and y
-            const x = it.x + g() * mm * px + (left ? -off : off);
-            const y = it.y + g() * mm * px + off;
-            const c = compensateTouch(x, y, left, k);
-            const got = ringPick(c.x - 160, c.y - 324, n, left);
+            const it = ringItem(c0, i, n, left);
+            // the critic's thumb: 0.9 mm toward the holding side and 1.2 mm down, plus the scatter
+            const x = it.x + g() * mm * px + (left ? -0.9 : 0.9) * px;
+            const y = it.y + g() * mm * px + 1.2 * px;
+            const cx = x + (left ? 1 : -1) * RING_PULL_MM.side * ref;
+            const cy = y - RING_PULL_MM.down * ref;
+            const got = ringPick(cx - c0.x, cy - c0.y, n, left);
             if (got === i) right++;
             else if (got !== null) wrong++;
           }
-          expect(right / 700, `${p.id} ${left} ${mm}`).toBeGreaterThanOrEqual(need);
-          expect(wrong / 700, `${p.id} ${left} ${mm} wrong`).toBeLessThanOrEqual(0.06);
+          expect(right / N, `${p.id} ${left} ${mm}`).toBeGreaterThanOrEqual(need);
+          expect(wrong / N, `${p.id} ${left} ${mm} wrong`).toBeLessThanOrEqual(0.02);
         }
       }
+  });
+
+  it('a slide resting short of the items (22-35 px out) picks nothing', async () => {
+    const { ringPick } = await import('../src/ui/layout');
+    for (const left of [false, true])
+      for (let d = 22; d <= 35; d++)
+        for (let deg = 0; deg < 360; deg += 15) {
+          const a = (deg * Math.PI) / 180;
+          expect(ringPick(Math.cos(a) * d, Math.sin(a) * d, 7, left)).toBeNull();
+        }
   });
 });

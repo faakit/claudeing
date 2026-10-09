@@ -474,11 +474,15 @@ async function runCombo(p, hand) {
             const n = items.length;
             const i = items.indexOf(slot);
             const t = n <= 1 ? 0.5 : i / (n - 1);
-            let deg = 270 + (100 - 270) * t;
+            const R = window.__farm.controls.ringGeometry;
+            let deg = R.from + (R.to - R.from) * t;
             if (left) deg = 180 - deg;
             const r = (deg * Math.PI) / 180;
             const L = ui.layout;
-            return { x: L.action.x + Math.cos(r) * 56, y: L.action.y + Math.sin(r) * 56 };
+            return {
+              x: L.action.x + Math.cos(r) * R.radius,
+              y: L.action.y + Math.sin(r) * R.radius,
+            };
           },
           { slot, left: hand === 'left' },
         );
@@ -665,11 +669,11 @@ async function runCombo(p, hand) {
       );
       const wob = 2.5 * mm;
       for (const [dx, dy] of [
-        [6, 0],
-        [14, wob],
-        [20, -wob],
-        [26, wob],
-        [31, 0],
+        [8, 0],
+        [20, wob],
+        [32, -wob],
+        [42, wob],
+        [48, 0],
       ]) {
         await t.move(L.action.x + toMid * dx, L.action.y + dy);
         await sleep(60);
@@ -691,14 +695,33 @@ async function runCombo(p, hand) {
           vibs <= 3 + 2,
         `armed ${armedEarly}/${armedLate}, preview ${shown}, tiles ${(await tiles()).join(' ')}, buzzes ${vibs}`,
       );
-      // Armed, then lifted without a drag, or dragged back to the start: nothing at all.
+      // A still press acts exactly once however long it is held (owner decision, round 3): hesitant holds
+      // included, since the guided start teaches Action early. Holding never repeats.
+      const pressUses = [];
+      for (const ms of [80, 180, 290, 400, 700, 1500]) {
+        await place(page, 10, 17, 'down');
+        await sleep(300);
+        await page.evaluate(() => window.__farm.controls.clear());
+        await t.hold(L.action.x, L.action.y, ms);
+        await sleep(450);
+        pressUses.push(
+          await page.evaluate(
+            () => window.__farm.controls.entries.filter((e) => e.kind === 'act' && e.ok).length,
+          ),
+        );
+      }
+      check(
+        `${tag}: still Action presses of 80-1500 ms act exactly once each`,
+        pressUses.every((n) => n === 1),
+        `uses per press ${pressUses.join(',')}`,
+      );
+      // Armed, dragged out a tile and back to the start: nothing at all.
       await place(page, 10, 17, 'down');
       await sleep(300);
       await page.evaluate(() => window.__farm.controls.clear());
-      await paintFromAction(400, []);
       await paintFromAction(340, [
         [-14, 0],
-        [-28, 0],
+        [-30, 0],
         [-10, 0],
         [-2, 0],
       ]);
@@ -706,7 +729,7 @@ async function runCombo(p, hand) {
         () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
       );
       check(
-        `${tag}: a held Action lifted without a drag, or dragged back to the start, does nothing`,
+        `${tag}: a paint dragged out and back to the start does nothing`,
         (await tiles()).length === 0 && cancelActs === 0,
         `tiles ${(await tiles()).join(' ')}, acts ${cancelActs}`,
       );
@@ -856,32 +879,38 @@ async function runCombo(p, hand) {
         `icon ${icon} (seed icon ${seedIcon}), planted ${planted}, slot ${await selected(page)}`,
       );
 
-      // --- Action under a rolling pad: a 2-2.5 mm roll still arms painting (nothing acts on lift); a touch
-      // that wandered 9 px or more never acts at all.
-      for (const [label, dx, dy, armed] of [
-        ['2 mm diagonal roll', 0.6 * 2 * mm, 0.8 * 2 * mm, true],
-        ['2 mm sideways roll', 2 * mm, 0, true],
-        ['3.5 mm diagonal roll', 0.6 * 3.5 * mm, 0.8 * 3.5 * mm, false],
+      // --- Action under a rolling pad (round 3): a press that stays within 9 px acts once, armed or not; one
+      // that rolls 9 px or more after being still acts once too; one that moves at once (a swipe or flick cut
+      // short) says no, with the error pulse and a shake, and never acts.
+      for (const [label, dx, dy, stillMs, want] of [
+        ['2 mm diagonal roll', 0.6 * 2 * mm, 0.8 * 2 * mm, 40, 'act'],
+        ['2 mm sideways roll', 2 * mm, 0, 40, 'act'],
+        ['3.5 mm roll after a still press', 0.6 * 3.5 * mm, 0.8 * 3.5 * mm, 160, 'act'],
+        ['3.5 mm roll at once', 0.6 * 3.5 * mm, 0.8 * 3.5 * mm, 30, 'no'],
       ]) {
         await place(page, 10, 17, 'down');
         await sleep(200);
-        await page.evaluate(() => window.__farm.controls.clear());
+        await page.evaluate(() => {
+          window.__farm.controls.clear();
+          window.__vibrations = [];
+        });
         await t.down(L.action.x, L.action.y);
-        await sleep(40);
+        await sleep(stillMs);
         await t.move(L.action.x + dx, L.action.y + dy);
-        await sleep(400);
-        const isArmed = await page.evaluate(
-          () => window.__farm.game.scene.getScene('UI').actionPress?.armed ?? false,
-        );
+        await sleep(400 - stillMs);
         await t.up();
         await sleep(250);
-        const n = await page.evaluate(
-          () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
-        );
+        const r = await page.evaluate(() => ({
+          acts: window.__farm.controls.entries.filter((e) => e.kind === 'act' && e.ok).length,
+          no: window.__farm.controls.entries.filter(
+            (e) => e.kind === 'press' && e.detail === 'reject',
+          ).length,
+          buzz: window.__vibrations.length,
+        }));
         check(
-          `${tag}: holding Action with a ${label} ${armed ? 'arms painting' : 'does not arm'} and acts 0 times`,
-          isArmed === armed && n === 0 && (await soil(page)) === 0,
-          `armed ${isArmed}, acts ${n}, soil ${await soil(page)}`,
+          `${tag}: Action pressed with a ${label} ${want === 'act' ? 'acts once' : 'says no (pulse + shake) and acts 0 times'}`,
+          want === 'act' ? r.acts === 1 && r.no === 0 : r.acts === 0 && r.no === 1 && r.buzz >= 1,
+          `acts ${r.acts}, no ${r.no}, vibrations ${r.buzz}`,
         );
       }
 
@@ -1042,6 +1071,61 @@ async function runCombo(p, hand) {
           `stick ${stick}, action ${press}, hotbar ${slot}`,
         );
       }
+
+      // --- Taps on doors and on tall or multi-tile things (guided-start findings, round 3): the door's top half
+      // (drawn on the wall) walks in; the top half of the bed (against the wall) opens the bed; the house door
+      // walks back out.
+      await place(page, 14, 10, 'down');
+      await sleep(1300);
+      const doorArt = await tileScreen(page, 14, 6);
+      await t.tap(doorArt.x, doorArt.y, 70);
+      const inHouse = await page
+        .waitForFunction(
+          () =>
+            window.__farm.game.scene.getScenes(true).find((s) => s.grid)?.mapId === 'house' &&
+            window.__farm.getState().player.map === 'house',
+          null,
+          { timeout: 10000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+      let bedOpened = false;
+      let outAgain = false;
+      if (inHouse) {
+        await sleep(800);
+        await place(page, 5, 6, 'up');
+        await sleep(1300);
+        const bed = await tileScreen(page, 2, 2);
+        await t.tap(bed.x, bed.y - 4, 70); // the bed's top half
+        bedOpened = await page
+          .waitForFunction(
+            () =>
+              window.__farm.game.scene
+                .getScene('UI')
+                .allModals()
+                .some((m) => m.isOpen),
+            null,
+            { timeout: 8000 },
+          )
+          .then(() => true)
+          .catch(() => false);
+        await closeSheets(page);
+        await sleep(400);
+        const door = await tileScreen(page, 5, 8);
+        await t.tap(door.x, door.y, 70);
+        outAgain = await page
+          .waitForFunction(() => window.__farm.getState().player.map === 'farm', null, {
+            timeout: 10000,
+          })
+          .then(() => true)
+          .catch(() => false);
+        await sleep(1200);
+      }
+      check(
+        `${tag}: a tap on the farmhouse door's art walks in; a tap on the bed's top half opens the bed; a tap on the house door walks out`,
+        inHouse && bedOpened && outAgain,
+        `in ${inHouse}, bed ${bedOpened}, out ${outAgain}`,
+      );
 
       check(`${tag}: no console errors`, errors.length === 0, errors.join(' | '));
       await ctx.close();

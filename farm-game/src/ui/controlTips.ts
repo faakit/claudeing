@@ -5,7 +5,8 @@
  */
 export const TIPS = {
   /** After the third tile tilled one at a time with Action. */
-  paint: 'Tip: hold Action a moment, then drag, to work a whole row.',
+  paint:
+    'Tip: hold Action a moment, then drag, to work a row. Turn as you drag to work a whole plot.',
   /** After the third tool change by swipe or hotbar. */
   ring: 'Tip: flick Action sideways for a ring of all your tools.',
 } as const;

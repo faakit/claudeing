@@ -733,3 +733,47 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   mm of thumb travel and about 21 s on an iPhone 13; it was 26 / 933 mm / 20 s before the controls work and 5 /
   ~230 mm / 16 s with world painting. A paint that could turn (serpentine) or a 3-wide swath would bring it back
   to about 5; both are owner questions in `agents/NEXT-STEPS-CONTROLS.md`.
+
+### Round 3 owner decisions (2026-10-09, controls round 3)
+
+- **A press-and-lift on Action acts once, however long it was held** (`ActionPress.up`). A still press that
+  armed painting and lifted without a drag is a tap (`cancel` then `tap`); holding never repeats on touch
+  (Space on a keyboard still does). A paint dragged out and back to the start still cancels. The bag hint
+  now says "hold Action, then drag, to work a whole plot".
+- **A rolled press resolves to its likely intent:** a press that rolls 9-13 px without becoming a swipe or a
+  flick is a tap when the finger stayed within 4.5 px for its first 100 ms (`ROLL_DWELL_MS`): a press whose pad
+  rolled. One that moved at once was a swipe or flick cut short: it does nothing and says so (the error pulse
+  and a 2 px shake of the Action icon, or a dim in Calm mode; logged as `press: reject`). Diagonal moves past
+  14 px that are neither a swipe nor a flick also say no.
+- **Painted paths turn corners (serpentine).** The first leg is chosen as before (4 ways, hysteresis 1.6) and
+  locks at 2 tiles. A new leg starts when the finger is 14 px off the current leg's line, has been moving
+  mostly sideways over its last 6 px of travel, and the leg has tiles. The line is the finger's own trend (a
+  weighted least-squares fit as it moves along, with a strong prior toward straight), so a slow drift or a
+  thumb's arc tilts the line instead of turning it. Where the corner goes is the average of where the finger ran
+  while it veered off (from 6 px out); past 10 px off the leg stops growing. Dragging back un-paints tile by tile
+  and round corners. The path never revisits a tile or the farmer's, stops at 16 tiles, and rows after the
+  first stay inside the first row's span (an overshoot cannot paint past the plot). At a U-turn the step
+  between rows is one tile, and a row one tile short of the box edge reaches it.
+- **Paint step 10 -> 16 px** (about 5 mm). Every corner and row end is decided by the finger's position, and with
+  3 mm bands the controls critic's 2 mm wobble model made a 3x3 serpentine exact in under 10% of trials on an SE.
+  At 16 px (critic's 2D wobble model, corners cut 2 mm, 0-2 mm end overshoot; `tests/paintModel.ts`): σ 1 mm
+  exact 90-100% with 0 strays on i13, SE, Fold and Pro Max; σ 2 mm 35-76%. Reach cost: a drag toward the screen
+  edge on the thumb's side reaches 3 tiles, toward the middle 9.
+- **Events:** `paintLine` keeps `dir` (now the last tile's direction) and `tiles` (the path's length) and adds an
+  optional `path` (one direction per tile from the farmer). `paintEnd` is unchanged. New `ActionEvent` kind
+  `reject` (UI only). No inputHub or gameEvents name was added, renamed or removed.
+- **Ring:** radius 56 -> 60 on a wider arc (285 -> 105 degrees), dead zone 22 -> 36 px (a slide resting short of
+  the items leaves the tap menu), sectors 0.44 -> 0.40 of a step, and ring aims correct the whole modelled
+  thumb-base pull (0.9 mm sideways, 1.2 mm down; `RING_PULL_MM`). Model, 7 items: σ 2 mm right 95% / neighbour
+  0.3% on i13, 88% / 1.8% on SE; σ 1.2 mm 99-100%.
+- **Options:** the autosave note heads the rows and the rows sit as low as the tab strip allows; each row puts
+  its more used switch on the holding thumb's side (mirrored for the left hand), with Sound and Vibrate in the
+  two lowest rows. Reach model: both comfortable for either thumb on i13, Pixel 7 and SE; no hard target there
+  (Quit is still hard on the Pro Max).
+- **Bag:** tapping a bag item a second time brings it to hand (as the bag's help already said), so "Use now" no
+  longer needs a reach across the sheet.
+- **Taps on doors and solid art (guided-start findings):** a tap on a door tile walks through it; a tap on a
+  solid tile with nothing of its own belongs to what it is drawn for: straight down through the solid run to an
+  interactable or a door at its foot, else along the run's bottom row (a facade) to a door or to an
+  interactable just below it (`tapIntent`, `solidOwner`). Multi-tile things (the bed, a counter) are reached from
+  whichever side is open (`pathToFaceAny`): the top half of the bed no longer says "Can't get there".

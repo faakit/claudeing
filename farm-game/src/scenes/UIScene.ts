@@ -5,6 +5,7 @@ import { NightGlow } from '../fx/NightGlow';
 import { RainLayer } from '../fx/RainLayer';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
+import { controlsLog } from '../input/controlsLog';
 import { ActionPress, type ActionEvent } from '../input/gesture';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
@@ -368,7 +369,7 @@ export class UIScene extends Phaser.Scene {
       onRelease: () => this.releaseAction(),
       onMove: (dx, dy, pointerId) => {
         this.actionPointer = pointerId;
-        this.actionEvents(this.actionPress?.move(dx, dy) ?? []);
+        this.actionEvents(this.actionPress?.move(dx, dy, this.time.now) ?? []);
       },
     });
     this.actionIcon?.destroy();
@@ -453,15 +454,42 @@ export class UIScene extends Phaser.Scene {
           audio.play('tick'); // rate-limited and footstep-aware in the audio engine
         }
         this.paintTiles = e.tiles;
-        inputHub.emit('paintLine', { dir: e.dir, tiles: e.tiles });
+        inputHub.emit('paintLine', { dir: e.dir, tiles: e.tiles, path: e.path });
       } else if (e.type === 'commit') {
         haptic('medium'); // the confirm: the row will be worked
         audio.play('confirm');
         inputHub.emit('paintEnd', { commit: true });
       } else if (e.type === 'cancel') {
         inputHub.emit('paintEnd', { commit: false });
+      } else if (e.type === 'reject') {
+        // A swipe or flick cut short: nothing happens, and the button says so (never silently).
+        haptic('error');
+        this.shakeAction();
+        controlsLog.push({ kind: 'press', t: this.time.now, detail: 'reject' });
       }
     }
+  }
+
+  /** A tiny "no" shake of the Action icon (a cut-short swipe); Calm mode dims it briefly instead. */
+  private shakeAction(): void {
+    const icon = this.actionIcon;
+    if (!icon) return;
+    const x = this.layout.action.x;
+    this.tweens.killTweensOf(icon);
+    icon.setX(x).setScale(1.9).setAlpha(1);
+    if (getState().settings.reduceMotion) {
+      icon.setAlpha(0.45);
+      this.tweens.add({ targets: icon, alpha: 1, duration: 180 });
+      return;
+    }
+    this.tweens.add({
+      targets: icon,
+      x: { from: x - 2, to: x + 2 },
+      duration: 40,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => icon.setX(x),
+    });
   }
 
   /** The Action icon pops (paint armed); skipped in Calm mode. */
