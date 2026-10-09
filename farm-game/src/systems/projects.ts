@@ -1,4 +1,4 @@
-import { items, projects } from '../data';
+import { game, items, projects } from '../data';
 import type { ProjectDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
@@ -112,7 +112,9 @@ function tryFinish(state: GameState, id: string): boolean {
     addStat(state, 'projectLevels');
     toast(`${p.name}: level ${level}! ${p.reward}`, 'good');
   } else toast(`${p.name} is finished! ${p.reward}`, 'good');
-  if (p.landmark && first) gameEvents.emit('placedChanged', { map: p.landmark.map });
+  // A growing landmark (the statue) is redrawn at every level.
+  if (p.landmark && (first || p.landmark.levels))
+    gameEvents.emit('placedChanged', { map: p.landmark.map });
   if (!p.repeat) addStat(state, 'projectsDone');
   return true;
 }
@@ -165,14 +167,58 @@ export function projectPerk(state: GameState, key: string): number {
   return total;
 }
 
-/** Landmarks standing on a map (finished projects only). */
-export function landmarksOn(
-  state: GameState,
-  map: string,
-): { id: string; tx: number; ty: number; sprite: string; color: string }[] {
-  const out: { id: string; tx: number; ty: number; sprite: string; color: string }[] = [];
-  for (const [id, p] of Object.entries(projects))
-    if (p.landmark?.map === map && isProjectDone(state, id)) out.push({ id, ...p.landmark });
+/**
+ * Something standing in the world: a finished project's landmark, or a trophy at home. `level` is set for
+ * one that grows (the statue: `sprite` is then `<base>_<level>`), so a placeholder can show its size.
+ */
+export interface Landmark {
+  id: string;
+  tx: number;
+  ty: number;
+  sprite: string;
+  color: string;
+  /** What tapping it says. */
+  text: string;
+  level?: number;
+  kind: 'project' | 'trophy';
+}
+
+/**
+ * Landmarks standing on a map: finished projects (a repeatable one grows with its level, owner round 3)
+ * and the trophies earned at home (`game.trophies`, critique 9 F1).
+ */
+export function landmarksOn(state: GameState, map: string): Landmark[] {
+  const out: Landmark[] = [];
+  for (const [id, p] of Object.entries(projects)) {
+    const l = p.landmark;
+    if (l?.map !== map || !isProjectDone(state, id)) continue;
+    const level = l.levels ? Math.max(1, Math.min(projectLevel(state, id), l.levels)) : undefined;
+    out.push({
+      id,
+      tx: l.tx,
+      ty: l.ty,
+      sprite: level ? `${l.sprite}_${level}` : l.sprite,
+      color: l.color,
+      text: p.repeat
+        ? `${p.name}, level ${projectLevel(state, id)}: funded by you!`
+        : `${p.name}: funded by you! ${p.reward}`,
+      ...(level ? { level } : {}),
+      kind: 'project',
+    });
+  }
+  for (const t of game.trophies ?? []) {
+    const n = state.stats[t.stat] ?? 0;
+    if (t.map !== map || n < 1) continue;
+    out.push({
+      id: `trophy.${t.id}`,
+      tx: t.tx,
+      ty: t.ty,
+      sprite: t.sprite,
+      color: t.color,
+      text: t.text.replace('{n}', String(n)),
+      kind: 'trophy',
+    });
+  }
   return out;
 }
 

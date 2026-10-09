@@ -73,7 +73,7 @@ describe('critique 5 fixes', () => {
     s.time.minutes = rivalMinute(s);
     expect(rivalPicks(s)).toEqual([]);
     expect(applyRival(s)).toBeNull(); // everything was posted today
-    expect(rivalNotice(s)).toBe('This season: you 0, Clay 0.');
+    expect(rivalNotice(s)).toBe('Clay scores on farm goods only.');
     // Next morning: the requests whose last day it is are fair game; longer ones are not.
     const day = absoluteDay(s) + 1;
     const [a, b, c] = s.orders.list;

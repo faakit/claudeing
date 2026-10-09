@@ -158,6 +158,12 @@ land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
 - [x] **D7 Decorations with a small use.** A bench to rest on once a day; a scarecrow against mild crows.
 - [x] **D8 Festivals as small games, all four.** Baskets count goods and data-driven kinds; the Flower Show is an
       arrangement with a new tulip crop; the derby has feedback and a stocked river.
+- [x] **D9 A fair race with Clay (critique 9).** The season score has its own board line every day; Clay scores
+      only on farm goods, so a farmer who never fishes can win; the prize is said up front and lasts (a trophy in
+      the house that counts seasons won, Mara's letter, 300g a year). Crop requests leave slack and the bin keeps
+      what requests want.
+- [x] **D10 Growing statue, gentler feasts.** The Founder's Statue shows a bigger landmark per level (six keys); from
+      the 4th dish of a day food gives less energy, and the dish says so.
 
 ## Later: production polish (R4)
 

@@ -31,6 +31,17 @@ function fits(state: GameState, item: string): boolean {
 
 const STORE = 'town_general_store';
 
+/**
+ * What a cart good is for in a word or two, shown on its row before you pay (critique 9, F7): the data's
+ * `tag`, or a seed's season ("Summer crop").
+ */
+export function cartTag(item: string): string | undefined {
+  const tag = cart.stock.find((e) => e.item === item)?.tag;
+  if (tag) return tag;
+  const season = crops[items[item]?.plants ?? '']?.seasons[0];
+  return season ? `${season[0]!.toUpperCase()}${season.slice(1)} crop` : undefined;
+}
+
 /** What a cart good is for, if the data says. */
 export const cartUse = (item: string): string | undefined =>
   cart.stock.find((e) => e.item === item)?.use;

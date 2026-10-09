@@ -436,6 +436,17 @@ try {
     m.energy === 80 && !m.inventory.slots.some((x) => x?.item === 'fish_stew'),
     `energy ${m.energy}`,
   );
+  // From the 4th dish of a day a dish gives half (owner default, round 3).
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.energy = 30;
+    s.stats['ate.today'] = 3; // the stew above set today's day; count three eaten
+    s.inventory.slots[6] = { item: 'fish_stew', qty: 1 };
+  });
+  await mp.keyboard.press('Digit7');
+  await mTap('Space');
+  m = await mState();
+  check('the 4th dish of a day gives half its energy', m.energy === 55, `energy ${m.energy}`);
   // Swiping up on the Action button changes tool without reaching for the hotbar.
   await mp.keyboard.press('Digit1');
   const swipeBox = await mp.evaluate(() => {
@@ -691,7 +702,93 @@ try {
     ps.orders.list.filter((o) => o.rival).length === 1 && ps.orders.day === 9 + 0,
     JSON.stringify(ps.orders),
   );
-  // A finished Greenhouse project: melon seeds planted in winter under glass.
+  // Critique 9, F1: the season's score has its own line on the board every day once Clay is about.
+  const uiTexts = () =>
+    ui(() => {
+      const out = [];
+      const vis = (o) => {
+        for (let q = o; q; q = q.parentContainer) if (q.visible === false) return false;
+        return true;
+      };
+      const walk = (o) => {
+        if (o.type === 'BitmapText' && o.text && vis(o)) out.push(o.text);
+        (o.list ?? []).forEach(walk);
+      };
+      window.__farm.game.scene.getScene('UI').children.list.forEach(walk);
+      return out;
+    });
+  const tapLabel = async (label) => {
+    const at = await pp.evaluate((label) => {
+      const out = [];
+      const vis = (o) => {
+        for (let q = o; q; q = q.parentContainer) if (q.visible === false) return false;
+        return true;
+      };
+      const walk = (o) => {
+        if (o.list && o.list.some((c) => c.type === 'Zone') && vis(o)) {
+          const words = [];
+          const grab = (c) => {
+            if (c.type === 'BitmapText' && c.text) words.push(c.text);
+            if (c !== o && c.list?.some((d) => d.type === 'Zone')) return; // a nested button
+            (c.list ?? []).forEach(grab);
+          };
+          o.list.forEach(grab);
+          if (words.includes(label)) {
+            const b = o.list.find((c) => c.type === 'Zone').getBounds();
+            out.push({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
+          }
+        }
+        (o.list ?? []).forEach(walk);
+      };
+      window.__farm.game.scene.getScene('UI').children.list.forEach(walk);
+      return out[0] ?? null;
+    }, label);
+    if (at) await pClick(at.x, at.y);
+    return !!at;
+  };
+  let texts = await uiTexts();
+  check(
+    'the board shows the season score on its own line once Clay is about',
+    texts.some((t) => /^This season: you \d+, Clay \d+\.$/.test(t)),
+    texts.join(' | '),
+  );
+  // Critique 9, F2: "Ship all produce" keeps what an open request wants, and says so.
+  await ui(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    f.game.scene.getScene('UI').panels.get('board').close();
+    window.__toasts = [];
+    s.orders.list.push({
+      id: 99,
+      item: 'potato|0|',
+      qty: 3,
+      reward: 300,
+      xp: 5,
+      done: false,
+      from: s.orders.day,
+      until: s.orders.day + 2,
+    });
+    s.inventory.slots[7] = { item: 'potato', qty: 5 };
+    f.gameEvents.emit('openPanel', { type: 'bin' });
+  });
+  await pp.waitForTimeout(400);
+  const tappedShip = await tapLabel('Ship all produce');
+  ps = await pState();
+  check(
+    '"Ship all produce" keeps the potatoes a request wants and ships the rest',
+    tappedShip &&
+      ps.inventory.slots.reduce((n, x) => (x?.item === 'potato' ? n + x.qty : n), 0) === 3 &&
+      ps.shipping['potato|0|'] === 2 &&
+      (await ui(() => window.__toasts.includes('Kept 3 Potato for the board.'))),
+    `tapped ${tappedShip} shipping ${JSON.stringify(ps.shipping)} bag ${JSON.stringify(ps.inventory.slots[7])} toasts ${await ui(() => window.__toasts.join(' / '))} texts ${(await uiTexts()).join(' | ')}`,
+  );
+  await ui(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    f.game.scene.getScene('UI').panels.get('bin').close();
+    s.orders.list = s.orders.list.filter((o) => o.id !== 99);
+  });
+
   await ui(() => {
     const f = window.__farm;
     f.game.scene.getScene('UI').panels.get('board').close();
@@ -763,7 +860,11 @@ try {
   await pp.waitForTimeout(400);
   await pClick(172, 150 + 34 + 11); // Open on the first row: the statue leads the list (critique 6, F1)
   const opened = await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').id);
-  check("the Founder's Statue opens from the projects list with a tap", opened === 'statue', opened);
+  check(
+    "the Founder's Statue opens from the projects list with a tap",
+    opened === 'statue',
+    opened,
+  );
   await pClick(161, 150 + 168 + 11); // +10,000g
   ps = await pState();
   check(
@@ -772,6 +873,28 @@ try {
     `fund ${ps.stats['fund.statue']} money ${ps.money}`,
   );
   await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').close());
+  // Critique 9, F1: a season won on the board puts a trophy in the house.
+  await ui(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.stats['boardWins'] = 1;
+    s.player.map = 'house';
+    s.player.x = 4 * 16 + 8;
+    s.player.y = 4 * 16 + 11;
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key !== 'UI')
+      .scene.start('House');
+  });
+  await pp.waitForTimeout(1500);
+  check(
+    'a season won on the board shows a trophy in the house',
+    await ui(() =>
+      window.__farm.game.scene
+        .getScene('House')
+        .children.list.some((o) => o.texture?.key === 'obj_trophy_board' && o.visible),
+    ),
+  );
   // Fishing Derby: handing in early asks first, so one stray tap cannot end the derby (critique 5, F4).
   await ui(() => {
     const f = window.__farm;

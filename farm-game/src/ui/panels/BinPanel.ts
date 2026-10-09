@@ -24,6 +24,8 @@ import {
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt } from './format';
+import { boardWants, wantedByBoard } from '../../systems/orders';
+import { boardWantsLine, keptLine } from './binText';
 
 const ROWS = 6;
 
@@ -63,11 +65,13 @@ export class BinPanel extends Modal {
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const have = countStack(s, ref);
       const inBin = s.shipping[keyOf(ref)] ?? 0;
+      // Goods an open request wants read in the warning colour (critique 9, F2).
+      const wanted = have > 0 && wantedByBoard(s, ref) > 0;
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),
         sub: `${fmt(sellValue(ref))}g  have ${have}  bin ${inBin}`,
-        subColor: inBin ? C.gold : C.creamDim,
+        subColor: wanted ? C.warn : inBin ? C.gold : C.creamDim,
         buttons: [
           {
             label: 'All',
@@ -116,12 +120,15 @@ export class BinPanel extends Modal {
     // One tap ships every crop, fish, wild good and product (one-thumb: low in the sheet, by the thumb).
     const produce = list.some((r) => countStack(s, r) > 0 && isProduce(r.item));
     this.button(left ? 8 : this.panelW - 8 - 92, footerY, 92, 20, 'Ship all produce', () => {
-      const res = shipAllProduce(getState());
+      // Goods the open requests want stay in the bag (critique 9, F2); the row's "All" still ships them.
+      const res = shipAllProduce(getState(), boardWants(getState()));
       if (res.count === 0) audio.play('error');
       else {
         audio.play('coin');
         haptic('tick');
       }
+      const kept = keptLine(res.kept);
+      if (kept) toast(kept, 'warn');
       this.rebuild();
     }).setEnabled(produce);
     this.closeButton('Done');
@@ -137,6 +144,16 @@ export class BinPanel extends Modal {
       // A legend is once a game: say it can still come back out tonight (critique 7, F7).
       if (delta > 0 && fish.some((f) => f.legend && f.item === ref.item))
         toast('A legend in the bin! Take it back out before bed to keep it.', 'warn');
+      // Shipping what an open request wants: say so, once the bag holds fewer than it asks for.
+      else if (delta > 0) {
+        const want = wantedByBoard(s, ref);
+        const left = s.inventory.slots.reduce(
+          (n, st) =>
+            st && st.item === ref.item && (st.of ?? '') === (ref.of ?? '') ? n + st.qty : n,
+          0,
+        );
+        if (want > left) toast(boardWantsLine(want, ref), 'warn');
+      }
     }
     this.rebuild();
   }

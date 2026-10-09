@@ -81,15 +81,26 @@ export class ObjectsRenderer {
     }
   }
 
-  /** Buildings from finished town projects: one solid tile each, drawn like any placed object. */
+  /**
+   * Buildings from finished town projects and trophies at home: one solid tile each, drawn like any placed
+   * object. A growing one (the statue) is swapped when its level's sprite changes.
+   */
   private syncLandmarks(state: GameState): void {
     for (const l of landmarksOn(state, this.mapId)) {
-      if (this.landmarks.has(l.id)) continue;
+      const shown = this.landmarks.get(l.id);
+      if (shown?.getData('sprite') === l.sprite) continue;
+      shown?.destroy();
       const y = (l.ty + 1) * TILE_SIZE;
+      const shape = l.kind === 'trophy' ? 'trophy' : l.level ? 'statue' : 'house';
       const sprite = this.scene.add
-        .image(l.tx * TILE_SIZE + TILE_SIZE / 2, y, ensureTexture(this.scene, l.sprite, l.color))
+        .image(
+          l.tx * TILE_SIZE + TILE_SIZE / 2,
+          y,
+          ensureTexture(this.scene, l.sprite, l.color, shape, l.level),
+        )
         .setOrigin(0.5, 1)
-        .setDepth(10 + y - 3);
+        .setDepth(10 + y - 3)
+        .setData('sprite', l.sprite);
       this.landmarks.set(l.id, sprite);
     }
   }

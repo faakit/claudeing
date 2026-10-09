@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { items } from '../../data';
 import { audio } from '../../platform/audio';
 import { getState } from '../../state/store';
-import { buyFromCart, cartLeft, cartPrice, cartStock, cartUse } from '../../systems/cart';
+import { buyFromCart, cartLeft, cartPrice, cartStock, cartTag, cartUse } from '../../systems/cart';
 import { gameEvents } from '../../systems/events';
 import { toast } from '../../systems/events';
 import { C } from '../theme';
@@ -31,7 +31,7 @@ export class CartPanel extends Modal {
       y = this.row(y, {
         icon: items[id]?.icon,
         title: items[id]?.name ?? id,
-        sub: cartSub(price, left),
+        sub: cartSub(price, left, cartTag(id)),
         subColor: left > 0 ? C.creamDim : C.warn,
         buttons: [
           {

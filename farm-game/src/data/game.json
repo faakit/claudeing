@@ -64,5 +64,17 @@
     "perYear": 1,
     "maxTakes": 2,
     "calmHearts": 2
-  }
+  },
+  "trophies": [
+    {
+      "id": "board",
+      "stat": "boardWins",
+      "map": "house",
+      "tx": 6,
+      "ty": 2,
+      "sprite": "obj_trophy_board",
+      "color": "#e8c050",
+      "text": "Board Trophy: seasons won on the board, {n}."
+    }
+  ]
 }

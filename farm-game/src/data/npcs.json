@@ -561,9 +561,9 @@
         "id": "bet",
         "title": "A friendly bet",
         "lines": [
-          "You keep beating me to the board.",
+          "This board race keeps me sharp.",
           "Fine. I will come by later in the day.",
-          "Here, winner's purse. For now."
+          "Here, a purse for a good rival."
         ],
         "reward": {
           "gold": 300

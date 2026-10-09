@@ -533,6 +533,7 @@ export function sanitize(raw: Raw): GameState {
         ...(typeof o['until'] === 'number' ? { until: int(o['until'], 0, 0, 1e7) } : {}),
         ...(typeof o['from'] === 'number' ? { from: int(o['from'], 0, 0, 1e7) } : {}),
         ...(typeof o['takenOn'] === 'number' ? { takenOn: int(o['takenOn'], 0, 0, 1e7) } : {}),
+        ...(o['noPoint'] === true ? { noPoint: true } : {}),
       });
     }
   }

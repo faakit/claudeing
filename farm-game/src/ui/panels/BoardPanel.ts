@@ -2,7 +2,14 @@ import Phaser from 'phaser';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
-import { deliverOrder, ensureOrders, haveFor, orderLabel } from '../../systems/orders';
+import {
+  deliverOrder,
+  ensureOrders,
+  haveFor,
+  keepForRequests,
+  orderLabel,
+} from '../../systems/orders';
+import { countItem } from '../../systems/inventory';
 import { orderSub } from './boardText';
 import { iconKey, parseKey } from '../../systems/itemRef';
 import { C } from '../theme';
@@ -13,7 +20,14 @@ import { fmt } from './format';
 import { cartStock } from '../../systems/cart';
 import { items } from '../../data';
 import { giveToSpecial, specialGiveCount, specialLabel, specialSub } from '../../systems/specials';
-import { applyRival, rivalActive, rivalName, rivalNotice, rivalPicks } from '../../systems/rival';
+import {
+  applyRival,
+  boardScoreLine,
+  rivalActive,
+  rivalName,
+  rivalNotice,
+  rivalPicks,
+} from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
 export class BoardPanel extends Modal {
@@ -31,50 +45,24 @@ export class BoardPanel extends Modal {
     const cartOpen = cartStock(s).length > 0;
     const rows = Math.max(1, s.orders.list.length);
     const sp = s.special;
+    // Once Clay is about, the season's score has a line of its own, every day (critique 9, F1).
+    const score = boardScoreLine(s);
+    const top = score ? 42 : 34;
     this.setHeight(
-      34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + (cartOpen ? 26 : 0) + 26 + 34,
+      top + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + (cartOpen ? 26 : 0) + 26 + 34,
     );
     this.panel();
     this.label(8, 8, 'Requests', C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
-    this.label(8, 20, rivalNotice(s), C.creamDim);
-    let y = 34;
-    if (sp) {
-      // The special order sits on top, in gold: a big seasonal request with a deadline. Its Give keeps back
-      // what a same-item request you can fill needs, and says how many it gives (critique 7, F4).
-      const keep = s.orders.list
-        .filter((o) => !o.done && parseKey(o.item).item === sp.item && haveFor(s, o) >= o.qty)
-        .reduce((n, o) => n + o.qty, 0);
-      const give = specialGiveCount(s, keep);
-      const have = give;
-      y = this.row(y, {
-        icon: items[sp.item]?.icon,
-        title: specialLabel(sp),
-        // When every one you carry is spoken for by a request below, say so instead of offering them.
-        sub: give === 0 && keep > 0 ? 'Saved for a request.' : specialSub(sp),
-        subColor: C.gold,
-        buttons: [
-          {
-            label: give > 0 ? `Give ${give}` : 'Give',
-            width: 40, // "Give 15" needs the room; the request rows keep 36 for their longer lines
-            enabled: have > 0,
-            color: have > 0 ? C.green : C.creamDim,
-            onClick: () => {
-              const res = giveToSpecial(getState(), keep);
-              if (res.ok) {
-                audio.play(res.finished ? 'order' : 'buy');
-                haptic('success');
-              } else audio.play('error');
-              this.rebuild();
-            },
-          },
-        ],
-      });
-    }
+    if (score) this.label(8, 19, score, C.cream);
+    this.label(8, score ? 30 : 20, rivalNotice(s), C.creamDim);
+    let y = top;
     // The requests Clay is after today are marked, so the race is about a known target.
     const eyed = new Set(
       rivalActive(s) && s.stats['rival.day'] !== s.orders.day ? rivalPicks(s).map((o) => o.id) : [],
     );
+    // Requests first, the special last: a hurried first tap goes to a request, not to the special
+    // (critique 9, F5).
     for (const o of s.orders.list) {
       const have = haveFor(s, o);
       const ready = !o.done && have >= o.qty;
@@ -82,7 +70,9 @@ export class BoardPanel extends Modal {
         icon: iconKey(parseKey(o.item)),
         title: o.done && !o.rival ? `${orderLabel(o)} (done)` : orderLabel(o),
         sub: o.rival
-          ? `${rivalName()} filled this one.`
+          ? o.noPoint
+            ? `${rivalName()} took it: no point.`
+            : `${rivalName()} filled this one.`
           : o.done
             ? 'Thank you!'
             : orderSub(s, o, have, eyed.has(o.id)),
@@ -112,8 +102,40 @@ export class BoardPanel extends Modal {
       });
     }
     if (s.orders.list.length === 0) {
-      this.label(8, 40, 'Nothing today. Check back tomorrow!', C.creamDim, 1, 'left', 184);
+      this.label(8, y + 6, 'Nothing today. Check back tomorrow!', C.creamDim, 1, 'left', 184);
       y += 26;
+    }
+    if (sp) {
+      // The special order, in gold: a big seasonal request with a deadline. Its Give keeps back what the
+      // same-item requests need, even one you are part-way to (critique 9, F3), and says how many it gives.
+      const keep = keepForRequests(s, sp.item);
+      const give = specialGiveCount(s, keep);
+      y = this.row(y, {
+        icon: items[sp.item]?.icon,
+        title: specialLabel(sp),
+        // When every one you carry is spoken for by a request, say so instead of offering them.
+        sub:
+          give === 0 && keep > 0 && countItem(s, sp.item) > 0
+            ? 'Saved for a request.'
+            : specialSub(sp),
+        subColor: C.gold,
+        buttons: [
+          {
+            label: give > 0 ? `Give ${give}` : 'Give',
+            width: 40, // "Give 15" needs the room; the request rows keep 36 for their longer lines
+            enabled: give > 0,
+            color: give > 0 ? C.green : C.creamDim,
+            onClick: () => {
+              const res = giveToSpecial(getState(), keepForRequests(getState(), sp.item));
+              if (res.ok) {
+                audio.play(res.finished ? 'order' : 'buy');
+                haptic('success');
+              } else audio.play('error');
+              this.rebuild();
+            },
+          },
+        ],
+      });
     }
     if (fest && festOpen) {
       this.button(

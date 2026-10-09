@@ -211,7 +211,8 @@
       "tx": 10,
       "ty": 14,
       "sprite": "obj_landmark_statue",
-      "color": "#cfc6b4"
+      "color": "#cfc6b4",
+      "levels": 6
     },
     "repeat": {
       "growth": 1.5,

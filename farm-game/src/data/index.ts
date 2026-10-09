@@ -386,7 +386,17 @@ export interface ProjectDef {
   /** What finishing it does, in one line the player reads before funding it. */
   reward: string;
   /** Something that appears in the world once it is built (solid, one tile). */
-  landmark?: { map: string; tx: number; ty: number; sprite: string; color: string };
+  landmark?: {
+    map: string;
+    tx: number;
+    ty: number;
+    sprite: string;
+    color: string;
+    /**
+     * A repeatable project's landmark grows: level n shows `<sprite>_<n>`, up to `levels` (owner, round 3).
+     */
+    levels?: number;
+  };
   /**
    * A project that can be funded again and again (the late-game sink): each level costs `growth` times the
    * last; its perks stack for the first `perkLevels` levels, after which a level is for show.
@@ -450,6 +460,22 @@ export interface GameData {
    * watches, there is a `chance` that one crop is eaten. Never in the greenhouse.
    */
   crows?: { startDay: number; minCrops: number; chance: number };
+  /**
+   * Lasting trophies shown at home (critique 9, F1): once stat `stat` reaches 1, `sprite` stands on
+   * `map` at `tx,ty`; tapping it reads `text`, with {n} the stat's value.
+   */
+  trophies?: TrophyDef[];
+}
+
+export interface TrophyDef {
+  id: string;
+  stat: string;
+  map: string;
+  tx: number;
+  ty: number;
+  sprite: string;
+  color: string;
+  text: string;
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];
@@ -497,7 +523,8 @@ export interface CartDef {
   days: number[];
   slots: number;
   limit: number;
-  stock: { item: string; mult: number; price?: number; use?: string }[];
+  /** `use`: what a good is for (the buy toast); `tag`: the same in a word or two, on the row before you pay. */
+  stock: { item: string; mult: number; price?: number; use?: string; tag?: string }[];
 }
 export const cart = cartRaw as unknown as CartDef;
 export const nodes = nodesRaw as unknown as Record<string, NodeDef>;
@@ -527,8 +554,7 @@ export function validateContent(): void {
       fail('items', `"${id}" needs sellPrice`);
     if (it.type === 'seed' && typeof it.buyPrice !== 'number')
       fail('items', `seed "${id}" needs buyPrice`);
-    if (it.type === 'food' && !((it.energy ?? 0) > 0))
-      fail('items', `food "${id}" needs energy`);
+    if (it.type === 'food' && !((it.energy ?? 0) > 0)) fail('items', `food "${id}" needs energy`);
   }
   for (const [id, c] of Object.entries(crops)) {
     if (!items[c.harvestItem]) fail('crops', `"${id}" harvests unknown item "${c.harvestItem}"`);
@@ -711,6 +737,10 @@ export function validateContent(): void {
   for (const [id, pl] of Object.entries(plots))
     if (pl.sign && claimed.has(pl.sign.join(',')))
       fail('plots', `"${id}" sign stands inside a plot`);
+  for (const t of game.trophies ?? []) {
+    if (!mapIds.includes(t.map)) fail('game', `trophy "${t.id}" is on unknown map "${t.map}"`);
+    if (!t.text.includes('{n}')) fail('game', `trophy "${t.id}" text must say {n}`);
+  }
   for (const [id, p] of Object.entries(projects)) {
     if (!p.name || !p.blurb || !p.reward) fail('projects', `"${id}" needs name, blurb and reward`);
     if (!Number.isInteger(p.gold) || p.gold < 1) fail('projects', `"${id}" needs a gold price`);
@@ -726,6 +756,8 @@ export function validateContent(): void {
       fail('projects', `"${id}" grants no perk and unlocks nothing`);
     if (p.landmark && !mapIds.includes(p.landmark.map))
       fail('projects', `"${id}" landmark is on unknown map "${p.landmark.map}"`);
+    if (p.landmark?.levels !== undefined && (!p.repeat || p.landmark.levels < 2))
+      fail('projects', `"${id}" landmark levels need a repeatable project and at least 2 levels`);
     // Every chain must lead back to a project that is open from the start (no loops).
     const seen = new Set<string>();
     for (let at: string | undefined = id; at; at = projects[at]?.after) {

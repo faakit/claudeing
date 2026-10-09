@@ -43,13 +43,16 @@ export function buildCraft(c: MenuTabContext): void {
           ? C.red
           : C.creamDim,
       buttons: [
-        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five.
-        ...(r.kitchen && unlocked && batch >= 2 && block === null
+        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five. The slot is
+        // always there (a dim "x1" when fewer than two can be made), so Make never slides under the thumb
+        // after a batch (critique 9, F4).
+        ...(r.kitchen && unlocked
           ? [
               {
-                label: `x${batch}`,
+                label: batch >= 2 && block === null ? `x${batch}` : 'x1',
                 width: 24,
-                color: C.cream,
+                enabled: batch >= 2 && block === null,
+                color: batch >= 2 && block === null ? C.cream : C.creamDim,
                 onClick: () => {
                   audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
                   c.rebuild();
