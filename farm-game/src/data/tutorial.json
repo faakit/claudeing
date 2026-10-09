@@ -1,0 +1,626 @@
+{
+  "speaker": "rosa",
+  "welcome": "Hi, I'm Rosa! This old farm is yours now.",
+  "gift": {
+    "map": "farm",
+    "crop": "parsnip",
+    "tiles": [
+      [10, 16],
+      [11, 16],
+      [12, 16]
+    ],
+    "forage": [
+      {
+        "item": "wild_leek",
+        "tile": [11, 11]
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "harvest",
+      "track": "day1",
+      "text": "Tap a ripe parsnip to pick it.",
+      "target": {
+        "find": "ripe",
+        "map": "farm"
+      },
+      "done": [
+        {
+          "stat": "harvested",
+          "min": 3
+        }
+      ],
+      "skip": {
+        "none": "ripe"
+      },
+      "count": {
+        "stat": "harvested",
+        "of": 3
+      },
+      "tag": "goal"
+    },
+    {
+      "id": "seeds",
+      "track": "day1",
+      "text": "Tap the seed packet on the hotbar.",
+      "target": {
+        "ui": "seedSlot"
+      },
+      "done": [
+        {
+          "selected": "seed"
+        },
+        {
+          "stat": "planted",
+          "min": 1
+        }
+      ],
+      "skip": {
+        "none": "seeds"
+      },
+      "tag": "hotbar"
+    },
+    {
+      "id": "plant",
+      "track": "day1",
+      "text": "Press Action to plant a seed.",
+      "target": {
+        "action": ["plant"],
+        "else": {
+          "find": "emptySoil",
+          "map": "farm",
+          "stand": true
+        }
+      },
+      "elseText": "Tap here, then press Action.",
+      "done": [
+        {
+          "stat": "planted",
+          "min": 1
+        }
+      ],
+      "skip": {
+        "any": [
+          {
+            "none": "seeds"
+          },
+          {
+            "none": "emptySoil"
+          }
+        ]
+      }
+    },
+    {
+      "id": "water",
+      "track": "day1",
+      "text": "Press Action again to water it.",
+      "target": {
+        "action": ["water"],
+        "else": {
+          "find": "dry",
+          "map": "farm"
+        }
+      },
+      "elseText": "Tap the dry seedling to water it.",
+      "done": [
+        {
+          "some": "wetCrop"
+        }
+      ],
+      "skip": {
+        "none": "crops"
+      },
+      "tag": "water"
+    },
+    {
+      "id": "grow",
+      "track": "day1",
+      "text": "Press Action: dig, plant, water.",
+      "target": {
+        "action": ["till", "plant", "water"],
+        "else": {
+          "find": "workable",
+          "map": "farm",
+          "stand": true
+        }
+      },
+      "elseText": "Tap here, then press Action.",
+      "alt": [
+        {
+          "when": {
+            "all": [
+              {
+                "fresh": "tilled",
+                "min": 2
+              },
+              {
+                "fresh": "painted",
+                "max": 0
+              }
+            ]
+          },
+          "text": "Tip: hold Action, drag {dir}: a row.",
+          "target": {
+            "gesture": "paint",
+            "map": "farm"
+          }
+        }
+      ],
+      "done": [
+        {
+          "stat": "planted",
+          "min": 5
+        }
+      ],
+      "skip": {
+        "none": "seeds"
+      },
+      "count": {
+        "stat": "planted",
+        "of": 5
+      },
+      "tag": "energy",
+      "teaches": ["tip.paint"]
+    },
+    {
+      "id": "ship",
+      "track": "day1",
+      "text": "Tap the bin to sell your harvest.",
+      "target": {
+        "object": "bin",
+        "map": "farm"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "bin"
+          },
+          "text": "Tap Ship all produce.",
+          "target": {
+            "button": "^Ship all"
+          }
+        }
+      ],
+      "done": [
+        {
+          "stat": "shipped",
+          "min": 1
+        }
+      ],
+      "skip": {
+        "none": "shippable"
+      },
+      "tag": "gold"
+    },
+    {
+      "id": "sleep",
+      "track": "day1",
+      "text": "Tap the bed: crops grow overnight.",
+      "target": {
+        "object": "bed",
+        "map": "house"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "sleep"
+          },
+          "text": "Tap Sleep. The bin pays at dawn.",
+          "target": {
+            "button": "^Sleep"
+          }
+        },
+        {
+          "when": {
+            "map": "farm"
+          },
+          "text": "Tap the door to go inside.",
+          "target": {
+            "door": "house"
+          }
+        }
+      ],
+      "done": [
+        {
+          "stat": "daysSlept",
+          "min": 1
+        }
+      ],
+      "tag": "clock"
+    },
+    {
+      "id": "water2",
+      "track": "day2",
+      "when": {
+        "day": 2
+      },
+      "text": "Crops need water daily: tap one.",
+      "target": {
+        "find": "dry",
+        "map": "farm"
+      },
+      "done": [
+        {
+          "none": "dry"
+        }
+      ],
+      "tag": "gold",
+      "optional": true
+    },
+    {
+      "id": "mail",
+      "track": "day2",
+      "when": {
+        "day": 2
+      },
+      "text": "A letter came! Tap the mailbox.",
+      "target": {
+        "object": "mailbox",
+        "map": "farm"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "mail"
+          },
+          "text": "Tap Read to open a letter.",
+          "target": {
+            "button": "^Read$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "some": "readLetter"
+        },
+        {
+          "none": "unread"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "id": "menu",
+      "track": "day2",
+      "when": {
+        "day": 2
+      },
+      "text": "Tap Menu: bag, goals, options.",
+      "target": {
+        "ui": "menu"
+      },
+      "done": [
+        {
+          "panel": "menu"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "id": "jobs",
+      "track": "day2",
+      "when": {
+        "day": 2
+      },
+      "text": "Tap Goal: jobs that pay you today.",
+      "target": {
+        "button": "^Goal$"
+      },
+      "alt": [
+        {
+          "when": {
+            "not": {
+              "panel": "menu"
+            }
+          },
+          "text": "Tap Menu, then Goal.",
+          "target": {
+            "ui": "menu"
+          }
+        }
+      ],
+      "done": [
+        {
+          "tab": "goals"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "id": "town",
+      "track": "day2",
+      "when": {
+        "day": 2
+      },
+      "text": "Wild goods are in town: walk south.",
+      "target": {
+        "door": "town"
+      },
+      "alt": [
+        {
+          "when": {
+            "map": "house"
+          },
+          "text": "Tap the door to go out.",
+          "target": {
+            "door": "farm"
+          }
+        }
+      ],
+      "done": [
+        {
+          "map": "town"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "id": "late",
+      "track": "intro",
+      "when": {
+        "minute": 1320
+      },
+      "text": "It's late! Sleep before 2 AM.",
+      "target": {
+        "hud": "clock"
+      },
+      "done": [
+        {
+          "min": 1,
+          "fresh": "daysSlept"
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "tired",
+      "track": "intro",
+      "when": {
+        "energyBelow": 0.2
+      },
+      "text": "Low energy: eat, or go to sleep.",
+      "target": {
+        "hud": "energy"
+      },
+      "done": [
+        {
+          "min": 1,
+          "fresh": "daysSlept"
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "forage",
+      "track": "intro",
+      "text": "Something sparkles! Tap to pick it.",
+      "target": {
+        "find": "forage"
+      },
+      "done": [
+        {
+          "fresh": "foraged",
+          "min": 1
+        }
+      ],
+      "when": {
+        "fact": "forageInView"
+      },
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "townHello",
+      "track": "intro",
+      "when": {
+        "map": "town"
+      },
+      "text": "That's Mara. Tap her to say hello.",
+      "target": {
+        "npc": "mara"
+      },
+      "done": [
+        {
+          "stat": "talked",
+          "min": 1
+        },
+        {
+          "stat": "bought",
+          "min": 1
+        },
+        {
+          "panel": "shop"
+        }
+      ],
+      "leave": true,
+      "optional": true,
+      "alt": [
+        {
+          "when": {
+            "not": {
+              "npc": "mara"
+            }
+          },
+          "text": "Mara's shop opens at 8 AM."
+        }
+      ]
+    },
+    {
+      "id": "shop",
+      "track": "intro",
+      "when": {
+        "panel": "shop"
+      },
+      "text": "Tap a price to buy seeds.",
+      "target": {
+        "button": "^[0-9,]+g$"
+      },
+      "done": [
+        {
+          "min": 1,
+          "fresh": "bought"
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "villager",
+      "track": "intro",
+      "when": {
+        "fact": "npcNew"
+      },
+      "text": "Say hello to {npc}: tap them.",
+      "target": {
+        "find": "npcNew"
+      },
+      "done": [
+        {
+          "min": 1,
+          "fresh": "talked"
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "gift",
+      "track": "intro",
+      "when": {
+        "all": [
+          {
+            "panel": "npc"
+          },
+          {
+            "stat": "talked",
+            "min": 1
+          }
+        ]
+      },
+      "text": "A gift they like adds hearts.",
+      "target": {
+        "button": "^Gift$"
+      },
+      "done": [
+        {
+          "stat": "gifted",
+          "min": 1
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "board",
+      "track": "intro",
+      "when": {
+        "panel": "board"
+      },
+      "text": "Requests pay more than the bin.",
+      "done": [
+        {
+          "stat": "ordersDone",
+          "min": 1
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "fish",
+      "track": "intro",
+      "when": {
+        "all": [
+          {
+            "job": "caught"
+          },
+          {
+            "has": "fishing_rod"
+          },
+          {
+            "not": {
+              "selected": "tool:fish"
+            }
+          }
+        ]
+      },
+      "text": "Flick Action sideways: pick the rod.",
+      "target": {
+        "gesture": "ring"
+      },
+      "done": [
+        {
+          "selected": "tool:fish"
+        },
+        {
+          "stat": "caught",
+          "min": 1
+        }
+      ],
+      "leave": true,
+      "optional": true,
+      "teaches": ["tip.ring"]
+    },
+    {
+      "id": "cast",
+      "track": "intro",
+      "when": {
+        "selected": "tool:fish"
+      },
+      "text": "Face water, Action, tap on a bite!",
+      "target": {
+        "ui": "action"
+      },
+      "done": [
+        {
+          "stat": "caught",
+          "min": 1
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "mine",
+      "track": "intro",
+      "when": {
+        "map": "mine"
+      },
+      "text": "Tap a rock to break it for ore.",
+      "target": {
+        "find": "node",
+        "map": "mine"
+      },
+      "done": [
+        {
+          "stat": "mined",
+          "min": 1
+        }
+      ],
+      "leave": true,
+      "optional": true
+    },
+    {
+      "id": "place",
+      "track": "intro",
+      "when": {
+        "some": "placeable"
+      },
+      "text": "Select it, then Action places it.",
+      "target": {
+        "ui": "placeSlot"
+      },
+      "done": [
+        {
+          "stat": "placed",
+          "min": 1
+        }
+      ],
+      "leave": true,
+      "optional": true
+    }
+  ]
+}

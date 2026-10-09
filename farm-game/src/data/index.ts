@@ -26,6 +26,7 @@ import projectsRaw from './projects.json';
 import jobsRaw from './jobs.json';
 import mailRaw from './mail.json';
 import specialsRaw from './specials.json';
+import tutorialRaw from './tutorial.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -452,6 +453,118 @@ export interface GameData {
   crows?: { startDay: number; minCrops: number; chance: number };
 }
 
+/** The guided start (see systems/tutorial.ts and docs/EXTENDING.md "Tutorial steps"). */
+export type TutorialHud = 'goal' | 'hotbar' | 'water' | 'energy' | 'gold' | 'clock';
+export type TutorialFind = 'ripe' | 'dry' | 'emptySoil' | 'workable' | 'forage' | 'node' | 'npcNew';
+export type TutorialKind =
+  | 'ripe'
+  | 'dry'
+  | 'crops'
+  | 'wetCrop'
+  | 'emptySoil'
+  | 'seeds'
+  | 'shippable'
+  | 'forage'
+  | 'unread'
+  | 'readLetter'
+  | 'placeable';
+/** A condition: every field given must hold (`any`, `all`, `not` combine). */
+export interface TutorialCond {
+  /** A lifetime stat, counted from when the guide (re)started. */
+  stat?: string;
+  /** A lifetime stat, counted from when this step first showed. */
+  fresh?: string;
+  min?: number;
+  max?: number;
+  map?: string;
+  /** Absolute day number reached. */
+  day?: number;
+  /** An open sheet (`bin`, `shop`, `menu`, `sleep`, `npc`, ...). */
+  panel?: string;
+  /** The menu tab showing (with the menu open). */
+  tab?: string;
+  /** The item in hand: an item type (`seed`) or `tool:<action>` (`tool:fish`). */
+  selected?: string;
+  /** An item id somewhere in the inventory. */
+  has?: string;
+  none?: TutorialKind;
+  some?: TutorialKind;
+  /** Energy below this fraction of the maximum. */
+  energyBelow?: number;
+  /** The clock at or after this minute of the day. */
+  minute?: number;
+  /** A job posted today, not yet done, counts this stat. */
+  job?: string;
+  /** This villager is standing on the current map. */
+  npc?: string;
+  /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
+  fact?: 'npcNew' | 'forageInView';
+  any?: TutorialCond[];
+  all?: TutorialCond[];
+  not?: TutorialCond;
+}
+/** What the coach points at. Exactly one kind per target. */
+export interface TutorialTarget {
+  find?: TutorialFind;
+  /** With `find`: point at a free tile beside the thing (to stand on and press Action), not the thing. */
+  stand?: boolean;
+  npc?: string;
+  /** A map object: `bin`, `bed`, `mailbox`, `board`, `shop`. */
+  object?: string;
+  /** The door that leads to this map. */
+  door?: string;
+  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'placeSlot';
+  gesture?: 'paint' | 'ring';
+  /** A button in the open sheet whose label matches this regular expression. */
+  button?: string;
+  hud?: TutorialHud;
+  /** Point at Action when it would do one of these right now, else at `else`. */
+  action?: string[];
+  else?: TutorialTarget;
+  /** The map the target is on (a different map re-points to the door). */
+  map?: string;
+}
+export interface TutorialStep {
+  id: string;
+  /** day1 runs first, day2 next, intros one at a time once both are done. */
+  track: 'day1' | 'day2' | 'intro';
+  /** One line (fits 184 px). `{dir}` is the paint direction, `{npc}` a villager's name. */
+  text: string;
+  /** The line while the coach points at the `else` target. */
+  elseText?: string;
+  target?: TutorialTarget;
+  /** Variants: the first whose `when` holds replaces the text and target. */
+  alt?: { when: TutorialCond; text: string; target?: TutorialTarget }[];
+  /** For day2 steps and intros: only while this holds. */
+  when?: TutorialCond;
+  /** Any of these completes the step. */
+  done: TutorialCond[];
+  /** The step cannot be done (or is pointless) now: pass it. */
+  skip?: TutorialCond;
+  /** An intro that was shown and whose `when` no longer holds is finished. */
+  leave?: boolean;
+  /** The line offers "Next" after a long stall (never on the day-1 core steps). */
+  optional?: boolean;
+  count?: { stat: string; of: number };
+  /** The HUD element tagged while this step runs. */
+  tag?: TutorialHud;
+  /** Stats set to 1 when the step first shows (e.g. `tip.paint`: the old first-run tip is then not needed). */
+  teaches?: string[];
+}
+export interface TutorialData {
+  /** Villager who greets you. */
+  speaker: string;
+  welcome: string;
+  /** Laid out on a new game: ripe crops in the home plot and wild goods near the house. */
+  gift: {
+    map: string;
+    crop: string;
+    tiles: [number, number][];
+    forage: { item: string; tile: [number, number] }[];
+  };
+  steps: TutorialStep[];
+}
+
 const DIRS = ['up', 'down', 'left', 'right'];
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
 
@@ -512,6 +625,7 @@ export const mail = mailRaw as unknown as MailData;
 export const specials = specialsRaw as unknown as SpecialDef[];
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
+export const tutorial = tutorialRaw as unknown as TutorialData;
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
@@ -527,8 +641,7 @@ export function validateContent(): void {
       fail('items', `"${id}" needs sellPrice`);
     if (it.type === 'seed' && typeof it.buyPrice !== 'number')
       fail('items', `seed "${id}" needs buyPrice`);
-    if (it.type === 'food' && !((it.energy ?? 0) > 0))
-      fail('items', `food "${id}" needs energy`);
+    if (it.type === 'food' && !((it.energy ?? 0) > 0)) fail('items', `food "${id}" needs energy`);
   }
   for (const [id, c] of Object.entries(crops)) {
     if (!items[c.harvestItem]) fail('crops', `"${id}" harvests unknown item "${c.harvestItem}"`);
@@ -779,5 +892,132 @@ export function validateContent(): void {
   const toolItems = Object.values(items).filter((i) => i.type === 'tool');
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');
+  validateTutorial(tutorial);
+}
+
+const TUT_KINDS = [
+  'readLetter',
+  'ripe',
+  'dry',
+  'crops',
+  'wetCrop',
+  'emptySoil',
+  'seeds',
+  'shippable',
+  'forage',
+  'unread',
+  'placeable',
+];
+const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew'];
+const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
+const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop'];
+const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'placeSlot'];
+const TUT_COND_KEYS = new Set([
+  'stat',
+  'fresh',
+  'min',
+  'max',
+  'map',
+  'day',
+  'panel',
+  'tab',
+  'selected',
+  'has',
+  'none',
+  'some',
+  'energyBelow',
+  'minute',
+  'job',
+  'npc',
+  'fact',
+  'any',
+  'all',
+  'not',
+]);
+
+/** The guided start's steps, checked like any other content (exported so tests can feed bad data). */
+export function validateTutorial(t: TutorialData): void {
+  const bad = (msg: string): never => fail('tutorial', msg);
+  const mapIds = Object.keys(mapsData.maps);
+  if (!npcs[t.speaker]) bad(`speaker "${t.speaker}" is not a villager`);
+  if (!t.welcome) bad('needs a welcome line');
+  if (!mapIds.includes(t.gift.map) || !crops[t.gift.crop]) bad('gift needs a map and a crop');
+  const home = Object.values(plots).find((p) => p.price === 0 && !p.project);
+  for (const [x, y] of t.gift.tiles) {
+    const [px, py, pw, ph] = home?.rect ?? [0, 0, 0, 0];
+    if (x < px || y < py || x >= px + pw || y >= py + ph)
+      bad(`gift crop ${x},${y} is outside the home plot`);
+  }
+  for (const f of t.gift.forage)
+    if (items[f.item]?.type !== 'forage') bad(`gift forage "${f.item}" is not a forage item`);
+  const cond = (c: TutorialCond, where: string): void => {
+    for (const k of Object.keys(c))
+      if (!TUT_COND_KEYS.has(k)) bad(`${where}: unknown condition "${k}"`);
+    if (c.map !== undefined && !mapIds.includes(c.map)) bad(`${where}: unknown map "${c.map}"`);
+    for (const k of [c.none, c.some])
+      if (k !== undefined && !TUT_KINDS.includes(k)) bad(`${where}: unknown kind "${k}"`);
+    if (c.has !== undefined && !items[c.has]) bad(`${where}: unknown item "${c.has}"`);
+    if (c.npc !== undefined && !npcs[c.npc]) bad(`${where}: unknown villager "${c.npc}"`);
+    if ((c.min !== undefined || c.max !== undefined) && !c.stat && !c.fresh)
+      bad(`${where}: min/max need a stat`);
+    if ((c.stat || c.fresh) && c.min === undefined && c.max === undefined)
+      bad(`${where}: a stat needs min or max`);
+    c.any?.forEach((x) => cond(x, where));
+    c.all?.forEach((x) => cond(x, where));
+    if (c.not) cond(c.not, where);
+  };
+  const target = (g: TutorialTarget, where: string): void => {
+    const kinds = [
+      'find',
+      'npc',
+      'object',
+      'door',
+      'ui',
+      'gesture',
+      'button',
+      'hud',
+      'action',
+    ].filter((k) => g[k as keyof TutorialTarget] !== undefined);
+    if (kinds.length !== 1)
+      bad(`${where}: a target needs exactly one kind, has ${kinds.join(', ') || 'none'}`);
+    if (g.find !== undefined && !TUT_FINDS.includes(g.find))
+      bad(`${where}: unknown find "${g.find}"`);
+    if (g.npc !== undefined && !npcs[g.npc]) bad(`${where}: unknown villager "${g.npc}"`);
+    if (g.object !== undefined && !TUT_OBJECTS.includes(g.object))
+      bad(`${where}: unknown object "${g.object}"`);
+    if (g.door !== undefined && !mapIds.includes(g.door)) bad(`${where}: no map "${g.door}"`);
+    if (g.map !== undefined && !mapIds.includes(g.map)) bad(`${where}: unknown map "${g.map}"`);
+    if (g.ui !== undefined && !TUT_UI.includes(g.ui)) bad(`${where}: unknown ui "${g.ui}"`);
+    if (g.hud !== undefined && !TUT_HUD.includes(g.hud)) bad(`${where}: unknown hud "${g.hud}"`);
+    if (g.button !== undefined) {
+      try {
+        g.button.split('||').forEach((part) => new RegExp(part));
+      } catch {
+        bad(`${where}: bad button pattern`);
+      }
+    }
+    if (g.action !== undefined && (!g.else || g.action.length === 0))
+      bad(`${where}: action needs kinds and an else`);
+    if (g.else) target(g.else, where);
+  };
+  const ids = new Set<string>();
+  for (const st of t.steps) {
+    const w = `step "${st.id}"`;
+    if (!st.id || ids.has(st.id)) bad(`${w} needs a unique id`);
+    ids.add(st.id);
+    if (!['day1', 'day2', 'intro'].includes(st.track)) bad(`${w} has an unknown track`);
+    if (!st.text) bad(`${w} needs text`);
+    if (!st.done?.length) bad(`${w} needs a done condition`);
+    if (st.track !== 'day1' && !st.when) bad(`${w}: only day-1 steps may run without "when"`);
+    if (st.tag !== undefined && !TUT_HUD.includes(st.tag)) bad(`${w}: unknown tag "${st.tag}"`);
+    st.done.forEach((c) => cond(c, w));
+    if (st.when) cond(st.when, w);
+    if (st.skip) cond(st.skip, w);
+    if (st.target) target(st.target, w);
+    for (const a of st.alt ?? []) {
+      cond(a.when, w);
+      if (a.target) target(a.target, w);
+    }
+  }
 }
 validateContent();

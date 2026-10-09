@@ -2,7 +2,7 @@
   "start": {
     "map": "farm",
     "tx": 14,
-    "ty": 9,
+    "ty": 11,
     "facing": "down"
   },
   "maps": {

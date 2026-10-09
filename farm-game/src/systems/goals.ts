@@ -37,8 +37,15 @@ export function checkGoals(state: GameState): void {
   checkTips(state);
 }
 
+/** Something (the guided start) may hold first-time tips back; they show once it lets go. */
+let tipsHeld: (state: GameState) => boolean = () => false;
+export function holdTipsWhile(fn: (state: GameState) => boolean): void {
+  tipsHeld = fn;
+}
+
 /** One-time explanations the first time a mechanic shows up (stored as `tip.<id>` stats, so saved). */
 export function checkTips(state: GameState): void {
+  if (tipsHeld(state)) return;
   for (const tip of tips) {
     const key = `tip.${tip.id}`;
     if (state.stats[key] || stat(state, tip.stat) < tip.min) continue;

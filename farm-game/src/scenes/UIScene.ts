@@ -31,6 +31,14 @@ import { MOVE_PANEL } from '../systems/placeables';
 import { Hud } from '../ui/Hud';
 import { ToolRing } from '../ui/ToolRing';
 import { TIPS } from '../ui/controlTips';
+import { CoachMarks } from '../ui/CoachMarks';
+import {
+  isFreshGame,
+  notePainted,
+  startTutorial,
+  tutorialOn,
+  type CoachFacts,
+} from '../systems/tutorial';
 import { dockLayout, resolveTouch, type DockLayout, type DockSpot } from '../ui/layout';
 import {
   BinPanel,
@@ -155,6 +163,7 @@ export class UIScene extends Phaser.Scene {
   private glow!: NightGlow;
   private dragHint: Phaser.GameObjects.Container | null = null;
   private sleeping = false;
+  private coach!: CoachMarks;
   private cleanup: (() => void)[] = [];
 
   constructor() {
@@ -198,32 +207,20 @@ export class UIScene extends Phaser.Scene {
     this.buildControls();
     this.buildPanels();
 
+    // A brand-new game starts the guided start (`?tutorial=0` keeps a bare new game for automated checks).
     const fresh = getState();
-    if (
-      fresh.goalIndex === 0 &&
-      fresh.time.day === 1 &&
-      fresh.time.season === 'spring' &&
-      !fresh.stats['tilled'] &&
-      !fresh.stats['tip.welcome'] // once per game, not on every map change
-    ) {
-      fresh.stats['tip.welcome'] = 1;
-      this.time.delayedCall(900, () =>
-        this.hud.toast(
-          getState().settings.controls.autoTool
-            ? 'Welcome to Tiny Acre! Face the grass and tap Action to till soil.'
-            : 'Welcome to Tiny Acre! Pick the hoe and tap Action to till soil.',
-          'good',
-        ),
-      );
-      this.time.delayedCall(4200, () =>
-        this.hud.toast(
-          getState().settings.controls.tapToMove
-            ? 'Tap a tile to walk there and work it. Or drag low on the screen to steer.'
-            : 'Drag anywhere low on the screen to walk. Hold Action to keep working.',
-          'info',
-        ),
-      );
+    if (isFreshGame(fresh)) {
+      const off = new URLSearchParams(globalThis.location?.search ?? '').get('tutorial') === '0';
+      startTutorial(fresh, { on: !off, gift: !off });
     }
+    this.coach = new CoachMarks({
+      scene: this,
+      layout: () => this.layout,
+      world: () => this.worldScene()?.coachWorld() ?? null,
+      facts: () => this.coachFacts(),
+      openModal: () => this.allModals().find((m) => m.isOpen) ?? null,
+    });
+    this.hud.intercept = (text, kind) => this.coach.intercept(text, kind);
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
@@ -269,6 +266,8 @@ export class UIScene extends Phaser.Scene {
       this.cleanup.forEach((off) => off());
       this.game.events.off(EVT_INTERACT_TARGET, this.setInteractTarget, this);
       this.hud.destroy();
+      this.coach.destroy();
+      runtime.coaching = false;
       // Quitting to title must silence the world: rain and night music belong to the game scene.
       audio.setRain(0);
       audio.setNight(0);
@@ -281,8 +280,8 @@ export class UIScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     const s = getState();
-    if (this.dragHint && inputHub.direction !== null) {
-      addStat(s, 'moved', 1); // remembered in the save, so the hint never returns
+    if (this.dragHint && (inputHub.direction !== null || tutorialOn(s))) {
+      if (inputHub.direction !== null) addStat(s, 'moved', 1); // remembered: the hint never returns
       this.dragHint.destroy();
       this.dragHint = null;
     }
@@ -292,6 +291,7 @@ export class UIScene extends Phaser.Scene {
     this.updateActionIcon();
     this.updateRingTip(s);
     this.updateIdleHint(delta);
+    this.coach.update(time, delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather !== 'sunny';
     const storm = s.weather === 'storm';
@@ -325,7 +325,7 @@ export class UIScene extends Phaser.Scene {
 
   /** After a long quiet spell, remind the player what the current goal wants (at most every 90 s). */
   private updateIdleHint(delta: number): void {
-    if (runtime.blocked || this.sleeping) return;
+    if (runtime.blocked || this.sleeping || runtime.coaching) return;
     if (inputHub.direction !== null || inputHub.actionHeld) this.idleMs = 0;
     else this.idleMs += delta;
     if (this.idleMs < IDLE_HINT_MS) return;
@@ -458,6 +458,7 @@ export class UIScene extends Phaser.Scene {
         haptic('medium'); // the confirm: the row will be worked
         audio.play('confirm');
         inputHub.emit('paintEnd', { commit: true });
+        notePainted(getState());
       } else if (e.type === 'cancel') {
         inputHub.emit('paintEnd', { commit: false });
       }
@@ -520,7 +521,8 @@ export class UIScene extends Phaser.Scene {
   private buildDragHint(): void {
     this.dragHint?.destroy();
     this.dragHint = null;
-    if (stat(getState(), 'moved') > 0) return;
+    // The guided start teaches walking by tapping; the stick hint would say something else at the same time.
+    if (stat(getState(), 'moved') > 0 || tutorialOn(getState())) return;
     const { x: cx, y: cy } = this.layout.dragHint;
     const ring = this.add.graphics();
     ring.lineStyle(2, 0xf4ead2, 0.45).strokeCircle(0, 0, 24);
@@ -589,6 +591,18 @@ export class UIScene extends Phaser.Scene {
     this.jarPanels = { jar: this.jar, [MOVE_PANEL]: this.move };
     for (const m of [...this.panels.values(), this.jar, this.move, this.npc, this.plot])
       m.onClosed = () => void saveNow(true);
+  }
+
+  /** Which sheet is open (by panel type) and the menu tab, for the guided start. */
+  private coachFacts(): CoachFacts {
+    let panel: string | null = null;
+    for (const [type, m] of this.panels) if (m.isOpen) panel = type;
+    if (this.jar.isOpen) panel = 'jar';
+    if (this.move.isOpen) panel = 'move';
+    if (this.npc.isOpen) panel = 'npc';
+    if (this.plot.isOpen) panel = 'plot';
+    if (this.summary.isOpen || this.yearEnd.isOpen) panel = 'summary';
+    return { panel, tab: this.menu.isOpen ? this.menu.currentTab : null };
   }
 
   private allModals(): Modal[] {

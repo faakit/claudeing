@@ -1,8 +1,8 @@
 [
   {
     "id": "swipe",
-    "stat": "tilled",
-    "min": 2,
+    "stat": "daysSlept",
+    "min": 3,
     "text": "Tip: swipe up or down on the Action button to change tool."
   },
   {

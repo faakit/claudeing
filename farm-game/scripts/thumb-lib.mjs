@@ -128,7 +128,12 @@ export async function startPreview(port, { snapshot = false, from = 'dist' } = {
 export const launch = () => chromium.launch({ executablePath: CHROMIUM });
 
 /** New game on a phone profile with touch; returns page, CDP session and the canvas geometry. */
-export async function openGame(browser, url, p, { leftHanded = false, query = '' } = {}) {
+export async function openGame(
+  browser,
+  url,
+  p,
+  { leftHanded = false, query = '', tutorial = false } = {},
+) {
   const ctx = await browser.newContext({
     viewport: { width: p.w, height: p.h },
     deviceScaleFactor: p.dpr,
@@ -161,7 +166,8 @@ export async function openGame(browser, url, p, { leftHanded = false, query = ''
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: p.insets });
-  await page.goto(`${url}?debug${query}`);
+  // A bare new game unless asked for the guided start.
+  await page.goto(`${url}?debug${tutorial ? '' : '&tutorial=0'}${query}`);
   await page.waitForFunction(
     () => window.__farm?.game?.scene?.getScene('Title')?.sys.isActive(),
     null,

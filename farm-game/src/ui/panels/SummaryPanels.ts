@@ -13,6 +13,7 @@ import { Modal } from '../widgets';
 import { fmt } from './format';
 import { summaryTip } from './summaryTips';
 import { arrangeNotes } from './summaryNotes';
+import { guidedMorning, guidedNotes } from '../../systems/tutorial';
 
 /** A modal the player must acknowledge: no tap-outside dismiss. */
 abstract class WaitModal extends Modal {
@@ -70,8 +71,9 @@ export class SummaryPanel extends WaitModal {
     // A busy morning (jobs, letters, a festival, many sales) first drops the tip, then the last notes,
     // rather than run under the Wake up button. Weather and the forecast come before the notes, so
     // they are never the part that is cut.
-    let withTip = true;
-    let maxNotes = arrangeNotes(this.summary.notes ?? []).length;
+    // The first guided morning stays short (the guide shows the rest one thing at a time).
+    let withTip = !guidedMorning(getState());
+    let maxNotes = this.notes(this.summary).length;
     let end = this.draw(this.summary, withTip, maxNotes);
     while (end + 40 > MAX_SUMMARY_H && (withTip || maxNotes > 0)) {
       if (withTip) withTip = false;
@@ -86,6 +88,12 @@ export class SummaryPanel extends WaitModal {
       textColor: C.green,
       rim: C.green,
     });
+  }
+
+  /** Morning notes; a guided first morning keeps only one (the letter, which the guide points at next). */
+  private notes(sum: DaySummary): string[] {
+    const all = arrangeNotes(sum.notes ?? []);
+    return guidedMorning(getState()) ? guidedNotes(all) : all;
   }
 
   /** Draw the summary top to bottom; returns the y just below the last line. */
@@ -147,18 +155,20 @@ export class SummaryPanel extends WaitModal {
       sum.weather === 'sunny' ? C.creamDim : C.blue,
       { gap: 8 },
     );
-    y += text(
-      `Tomorrow: ${forecastText(s.forecast)}`,
-      s.forecast === 'sunny' ? C.creamDim : C.blue,
-      {
-        gap: 8,
-      },
-    );
-    const notes = arrangeNotes(sum.notes ?? []);
+    const guided = guidedMorning(s);
+    if (!guided)
+      y += text(
+        `Tomorrow: ${forecastText(s.forecast)}`,
+        s.forecast === 'sunny' ? C.creamDim : C.blue,
+        {
+          gap: 8,
+        },
+      );
+    const notes = this.notes(sum);
     for (const note of notes.slice(0, maxNotes)) y += text(note, C.cream, { wrap: 184, gap: 4 });
     if (notes.length > maxNotes)
       y += text(`...and ${notes.length - maxNotes} more`, C.creamDim, { gap: 4 });
-    if (withTip)
+    if (withTip && !guided)
       y += text(`Tip: ${summaryTip(s.time.season, s.time.day, s.time.year)}`, C.creamDim, {
         wrap: 184,
       });

@@ -1,36 +1,35 @@
 [
   {
-    "id": "till",
-    "text": "Till 6 soil tiles with the hoe",
-    "stat": "tilled",
-    "target": 6,
+    "id": "gift",
+    "text": "Pick the 3 ripe parsnips",
+    "stat": "harvested",
+    "target": 3,
     "reward": 20,
-    "hint": "Select the hoe (slot 1) and press Action on bare ground.",
+    "hint": "Rosa left ripe parsnips in your plot. Tap one to pick it.",
     "where": {
-      "farm": [10, 17]
+      "farm": [11, 16]
     }
   },
   {
     "id": "plant",
-    "text": "Plant 5 seeds on tilled soil",
+    "text": "Plant 5 seeds",
     "stat": "planted",
     "target": 5,
-    "reward": 20,
-    "hint": "Pick seeds on the hotbar and press Action on tilled soil.",
+    "reward": 40,
+    "hint": "Pick seeds on the hotbar, then Action beside tilled soil.",
     "where": {
       "farm": [10, 17]
     }
   },
   {
-    "id": "water",
-    "text": "Water 5 plants with the can",
-    "stat": "watered",
-    "target": 5,
+    "id": "ship1",
+    "text": "Sell your harvest in the bin",
+    "stat": "shipped",
+    "target": 1,
     "reward": 20,
-    "hint": "Equip the can and press Action on crops. Refill at the pond.",
+    "hint": "Tap the bin by the house, then Ship all produce.",
     "where": {
-      "farm": [10, 17],
-      "town": [11, 2]
+      "farm": [12, 9]
     }
   },
   {

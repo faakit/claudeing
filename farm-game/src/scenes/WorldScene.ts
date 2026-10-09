@@ -78,6 +78,10 @@ import {
   type WorldObject,
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
+import type { CoachObject } from '../systems/tutorial';
+import type { CoachScreenWorld } from '../ui/CoachMarks';
+import { npcLocation } from '../systems/npcs';
+import { npcs as npcData } from '../data';
 
 /** Tool-use poses by tool item (chars atlas, from the Flow sheet npcs4). */
 const TOOL_POSES: Record<string, string> = {
@@ -378,7 +382,8 @@ export abstract class WorldScene extends Phaser.Scene {
     if (inputHub.direction !== null || inputHub.actionHeld) this.idleMs = 0;
     else this.idleMs += delta;
     const where = currentGoal(getState())?.where?.[this.mapId];
-    if (!where || this.idleMs < GUIDE_AFTER_MS) {
+    // While the guided start points at something, its own marks do this job.
+    if (!where || this.idleMs < GUIDE_AFTER_MS || runtime.coaching) {
       arrow.setVisible(false);
       return;
     }
@@ -411,6 +416,58 @@ export abstract class WorldScene extends Phaser.Scene {
         tip.y + Math.sin(right) * 9,
       );
     }
+  }
+
+  /**
+   * The world as the guided start's coach sees it (systems/tutorial.ts): the player's tile, what Action would do,
+   * the map's objects and villagers, and a tile -> screen mapping for the coach marks. Read-only.
+   */
+  coachWorld(): CoachScreenWorld | null {
+    if (this.transitioning || !this.grid) return null;
+    const state = getState();
+    const here = playerTile(state.player);
+    const cam = this.cameras.main;
+    const types = ['bin', 'bed', 'shop', 'board', 'door'];
+    const objects: CoachObject[] = this.objects
+      .filter((o) => types.includes(o.type))
+      .map((o) => ({
+        type: o.type,
+        tx: o.tx,
+        ty: o.ty,
+        w: o.tw,
+        h: o.th,
+        to: o.type === 'door' ? doorTarget(o).map : undefined,
+      }));
+    if (mail.mailbox.map === this.mapId)
+      objects.push({ type: 'mailbox', tx: mail.mailbox.tx, ty: mail.mailbox.ty, w: 1, h: 1 });
+    const npcs: { id: string; tx: number; ty: number }[] = [];
+    for (const id of Object.keys(npcData)) {
+      const at = npcLocation(id, state.time.minutes);
+      if (at && at.map === this.mapId) npcs.push({ id, tx: at.tx, ty: at.ty });
+    }
+    const screen = (tx: number, ty: number) => ({
+      x: tx * TILE_SIZE + TILE_SIZE / 2 - cam.scrollX + cam.x,
+      y: ty * TILE_SIZE + TILE_SIZE / 2 - cam.scrollY + cam.y,
+    });
+    return {
+      map: this.mapId,
+      tile: here,
+      facing: state.player.facing,
+      action: this.lastMark
+        ? { plan: this.lastMark.plan, tx: this.lastMark.tx, ty: this.lastMark.ty }
+        : null,
+      objects,
+      npcs,
+      blocked: (tx, ty) => !this.inMap({ tx, ty }) || isTileBlocked(this.grid, tx, ty),
+      actKind: (tx, ty) => (this.inMap({ tx, ty }) ? this.actKindAt({ tx, ty }) : null),
+      inView: (tx, ty) => {
+        const p = screen(tx, ty);
+        return (
+          p.x >= 0 && p.x < WORLD_VIEW.w && p.y >= WORLD_VIEW.y && p.y < WORLD_VIEW.y + WORLD_VIEW.h
+        );
+      },
+      screen,
+    };
   }
 
   // ---- setup ----

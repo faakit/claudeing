@@ -6,7 +6,7 @@ import { chromium } from 'playwright-core';
 
 // Override with E2E_PORT when another checkout runs its checks at the same time.
 const PORT = Number(process.env.E2E_PORT ?? 4173);
-const URL_ = `http://localhost:${PORT}/?debug`;
+const URL_ = `http://localhost:${PORT}/?debug&tutorial=0`; // a bare new game (no guided start)
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
 const server = spawn(

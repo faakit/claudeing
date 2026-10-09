@@ -12,6 +12,7 @@ import {
   toggleVibration,
 } from '../../systems/settings';
 import { C } from '../theme';
+import { replayTutorial } from '../../systems/tutorial';
 import type { MenuTabContext } from './MenuPanel';
 
 const SIZE_NAME = { s: 'S', m: 'M', l: 'L' } as const;
@@ -81,7 +82,23 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
     y -= 26;
     for (let col = 0; col < 2; col++) {
       const it = ITEMS[row * 2 + col];
-      if (!it) continue;
+      if (!it) {
+        // The free half of the last row: replay the guided start from its first step that applies.
+        c.button(
+          8 + col * 92,
+          y,
+          half,
+          22,
+          'Replay guide',
+          () => {
+            replayTutorial(getState());
+            controlsPage.open = false;
+            c.close();
+          },
+          { textColor: C.gold },
+        );
+        continue;
+      }
       c.button(8 + col * 92, y, half, 22, it.label(s), () => {
         if (it.run(s) === 'haptics') haptic('tick');
         else gameEvents.emit('settingsChanged', undefined);

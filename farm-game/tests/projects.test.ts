@@ -161,7 +161,7 @@ describe('save migration v7 -> v8', () => {
     expect(goals[s.goalIndex]?.id).toBe('jars');
     v7['goalIndex'] = 39; // every v7 goal done: continue with the first goal added after them
     expect(goals[migrate(v7).goalIndex]?.id).toBe('projectAll');
-    v7['goalIndex'] = 0;
-    expect(migrate(v7).goalIndex).toBe(0);
+    v7['goalIndex'] = 0; // "till": since v17 (the guided start) a save on it moves to "plant"
+    expect(goals[migrate(v7).goalIndex]?.id).toBe('plant');
   });
 });

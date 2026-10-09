@@ -152,6 +152,11 @@ export class MenuPanel extends Modal {
     this.rebuild();
   }
 
+  /** The tab showing (the guided start points at tabs). */
+  get currentTab(): string {
+    return this.tab;
+  }
+
   clearCursor(): void {
     this.cursor = null;
   }
