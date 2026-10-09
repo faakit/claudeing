@@ -25,7 +25,8 @@ REMAP = {
     },
     "fall": {
         # green ground with dry brown blades and fallen orange leaves (no lime wash)
-        "ground": {"leaf mid": "wood", "new leaf": "orange"},
+        "ground": {"new leaf": "orange"},
+        "lush": {"leaf mid": "wood", "new leaf": "orange"},
         "flora": {"leaf mid": "wood", "new leaf": "orange", "rose": "orange", "lilac": "plum"},
         "foliage": {
             "teal shade": "earth dark", "leaf dark": "soil", "leaf mid": "orange", "grass": "gold", "new leaf": "sand",
@@ -64,6 +65,8 @@ def category(name: str) -> str | None:
         return "roof"
     if name.startswith(FLORA_PREFIX):
         return "flora"
+    if name.startswith(("lush_", "gv_")):
+        return "lush"
     if name.startswith(GROUND_PREFIX) or name in GROUND_EXACT:
         return "ground"
     return None
@@ -77,6 +80,8 @@ def season_sheets(sheet: np.ndarray, slot_names: list[str], cols: int, names: li
         s = sheet.copy()
         for k, n in enumerate(slot_names):
             cat = category(n)
+            if cat == "lush" and cat not in table:
+                cat = "ground"
             if not cat or cat not in table:
                 continue
             y, x = divmod(k, cols)
