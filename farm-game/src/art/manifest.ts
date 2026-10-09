@@ -68,6 +68,34 @@ export const npcFrame = (id: string, dir: string, i: number): string => `npc_${i
 export const animalIdleKey = (sprite: string): string => `${sprite}_1`;
 
 /** UI glyphs and fx drawn in code (gameArt.drawGlyphs / placeholders). */
+/** Small effect and ambient sprites (ui atlas): drawn only when the art exists, no generated fallback. */
+export const FX_SPRITES: [string, number, number][] = [
+  ['fx_petal', 5, 5],
+  ['fx_leaf_o', 7, 7],
+  ['fx_leaf_r', 7, 7],
+  ['fx_snow', 5, 5],
+  ['fx_firefly', 5, 5],
+  ['fx_seed', 7, 7],
+  ['fx_butterfly_w0', 9, 8],
+  ['fx_butterfly_w1', 5, 8],
+  ['fx_butterfly_o0', 9, 8],
+  ['fx_butterfly_o1', 5, 8],
+  ['fx_sparkle_0', 3, 3],
+  ['fx_sparkle_1', 7, 7],
+  ['fx_sparkle_2', 11, 11],
+  ['fx_sparkle_3', 5, 5],
+  ['fx_dust_0', 5, 5],
+  ['fx_dust_1', 8, 7],
+  ['fx_dust_2', 10, 9],
+  ['fx_dust_3', 11, 10],
+  ['fx_splash_0', 9, 4],
+  ['fx_splash_1', 10, 8],
+  ['fx_splash_2', 12, 11],
+  ['fx_splash_3', 12, 11],
+  ['fx_ember', 4, 5],
+  ['fx_glint', 7, 7],
+];
+
 const UI_GLYPHS: [string, number, number][] = [
   ['ui_coin', 9, 9],
   ['ui_bolt', 9, 11],
@@ -196,6 +224,8 @@ export function artManifest(): ArtEntry[] {
   for (const [k, w, h] of UI_GLYPHS)
     add({ texture: k, w, h, group: 'ui', kind: 'ui glyph', from: 'gameArt.ts' });
   add({ texture: 'fx_px', w: 2, h: 2, group: 'ui', kind: 'fx particle pixel', from: 'gameArt.ts' });
+  for (const [k, w, h] of FX_SPRITES)
+    add({ texture: k, w, h, group: 'ui', kind: 'fx / ambient', from: 'fx/*', optional: true });
   add({
     texture: 'fx_shadow',
     w: 14,

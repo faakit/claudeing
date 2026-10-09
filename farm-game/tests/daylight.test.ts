@@ -37,3 +37,27 @@ describe('daylight', () => {
     expect(DAYLIGHT_KEYS[DAYLIGHT_KEYS.length - 1]![0]).toBe(game.dayEndMinutes);
   });
 });
+
+describe('night glow', () => {
+  it('is off by day, full at night, and comes on in four steps', async () => {
+    const { glowAmount } = await import('../src/ui/daylight');
+    expect(glowAmount(720)).toBe(0);
+    expect(glowAmount(1080)).toBe(0);
+    expect(glowAmount(1400)).toBe(1);
+    const levels = new Set<number>();
+    for (let m = 1000; m <= 1560; m += 5) levels.add(glowAmount(m));
+    expect([...levels].sort()).toEqual([0, 0.25, 0.5, 0.75, 1]);
+    let last = 0;
+    for (let m = 1000; m <= 1560; m += 5) {
+      expect(glowAmount(m)).toBeGreaterThanOrEqual(last);
+      last = glowAmount(m);
+    }
+  });
+  it('keeps the mine lit and the house cozy', async () => {
+    const { glowFor } = await import('../src/ui/daylight');
+    expect(glowFor('mine', 720, false)).toBeGreaterThan(0);
+    expect(glowFor('house', 720, false)).toBeGreaterThan(0);
+    expect(glowFor('farm', 720, true)).toBe(0);
+    expect(glowFor('house', 1400, false)).toBe(1);
+  });
+});

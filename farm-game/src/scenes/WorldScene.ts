@@ -17,6 +17,8 @@ import {
 import { items, mapsData } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
+import { parseLights, publishGlow } from '../fx/NightGlow';
+import { Ambient } from '../fx/Ambient';
 import { TileHighlight, type HighlightKind } from '../fx/TileHighlight';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
@@ -78,6 +80,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private ground!: Phaser.Tilemaps.TilemapLayer;
   private farm: FarmRenderer | null = null;
   private mapArt: MapArt | null = null;
+  private ambient: Ambient | null = null;
   protected fx!: Effects;
   private transitioning = false;
   /** After a door, ignore held input until it is released once, so doors never bounce. */
@@ -131,6 +134,12 @@ export abstract class WorldScene extends Phaser.Scene {
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
+    publishGlow(
+      this.mapId,
+      outdoor,
+      parseLights(raw as unknown as Parameters<typeof parseLights>[0]),
+      this.cameras.main,
+    );
     this.mapArt = new MapArt(map, tileset, look.tinted ? SEASON_TINT[state.time.season] : 0xffffff);
 
     if (look.tinted && SEASON_TINT[state.time.season] !== 0xffffff) {
@@ -142,6 +151,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.fx = new Effects(this);
+    this.ambient = new Ambient(this, this.mapId, outdoor);
     if (this.mapId === 'farm') {
       this.farm = new FarmRenderer(this);
       this.farm.sync(state, false);
@@ -212,10 +222,14 @@ export abstract class WorldScene extends Phaser.Scene {
       this.npcs?.destroy();
       this.npcs = null;
       this.game.events.emit(EVT_INTERACT_TARGET, null);
+      publishGlow(this.mapId, false, [], null);
+      this.ambient?.destroy();
+      this.ambient = null;
     });
   }
 
   update(time: number, delta: number): void {
+    this.ambient?.update(time, getState());
     if (this.transitioning) return;
     const state = getState();
     const player = state.player;

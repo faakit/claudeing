@@ -10,6 +10,7 @@ import {
   WORLD_VIEW,
 } from '../config';
 import { game, mapsData } from '../data';
+import { NightGlow } from '../fx/NightGlow';
 import { RainLayer } from '../fx/RainLayer';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
@@ -141,6 +142,7 @@ export class UIScene extends Phaser.Scene {
   /** Real ms since the player last touched anything; a long silence earns a hint about the goal. */
   private idleMs = 0;
   private rain!: RainLayer;
+  private glow!: NightGlow;
   private dragHint: Phaser.GameObjects.Container | null = null;
   private sleeping = false;
   private cleanup: (() => void)[] = [];
@@ -174,6 +176,7 @@ export class UIScene extends Phaser.Scene {
       .setDepth(190)
       .setAlpha(0);
 
+    this.glow = new NightGlow(this, 1.5); // lights over the day tint, under the rain and the HUD
     this.rain = new RainLayer(this, 2);
     this.hud = new Hud(this, getState);
     this.buildControls();
@@ -271,6 +274,7 @@ export class UIScene extends Phaser.Scene {
     this.tint.setVisible(grade !== 0xffffff).setFillStyle(grade);
     this.rain.setIntensity(raining && !indoors ? (storm ? 1.6 : 1) : 0);
     this.rain.update(delta);
+    this.glow.update(time, s);
     audio.setRain(raining ? (indoors ? 0.35 : 1) : 0);
     if (
       s.time.minutes >= game.dayEndMinutes - 60 &&

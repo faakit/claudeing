@@ -139,6 +139,32 @@ try {
       });
     });
     await page.evaluate(() => (window.__farm.inputHub.actionHeld = false));
+    // Atmosphere: night glow over the lit town, and ambient life (fireflies at night, petals and butterflies).
+    const visit = (map, scene, tx, ty, minutes, season) =>
+      page.evaluate(
+        ([map, scene, tx, ty, minutes, season]) => {
+          const f = window.__farm;
+          const s = f.getState();
+          s.weather = 'sunny';
+          s.time.minutes = minutes;
+          s.time.season = season;
+          s.player.map = map;
+          s.player.x = tx * 16 + 8;
+          s.player.y = ty * 16 + 11;
+          const active = f.game.scene.getScenes(true).find((x) => x.scene.key !== 'UI');
+          active.scene.start(scene);
+        },
+        [map, scene, tx, ty, minutes, season],
+      );
+    await sample('town at night: lamps, windows, forge, halo', () =>
+      visit('town', 'Town', 11, 12, 1380, 'spring'),
+    );
+    await sample('woods summer night: fireflies + glow', () =>
+      visit('woods', 'Woods', 11, 19, 1380, 'summer'),
+    );
+    await sample('woods spring day: petals + butterflies', () =>
+      visit('woods', 'Woods', 11, 10, 700, 'spring'),
+    );
     // The budget above includes the audio engine's scheduling: report that music really was playing.
     const au = await page.evaluate(() => window.__farm.audio.debugInfo());
     console.log(

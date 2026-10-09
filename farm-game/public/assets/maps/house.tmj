@@ -11,7 +11,7 @@
  "tilewidth": 16,
  "tileheight": 16,
  "nextlayerid": 10,
- "nextobjectid": 6,
+ "nextobjectid": 5,
  "layers": [
   {
    "id": 1,
@@ -803,18 +803,6 @@
    "objects": [
     {
      "id": 3,
-     "name": "window",
-     "type": "light",
-     "x": 56,
-     "y": 24,
-     "width": 0,
-     "height": 0,
-     "point": true,
-     "rotation": 0,
-     "visible": true
-    },
-    {
-     "id": 4,
      "name": "fire",
      "type": "light",
      "x": 120,
@@ -826,7 +814,7 @@
      "visible": true
     },
     {
-     "id": 5,
+     "id": 4,
      "name": "lamp",
      "type": "light",
      "x": 24,

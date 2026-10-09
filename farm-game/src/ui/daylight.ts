@@ -6,9 +6,9 @@ export const DAYLIGHT_KEYS: [number, number][] = [
   [480, 0xfff4ec], // 8:00
   [600, 0xffffff], // 10:00 neutral day
   [1020, 0xffffff], // 5:00 PM
-  [1110, 0xffe4cc], // 6:30 PM soft golden hour
-  [1200, 0xf2bcc4], // 8:00 PM rose dusk (toward the palette's rose and plum, not orange)
-  [1290, 0xa894c4], // 9:30 PM plum
+  [1110, 0xf8e8dc], // 6:30 PM soft golden hour
+  [1200, 0xdcc4d4], // 8:00 PM rose-lilac dusk (toward the palette's rose and plum, never orange sand)
+  [1290, 0xa49cc8], // 9:30 PM plum
   [1380, 0x7c7cb8], // 11:00 PM
   [1560, 0x646ca8], // 2:00 AM deep night
 ];
@@ -33,4 +33,20 @@ export const indoorColor = (color: number): number => mix(color, 0xffffff, 0.65)
 export function nightAmount(minutes: number): number {
   const t = (minutes - 1140) / (1320 - 1140);
   return Math.max(0, Math.min(1, t));
+}
+
+/**
+ * Strength of the night glow (windows, lamps, the player's halo): lights come on in four steps from 6 PM to
+ * 9:30 PM, like lamps being lit one by one, never a smooth fade (pixel-art lights read as steps).
+ */
+export function glowAmount(minutes: number): number {
+  const t = Math.max(0, Math.min(1, (minutes - 1080) / (1290 - 1080)));
+  return Math.round(t * 4) / 4;
+}
+
+/** Light inside: the house's fire and lamp follow the evening; the mine's torches burn all day. */
+export function glowFor(map: string, minutes: number, outdoor: boolean): number {
+  if (map === 'mine') return 0.75;
+  const g = glowAmount(minutes);
+  return outdoor ? g : Math.min(1, g * 0.8 + 0.2);
 }

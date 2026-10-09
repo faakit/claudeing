@@ -283,7 +283,6 @@ const LIGHT_OF = {
   f_window_box: 'window',
   f_lantern: 'lamp',
   f_forge: 'fire',
-  i_window: 'window',
 };
 
 /** Tiles where nothing solid may go: objects (doors, zones, interactables), spawns, plots, landmarks, villagers. */

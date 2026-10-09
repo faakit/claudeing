@@ -340,6 +340,9 @@ GLYPHS = {
         ],
     ),
     "fx_px": ({"w": "#ece8e0"}, ["ww", "ww"]),
+    # authored where the Flow crop was too small to survive the downscale
+    "fx_snow": ({"w": "#d6ecf0", "s": "#72aadc"}, [".w.w.", "wwsww", ".sws.", "wwsww", ".w.w."]),
+    "fx_sparkle_3": ({"w": "#fff0a0", "g": "#f4cc3c"}, ["g...g", ".....", "..w..", ".....", "g...g"]),
 }
 
 
