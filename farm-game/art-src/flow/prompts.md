@@ -24,7 +24,7 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **24** prompts.
+Generations: **25** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -201,3 +201,11 @@ Generations: **24** prompts.
 - raw: items7-a.jpg, items7-b.jpg
 - used: 
 - note: round 2, submitted while crops4 was running
+
+## 25. `items8` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: small paper seed packet with a picture of a pink tulip, a single pink tulip flower with a green stem and two leaves, a bowl of creamy parsnip soup, a baked potato split open with melting butter, a bowl of hearty fish stew, a round berry tart with red and blue berries, a bowl of green kale salad, a pumpkin pie with one slice cut out, then four big legendary fish seen from the side: a shimmering silver trout with pink sparkles, a big golden carp glowing like the sun, a huge old dark grey catfish with long whiskers, a pale icy blue pike with frosty fins, then, seen in three-quarter front view as they stand on the ground: a straw scarecrow with a patched shirt and a straw hat on a wooden post, a round hay bale, an old tree stump with a cluster of brown mushrooms, a short wooden mooring post with a coil of rope.
+
+- raw: 
+- used: 
+- note: round 3: submitted in the owner's Flow project but not downloaded (the art agent may not download files without the owner's own go-ahead in chat); the 21 placeholder keys were drawn by hand in art-src/tools/drawn.py instead. The two outputs stay in the Flow project if the owner wants them.

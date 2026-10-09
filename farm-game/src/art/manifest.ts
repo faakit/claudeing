@@ -96,6 +96,28 @@ export const FX_SPRITES: [string, number, number][] = [
   ['fx_glint', 7, 7],
 ];
 
+/**
+ * Onboarding coach marks (ui atlas, art round 3), for the guided start: a pointing hand (finger up; flip it to
+ * point down), a target ring and a wider, thinner ring for a stepped pulse, and a speech bubble as a 12 x 12
+ * nine-slice source (4 px corners) with a tail that overlaps its bottom outline row.
+ */
+export const COACH_SPRITES: [string, number, number][] = [
+  ['ui_coach_hand', 13, 17],
+  ['ui_coach_ring', 16, 16],
+  ['ui_coach_ring_wide', 22, 22],
+  ['ui_coach_bubble', 12, 12],
+  ['ui_coach_bubble_tail', 7, 4],
+];
+
+/**
+ * A repeatable project's landmark grows with its level: level 1 is the plain sprite, then `<sprite>_<level>` up
+ * to the last level with its own frame (the statue: 5, its perk levels). Pure, so tests and the renderer agree.
+ */
+export function landmarkLevelKey(sprite: string, level: number, frames: number): string {
+  const lv = Math.min(Math.max(1, Math.floor(level)), frames);
+  return lv <= 1 ? sprite : `${sprite}_${lv}`;
+}
+
 const UI_GLYPHS: [string, number, number][] = [
   ['ui_coin', 9, 9],
   ['ui_bolt', 9, 11],
@@ -236,6 +258,8 @@ export function artManifest(): ArtEntry[] {
     });
   for (const [k, w, h] of FX_SPRITES)
     add({ texture: k, w, h, group: 'ui', kind: 'fx / ambient', from: 'fx/*', optional: true });
+  for (const [k, w, h] of COACH_SPRITES)
+    add({ texture: k, w, h, group: 'ui', kind: 'coach mark', from: 'onboarding', optional: true });
   add({
     texture: 'fx_shadow',
     w: 14,
@@ -292,6 +316,20 @@ export function artManifest(): ArtEntry[] {
         exact: false,
         optional: true,
       });
+  // Level frames of a repeatable project's landmark (the Founder's Statue grows each level).
+  for (const [id, p] of Object.entries(projects))
+    if (p.landmark && p.repeat)
+      for (let lv = 2; lv <= p.repeat.perkLevels; lv++)
+        add({
+          texture: landmarkLevelKey(p.landmark.sprite, lv, p.repeat.perkLevels),
+          w: 16,
+          h: 16,
+          group: 'world',
+          kind: `town landmark ${id} level ${lv}`,
+          from: 'projects.json',
+          exact: false,
+          optional: true,
+        });
   add({
     texture: mail.mailbox.sprite,
     w: 16,

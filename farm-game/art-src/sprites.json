@@ -6596,34 +6596,8 @@
   "group": "ui",
   "island": 0
  },
- "player_use_hoe": {
-  "src": "npcs4a/pose_hoe",
-  "size": [
-   32,
-   32
-  ],
-  "group": "chars",
-  "noscale": true,
-  "drop_rows": 3
- },
- "player_use_can": {
-  "src": "npcs4a/pose_can",
-  "size": [
-   32,
-   32
-  ],
-  "group": "chars",
-  "noscale": true,
-  "drop_rows": 2
- },
- "player_use_rod": {
-  "src": "npcs4a/pose_rod",
-  "size": [
-   32,
-   32
-  ],
-  "group": "chars",
-  "noscale": true,
-  "drop_rows": 3
+ "crop_tulip_0": {
+  "authored": "seed_mound",
+  "group": "world"
  }
 }

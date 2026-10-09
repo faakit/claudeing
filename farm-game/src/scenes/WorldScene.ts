@@ -295,6 +295,7 @@ export abstract class WorldScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     this.ambient?.update(time, getState());
+    this.things?.syncLandmarkLevels(getState());
     if (this.transitioning) return;
     const state = getState();
     const player = state.player;

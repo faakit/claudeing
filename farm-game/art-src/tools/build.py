@@ -1,6 +1,7 @@
 """Build every shipped sprite, the packed atlases and the tileset from committed sources.
 
     python art-src/tools/build.py            # rebuild everything
+    python art-src/tools/build.py --sprites  # only the sprite atlases (about a minute; the tileset is untouched)
 
 Sources:
   art-src/flow/crops/<sheet>/<name>.png   per-sprite crops of Google Flow output (see art-src/flow/prompts.md)
@@ -202,7 +203,7 @@ def main() -> None:
         print(f"{g}: {len(sprites)} frames, {sheet.shape[1]}x{sheet.shape[0]}")
     if "--prune" in sys.argv:
         prune_crops()
-    if tiles_only:
+    if tiles_only or "--sprites" in sys.argv:  # --sprites: atlases only, the tileset and its index stay as built
         return
     with open(os.path.join(GAME, "src", "art", "atlases.json"), "w", newline="\n") as f:
         atl = ", ".join(json.dumps(a) for a in index["atlases"])

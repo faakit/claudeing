@@ -278,5 +278,14 @@
   ],
   "used": "",
   "note": "round 2, submitted while crops4 was running"
+ },
+ {
+  "id": "items8",
+  "aspect": "1:1",
+  "preamble": "tinyacre",
+  "body": "A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: small paper seed packet with a picture of a pink tulip, a single pink tulip flower with a green stem and two leaves, a bowl of creamy parsnip soup, a baked potato split open with melting butter, a bowl of hearty fish stew, a round berry tart with red and blue berries, a bowl of green kale salad, a pumpkin pie with one slice cut out, then four big legendary fish seen from the side: a shimmering silver trout with pink sparkles, a big golden carp glowing like the sun, a huge old dark grey catfish with long whiskers, a pale icy blue pike with frosty fins, then, seen in three-quarter front view as they stand on the ground: a straw scarecrow with a patched shirt and a straw hat on a wooden post, a round hay bale, an old tree stump with a cluster of brown mushrooms, a short wooden mooring post with a coil of rope.",
+  "raw": [],
+  "used": "",
+  "note": "round 3: submitted in the owner's Flow project but not downloaded (the art agent may not download files without the owner's own go-ahead in chat); the 21 placeholder keys were drawn by hand in art-src/tools/drawn.py instead. The two outputs stay in the Flow project if the owner wants them."
  }
 ]

@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { TILE_SIZE } from '../config';
-import { items, placeables, plots } from '../data';
+import { items, placeables, plots, projects } from '../data';
 import { Label } from '../ui/font';
 import type { GameState } from '../state/GameState';
 import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
 import { hasArt } from '../art/registry';
-import { animalIdleKey } from '../art/manifest';
-import { landmarksOn } from '../systems/projects';
+import { animalIdleKey, landmarkLevelKey } from '../art/manifest';
+import { landmarksOn, projectLevel } from '../systems/projects';
 import { ownsPlot, signVisible } from '../systems/plots';
 import { unreadCount } from '../systems/mail';
 import { mail } from '../data';
@@ -81,16 +81,38 @@ export class ObjectsRenderer {
     }
   }
 
-  /** Buildings from finished town projects: one solid tile each, drawn like any placed object. */
+  /**
+   * Buildings from finished town projects: one solid tile each, drawn like any placed object. A repeatable
+   * project's landmark (the Founder's Statue) shows its level's frame when the art has one.
+   */
   private syncLandmarks(state: GameState): void {
     for (const l of landmarksOn(state, this.mapId)) {
-      if (this.landmarks.has(l.id)) continue;
+      const frames = projects[l.id]?.repeat?.perkLevels ?? 1;
+      const level = landmarkLevelKey(l.sprite, projectLevel(state, l.id), frames);
+      const key = level !== l.sprite && hasArt(level) ? level : l.sprite;
+      const shown = this.landmarks.get(l.id);
+      if (shown?.texture.key === key) continue;
+      shown?.destroy();
       const y = (l.ty + 1) * TILE_SIZE;
       const sprite = this.scene.add
-        .image(l.tx * TILE_SIZE + TILE_SIZE / 2, y, ensureTexture(this.scene, l.sprite, l.color))
+        .image(l.tx * TILE_SIZE + TILE_SIZE / 2, y, ensureTexture(this.scene, key, l.color))
         .setOrigin(0.5, 1)
         .setDepth(10 + y - 3);
       this.landmarks.set(l.id, sprite);
+    }
+  }
+
+  /** Cheap per-frame check: a repeatable landmark went up a level (funding fires no map event after the first). */
+  syncLandmarkLevels(state: GameState): void {
+    for (const [id, img] of this.landmarks) {
+      const p = projects[id];
+      if (!p?.repeat || !p.landmark) continue;
+      const want = landmarkLevelKey(
+        p.landmark.sprite,
+        projectLevel(state, id),
+        p.repeat.perkLevels,
+      );
+      if (img.texture.key !== want && hasArt(want)) return this.syncLandmarks(state);
     }
   }
 
