@@ -9,7 +9,7 @@ Round-2 commits:
 - `6e935be`: title sting, festival trio, mine deep section, R6 fixes.
 - `1127690`: sfx peaks capped at the source (R7), plus decisions.
 
-`npm run verify` is green at `1127690`: 475 unit tests, e2e, mobile e2e and perf. **Nobody has listened to any of it**, by
+`npm run verify` is green at `892183c`: 484 unit tests, e2e, mobile e2e and perf. **Nobody has listened to any of it**, by
 ear or on a phone. Every judgement so far comes from measuring offline renders of the real engine.
 
 ## What is done (round 1, still true)
@@ -66,6 +66,32 @@ ear or on a phone. Every judgement so far comes from measuring offline renders o
   - **They are not wired**: the controls branch owns the call sites.
 - **Payload:** 1.75 MB of mono MP3 (instruments 1.08, sfx 0.18, ambience 0.49), up 23 KB from round 1.
 
+## Round 2, part 3 (the coordinator's second list; `c6c9181`, `892183c` and later)
+
+- **Villager motifs:** Mara, Finn, Rosa, Orin, and Clay (cheeky and chromatic).
+  - Each has a "-heart" version.
+  - Stored in `music.json` "stings".
+  - `audio.motif(id)` plays on the first `talkTo` per villager per day. `heartUp` plays the heart version after the heart jingle.
+  - Level: -21 to -23 max momentary, with a 4 dB music dip.
+  - The lead moves to a light instrument the playing piece is not using.
+- **Weather:**
+  - Rain or storm: no percussion, accompaniment on the main beats only, melodies rest more, and the piece plays 2.5 dB down.
+  - The music ducks 6 dB under each thunderclap.
+  - The rain bed is now 2 dB lower.
+- **Dawn and dusk:** three variants each (`MomentClock`), on the first day of each week only. Dawn plays the first time you are outdoors that morning; dusk plays when the evening turns while you are outdoors.
+- **Interiors:**
+  - While the shop is open (after 1.5 s; `PanelTracker`), a light F-major shop piece plays. Under it: creaks and pages, a generated forge, the anvil from the smithy next door, and a wall clock.
+  - The house at night plays a near-silent lullaby (-30.5 LUFS) with the ticking clock. The clock also ticks softly in the house by day.
+  - `gen_beds.py` makes the clock (from CC0 ticks) and the forge (from noise).
+- **Moments:**
+  - Season-change sting under the sleep screen, in the new season's key.
+  - Festival openers, one per season.
+  - A `special` fanfare (new `Sfx` id) after a special order is delivered in full. It has jingle priority 2: it cuts or drops an `order` jingle within 1 s of it, in either order.
+- **Chord-aware jingles:** held notes (a beat or more) of every jingle and sting move off any semitone clash with the chord under them (`fitToChord`, which follows the coming bars). A test covers every chord of every piece.
+- **Year two:** each season's `form2` is A A2 B A2 R. The A2 sections are reharmonised and have their own day and night phrases. They read -24.6 to -25.3 LUFS.
+- **Mix:** `select` +1.5 dB, rain bed -2 dB.
+- **Renders and listening order:** `audio-renders/round2/r3/LISTEN.md`.
+
 ## Open
 
 - Nits from the critic:
@@ -78,6 +104,8 @@ ear or on a phone. Every judgement so far comes from measuring offline renders o
   - `ringOpen` / `ringClose`
   - `confirm` when a tool is picked or a row is committed
 - Render speed is now 30-40x realtime (the soft clipper costs about 10%).
+- The year-two spring vs summer bar-chroma similarity is 0.922, 0.002 over the critic's 0.92 line, inside the run-to-run noise, and the critic accepted it. If you touch spring A2 again, its E7-A7 secondary dominants are the place to separate it from summer.
+- The motifs, shop, lullaby, dawn/dusk and season stings have not been heard in game. Their triggers (talkTo, heartUp, the shop panel, the house at night, daySummary) are unit-tested, but nobody has checked them on a phone.
 
 ## What the owner should listen to first
 
