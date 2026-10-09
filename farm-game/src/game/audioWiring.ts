@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { chooseAmbience, chooseMusic, type Scene } from '../audio/director';
+import { MomentClock, PanelTracker, chooseAmbience, chooseMusic, type Scene } from '../audio/director';
+import { inputHub } from '../input/InputHub';
 import { mapsData } from '../data';
 import { audio } from '../platform/audio';
 import { isNative } from '../platform/native';
@@ -12,8 +13,10 @@ import { nightAmount } from '../ui/daylight';
 /** How often the director looks at the game (music and ambience change slowly; 4 Hz is plenty). */
 const DIRECTOR_MS = 250;
 
-/** The last panel opened; it counts as open while any modal is up. */
-let lastPanel: string | null = null;
+/** Which panel is open (for the shop music), from panel events and the modal count. */
+const panels = new PanelTracker();
+const moments = new MomentClock();
+const SEASON_INDEX: Record<string, number> = { spring: 0, summer: 1, fall: 2, winter: 3 };
 
 function describe(): Scene {
   if (!runtime.inGame)
@@ -28,7 +31,7 @@ function describe(): Scene {
     night: nightAmount(s.time.minutes),
     weather: s.weather,
     festival: !!fest && !hasEntered(s, fest.id),
-    panel: runtime.modals > 0 ? lastPanel : null,
+    panel: panels.current(performance.now()),
     year: s.time.year,
   };
 }
@@ -58,7 +61,13 @@ function serviceWorkerSettled(): Promise<unknown> {
 export function wireAudio(game: Phaser.Game): void {
   let last = -Infinity;
   let specials: number | null = null;
+  const talked = new Set<string>();
+  const absDay = () => {
+    const t = getState().time;
+    return (t.year - 1) * 112 + (SEASON_INDEX[t.season] ?? 0) * 28 + t.day - 1;
+  };
   game.events.on(Phaser.Core.Events.POST_STEP, (time: number) => {
+    panels.frame(runtime.modals);
     if (time - last < DIRECTOR_MS) return;
     last = time;
     const scene = describe();
@@ -69,11 +78,26 @@ export function wireAudio(game: Phaser.Game): void {
     const done = runtime.inGame ? (getState().stats['specialsDone'] ?? 0) : null;
     if (specials !== null && done !== null && done > specials) audio.play('special');
     specials = done;
+    if (scene.inGame && !runtime.blocked) {
+      const m2 = moments.step(absDay(), scene.night, scene.outdoor && m.slot === scene.season);
+      if (m2) audio.sting(m2);
+    }
   });
   // Musical moments: villager motifs, new hearts, the season changing under the sleep screen.
-  gameEvents.on('openPanel', ({ type }) => (lastPanel = type));
-  // The world only emits talkTo when nothing blocks it; the sheet opens on the same event.
-  gameEvents.on('talkTo', ({ id }) => audio.motif(id));
+  const now = () => performance.now();
+  gameEvents.on('openPanel', ({ type }) => panels.open(type, now()));
+  inputHub.on('menu', () => panels.open('menu', now()));
+  gameEvents.on('placedPanel', () => panels.open('placed', now()));
+  gameEvents.on('buyPlot', () => panels.open('plot', now()));
+  gameEvents.on('startFishing', () => panels.open('fishing', now()));
+  // A villager's motif on the first chat of the day with them (chats and gifts repeat talkTo).
+  gameEvents.on('talkTo', ({ id }) => {
+    panels.open('npc', now());
+    const key = `${absDay()}:${id}`;
+    if (talked.has(key)) return;
+    talked.add(key);
+    audio.motif(id);
+  });
   gameEvents.on('heartUp', ({ id }) => audio.motif(id, true));
   gameEvents.on('daySummary', (sum) => {
     const now = getState().time.season;

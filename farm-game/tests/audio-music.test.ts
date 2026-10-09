@@ -5,6 +5,8 @@ import type { BarOptions } from '../src/audio/sequencer';
 import {
   bassNote,
   chordAt,
+  chordPcs,
+  fitToChord,
   noteToMidi,
   parseChord,
   parseChords,
@@ -119,6 +121,23 @@ describe('composed music data', () => {
           for (const n of parseNotes(part.notes)) if (n.midi !== null) check(part.inst, n.midi + p.jingleKey, `jingle ${cue}`);
   });
 
+  it('held jingle and sting notes never sound a semitone against the chord under them (after the chord fit)', () => {
+    for (const [cue, j] of Object.entries({ ...MUSIC.jingles, ...MUSIC.stings }))
+      for (const [name, p] of Object.entries(MUSIC.pieces))
+        for (const sec of Object.values(p.sections))
+          for (const c of parseChords(sec.chords, p.meter).chords)
+            for (const part of j.parts)
+              for (const n of parseNotes(part.notes)) {
+                if (n.midi === null || n.beats < 1) continue;
+                const m = fitToChord(n.midi + p.jingleKey, c.chord);
+                const pcs = chordPcs(c.chord);
+                const pc = m % 12;
+                const clash = !pcs.has(pc) && [...pcs].some((t) => (pc - t + 12) % 12 === 1 || (t - pc + 12) % 12 === 1);
+                expect(clash, `${cue} over ${name} ${c.chord.symbol}`).toBe(false);
+                expect(Math.abs(m - n.midi - p.jingleKey), 'moves at most 3 semitones').toBeLessThanOrEqual(3);
+              }
+  });
+
   it('every jingle instrument has samples', () => {
     for (const [cue, j] of Object.entries(MUSIC.jingles))
       for (const p of j.parts) expect(sampleFor(p.inst, 72, false), `${cue} ${p.inst}`).not.toBeNull();
@@ -191,6 +210,18 @@ describe('sequencer', () => {
     expect(comp(wet).length).toBeLessThan(comp(dry).length / 1.5);
     for (const e of comp(wet)) expect(Math.round(e.beat) % 2, 'main beats only').toBe(0);
     expect(wet.filter((e) => e.layer === 'tune').length).toBeLessThan(dry.filter((e) => e.layer === 'tune').length);
+  });
+
+  it('plays the year-two variation sections from year two only', () => {
+    for (const slot of ['spring', 'summer', 'fall', 'winter']) {
+      const piece = MUSIC.pieces[slot]!;
+      expect(piece.form2, slot).toBeDefined();
+      const y1 = new Set(bars(slot, 120, 2, { ...ALL, year: 1 }).map((b) => b.section));
+      const y2 = new Set(bars(slot, 120, 2, { ...ALL, year: 2 }).map((b) => b.section));
+      expect(y1, slot).toEqual(new Set(piece.form));
+      expect(y2, slot).toEqual(new Set(piece.form2));
+      expect([...y2].some((s) => !y1.has(s)), `${slot} has new sections in year two`).toBe(true);
+    }
   });
 
   it('plays an intro once, with every melody layer, then loops the form', () => {

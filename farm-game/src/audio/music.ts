@@ -1,9 +1,11 @@
-import { MUSIC, instrumentFiles, jingleOrSting, sampleFor, slotInstruments } from './assets';
+import { MANIFEST, MUSIC, instrumentFiles, jingleOrSting, sampleFor, slotInstruments } from './assets';
 import { SAMPLED_MUSIC_GAIN } from './graph';
 import type { SampleBank } from './bank';
 import { PiecePlayer, catchUp, makeRng } from './sequencer';
 import type { NoteEvent } from './sequencer';
-import { parseNotes } from './theory';
+import { fitToChord, parseNotes } from './theory';
+import type { Chord } from './theory';
+import { playableRange } from './zones';
 import type { LayerTime, MusicSlot } from './types';
 import { glide, playSample } from './voice';
 import type { Voice } from './voice';
@@ -28,6 +30,11 @@ const MAX_VOICES = 40;
 /** How long a piece waits for its samples before starting with whatever it has. */
 const MAX_WAIT = 6;
 const FADE_OUT = 1.6;
+/** Jingles of different priority this close together (seconds): the lesser one gives way. */
+export const JINGLE_PRIORITY_WINDOW = 1;
+/** Light instruments a villager motif may move to when the piece already uses its own. */
+const LEAD_CANDIDATES = ['vibes', 'glock', 'marimba', 'harp'];
+
 /** A rainy day plays the piece softer (on top of the thinner arrangement). */
 const RAIN_DB = -2.5;
 
@@ -48,6 +55,8 @@ class ActivePiece {
   out: Record<LayerTime, { dry: GainNode; wet: GainNode }>;
   strips = new Map<string, Strip>();
   queue: Scheduled[] = [];
+  /** Recently generated bars (start time, section, bar), so jingles can follow the chords. */
+  history: { t0: number; section: string; bar: number }[] = [];
   nextBar = 0;
   started = false;
   stopAt = Infinity;
@@ -139,6 +148,7 @@ export class MusicPlayer {
   private year = 1;
   private rng = makeRng(0x7a11ac3e);
   private voices: Voice[] = [];
+  private recentJingles: { priority: number; start: number; voices: Voice[] }[] = [];
   /** Notes played from samples / by the synth fallback / skipped, for tests and the report. */
   readonly stats = { sampled: 0, synth: 0, dropped: 0, bars: 0 };
 
@@ -258,6 +268,8 @@ export class MusicPlayer {
         year: this.year,
       });
       this.stats.bars++;
+      a.history.push({ t0: a.nextBar, section: bar.section, bar: bar.bar });
+      if (a.history.length > 16) a.history.shift();
       for (const ev of bar.events) a.queue.push({ t: a.nextBar + ev.beat * spb + ev.jitter, dur: ev.beats * spb, ev });
       a.nextBar += barLen;
     }
@@ -303,6 +315,22 @@ export class MusicPlayer {
     }
   }
 
+  /** The chord the playing piece sounds at time `t` (past, present or coming), or null if none. */
+  chordAt(t: number): Chord | null {
+    const a = this.active;
+    if (!a?.started || a.history.length === 0) return null;
+    const barLen = a.player.secondsPerBar();
+    const spb = 60 / a.player.piece.bpm;
+    let at: { t0: number; section: string; bar: number } | undefined;
+    if (t < a.nextBar) at = [...a.history].reverse().find((h) => h.t0 <= t + 1e-6);
+    else {
+      const k = Math.floor((t - a.nextBar) / barLen);
+      at = { t0: a.nextBar + k * barLen, ...a.player.peek(k, { year: this.year }) };
+    }
+    if (!at) return null;
+    return a.player.chordOf(at.section, at.bar, Math.max(0, (t - at.t0) / spb));
+  }
+
   /** The key (semitones from C) jingles are transposed to: the playing piece's, or a given slot's. */
   jingleKey(slot?: MusicSlot): number {
     const piece = MUSIC.pieces[slot ?? this.active?.slot ?? ''];
@@ -314,38 +342,73 @@ export class MusicPlayer {
    * starting `delay` seconds from now. Returns false if none of its instruments can play yet, so the
    * caller uses the synth instead.
    */
-  jingle(cue: string, now: number, volume = 1, o: { key?: number; delay?: number } = {}): boolean {
+  jingle(cue: string, now: number, volume = 1, o: { key?: number; delay?: number; lead?: boolean } = {}): boolean {
     const j = jingleOrSting(cue);
     if (!j) return false;
     const tr = o.key ?? this.jingleKey();
     volume *= j.volume ?? 1;
     const start = now + (o.delay ?? 0);
+    // Priority: a more important fanfare (special order) silences a lesser jingle within a second of
+    // it, whichever was asked for first; the lesser one is dropped (reported as played).
+    const prio = j.priority ?? 1;
+    this.recentJingles = this.recentJingles.filter((r) => r.start > now - 5);
+    if (this.recentJingles.some((r) => r.priority > prio && Math.abs(r.start - start) < JINGLE_PRIORITY_WINDOW)) return true;
+    for (const r of this.recentJingles)
+      if (r.priority < prio && Math.abs(r.start - start) < JINGLE_PRIORITY_WINDOW) r.voices.forEach((v) => v.stop(start, 0.06));
+    // Chord-aware only in the playing piece's own key (a sting for the next season is in its key).
+    const follow = tr === this.jingleKey();
     const spb = 60 / j.bpm;
     const notes: { inst: string; midi: number; t: number; dur: number; gain: number }[] = [];
-    for (const part of j.parts) {
+    j.parts.forEach((part, pi) => {
+      const inst = o.lead && pi === 0 ? this.leadFor(part.inst, part.notes, tr) : part.inst;
       for (const n of parseNotes(part.notes)) {
         if (n.midi === null) continue;
-        notes.push({ inst: part.inst, midi: n.midi + tr, t: n.beat * spb, dur: n.beats * spb, gain: part.gain ?? 1 });
+        let midi = n.midi + tr;
+        // Held notes (a beat or more) move off a semitone clash with the chord sounding under them.
+        const chord = follow && n.beats >= 1 ? this.chordAt(start + 0.01 + n.beat * spb) : null;
+        if (chord) midi = fitToChord(midi, chord);
+        notes.push({ inst, midi, t: n.beat * spb, dur: n.beats * spb, gain: part.gain ?? 1 });
       }
-    }
+    });
     const playable = notes.filter((n) => {
       const p = sampleFor(n.inst, n.midi, false);
       return p && this.bank.get(p.zone.file, now);
     });
     if (playable.length === 0) return false;
+    const voices: Voice[] = [];
     for (const n of playable) {
       const p = sampleFor(n.inst, n.midi, false)!;
       const d = this.bank.get(p.zone.file, now)!;
       const mix = MUSIC.instruments[n.inst];
-      playSample(this.ctx, d, p.zone, this.buses.sfx, {
+      voices.push(playSample(this.ctx, d, p.zone, this.buses.sfx, {
         when: start + 0.01 + n.t,
         rate: p.rate,
         gain: volume * n.gain * (mix?.gain ?? 0.6) * 0.9,
         dur: n.dur,
         release: Math.max(0.3, mix?.release ?? 0.3),
-      });
+      }));
     }
+    this.recentJingles.push({ priority: prio, start, voices });
     return true;
+  }
+
+  /**
+   * The lead instrument for a motif: its own unless the playing piece already uses it, then the first
+   * of the light jingle instruments the piece does not use and that can play every note.
+   */
+  leadFor(inst: string, notes: string, tr: number): string {
+    const used = this.active ? new Set(slotInstruments(this.active.slot)) : new Set<string>();
+    if (!used.has(inst)) return inst;
+    const midis = parseNotes(notes).flatMap((n) => (n.midi === null ? [] : [n.midi + tr]));
+    for (const alt of LEAD_CANDIDATES) {
+      if (used.has(alt)) continue;
+      const a = MANIFEST.instruments[alt];
+      if (!a) continue;
+      const [lo, hi] = playableRange(alt, a);
+      // A chord fit can move a note by up to 3 semitones.
+      if (midis.every((m) => m - 3 >= lo && m + 3 <= hi)) return alt;
+    }
+    return inst;
   }
 }
 

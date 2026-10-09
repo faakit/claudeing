@@ -22,7 +22,8 @@ export interface RenderOptions {
   /** Settings sliders (defaults are the game's defaults). */
   music?: number;
   sfx?: number;
-  cues?: { cue: string; at: number }[];
+  /** `lead`: motifs move their lead to an instrument the piece is not using, as in game. */
+  cues?: { cue: string; at: number; lead?: boolean }[];
   ambience?: Partial<AmbienceTargets> & { rain?: number };
   /** Rainy-day arrangement and game year (variation sections from year two). */
   rain?: boolean;
@@ -97,7 +98,7 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
       amb.tick(now, true);
       while (cues.length && cues[0]!.at <= now + 1e-6) {
         const c = cues.shift()!;
-        if (!music.jingle(c.cue, now)) sfx.play(c.cue, now);
+        if (!music.jingle(c.cue, now, 1, { lead: c.lead })) sfx.play(c.cue, now);
       }
       void ctx.resume();
     });

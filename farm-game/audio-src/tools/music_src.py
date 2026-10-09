@@ -81,7 +81,7 @@ JINGLES = {
         {"inst": "vibes", "notes": "C5:.5 E5:.5 G5:2"},
         {"inst": "harp", "notes": "C4:.5 E4:.5 G4:2", "gain": 0.7},
         {"inst": "glock", "notes": "r:1 C6:2", "gain": 0.8}]},
-    "special": {"bpm": 140, "volume": 0.85, "parts": [
+    "special": {"bpm": 140, "volume": 0.85, "priority": 2, "parts": [
         {"inst": "vibes", "notes": "C5:.25 E5:.25 G5:.25 C6:.5 G5:.25 C6:.25 E6:1.5"},
         {"inst": "harp", "notes": "C4:.5 G4:.5 C5:.5 E5:1.5", "gain": 0.7},
         {"inst": "glock", "notes": "r:1.5 C6:.5 G6:1.5", "gain": 0.7}]},
@@ -92,53 +92,65 @@ JINGLES = {
 STINGS = {
     # Villager motifs, soft, when their sheet opens; "-heart" is the warmer one at a new heart.
     # Mara (General Store): a welcoming sixth up and a turn home.
-    "motif-mara": {"bpm": 112, "volume": 0.5, "parts": [
+    "motif-mara": {"bpm": 112, "volume": 0.75, "parts": [
         {"inst": "vibes", "notes": "G5:.5 C6:.5 E6:.5 D6:.5 C6:1.5"},
         {"inst": "marimba", "notes": "C5:.5 r:.5 G4:.5 r:.5 C5:1", "gain": 0.6}]},
-    "motif-mara-heart": {"bpm": 90, "volume": 0.6, "parts": [
+    "motif-mara-heart": {"bpm": 90, "volume": 0.8, "parts": [
         {"inst": "vibes", "notes": "G5:.5 C6:.5 E6:.5 D6:.5 C6:2"},
         {"inst": "harp", "notes": "C4:.25 E4:.25 G4:.25 C5:2.75", "gain": 0.6},
         {"inst": "glock", "notes": "r:2.5 G6:1.5", "gain": 0.5}]},
     # Finn (fisherman): a lazy swaying pentatonic line.
-    "motif-finn": {"bpm": 84, "volume": 0.5, "parts": [
+    "motif-finn": {"bpm": 84, "volume": 0.75, "parts": [
         {"inst": "vibes", "notes": "E5:1 G5:.5 A5:1.5 G5:.5 E5:1.5"},
         {"inst": "harp", "notes": "C4:1.5 G4:1.5 C5:2", "gain": 0.6}]},
-    "motif-finn-heart": {"bpm": 72, "volume": 0.6, "parts": [
+    "motif-finn-heart": {"bpm": 72, "volume": 0.9, "parts": [
         {"inst": "vibes", "notes": "E5:1 G5:.5 A5:1.5 C6:2"},
         {"inst": "harp", "notes": "C4:.25 G4:.25 C5:.25 E5:3.25", "gain": 0.6},
         {"inst": "glock", "notes": "r:3 E6:2", "gain": 0.5}]},
     # Rosa (neighbour, knows soil): a plain stepwise rise that settles.
-    "motif-rosa": {"bpm": 96, "volume": 0.5, "parts": [
+    "motif-rosa": {"bpm": 96, "volume": 0.75, "parts": [
         {"inst": "harp", "notes": "C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:1.5"},
         {"inst": "glock", "notes": "r:3 E6:1.5", "gain": 0.4}]},
-    "motif-rosa-heart": {"bpm": 80, "volume": 0.6, "parts": [
+    "motif-rosa-heart": {"bpm": 80, "volume": 0.7, "parts": [
         {"inst": "harp", "notes": "C5:.5 D5:.5 E5:.5 G5:.5 A5:1 G5:2"},
         {"inst": "vibes", "notes": "r:1 E5:1 G5:3", "gain": 0.6},
         {"inst": "glock", "notes": "r:3 G6:2", "gain": 0.4}]},
     # Orin (blacksmith): two hammer blows on the tonic, a fifth, an octave.
-    "motif-orin": {"bpm": 100, "volume": 0.55, "parts": [
+    "motif-orin": {"bpm": 100, "volume": 0.8, "parts": [
         {"inst": "marimba", "notes": "C4:.5 C4:.5 G4:.5 E4:.5 C5:2"},
         {"inst": "pizz", "notes": "C3:1 G2:1 C3:2", "gain": 0.8}]},
-    "motif-orin-heart": {"bpm": 84, "volume": 0.6, "parts": [
+    "motif-orin-heart": {"bpm": 84, "volume": 0.8, "parts": [
         {"inst": "marimba", "notes": "C4:.5 C4:.5 G4:.5 E4:.5 C5:2.5"},
         {"inst": "pizz", "notes": "C3:1 G2:1 C3:2.5", "gain": 0.8},
         {"inst": "harp", "notes": "r:2 G4:.25 C5:.25 E5:2.5", "gain": 0.6}]},
     # Clay (the rival): a cheeky chromatic "nyah-nyah".
-    "motif-clay": {"bpm": 150, "volume": 0.35, "parts": [
+    "motif-clay": {"bpm": 150, "volume": 0.5, "parts": [
         {"inst": "marimba", "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 G5:1"},
         {"inst": "pizz", "notes": "G3:.25 F#3:.25 G3:.5 E3:.5 A3:.5 G3:1", "gain": 0.8}]},
-    "motif-clay-heart": {"bpm": 120, "volume": 0.42, "parts": [
+    "motif-clay-heart": {"bpm": 120, "volume": 0.55, "parts": [
         {"inst": "marimba", "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 C6:1.5"},
         {"inst": "pizz", "notes": "C3:1 G3:1 C3:1.5", "gain": 0.8},
         {"inst": "glock", "notes": "r:2 E6:1.5", "gain": 0.4}]},
-    # Dawn and dusk, when the day and night music trade places.
-    "dawn": {"bpm": 100, "volume": 0.4, "parts": [
+    # Dawn (first time outdoors on the first morning of a week) and dusk (that evening): three each.
+    "dawn-1": {"bpm": 100, "volume": 0.4, "parts": [
         {"inst": "harp", "notes": "C4:.25 E4:.25 G4:.25 C5:.25 E5:2"},
         {"inst": "vibes", "notes": "r:1 C6:2", "gain": 0.6},
         {"inst": "glock", "notes": "r:1 G6:2", "gain": 0.5}]},
-    "dusk": {"bpm": 80, "volume": 0.4, "parts": [
+    "dawn-2": {"bpm": 92, "volume": 0.4, "parts": [
+        {"inst": "vibes", "notes": "E5:.5 G5:.5 C6:2.5"},
+        {"inst": "harp", "notes": "C4:.5 G4:.5 E5:2.5", "gain": 0.6}]},
+    "dawn-3": {"bpm": 108, "volume": 0.4, "parts": [
+        {"inst": "marimba", "notes": "C5:.25 D5:.25 E5:.25 G5:.25 A5:.5 G5:1.5"},
+        {"inst": "glock", "notes": "r:1.5 E6:1.5", "gain": 0.5}]},
+    "dusk-1": {"bpm": 80, "volume": 0.4, "parts": [
         {"inst": "vibes", "notes": "E6:.5 C6:.5 A5:.5 G5:2"},
         {"inst": "harp", "notes": "C4:3.5", "gain": 0.6}]},
+    "dusk-2": {"bpm": 76, "volume": 0.4, "parts": [
+        {"inst": "harp", "notes": "G5:.5 E5:.5 C5:.5 G4:2.5"},
+        {"inst": "vibes", "notes": "r:1.5 E5:2.5", "gain": 0.6}]},
+    "dusk-3": {"bpm": 72, "volume": 0.4, "parts": [
+        {"inst": "vibes", "notes": "A5:1 G5:.5 E5:.5 D5:.5 C5:2"},
+        {"inst": "harp", "notes": "F3:2 C4:2.5", "gain": 0.6}]},
     # A new season, under the sleep screen, in the new season's key.
     "season-spring": {"bpm": 96, "volume": 0.8, "parts": [
         {"inst": "harp", "notes": "C4:.5 G4:.5 C5:.5 E5:.5 G5:2"},
@@ -180,19 +192,23 @@ PIECES["spring"] = {
         "A": {"chords": "C | Am | F | G | C | Am | Dm7 G7 | C"},
         "B": {"chords": "F | G | Em | Am | F | G | Dm7 | Gsus4 G"},
         "R": {"chords": "F | C | F | G"},
+        "A2": {"chords": "Fmaj7 | Em7 | Dm7 | Gsus4 G | E7 | A7 | Dm7 Fm6 | C"},
     },
     "form": ["A", "A", "B", "A", "R"],
+    # Year two: A alternates with a reharmonised variation (A2) that has its own phrases.
+    "form2": ["A", "A2", "B", "A2", "R"],
     "layers": [
         {"id": "comp", "inst": "harp", "time": "day", "pattern": "arp8", "anchor": 55, "gain": 0.8},
         {"id": "bass", "inst": "pizz", "time": "day", "pattern": "bass1", "anchor": 40, "bass": True, "tacet": ["R"]},
         {"id": "tune", "inst": "recorder", "time": "day", "rest": 0.15,
-         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]],
+                     "A2": [["s2a1", "s2a1b"], ["s2a2", "s2a2b"]]}},
         {"id": "shaker", "inst": "shaker", "time": "day", "pattern": "shaker8", "outdoorOnly": True, "tacet": ["R"],
          "gain": 0.7},
         {"id": "pad", "inst": "viola", "time": "night", "pattern": "pad", "anchor": 55, "gain": 0.75},
         {"id": "ncomp", "inst": "harp", "time": "night", "pattern": "arpUp", "anchor": 60, "gain": 0.55},
         {"id": "ntune", "inst": "vibes", "time": "night", "rest": 0.3,
-         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]]}},
+         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]], "A2": [["s2n1"], ["s2n2"]]}},
     ],
     "phrases": {
         "a1": "E5:1 G5:1 C6:1.5 B5:.5 | A5:2 E5:2 | F5:1 A5:1 C6:1 A5:1 | G5:3 r:1",
@@ -209,6 +225,12 @@ PIECES["spring"] = {
         "na2b": "r:2 C6:2 | A5:4 | F5:2 B5:2 | C6:4",
         "nb1": "C6:4 | B5:2 G5:2 | E5:4 | r:2 C5:2",
         "nb2": "A5:4 | G5:2 D5:2 | F5:2 C5:2 | D5:2 B4:2",
+        "s2a1": "A5:1 C6:1 E6:1.5 D6:.5 | B5:1.5 G5:.5 E5:2 | F5:1 A5:1 D6:1 C6:1 | C6:2 B5:2",
+        "s2a1b": "F5:1.5 G5:.5 A5:1 C6:1 | G5:2 B5:1 D6:1 | A5:1.5 F5:.5 D5:2 | D5:1 G5:1 B5:2",
+        "s2a2": "B5:1.5 A5:.5 G#5:2 | C#6:1.5 A5:.5 E5:1 G5:1 | F5:1 A5:1 Ab5:1 F5:1 | C6:3 r:1",
+        "s2a2b": "E6:2 D6:1 B5:1 | A5:1 E5:1 G5:1 C#6:1 | D6:1 A5:1 G5:1 F5:1 | E5:4",
+        "s2n1": "E5:4 | G5:2 B5:2 | A5:4 | C6:2 B5:2",
+        "s2n2": "B5:4 | C#6:2 A5:2 | F5:2 D5:2 | E5:4",
     },
 }
 
@@ -223,14 +245,18 @@ PIECES["summer"] = {
         "A": {"chords": "D | C/D | G/D | D | D | C/D | Em7 G/D | C D"},
         "B": {"chords": "Fmaj7 | C/E | Bbmaj7 | C | Fmaj7 | C/E | Bbmaj7 | Cadd9"},
         "R": {"chords": "G/D | D | C/D | D"},
+        "A2": {"chords": "D | E/D | Gmaj7 | D | Bm7 | Em7 | Cadd9 | D"},
     },
     "form": ["A", "A", "B", "A", "R"],
+    # Year two: A alternates with a reharmonised variation (A2) that has its own phrases.
+    "form2": ["A", "A2", "B", "A2", "R"],
     "layers": [
         {"id": "comp", "inst": "marimba", "time": "day", "pattern": "summerComp", "anchor": 62, "gain": 0.8},
         {"id": "bass", "inst": "pizz", "time": "day", "pattern": "bassTresillo", "anchor": 38, "bass": True,
          "tacet": ["R"]},
         {"id": "tune", "inst": "ocarina", "time": "day", "rest": 0.15,
-         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]],
+                     "A2": [["u2a1", "u2a1b"], ["u2a2", "u2a2b"]]}},
         {"id": "shaker", "inst": "shaker", "time": "day", "pattern": "shaker8", "outdoorOnly": True, "tacet": ["R"],
          "gain": 0.8},
         {"id": "tamb", "inst": "tamb", "time": "day", "pattern": "tamb24", "outdoorOnly": True, "tacet": ["R"],
@@ -239,7 +265,7 @@ PIECES["summer"] = {
         {"id": "nbass", "inst": "cello", "time": "night", "pattern": "bassLong", "anchor": 38, "bass": True,
          "gain": 0.55},
         {"id": "ntune", "inst": "ocarina", "time": "night", "rest": 0.3,
-         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]]}},
+         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]], "A2": [["u2n1"], ["u2n2"]]}},
     ],
     "phrases": {
         "a1": "r:.5 F#5:.5 A5:1 A5:.5 B5:.5 A5:1 | G5:1.5 C6:.5 E6:1 C6:1 | B5:.5 A5:.5 G5:1 D6:1 G5:.5 B5:.5"
@@ -260,6 +286,12 @@ PIECES["summer"] = {
         "na2b": "D6:3 A5:1 | G5:4 | G5:2 B5:2 | E5:2 F#5:2",
         "nb1": "A5:4 | G5:2 E5:2 | F5:3 D5:1 | E5:4",
         "nb2": "C6:4 | C6:2 G5:2 | A5:2 F5:2 | D6:4",
+        "u2a1": "r:.5 F#5:.5 A5:.5 B5:.5 A5:1 F#5:1 | G#5:1.5 E5:.5 B5:1 D6:1 | F#5:.5 G5:.5 B5:1 D6:1.5 B5:.5 | A5:3 r:1",
+        "u2a1b": "D6:.5 A5:.5 F#5:1 A5:.5 D6:1.5 | E6:1 B5:.5 G#5:.5 E5:2 | D6:1 B5:1 G5:.5 F#5:.5 G5:1 | F#5:2 r:2",
+        "u2a2": "r:.5 D6:.5 B5:1 A5:.5 F#5:.5 D5:1 | E5:.5 G5:.5 B5:1 D6:1 B5:1 | C6:1.5 G5:.5 E5:1 D5:1 | D5:.5 F#5:.5 A5:1 D6:2",
+        "u2a2b": "F#5:1.5 A5:.5 B5:1 D6:1 | G5:1 B5:.5 E6:1.5 D6:1 | E6:1 C6:1 G5:1.5 E5:.5 | F#5:1 A5:1 D6:2",
+        "u2n1": "F#5:4 | G#5:2 E5:2 | B5:4 | A5:4",
+        "u2n2": "D6:4 | B5:2 G5:2 | E5:2 C6:2 | D6:4",
     },
 }
 
@@ -273,17 +305,21 @@ PIECES["fall"] = {
         "A": {"chords": "Em | D | C | B7 | Em | A | C D | Em"},
         "B": {"chords": "Am7 | D | G | Em | Am7 | F | C | B7"},
         "R": {"chords": "Em | Am7 | Em | Am7"},
+        "A2": {"chords": "Em | Cmaj7 | Am7 | B7 | Em | D | Cmaj7 | B7"},
     },
     "form": ["A", "A", "B", "A", "R"],
+    # Year two: A alternates with a reharmonised variation (A2) that has its own phrases.
+    "form2": ["A", "A2", "B", "A2", "R"],
     "layers": [
         {"id": "comp", "inst": "harp", "time": "day", "pattern": "arpTrip", "anchor": 52, "gain": 0.7},
         {"id": "bass", "inst": "cello", "time": "day", "pattern": "bass2", "anchor": 40, "bass": True, "gain": 0.6,
          "tacet": ["R"]},
         {"id": "tune", "inst": "viola", "time": "day", "rest": 0.15,
-         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]],
+                     "A2": [["f2a1", "f2a1b"], ["f2a2", "f2a2b"]]}},
         {"id": "ncomp", "inst": "harp", "time": "night", "pattern": "arpTripHalf", "anchor": 52, "gain": 0.55},
         {"id": "ntune", "inst": "cello", "time": "night", "rest": 0.25,
-         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]]}},
+         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]], "A2": [["f2n1"], ["f2n2"]]}},
     ],
     "phrases": {
         "a1": "B4:3 A4:1 | A4:2 F#4:2 | G4:3 F#4:.5 E4:.5 | D#4:4",
@@ -300,6 +336,12 @@ PIECES["fall"] = {
         "na2b": "B3:4 | A3:2 E3:2 | G3:2 F#3:2 | E3:4",
         "nb1": "C4:4 | A3:2 F#3:2 | B3:2 D4:2 | E4:4",
         "nb2": "E4:4 | C4:2 A3:2 | G3:2 E3:2 | D#3:4",
+        "f2a1": "G4:3 F#4:1 | E4:2 G4:2 | A4:1.5 B4:.5 C5:2 | B4:4",
+        "f2a1b": "B4:3 A4:1 | G4:2 E4:2 | E4:1.5 G4:.5 C5:2 | D#5:2 B4:2",
+        "f2a2": "E5:1.5 D5:.5 B4:2 | A4:2 F#4:2 | G4:1.5 B4:.5 E5:2 | D#5:3 r:1",
+        "f2a2b": "G4:2 B4:2 | A4:3 D5:1 | C5:2 B4:2 | A4:1 F#4:1 D#4:2",
+        "f2n1": "E3:4 | E3:2 G3:2 | A3:2 C4:2 | B3:4",
+        "f2n2": "B3:4 | A3:2 F#3:2 | G3:2 E3:2 | D#3:4",
     },
 }
 
@@ -313,20 +355,24 @@ PIECES["winter"] = {
         "A": {"chords": "Dm | Bbmaj7/D | Gm/D | Dsus2 | Dm | Bbmaj7/D | Gm/D | Dsus4 Dm"},
         "B": {"chords": "Bbmaj7 | C | Fmaj7 | Dm | Bbmaj7 | C | Gm7 | Asus4"},
         "R": {"chords": "Dm | Gm/D | Dm | Gm/D"},
+        "A2": {"chords": "Fmaj7 | C/E | Dm7 | Bbmaj7 | Fmaj7/A | Gm7 | Bbm6 | Asus4"},
     },
     "form": ["A", "A", "B", "A", "R"],
+    # Year two: A alternates with a reharmonised variation (A2) that has its own phrases.
+    "form2": ["A", "A2", "B", "A2", "R"],
     "layers": [
         {"id": "bass", "inst": "piano", "time": "day", "pattern": "bass3", "anchor": 38, "bass": True, "gain": 0.75},
         {"id": "comp", "inst": "piano", "time": "day", "pattern": "waltzChords", "anchor": 57, "gain": 0.75},
         {"id": "tune", "inst": "glock", "time": "day", "rest": 0.2,
-         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]]}},
+         "phrases": {"A": [["a1", "a1b"], ["a2", "a2b"]], "B": [["b1", "b1b"], ["b2", "b2b"]],
+                     "A2": [["w2a1", "w2a1b"], ["w2a2", "w2a2b"]]}},
         {"id": "dpad", "inst": "viola", "time": "day", "pattern": "pad3wide", "anchor": 57, "gain": 0.45},
         {"id": "sleigh", "inst": "sleigh", "time": "day", "pattern": "sleigh2bar3", "outdoorOnly": True,
          "tacet": ["R"], "gain": 0.8},
         {"id": "pad", "inst": "viola", "time": "night", "pattern": "pad3wide", "anchor": 57, "gain": 0.7},
         {"id": "nbass", "inst": "cello", "time": "night", "pattern": "bass3", "anchor": 38, "bass": True, "gain": 0.65},
         {"id": "ntune", "inst": "piano", "time": "night", "rest": 0.3, "gain": 0.85,
-         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]]}},
+         "phrases": {"A": [["na1", "na1b"], ["na2", "na2b"]], "B": [["nb1"], ["nb2"]], "A2": [["w2n1"], ["w2n2"]]}},
     ],
     "phrases": {
         "a1": "A5:2 D6:1 | G6:2 F6:1 | D6:3 | E6:3",
@@ -343,6 +389,12 @@ PIECES["winter"] = {
         "na2b": "D6:3 | C6:2 Bb5:1 | Bb5:2 G5:1 | A5:1.5 F5:1.5",
         "nb1": "F5:3 | E5:2 G5:1 | A5:3 | r:1 D5:2",
         "nb2": "D6:3 | C6:2 G5:1 | Bb5:2 F5:1 | E5:3",
+        "w2a1": "A6:2 F6:1 | G6:3 | F6:2 D6:1 | D6:3",
+        "w2a1b": "C6:2 E6:1 | E6:3 | A5:1.5 C6:1.5 | Bb5:3",
+        "w2a2": "C6:3 | Bb5:2 D6:1 | Db6:2 F6:1 | E6:3",
+        "w2a2b": "F6:2 E6:1 | D6:3 | Db6:1.5 Bb5:1.5 | A5:3",
+        "w2n1": "A5:3 | G5:3 | F5:3 | D5:3",
+        "w2n2": "C6:3 | Bb5:3 | Db6:3 | E5:3",
     },
 }
 
@@ -498,7 +550,7 @@ PIECES["shop"] = {
 # The house at night: almost nothing. Slow harp in threes, a vibraphone line that mostly rests, and the
 # wall clock (ambience) ticking under it.
 PIECES["lullaby"] = {
-    "key": "F major", "level": 3, "jingleKey": 5, "bpm": 54, "meter": 3,
+    "key": "F major", "level": 6.5, "jingleKey": 5, "bpm": 54, "meter": 3,
     "sections": {
         "A": {"chords": "Fmaj7 | Dm7 | Bbmaj7 | Csus4 C | Fmaj7 | Am7 | Gm7 C | F"},
         "R": {"chords": "Bbmaj7 | Fmaj7 | Bbmaj7 | Csus4 C"},

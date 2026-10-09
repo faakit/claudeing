@@ -110,6 +110,24 @@ export function voiceTone(v: number[], index: number): number {
   return v[((index % n) + n) % n]! + 12 * oct;
 }
 
+/** Pitch classes sounding in a chord (tones and slash bass). */
+export function chordPcs(chord: Chord): Set<number> {
+  return new Set([...chord.tones.map((t) => (chord.root + t) % 12), chord.bass]);
+}
+
+/**
+ * A held note against a chord: if it sits a semitone (m2 or M7) from a chord tone without being one,
+ * move it to the nearest chord tone (lower on a tie). Notes that are chord tones or a whole tone or
+ * more away from every chord tone (ninths, sixths) stay as written.
+ */
+export function fitToChord(midi: number, chord: Chord): number {
+  const pcs = chordPcs(chord);
+  const pc = ((midi % 12) + 12) % 12;
+  if (pcs.has(pc) || ![...pcs].some((c) => (pc - c + 12) % 12 === 1 || (c - pc + 12) % 12 === 1)) return midi;
+  for (const d of [-1, 1, -2, 2, -3, 3]) if (pcs.has((((midi + d) % 12) + 12) % 12)) return midi + d;
+  return midi;
+}
+
 /** The bass note of a chord in the octave at or above `anchor`. */
 export function bassNote(chord: Chord, anchor: number): number {
   let n = anchor - (((anchor % 12) + 12) % 12) + chord.bass;

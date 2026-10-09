@@ -148,8 +148,6 @@ class AudioEngine {
   private indoor = false;
   private ambienceTargets: Partial<AmbienceTargets> = {};
   private mood: { rain: boolean; year: number } = { rain: false, year: 1 };
-  /** Day or night as last announced (dawn and dusk flourishes play on the change), null until known. */
-  private dayPhase: 'day' | 'night' | null = null;
   private lastEvict = 0;
   readonly bank = new SampleBank(AUDIO_BASE);
   private sfxPlayer: SfxPlayer | null = null;
@@ -297,13 +295,6 @@ class AudioEngine {
   /** 0 = full day music, 1 = full night music. */
   setNight(amount: number): void {
     this.night = Math.max(0, Math.min(1, amount));
-    // Dawn and dusk: a short flourish when the music turns over (hysteresis so it plays once).
-    const phase = this.night > 0.65 ? 'night' : this.night < 0.35 ? 'day' : this.dayPhase;
-    if (phase && phase !== this.dayPhase) {
-      const first = this.dayPhase === null;
-      this.dayPhase = phase;
-      if (!first && this.slot && SEASON_SLOTS.has(this.slot) && !this.indoor) this.sting(phase === 'day' ? 'dawn' : 'dusk');
-    }
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.dayBus.gain.setTargetAtTime(1 - this.night, t, 0.6);
@@ -432,7 +423,7 @@ class AudioEngine {
    * key of `key`'s piece), `delay` seconds from now; the music dips a little under it. Falls back to a
    * synth rendition of the same notes.
    */
-  sting(name: string, o: { key?: MusicSlot; delay?: number; volume?: number; duckDb?: number } = {}): void {
+  sting(name: string, o: { key?: MusicSlot; delay?: number; volume?: number; duckDb?: number; lead?: boolean } = {}): void {
     const ctx = this.ctx;
     if (!ctx || this.muted || !jingleOrSting(name)) return;
     const when = ctx.currentTime + (o.delay ?? 0);
@@ -440,13 +431,16 @@ class AudioEngine {
     this.duck.gain.setTargetAtTime(duck, when, 0.08);
     this.duck.gain.setTargetAtTime(1, when + 1.2, 0.5);
     const key = this.musicPlayer?.jingleKey(o.key) ?? 0;
-    if (this.musicPlayer?.jingle(name, ctx.currentTime, o.volume ?? 1, { key, delay: o.delay ?? 0 })) return;
+    if (this.musicPlayer?.jingle(name, ctx.currentTime, o.volume ?? 1, { key, delay: o.delay ?? 0, lead: o.lead })) return;
     this.synthJingle(name, key, o.delay ?? 0, o.volume ?? 1);
   }
 
-  /** A villager's motif when their sheet opens; `heart` for the warmer version at a new heart. */
+  /**
+   * A villager's motif when their sheet opens; `heart` for the warmer version at a new heart. The lead
+   * moves to an instrument the playing piece is not using, so it stands out from the music.
+   */
   motif(npc: string, heart = false): void {
-    this.sting(`motif-${npc}${heart ? '-heart' : ''}`, { delay: heart ? 0.8 : 0.05, duckDb: heart ? -5 : -3 });
+    this.sting(`motif-${npc}${heart ? '-heart' : ''}`, { delay: heart ? 0.8 : 0.05, duckDb: heart ? -5 : -4, lead: true });
   }
 
   /** The season-change sting, under the sleep screen, in the new season's key. */
@@ -588,9 +582,7 @@ class AudioEngine {
 
   /** Choose the piece (title, a season, mine, festival...), whether we are indoors, and the weather and year. */
   setMusic(slot: MusicSlot, indoor: boolean, mood?: { rain?: boolean; year?: number }): void {
-    const entering = slot !== this.slot;
-    // Each festival opens with its own short fanfare (by season), in the festival's key.
-    if (entering && slot === 'festival' && this.slot !== null) this.sting(`open-${this.homeSlot}`, { key: 'festival' });
+    const entering = slot !== this.slot && this.slot !== null;
     if (mood) this.mood = { rain: !!mood.rain, year: mood.year ?? this.mood.year };
     if (this.ctx && this.musicPlayer) this.musicPlayer.setMood(this.mood, this.ctx.currentTime);
     this.slot = slot;
@@ -600,6 +592,8 @@ class AudioEngine {
       this.homeSlot = slot;
     }
     if (this.ctx && this.musicPlayer) this.musicPlayer.setSlot(slot, indoor, this.ctx.currentTime);
+    // Each festival opens with its own short fanfare (by season), in the festival's key.
+    if (entering && slot === 'festival') this.sting(`open-${this.homeSlot}`, { key: 'festival' });
   }
 
   /** Music on (it plays whenever audio is unlocked, a slot is chosen and music is not stopped). */

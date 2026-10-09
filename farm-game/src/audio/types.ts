@@ -138,6 +138,8 @@ export interface Jingle {
   bpm: number;
   /** Playback level (default 1): motifs and flourishes sit under the event fanfares. */
   volume?: number;
+  /** Default 1. A jingle silences or drops a lower-priority one within a second of it. */
+  priority?: number;
   parts: { inst: string; notes: string; gain?: number }[];
 }
 

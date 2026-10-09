@@ -1,5 +1,5 @@
 import { bassNote, chordAt, parseChords, parsePhrase, voiceTone, voicing } from './theory';
-import type { ChordAt, PhraseNote } from './theory';
+import type { Chord, ChordAt, PhraseNote } from './theory';
 import type { Layer, LayerTime, Piece, PatternStep } from './types';
 
 /** Deterministic PRNG (mulberry32) so renders and tests repeat exactly. */
@@ -99,6 +99,30 @@ export class PiecePlayer {
 
   private formFor(opt: BarOptions): string[] {
     return (opt.year ?? 1) >= 2 && this.piece.form2 ? this.piece.form2 : this.piece.form;
+  }
+
+  /** The section and bar `k` bars after the next one to be generated (k = 0 is the next one). */
+  peek(k: number, opt: Pick<BarOptions, 'year'>): { section: string; bar: number } {
+    const introLen = this.piece.intro?.length ?? 0;
+    const form = this.formFor(opt as BarOptions);
+    let intro = this.introIndex;
+    let f = this.formIndex;
+    let b = this.barInSection;
+    for (let i = 0; i < k; i++) {
+      const sid = intro < introLen ? this.piece.intro![intro]! : form[f % form.length]!;
+      b++;
+      if (b >= this.sections.get(sid)!.bars) {
+        b = 0;
+        if (intro < introLen) intro++;
+        else f = (f + 1) % form.length;
+      }
+    }
+    return { section: intro < introLen ? this.piece.intro![intro]! : form[f % form.length]!, bar: b };
+  }
+
+  /** The chord at a beat of a bar of a section. */
+  chordOf(section: string, bar: number, beat: number): Chord {
+    return chordAt(this.sections.get(section)!.chords, bar * this.piece.meter + beat).chord;
   }
 
   nextBar(rng: () => number, opt: BarOptions): BarOut {

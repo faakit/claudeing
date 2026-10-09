@@ -66,16 +66,17 @@ jobs.push({ name: 'crickets-long', o: { seconds: 420, ambience: { crickets: 1 } 
 const NPCS = ['mara', 'finn', 'rosa', 'orin', 'clay'];
 for (const n of NPCS)
   for (const v of ['', '-heart'])
-    jobs.push({ name: `moment-motif-${n}${v}`, o: { seconds: 7, slot: 'spring', cues: [{ cue: `motif-${n}${v}`, at: 1 }] } });
-for (const c of ['dawn', 'dusk']) jobs.push({ name: `moment-${c}`, o: { seconds: 7, slot: 'summer', night: 0.5, cues: [{ cue: c, at: 1 }] } });
+    jobs.push({ name: `moment-motif-${n}${v}`, o: { seconds: 7, slot: 'spring', cues: [{ cue: `motif-${n}${v}`, at: 1, lead: true }] } });
+for (const c of ['dawn-1', 'dawn-2', 'dawn-3', 'dusk-1', 'dusk-2', 'dusk-3']) jobs.push({ name: `moment-${c}`, o: { seconds: 7, slot: 'summer', night: 0.5, cues: [{ cue: c, at: 1 }] } });
 for (const s of SEASONS) {
   jobs.push({ name: `moment-season-${s}`, o: { seconds: 7, slot: s, cues: [{ cue: `season-${s}`, at: 1 }] } });
   jobs.push({ name: `moment-open-${s}`, o: { seconds: 8, slot: 'festival', cues: [{ cue: `open-${s}`, at: 0.3 }] } });
 }
 // The same moments alone (no music), for their own loudness. Stings play in C here.
-for (const c of [...NPCS.flatMap((n) => [`motif-${n}`, `motif-${n}-heart`]), 'dawn', 'dusk', ...SEASONS.flatMap((s) => [`season-${s}`, `open-${s}`])])
+for (const c of [...NPCS.flatMap((n) => [`motif-${n}`, `motif-${n}-heart`]), 'dawn-1', 'dawn-2', 'dawn-3', 'dusk-1', 'dusk-2', 'dusk-3', ...SEASONS.flatMap((s) => [`season-${s}`, `open-${s}`])])
   jobs.push({ name: `sting-${c}`, o: { seconds: 5, cues: [{ cue: c, at: 0.2 }] } });
-jobs.push({ name: 'moment-special', o: { seconds: 6, slot: 'spring', cues: [{ cue: 'order', at: 1 }, { cue: 'special', at: 1.5 }] } });
+jobs.push({ name: 'moment-special', o: { seconds: 6, slot: 'spring', cues: [{ cue: 'order', at: 1 }, { cue: 'special', at: 1.25 }] } });
+jobs.push({ name: 'moment-special-first', o: { seconds: 6, slot: 'spring', cues: [{ cue: 'special', at: 1 }, { cue: 'order', at: 1.1 }] } });
 // Weather, interiors and year two.
 for (const s of SEASONS) jobs.push({ name: `rain-${s}-day`, o: { seconds: 120, slot: s, rain: true, ambience: { rain: 1 } } });
 jobs.push({ name: 'storm-summer', o: { seconds: 90, slot: 'summer', rain: true, ambience: { rain: 1, thunder: 1, wind: 0.8 } } });

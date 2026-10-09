@@ -171,7 +171,7 @@ Beds are matched on RMS over the loop, one-shots on active-region RMS (target co
 
 | bed | take | length ms | onset ms | max momentary LUFS | RMS dB | target dB | TP dBTP | loop seam |
 |---|---|---|---|---|---|---|---|---|
-| rain | loop 1 (12.0 s) | 13100 | - | -23.7 | -30.0 | -30 | -12.9 | jump/RMS 0.299 (body p95 1.029), step +0.34 dB (body p95 1.88) |
+| rain | loop 1 (12.0 s) | 13100 | - | -25.7 | -32.0 | -32 | -14.1 | jump/RMS 0.299 (body p95 1.029), step +0.34 dB (body p95 1.88) |
 | crickets | loop 1 (9.0 s) | 10100 | - | -31.9 | -39.0 | -39 | -23.8 | jump/RMS 0.290 (body p95 1.172), step -0.48 dB (body p95 4.50) |
 | crickets | loop 2 (7.333333333333333 s) | 8433 | - | -31.8 | -39.0 | -39 | -24.1 | jump/RMS 0.041 (body p95 1.175), step -0.90 dB (body p95 4.42) |
 | wind | loop 1 (15.0 s) | 16100 | - | -27.5 | -33.0 | -33 | -16.2 | jump/RMS 0.025 (body p95 0.235), step +0.76 dB (body p95 3.08) |

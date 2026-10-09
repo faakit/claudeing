@@ -97,3 +97,59 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     shop: 0,
   };
 }
+
+/** The shop piece starts only after the store has been open this long (ms): no churn on quick visits. */
+export const SHOP_DWELL_MS = 1500;
+
+/**
+ * Which panel is open, for the music. Any panel or sheet opening is reported to `open` (the shop by
+ * name, the rest by any name); a frame with no modal clears it. The shop counts only after the dwell.
+ */
+export class PanelTracker {
+  private panel: string | null = null;
+  private since = 0;
+
+  open(type: string, t: number): void {
+    this.panel = type;
+    this.since = t;
+  }
+
+  /** Call every frame with the number of open modals. */
+  frame(modals: number): void {
+    if (modals === 0) this.panel = null;
+  }
+
+  current(t: number): string | null {
+    if (this.panel === 'shop' && t - this.since < SHOP_DWELL_MS) return null;
+    return this.panel;
+  }
+}
+
+export type Moment = 'dawn' | 'dusk';
+
+/**
+ * Dawn and dusk flourishes, rationed: only on the first day of each week (days 1, 8, 15, 22 of a
+ * season), dawn the first time the player is outdoors that morning, dusk when the evening turns while
+ * they are outdoors. Returns the sting to play (three variants each, by week), or null.
+ */
+export class MomentClock {
+  private dawnDay = -1;
+  private duskDay = -1;
+  private lastNight: number | null = null;
+
+  step(absDay: number, night: number, outdoor: boolean): string | null {
+    const prev = this.lastNight;
+    this.lastNight = night;
+    if (absDay % 7 !== 0 || !outdoor) return null;
+    const variant = (Math.floor(absDay / 7) % 3) + 1;
+    if (night < 0.35 && this.dawnDay !== absDay) {
+      this.dawnDay = absDay;
+      return `dawn-${variant}`;
+    }
+    if (night >= 0.65 && prev !== null && prev < 0.65 && this.duskDay !== absDay) {
+      this.duskDay = absDay;
+      return `dusk-${variant}`;
+    }
+    return null;
+  }
+}
