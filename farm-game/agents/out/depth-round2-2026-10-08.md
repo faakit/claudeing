@@ -3,7 +3,8 @@
 Branch `depth/round2` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/agents-2026-10-08`.
 Pushed to `origin/depth/round2` after every green verify.
 
-Status: in progress (checkpoint after critique 8).
+Status: final. The session was wrapped up on request after critique 9; next steps are in
+`agents/NEXT-STEPS-DEPTH.md`.
 
 ## Commits shipped
 
@@ -26,6 +27,9 @@ Status: in progress (checkpoint after critique 8).
 | `3e1b9c5` | Traveling cart (days 5/12/19/26), x5 cooking, legend-in-the-bin warning |
 | `f1a6e64` | Report and handover refresh |
 | `a51cf83` | Critique 8 fixes: season scoreboard against Clay, field-sized crop requests, special keeps goods for requests, cart never resells store goods, plain-only batch cooking, text |
+| `f7e4d49` | Report and handover refresh |
+| `1a7464d` | A "Beat Clay on the board" goal |
+| (final) | Critique 9 report, handover and this report |
 
 ## What was verified, and how
 
@@ -45,12 +49,17 @@ Status: in progress (checkpoint after critique 8).
   `shots-7/`; all nine findings triaged, fixes in `933be12`.
 - Critique 8 (frozen `3e1b9c5`, two 16-day real-input runs, 42-screen sweep, no blocker): `critique-8.md` and
   `shots-8/`; all eight findings triaged, fixes in `a51cf83`. A first attempt was cut off by a usage limit.
+- Critique 9 (frozen `1a7464d`, about 120 played days, a real spring-to-summer settlement, 48 screens, no blocker):
+  `critique-9.md` and `shots-9/`. **Not fixed**: the wrap-up came first. Two Medium (the scoreboard is hidden from a
+  losing player and unwinnable for a pure farmer; crop requests need the whole harvest) and six Minor findings,
+  listed with suggested fixes in `agents/NEXT-STEPS-DEPTH.md`.
 
 ## Not verified
 
 - No real phone, no native build, no audio listening. Headless Chromium only.
 - New art keys use generated placeholders.
-- Legendary fish and cooking were not played by a critic yet.
+- Year two with real input. The two-year economy is from the sim only.
+- One critic bot stopped on day 31 when the bin and bed did not open after "Inventory full!"; not reproduced.
 
 ## Save versions
 
@@ -77,3 +86,12 @@ No `STATE_VERSION` bump this round (still 15). New state is optional fields or s
 2. The Founder's Statue gives +1% sales for five levels and then is for glory. Enough of a late goal, or should
    later levels unlock something visible (a bigger landmark) once the art exists?
 3. Cooking turns crops into energy. Should eating be capped per day (Stardew is not), or is the 15% price cap enough?
+4. The board race with Clay: should a farmer who never fishes be able to win it, and is 300g a year of play the right
+   prize, or should it be a lasting trophy?
+
+## Next three goals
+
+1. Fix critique 9's two Medium findings (always show the board score and count only rows you could have filled;
+   slack in crop requests and a bin warning), then its Minor ones.
+2. The long-press hotbar picker (with or after the controls agent).
+3. Another critique on a frozen copy, including a year two with real input.
