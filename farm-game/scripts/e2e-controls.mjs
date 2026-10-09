@@ -161,8 +161,12 @@ try {
         `${tapOpens}/3`,
       );
 
-      // --- A tap never walks, a drag never acts.
-      await place(page, 10, 17, 'down');
+      // --- A tap never walks, a drag never acts. (A dry crop below: a tap waters it from where you stand.)
+      const dryBelow =
+        "s.farm.tiles = { '10,18': { watered: false, crop: { cropId: 'parsnip', stage: 1, daysInStage: 0, regrow: false } } };";
+      const wetBelow = () =>
+        page.evaluate(() => !!window.__farm.getState().farm.tiles['10,18']?.watered);
+      await place(page, 10, 17, 'down', dryBelow);
       await sleep(1200); // let the camera settle before mapping tiles to the screen
       const below = await tileScreen(page, 10, 18);
       const a = await player(page);
@@ -175,10 +179,10 @@ try {
       const b = await player(page);
       check(
         `${tag}: a tap that rolls 7 px acts once and moves 0 px`,
-        (await soil(page)) === 1 && Math.abs(b.x - a.x) + Math.abs(b.y - a.y) < 0.01,
-        `soil ${await soil(page)}, moved ${(b.x - a.x).toFixed(1)},${(b.y - a.y).toFixed(1)}`,
+        (await wetBelow()) && Math.abs(b.x - a.x) + Math.abs(b.y - a.y) < 0.01,
+        `watered ${await wetBelow()}, moved ${(b.x - a.x).toFixed(1)},${(b.y - a.y).toFixed(1)}`,
       );
-      await place(page, 10, 17, 'down');
+      await place(page, 10, 17, 'down', dryBelow);
       await sleep(400);
       const c0 = await player(page);
       await t.down(below.x, below.y);
@@ -189,8 +193,8 @@ try {
       const c1 = await player(page);
       check(
         `${tag}: a touch that strays 11 px engages the stick and never acts`,
-        (await soil(page)) === 0 && (c1.x !== c0.x || c1.facing !== c0.facing),
-        `soil ${await soil(page)}, moved ${(c1.x - c0.x).toFixed(1)} facing ${c1.facing}`,
+        !(await wetBelow()) && (c1.x !== c0.x || c1.facing !== c0.facing),
+        `watered ${await wetBelow()}, moved ${(c1.x - c0.x).toFixed(1)} facing ${c1.facing}`,
       );
 
       // --- No silent taps: a tap on your own tile (nothing to do there) answers with a ring.
@@ -258,7 +262,7 @@ try {
       );
       await closeSheets(page);
 
-      // A tap on a far grass tile walks next to it and tills it; the preview shows before the finger lifts.
+      // A tap on grass only walks (a tap never tills or plants); the preview shows before the finger lifts.
       await place(page, 10, 17, 'down');
       await sleep(1300);
       const g = await tileScreen(page, 12, 19);
@@ -270,21 +274,51 @@ try {
       });
       const stillThere = await player(page);
       await t.up();
+      await sleep(1500);
+      const walked = await player(page);
+      check(
+        `${tag}: a held tap on grass previews its path, then walks there and works nothing`,
+        previewShown &&
+          stillThere.tx === 10 &&
+          walked.tx === 12 &&
+          walked.ty === 19 &&
+          (await soil(page)) === 0,
+        `preview ${previewShown}, at ${walked.tx},${walked.ty}, soil ${await soil(page)}`,
+      );
+
+      // A tap on a dry crop walks next to it and waters it (an obvious act).
+      const dry = (keys) =>
+        `s.farm.tiles = {${keys
+          .map(
+            (k) =>
+              `'${k}': { watered: false, crop: { cropId: 'parsnip', stage: 1, daysInStage: 0, regrow: false } }`,
+          )
+          .join(', ')}};`;
+      await place(page, 10, 17, 'down', dry(['12,22', '9,22']));
+      await sleep(1300);
+      const crop = await tileScreen(page, 12, 22);
+      await t.tap(crop.x, crop.y, 60);
       await page
-        .waitForFunction(() => !!window.__farm.getState().farm.tiles['12,19'], null, {
+        .waitForFunction(() => window.__farm.getState().farm.tiles['12,22']?.watered, null, {
           timeout: 5000,
         })
         .catch(() => undefined);
+      const wet = () =>
+        page.evaluate(() =>
+          Object.entries(window.__farm.getState().farm.tiles)
+            .filter(([, v]) => v.watered)
+            .map(([k]) => k),
+        );
       check(
-        `${tag}: a held tap previews its path, and on release walks there and works the tile`,
-        previewShown && stillThere.tx === 10 && (await soil(page)) === 1,
-        `preview ${previewShown}, soil ${await soil(page)}`,
+        `${tag}: a tap on a dry crop walks there and waters it`,
+        (await wet()).join() === '12,22',
+        (await wet()).join(),
       );
 
       // The stick cancels a walk at once, with no act afterwards; a second tap retargets.
-      await place(page, 10, 17, 'down');
+      await place(page, 10, 17, 'down', dry(['12,22', '9,22']));
       await sleep(1300);
-      const far2 = await tileScreen(page, 12, 22); // in the home plot (9-12 x 16-23)
+      const far2 = await tileScreen(page, 12, 22);
       await t.tap(far2.x, far2.y, 60);
       await sleep(250);
       await t.down(L.stickHome.x, L.stickHome.y);
@@ -297,10 +331,10 @@ try {
       await sleep(1500);
       check(
         `${tag}: a stick push cancels a tap's walk at once and nothing is worked afterwards`,
-        routeGone && (await soil(page)) === 0,
-        `route cleared ${routeGone}, soil ${await soil(page)}`,
+        routeGone && (await wet()).length === 0,
+        `route cleared ${routeGone}, watered ${(await wet()).join()}`,
       );
-      await place(page, 10, 17, 'down');
+      await place(page, 10, 17, 'down', dry(['12,22', '8,22', '9,22', '10,22']));
       await sleep(1300);
       const a1 = await tileScreen(page, 12, 22);
       await t.tap(a1.x, a1.y, 60);
@@ -308,16 +342,17 @@ try {
       const a2 = await tileScreen(page, 9, 22); // the camera follows the walk: map the tile now
       await t.tap(a2.x, a2.y, 60);
       await page
-        .waitForFunction(() => Object.keys(window.__farm.getState().farm.tiles).length > 0, null, {
-          timeout: 5000,
-        })
+        .waitForFunction(
+          () => Object.values(window.__farm.getState().farm.tiles).some((v) => v.watered),
+          null,
+          { timeout: 5000 },
+        )
         .catch(() => undefined);
       await sleep(400);
-      const worked = await page.evaluate(() => Object.keys(window.__farm.getState().farm.tiles));
       check(
-        `${tag}: a second tap mid-walk retargets: only the new tile is worked`,
-        worked.length === 1 && worked[0] !== '12,22', // the first target is never worked
-        worked.join(' '),
+        `${tag}: a second tap mid-walk retargets: one crop of the new row is watered, never the first`,
+        (await wet()).length === 1 && !(await wet()).includes('12,22'),
+        (await wet()).join(),
       );
 
       // Grazes on the dock and hotbar never reach the world.
@@ -362,9 +397,11 @@ try {
           for (const [name, tx, ty, kind] of [
             ['bin', 12, 9, 'interact'],
             ['jar', 16, 15, 'interact'],
+            ['belowBin', 12, 10, 'walk'],
+            ['besideMailbox', 14, 9, 'walk'],
             ['crop', 13, 17, 'act'],
           ])
-            for (const sigma of [1.5, 2.5]) {
+            for (const sigma of [1.0, 1.5, 2.5]) {
               let hit = 0;
               let wrongAct = 0;
               let otherSheet = 0;
@@ -397,17 +434,21 @@ try {
         { mm, hand },
       );
       console.log(`      ${tag} tap accuracy: ${JSON.stringify(acc)}`);
-      // The jar stands alone: it must catch >= 95% / 85%. The bin has the mailbox right beside it, so a miss
-      // there may open the mailbox: still a sheet, never an act; bin-or-sheet must meet the same bar.
+      // No magnets (owner ruling): only the target's own tile or sprite opens it, so the tiles in front of
+      // the house walk.
+      // Bars by screen: the SE's tiles are 4.0 mm (the hard check), the iPhone 13's 5.0 mm.
+      const small = p.id === 'se' || p.id === 'fold';
       check(
-        `${tag}: taps at a machine resolve to it >= 95% at 1.5 mm and >= 85% at 2.5 mm`,
-        acc['jar@1.5'].hit >= 0.95 && acc['jar@2.5'].hit >= 0.85,
+        `${tag}: centre taps (1 mm) on the tiles beside the bin and mailbox walk >= ${small ? 85 : 90}%`,
+        acc['belowBin@1'].hit >= (small ? 0.85 : 0.9) &&
+          acc['besideMailbox@1'].hit >= (small ? 0.85 : 0.9),
         JSON.stringify(acc),
       );
+      // Without magnets accuracy is the tile's own size: about 80% at 1.5 mm on a 5 mm tile with the critic's
+      // 1.5 mm offset. The bar is the owner's ruling (own tile or sprite only), not a magnet-era number.
       check(
-        `${tag}: taps at the bin open the bin (or the mailbox beside it) >= 95% / 85%`,
-        acc['bin@1.5'].hit + acc['bin@1.5'].otherSheet >= 0.95 &&
-          acc['bin@2.5'].hit + acc['bin@2.5'].otherSheet >= 0.85,
+        `${tag}: taps at the bin open it (own tile and sprite only) >= ${small ? '60% at 1.5 mm, 85%' : '75% at 1.5 mm, 95%'} at 1 mm`,
+        acc['bin@1.5'].hit >= (small ? 0.6 : 0.75) && acc['bin@1'].hit >= (small ? 0.85 : 0.95),
         JSON.stringify(acc),
       );
       check(
@@ -415,6 +456,116 @@ try {
         acc['crop@1.5'].wrongAct === 0 && acc['crop@2.5'].wrongAct === 0,
         JSON.stringify(acc),
       );
+
+      // --- Paint a row (M5): long-press a tile, drag over three more, lift: the farmer tills all four.
+      const world = () => window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+      const paintDone = () =>
+        page
+          .waitForFunction(
+            () => {
+              const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+              return w.work === null && w.route === null && w.painting === null;
+            },
+            null,
+            { timeout: 15000, polling: 100 },
+          )
+          .catch(() => undefined);
+      await place(page, 10, 16, 'down');
+      await sleep(1300);
+      const row = [];
+      for (const tx of [9, 10, 11, 12]) row.push(await tileScreen(page, tx, 19));
+      await page.evaluate(() => (window.__vibrations = []));
+      await t.down(row[0].x, row[0].y);
+      await sleep(200);
+      const armedEarly = await page.evaluate(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        return w.painting !== null;
+      });
+      await sleep(110);
+      const armed = await page.evaluate(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        return { painting: w.painting !== null, shown: w.highlight.paintGfx.visible };
+      });
+      const armPulses = await page.evaluate(() => window.__vibrations.length);
+      for (let i = 1; i < row.length; i++) {
+        await t.move((row[i - 1].x + row[i].x) / 2, row[i].y);
+        await sleep(20);
+        await t.move(row[i].x, row[i].y);
+        await sleep(20);
+      }
+      await t.up();
+      await paintDone();
+      const painted = await page.evaluate(() =>
+        Object.keys(window.__farm.getState().farm.tiles).sort(),
+      );
+      check(
+        `${tag}: a long-press arms painting at 250 ms (seen and felt), and a drag over 4 tiles works all 4`,
+        !armedEarly &&
+          armed.painting &&
+          armed.shown &&
+          armPulses >= 1 &&
+          painted.join(' ') === '10,19 11,19 12,19 9,19',
+        `early ${armedEarly}, armed ${JSON.stringify(armed)}, pulses ${armPulses}, tiles ${painted.join(' ')}`,
+      );
+
+      // A long-press without a drag works exactly one tile.
+      await place(page, 10, 16, 'down');
+      await sleep(1300);
+      const one = await tileScreen(page, 11, 19);
+      await t.hold(one.x, one.y, 400);
+      await paintDone();
+      check(
+        `${tag}: a long-press without a drag works exactly one tile`,
+        (await soil(page)) === 1,
+        `soil ${await soil(page)}`,
+      );
+
+      // Lifting on the dock cancels: nothing is worked.
+      await place(page, 10, 16, 'down');
+      await sleep(1300);
+      const p0 = await tileScreen(page, 9, 19);
+      const p1 = await tileScreen(page, 10, 19);
+      await t.down(p0.x, p0.y);
+      await sleep(320);
+      await t.move(p1.x, p1.y);
+      await sleep(40);
+      await t.move(p1.x, 330);
+      await sleep(40);
+      await t.up();
+      await sleep(1200);
+      check(
+        `${tag}: a paint lifted on the dock is cancelled (0 tiles worked)`,
+        (await soil(page)) === 0,
+        `soil ${await soil(page)}`,
+      );
+
+      // A stick drag that starts on soil never arms painting.
+      await place(page, 10, 16, 'down');
+      await sleep(1300);
+      let arms = 0;
+      for (let i = 0; i < 6; i++) {
+        const s0 = await tileScreen(page, 9 + (i % 3), 19);
+        await t.down(s0.x, s0.y);
+        await sleep(60 + i * 25);
+        await t.move(s0.x + 14, s0.y);
+        await sleep(300);
+        if (
+          await page.evaluate(
+            () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).painting !== null,
+          )
+        )
+          arms++;
+        await t.up();
+        await sleep(200);
+        await place(page, 10, 16, 'down');
+        await sleep(300);
+      }
+      check(
+        `${tag}: stick drags that start on soil never arm painting`,
+        arms === 0,
+        `${arms} armed`,
+      );
+      void world;
 
       // --- Grid feel (M2): a flick in a new direction turns in place; every release rests on a tile centre.
       const flickFails = [];
@@ -498,13 +649,14 @@ try {
         `soil ${await soil(page)}`,
       );
 
-      // --- Auto tool (M3): hoe in hand, tilled soil in front -> Action shows and uses the seeds.
+      // --- Auto tool (M3): the scythe in hand (nothing to cut), tilled soil in front, parsnips planted before
+      // -> Action shows and uses the seeds, and the scythe stays selected.
       await place(
         page,
         10,
         17,
         'down',
-        "s.farm.tiles = { '10,18': { watered: false, crop: null } };",
+        "s.farm.tiles = { '10,18': { watered: false, crop: null } }; s.controls.lastSeed = 'parsnip_seed'; s.inventory.selected = 2;",
       );
       await sleep(250);
       const icon = await page.evaluate(() => {
@@ -523,8 +675,8 @@ try {
         () => !!window.__farm.getState().farm.tiles['10,18']?.crop,
       );
       check(
-        `${tag}: auto tool shows the seeds on Action and plants with the hoe still selected`,
-        planted && (await selected(page)) === 0 && icon !== 'item_hoe',
+        `${tag}: auto tool shows the seeds on Action and plants with the scythe still selected`,
+        planted && (await selected(page)) === 2 && icon !== 'item_scythe',
         `icon ${icon} (seed icon ${seedIcon}), planted ${planted}, slot ${await selected(page)}`,
       );
 
@@ -542,15 +694,15 @@ try {
         await sleep(1160);
         await t.up();
         await sleep(250);
-        // Uses at 110, 310 ... 1110 ms. (Auto tool works the front tile through till, plant and water before
-        // the sides, so count uses, not tiles.) A cancelled hold would give 1.
+        // A hold repeats only the step it started with: it tills the 3 tiles in reach, then stops quietly.
+        // A cancelled hold would give 1.
         const n = await page.evaluate(
           () => window.__farm.controls.entries.filter((e) => e.kind === 'act' && e.ok).length,
         );
         check(
-          `${tag}: holding Action 1.2 s with a ${label} keeps working (>= 5 uses)`,
-          n >= 5,
-          `${n} uses`,
+          `${tag}: holding Action 1.2 s with a ${label} tills all 3 tiles in reach, and only tills`,
+          n === 3 && (await soil(page)) === 3,
+          `${n} uses, ${await soil(page)} tiles`,
         );
       }
 
@@ -570,7 +722,7 @@ try {
           const log = await page.evaluate(() => window.__touchLog);
           const times = log.filter((e) => e.type !== 'touchend').map((e) => e.t);
           const maxGap = Math.max(...times.slice(1).map((v, k) => v - times[k]));
-          if (maxGap > 90 && attempt < 2) {
+          if (maxGap > 55 && attempt < 2) {
             stalls++;
             continue;
           }
@@ -581,7 +733,9 @@ try {
         }
       }
       if (stalls)
-        console.log(`      ${tag}: ${stalls} swipe samples retried (harness stalled > 90 ms)`);
+        console.log(
+          `      ${tag}: ${stalls} swipe samples retried (harness gap > 55 ms: a phone reports a moving finger every 8-16 ms)`,
+        );
       check(
         `${tag}: swipes of 60-500 ms change tool and never use the old one`,
         uses === 0,

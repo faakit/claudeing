@@ -64,6 +64,13 @@ export class VirtualJoystick {
     }
   }
 
+  /** Let go of a pointer that has not engaged (it became a paint gesture): it never moves the stick. */
+  drop(id: number): void {
+    if (this.pointerId !== id || this.engaged) return;
+    this.pointerId = null;
+    this.current = null;
+  }
+
   /** Did this pointer's touch (current, or the one that just ended) move the stick past its deadzone? */
   wasEngaged(id: number): boolean {
     if (this.pointerId === id) return this.engaged;

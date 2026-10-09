@@ -121,11 +121,11 @@
     }
   },
   "M3": {
-    "_note": "Auto tool: no tool changes for farm work; every act matches the marker and the Action icon.",
+    "_note": "Auto tool: no tool changes for farm work; every act matches the marker and the Action icon. Owner ruling: seeds are never picked for you until you planted some, so the plot loop taps the seeds once.",
     "plot3x3": {
-      "gestures": 24,
+      "gestures": 25,
       "travelMm": 1150,
-      "toolChanges": 0,
+      "toolChanges": 1,
       "markMismatches": 0
     },
     "switchSwipe": {
@@ -162,9 +162,9 @@
       "markMismatches": 0
     },
     "plot3x3@human": {
-      "gestures": 24,
+      "gestures": 25,
       "travelMm": 1150,
-      "toolChanges": 0,
+      "toolChanges": 1,
       "corrections": 0,
       "markMismatches": 0
     },
@@ -190,11 +190,11 @@
     }
   },
   "M4": {
-    "_note": "Tap to walk and act: errands are one tap to open the sheet.",
+    "_note": "Tap to walk and act: errands are one tap to open the sheet. The jar starts 7 rows below the door, off screen: one tap on the way, one on the jar, Load (3).",
     "plot3x3": {
-      "gestures": 24,
+      "gestures": 25,
       "travelMm": 1150,
-      "toolChanges": 0,
+      "toolChanges": 1,
       "markMismatches": 0
     },
     "switchSwipe": {
@@ -218,7 +218,7 @@
       "markMismatches": 0
     },
     "machine": {
-      "gestures": 2,
+      "gestures": 3,
       "markMismatches": 0
     },
     "fish": {
@@ -231,9 +231,9 @@
       "markMismatches": 0
     },
     "plot3x3@human": {
-      "gestures": 24,
+      "gestures": 25,
       "travelMm": 1150,
-      "toolChanges": 0,
+      "toolChanges": 1,
       "corrections": 0,
       "markMismatches": 0
     },
@@ -248,7 +248,76 @@
       "markMismatches": 0
     },
     "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
+  },
+  "M5": {
+    "_note": "Paint a row: the 3x3 plot is two taps to get there and two paints (prepare, harvest).",
+    "plot3x3": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
       "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 20,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
       "corrections": 0,
       "markMismatches": 0
     },

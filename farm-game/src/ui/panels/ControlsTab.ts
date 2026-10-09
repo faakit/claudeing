@@ -41,6 +41,11 @@ const ITEMS: ControlItem[] = [
     run: (s) => (toggleControl(s, 'tapToMove'), 'settings'),
   },
   {
+    id: 'paint',
+    label: (s) => `Paint rows: ${onOff(s.settings.controls.paint)}`,
+    run: (s) => (toggleControl(s, 'paint'), 'settings'),
+  },
+  {
     id: 'stickSize',
     label: (s) => `Stick size: ${SIZE_NAME[s.settings.controls.stickSize]}`,
     run: (s) => (cycleStickSize(s), 'settings'),
@@ -84,7 +89,7 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
   c.label(
     8,
     c.top + 4,
-    'Tap a tile to walk there and work it. Auto tool: Action picks the hoe, seeds, can, scythe or pickaxe. The rod and things you place stay your choice.',
+    'Tap a tile to walk there and work it. Hold a tile a moment, then drag, to work a whole row. Auto tool picks the hoe, seeds, can, scythe or pickaxe; the rod and things you place stay your choice.',
     C.creamDim,
     1,
     'left',

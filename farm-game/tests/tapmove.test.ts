@@ -8,7 +8,7 @@ import {
   type CollisionGrid,
 } from '../src/systems/movement';
 import { findPath, pathToFace, standTiles } from '../src/systems/pathfind';
-import { SNAP_PX, tapIntent, type TapWorld } from '../src/systems/tapIntent';
+import { TAP_ACTS, tapIntent, type TapWorld } from '../src/systems/tapIntent';
 import type { TileCoord } from '../src/systems/world';
 
 const TS = 16;
@@ -136,12 +136,23 @@ describe('tap intent', () => {
     expect(tapIntent(world(), ...at({ tx: 8, ty: 1 }))).toMatchObject({ kind: 'none' });
   });
 
-  it('a near miss on a bin snaps to it; a farther one walks', () => {
-    // 4 px left of the bin's tile, on the grass tile beside it
-    const near = tapIntent(world(), 5 * TS - 4, 2 * TS + 8);
-    expect(near).toMatchObject({ kind: 'interact', type: 'bin', snapped: true });
-    const far = tapIntent(world(), 5 * TS - SNAP_PX - 2, 2 * TS + 8);
-    expect(far.kind).toBe('walk');
+  it('no magnets: a tap on the walkable tile next to the bin walks there', () => {
+    expect(tapIntent(world(), 5 * TS - 4, 2 * TS + 8).kind).toBe('walk');
+    expect(tapIntent(world(), 5 * TS + 8, 3 * TS + 2).kind).toBe('walk');
+  });
+
+  it('a tap on a sprite drawn over the tile above opens what it belongs to', () => {
+    // Rosa stands on (3,6); her head is drawn over (3,5)
+    const w = world({
+      spriteTarget: (x, y) =>
+        x >= 3 * TS && x < 4 * TS && y >= 5 * TS + 6 && y < 7 * TS
+          ? { tile: { tx: 3, ty: 6 }, type: 'npc:rosa' }
+          : null,
+    });
+    expect(tapIntent(w, 3 * TS + 8, 5 * TS + 10)).toMatchObject({
+      kind: 'interact',
+      type: 'npc:rosa',
+    });
   });
 
   it('a miss next to a crop never works a different tile: it walks', () => {
@@ -149,33 +160,27 @@ describe('tap intent', () => {
     expect(r.kind).toBe('walk');
   });
 
-  it('a magnet never steals a tap that would act (tilling around a sprinkler stays tilling)', () => {
-    const w = world({
-      actKind: (t) => (t.tx === 4 && t.ty === 2 ? 'till' : null),
-    });
-    expect(tapIntent(w, 5 * TS - 3, 2 * TS + 8)).toMatchObject({ kind: 'act', plan: 'till' });
-    expect(tapIntent(w, 6 * TS + 2, 2 * TS + 8)).toMatchObject({ kind: 'interact', type: 'bin' });
+  it('a tap never tills or plants: grass and empty soil just walk', () => {
+    const w = world({ actKind: (t) => (t.tx === 4 ? 'till' : t.tx === 6 ? 'plant' : 'water') });
+    expect(tapIntent(w, 4 * TS + 8, 6 * TS + 8).kind).toBe('walk');
+    expect(tapIntent(w, 6 * TS + 8, 6 * TS + 8).kind).toBe('walk');
+    expect(tapIntent(w, 7 * TS + 8, 6 * TS + 8)).toMatchObject({ kind: 'act', plan: 'water' });
+    for (const k of ['till', 'plant', 'place', 'fertilize']) expect(TAP_ACTS.has(k)).toBe(false);
   });
 
-  it('accuracy: Gaussian taps at the bin resolve to it >= 95% at 1.5 mm and >= 85% at 2.5 mm', () => {
-    // iPhone 13: 1 mm = 3.17 logical px. Thumbs also land ~1.5 mm toward the thumb base (down-right).
+  it('accuracy: Gaussian taps at a lone target resolve to it (no magnet: the tile alone)', () => {
     let s = 99;
     const u = () => ((s = (s * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
     const g = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
-    const px = 3.17;
-    for (const [sigmaMm, need] of [
-      [1.5, 0.95],
-      [2.5, 0.85],
-    ] as const) {
-      let hit = 0;
-      for (let i = 0; i < 2000; i++) {
-        const x = 5 * TS + 8 + (g() * sigmaMm + 1.06) * px;
-        const y = 2 * TS + 8 + (g() * sigmaMm + 1.06) * px;
-        const r = tapIntent(world(), x, y);
-        if (r.kind === 'interact') hit++;
-      }
-      expect(hit / 2000, `${sigmaMm} mm`).toBeGreaterThanOrEqual(need);
+    const px = 3.17; // iPhone 13: logical px per mm
+    let hit = 0;
+    for (let i = 0; i < 2000; i++) {
+      const x = 5 * TS + 8 + g() * 1.0 * px;
+      const y = 2 * TS + 8 + g() * 1.0 * px;
+      if (tapIntent(world(), x, y).kind === 'interact') hit++;
     }
+    // a 16 px tile under a 1 mm spread: about 95%
+    expect(hit / 2000).toBeGreaterThan(0.9);
   });
 });
 

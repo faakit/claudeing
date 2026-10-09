@@ -27,7 +27,8 @@ const cell = (b, a, f = (x) => x) => {
   return b === a ? `${f(a)}` : `${f(b)} -> ${f(a)}`;
 };
 const secs = (r) => (typeof r?.detail?.seconds === 'number' ? r.detail.seconds : undefined);
-const ok = (r) => (r.fails?.length ? `FAIL: ${r.fails.join('; ')}` : r.detail?.error ? 'error' : 'ok');
+const ok = (r) =>
+  r.fails?.length ? `FAIL: ${r.fails.join('; ')}` : r.detail?.error ? 'error' : 'ok';
 
 console.log(
   '| task | profile | hand | stop | reaction ms | gestures | travel mm | corrections | tool changes | seconds | result |',

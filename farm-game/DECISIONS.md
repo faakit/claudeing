@@ -473,3 +473,43 @@ iPhone 13/14 and Pixel 7 are the primary phones, the SE must pass; right-handed 
   about 78% at 180 +- 30, 99.7% at 120 +- 30 and about 59% for anticipation; 14 px would give 90% / 38%. Kept at
   13 (the bench now has REACTION_SD and negative REACTION_MS to measure it). Tap-to-walk makes exact stick stops
   unnecessary for errands, and the two-speed stick (M7) is the precision answer.
+
+### M5 paint a row
+
+- **Gesture (owner decision 3):** a world touch held still 250 ms on a tile Action can work arms painting (a
+  tick, a marker pop and the tile washed); from then the same finger paints instead of steering. Every tile it
+  enters joins the row (4-way, gaps filled in straight lines, at most 12, only tiles with something to do);
+  stepping back onto the previous tile takes the last one off. Lifting on the dock, or back on the first tile
+  after a loop, cancels with nothing worked. A drag that leaves the 9 px deadzone before 250 ms is the stick and
+  can never arm. A long-press without a drag works its one tile, exactly as a tap would.
+- **Working the row (`systems/workQueue.ts`):** the farmer walks to each tile in the order painted and works it
+  **until it is done for today** (on grass: till, plant, water; at most 3 uses, each waiting for the swing like
+  a held Action), so one pass over grass leaves a planted, watered row and the 3x3 plot is two paints (prepare,
+  then harvest). Energy is exactly that of single presses. Tiles with nothing left are skipped (one toast at
+  the end); out of energy stops the row with one toast. The stick, a tap or a new paint cancels the rest.
+- **Your own tile counts when painting** (painting is deliberate; the farmer steps off to work it), unlike a tap.
+- **Options > Controls > Paint rows** turns it off (a long-press is then a plain tap).
+
+### Owner rulings after controls review 2 (2026-10-09)
+
+These replace the M3 and M4 entries above where they differ.
+
+1. **A tap does only the obvious, harmless thing:** harvest, pick up forage, water a dry crop, clear weeds,
+   mine a node, refill the can, cast the rod you hold (`TAP_ACTS`), or open and talk to things. A tap on grass
+   or empty tilled soil just walks there; it never tills or plants. Tilling and planting go through Action or a
+   painted row (paint is the deliberate way to work ground).
+2. **A held Action repeats only the kind of step it started with:** a hold that starts by tilling only tills,
+   one that starts by watering only waters, and it stops quietly (no error pulse) when there is no more of that
+   step in reach. No till-then-plant-then-water chain in one hold.
+3. **Seeds and explicit items:** what you hold always wins whenever it can act; auto tool fills in only when it
+   cannot. Seeds: the selected seed, else the seed you planted last (anywhere in the bag), else none: Action on
+   empty soil then says "Pick seeds on the hotbar first." with the error pulse. Never the first seed on the
+   hotbar.
+4. **No magnets:** a tap on a walkable tile next to the bin, the mailbox or any interactable walks there. Only a
+   tap on the object's own tile, or on its drawn sprite (a villager's head, a tall machine: the topmost
+   y-sorted sprite under the finger), opens it. Accuracy is then the tile's own size: on an iPhone 13 (5 mm
+   tiles, the critic's 1.5 mm thumb offset) the bin opens on 97% of 1 mm-spread taps and 80% at 1.5 mm, and
+   centre taps beside it walk 96%; on the SE (4 mm tiles) 88% / 64-68% / 88%.
+5. **Painting a row is unchanged by ruling 2** (it is a deliberate gesture, not a hold): each painted tile is
+   worked until done for today, with the seed rule above (no chosen seed: tilled and watered, not planted).
+   One constant (`WORK_USES_PER_TILE`) turns it into one step per tile if the owner prefers.

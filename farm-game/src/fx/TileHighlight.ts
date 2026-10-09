@@ -21,12 +21,16 @@ export class TileHighlight {
   /** Tap-to-move plan: dots along the path and a marker on the goal (redrawn only when the plan changes). */
   private readonly plan: Phaser.GameObjects.Graphics;
   private planKey = '';
+  /** Painted row: every queued tile washed and outlined (redrawn only when the queue changes). */
+  private readonly paintGfx: Phaser.GameObjects.Graphics;
+  private paintKey = '';
   private kind: MarkerKind | null = null;
 
   constructor(private readonly scene: Phaser.Scene) {
     this.gfx = scene.add.graphics().setDepth(MARKER_DEPTH);
     this.ring = scene.add.graphics().setDepth(MARKER_DEPTH).setVisible(false);
     this.plan = scene.add.graphics().setDepth(MARKER_DEPTH).setVisible(false);
+    this.paintGfx = scene.add.graphics().setDepth(MARKER_DEPTH).setVisible(false);
   }
 
   /** Show the marker on a tile, or hide it when `tile` is null (off the map). */
@@ -92,6 +96,39 @@ export class TileHighlight {
       g.lineStyle(3, 0x14101f, 0.5).strokeCircle(cx, cy, 4);
       g.lineStyle(1, MARKER_COLORS.work, 1).strokeCircle(cx, cy, 4);
     }
+  }
+
+  /**
+   * Show a painted row: each queued tile washed and outlined in its action's colour, the next one to work
+   * brighter. Null or empty clears it.
+   */
+  showPaint(tiles: readonly { tx: number; ty: number; kind: MarkerKind }[] | null, next = 0): void {
+    const key = tiles?.length
+      ? `${next}|${tiles.map((t) => `${t.tx},${t.ty},${t.kind}`).join(';')}`
+      : '';
+    if (key === this.paintKey) return;
+    this.paintKey = key;
+    const g = this.paintGfx;
+    g.clear();
+    if (!tiles?.length) {
+      g.setVisible(false);
+      return;
+    }
+    g.setVisible(true);
+    tiles.forEach((t, i) => {
+      if (i < next) return;
+      const x = t.tx * TILE_SIZE;
+      const y = t.ty * TILE_SIZE;
+      const color = MARKER_COLORS[t.kind];
+      g.fillStyle(color, i === next ? 0.32 : 0.2).fillRect(
+        x + 1,
+        y + 1,
+        TILE_SIZE - 2,
+        TILE_SIZE - 2,
+      );
+      g.lineStyle(3, 0x14101f, 0.5).strokeRect(x + 1.5, y + 1.5, TILE_SIZE - 3, TILE_SIZE - 3);
+      g.lineStyle(1, color, 1).strokeRect(x + 1.5, y + 1.5, TILE_SIZE - 3, TILE_SIZE - 3);
+    });
   }
 
   /** Brief pop so every press feels acknowledged. */

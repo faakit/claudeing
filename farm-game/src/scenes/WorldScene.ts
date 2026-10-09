@@ -22,13 +22,13 @@ import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
 import { findPath, pathToFace } from '../systems/pathfind';
 import {
-  compensateTouch,
-  CSS_PX_PER_MM,
-  SNAP_MM,
-  tapIntent,
-  type TapIntent,
-  type TapWorld,
-} from '../systems/tapIntent';
+  createWork,
+  nextWork,
+  paintRelease,
+  paintStep,
+  type WorkQueue,
+} from '../systems/workQueue';
+import { compensateTouch, tapIntent, type TapIntent, type TapWorld } from '../systems/tapIntent';
 import { cssPerLogical } from '../ui/hit';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
@@ -80,6 +80,8 @@ import {
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
 
+/** Uses a painted tile may get in one visit (till, plant, water). */
+const WORK_USES_PER_TILE = 3;
 /** Quiet time before the goal arrow appears. */
 const GUIDE_AFTER_MS = 14_000;
 
@@ -106,6 +108,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private heldFailed = false;
   /** Uses so far in the current Action hold: later ones tick the haptic less often. */
   private holdUses = 0;
+  /** The kind of step the current hold started with (it repeats only that). */
+  private holdKind: string | null = null;
   /** What the marker and Action icon showed last frame (debug log: did the act match?). */
   private lastMark: { slot: number | null; plan: string | null; tx: number; ty: number } | null =
     null;
@@ -114,6 +118,9 @@ export abstract class WorldScene extends Phaser.Scene {
   private routeEnd: { intent: TapIntent; face: Direction | null } | null = null;
   /** A tap preview is showing (touch held still on the world). */
   private preview = false;
+  /** The row being painted (finger down), and the painted row being worked (runtime only). */
+  private painting: TileCoord[] | null = null;
+  private work: WorkQueue | null = null;
   /** Turn-in-place and settle-on-release state (runtime only). */
   private move: MoveState = createMoveState();
   private lastTarget: string | null | undefined;
@@ -140,6 +147,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.route = null;
     this.routeEnd = null;
     this.preview = false;
+    this.work = null;
+    this.painting = null;
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
@@ -207,6 +216,9 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
       inputHub.on('tapCancel', () => this.onTapCancel()),
+      inputHub.on('paintArm', (p) => this.onPaintArm(p.x, p.y, p.accept)),
+      inputHub.on('paintMove', (p) => this.onPaintMove(p.x, p.y)),
+      inputHub.on('paintEnd', (p) => this.onPaintEnd(p.x, p.y, p.onDock)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
@@ -278,9 +290,14 @@ export abstract class WorldScene extends Phaser.Scene {
 
     // A tap's walk runs until the stick or a key takes over (they always win, at once).
     let moving: boolean;
+    if (!this.route && this.work && dir === null && this.actionLock <= 0) this.startNextWork();
     if (this.route && dir === null && this.actionLock <= 0) moving = this.followRoute(delta);
     else {
-      if (this.route && dir !== null) this.cancelRoute();
+      if ((this.route || this.work) && dir !== null) {
+        this.work = null;
+        this.highlight.showPaint(null);
+        this.cancelRoute();
+      }
       moving = stepMove(player, this.move, dir, delta, this.grid).moving;
     }
     this.syncSprite(moving);
@@ -295,6 +312,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!inputHub.actionHeld) {
       this.heldFailed = false;
       this.holdUses = 0;
+      this.holdKind = null;
     } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
 
     this.updateNpcs(state);
@@ -521,10 +539,18 @@ export abstract class WorldScene extends Phaser.Scene {
     const state = getState();
     const tiles = only ? [only] : this.candidates();
     if (tiles.length === 0) return;
+    // A held Action repeats only the kind of step it started with, and simply stops (no buzz) when there
+    // is no more of it in reach: a hold that starts by tilling only tills.
+    const repeating = !only && inputHub.actionHeld && this.holdUses > 0 && this.holdKind !== null;
     const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
+      repeating ? { kind: this.holdKind!, quiet: true } : {},
     );
+    if (!res.ok && repeating) {
+      this.heldFailed = true;
+      return;
+    }
     const stack = state.inventory.slots[res.slot] ?? null;
     if (!only && this.lastMark)
       controlsLog.push({
@@ -547,7 +573,10 @@ export abstract class WorldScene extends Phaser.Scene {
       // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
       if (res.kind === 'harvest') haptic('medium');
       else haptic('tick', { repeat: inputHub.actionHeld && this.holdUses > 0 });
-      if (inputHub.actionHeld) this.holdUses++;
+      if (inputHub.actionHeld) {
+        if (this.holdUses === 0) this.holdKind = res.kind;
+        this.holdUses++;
+      }
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
       this.heldFailed = true;
@@ -620,7 +649,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private tapWorld(): TapWorld {
     return {
       tileSize: TILE_SIZE,
-      snapPx: (SNAP_MM * CSS_PX_PER_MM) / cssPerLogical(this),
+      spriteTarget: (x, y) => this.spriteTargetAt(x, y),
       inMap: (t) => this.inMap(t),
       blocked: (t) => isTileBlocked(this.grid, t.tx, t.ty),
       interactable: (t) => this.interactableAt(t),
@@ -629,6 +658,30 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   private isDoor = (tx: number, ty: number): boolean => !!objectAt(this.objects, tx, ty, 'door');
+
+  /**
+   * The interact target whose drawn sprite covers a world point: villagers and machines are drawn taller than
+   * their tile, so a tap on a head opens the right sheet. Only y-sorted sprites (depth >= 9) count; the topmost
+   * wins. The farmer's own sprite never does.
+   */
+  private spriteTargetAt(x: number, y: number): { tile: TileCoord; type: string } | null {
+    let best: { tile: TileCoord; type: string; depth: number } | null = null;
+    for (const o of this.children.list) {
+      if (o === this.sprite || o === this.shadow || (o.type !== 'Image' && o.type !== 'Sprite'))
+        continue;
+      const g = o as Phaser.GameObjects.Image;
+      if (!g.visible || g.depth < 9 || g.depth >= 9000 || (best && g.depth <= best.depth)) continue;
+      const b = g.getBounds();
+      if (!b.contains(x, y)) continue;
+      const tile = {
+        tx: Math.floor(b.centerX / TILE_SIZE),
+        ty: Math.floor((b.bottom - 1) / TILE_SIZE),
+      };
+      const type = this.interactableAt(tile);
+      if (type) best = { tile, type, depth: g.depth };
+    }
+    return best ? { tile: best.tile, type: best.type } : null;
+  }
 
   /** Where a tap at (x, y) leads: the intent and the walk to do it, or null path when it cannot. */
   private planTap(
@@ -683,6 +736,11 @@ export abstract class WorldScene extends Phaser.Scene {
     this.preview = false;
     if (this.transitioning || runtime.blocked) return;
     if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
+    // A new tap replaces a painted row in progress.
+    if (this.work) {
+      this.work = null;
+      this.highlight.showPaint(null);
+    }
     const plan = this.planTap(x, y);
     if (!plan) return;
     if (!plan.path) {
@@ -745,13 +803,133 @@ export abstract class WorldScene extends Phaser.Scene {
     this.syncSprite(false);
     const target = end.intent.target;
     if (end.intent.kind === 'interact') this.onInteract(target);
-    else if (end.intent.kind === 'act') this.tryAction(target);
+    else if (end.intent.kind === 'act') {
+      this.tryAction(target);
+      // A painted tile is worked until it is done for today (till, plant, water: at most 3 uses), so one
+      // pass over grass leaves a planted, watered row. Each use waits for the swing like a held Action.
+      const w = this.work;
+      if (w && w.tileUses < WORK_USES_PER_TILE - 1 && this.actKindAt(target)) {
+        w.tileUses++;
+        this.route = createRoute([playerTile(player)]);
+        this.routeEnd = end;
+      } else if (w) w.tileUses = 0;
+    }
   }
 
   private cancelRoute(): void {
     this.route = null;
     this.routeEnd = null;
     if (!this.preview) this.highlight.showPlan(null, null, 'none');
+  }
+
+  // ---- paint a row (M5) ----
+
+  /** The tile under a screen point (touch-offset compensated), or null outside the world. */
+  private tileAtScreen(x: number, y: number): TileCoord | null {
+    if (!this.worldPoint(x, y)) return null;
+    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
+    const w = this.worldPoint(c.x, c.y) ?? this.worldPoint(x, y)!;
+    const t = { tx: Math.floor(w.x / TILE_SIZE), ty: Math.floor(w.y / TILE_SIZE) };
+    return this.inMap(t) ? t : null;
+  }
+
+  /** What Action would do on a tile right now (auto tool), if anything. */
+  private actKindAt(t: TileCoord): string | null {
+    return chooseAction(getState(), [this.tileInfo(t)])?.plan.kind ?? null;
+  }
+
+  private paintMarks(tiles: readonly TileCoord[]): { tx: number; ty: number; kind: MarkerKind }[] {
+    return tiles.map((t) => ({
+      ...t,
+      kind: markerKind({ planKind: this.actKindAt(t), interactable: false }),
+    }));
+  }
+
+  /** A long-press: paint can start on a tile Action can work. */
+  private onPaintArm(x: number, y: number, accept: () => void): void {
+    if (this.transitioning || runtime.blocked || !getState().settings.controls.paint) return;
+    const t = this.tileAtScreen(x, y);
+    // Painting is deliberate, so your own tile counts (the farmer steps off to work it).
+    if (!t || this.interactableAt(t) || !this.actKindAt(t)) return;
+    accept();
+    this.cancelRoute();
+    this.work = null;
+    this.preview = false;
+    this.highlight.showPlan(null, null, 'none');
+    this.painting = [t];
+    this.highlight.showPaint(this.paintMarks(this.painting));
+    this.highlight.pulse();
+    audio.play('select');
+    controlsLog.push({ kind: 'paint', t: this.time.now, detail: `arm ${t.tx},${t.ty}` });
+  }
+
+  private onPaintMove(x: number, y: number): void {
+    if (!this.painting) return;
+    const t = this.tileAtScreen(x, y);
+    if (!t) return;
+    const r = paintStep(
+      this.painting,
+      t,
+      (c) => !this.interactableAt(c) && this.actKindAt(c) !== null,
+    );
+    if (!r.added && !r.removed) return;
+    this.painting = r.queue;
+    this.highlight.showPaint(this.paintMarks(this.painting));
+    if (r.added) {
+      haptic('tick'); // one light tick per tile added (throttled), the wash is its visible twin
+      audio.play('select');
+    }
+  }
+
+  private onPaintEnd(x: number, y: number, onDock: boolean): void {
+    const tiles = this.painting;
+    this.painting = null;
+    if (!tiles) return;
+    const verdict = paintRelease(tiles, this.tileAtScreen(x, y), onDock);
+    controlsLog.push({
+      kind: 'paint',
+      t: this.time.now,
+      detail: `${verdict} ${tiles.length}`,
+    });
+    if (verdict === 'cancel') {
+      this.highlight.showPaint(null);
+      audio.play('select');
+      return;
+    }
+    this.work = createWork(tiles);
+    this.highlight.showPaint(this.paintMarks(tiles));
+  }
+
+  /** Between tiles of a painted row: walk to the next tile that still has work, or finish. */
+  private startNextWork(): void {
+    const w = this.work!;
+    const state = getState();
+    const next = nextWork(
+      w,
+      (t) => this.actKindAt(t) !== null,
+      () => (state.energy <= 0 ? 'Too tired! Go to bed.' : null),
+    );
+    if ('stop' in next) {
+      this.work = null;
+      this.highlight.showPaint(null);
+      if (next.stop) toast(next.stop, 'warn');
+      else if (w.skipped > 0)
+        toast(`${w.skipped} tile${w.skipped > 1 ? 's' : ''} had nothing left to do.`, 'info');
+      return;
+    }
+    this.highlight.showPaint(this.paintMarks(w.tiles), w.i);
+    const here = playerTile(state.player);
+    const r = pathToFace(this.grid, here, next.tile, { avoid: (tx, ty) => this.isDoor(tx, ty) });
+    if (!r) {
+      w.skipped++;
+      w.i++;
+      return;
+    }
+    const plan = this.actKindAt(next.tile) ?? 'till';
+    this.route = createRoute(r.path);
+    this.routeEnd = { intent: { kind: 'act', target: next.tile, plan }, face: r.face };
+    w.i++;
+    w.done++;
   }
 
   /** Tap-to-move off: tapping a tile next to the player turns toward it and uses Action there. */

@@ -10,6 +10,15 @@ come from the game's own loop in headless Chromium (about 85 fps, software GL), 
 only. A real phone adds roughly 35 to 140 ms of touch-sensing and display latency on top (LaTARbot study, below).
 What the owner should try by hand is in section 6.
 
+## Owner decisions and rulings (2026-10-08/09)
+
+Implementation status lives in `DECISIONS.md` ("One-thumb controls") and `agents/out/controls/bench-m*.md`.
+Rulings that change this plan: tap-to-move and auto tool are on by default; auto tool never picks the rod or
+placeables; a tap never tills or plants (only harvest, water, clear, mine, pick up, refill, cast, open, talk);
+a held Action repeats only the step it started with; what you hold wins whenever it can act; seeds come only
+from the selected slot or the seed planted last (no first-seed fallback); interact targets have no magnets
+(own tile or drawn sprite only); Menu sits in thumb reach and acts on release; haptics light and on.
+
 ## How to reproduce
 
 ```

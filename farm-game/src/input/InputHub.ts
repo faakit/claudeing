@@ -13,6 +13,15 @@ export interface InputEvents {
   tapPreview: TapPoint;
   /** The previewed touch turned into a drag (the stick) or left the world: drop the preview. */
   tapCancel: undefined;
+  /**
+   * A world touch held still for the paint delay: the world calls `accept()` if painting a row can start
+   * there (a tile Action can work); the touch then paints instead of being a tap or the stick.
+   */
+  paintArm: TapPoint & { accept: () => void };
+  /** The painting finger moved (logical screen coordinates). */
+  paintMove: TapPoint;
+  /** The painting finger lifted; `onDock` when it lifted outside the world view (cancel). */
+  paintEnd: TapPoint & { onDock: boolean };
   /** Hotbar slot picked by number key (0-based). */
   slot: number;
   /** Cycle the hotbar by +1 / -1 (wheel, Tab). */

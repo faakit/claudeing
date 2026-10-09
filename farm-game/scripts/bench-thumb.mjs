@@ -42,6 +42,8 @@ const centreStop = (process.env.STOP ?? 'center') === 'center';
 // unless REACTION_SD is set explicitly.
 const reactionSd = Number(process.env.REACTION_SD ?? 30);
 const sdExplicit = process.env.REACTION_SD !== undefined;
+/** Aim spread of world taps in mm (0 = taps land on tile centres). */
+const tapSdMm = Number(process.env.TAP_SD_MM ?? 0);
 let seed = Number(process.env.SEED ?? 7);
 const gauss = () => {
   const u = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
@@ -57,10 +59,18 @@ const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 async function tapModeOn(page) {
   if (process.env.TAP === '0') return false;
   if (process.env.TAP === '1') return true;
-  return page.evaluate(() => window.__farm.getState().settings.controls?.tapToMove === true);
+  // Builds before M4 already carry the setting in their saves; only trust it if the world can walk a tap.
+  return page.evaluate(() => {
+    const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+    return (
+      typeof w?.planTap === 'function' &&
+      window.__farm.getState().settings.controls?.tapToMove === true
+    );
+  });
 }
 
 function makeWorld(page, thumb, L, reactionMs) {
+  const hand = thumb.hand;
   const ACTION = { x: L.action.x, y: L.action.y };
   const INTERACT = { x: L.interact.x, y: L.interact.y };
   const MENU = { x: L.menu.x, y: L.menu.y };
@@ -269,9 +279,64 @@ function makeWorld(page, thumb, L, reactionMs) {
     await thumb.tap(MENU.x, MENU.y, 60);
     await sleep(400);
   }
+  /** Wait until the follow camera has stopped moving (taps map screen to tiles through it). */
+  async function settleCamera() {
+    let last = '';
+    for (let i = 0; i < 40; i++) {
+      const now = await page.evaluate(() => {
+        const c = window.__farm.game.scene.getScenes(true).find((s) => s.grid).cameras.main;
+        return `${c.scrollX.toFixed(1)},${c.scrollY.toFixed(1)}`;
+      });
+      if (now === last) return;
+      last = now;
+      await sleep(60);
+    }
+  }
+  /**
+   * Tap a tile. With TAP_SD_MM set, the thumb lands with that Gaussian spread plus 1.5 mm toward the thumb
+   * base (down and toward the holding side), like the controls critic's human model.
+   */
   async function tapTile(tx, ty, holdMs = 70) {
     const c = await tileScreen(page, tx, ty);
-    await thumb.tap(c.x, c.y, holdMs);
+    let { x, y } = c;
+    if (tapSdMm > 0) {
+      const mm = 1 / (thumb.geo.k * ((25.4 / thumb.p.ppi) * thumb.p.dpr));
+      const off = 1.06 * mm;
+      x += gauss() * tapSdMm * mm + (hand === 'left' ? -off : off);
+      y += gauss() * tapSdMm * mm + off;
+    }
+    await thumb.tap(x, y, holdMs);
+  }
+  /**
+   * Paint a row (M5+): long-press the first tile until painting arms, drag through the rest, lift; then wait
+   * until the farmer has worked them all.
+   */
+  async function paintTiles(tiles) {
+    await settleCamera();
+    const pts = [];
+    for (const t of tiles) pts.push(await tileScreen(page, t.tx, t.ty));
+    await thumb.down(pts[0].x, pts[0].y);
+    await sleep(330);
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1];
+      const b = pts[i];
+      for (let k = 1; k <= 3; k++) {
+        await thumb.move(a.x + ((b.x - a.x) * k) / 3, a.y + ((b.y - a.y) * k) / 3);
+        await sleep(12);
+      }
+    }
+    await thumb.up();
+    await page
+      .waitForFunction(
+        () => {
+          const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+          return w.work === null && w.route === null && w.painting === null;
+        },
+        null,
+        { timeout: 20000, polling: 100 },
+      )
+      .catch(() => undefined);
+    await sleep(300);
   }
   /**
    * Get to a thing and open it: with tap-to-move (M4+) one tap on it; before that, walk to the stand tile
@@ -283,6 +348,25 @@ function makeWorld(page, thumb, L, reactionMs) {
       await walkTo(stand.tx, stand.ty, dir);
       await tapInteract();
       return;
+    }
+    await settleCamera();
+    // Off screen (under the dock or the HUD)? Tap a visible tile on the way first, as a person would.
+    for (let hop = 0; hop < 3; hop++) {
+      const c = await tileScreen(page, target.tx, target.ty);
+      if (c.y >= 84 && c.y <= 278 && c.x >= 6 && c.x <= 194) break;
+      const p = await tile();
+      const ty = c.y > 278 ? p.ty + 5 : p.ty - 5;
+      const tx = p.tx; // straight down (or up) the path the farmer is on
+      await tapTile(tx, ty);
+      await sleep(150);
+      await page
+        .waitForFunction(
+          () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
+          null,
+          { timeout: 6000, polling: 50 },
+        )
+        .catch(() => undefined);
+      await settleCamera();
     }
     await tapTile(target.tx, target.ty);
     await page
@@ -312,6 +396,9 @@ function makeWorld(page, thumb, L, reactionMs) {
     tapSlot,
     tapMenu,
     tapTile,
+    paintTiles,
+    settleCamera,
+    hand,
     goInteract,
     tile,
   };
@@ -339,6 +426,11 @@ const fresh = (page, extra = '') =>
     s.shipping = {};
     s.placed.farm = [];
     if (s.friends?.rosa) s.friends.rosa = { ...s.friends.rosa, talkedDay: 0, giftedDay: 0 };
+    if (s.controls) s.controls.lastSeed = null;
+    // drop any walk, painted row or paint left over from the last task
+    const w = f.game.scene.getScenes(true).find((x) => x.grid);
+    if (w && 'route' in w)
+      Object.assign(w, { route: null, routeEnd: null, work: null, painting: null });
     if (extra) new Function('s', 'f', extra)(s, f);
     f.gameEvents.emit('farmChanged', undefined);
     f.gameEvents.emit('inventoryChanged', undefined);
@@ -379,13 +471,75 @@ const TASKS = {
     const auto = await page.evaluate(
       () => window.__farm.getState().settings.controls?.autoTool === true,
     );
+    // With painting (M5+) every pass is one long-press-and-drag over the plot, worked by the farmer.
+    const paint =
+      auto &&
+      (await tapModeOn(page)) &&
+      (await page.evaluate(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        return (
+          typeof w?.onPaintArm === 'function' &&
+          window.__farm.getState().settings.controls?.paint === true
+        );
+      }));
+    if (paint) {
+      // The serpentine starts on the thumb's side of the plot (right hand: the right column).
+      const right = w.hand !== 'left';
+      const cols = right ? [11, 10, 9] : [9, 10, 11];
+      const serp = [18, 19, 20].flatMap((ty, row) =>
+        (row % 2 ? [...cols].reverse() : cols).map((tx) => ({ tx, ty })),
+      );
+      // Two taps walk within sight of the whole plot (it starts 10 rows below the door, off screen).
+      for (const [tx, ty] of [
+        [right ? 12 : 9, 13],
+        [right ? 11 : 9, 15],
+      ]) {
+        await w.settleCamera();
+        await w.tapTile(tx, ty);
+        await sleep(150); // let the tap land before waiting for its walk to end
+        await page
+          .waitForFunction(
+            () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
+            null,
+            { timeout: 8000, polling: 50 },
+          )
+          .catch(() => undefined);
+      }
+      const t0 = Date.now();
+      // Pick the seeds once (never chosen for you), then one pass over grass tills, plants and waters
+      // each tile (worked until done for today).
+      await w.tapSlot(5);
+      await w.paintTiles(serp);
+      const tilled = await farmCount(page, 'tilled');
+      const planted = await farmCount(page, 'planted');
+      const watered = await farmCount(page, 'watered');
+      await ripen(page);
+      await w.paintTiles(serp);
+      const harvested = await farmCount(page, 'harvested');
+      const ok9 = tilled === 9 && planted === 9 && watered === 9 && harvested >= 9;
+      return {
+        ok: ok9,
+        mode: 'paint',
+        log: ok9
+          ? undefined
+          : await page.evaluate(() =>
+              window.__farm.controls.entries.filter((e) => e.kind !== 'act').slice(-8),
+            ),
+        tilled,
+        planted,
+        watered,
+        harvested,
+        seconds: (Date.now() - t0) / 1000,
+      };
+    }
     const t0 = Date.now();
     await pass(); // hoe in hand
     const tilled = await farmCount(page, 'tilled');
-    if (!auto) await w.tapSlot(5); // seeds
+    // Seeds are never picked for you until you have planted some (owner ruling): one tap on the seeds.
+    await w.tapSlot(5);
     await pass();
     const planted = await farmCount(page, 'planted');
-    if (!auto) await w.tapSlot(1); // can
+    if (!auto) await w.tapSlot(1); // can (auto tool: the can steps in where the seeds in hand cannot act)
     await pass();
     const watered = await farmCount(page, 'watered');
     await ripen(page);

@@ -78,40 +78,33 @@ export function withSelected<T>(state: GameState, slot: number, fn: () => T): T 
 }
 
 /**
- * The seed auto tool sows: the selected seed when seeds are in hand, else the last seed planted while it is
- * still on the hotbar, else the first seed on the hotbar. One seed kind at a time, so a mixed hotbar never
- * plants a surprise.
+ * The seed auto tool sows: the selected seed when seeds are in hand, else the seed planted last while some is
+ * still in the bag, else none (Action then says to pick seeds). Never a seed the player did not choose.
  */
 export function seedSlot(state: GameState): number | null {
   const slots = state.inventory.slots;
   const isSeed = (i: number) => items[slots[i]?.item ?? '']?.type === 'seed';
   if (isSeed(state.inventory.selected)) return state.inventory.selected;
-  const hot = [...Array(game.hotbarSlots).keys()];
   const last = state.controls.lastSeed;
-  const remembered = hot.find((i) => isSeed(i) && slots[i]!.item === last);
-  if (remembered !== undefined) return remembered;
-  return hot.find(isSeed) ?? null;
+  if (!last) return null;
+  // The seed planted last, wherever it is in the bag; never some other seed the player did not choose.
+  const i = slots.findIndex((st, k) => st?.item === last && isSeed(k));
+  return i >= 0 ? i : null;
 }
 
-/** The hotbar slots auto tool may use now, best tie-break first. */
+/** The slots auto tool may use now (hotbar farm tools, plus the seed slot), best tie-break first. */
 export function autoSlots(state: GameState): number[] {
   const seed = seedSlot(state);
   const out: { slot: number; priority: number }[] = [];
   for (let i = 0; i < game.hotbarSlots; i++) {
     const stack = state.inventory.slots[i] ?? null;
     const item = autoItemFor(stack);
-    if (!item) continue;
-    if (items[stack!.item]?.type === 'seed' && i !== seed) continue;
+    if (!item || items[stack!.item]?.type === 'seed') continue;
     out.push({ slot: i, priority: item.priority });
   }
-  // The selected slot first among equals, so a tie keeps what you hold.
-  return out
-    .sort(
-      (a, b) =>
-        b.priority - a.priority ||
-        Number(b.slot === state.inventory.selected) - Number(a.slot === state.inventory.selected),
-    )
-    .map((o) => o.slot);
+  if (seed !== null)
+    out.push({ slot: seed, priority: autoItemFor(state.inventory.slots[seed]!)!.priority });
+  return out.sort((a, b) => b.priority - a.priority).map((o) => o.slot);
 }
 
 export interface Choice {
@@ -129,20 +122,27 @@ export interface Choice {
  * exactly as before auto tool. In auto mode: the most valuable action any auto item can do (harvest beats
  * planting beats tools, as the handlers rank them); ties go to the earlier tile, then the item priority.
  */
-export function chooseAction(state: GameState, candidates: TileInfo[]): Choice | null {
+export function chooseAction(
+  state: GameState,
+  candidates: TileInfo[],
+  opts: { kind?: string } = {},
+): Choice | null {
   const sel = state.inventory.selected;
-  const slots = autoMode(state) ? autoSlots(state) : [sel];
-  if (slots.length === 0) slots.push(sel);
-  let best: Choice | null = null;
-  for (const tile of candidates) {
-    for (const slot of slots) {
-      const planned = withSelected(state, slot, () => planAction(state, tile));
-      if (!planned.ok) continue;
-      if (!best || planned.priority > best.priority)
-        best = { slot, plan: planned.plan, priority: planned.priority, tile, auto: slot !== sel };
-    }
-  }
-  return best;
+  const best = (slots: number[]): Choice | null => {
+    let out: Choice | null = null;
+    for (const tile of candidates)
+      for (const slot of slots) {
+        const planned = withSelected(state, slot, () => planAction(state, tile));
+        if (!planned.ok || (opts.kind && planned.plan.kind !== opts.kind)) continue;
+        if (!out || planned.priority > out.priority)
+          out = { slot, plan: planned.plan, priority: planned.priority, tile, auto: slot !== sel };
+      }
+    return out;
+  };
+  // What you hold always wins when it can do something; auto tool only fills in when it cannot.
+  const explicit = best([sel]);
+  if (explicit || !autoMode(state)) return explicit;
+  return best(autoSlots(state).filter((s) => s !== sel));
 }
 
 /** Run a choice: with its slot selected, and remember the seed when it sowed. */
@@ -167,14 +167,28 @@ export function performChoice(state: GameState, choice: Choice): ActionResult {
 export function actOn(
   state: GameState,
   candidates: TileInfo[],
+  opts: { kind?: string; quiet?: boolean } = {},
 ): ActionResult & { tile: TileInfo; slot: number } {
   const first = candidates[0];
   if (!first) throw new Error('actOn needs at least one candidate tile');
-  const choice = chooseAction(state, candidates);
+  const choice = chooseAction(state, candidates, opts);
   if (choice) return { ...performChoice(state, choice), tile: choice.tile, slot: choice.slot };
   const sel = state.inventory.selected;
-  const planned = planAction(state, first);
-  const message = planned.ok ? 'Nothing to do here.' : planned.message;
-  toast(message, 'warn');
+  const message = refusalFor(state, candidates);
+  if (!opts.quiet) toast(message, 'warn');
   return { ok: false, message, tile: first, slot: sel };
 }
+
+/** Why Action can do nothing: no seed for empty soil in reach, else the item in hand's own refusal. */
+export function refusalFor(state: GameState, candidates: TileInfo[]): string {
+  const first = candidates[0]!;
+  const emptySoil = candidates.some((t) => {
+    const soil = t.farmland ? state.farm.tiles[`${t.tx},${t.ty}`] : undefined;
+    return !!soil && !soil.crop;
+  });
+  if (emptySoil && autoMode(state) && seedSlot(state) === null) return NO_SEED_HINT;
+  const planned = planAction(state, first);
+  return planned.ok ? 'Nothing to do here.' : planned.message;
+}
+
+export const NO_SEED_HINT = 'Pick seeds on the hotbar first.';

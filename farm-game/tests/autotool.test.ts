@@ -38,12 +38,44 @@ describe('auto tool chooses the farm item for the tile', () => {
     expect(c?.plan.kind).toBe('till');
   });
 
-  it('tilled empty soil -> seeds (the hotbar seed when none was planted yet)', () => {
+  it('tilled empty soil -> the seed planted last; never a seed the player did not choose', () => {
     const s = game();
     till(s, 5, 5);
+    expect(chooseAction(s, [field(5, 5)])?.plan.kind).not.toBe('plant');
+    s.controls.lastSeed = 'parsnip_seed';
     const c = chooseAction(s, [field(5, 5)]);
     expect(c && itemAt(s, c.slot)).toBe('parsnip_seed');
     expect(c?.plan.kind).toBe('plant');
+  });
+
+  it('no seed chosen yet: Action on empty soil says to pick seeds', async () => {
+    const { refusalFor, NO_SEED_HINT } = await import('../src/systems/autoTool');
+    const s = game();
+    till(s, 5, 5);
+    s.farm.tiles['5,5']!.watered = true; // nothing else to do there
+    expect(chooseAction(s, [field(5, 5)])).toBeNull();
+    expect(refusalFor(s, [field(5, 5)])).toBe(NO_SEED_HINT);
+  });
+
+  it('what you hold wins whenever it can act', () => {
+    const s = game();
+    s.farm.weeds['5,5'] = true;
+    s.controls.lastSeed = 'parsnip_seed';
+    till(s, 6, 5);
+    equip(s, 'watering_can'); // the can can water the tilled tile: it wins over planting there
+    const c = chooseAction(s, [field(6, 5), field(5, 5)]);
+    expect(c && itemAt(s, c.slot)).toBe('watering_can');
+  });
+
+  it('a held Action repeats only the kind of step it started with', () => {
+    const s = game();
+    s.controls.lastSeed = 'parsnip_seed';
+    till(s, 6, 5);
+    // the front is grass (till), the side tilled (plant): asked for "till" only, it never plants
+    const c = chooseAction(s, [field(5, 5), field(6, 5)], { kind: 'till' });
+    expect(c?.plan.kind).toBe('till');
+    till(s, 5, 5);
+    expect(chooseAction(s, [field(5, 5), field(6, 5)], { kind: 'till' })).toBeNull();
   });
 
   it('a dry crop -> can; a watered crop -> nothing to do', () => {
@@ -67,9 +99,10 @@ describe('auto tool chooses the farm item for the tile', () => {
     }
   });
 
-  it('weeds -> scythe', () => {
+  it('weeds -> scythe (with an item in hand that cannot clear them)', () => {
     const s = game();
     s.farm.weeds['5,5'] = true;
+    equip(s, 'watering_can');
     const c = chooseAction(s, [field(5, 5)]);
     expect(c && itemAt(s, c.slot)).toBe('scythe');
   });
@@ -127,17 +160,19 @@ describe('auto tool chooses the farm item for the tile', () => {
   it('the hotbar selection never changes; the seed planted is remembered', () => {
     const s = game();
     till(s, 5, 5);
+    s.farm.tiles['5,5']!.watered = true; // the hoe and can have nothing to do; seeds in hand plant
+    equip(s, 'parsnip_seed');
+    const sel = s.inventory.selected;
     const res = actOn(s, [field(5, 5)]);
     expect(res).toMatchObject({ ok: true, kind: 'plant' });
-    expect(s.inventory.selected).toBe(0);
+    expect(s.inventory.selected).toBe(sel);
     expect(s.controls.lastSeed).toBe('parsnip_seed');
   });
 
-  it('seeds: the one in hand, else the last planted, else the first on the hotbar', () => {
+  it('seeds: the one in hand, else the last planted (anywhere in the bag), else none', () => {
     const s = game();
     addItem(s, 'cauliflower_seed', 3);
-    const first = seedSlot(s)!;
-    expect(itemAt(s, first)).toBe('parsnip_seed');
+    expect(seedSlot(s)).toBeNull();
     s.controls.lastSeed = 'cauliflower_seed';
     expect(itemAt(s, seedSlot(s)!)).toBe('cauliflower_seed');
     equip(s, 'parsnip_seed');

@@ -258,10 +258,16 @@ export class UIScene extends Phaser.Scene {
       audio.setRain(0);
       audio.setNight(0);
     });
-    this.worldTouch = new WorldTouch(this, inputHub, this.joystick, () => {
-      this.idleMs = 0;
-      audio.unlock();
-    });
+    this.worldTouch = new WorldTouch(
+      this,
+      inputHub,
+      this.joystick,
+      () => {
+        this.idleMs = 0;
+        audio.unlock();
+      },
+      () => getState().settings.controls.paint,
+    );
   }
 
   update(time: number, delta: number): void {
