@@ -70,6 +70,7 @@ from other branches show up in the manifest after a merge (`node art-src/tools/m
 Nothing is blocking. The critic's final round may add to this list.
 
 **Minor.** All of these were addressed once in b321e29; the critic has not judged them again yet:
+
 - Mine darkness now follows the outer wall and the bays, with a straight falloff from the torches. Check that it no
   longer reads as a stain and that ore nodes stay readable inside the band.
 - Wall lantern on stone: a new `wall` glow kind (orange and earth-dark rings, a solid core). Check the farmhouse
@@ -81,6 +82,7 @@ Nothing is blocking. The critic's final round may add to this list.
   are redone.
 
 **Accepted per coordinator rulings:**
+
 - R3-1: ponds stay rounded rectangles.
 - R3-2: woods groves only outside the forage zones.
 - R3-6: the target marker belongs to the controls agent.
@@ -110,6 +112,7 @@ Nothing is blocking. The critic's final round may add to this list.
    - `fx2a`: ember, glint and glow.
 
 How to run things:
+
 - `npm run art:maps`: maps plus baked tiles.
 - `python art-src/tools/build.py`: everything (about 2 minutes).
 - `python art-src/tools/mapview.py <dir> 2`: whole-map renders.
