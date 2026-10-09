@@ -1,0 +1,2772 @@
+[
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 193,
+  "airMm": 773,
+  "travelMm": 966,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.17
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 30,
+  "travelMm": 30,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 34,
+  "airMm": 83,
+  "travelMm": 118,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 69,
+  "travelMm": 69,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 152,
+  "travelMm": 152,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 3,
+  "drags": 4,
+  "gestures": 10,
+  "contactMm": 50,
+  "airMm": 84,
+  "travelMm": 134,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 10,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 11.164
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 17,
+  "airMm": 0,
+  "travelMm": 17,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.059,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 193,
+  "airMm": 773,
+  "travelMm": 966,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.135
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 30,
+  "travelMm": 30,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 34,
+  "airMm": 76,
+  "travelMm": 110,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 69,
+  "travelMm": 69,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 152,
+  "travelMm": 152,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 4,
+  "drags": 4,
+  "gestures": 11,
+  "contactMm": 50,
+  "airMm": 82,
+  "travelMm": 132,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 11,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 8.393
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 17,
+  "airMm": 0,
+  "travelMm": 17,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.045,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 202,
+  "airMm": 807,
+  "travelMm": 1009,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.15
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 6,
+  "airMm": 0,
+  "travelMm": 6,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 32,
+  "travelMm": 32,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 36,
+  "airMm": 87,
+  "travelMm": 123,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 72,
+  "travelMm": 72,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 159,
+  "travelMm": 159,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  ]
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 5,
+  "holds": 5,
+  "drags": 4,
+  "gestures": 14,
+  "contactMm": 52,
+  "airMm": 87,
+  "travelMm": 140,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 14,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 13.122
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 18,
+  "airMm": 0,
+  "travelMm": 18,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.037,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 202,
+  "airMm": 807,
+  "travelMm": 1009,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.156
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 6,
+  "airMm": 0,
+  "travelMm": 6,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 32,
+  "travelMm": 32,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 36,
+  "airMm": 79,
+  "travelMm": 115,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 72,
+  "travelMm": 72,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 159,
+  "travelMm": 159,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 2,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  ]
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 6,
+  "drags": 4,
+  "gestures": 13,
+  "contactMm": 52,
+  "airMm": 85,
+  "travelMm": 138,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 13,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 10.141
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 18,
+  "airMm": 0,
+  "travelMm": 18,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.052,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 154,
+  "airMm": 616,
+  "travelMm": 771,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.135
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 4,
+  "airMm": 0,
+  "travelMm": 4,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 24,
+  "travelMm": 24,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 27,
+  "airMm": 67,
+  "travelMm": 94,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 55,
+  "travelMm": 55,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 121,
+  "travelMm": 121,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  ]
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 2,
+  "drags": 4,
+  "gestures": 9,
+  "contactMm": 40,
+  "airMm": 67,
+  "travelMm": 107,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 9,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 8.713
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 14,
+  "airMm": 0,
+  "travelMm": 14,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.045,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 154,
+  "airMm": 616,
+  "travelMm": 771,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.122
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 4,
+  "airMm": 0,
+  "travelMm": 4,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 24,
+  "travelMm": 24,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 27,
+  "airMm": 61,
+  "travelMm": 88,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 55,
+  "travelMm": 55,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 121,
+  "travelMm": 121,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  ]
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 6,
+  "holds": 3,
+  "drags": 4,
+  "gestures": 13,
+  "contactMm": 40,
+  "airMm": 65,
+  "travelMm": 105,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 13,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 7.567
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 14,
+  "airMm": 0,
+  "travelMm": 14,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.042,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 213,
+  "airMm": 850,
+  "travelMm": 1062,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.136
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 6,
+  "airMm": 0,
+  "travelMm": 6,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 33,
+  "travelMm": 33,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 38,
+  "airMm": 92,
+  "travelMm": 129,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 76,
+  "travelMm": 76,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 167,
+  "travelMm": 167,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  ]
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 3,
+  "drags": 4,
+  "gestures": 10,
+  "contactMm": 55,
+  "airMm": 92,
+  "travelMm": 147,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 10,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 6.462
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 19,
+  "airMm": 0,
+  "travelMm": 19,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.044,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 213,
+  "airMm": 850,
+  "travelMm": 1062,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.13
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 6,
+  "airMm": 0,
+  "travelMm": 6,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 33,
+  "travelMm": 33,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 38,
+  "airMm": 83,
+  "travelMm": 121,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 2,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 76,
+  "travelMm": 76,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 167,
+  "travelMm": 167,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 1
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  ]
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 3,
+  "drags": 4,
+  "gestures": 10,
+  "contactMm": 55,
+  "airMm": 90,
+  "travelMm": 145,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 10,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 6.198
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 19,
+  "airMm": 0,
+  "travelMm": 19,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.059,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 169,
+  "airMm": 674,
+  "travelMm": 843,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.143
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 26,
+  "travelMm": 26,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 30,
+  "airMm": 73,
+  "travelMm": 103,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 60,
+  "travelMm": 60,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 132,
+  "travelMm": 132,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  ]
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 4,
+  "holds": 3,
+  "drags": 4,
+  "gestures": 11,
+  "contactMm": 44,
+  "airMm": 73,
+  "travelMm": 117,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 11,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 5.31
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 15,
+  "airMm": 0,
+  "travelMm": 15,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.052,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 0,
+  "holds": 12,
+  "drags": 12,
+  "gestures": 24,
+  "contactMm": 169,
+  "airMm": 674,
+  "travelMm": 843,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 24,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "auto": true,
+   "tilled": 6,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 22.102
+  },
+  "acts": 37,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 26,
+  "travelMm": 26,
+  "corrections": 0,
+  "toolChanges": 2,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 30,
+  "airMm": 66,
+  "travelMm": 96,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 60,
+  "travelMm": 60,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 132,
+  "travelMm": 132,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have Bag | Goal | Make | Skill | Book | Opts | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag cell | bag ce"
+  ]
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 5,
+  "holds": 3,
+  "drags": 4,
+  "gestures": 12,
+  "contactMm": 44,
+  "airMm": 71,
+  "travelMm": 115,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 12,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 7.615
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 15,
+  "airMm": 0,
+  "travelMm": 15,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.053,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ }
+]
