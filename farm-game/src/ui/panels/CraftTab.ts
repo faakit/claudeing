@@ -1,15 +1,17 @@
-import { items, recipes, skills } from '../../data';
+import { items, recipes } from '../../data';
 import { getState } from '../../state/store';
-import { craft, craftBlock } from '../../systems/crafting';
+import { craft, craftBatch, craftBlock, plainBatch } from '../../systems/crafting';
 import { countItem } from '../../systems/inventory';
 import { audio } from '../../platform/audio';
-import { isRecipeUnlocked, levelOf } from '../../systems/skills';
+import { isRecipeUnlocked } from '../../systems/skills';
+import { lockedText, recipeNeed } from './craftText';
 import { C } from '../theme';
 import { ROW_H } from '../widgets';
 import { fmt } from './format';
 import type { MenuTabContext } from './MenuPanel';
 
 const PER_PAGE = 8;
+
 let page = 0;
 
 /** Menu tab: everything you can make. Locked recipes stay visible so players know what to aim for. */
@@ -28,23 +30,33 @@ export function buildCraft(c: MenuTabContext): void {
   for (const id of ids.slice(page * PER_PAGE, (page + 1) * PER_PAGE)) {
     const r = recipes[id]!;
     const unlocked = isRecipeUnlocked(s, r);
-    const need = r.ingredients
-      .map((i) => `${i.qty} ${items[i.item]?.name ?? i.item}`)
-      .concat(r.gold ? [`${r.gold}g`] : [])
-      .join(', ');
+    const need = recipeNeed(r);
     const block = craftBlock(s, id);
+    const batch = plainBatch(s, id, 5);
     y = c.row(y, {
       icon: items[r.output.item]?.icon,
       title: `${r.name}${r.output.qty > 1 ? ` x${r.output.qty}` : ''}`,
-      sub: unlocked
-        ? need
-        : `${skills[r.unlock!.skill]?.name} Lv ${r.unlock!.level} (you: ${levelOf(s, r.unlock!.skill)})`,
+      sub: unlocked ? need : lockedText(s, r),
       subColor: !unlocked
         ? C.warn
         : block === 'no_items' || block === 'no_gold'
           ? C.red
           : C.creamDim,
       buttons: [
+        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five.
+        ...(r.kitchen && unlocked && batch >= 2 && block === null
+          ? [
+              {
+                label: `x${batch}`,
+                width: 24,
+                color: C.cream,
+                onClick: () => {
+                  audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
+                  c.rebuild();
+                },
+              },
+            ]
+          : []),
         {
           label: 'Make',
           width: 38,

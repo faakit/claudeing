@@ -64,13 +64,46 @@ describe('greenhouse', () => {
     expect(buyItem(s, 'town_general_store', 'pumpkin_seed', 1)).toBe('ok');
   });
 
+  it('regrowing crops under glass are spent at the season change (critique 5, F5)', () => {
+    const s = newState();
+    build(s);
+    s.time.season = 'winter';
+    till(s, gx, gy);
+    till(s, gx + 1, gy);
+    addItem(s, 'corn_seed', 1);
+    equip(s, 'corn_seed');
+    s.time.day = 20; // corn needs 13 days: too late for a plant that lasts one season
+    expect(performAction(s, inside)).toMatchObject({ ok: false });
+    s.time.day = 1;
+    expect(performAction(s, inside)).toMatchObject({ ok: true, kind: 'plant' });
+    expect(checkPlant(s, gx + 1, gy, 'pumpkin')).toBe('ok');
+    getSoil(s, gx + 1, gy)!.crop = { cropId: 'pumpkin', stage: 2, daysInStage: 0, regrow: false };
+    s.time.season = 'spring';
+    expect(killOutOfSeason(s)).toBe(1);
+    expect(getSoil(s, gx, gy)?.crop).toBeNull(); // the corn is spent
+    expect(getSoil(s, gx + 1, gy)?.crop?.cropId).toBe('pumpkin'); // a pumpkin keeps growing
+  });
+
+  /** Net gold per tile-day under glass, counting seed cost and regrowth over one season. */
+  const netPerTileDay = (id: string): number => {
+    const c = crops[id]!;
+    const grow = c.stageDays.reduce((a, b) => a + b, 0);
+    const sell = items[c.harvestItem]!.sellPrice! * c.harvestQuantity;
+    const seed = Object.values(items).find((i) => i.plants === id)!.buyPrice!;
+    if (!c.regrowDays) return (sell - seed) / grow; // replanted as soon as it is picked
+    const harvests = 1 + Math.floor((28 - grow - 1) / c.regrowDays);
+    return (harvests * sell - seed) / 28;
+  };
+
+  it('under glass the best crop is still one you replant, not corn or a rare berry', () => {
+    const rates = Object.keys(crops).map((id) => [id, netPerTileDay(id)] as const);
+    const best = Math.max(...rates.map(([, r]) => r));
+    for (const [id, r] of rates) if (crops[id]!.regrowDays) expect(r, id).toBeLessThan(best * 0.8);
+    expect(rates.find(([, r]) => r === best)?.[0]).toBe('pumpkin');
+  });
+
   it('a full greenhouse is a real winter income, but not a runaway one', () => {
-    const perTileDay = Math.max(
-      ...Object.values(crops).map((c) => {
-        const days = c.stageDays.reduce((a, b) => a + b, 0);
-        return (items[c.harvestItem]!.sellPrice! * c.harvestQuantity) / days;
-      }),
-    );
+    const perTileDay = Math.max(...Object.keys(crops).map(netPerTileDay));
     const perDay = gw * gh * perTileDay;
     expect(perDay).toBeGreaterThan(400);
     expect(perDay).toBeLessThan(1200);

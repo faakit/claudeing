@@ -31,7 +31,7 @@
   },
   {
     "id": "animals",
-    "stat": "collected",
+    "stat": "animalsAdded",
     "min": 1,
     "text": "Fed, happy animals give better quality goods. Feed them daily."
   },
@@ -39,7 +39,7 @@
     "id": "skills",
     "stat": "level.farming",
     "min": 2,
-    "text": "Skills unlock recipes and perks. See Menu > Craft and Skills."
+    "text": "Skills unlock recipes and perks. See Menu > Make and Skill."
   },
   {
     "id": "perfect",

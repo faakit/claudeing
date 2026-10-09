@@ -1,22 +1,33 @@
 import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { festivals, game, npcs } from '../src/data';
-import { enterFestival } from '../src/systems/festivals';
+import { enterBasket } from '../src/systems/festivals';
 import { POINTS_PER_HEART } from '../src/systems/friendship';
 import { addItem } from '../src/systems/inventory';
 import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
-import { applyRival, rivalActive, rivalMinute, rivalNotice } from '../src/systems/rival';
+import {
+  applyRival,
+  rivalActive,
+  rivalMinute,
+  rivalNotice,
+  rivalPicks,
+  rivalTakes,
+} from '../src/systems/rival';
 import { migrate } from '../src/systems/save';
 import { absoluteDay } from '../src/systems/time';
 import { measureText } from '../src/ui/fontMetrics';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
 
-/** A state on the rival's first day, with a fresh board. */
+/** A state on the rival's first day, every request posted the day before and on its last day (fair game). */
 function boardDay(): GameState {
   const s = newState();
   s.time.day = game.rival.startDay;
   s.orders = { day: absoluteDay(s), list: generateOrders(s) };
+  for (const o of s.orders.list) {
+    o.from = absoluteDay(s) - 1;
+    o.until = absoluteDay(s);
+  }
   return s;
 }
 const hearts = (s: GameState, n: number) =>
@@ -45,26 +56,33 @@ describe('the rival farmer', () => {
     expect(rivalNotice(s)).toBe('Clay took one today.');
   });
 
-  it('a request you filled first is safe; a late delivery finds it gone', () => {
+  it('a request you filled first is safe; the rival still comes for his', () => {
     const s = boardDay();
     const [a, b] = s.orders.list;
     for (const o of [a!, b!]) addItem(s, o.item.split('|')[0]!, o.qty);
     s.time.minutes = 600;
     expect(deliverOrder(s, a!.id)).toBe('ok');
     s.time.minutes = rivalMinute(s) + 10;
-    // The rival came by while we were away: one of the two open ones is gone.
     const res = deliverOrder(s, b!.id);
-    const gone = s.orders.list.find((o) => o.rival)!;
-    expect(gone.id).not.toBe(a!.id);
-    expect(res).toBe(gone.id === b!.id ? 'done' : 'ok');
+    const gone = s.orders.list.find((o) => o.rival);
+    expect(gone?.id).not.toBe(a!.id);
+    expect(res).toBe(gone?.id === b!.id ? 'done' : 'ok');
+    // Without a delivery, a late visit finds his pick gone.
+    const t = boardDay();
+    t.time.minutes = rivalMinute(t) + 10;
+    const target = rivalPicks(t)[0]!;
+    addItem(t, target.item.split('|')[0]!, target.qty);
+    expect(deliverOrder(t, target.id)).toBe('done');
   });
 
   it('friendship softens the rivalry: later, then polite, then not at all', () => {
     const s = boardDay();
     hearts(s, 2);
     expect(rivalMinute(s)).toBe(game.rival.minute + 180);
-    expect(rivalNotice(s)).toMatch(/5:00 PM/);
+    expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
     hearts(s, 4);
+    expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
+    expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
     s.time.minutes = 1300;
     const cheapest = Math.min(...s.orders.list.map((o) => o.reward));
     expect(applyRival(s)?.reward).toBe(cheapest);
@@ -93,7 +111,11 @@ describe('the rival farmer', () => {
     s.time.season = f.season;
     s.time.day = f.day;
     addItem(s, { item: 'daffodil', q: 2 }, 1);
-    const res = enterFestival(s, { item: 'daffodil', q: 2 });
+    addItem(s, { item: 'tulip', q: 2 }, 1);
+    const res = enterBasket(s, [
+      { item: 'daffodil', q: 2 },
+      { item: 'tulip', q: 2 },
+    ]);
     expect(res).toMatchObject({ ok: true, place: 1 });
     expect(s.mail.list.some((l) => l.from === game.rival.npc)).toBe(true);
     expect(id).toBeTruthy();
@@ -107,5 +129,38 @@ describe('the rival farmer', () => {
     const v11 = JSON.parse(JSON.stringify(newState())) as Record<string, unknown>;
     v11['version'] = 11;
     expect(migrate(v11).version).toBeGreaterThan(11);
+  });
+});
+
+describe('the rival in year two (handover goal 3)', () => {
+  it('takes two requests a day from year two, never the last open one', () => {
+    const s = boardDay();
+    s.time.year = 2;
+    s.orders.day = absoluteDay(s);
+    expect(rivalTakes(s)).toBe(2);
+    expect(rivalNotice(s)).toMatch(/wants two of these at 2:00 PM/);
+    s.time.minutes = rivalMinute(s);
+    const sorted = [...s.orders.list].sort((a, b) => b.reward - a.reward);
+    applyRival(s);
+    const gone = s.orders.list.filter((o) => o.rival).map((o) => o.id);
+    expect(gone).toEqual(sorted.slice(0, 2).map((o) => o.id));
+    expect(rivalNotice(s)).toBe('Clay took two today.');
+    expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
+    // With one request left open he leaves it to you.
+    const t = boardDay();
+    t.time.year = 3;
+    t.orders.day = absoluteDay(t);
+    t.orders.list[0]!.done = true;
+    t.time.minutes = 1300;
+    applyRival(t);
+    expect(t.orders.list.filter((o) => !o.done)).toHaveLength(1);
+  });
+
+  it('a friend takes only one, however many years go by', () => {
+    const s = boardDay();
+    s.time.year = 4;
+    hearts(s, 2);
+    expect(rivalTakes(s)).toBe(1);
+    expect(rivalTakes({ ...s, friends: {} })).toBe(2); // capped at two
   });
 });

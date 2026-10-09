@@ -3,14 +3,15 @@
     "name": "Flower Show",
     "season": "spring",
     "day": 14,
-    "blurb": "Show your finest flower.",
+    "blurb": "Up to 3 different flowers. Mix them!",
     "accept": {
       "families": ["flower"]
     },
-    "rivals": [24, 33, 42],
+    "rivals": [40, 75, 120],
     "prizes": [600, 350, 200],
     "consolation": 60,
-    "mode": "single"
+    "mode": "basket",
+    "slots": 3
   },
   "fishing_derby": {
     "name": "Fishing Derby",
@@ -20,38 +21,62 @@
     "accept": {
       "types": ["fish"]
     },
-    "rivals": [110, 170, 240],
+    "rivals": [95, 170, 240],
     "prizes": [800, 450, 250],
     "consolation": 80,
     "mode": "derby",
-    "slots": 3
+    "slots": 3,
+    "stocked": {
+      "fish": "catfish",
+      "maps": ["town"]
+    }
   },
   "harvest_fair": {
     "name": "Harvest Fair",
     "season": "fall",
     "day": 16,
-    "blurb": "A basket of 3 crops. Mix it up!",
+    "blurb": "3 goods: veg, fruit, something wild.",
     "accept": {
-      "types": ["crop"]
+      "types": ["crop", "forage"]
     },
-    "rivals": [300, 600, 950],
+    "rivals": [400, 750, 1300],
     "prizes": [1000, 600, 300],
     "consolation": 100,
     "mode": "basket",
-    "slots": 3
+    "slots": 3,
+    "kinds": [
+      {
+        "name": "Wild",
+        "types": ["forage"]
+      },
+      {
+        "name": "Veg",
+        "families": ["veg"]
+      },
+      {
+        "name": "Fruit",
+        "families": ["fruit"]
+      }
+    ]
   },
   "winter_feast": {
     "name": "Winter Feast",
     "season": "winter",
     "day": 24,
-    "blurb": "Bring 3 homemade goods.",
+    "blurb": "3 homemade goods. Mix them up!",
     "accept": {
       "types": ["preserve", "product"]
     },
-    "rivals": [220, 380, 600],
+    "rivals": [300, 700, 1600],
     "prizes": [1000, 600, 300],
     "consolation": 100,
     "mode": "basket",
-    "slots": 3
+    "slots": 3,
+    "kinds": [
+      {
+        "name": "Animal",
+        "types": ["product"]
+      }
+    ]
   }
 }

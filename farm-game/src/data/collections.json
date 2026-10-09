@@ -11,7 +11,8 @@
       "potato",
       "pumpkin",
       "tomato",
-      "yam"
+      "yam",
+      "tulip"
     ]
   },
   "orchard": {
@@ -41,7 +42,7 @@
   "barn": {
     "name": "Animal Goods",
     "reward": 300,
-    "items": ["egg", "milk", "wool", "honey"]
+    "items": ["egg", "milk", "wool", "honey", "truffle"]
   },
   "cellar": {
     "name": "Preserves",

@@ -367,10 +367,24 @@ try {
     m.placed.farm[0].data.house?.n === 1 && m.placed.farm[0].data.house?.fed === true,
     JSON.stringify(m.placed.farm[0]),
   );
-  // Moving a building: pat, then two more taps pick the coop up with its hen parked for the next coop.
+  // Moving a building: chore taps never lift a coop with hens; the second tap opens the Move sheet and
+  // its real "Move it" button picks the coop up with its hen parked for the next coop (critique 5, F3).
   await mTap('KeyE'); // a pat
-  await mTap('KeyE'); // "All fed. ... Tap again to pick up."
-  await mTap('KeyE'); // picked up
+  await mTap('KeyE'); // "All fed. ... Tap again to move it."
+  await mTap('KeyE'); // the Move sheet
+  m = await mState();
+  const moveOpen = await mp.evaluate(() => window.__farm.game.scene.getScene('UI').move.isOpen);
+  check(
+    'a chore tap never lifts a coop with a hen: the Move sheet asks first',
+    moveOpen && m.placed.farm.some((o) => o.type === 'coop'),
+    JSON.stringify(m.placed.farm),
+  );
+  const moveBox = await mp.evaluate(() => {
+    const c = document.querySelector('canvas').getBoundingClientRect();
+    return { x: c.x, y: c.y, k: c.width / 200 };
+  });
+  await mp.mouse.click(moveBox.x + 100 * moveBox.k, moveBox.y + (400 - 130 + 74 + 12) * moveBox.k);
+  await mp.waitForTimeout(400);
   m = await mState();
   check(
     'a coop with a hen can be picked up to move it, keeping the hen',
@@ -395,6 +409,32 @@ try {
     m.placed.farm.find((o) => o.type === 'silo')?.data.stock?.hay === 20 &&
       !m.inventory.slots.some((x) => x?.item === 'hay'),
     JSON.stringify(m.placed.farm),
+  );
+  // A garden bench: Interact sits down for a little energy, once a day.
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.energy = 40;
+    s.placed.farm.push({ id: 12, type: 'garden_bench', tx: 12, ty: 10, data: {} });
+    s.nextPlacedId = 13;
+    window.__farm.gameEvents.emit('placedChanged', { map: 'farm' });
+  });
+  await mPlace(11, 10, 'right');
+  await mTap('KeyE');
+  m = await mState();
+  check('Interact at a garden bench gives a little energy', m.energy === 55, `energy ${m.energy}`);
+  // A cooked dish in hand: Action eats it.
+  await mp.evaluate(() => {
+    const s = window.__farm.getState();
+    s.energy = 30;
+    s.inventory.slots[6] = { item: 'fish_stew', qty: 1 };
+  });
+  await mp.keyboard.press('Digit7');
+  await mTap('Space');
+  m = await mState();
+  check(
+    'Action with a dish in hand eats it for energy',
+    m.energy === 80 && !m.inventory.slots.some((x) => x?.item === 'fish_stew'),
+    `energy ${m.energy}`,
   );
   // Swiping up on the Action button changes tool without reaching for the hotbar.
   await mp.keyboard.press('Digit1');
@@ -548,7 +588,7 @@ try {
   });
   await pp.waitForTimeout(400);
   await pClick(163, 150 + 44 + 11); // Bigger Bag 1,500g
-  await pClick(170, 150 + 70 + 11); // Wood Fence 15g
+  await pClick(170, 150 + 96 + 11); // Wood Fence 15g (below the Bigger Bag and Kitchen rows)
   ps = await pState();
   check(
     'Home tab: the Bigger Bag adds 8 slots and a fence can be bought',
@@ -627,12 +667,20 @@ try {
     'Interact at the mailbox opens the mail sheet',
     await ui(() => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen),
   );
-  // From day 8 the rival farmer fills one open request every afternoon.
+  // From day 8 the rival farmer fills one open request every afternoon (one that was up since yesterday).
   await ui(() => {
     const f = window.__farm;
-    f.game.scene.getScene('UI').panels.get('mail').close();
+    const u = f.game.scene.getScene('UI');
+    u.panels.get('mail').close();
     const s = f.getState();
     s.time.day = 9;
+    s.time.minutes = 600;
+    f.gameEvents.emit('openPanel', { type: 'board' }); // the morning look posts the board
+    u.panels.get('board').close();
+    for (const o of s.orders.list) {
+      o.from -= 1; // as if posted yesterday...
+      o.until = o.from + 1; // ...and today is its last day
+    }
     s.time.minutes = 900;
     f.gameEvents.emit('openPanel', { type: 'board' });
   });
@@ -692,6 +740,79 @@ try {
     'Harvest Fair: a basket is presented with Add and Present',
     ps.stats['fest.harvest_fair.y1'] === 1 && ps.money > moneyBefore,
     `money ${moneyBefore} -> ${ps.money}`,
+  );
+  // The Founder's Statue: once every project is done it stays open, a level at a time.
+  await ui(() => {
+    const f = window.__farm;
+    const ui = f.game.scene.getScene('UI');
+    ui.panels.get('festival').close();
+    const s = f.getState();
+    for (const id of [
+      'canopy',
+      'seedexchange',
+      'fishladder',
+      'library',
+      'bathhouse',
+      'fairhall',
+      'market',
+    ])
+      s.stats[`project.${id}`] = 1;
+    s.money = 50000;
+    f.gameEvents.emit('openPanel', { type: 'projects' });
+  });
+  await pp.waitForTimeout(400);
+  await pClick(172, 150 + 34 + 11); // Open on the first row: the statue leads the list (critique 6, F1)
+  const opened = await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').id);
+  check("the Founder's Statue opens from the projects list with a tap", opened === 'statue', opened);
+  await pClick(161, 150 + 168 + 11); // +10,000g
+  ps = await pState();
+  check(
+    "the Founder's Statue takes gold once every project is done",
+    ps.stats['fund.statue'] === 10000 && ps.money === 40000,
+    `fund ${ps.stats['fund.statue']} money ${ps.money}`,
+  );
+  await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').close());
+  // Fishing Derby: handing in early asks first, so one stray tap cannot end the derby (critique 5, F4).
+  await ui(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.time.season = 'summer';
+    s.time.day = 22;
+    s.time.minutes = 600;
+    s.stats['fest.fishing_derby.y1.catch0'] = 80;
+    s.stats['fest.fishing_derby.y1.fish0'] = 13; // a catfish
+    f.gameEvents.emit('openPanel', { type: 'festival' });
+  });
+  await pp.waitForTimeout(500);
+  await pClick(100, 150 + 194 + 12); // Hand in my catches
+  ps = await pState();
+  const asked = !ps.stats['fest.fishing_derby.y1'];
+  await pClick(100, 150 + 194 + 12); // Sure? Tap to hand in
+  ps = await pState();
+  check(
+    'Fishing Derby: an early hand-in asks first, the second tap hands in',
+    asked && ps.stats['fest.fishing_derby.y1'] === 1,
+    JSON.stringify(ps.stats),
+  );
+  // The traveling cart: on its days a few premium goods, bought with a real tap on Buy.
+  await ui(() => {
+    const f = window.__farm;
+    const u = f.game.scene.getScene('UI');
+    for (const m of u.panels.values()) if (m.isOpen) m.close();
+    const s = f.getState();
+    s.time.season = 'spring';
+    s.time.day = 5;
+    s.money = 5000;
+    f.gameEvents.emit('openPanel', { type: 'cart' });
+  });
+  await pp.waitForTimeout(400);
+  const moneyCart = (await pState()).money;
+  await pClick(172, 400 - 196 + 34 + 11); // Buy on the first row
+  ps = await pState();
+  check(
+    'the traveling cart sells with a tap on its days',
+    ps.money < moneyCart && ps.stats.cartBought === 1,
+    `money ${moneyCart} -> ${ps.money}`,
   );
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();

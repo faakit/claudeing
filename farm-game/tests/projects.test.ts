@@ -140,11 +140,15 @@ describe('town projects', () => {
   it('every project chain can be finished, and all of them together are a real late sink', () => {
     const s = newState();
     for (let round = 0; round < 10; round++)
-      for (const id of Object.keys(projects)) if (isProjectOpen(s, id)) finish(s, id);
+      for (const id of Object.keys(projects))
+        if (isProjectOpen(s, id) && !isProjectDone(s, id)) finish(s, id);
     expect(Object.keys(projects).every((id) => isProjectDone(s, id))).toBe(true);
-    const total = Object.values(projects).reduce((n, p) => n + p.gold, 0);
+    const once = Object.entries(projects).filter(([, p]) => !p.repeat);
+    const total = once.reduce((n, [, p]) => n + p.gold, 0);
     expect(total).toBeGreaterThan(80000);
-    expect(goals.find((g) => g.id === 'projectAll')?.target).toBe(Object.keys(projects).length);
+    // "All projects" means the ones you finish once; the repeatable statue never counts.
+    expect(goals.find((g) => g.id === 'projectAll')?.target).toBe(once.length);
+    expect(s.stats['projectsDone']).toBe(once.length);
   });
 });
 

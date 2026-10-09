@@ -118,7 +118,7 @@
     "stat": "crafted",
     "target": 1,
     "reward": 60,
-    "hint": "Open Menu > Craft. Fertilizer needs fiber from cut weeds."
+    "hint": "Open Menu > Make. Fertilizer needs fiber from cut weeds."
   },
   {
     "id": "place",
@@ -468,5 +468,37 @@
     "target": 1,
     "reward": 1000,
     "hint": "A big seasonal request on the board. Bring goods bit by bit."
+  },
+  {
+    "id": "statue3",
+    "text": "Raise your statue to level 3",
+    "stat": "projectLevels",
+    "target": 3,
+    "reward": 3000,
+    "hint": "The Founder's Statue opens after the Market Road."
+  },
+  {
+    "id": "cook",
+    "text": "Cook a meal",
+    "stat": "cooked",
+    "target": 1,
+    "reward": 300,
+    "hint": "Buy a kitchen (shop, Home tab), then cook at the workbench."
+  },
+  {
+    "id": "legend1",
+    "text": "Catch a legendary fish",
+    "stat": "legends",
+    "target": 1,
+    "reward": 1500,
+    "hint": "Finn knows where the four legends of the valley hide."
+  },
+  {
+    "id": "board1",
+    "text": "Beat Clay on the board",
+    "stat": "boardWins",
+    "target": 1,
+    "reward": 1000,
+    "hint": "Fill more requests in a season than Clay takes."
   }
 ]

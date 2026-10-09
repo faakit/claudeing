@@ -1,0 +1,97 @@
+# Game-depth session, round 2 (2026-10-08)
+
+Branch `depth/round2` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/agents-2026-10-08`.
+Pushed to `origin/depth/round2` after every green verify.
+
+Status: final. The session was wrapped up on request after critique 9; next steps are in
+`agents/NEXT-STEPS-DEPTH.md`.
+
+## Commits shipped
+
+| Commit | Goal |
+| --- | --- |
+| `c64e232` | Critique 5 fixes: multi-day requests so Clay races you, baskets count goods and data-driven kinds, Move sheet for occupied buildings, derby feedback, regrowing crops spent at the season change under glass, placement refused on unbought land and project sites, silo shortfall line, project and shop text, truffles in the Book |
+| `b7f810f` | Animal goods as requests and specials; Clay takes two requests a day in year 2 unless at 2 hearts; repeatable projects and the Founder's Statue (late-game sink, backed by a two-year sim) |
+| `5fd9943` | Decorations with a small use: garden bench, scarecrow and mild crows; five-seed sim judged on the median |
+| `3841f0d` | Jobs pay 55% of before (early jobs under early farm income); Flower Show arrangement; tulips |
+| `8b5a87e` | Probe fixes (plural goods on the Move sheet, statue level line), roadmap, report |
+| `a725d1d` | Clay's polite notice is honest |
+| `b368655` | Bees make honey faster near flowers |
+| `316a162` | Critique 6 fixes: paged projects list (blocker), Clay settles overnight and names his target, crop requests only for crops you grow, farm-sized specials, "Glass only" seeds, tougher Fair and Feast, bench mash-safe, text fixes |
+| `5d00670` | A kitchen (Home upgrade) and six dishes that restore energy |
+| `ce43907` | Four legendary fish with Finn's letter and a goal |
+| `f27999e` | Human-paced sim variant; report checkpoint |
+| `4789b54` | Handover refresh |
+| `61e118e` | Sim bot keeps a coop of hens (animal requests exercised); median repinned |
+| `933be12` | Critique 7 fixes: crop requests wait for ripening, Clay only on last days and stays home when you fill one, farm-weighted board, special's "Give N", bench lines, dishes never wasted, Legends 1/4, 70% animal specials, statue bonus line, seed order |
+| `3e1b9c5` | Traveling cart (days 5/12/19/26), x5 cooking, legend-in-the-bin warning |
+| `f1a6e64` | Report and handover refresh |
+| `a51cf83` | Critique 8 fixes: season scoreboard against Clay, field-sized crop requests, special keeps goods for requests, cart never resells store goods, plain-only batch cooking, text |
+| `f7e4d49` | Report and handover refresh |
+| `1a7464d` | A "Beat Clay on the board" goal |
+| (final) | Critique 9 report, handover and this report |
+
+## What was verified, and how
+
+- `npm run verify` green before every commit (lint, typecheck, unit 466 -> 537, build, e2e, mobile e2e, perf within
+  <= 12 draws and <= 3.5 ms JS per frame).
+- New unit test files: `critique5.test.ts`, `animal-orders.test.ts`, `statue.test.ts`, `decor-effects.test.ts`,
+  `cooking.test.ts`, `legends.test.ts`; additions to festivals, greenhouse, rival, projects, machines, rare, balance
+  and sim tests (five seeds, two years with projects, early jobs vs farming, a human-paced run).
+- New e2e lines: the Move sheet and its "Move it" button; an early derby hand-in asks first; the statue opens from
+  the projects list with a real tap and takes gold; a garden bench gives energy; a dish in hand is eaten with Action;
+  the rival takes a request posted the day before; the traveling cart sells with a tap.
+- Probe `agents/probes/round2.mjs` (board, Fair basket, derby, Move sheet, projects list, statue, shop Seeds and Home,
+  a dish's bag card), screenshots read back.
+- Critique 6 (independent sub-agent, frozen copy of `5fd9943`, 14 real-input days, probes, a 41-screen sweep):
+  `agents/critiques/critique-6.md` and `shots-6/`. All nine findings triaged; fixes in `316a162`.
+- Critique 7 (frozen `f27999e`, two 14-day real-input runs, 44-screen sweep, no blocker): `critique-7.md` and
+  `shots-7/`; all nine findings triaged, fixes in `933be12`.
+- Critique 8 (frozen `3e1b9c5`, two 16-day real-input runs, 42-screen sweep, no blocker): `critique-8.md` and
+  `shots-8/`; all eight findings triaged, fixes in `a51cf83`. A first attempt was cut off by a usage limit.
+- Critique 9 (frozen `1a7464d`, about 120 played days, a real spring-to-summer settlement, 48 screens, no blocker):
+  `critique-9.md` and `shots-9/`. **Not fixed**: the wrap-up came first. Two Medium (the scoreboard is hidden from a
+  losing player and unwinnable for a pure farmer; crop requests need the whole harvest) and six Minor findings,
+  listed with suggested fixes in `agents/NEXT-STEPS-DEPTH.md`.
+
+## Not verified
+
+- No real phone, no native build, no audio listening. Headless Chromium only.
+- New art keys use generated placeholders.
+- Year two with real input. The two-year economy is from the sim only.
+- One critic bot stopped on day 31 when the bin and bed did not open after "Inventory full!"; not reproduced.
+
+## Save versions
+
+No `STATE_VERSION` bump this round (still 15). New state is optional fields or stats:
+`Order.until`, `Order.from`, `Order.takenOn` (optional, sanitized); stats `board.s<n>.you|rival`, `boardWins`,
+`special.last.<id>`,
+`cart.<day>.<item>`, `cartBought`, `rested.day`, `crowsAte`,
+`project.<id>.level`, `projectLevels`, `upgraded.kitchen`, `cooked`, `ate`, `legend.<fish>`, `legends`,
+`fest.<id>.y<year>.fish<i>`.
+
+## New texture keys (placeholders today)
+
+- `item_scarecrow`, `obj_scarecrow`
+- `obj_landmark_statue` (Founder's Statue, town 10,14; could grow with its level)
+- `item_tulip`, `item_tulip_seed`, crop frames `crop_tulip_0` .. `crop_tulip_4`
+- Dishes: `item_parsnip_soup`, `item_baked_potato`, `item_fish_stew`, `item_berry_tart`, `item_kale_salad`,
+  `item_pumpkin_pie`
+- Legendary fish: `item_glimmer_trout`, `item_sun_carp`, `item_old_whiskers`, `item_ice_pike`
+
+## Open questions for the owner
+
+1. Crows: mild (one crop now and then on a big unguarded field, a free scarecrow first). Keep, or drop the threat
+   and make the scarecrow purely cosmetic?
+2. The Founder's Statue gives +1% sales for five levels and then is for glory. Enough of a late goal, or should
+   later levels unlock something visible (a bigger landmark) once the art exists?
+3. Cooking turns crops into energy. Should eating be capped per day (Stardew is not), or is the 15% price cap enough?
+4. The board race with Clay: should a farmer who never fishes be able to win it, and is 300g a year of play the right
+   prize, or should it be a lasting trophy?
+
+## Next three goals
+
+1. Fix critique 9's two Medium findings (always show the board score and count only rows you could have filled;
+   slack in crop requests and a bin warning), then its Minor ones.
+2. The long-press hotbar picker (with or after the controls agent).
+3. Another critique on a frozen copy, including a year two with real input.

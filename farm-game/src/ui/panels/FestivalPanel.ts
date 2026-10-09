@@ -5,20 +5,27 @@ import { getState } from '../../state/store';
 import {
   accepts,
   basketScore,
-  derbyCatches,
+  DERBY_SURE_BEFORE,
+  derbyBest,
+  derbyHint,
   derbyScore,
   enterBasket,
   festivalToday,
   finishDerby,
+  goodOf,
   hasEntered,
   modeOf,
   placeFor,
+  kindOf,
   rivalScores,
   scoreOf,
   slotsOf,
+  varietyBonus,
   type EnterResult,
 } from '../../systems/festivals';
 import { displayName, iconKey, keyOf, refOf, type ItemRef } from '../../systems/itemRef';
+import { formatClock } from '../../systems/time';
+import { toast } from '../../systems/events';
 import { rivalName } from '../../systems/rival';
 import { C } from '../theme';
 import { Modal } from '../widgets';
@@ -35,6 +42,8 @@ const ROWS = 4;
 export class FestivalPanel extends Modal {
   private page = 0;
   private result = '';
+  /** The early derby hand-in was asked once; the next tap hands in. */
+  private sure = false;
   /** Keys of the stacks picked for the basket. */
   private basket: string[] = [];
 
@@ -93,30 +102,52 @@ export class FestivalPanel extends Modal {
   private buildDerby(): void {
     const s = getState();
     const today = festivalToday(s)!;
-    const best = derbyCatches(s);
+    const best = derbyBest(s);
     const slots = slotsOf(today.def);
     this.label(8, 50, 'Best catches so far:', C.cream);
-    for (let i = 0; i < slots; i++)
+    for (let i = 0; i < slots; i++) {
+      const c = best[i];
       this.label(
         8,
         64 + i * 12,
-        `${i + 1}. ${best[i] ? `${fmt(best[i]!)} points` : '-'}`,
+        `${i + 1}. ${c ? `${c.ref ? `${displayName(c.ref)} ` : ''}${fmt(c.value)} points` : '-'}`,
         C.creamDim,
       );
+    }
     const score = derbyScore(s);
     const place = placeFor(s, today.def, score);
     this.label(8, 64 + slots * 12 + 6, `Score ${fmt(score)}  ${placeText(place)}`, C.gold);
     this.label(
       8,
       64 + slots * 12 + 20,
-      'Cast anywhere: pond, river or lake. Hand in before bed.',
+      `${derbyHint(today.def)} Hand in before bed.`,
       C.creamDim,
       1,
       'left',
       184,
     );
-    this.button(8, this.panelH - 56, this.panelW - 16, 24, 'Hand in my catches', () =>
-      this.after(finishDerby(getState())),
+    // Handing in ends the derby for the year, so before evening the first tap only asks.
+    const early = s.time.minutes < DERBY_SURE_BEFORE && !this.sure;
+    this.button(
+      8,
+      this.panelH - 56,
+      this.panelW - 16,
+      24,
+      this.sure ? 'Sure? Tap to hand in' : 'Hand in my catches',
+      () => {
+        if (early) {
+          this.sure = true;
+          toast(
+            `Handing in ends your derby. Fish until ${formatClock(DERBY_SURE_BEFORE)}?`,
+            'info',
+          );
+          audio.play('select');
+          return this.rebuild();
+        }
+        this.sure = false;
+        this.after(finishDerby(getState()));
+      },
+      this.sure ? { textColor: C.warn } : undefined,
     ).setEnabled(best.length > 0);
   }
 
@@ -146,11 +177,12 @@ export class FestivalPanel extends Modal {
     let y = 46;
     if (basketMode) {
       const picked = this.basket.map((k) => kinds.get(k)!);
-      const score = basketScore(picked);
+      const score = basketScore(def, picked);
+      const bonus = Math.round(varietyBonus(def, picked) * 100);
       this.label(
         8,
         y,
-        `Basket ${picked.length}/${slots}  Score ${fmt(score)}  ${picked.length ? placeText(placeFor(s, def, score)) : ''}`,
+        `Basket ${picked.length}/${slots}  ${fmt(score)}${bonus ? ` +${bonus}%` : ''}  ${picked.length ? placeText(placeFor(s, def, score)) : ''}`,
         C.gold,
       );
       y += 12;
@@ -159,11 +191,14 @@ export class FestivalPanel extends Modal {
       const key = keyOf(ref);
       const score = scoreOf(ref);
       const inBasket = this.basket.includes(key);
+      // One of each good: a gold pumpkin and a plain one are the same good.
+      const sameGood = !inBasket && this.basket.some((k) => goodOf(kinds.get(k)!) === goodOf(ref));
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),
+        // The row names the good's kind, so "mix it up" is something you can see.
         sub: basketMode
-          ? `Score ${fmt(score)}${inBasket ? '  in basket' : ''}`
+          ? `${kindOf(def, ref)}  ${fmt(score)}${inBasket ? '  in basket' : ''}`
           : `Score ${fmt(score)}  ${placeText(placeFor(s, def, score))}`,
         subColor: inBasket ? C.green : C.creamDim,
         buttons: [
@@ -172,7 +207,7 @@ export class FestivalPanel extends Modal {
                 label: inBasket ? 'Out' : 'Add',
                 width: 40,
                 color: inBasket ? C.warn : C.green,
-                enabled: inBasket || this.basket.length < slots,
+                enabled: inBasket || (this.basket.length < slots && !sameGood),
                 onClick: () => {
                   this.basket = inBasket
                     ? this.basket.filter((k) => k !== key)
@@ -231,6 +266,7 @@ export class FestivalPanel extends Modal {
     this.result = '';
     this.page = 0;
     this.basket = [];
+    this.sure = false;
     super.open();
   }
 }

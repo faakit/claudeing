@@ -5,8 +5,8 @@
     "text": "catch {n} fish",
     "stat": "caught",
     "qty": [1, 3],
-    "base": 15,
-    "perUnit": 25,
+    "base": 8,
+    "perUnit": 14,
     "weight": 3,
     "introDay": 2
   },
@@ -16,8 +16,8 @@
     "text": "break {n} mine rock{s}",
     "stat": "mined",
     "qty": [3, 6],
-    "base": 10,
-    "perUnit": 8,
+    "base": 6,
+    "perUnit": 4,
     "weight": 3,
     "introDay": 3
   },
@@ -27,8 +27,8 @@
     "text": "fill {n} board request{s}",
     "stat": "ordersDone",
     "qty": [1, 1],
-    "base": 20,
-    "perUnit": 30,
+    "base": 11,
+    "perUnit": 17,
     "weight": 2,
     "introDay": 4,
     "check": "order"
@@ -39,8 +39,8 @@
     "text": "pick {n} wild good{s}",
     "stat": "foraged",
     "qty": [2, 4],
-    "base": 10,
-    "perUnit": 10,
+    "base": 6,
+    "perUnit": 6,
     "weight": 3
   },
   {
@@ -49,8 +49,8 @@
     "text": "greet {n} villager{s}",
     "stat": "talked",
     "qty": [2, 3],
-    "base": 10,
-    "perUnit": 10,
+    "base": 6,
+    "perUnit": 6,
     "weight": 2
   },
   {
@@ -59,8 +59,8 @@
     "text": "give a gift they like",
     "stat": "likedGifts",
     "qty": [1, 1],
-    "base": 15,
-    "perUnit": 20,
+    "base": 8,
+    "perUnit": 11,
     "weight": 1
   },
   {
@@ -69,8 +69,8 @@
     "text": "ship {n} good{s}",
     "stat": "shipped",
     "qty": [6, 15],
-    "base": 10,
-    "perUnit": 3,
+    "base": 6,
+    "perUnit": 2,
     "weight": 2,
     "requires": {
       "stat": "harvested",
@@ -84,8 +84,8 @@
     "text": "harvest {n} crop{s}",
     "stat": "harvested",
     "qty": [4, 10],
-    "base": 10,
-    "perUnit": 4,
+    "base": 6,
+    "perUnit": 2,
     "weight": 2,
     "requires": {
       "stat": "harvested",
@@ -99,8 +99,8 @@
     "text": "cut {n} weed{s}",
     "stat": "cleared",
     "qty": [2, 4],
-    "base": 10,
-    "perUnit": 8,
+    "base": 6,
+    "perUnit": 4,
     "weight": 1,
     "check": "weeds"
   },
@@ -110,8 +110,8 @@
     "text": "get {n} animal good{s}",
     "stat": "collected",
     "qty": [3, 6],
-    "base": 15,
-    "perUnit": 6,
+    "base": 8,
+    "perUnit": 3,
     "weight": 2,
     "requires": {
       "stat": "animalsAdded",
@@ -124,8 +124,8 @@
     "text": "load {n} machine{s}",
     "stat": "jarsLoaded",
     "qty": [1, 3],
-    "base": 10,
-    "perUnit": 15,
+    "base": 6,
+    "perUnit": 8,
     "weight": 2,
     "requires": {
       "stat": "jarsLoaded",
@@ -138,8 +138,8 @@
     "text": "craft {n} thing{s}",
     "stat": "crafted",
     "qty": [1, 2],
-    "base": 15,
-    "perUnit": 15,
+    "base": 8,
+    "perUnit": 8,
     "weight": 1,
     "requires": {
       "stat": "crafted",

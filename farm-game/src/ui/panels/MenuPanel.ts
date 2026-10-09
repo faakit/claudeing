@@ -14,6 +14,7 @@ import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { isShippable } from '../../systems/economy';
+import { eat, eatGain, foodEnergy, tooFullFor } from '../../systems/food';
 import { displayName, iconKey, refOf, sellValue } from '../../systems/itemRef';
 import {
   adjustVolume,
@@ -154,6 +155,10 @@ export class MenuPanel extends Modal {
     return this.cursor;
   }
 
+  clearCursor(): void {
+    this.cursor = null;
+  }
+
   get quit(): 'idle' | 'confirm' | 'unsaved' {
     return this.quitState;
   }
@@ -218,8 +223,29 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
 
   const dy = c.top - 4;
   const cur = cursor !== null ? s.inventory.slots[cursor] : null;
+  // A dish, wherever it sits: one tap eats it (cooking is how a long day gets longer).
+  const gain = eatGain(s, cur?.item);
+  if (cur && cursor !== null && foodEnergy(cur.item) > 0)
+    c.button(
+      110,
+      y0 - 26,
+      82,
+      22,
+      tooFullFor(s, cur.item) ? 'Not hungry' : `Eat +${gain}`,
+      () => {
+        if (eat(getState(), cursor) === 'full') {
+          audio.play('error');
+          toast("You're not hungry enough.", 'info');
+        } else audio.play('select');
+        menu.clearCursor(); // the next slot tap selects, never swaps (critique 8, F6)
+        c.rebuild();
+      },
+      tooFullFor(s, cur.item)
+        ? { textColor: C.creamDim, rim: C.creamDim }
+        : { textColor: C.green, rim: C.green },
+    );
   // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
-  if (cur && cursor !== null && cursor >= game.hotbarSlots)
+  else if (cur && cursor !== null && cursor >= game.hotbarSlots)
     c.button(
       110,
       y0 - 26,

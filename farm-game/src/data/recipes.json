@@ -304,5 +304,113 @@
       "skill": "farming",
       "level": 6
     }
+  },
+  "parsnip_soup": {
+    "name": "Parsnip Soup",
+    "output": {
+      "item": "parsnip_soup",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "parsnip",
+        "qty": 2
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "kitchen": true
+  },
+  "baked_potato": {
+    "name": "Baked Potato",
+    "output": {
+      "item": "baked_potato",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "potato",
+        "qty": 2
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "kitchen": true
+  },
+  "fish_stew": {
+    "name": "Fish Stew",
+    "output": {
+      "item": "fish_stew",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "carp",
+        "qty": 2
+      },
+      {
+        "item": "potato",
+        "qty": 1
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "kitchen": true
+  },
+  "berry_tart": {
+    "name": "Berry Tart",
+    "output": {
+      "item": "berry_tart",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "wild_berry",
+        "qty": 3
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "kitchen": true
+  },
+  "kale_salad": {
+    "name": "Kale Salad",
+    "output": {
+      "item": "kale_salad",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "kale",
+        "qty": 2
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "kitchen": true
+  },
+  "pumpkin_pie": {
+    "name": "Pumpkin Pie",
+    "output": {
+      "item": "pumpkin_pie",
+      "qty": 1
+    },
+    "ingredients": [
+      {
+        "item": "pumpkin",
+        "qty": 1
+      },
+      {
+        "item": "egg",
+        "qty": 1
+      },
+      {
+        "item": "milk",
+        "qty": 1
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "kitchen": true
   }
 }

@@ -190,5 +190,32 @@
       "sprite": "obj_landmark_market",
       "color": "#f4d35e"
     }
+  },
+  "statue": {
+    "name": "Founder's Statue",
+    "blurb": "A statue of you in the town square. Each level makes it grander.",
+    "after": "market",
+    "gold": 30000,
+    "items": [
+      {
+        "item": "stone",
+        "qty": 50
+      }
+    ],
+    "perks": {
+      "sellBonus": 0.01
+    },
+    "reward": "Sales +1% a level, up to +5%.",
+    "landmark": {
+      "map": "town",
+      "tx": 10,
+      "ty": 14,
+      "sprite": "obj_landmark_statue",
+      "color": "#cfc6b4"
+    },
+    "repeat": {
+      "growth": 1.5,
+      "perkLevels": 5
+    }
   }
 }

@@ -14,25 +14,42 @@ import {
   itemNeeds,
   needLabel,
   nextLocked,
+  priceOf,
+  projectLevel,
   projectProgress,
-  visibleProjects,
   type FundResult,
 } from '../../systems/projects';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { fmt } from './format';
-import { GIVE_STEPS, PROJECTS_INTRO, projectSub } from './projectText';
+import {
+  GIVE_STEPS,
+  GLORY_LINE,
+  repeatNow,
+  LIST_NAV_FROM_BOTTOM,
+  LIST_ROWS,
+  LIST_TOP,
+  PROJECT_SHEET_H,
+  PROJECTS_INTRO,
+  projectLists,
+  projectSub,
+  repeatSub,
+} from './projectText';
 
 /** The town fund: a list of projects, and a page per project to give gold and goods to. */
 export class ProjectPanel extends Modal {
   private id: string | null = null;
+  private page = 0;
+  private showFinished = false;
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 250);
+    super(scene, PROJECT_SHEET_H);
   }
 
   override open(): void {
     this.id = null;
+    this.page = 0;
+    this.showFinished = false;
     super.open();
   }
 
@@ -53,14 +70,22 @@ export class ProjectPanel extends Modal {
     this.label(8, 8, 'Town Projects', C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     this.label(8, 20, PROJECTS_INTRO, C.creamDim);
-    let y = 34;
-    for (const id of visibleProjects(s)) {
+    // Open projects first; finished ones on their own pages, so nine projects never push a row under
+    // Close or off the screen (critique 6, F1).
+    const { open, finished } = projectLists(s);
+    const list = this.showFinished ? finished : open;
+    const pages = Math.max(1, Math.ceil(list.length / LIST_ROWS));
+    this.page = Math.min(this.page, pages - 1);
+    let y = LIST_TOP;
+    for (const id of list.slice(this.page * LIST_ROWS, (this.page + 1) * LIST_ROWS)) {
       const p = projects[id]!;
-      const done = isProjectDone(s, id);
+      const done = isProjectDone(s, id) && !p.repeat;
       y = this.row(y, {
         icon: this.landmarkIcon(id),
         title: p.name,
-        sub: projectSub(goldGiven(s, id), p.gold, done, p.perks),
+        sub: p.repeat
+          ? repeatSub(projectLevel(s, id), goldGiven(s, id), priceOf(s, id))
+          : projectSub(goldGiven(s, id), p.gold, done, p.perks),
         subColor: done ? C.green : C.creamDim,
         buttons: done
           ? []
@@ -78,15 +103,36 @@ export class ProjectPanel extends Modal {
       });
     }
     const locked = nextLocked(s);
-    if (locked)
+    if (locked && !this.showFinished && this.page === pages - 1)
       this.label(
         8,
         y + 4,
         `More after the ${projects[locked.after]?.name ?? 'next one'}.`,
         C.creamDim,
-        1,
-        'left',
-        184,
+      );
+    const by = this.panelH - LIST_NAV_FROM_BOTTOM;
+    if (pages > 1) {
+      this.button(8, by, 30, 20, '<', () => {
+        this.page = (this.page + pages - 1) % pages;
+        this.rebuild();
+      });
+      this.button(162, by, 30, 20, '>', () => {
+        this.page = (this.page + 1) % pages;
+        this.rebuild();
+      });
+    }
+    if (finished.length > 0)
+      this.button(
+        42,
+        by,
+        116,
+        20,
+        this.showFinished ? `Open ones (${open.length})` : `Finished (${finished.length})`,
+        () => {
+          this.showFinished = !this.showFinished;
+          this.page = 0;
+          this.rebuild();
+        },
       );
   }
 
@@ -98,14 +144,31 @@ export class ProjectPanel extends Modal {
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     const blurb = this.label(8, 26, p.blurb, C.cream, 1, 'left', 184);
     let y = 26 + blurb.textHeight + 4;
-    const reward = this.label(8, y, `When done: ${p.reward}`, C.green, 1, 'left', 184);
+    const glory = !!p.repeat && projectLevel(s, id) >= p.repeat.perkLevels;
+    const reward = this.label(
+      8,
+      y,
+      glory
+        ? GLORY_LINE
+        : `${p.repeat && projectLevel(s, id) > 0 ? 'Next level' : 'When done'}: ${p.reward}${p.repeat && projectLevel(s, id) > 0 ? ` Now ${repeatNow(p, projectLevel(s, id))}.` : ''}`,
+      C.green,
+      1,
+      'left',
+      184,
+    );
     y += reward.textHeight + 6;
     const g = this.scene.add.graphics();
     this.content.add(g);
     drawBar(g, 8, y, 184, 7, projectProgress(s, id), C.gold);
     y += 11;
-    const left = p.gold - goldGiven(s, id);
-    this.label(8, y, `Gold ${fmt(goldGiven(s, id))}/${fmt(p.gold)}`, left > 0 ? C.cream : C.green);
+    const price = priceOf(s, id);
+    const left = price - goldGiven(s, id);
+    this.label(
+      8,
+      y,
+      `${p.repeat ? `Level ${projectLevel(s, id) + 1}  ` : ''}Gold ${fmt(goldGiven(s, id))}/${fmt(price)}`,
+      left > 0 ? C.cream : C.green,
+    );
     y += 12;
     for (const n of itemNeeds(s, id)) {
       this.label(8, y, needLabel(s, n), n.given >= n.need ? C.green : C.creamDim);
@@ -114,13 +177,16 @@ export class ProjectPanel extends Modal {
     // Give buttons sit low, next to the thumb: three gold steps, then goods.
     const by = this.panelH - 82;
     // Each button says what it really gives: near the end, "+10,000g" becomes the amount still needed.
-    GIVE_STEPS.forEach((step, i) => {
-      const amount = Math.min(step, left);
-      const repeat = i > 0 && Math.min(GIVE_STEPS[i - 1]!, left) === amount;
-      this.button(8 + i * 62, by, 58, 22, `+${fmt(amount)}g`, () =>
-        this.after(donateGold(getState(), id, step)),
-      ).setEnabled(amount > 0 && !repeat && s.money >= amount);
-    });
+    // Once the gold is all in, the three buttons give way to a plain line (no "+0g" buttons).
+    if (left <= 0) this.label(100, by + 6, 'All the gold is in!', C.green, 1, 'center');
+    else
+      GIVE_STEPS.forEach((step, i) => {
+        const amount = Math.min(step, left);
+        const repeat = i > 0 && Math.min(GIVE_STEPS[i - 1]!, left) === amount;
+        this.button(8 + i * 62, by, 58, 22, `+${fmt(amount)}g`, () =>
+          this.after(donateGold(getState(), id, step)),
+        ).setEnabled(amount > 0 && !repeat && s.money >= amount);
+      });
     const needsItems = itemNeeds(s, id).some((n) => n.given < n.need);
     this.button(8, by + 26, 90, 22, 'Give goods', () =>
       this.after(donateItems(getState(), id)),
@@ -135,7 +201,8 @@ export class ProjectPanel extends Modal {
     if (res.ok) {
       audio.play(res.finished ? 'level' : 'buy');
       haptic('success');
-      if (res.finished) this.id = null;
+      // A repeatable project stays open on its page for the next level (critique 7, F9).
+      if (res.finished && !projects[this.id ?? '']?.repeat) this.id = null;
     } else {
       audio.play('error');
       haptic('error');

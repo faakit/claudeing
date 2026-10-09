@@ -127,6 +127,20 @@ placeholder colour). Progress is kept in stats, so a new project needs no save c
 A plot in `plots.json` with `"project": "<id>"` is owned once that project is finished; with
 `"greenhouse": true` crops on it ignore the season. Rules live in
 `systems/projects.ts`; the sheet is `ui/panels/ProjectPanel.ts`, opened from the town board.
+A project with `"repeat": { "growth": 1.5, "perkLevels": 5 }` never closes: each level costs `growth`
+times the last, and its perks stack for the first `perkLevels` levels (the Founder's Statue).
+
+### Festivals
+
+`festivals.json` picks a `mode`: `single` (one item), `basket` (up to `slots` different goods; quality does
+not make a good different) or `derby` (the day's best catches). A basket's variety bonus counts `kinds`:
+`[{ "name": "Veg", "families": ["veg"] }, ...]`, first match wins, and a good that matches none is its own
+kind. A derby may name a `stocked` fish that bites on some maps whatever the weather.
+
+### Moving occupied buildings
+
+A placeable behavior with `occupants(obj)` (what would come along: "3 chickens") is moved from the Move
+sheet instead of a second tap whenever it holds something; with `keepsData` its state rides along.
 
 ## 6. Panels and menu tabs
 

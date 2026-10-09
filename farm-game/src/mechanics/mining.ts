@@ -1,3 +1,4 @@
+import { tiredText } from '../systems/food';
 import { items, mining } from '../data';
 import { registerActionHandler, registerToolAction } from '../systems/actionRegistry';
 import { registerDayHook } from '../systems/dayHooks';
@@ -10,7 +11,7 @@ import { addXp } from '../systems/skills';
 /** The pickaxe breaks the ore node in front of you. Nodes are solid, so you always face one to mine it. */
 registerToolAction('mine', ({ state, tile, tool }) => {
   if (!nodeAt(state, tile.map, tile.tx, tile.ty)) return { refusal: 'Nothing to mine here.' };
-  if (!canAfford(state, tool.energyCost)) return { refusal: 'Too tired! Go to bed.' };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   if (roomFor(state, 'stone', 1) < 1) return { refusal: 'Inventory full!' };
   return {
     plan: {

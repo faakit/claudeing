@@ -1,4 +1,7 @@
-import { items } from '../data';
+import { crops, items } from '../data';
+import type { PlaceableDef } from '../data';
+import type { GameState, PlacedObject } from '../state/GameState';
+import { parseKey } from '../systems/farming';
 import { addItem, roomFor } from '../systems/inventory';
 import { addStat } from '../systems/goals';
 import { toast } from '../systems/events';
@@ -24,11 +27,33 @@ export function hiveOf(obj: { data: Record<string, unknown> }, cap = 3): HiveDat
   return h;
 }
 
+/** Is a flower crop (a tulip) growing within `radius` tiles of this bee house? */
+export function flowersNear(state: GameState, obj: PlacedObject, radius: number): boolean {
+  if (radius <= 0) return false;
+  return Object.entries(state.farm.tiles).some(([key, soil]) => {
+    if (!soil.crop) return false;
+    const [tx, ty] = parseKey(key);
+    const crop = crops[soil.crop.cropId];
+    return (
+      !!crop &&
+      items[crop.harvestItem]?.family === 'flower' &&
+      Math.max(Math.abs(tx - obj.tx), Math.abs(ty - obj.ty)) <= radius
+    );
+  });
+}
+
+/** Mornings per honey: `days`, or `flowerDays` while flowers grow nearby. */
+export function hiveDays(state: GameState, obj: PlacedObject, def: PlaceableDef): number {
+  const days = Number(def.params['days'] ?? 4);
+  const radius = Number(def.params['flowerRadius'] ?? 0);
+  return flowersNear(state, obj, radius) ? Number(def.params['flowerDays'] ?? days) : days;
+}
+
 /** A bee house makes honey every few mornings with no input: low effort, low reward, never stops. */
 registerPlaceableBehavior('beeHouse', {
   status: (obj) => (hiveOf(obj).ready > 0 ? 'ready' : 'busy'),
-  onMorning(_state, obj, def, ctx) {
-    const days = Number(def.params['days'] ?? 4);
+  onMorning(state, obj, def, ctx) {
+    const days = hiveDays(state, obj, def);
     const cap = Number(def.params['cap'] ?? 3);
     const h = hiveOf(obj, cap);
     h.timer += 1;
@@ -41,8 +66,12 @@ registerPlaceableBehavior('beeHouse', {
   interact(state, obj, def) {
     const h = hiveOf(obj, Number(def.params['cap'] ?? 3));
     if (h.ready === 0) {
-      const left = Number(def.params['days'] ?? 4) - h.timer;
-      return { kind: 'message', text: `Honey in ${left} day${left > 1 ? 's' : ''}.` };
+      const left = Math.max(1, hiveDays(state, obj, def) - h.timer);
+      const near = flowersNear(state, obj, Number(def.params['flowerRadius'] ?? 0));
+      return {
+        kind: 'message',
+        text: `Honey in ${left} day${left > 1 ? 's' : ''}.${near ? ' The bees love your flowers.' : ''}`,
+      };
     }
     const take = Math.min(h.ready, roomFor(state, 'honey', h.ready));
     if (take === 0) return { kind: 'message', text: 'Inventory full!' };

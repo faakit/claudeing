@@ -21,11 +21,11 @@ export class SleepPanel extends Modal {
   protected build(): void {
     const s = getState();
     this.panel();
-    this.label(this.panelW / 2, 8, 'Go to bed?', C.gold, 2, 'center');
-    this.label(this.panelW / 2, 28, `It is ${formatClock(s.time.minutes)}.`, C.cream, 1, 'center');
+    this.label(this.panelW / 2, 6, 'Go to bed?', C.gold, 2, 'center');
+    this.label(this.panelW / 2, 30, `It is ${formatClock(s.time.minutes)}.`, C.cream, 1, 'center');
     this.label(
       this.panelW / 2,
-      41,
+      42,
       'Crops grow, the bin is sold, and you wake up fully rested.',
       C.creamDim,
       1,

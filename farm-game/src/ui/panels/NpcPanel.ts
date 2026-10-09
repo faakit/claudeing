@@ -26,7 +26,7 @@ import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
-import { giftSub } from './giftText';
+import { giftNote, giftSub } from './giftText';
 
 const ROWS = 5;
 
@@ -166,14 +166,16 @@ export class NpcPanel extends Modal {
         this.close();
         gameEvents.emit('openPanel', { type: 'shop' });
       });
+    // Beside a Shop button there is less room (critique 6, F8: "1 gift a day." ran off the edge).
+    const x = def.role === 'shop' ? 136 : 104;
     this.label(
-      def.role === 'shop' ? 138 : 104,
+      x,
       y + 4,
-      canGift(s, this.id) ? '1 gift a day.' : 'Back tomorrow.',
+      giftNote(canGift(s, this.id), def.role === 'shop'),
       C.creamDim,
       1,
       'left',
-      90,
+      192 - x,
     );
   }
 

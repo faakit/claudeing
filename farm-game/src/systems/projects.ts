@@ -13,25 +13,43 @@ import { countItem, removeItem } from './inventory';
  *  - `fund.<id>`          gold given so far
  *  - `fund.<id>.<item>`   goods given so far
  *  - `project.<id>`       1 once finished
+ *  - `project.<id>.level` times a repeatable project was finished (gold and goods restart each level)
  */
 const goldKey = (id: string): string => `fund.${id}`;
 const itemKey = (id: string, item: string): string => `fund.${id}.${item}`;
 const doneKey = (id: string): string => `project.${id}`;
+const levelKey = (id: string): string => `project.${id}.level`;
+
+/** How many times a project was finished: 0 or 1, or any number for a repeatable one. */
+export const projectLevel = (state: GameState, id: string): number =>
+  projects[id]?.repeat
+    ? Math.max(0, Math.floor(state.stats[levelKey(id)] ?? 0))
+    : state.stats[doneKey(id)] === 1
+      ? 1
+      : 0;
+
+/** Gold the project asks for now: a repeatable one costs `growth` times more each level. */
+export function priceOf(state: GameState, id: string): number {
+  const p = projects[id];
+  if (!p) return 0;
+  if (!p.repeat) return p.gold;
+  return Math.round((p.gold * p.repeat.growth ** projectLevel(state, id)) / 100) * 100;
+}
 
 export const projectIds = (): string[] => Object.keys(projects);
 
 export const isProjectDone = (state: GameState, id: string): boolean =>
   state.stats[doneKey(id)] === 1;
 
-/** Open for funding: not finished, and whatever it comes after is finished. */
+/** Open for funding: not finished (a repeatable one never closes), and whatever it comes after is finished. */
 export function isProjectOpen(state: GameState, id: string): boolean {
   const p = projects[id];
-  if (!p || isProjectDone(state, id)) return false;
+  if (!p || (isProjectDone(state, id) && !p.repeat)) return false;
   return p.after === undefined || isProjectDone(state, p.after);
 }
 
 export const goldGiven = (state: GameState, id: string): number =>
-  Math.min(projects[id]?.gold ?? 0, state.stats[goldKey(id)] ?? 0);
+  Math.min(priceOf(state, id), state.stats[goldKey(id)] ?? 0);
 
 export interface ItemNeed {
   item: string;
@@ -51,11 +69,11 @@ export function itemNeeds(state: GameState, id: string): ItemNeed[] {
 export function projectProgress(state: GameState, id: string): number {
   const p = projects[id];
   if (!p) return 0;
-  if (isProjectDone(state, id)) return 1;
+  if (isProjectDone(state, id) && !p.repeat) return 1;
   const needs = itemNeeds(state, id);
   const parts = 1 + needs.length;
   const items = needs.reduce((n, x) => n + x.given / x.need, 0);
-  return (goldGiven(state, id) / p.gold + items) / parts;
+  return (goldGiven(state, id) / priceOf(state, id) + items) / parts;
 }
 
 /** Projects the player can see on the board: finished ones and open ones, in data order. */
@@ -75,15 +93,27 @@ export type FundResult =
   | { ok: true; given: number; finished: boolean }
   | { ok: false; reason: 'unknown' | 'closed' | 'no_money' | 'nothing' };
 
-/** Finish the project if every coin and good is in. Grants it once: perks, landmark, stats. */
+/**
+ * Finish the project if every coin and good is in. Grants it once: perks, landmark, stats. A repeatable
+ * project instead goes up a level and starts collecting again (it never counts toward "all projects").
+ */
 function tryFinish(state: GameState, id: string): boolean {
   const p = projects[id] as ProjectDef;
-  if (isProjectDone(state, id) || goldGiven(state, id) < p.gold) return false;
+  if ((isProjectDone(state, id) && !p.repeat) || goldGiven(state, id) < priceOf(state, id))
+    return false;
   if (itemNeeds(state, id).some((n) => n.given < n.need)) return false;
+  const first = !isProjectDone(state, id);
   state.stats[doneKey(id)] = 1;
-  toast(`${p.name} is finished! ${p.reward}`, 'good');
-  if (p.landmark) gameEvents.emit('placedChanged', { map: p.landmark.map });
-  addStat(state, 'projectsDone');
+  if (p.repeat) {
+    const level = projectLevel(state, id) + 1;
+    state.stats[levelKey(id)] = level;
+    delete state.stats[goldKey(id)];
+    for (const n of p.items ?? []) delete state.stats[itemKey(id, n.item)];
+    addStat(state, 'projectLevels');
+    toast(`${p.name}: level ${level}! ${p.reward}`, 'good');
+  } else toast(`${p.name} is finished! ${p.reward}`, 'good');
+  if (p.landmark && first) gameEvents.emit('placedChanged', { map: p.landmark.map });
+  if (!p.repeat) addStat(state, 'projectsDone');
   return true;
 }
 
@@ -92,7 +122,7 @@ export function donateGold(state: GameState, id: string, amount: number): FundRe
   const p = projects[id];
   if (!p) return { ok: false, reason: 'unknown' };
   if (!isProjectOpen(state, id)) return { ok: false, reason: 'closed' };
-  const give = Math.min(Math.floor(amount), p.gold - goldGiven(state, id));
+  const give = Math.min(Math.floor(amount), priceOf(state, id) - goldGiven(state, id));
   if (give <= 0) return { ok: false, reason: 'nothing' };
   if (state.money < give) return { ok: false, reason: 'no_money' };
   state.money -= give;
@@ -122,11 +152,16 @@ export const canGiveItems = (state: GameState, id: string): boolean =>
   isProjectOpen(state, id) &&
   itemNeeds(state, id).some((n) => n.given < n.need && countItem(state, n.item) > 0);
 
-/** Sum of a perk over finished projects. Registered as a perk source by mechanics/projects.ts. */
+/**
+ * Sum of a perk over finished projects (a repeatable one counts each level, up to its `perkLevels`).
+ * Registered as a perk source by mechanics/projects.ts.
+ */
 export function projectPerk(state: GameState, key: string): number {
   let total = 0;
-  for (const [id, p] of Object.entries(projects))
-    if (isProjectDone(state, id)) total += p.perks[key] ?? 0;
+  for (const [id, p] of Object.entries(projects)) {
+    const levels = Math.min(projectLevel(state, id), p.repeat?.perkLevels ?? 1);
+    total += (p.perks[key] ?? 0) * levels;
+  }
   return total;
 }
 

@@ -349,3 +349,116 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
   masks it on phone speakers.
 - **Phaser's own audio is off** (`audio: { noAudio: true }`): one AudioContext for the whole game.
 - **Sources:** Kenney (CC0) and OpenGameArt CC0 for sound effects and ambience, Versilian Studios (CC0) for instruments; every file, page, author, licence and sha1 in `audio-src/SOURCES.md`. Nothing was listened to by a human while building it.
+
+## Critique 5 fixes (depth round 2)
+
+An independent critic played the build at `64eeb10` and wrote `agents/critiques/critique-5.md` (partial). Fixed:
+
+- **F1 Clay has teeth: requests stay two or three days** (`orders.json` `days`). Each morning filled and expired requests come down and new ones fill the free places, so a request you need a day to gather for can be taken by Clay at 2 PM, the best-paying one first. Rows say "Have 1/3  120g  2 days". Clay now stays in town until 6 PM, so his 2-heart perk ("comes at 5 PM") matches where he is. Old saves: a request with no last day ends the day it was posted (no version bump; `until` is optional). The sim earns about 10% more (more requests get filled), so `SIM_EARNED` moved from 208,549 to 230,261.
+- **F2 baskets count goods, not qualities:** three pumpkins of three qualities are one good and are refused. Kinds come from the festival's data (`kinds`): the Harvest Fair now also takes forage and counts Veg, Fruit and Wild; at the Winter Feast every preserve is its own kind and all animal goods are one. Each row names its kind and the basket line shows "+30%". Feast rivals rose to 260/480/900, so a single gold wine is second, not first.
+- **F3 a chore tap never lifts an occupied building:** behaviors may say what they hold (`occupants`); for a coop, barn, sty or stocked silo the second tap opens a Move sheet with a "Move it" button instead of picking it up. Empty ones still go with a second tap. Auto tool: none (Interact).
+- **F4 the derby talks:** an improving catch toasts "Derby best! Catfish. Score 195."; the derby page names each fish; handing in before 6 PM asks once ("Sure? Tap to hand in"). Derby day stocks catfish in the town river whatever the weather (`stocked`), and the page says so; the third rival dropped to 95 so three bluegill from the farm pond reach the podium.
+- **F5 regrowing crops under glass are spent when their season ends** (and cannot be planted too late to ripen), so corn and the rare berries earn 13 to 14g per tile-day there against pumpkin's 19. The greenhouse test now counts seed cost and regrowth.
+- **F6 and the owner's call:** nothing can be placed on land for sale or on a project's site before it is yours ("Not your land yet. Buy it at a sign."). The yard outside every plot stays free for decorations and machines.
+- **F7** the morning summary names a house the silo could not feed ("The barn went hungry: the silo needs 2 Hay.").
+- **F8** a finished project's gold buttons give way to "All the gold is in!"; shop rows keep "own N" by shortening to "4d 35g, own 12" when the full line does not fit beside the buttons (the old test allowed 110 px where the row has 86); truffles join the Animal Goods page.
+
+## Animal goods on the board (depth round 2)
+
+- **Orders and specials ask for eggs, milk, wool, truffles and honey once the farm makes them** (`animalOutput`: a house with animals, a bee house; pigs not in winter). A request never asks for more than about two days of what the farm makes (`animalOrderCap`), so one hen never gets a request for six eggs. The egg special now waits for hens, not for any animal; milk (Rosa) and truffle (Mara) specials were added. No reward rule changed, so the order bound in `tests/balance.test.ts` still holds.
+
+## Clay in year two (depth round 2)
+
+- **From year two Clay takes two requests a day** (`game.rival.perYear`, capped by `maxTakes`), back to one once he likes you (`calmHearts`: 2 hearts, the same heart that makes him come later). He never takes the last open request. The board says "Clay takes the best two at 2:00 PM."
+
+## A repeatable late-game sink: the Founder's Statue (depth round 2)
+
+- **Evidence first:** a two-year run of the sim bot that buys all the land and then funds every project (it is handed the goods it does not mine) finished all eight projects by spring of year two and then ended the year holding about 280k gold with nothing to buy.
+- **A project can now repeat** (`repeat: { growth, perkLevels }` in `projects.json`): each level costs `growth` times the last, gold and goods start over, perks stack for `perkLevels` levels and later levels are for show. Levels are the stat `project.<id>.level`; no new state.
+- **The Founder's Statue** opens after the Market Road: 30,000g and 50 stone for level 1, half again each level; +1% on sales per level up to +5%. A level pays back 1% of a year's sales, so it is a sink, not an investment (a test keeps payback over ten tireless years). The same bot now ends year two at statue level 4 with about 30k in hand. Repeat levels never count toward "all projects"; a goal "statue level 3" is appended.
+- **Landmark** `obj_landmark_statue` at town 10,14 (fallback colour until art).
+
+## Decorations with a small use (owner's call, depth round 2)
+
+- **Mostly cosmetic still**, but two do a little: a **Garden Bench** gives +15 energy once a day when you sit (Interact; a full player keeps the sit for later), and a new **Scarecrow** (80g, Home tab, `radius` 4) keeps crows off the crops around it.
+- **Crows are the reason for the scarecrow, and they are mild:** from day 8, on a dry morning, a field with 12 or more crops no scarecrow watches has a 25% chance to lose one crop ("A crow ate a parsnip. Scarecrows keep them off."). Never under glass. Rosa's day-7 letter brings a scarecrow, so the first one is free and comes before the first crow. Auto tool: none (placeable / Interact).
+- **The sim bot stands scarecrows over every plot** and loses almost nothing; it now also runs five seeds and is judged on the median (critique 5, F9), pinned at 209,894 (seed 42 alone: 224,150; the spread of 149k to 224k is why one seed was not evidence).
+
+## Jobs are a nudge, not a living (owner's call, depth round 2)
+
+- **Measured:** over days 2 to 14 three average jobs a day paid about 1,800g, while the tireless sim bot's farm had earned 1,380g by day 14 (median of five seeds). Jobs outpaced crops.
+- **Job gold is now 55% of what it was** (each `base` and `perUnit` in `jobs.json`), so the same two weeks of jobs pay about 1,000g: still a useful start (three jobs buy a row of seeds) but less than the farm. A sim test keeps early jobs under three quarters of early farm income. Friendship from jobs is unchanged.
+- **Knock-on:** the bot completes some jobs passively (harvest and ship jobs), so its year fell; the five-seed median was repinned from 209,894 to 177,686, and the two-year statue check now expects level 3 and 250k sunk.
+- **Specials stay at 1.5x the goods' value** (about 750g over the bin for a week of planning): no change, nothing in the tests says they outpace crops.
+
+## The Flower Show is an arrangement (handover goal 6, depth round 2)
+
+- **A basket of up to three different flowers** (the basket mode, no new screen): each flower is its own kind, so a pair scores 15% more and three flowers 30%. Rivals rose to 40/75/120: a plain tulip and daffodil reach the podium, a gold pair wins, a lone daffodil does not place.
+- **Tulips, a spring flower crop** (bulbs 25g, 6 days, 55g; on the Crops page of the Book), so the show has something you grow for it, not only what you find. Per tile-day they earn less than potatoes, so they are for the show and variety, not a new best crop. A year-two player can add a summer sunflower or winter holly kept in the bag.
+- **Bees love flowers:** a bee house with a flower crop (tulips) growing within 3 tiles makes honey every 3 mornings instead of 4 (`flowerDays`, `flowerRadius`), and says so. This gives tulips a use beyond one festival day; at most five bee houses, so honey stays a small income (about 117g a day at best).
+
+## Critique 6 fixes (depth round 2)
+
+An independent critic played the build at `5fd9943` (14 real-input days plus probes and a 41-screen sweep) and wrote `agents/critiques/critique-6.md`. Fixed:
+
+- **F1 (Blocker) the projects list overflowed:** with eight or nine projects the Market Road's Open sat under Close and the statue was off the screen. The list now shows the projects you can still fund (the statue always first) and moves finished ones to a "Finished (7)" page, five rows a page with arrows; a layout test checks every row stays above the buttons, and the e2e opens the statue with a real tap.
+- **F2 (Major) Clay only came if you looked after 2 PM:** the morning refresh now settles the day before first (`settleRival`), with a summary line ("Clay filled 4 Potato on the board."); it never acts twice for a day.
+- **F3 Clay always took the newest, dearest request:** a request is safe on the day it goes up (`Order.from`); from the next day Clay targets the best one, and the board names it ("Clay wants this one at 2:00 PM." and "Clay's!" on the row). The race is now "can I bring 4 potatoes before 2 PM tomorrow?". Crop requests only appear for crops you are growing or carry, so the early board stops asking for what cannot ripen in time.
+- **F4 specials ignored herd size:** an animal special asks for at most what the farm makes by the deadline (`specialCap`), and is not posted when that is under five. Pigs count at 60% (dry days); honey requests only when a hive has some ready.
+- **F5 a greenhouse year's seed shelf was a trap:** the season's own seeds come first, the others say "Glass only"; regrowing seeds say "again 4d". The sim bot no longer buys out-of-season seeds and farms its greenhouse; its two-year run now shows a full year two (about 777k earned, statue level 5, 30k in hand) instead of a dead summer. Five-seed median repinned at 195,194.
+- **F6 festivals too easy:** Fair rivals 400/750/1,300 and Feast rivals 300/700/1,600, so the best three jars still win but not at 2.6x Clay, and a lone gold wine or two gold crops no longer take first.
+- **F7 the bench:** the sit is kept until it gives its full 15; right after sitting, Interact says "Rested. Back tomorrow." and never arms a pick-up (`arm: false` on a message).
+- **F8 text:** "Done!" for perk-less projects; "1 a day." beside Mara's Shop button; the silo's Move line no longer says "they"; Enter no longer presses "Move it"; the sleep title no longer touches the time; the season change says when regrowing crops under glass were spent; the scarecrow says its reach.
+- **F9:** dearer land signs appear at half their price earned (was a quarter). The long-press hotbar picker stays with the controls agent.
+
+## A kitchen and cooking (brief backlog 1: house upgrades)
+
+- **The Kitchen is a Home upgrade** (2,500g, shop Home tab). Its level is kept only as the `upgraded.kitchen` stat (`upgradeLevel` falls back to it), so no save change.
+- **Six dishes cooked at the workbench** (recipes with `kitchen: true`): Parsnip Soup, Baked Potato, Fish Stew, Berry Tart, Kale Salad, Pumpkin Pie. Each restores 30 to 80 energy. Eat from the bag card ("Eat +40") or with the dish in hand and Action (`eat` handler, priority 45; auto tool: none). A full player is refused, so a dish is never wasted.
+- **Energy, not money:** a dish sells for at most 15% over its ingredients (a test), so cooking makes a long day longer instead of being a second jar. Villagers like some dishes (Rosa loves pumpkin pie, Finn fish stew). A "Cook a meal" goal is appended.
+- New texture keys: `item_parsnip_soup`, `item_baked_potato`, `item_fish_stew`, `item_berry_tart`, `item_kale_salad`, `item_pumpkin_pie`.
+
+## Legendary fish (fishing mastery)
+
+- **Four legends, one a season** (`legend: true` in `fish.json`, appended so derby fish codes keep their meaning): Glimmer Trout (town river, rainy spring), Sun Carp (the farm pond, summer), Old Whiskers (woods, rainy fall), Ice Pike (town, winter). Each is rare (weight 0.4), hard (0.8 to 0.9) and bites only until you catch it once (`legend.<id>` stat). They are never board requests.
+- **Found through Finn:** a letter after your tenth catch says where each hides; a "Catch a legendary fish" goal is appended. Not on a Book page, so finishing the Book stays reachable.
+- New texture keys: `item_glimmer_trout`, `item_sun_carp`, `item_old_whiskers`, `item_ice_pike`.
+
+## A human-paced sim (critique 5, F9: "no clock")
+
+- The bot can now be given a number of Action presses a day. At 150 presses (three seeds) it earns a median of about 148k in year one, 76% of the tireless bot; at 60 presses about 87k. Upgraded tools and plant-a-row make each press count, which is why the gap is smaller than the press count suggests. A test keeps the 150-press year under the tireless median and above the first statue level, so a steady human reaches the late sinks in year two rather than drowning in gold in year one.
+- **The bot keeps hens too** (a coop of three once Farming 3, fed and collected daily, eggs shipped or given to requests), so animal goods on the board are exercised by the sim. The five-seed median moved from 195,194 to 219,796 (+13%: about 12k of eggs a year plus egg requests and a different random path).
+
+## Critique 7 fixes (depth round 2)
+
+An independent critic played the build at `f27999e` (two 14-day real-input runs, probes, a 44-screen sweep) and wrote `agents/critiques/critique-7.md`: no blocker; six critique-6 fixes held. Fixed:
+
+- **F1 crop requests for crops that could not ripen in time:** a crop is asked for only if you carry some or one of yours ripens within 3 days (`cropReadyIn`, `CROP_WAIT`), and the request stays open until a day after it ripens.
+- **F2 Clay took the dearest request every day, so "3 days" was a lie:** he now takes only requests on their **last day**, so the days on a row are true; and **on a day you fill a request yourself he stays home** ("Clay stays home: you won today."), so racing him has a reward. Most of what he still takes would have expired unfilled.
+- **F3 the board asked a farmer for trout:** crops, preserves and animal goods are drawn three times as often as fish and wild goods (a test keeps two grown crops above a quarter of requests).
+- **F4 the special's Give starved a same-item request:** it keeps back what a fillable same-item request needs and says how many it gives ("Give 3"); a finished special is not posted again within a season.
+- **F5 bench:** without a sit to give, Interact says why ("Rested today." or "Sit when tired (+15).") before the usual second-tap pick-up.
+- **F6 eating:** a dish is kept when less than half of it would count ("Not hungry" on the card, "You're not hungry enough." on Action); the card shows the real gain; the bag cursor clears when the last one is eaten; out of energy with food in the bag, the line says "Eat something or go to bed."
+- **F7 legends:** the Book's Fish page shows "Legends 1/4".
+- **F8 animal specials** ask for about 70% of what the farm makes by the deadline (`SPECIAL_SHARE`).
+- **F9:** the honey tip no longer talks about feeding animals (the tip now waits for an animal); the statue page says what you have ("Now +2%.") and stays open after a level; glass-only regrowing seeds keep "again 4d" where it fits; the seed shelf lists this season's seeds, then glass-only ones, then the rest.
+- **Sim:** five-seed median repinned at 227,442 (crop requests the bot can fill; Clay only on last days). Clay took 71 of 145 requests in the seed-42 year, all on their last day and almost all ones the bot would not have filled.
+
+## The traveling cart, x5 cooking, a legend warning
+
+- **A traveling cart on days 5, 12, 19 and 26 of every season** (`cart.json`): four goods a visit from a pool the store does not sell, at a premium: rare seeds at twice the price before (or instead of) the Seed Exchange, saplings, Speed-Gro, and copper and iron bars, quartz and cloth for players who do not mine or weave. Five of each a visit. Opened from a gold "The traveling cart is here!" button on the board; the morning news announces it. Its stock is a hash of the day, so it needs no saved state (purchases are `cart.<day>.<item>` stats). Seeds are offered only when they grow now or you have a greenhouse. A weekly reason to visit town and a mid-game gold sink; bars cost about five times what the bin pays, so it is a shortcut, never a loop.
+- **x5 on dishes** at the workbench (cooks up to five); ingredient lines drop the "1" ("Pumpkin, Egg, Milk") so they fit beside two buttons.
+- **A legend in the bin** gets a warning toast: it can still be taken back out before bed.
+- New texture keys: none (the cart is a sheet, not an object in the world).
+
+## Critique 8 fixes (depth round 2)
+
+The critic played the build at `3e1b9c5` (two 16-day real-input runs, probes, a 42-screen sweep) and wrote `agents/critiques/critique-8.md`: no blocker. Fixed:
+
+- **F1 the special's Give could still empty a same-item request:** goods a fillable request needs are never handed to the special; when all are spoken for, its row says "Saved for a request." and Give is off.
+- **F2 Clay had become harmless (he only took rows nobody would fill):** the "stays home" rule is gone and **the board keeps score each season** instead: a request you fill is a point for you, one left to its last day is a point for Clay. The notice shows "This season: you 3, Clay 1." On the first morning of a season the leader is settled: beat him and the town pays 300g a year of play (and he likes you a little more); lose and he writes to gloat. Leaving requests to expire now costs something, and the rule is the same one the board shows. His letter and chat line were rewritten to match ("Leave a request to its last day and it is mine.").
+- **F3 crop requests asked for more than the field gives:** a crop request asks for at most what you carry plus what ripens before it ends (`cropSupply`).
+- **F5 the first week's board had no crops:** a crop now joins the board up to 7 days before it ripens (`CROP_WAIT`), and the request stays open until a day after.
+- **F4 the cart resold store goods:** it never offers what the store sells that day, nor seeds that cannot ripen this season (without a greenhouse); its pool is rare seeds, bars, quartz, cloth, a ruby, amethyst, rich fertilizer and a quality sprinkler, each with a one-line use shown when bought ("Bought Quartz. For the Library and Greenhouse."); its sheet closes back to the board.
+- **F6** the bag cursor clears after any Eat tap, and "Not hungry" is drawn dim. **F7** batch cooking ("x3") uses plain-quality ingredients only and toasts the real count. **F8** goal and tip text say "Make", not "Craft"; the pre-Clay notice says "Requests stay a few days."; the statue page says "Next level: ... Now +2%."
+- **Sim:** the median rose 16% across critique 7 and 8 work; measured, it is about 9k of eggs (180 a year from the bot's hens), about 7k more of board requests, and more jars kept busy along a richer early path. Repinned at 213,730.

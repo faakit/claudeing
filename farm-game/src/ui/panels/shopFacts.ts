@@ -1,4 +1,5 @@
 import { crops, game, items, placeables, trees } from '../../data';
+import { measureText } from '../fontMetrics';
 
 /** True when a seed could not ripen before the season ends (so buying it now is a mistake). */
 export function tooLate(itemId: string, day: number): boolean {
@@ -7,17 +8,54 @@ export function tooLate(itemId: string, day: number): boolean {
   return crop.stageDays.reduce((a, b) => a + b, 0) > game.seasonLength - day;
 }
 
-/** The short line under an item in the shop: facts a buyer needs, never a long blurb. Pure so tests can size it. */
-export function shopFacts(itemId: string, own: number, day: number, greenhouse = false): string {
+/**
+ * Room for the facts line in a shop row: the 200 px sheet less the icon column and the buttons
+ * (a price button, plus x5 on cheap rows).
+ */
+export const shopFactsRoom = (withX5: boolean): number => 200 - 8 - 28 - 47 - (withX5 ? 29 : 0) - 2;
+
+/**
+ * The short line under an item in the shop: facts a buyer needs, never a long blurb. It always fits `room`
+ * with the "own" count kept (critique 5 found "Parsnip Seeds 4 days 35g (ow.."). Pure so tests can size it.
+ */
+export function shopFacts(
+  itemId: string,
+  own: number,
+  day: number,
+  greenhouse = false,
+  room = shopFactsRoom(true),
+  season?: string,
+): string {
   const def = items[itemId]!;
   const crop = def.plants ? crops[def.plants] : undefined;
   let base: string;
-  if (crop)
-    base =
-      !greenhouse && tooLate(itemId, day)
-        ? 'Too late now'
-        : `${crop.stageDays.reduce((a, b) => a + b, 0)} days  ${items[crop.harvestItem]?.sellPrice ?? 0}g`;
-  else if (def.type === 'animal') base = 'Needs a home';
+  let short: string | null = null;
+  /** Shorter ways to say `base` when it does not fit beside the buttons. */
+  let alts: string[] = [];
+  if (crop) {
+    const days = crop.stageDays.reduce((a, b) => a + b, 0);
+    const sell = items[crop.harvestItem]?.sellPrice ?? 0;
+    const late = !greenhouse && tooLate(itemId, day);
+    // With a greenhouse every season's seeds are sold; say which ones only grow under glass.
+    const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
+    const again = crop.regrowDays ? `, again ${crop.regrowDays}d` : '';
+    base = late
+      ? 'Too late now'
+      : glass
+        ? `Glass only ${days}d ${sell}g${again}`
+        : `${days} days  ${sell}g${again}`;
+    alts = late
+      ? []
+      : glass
+        ? [
+            `Glass only ${days}d ${sell}g`,
+            `Glass ${days}d ${sell}g${again}`,
+            `Glass ${days}d ${sell}g`,
+            `Glass ${days}d`,
+          ]
+        : [`${days}d ${sell}g${again}`, `${days}d ${sell}g`];
+    short = late ? 'Too late' : glass ? `Glass ${days}d` : `${days}d ${sell}g`;
+  } else if (def.type === 'animal') base = 'Needs a home';
   else if (def.type === 'sapling') base = `${seasonName(trees[itemId]?.season ?? '')} fruit`;
   else if (def.type === 'feed') base = 'Daily food';
   else if (def.type === 'fertilizer')
@@ -28,7 +66,10 @@ export function shopFacts(itemId: string, own: number, day: number, greenhouse =
     // For decorations `own` counts placed ones too, against the cap: "Decor 1/1".
     return `Decor ${own}/${String(placeables[itemId]?.params['max'] ?? 1)}`;
   else base = def.description;
-  return own > 0 ? `${base} (own ${own})` : base;
+  if (own <= 0) return [base, ...alts].find((l) => measureText(l) <= room) ?? base;
+  for (const line of [`${base} (own ${own})`, short && `${short}, own ${own}`])
+    if (line && measureText(line) <= room) return line;
+  return `Own ${own}`;
 }
 
 export type ShopTab = 'seeds' | 'farm' | 'home' | 'upgrades';

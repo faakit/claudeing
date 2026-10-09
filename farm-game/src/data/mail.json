@@ -166,9 +166,32 @@
       "id": "clay_intro",
       "from": "clay",
       "title": "Hello, neighbour",
-      "text": "Heard there is a new farmer in the valley. I fill requests on the town board too: from tomorrow I take one every day at 2 PM. May the best farmer win.",
+      "text": "Heard there is a new farmer in the valley. I fill requests on the town board too: any you leave to their last day, I take at 2 PM. The board keeps score each season. May the best farmer win.",
       "when": {
         "day": 7
+      }
+    },
+    {
+      "id": "crows",
+      "from": "rosa",
+      "title": "Mind the crows",
+      "text": "Crows come down to the fields after the first week. A scarecrow keeps them off the crops around it. Here, take my spare one!",
+      "when": {
+        "day": 7
+      },
+      "gift": {
+        "item": "scarecrow",
+        "qty": 1
+      }
+    },
+    {
+      "id": "legends",
+      "from": "finn",
+      "title": "Legends of the valley",
+      "text": "Four giant fish live here, one a season, and each bites only once. A trout in the town river on rainy spring days. A golden carp in your own pond in summer. Old Whiskers in the woods when fall rain falls. A pike under the winter ice in town.",
+      "when": {
+        "stat": "caught",
+        "min": 10
       }
     }
   ]

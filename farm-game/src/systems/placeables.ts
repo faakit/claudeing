@@ -8,7 +8,8 @@ import { addItem, roomFor } from './inventory';
 /** What the UI should do when the player interacts with a placed object. */
 export type InteractResult =
   | { kind: 'none' }
-  | { kind: 'message'; text: string }
+  /** `arm: false`: this message never arms "tap again to pick up" (a tap right after a sit-down). */
+  | { kind: 'message'; text: string; arm?: boolean }
   /** Open the sheet registered under `panel` for this object. */
   | { kind: 'panel'; panel: string; id: number }
   /** Pick the object back up into the inventory. */
@@ -32,6 +33,11 @@ export interface PlaceableBehavior {
    * this is how buildings are moved.
    */
   keepsData?: boolean;
+  /**
+   * What would come along if it were moved right now ("3 chickens, 2 eggs waiting"), or null when it is
+   * empty. An occupied object is never lifted by a tap: the second tap opens the Move sheet instead.
+   */
+  occupants?: (obj: PlacedObject) => string | null;
   /** How the world should draw it: nothing going on, working, or goods ready to collect. */
   status?: (obj: PlacedObject) => 'idle' | 'busy' | 'ready';
   /** Texture to draw for this object right now (e.g. a sapling before it is a tree). Default: the placeable's sprite. */
@@ -104,10 +110,21 @@ export function solidTiles(state: GameState, map: string): [number, number][] {
     .map((o) => [o.tx, o.ty] as [number, number]);
 }
 
+/** The sheet that asks before an occupied building is picked up to be moved. */
+export const MOVE_PANEL = 'move';
+
+/** What moving this object would carry along, or null when it is empty (see `occupants`). */
+export function occupantsOf(obj: PlacedObject): string | null {
+  const def = placeables[obj.type];
+  return def ? (behaviorOf(def).occupants?.(obj) ?? null) : null;
+}
+
 /** How long a "Tap again to pick up" stays armed. */
 export const ARM_MS = 4000;
 let armed: { id: number; at: number } | null = null;
 let clock: () => number = () => Date.now();
+/** The pick-up clock (ms), for behaviors that need "a moment ago". */
+export const pickupNow = (): number => clock();
 /** Tests can drive time. */
 export function setPickupClock(fn: () => number): void {
   clock = fn;
@@ -125,14 +142,20 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
   // on a plain status message (never after something happened, and never while it is busy). The arm is
   // runtime memory with a time limit: it is never saved, and a tap minutes later starts over.
   delete obj.data['armedPick']; // left by older versions, which saved it
-  if (res.kind === 'message' && res.text !== '' && canPickUp(obj)) {
+  if (res.kind === 'message' && res.text !== '' && res.arm !== false && canPickUp(obj)) {
+    // A building with animals or stock is moved from a sheet with a Move button, never by a stray
+    // second tap of a chore (critique 5, F3).
+    const occupied = b.occupants?.(obj) ?? null;
     const now = clock();
     if (armed && armed.id === obj.id && now - armed.at <= ARM_MS) {
       armed = null;
-      return { kind: 'pickup' };
+      return occupied ? { kind: 'panel', panel: MOVE_PANEL, id: obj.id } : { kind: 'pickup' };
     }
     armed = { id: obj.id, at: now };
-    return { ...res, text: `${res.text} Tap again to pick up.` };
+    return {
+      ...res,
+      text: `${res.text} ${occupied ? 'Tap again to move it.' : 'Tap again to pick up.'}`,
+    };
   }
   armed = null;
   return res;

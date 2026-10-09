@@ -3,16 +3,17 @@ import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import { deliverOrder, ensureOrders, haveFor, orderLabel } from '../../systems/orders';
+import { orderSub } from './boardText';
 import { iconKey, parseKey } from '../../systems/itemRef';
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
+import { cartStock } from '../../systems/cart';
 import { items } from '../../data';
-import { countItem } from '../../systems/inventory';
-import { giveToSpecial, specialLabel, specialSub } from '../../systems/specials';
-import { applyRival, rivalName, rivalNotice } from '../../systems/rival';
+import { giveToSpecial, specialGiveCount, specialLabel, specialSub } from '../../systems/specials';
+import { applyRival, rivalActive, rivalName, rivalNotice, rivalPicks } from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
 export class BoardPanel extends Modal {
@@ -27,30 +28,39 @@ export class BoardPanel extends Modal {
     // Rows, then the festival and projects buttons, then Close: the sheet grows with the board.
     const fest = festivalToday(s);
     const festOpen = !!fest && !hasEntered(s, fest.id);
+    const cartOpen = cartStock(s).length > 0;
     const rows = Math.max(1, s.orders.list.length);
     const sp = s.special;
-    this.setHeight(34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + 26 + 34);
+    this.setHeight(
+      34 + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + (cartOpen ? 26 : 0) + 26 + 34,
+    );
     this.panel();
-    this.label(8, 8, "Today's Requests", C.gold);
+    this.label(8, 8, 'Requests', C.gold);
     this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
     this.label(8, 20, rivalNotice(s), C.creamDim);
     let y = 34;
     if (sp) {
-      // The special order sits on top, in gold: a big seasonal request with a deadline.
-      const have = countItem(s, sp.item);
+      // The special order sits on top, in gold: a big seasonal request with a deadline. Its Give keeps back
+      // what a same-item request you can fill needs, and says how many it gives (critique 7, F4).
+      const keep = s.orders.list
+        .filter((o) => !o.done && parseKey(o.item).item === sp.item && haveFor(s, o) >= o.qty)
+        .reduce((n, o) => n + o.qty, 0);
+      const give = specialGiveCount(s, keep);
+      const have = give;
       y = this.row(y, {
         icon: items[sp.item]?.icon,
         title: specialLabel(sp),
-        sub: specialSub(sp),
+        // When every one you carry is spoken for by a request below, say so instead of offering them.
+        sub: give === 0 && keep > 0 ? 'Saved for a request.' : specialSub(sp),
         subColor: C.gold,
         buttons: [
           {
-            label: 'Give',
-            width: 34,
+            label: give > 0 ? `Give ${give}` : 'Give',
+            width: 40, // "Give 15" needs the room; the request rows keep 36 for their longer lines
             enabled: have > 0,
             color: have > 0 ? C.green : C.creamDim,
             onClick: () => {
-              const res = giveToSpecial(getState());
+              const res = giveToSpecial(getState(), keep);
               if (res.ok) {
                 audio.play(res.finished ? 'order' : 'buy');
                 haptic('success');
@@ -61,6 +71,10 @@ export class BoardPanel extends Modal {
         ],
       });
     }
+    // The requests Clay is after today are marked, so the race is about a known target.
+    const eyed = new Set(
+      rivalActive(s) && s.stats['rival.day'] !== s.orders.day ? rivalPicks(s).map((o) => o.id) : [],
+    );
     for (const o of s.orders.list) {
       const have = haveFor(s, o);
       const ready = !o.done && have >= o.qty;
@@ -71,12 +85,19 @@ export class BoardPanel extends Modal {
           ? `${rivalName()} filled this one.`
           : o.done
             ? 'Thank you!'
-            : `Have ${Math.min(have, 99)}/${o.qty}  Pays ${fmt(o.reward)}g`,
-        subColor: o.rival ? C.warn : o.done ? C.green : ready ? C.gold : C.creamDim,
+            : orderSub(s, o, have, eyed.has(o.id)),
+        subColor:
+          o.rival || (eyed.has(o.id) && !ready)
+            ? C.warn
+            : o.done
+              ? C.green
+              : ready
+                ? C.gold
+                : C.creamDim,
         buttons: [
           {
             label: o.rival ? 'Gone' : o.done ? 'Done' : 'Give',
-            width: 40,
+            width: 36,
             enabled: ready,
             color: ready ? C.green : C.creamDim,
             onClick: () => {
@@ -104,6 +125,21 @@ export class BoardPanel extends Modal {
         () => {
           this.close();
           gameEvents.emit('openPanel', { type: 'festival' });
+        },
+        { textColor: C.gold, rim: C.gold },
+      );
+      y += 26;
+    }
+    if (cartOpen) {
+      this.button(
+        8,
+        y + 2,
+        this.panelW - 16,
+        22,
+        'The traveling cart is here!',
+        () => {
+          this.close();
+          gameEvents.emit('openPanel', { type: 'cart' });
         },
         { textColor: C.gold, rim: C.gold },
       );

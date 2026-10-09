@@ -101,8 +101,9 @@ Give players reasons to plan their day and their season.
       leave a rainbow morning with a second helping of wild goods.
 - [~] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
   order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
-  _Done:_ sheep, petting, pigs that dig truffles on dry days, a feed silo that feeds every house overnight.
-  Not done: animals roaming beyond their house, animal goods as order targets.
+  _Done:_ sheep, petting, pigs that dig truffles on dry days, a feed silo that feeds every house overnight,
+  animal goods as board requests and specials (sized to what the animals make). Not done: animals roaming
+  beyond their house (waits for real animal sprites).
 
 ## Then: a living world (R3)
 
@@ -150,6 +151,13 @@ land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
       spot with friendship; early days point at fishing, the mine and the board.
 - [x] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays,
       seasonal morning tips. Not done: a quick bag-to-hotbar swap (critique 3, F11).
+- [x] **D5 A rival with teeth (critique 5).** Requests stay two or three days, so Clay's afternoon pick can take
+      one you were gathering for; from year two he takes two a day unless he likes you.
+- [x] **D6 A repeatable late-game sink.** Projects can repeat; the Founder's Statue absorbs year-two gold (backed by
+      a two-year sim run that funds every project).
+- [x] **D7 Decorations with a small use.** A bench to rest on once a day; a scarecrow against mild crows.
+- [x] **D8 Festivals as small games, all four.** Baskets count goods and data-driven kinds; the Flower Show is an
+      arrangement with a new tulip crop; the derby has feedback and a stocked river.
 
 ## Later: production polish (R4)
 
@@ -164,10 +172,12 @@ land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
 - [ ] **R4.4 Store release.** Final app id, store listings, privacy statement, crash and error reporting, signed
       builds. Follows R1.1.
 - [~] **Second-year content.** Done: a Seed Exchange project with four rare regrowing crops, a Rare Crops Book page,
-      mastery goals (gold-quality sales, every Book page). Not done: a Year 2 rivals ramp beyond the 20% a year
-      festivals already have. Special orders: one big seasonal request at a time, due at the season's end.
-- [ ] **R4.5 Retention hooks.** Daily login streak, optional notifications ("your crops are ready"), seasonal
-      cosmetic rewards. Only after the core loop is proven fun.
+      mastery goals (gold-quality sales, every Book page). Special orders: one big seasonal request at a time,
+      due at the season's end. Year 2: Clay takes two requests a day unless befriended; a repeatable
+      Founder's Statue absorbs year-two gold.
+- [ ] **R4.5 Retention hooks.** Optional notifications ("your crops are ready"), seasonal cosmetic rewards.
+      Only after the core loop is proven fun. No daily login streak (owner, 2026-10-08): the game never reads
+      the real clock.
 - [ ] **R4.6 Cloud save and cross-device sync.** Optional account, conflict-safe merges. Needs a backend decision.
 
 ## Engineering health (continuous)

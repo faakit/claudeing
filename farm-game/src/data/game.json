@@ -52,9 +52,17 @@
     "winter": 0.0
   },
   "bagSlotsPerLevel": 8,
+  "crows": {
+    "startDay": 8,
+    "minCrops": 12,
+    "chance": 0.25
+  },
   "rival": {
     "npc": "clay",
     "minute": 840,
-    "startDay": 8
+    "startDay": 8,
+    "perYear": 1,
+    "maxTakes": 2,
+    "calmHearts": 2
   }
 }

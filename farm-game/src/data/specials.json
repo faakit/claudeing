@@ -80,5 +80,17 @@
       "stat": "made.furnace",
       "min": 1
     }
+  },
+  {
+    "id": "milk",
+    "giver": "rosa",
+    "item": "milk",
+    "seasons": ["summer", "fall"]
+  },
+  {
+    "id": "truffles",
+    "giver": "mara",
+    "item": "truffle",
+    "seasons": ["spring", "summer", "fall"]
   }
 ]

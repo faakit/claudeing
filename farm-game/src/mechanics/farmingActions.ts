@@ -1,4 +1,4 @@
-import { crops, game, placeables, tools } from '../data';
+import { crops, game, placeables, plots, tools } from '../data';
 import {
   registerActionHandler,
   registerToolAction,
@@ -17,6 +17,7 @@ import {
   getSoil,
   harvest,
   isMature,
+  lastsOneSeason,
   plant,
   till,
   tileKey,
@@ -27,10 +28,9 @@ import { addItem, removeFromSlot, roomFor } from '../systems/inventory';
 import { sellValue } from '../systems/itemRef';
 import { placedAt, placeObject, restoreStored } from '../systems/placeables';
 import { addXp } from '../systems/skills';
-import { inGreenhouse } from '../systems/plots';
+import { inGreenhouse, ownsPlot, plotAtTile } from '../systems/plots';
 import { villagerSpot } from '../systems/npcs';
-
-const TIRED = 'Too tired! Go to bed.';
+import { tiredText } from '../systems/food';
 
 /** Harvesting a mature crop beats whatever is equipped, so players never swap tools to collect. */
 registerActionHandler({
@@ -81,8 +81,12 @@ registerActionHandler({
       return { refusal: `Won't grow in ${state.time.season}. Plant in ${when}.` };
     }
     const grow = (crops[cropId]?.stageDays ?? []).reduce((a, b) => a + b, 0);
-    if (!inGreenhouse(state, tile.tx, tile.ty) && grow >= game.seasonLength - state.time.day + 1)
+    const late = grow >= game.seasonLength - state.time.day + 1;
+    if (late && !inGreenhouse(state, tile.tx, tile.ty))
       return { refusal: `Won't ripen in time (${grow} days). Save it for next season.` };
+    // Under glass the season does not matter, except that regrowing plants are spent when it ends.
+    if (late && lastsOneSeason(cropId))
+      return { refusal: `Too late (${grow} days). Regrowing crops last one season, even here.` };
     // Seeds follow the hoe: a hoe that tills N in a row lets you sow the same row in one press.
     const row = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe'))
       .filter((t) => t.farmland && checkPlant(state, t.tx, t.ty, cropId) === 'ok')
@@ -147,6 +151,14 @@ registerActionHandler({
       return { refusal: 'Something is already here.' };
     if (villagerSpot(tile.map, tile.tx, tile.ty))
       return { refusal: 'Someone stands here every day. Try another spot.' };
+    // Land for sale (or a project's site) is not yours yet: placing is refused just like tilling.
+    const plot = tile.map === 'farm' ? plotAtTile(tile.tx, tile.ty) : null;
+    if (plot && !ownsPlot(state, plot))
+      return {
+        refusal: plots[plot]?.project
+          ? `The ${plots[plot]?.name} will stand here. Fund it at the town board.`
+          : 'Not your land yet. Buy it at a sign.',
+      };
     const max = Number(placeables[stack.item]?.params['max'] ?? Infinity);
     const have = Object.values(state.placed).reduce(
       (n, list) => n + list.filter((o) => o.type === stack.item).length,
@@ -228,7 +240,7 @@ registerToolAction('till', ({ state, tile, tool }) => {
   if (tile.farmland && tile.owned === false)
     return { refusal: 'Not your land yet. Buy it at a sign.' };
   if (!canTill(state, tile)) return { refusal: "Can't till here." };
-  if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A better hoe breaks several tiles in a row for the same energy.
   const targets = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe')).filter((t) =>
     canTill(state, t),
@@ -273,7 +285,7 @@ registerToolAction('water', ({ state, tile, tool }) => {
   if (!soil) return { refusal: 'Nothing to water here.' };
   if (soil.watered) return { refusal: 'Already watered.' };
   if (state.water <= 0) return { refusal: 'Can is empty. Refill at the pond.' };
-  if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A bigger can waters a line of crops with one swing, as far as the water lasts.
   const targets = lineFrom(tile, state.player.facing, upgradeLvl(state, 'can'))
     .filter((t) => needsWater(state, t))
@@ -298,7 +310,7 @@ registerToolAction('clear', ({ state, tile, tool }) => {
   const key = tileKey(tile.tx, tile.ty);
   if (!tile.farmland || !state.farm.weeds[key]) return { refusal: 'Nothing to cut.' };
   if (roomFor(state, 'fiber', 1) < 1) return { refusal: 'Inventory full!' };
-  if (!canAfford(state, tool.energyCost)) return { refusal: TIRED };
+  if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   return {
     plan: {
       kind: 'clear',

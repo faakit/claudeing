@@ -20,6 +20,7 @@ import treesRaw from './trees.json';
 import collectionsRaw from './collections.json';
 import nodesRaw from './nodes.json';
 import festivalsRaw from './festivals.json';
+import cartRaw from './cart.json';
 import miningRaw from './mining.json';
 import projectsRaw from './projects.json';
 import jobsRaw from './jobs.json';
@@ -67,7 +68,8 @@ export type ItemType =
   | 'bar'
   | 'sapling'
   | 'feed'
-  | 'product';
+  | 'product'
+  | 'food';
 export interface ItemDef {
   name: string;
   type: ItemType;
@@ -90,6 +92,8 @@ export interface ItemDef {
   sellMultiplier?: number;
   /** Display name template; `{of}` is replaced by the source item's name. */
   nameTemplate?: string;
+  /** Food: energy restored when eaten. */
+  energy?: number;
 }
 export interface CropDef {
   seasons: Season[];
@@ -157,6 +161,8 @@ export interface RecipeDef {
   ingredients: { item: string; qty: number }[];
   gold: number;
   unlock: { skill: string; level: number } | null;
+  /** A dish: cooked at the workbench once the house has a kitchen (a Home upgrade). */
+  kitchen?: boolean;
 }
 export interface PlaceableDef {
   name: string;
@@ -181,6 +187,8 @@ export interface FishDef {
   weight: number;
   /** 0..1: how hard the reel mini-game is. */
   difficulty: number;
+  /** A legendary fish: bites until you catch it once, never asked for on the board. */
+  legend?: boolean;
 }
 export interface OrdersDef {
   perDay: number;
@@ -189,6 +197,8 @@ export interface OrdersDef {
   maxReward: number;
   tiers: { maxValue: number; qty: [number, number] }[];
   xpPerValue: number;
+  /** How many days a request stays on the board (the posting day counts). Default one. */
+  days?: [number, number];
 }
 export interface AnimalDef {
   name: string;
@@ -254,6 +264,13 @@ export interface FestivalDef {
    */
   mode?: 'single' | 'basket' | 'derby';
   slots?: number;
+  /**
+   * Basket variety: the kinds of good a basket can mix (first match wins). A good that matches no kind is
+   * its own kind, named after the item. Each kind beyond the first adds `VARIETY_BONUS` to the score.
+   */
+  kinds?: { name: string; types?: string[]; families?: string[]; items?: string[] }[];
+  /** Derby day: this fish bites on these maps whatever the weather ("the river is stocked"). */
+  stocked?: { fish: string; maps: string[] };
 }
 export interface NodeDef {
   name: string;
@@ -370,6 +387,11 @@ export interface ProjectDef {
   reward: string;
   /** Something that appears in the world once it is built (solid, one tile). */
   landmark?: { map: string; tx: number; ty: number; sprite: string; color: string };
+  /**
+   * A project that can be funded again and again (the late-game sink): each level costs `growth` times the
+   * last; its perks stack for the first `perkLevels` levels, after which a level is for show.
+   */
+  repeat?: { growth: number; perkLevels: number };
 }
 export interface PlotDef {
   name: string;
@@ -411,8 +433,23 @@ export interface GameData {
   stormChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;
-  /** The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. */
-  rival: { npc: string; minute: number; startDay: number };
+  /**
+   * The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. From year
+   * two he takes `perYear` more each year (at most `maxTakes`), unless he likes you (`calmHearts`).
+   */
+  rival: {
+    npc: string;
+    minute: number;
+    startDay: number;
+    perYear?: number;
+    maxTakes?: number;
+    calmHearts?: number;
+  };
+  /**
+   * Crows: from absolute day `startDay`, on a dry morning, with at least `minCrops` crops no scarecrow
+   * watches, there is a `chance` that one crop is eaten. Never in the greenhouse.
+   */
+  crows?: { startDay: number; minCrops: number; chance: number };
 }
 
 const DIRS = ['up', 'down', 'left', 'right'];
@@ -455,6 +492,14 @@ export const fish = fishRaw as unknown as FishDef[];
 export const orders = ordersRaw as unknown as OrdersDef;
 export const animals = animalsRaw as unknown as Record<string, AnimalDef>;
 export const festivals = festivalsRaw as unknown as Record<string, FestivalDef>;
+/** The traveling cart (see systems/cart.ts). */
+export interface CartDef {
+  days: number[];
+  slots: number;
+  limit: number;
+  stock: { item: string; mult: number; price?: number; use?: string }[];
+}
+export const cart = cartRaw as unknown as CartDef;
 export const nodes = nodesRaw as unknown as Record<string, NodeDef>;
 export const mining = miningRaw as unknown as MiningDef;
 export const collections = collectionsRaw as unknown as Record<string, CollectionDef>;
@@ -482,6 +527,8 @@ export function validateContent(): void {
       fail('items', `"${id}" needs sellPrice`);
     if (it.type === 'seed' && typeof it.buyPrice !== 'number')
       fail('items', `seed "${id}" needs buyPrice`);
+    if (it.type === 'food' && !((it.energy ?? 0) > 0))
+      fail('items', `food "${id}" needs energy`);
   }
   for (const [id, c] of Object.entries(crops)) {
     if (!items[c.harvestItem]) fail('crops', `"${id}" harvests unknown item "${c.harvestItem}"`);
@@ -616,7 +663,17 @@ export function validateContent(): void {
         fail('festivals', `"${id}" accepts unknown type "${t}"`);
     for (const i of f.accept.items ?? [])
       if (!items[i]) fail('festivals', `"${id}" accepts unknown item "${i}"`);
+    for (const k of f.kinds ?? [])
+      for (const i of k.items ?? [])
+        if (!items[i]) fail('festivals', `"${id}" kind "${k.name}" lists unknown item "${i}"`);
+    if (f.stocked && !fish.some((x) => x.item === f.stocked?.fish))
+      fail('festivals', `"${id}" stocks unknown fish "${f.stocked.fish}"`);
   }
+  for (const e of cart.stock) {
+    if (!items[e.item]) fail('cart', `sells unknown item "${e.item}"`);
+    if (!e.price && !items[e.item]?.buyPrice) fail('cart', `"${e.item}" needs a price`);
+  }
+  for (const d of cart.days) if (d < 1 || d > game.seasonLength) fail('cart', `bad day ${d}`);
   for (const [id, n] of Object.entries(nodes)) {
     if (n.drops.length === 0 || n.weight <= 0) fail('nodes', `"${id}" needs drops and a weight`);
     for (const dr of n.drops)

@@ -127,12 +127,33 @@ export function growCrops(state: GameState): void {
   gameEvents.emit('farmChanged', undefined);
 }
 
+/**
+ * Under glass a crop ignores the season, but a plant that regrows is still spent when its season ends:
+ * otherwise one planting of corn would crop forever (critique 5, F5).
+ */
+export const lastsOneSeason = (cropId: string): boolean => !!crops[cropId]?.regrowDays;
+
+/** Regrowing crops under glass that the coming season change will spend (for the morning note). */
+export function spentUnderGlass(state: GameState): number {
+  return Object.entries(state.farm.tiles).filter(([key, soil]) => {
+    const [tx, ty] = parseKey(key);
+    return !!soil.crop && lastsOneSeason(soil.crop.cropId) && inGreenhouse(state, tx, ty);
+  }).length;
+}
+
 /** Remove crops that can't survive the current season. Returns how many withered. */
 export function killOutOfSeason(state: GameState): number {
   let dead = 0;
   for (const [key, soil] of Object.entries(state.farm.tiles)) {
     const [tx, ty] = parseKey(key);
-    if (inGreenhouse(state, tx, ty)) continue; // warm all year
+    if (inGreenhouse(state, tx, ty)) {
+      // Warm all year: only regrowing plants give out at the season change.
+      if (soil.crop && lastsOneSeason(soil.crop.cropId)) {
+        soil.crop = null;
+        dead += 1;
+      }
+      continue;
+    }
     if (soil.crop && !cropDef(soil.crop).seasons.includes(state.time.season)) {
       soil.crop = null;
       dead += 1;

@@ -9,7 +9,8 @@ import { preserveOf } from './preserves';
 import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
-import { applyRival } from './rival';
+import { applyRival, scoreFill } from './rival';
+import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
 
@@ -22,16 +23,62 @@ function seedOnSale(state: GameState, cropId: string): boolean {
   return !entry?.project || isProjectDone(state, entry.project);
 }
 
+/**
+ * A crop request waits at most this many days for your crop to ripen (it then stays open until a day after):
+ * a week, so a fresh field is on the board early (critique 8, F5).
+ */
+export const CROP_WAIT = 7;
+
+/** How many of a crop you could hand over within `days`: what you carry plus what ripens by then. */
+export function cropSupply(state: GameState, item: string, days: number): number {
+  let n = countItem(state, item);
+  for (const t of Object.values(state.farm.tiles)) {
+    const crop = t.crop ? crops[t.crop.cropId] : undefined;
+    if (!crop || !t.crop || crop.harvestItem !== item) continue;
+    const left = crop.stageDays.slice(t.crop.stage).reduce((a, b) => a + b, 0) - t.crop.daysInStage;
+    if (left <= days) n += crop.harvestQuantity;
+  }
+  return n;
+}
+
+/**
+ * Days until you could hand over each crop: 0 if you carry some, else the fewest growing days left on any
+ * tile of it (watered every night). Crops you do not grow are absent.
+ */
+export function cropReadyIn(state: GameState): Map<string, number> {
+  const out = new Map<string, number>();
+  const put = (item: string, d: number) => out.set(item, Math.min(d, out.get(item) ?? Infinity));
+  for (const t of Object.values(state.farm.tiles)) {
+    const crop = t.crop ? crops[t.crop.cropId] : undefined;
+    if (!crop || !t.crop) continue;
+    const left = crop.stageDays.slice(t.crop.stage).reduce((a, b) => a + b, 0) - t.crop.daysInStage;
+    put(crop.harvestItem, Math.max(0, left));
+  }
+  for (const c of Object.values(crops))
+    if (countItem(state, c.harvestItem) > 0) put(c.harvestItem, 0);
+  return out;
+}
+
 /** Goods a town order may ask for today: what the season gives, what the player can make. */
 export function orderCandidates(state: GameState): ItemRef[] {
   const season = state.time.season;
   const out = new Map<string, ItemRef>();
   const add = (r: ItemRef) => out.set(keyOf(r), r);
+  // Crops only when you carry some or one ripens within a few days (critique 6 F3, critique 7 F1): the
+  // request then stays open until it is ripe, so it is never a row nobody could fill.
+  const ready = cropReadyIn(state);
   for (const [id, c] of Object.entries(crops))
-    if (c.seasons.includes(season) && seedOnSale(state, id)) add({ item: c.harvestItem });
+    if (
+      c.seasons.includes(season) &&
+      seedOnSale(state, id) &&
+      (ready.get(c.harvestItem) ?? Infinity) <= CROP_WAIT
+    )
+      add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
-  for (const f of fishTable) if (f.seasons.includes(season)) add({ item: f.item });
+  for (const f of fishTable) if (f.seasons.includes(season) && !f.legend) add({ item: f.item });
+  // Eggs, milk, wool, truffles and honey, once the farm makes them.
+  for (const item of animalOutput(state).keys()) add({ item });
   // Goods from any machine the player has unlocked (jam, pickles, wine...).
   for (const machine of Object.keys(machines)) {
     const recipe = recipes[machine];
@@ -49,19 +96,57 @@ export function orderCandidates(state: GameState): ItemRef[] {
 const between = (state: GameState, [lo, hi]: [number, number]): number =>
   lo + Math.floor(random(state) * (hi - lo + 1));
 
-/** Make today's board: `perDay` distinct requests, priced above shipping value. */
-export function generateOrders(state: GameState): Order[] {
-  const pool = orderCandidates(state);
+/** Goods of the farm (weighted up on the board): crops, preserves, animal goods. */
+const FARM_TYPES = ['crop', 'preserve', 'product'];
+
+/** How many requests the board holds. Town projects (the board canopy) can post extra ones. */
+export const boardSize = (state: GameState): number =>
+  ordersCfg.perDay + Math.max(0, Math.round(perk(state, 'orderSlots')));
+
+/**
+ * New requests, priced above shipping value: `count` of them (default a full board), none for goods
+ * already asked for in `standing`. Each stays open two or three days (`orders.json` `days`).
+ */
+export function generateOrders(
+  state: GameState,
+  count = boardSize(state),
+  standing: readonly Order[] = [],
+): Order[] {
+  const asked = new Set(standing.map((o) => o.item));
+  const pool = orderCandidates(state).filter((r) => !asked.has(keyOf(r)));
   const list: Order[] = [];
-  let id = (state.orders.list.reduce((n, o) => Math.max(n, o.id), 0) || 0) + 1;
-  // Town projects (the board canopy) can post extra requests.
-  const perDay = ordersCfg.perDay + Math.max(0, Math.round(perk(state, 'orderSlots')));
-  for (let i = 0; i < perDay && pool.length > 0; i++) {
-    const ref = pool.splice(Math.floor(random(state) * pool.length), 1)[0] as ItemRef;
+  let id = [...state.orders.list, ...standing].reduce((n, o) => Math.max(n, o.id), 0) + 1;
+  const today = absoluteDay(state);
+  const made = animalOutput(state);
+  const ready = cropReadyIn(state);
+  for (let i = 0; i < count && pool.length > 0; i++) {
+    // What you grow and make is asked for three times as often as fish and wild goods (critique 7, F3).
+    const weights = pool.map((r) => (FARM_TYPES.includes(items[r.item]?.type ?? '') ? 3 : 1));
+    let roll = random(state) * weights.reduce((a, b) => a + b, 0);
+    let pick = pool.length - 1;
+    for (let j = 0; j < pool.length; j++)
+      if ((roll -= weights[j]!) < 0) {
+        pick = j;
+        break;
+      }
+    const ref = pool.splice(pick, 1)[0] as ItemRef;
     const value = sellValue(ref);
     const tier = ordersCfg.tiers.find((t) => value <= t.maxValue) ?? ordersCfg.tiers[0];
     if (!tier) break;
-    const qty = between(state, tier.qty);
+    // A crop request lasts at least until a day after your crop ripens.
+    const until = Math.max(
+      today + between(state, ordersCfg.days ?? [1, 1]) - 1,
+      today + (ready.get(ref.item) ?? 0) + 1,
+    );
+    // Animal goods: never more than about two days of what the farm makes. Crops: never more than you
+    // carry plus what ripens before the request ends (critique 8, F3).
+    const perDay = made.get(ref.item);
+    const crop = ready.has(ref.item) ? cropSupply(state, ref.item, until - today) : 999;
+    const qty = Math.min(
+      between(state, tier.qty),
+      perDay ? animalOrderCap(perDay) : 999,
+      Math.max(1, crop),
+    );
     const [lo, hi] = ordersCfg.rewardMultiplier;
     const mult = lo + random(state) * (hi - lo);
     const reward = Math.min(
@@ -75,16 +160,38 @@ export function generateOrders(state: GameState): Order[] {
       reward,
       xp: Math.max(4, Math.round(value * qty * ordersCfg.xpPerValue)),
       done: false,
+      until,
+      from: today,
     });
   }
   return list;
 }
 
-/** Make sure the board shows today's orders (it is rewritten on the first look of a new day). */
-export function ensureOrders(state: GameState): void {
+/** The last day a request is open (older saves kept no `until`: their posting day). */
+export const lastDayOf = (state: GameState, order: Order): number =>
+  order.until ?? state.orders.day;
+
+/** Days a request has left, today included (1 = last day). */
+export const daysLeft = (state: GameState, order: Order): number =>
+  lastDayOf(state, order) - absoluteDay(state) + 1;
+
+/**
+ * The morning board: filled and expired requests come down, open ones stay, and new ones fill the free
+ * places. Because requests last two or three days, the rival can take one you were still working on
+ * (critique 5, F1). Returns how many new requests went up.
+ */
+export function refreshBoard(state: GameState): number {
   const today = absoluteDay(state);
-  if (state.orders.day === today) return;
-  state.orders = { day: today, list: generateOrders(state) };
+  const standing = state.orders.list.filter((o) => !o.done && lastDayOf(state, o) >= today);
+  const fresh = generateOrders(state, Math.max(0, boardSize(state) - standing.length), standing);
+  state.orders = { day: today, list: [...standing, ...fresh] };
+  return fresh.length;
+}
+
+/** Make sure the board shows today's orders (it is refreshed on the first look of a new day). */
+export function ensureOrders(state: GameState): void {
+  if (state.orders.day === absoluteDay(state)) return;
+  refreshBoard(state);
   gameEvents.emit('goalChanged', undefined);
 }
 
@@ -151,6 +258,7 @@ export function deliverOrder(state: GameState, id: number): DeliverResult {
         : 'farming';
   addXp(state, skill, order.xp);
   addStat(state, 'ordersDone');
+  scoreFill(state, absoluteDay(state)); // a point on the season's board against the rival
   toast(`Order done! +${gold}g`, 'good');
   return 'ok';
 }
