@@ -10,7 +10,7 @@
  "type": "map",
  "tilewidth": 16,
  "tileheight": 16,
- "nextlayerid": 10,
+ "nextlayerid": 11,
  "nextobjectid": 15,
  "layers": [
   {
@@ -4537,6 +4537,17 @@
      "visible": true
     }
    ]
+  },
+  {
+   "id": 10,
+   "name": "blooms",
+   "type": "objectgroup",
+   "x": 0,
+   "y": 0,
+   "opacity": 1,
+   "visible": false,
+   "draworder": "topdown",
+   "objects": []
   }
  ],
  "tilesets": [

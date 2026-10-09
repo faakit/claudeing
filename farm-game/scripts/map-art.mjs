@@ -334,7 +334,8 @@ export function spawnTiles(name, allObjects) {
 }
 
 /**
- * @returns {null | { layers: Record<string, number[]>, solid: Set<number>, lights: object[], tilecount: number,
+ * @returns {null | { layers: Record<string, number[]>, solid: Set<number>, lights: object[],
+ *   blooms: { x: number, y: number, n: number }[], tilecount: number,
  *   columns: number, rows: number }}
  */
 export function artLayers(name, m, objects, extraReserved = []) {
@@ -970,6 +971,31 @@ export function artLayers(name, m, objects, extraReserved = []) {
       lights.push({ type: 'crystal', tx: x, ty: y });
     }
   }
+  // --- blooms: where butterflies flit (src/fx/Ambient.ts). One point per 4x4 block holding flowers on the ground
+  // or in the art layers, at the block's flower centroid; written as a hidden object group ---
+  const nameOf = new Map(Object.entries(tiles).map(([n, i]) => [i + 1, n]));
+  const FLORA = /^(flower|bloom_|rose_|patch_|bush_rose|p_flowerbed|p_flowerbox)/;
+  const cells = new Map();
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const hit =
+        kind(x, y) === 'flower' ||
+        ['detail', 'shade', 'props'].some((k) => FLORA.test(nameOf.get(L[k][y * w + x]) ?? ''));
+      if (!hit) continue;
+      const key = `${x >> 2},${y >> 2}`;
+      const c = cells.get(key) ?? { sx: 0, sy: 0, n: 0 };
+      c.sx += x;
+      c.sy += y;
+      c.n++;
+      cells.set(key, c);
+    }
+  const blooms = [...cells.values()]
+    .filter((c) => c.n >= 2)
+    .map((c) => ({
+      x: Math.round(((c.sx / c.n) * 16 + 8) / 2) * 2,
+      y: Math.round(((c.sy / c.n) * 16 + 8) / 2) * 2,
+      n: c.n,
+    }));
   const rows = Math.ceil((Math.max(...Object.values(tiles)) + 1) / columns);
-  return { layers: L, solid, lights, tilecount: rows * columns, columns, rows };
+  return { layers: L, solid, lights, blooms, tilecount: rows * columns, columns, rows };
 }

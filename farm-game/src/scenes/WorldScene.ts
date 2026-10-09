@@ -20,7 +20,7 @@ import { items, mapsData } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
-import { Ambient } from '../fx/Ambient';
+import { Ambient, parseBlooms } from '../fx/Ambient';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
 import { findPath, pathToFace } from '../systems/pathfind';
@@ -207,7 +207,12 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.fx = new Effects(this);
-    this.ambient = new Ambient(this, this.mapId, outdoor);
+    this.ambient = new Ambient(
+      this,
+      this.mapId,
+      outdoor,
+      parseBlooms(raw as unknown as Parameters<typeof parseBlooms>[0]),
+    );
     if (this.mapId === 'farm') {
       this.farm = new FarmRenderer(this);
       this.farm.sync(state, false);
