@@ -90,6 +90,14 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 - The two outputs are still in the Flow project if the owner wants Flow versions. To use them: download to
   `flow-raw/items8-{a,b}.jpg`, run `extract.py`, and add `src` specs to `sprites.json`. The hand-drawn versions
   are overridden only if their keys are dropped from `drawn.build()`.
+- **Download approval (status at the end of round 3).** After the handover, the coordinator relayed that the
+  owner said "yes, it should be autonomous" about downloading our own Flow outputs. The art agent did not act on
+  it: its rules accept a download approval only when the owner types it in the art session's own chat, never
+  when another agent passes it on. There are two ways to unblock future sessions:
+  - the owner states the approval directly in the art agent's chat at the start of a session;
+  - or the owner downloads the outputs into `C:/Users/andre/dev/tiny-acre/flow-raw/` (for example
+    `items8-a.jpg` and `items8-b.jpg`), and the art agent then crops and compares them against the hand-drawn
+    keys. Working on files already on disk needs no download.
 
 ## Merge notes (for the coordinator)
 
