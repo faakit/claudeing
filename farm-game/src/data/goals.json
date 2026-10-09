@@ -499,6 +499,6 @@
     "stat": "boardWins",
     "target": 1,
     "reward": 1000,
-    "hint": "Fill more requests in a season than Clay takes."
+    "hint": "Out-fill Clay in a season. He scores farm goods only."
   }
 ]

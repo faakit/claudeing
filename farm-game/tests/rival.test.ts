@@ -7,6 +7,7 @@ import { addItem } from '../src/systems/inventory';
 import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
 import {
   applyRival,
+  isFarmGood,
   rivalActive,
   rivalMinute,
   rivalNotice,
@@ -84,7 +85,10 @@ describe('the rival farmer', () => {
     expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
     expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
     s.time.minutes = 1300;
-    const cheapest = Math.min(...s.orders.list.map((o) => o.reward));
+    // Polite: a row that is no point for him first (round 3), then the cheapest.
+    const spare = s.orders.list.filter((o) => !isFarmGood(o));
+    const pool = spare.length ? spare : s.orders.list;
+    const cheapest = Math.min(...pool.map((o) => o.reward));
     expect(applyRival(s)?.reward).toBe(cheapest);
     const t = boardDay();
     hearts(t, 5);

@@ -148,7 +148,7 @@ one from then on), and the placeholder grows with the level until the art lands.
 
 `game.json` `trophies` lists lasting trophies: `stat` (shown once it reaches 1), `map` and tile, texture key,
 placeholder colour and a `text` read on a tap, with `{n}` the stat's value. They are drawn and blocked like
-landmarks (`landmarksOn` in `systems/projects.ts` returns both). The board trophy counts `boardWins`.
+landmarks (`landmarksOn` in `systems/projects.ts` returns both). The board trophy counts `boardWins`, the festival ribbons `festivalWins`, the legend wall `legends`.
 
 ### Festivals
 

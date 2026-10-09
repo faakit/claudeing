@@ -10,7 +10,7 @@ import { parseKey } from './itemRef';
 /**
  * The rival farmer competes for the town board: once a day, at a set time, they fill one open request
  * (the best-paying one) unless the player got there first. Friendship softens it: they come later, then
- * leave the best request to you, then stop competing (perks `rivalLate`, `rivalPolite`, `rivalOff`).
+ * spare your farm goods, then stop competing (perks `rivalLate`, `rivalPolite`, `rivalOff`).
  *
  * Resolved lazily (whenever the board is looked at or an order is delivered), so it needs no clock hook
  * and is exact in tests. The day it acted is kept as the `rival.day` stat.
@@ -54,7 +54,8 @@ export function isFarmGood(order: Pick<Order, 'item'>): boolean {
 /**
  * The requests the rival wants on board day `day`: the best-paying open ones on their last day (and posted before it)
  * day (a request is always safe on the day it goes up), at most `rivalTakes`, and never the last open one.
- * Polite (4 hearts): the smallest instead.
+ * Polite (4 hearts): rows that are no point for him first (fish, wild goods), then the smallest (round 3:
+ * his friendship now spares your farm goods, the ones that count).
  */
 export function rivalPicks(state: GameState, day = state.orders.day): Order[] {
   const open = state.orders.list.filter((o) => !o.done);
@@ -62,7 +63,11 @@ export function rivalPicks(state: GameState, day = state.orders.day): Order[] {
   // Only requests on their last day (critique 7, F2): "3 days" on a row is then the truth.
   return open
     .filter((o) => (o.from ?? -Infinity) < day && (o.until ?? state.orders.day) <= day)
-    .sort((a, b) => (polite ? a.reward - b.reward : b.reward - a.reward))
+    .sort((a, b) =>
+      polite
+        ? Number(isFarmGood(a)) - Number(isFarmGood(b)) || a.reward - b.reward
+        : b.reward - a.reward,
+    )
     .slice(0, Math.min(rivalTakes(state), Math.max(0, open.length - 1)));
 }
 

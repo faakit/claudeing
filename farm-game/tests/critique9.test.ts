@@ -312,3 +312,17 @@ describe('round 3: the statue grows with its level', () => {
     }
   });
 });
+
+describe('round 3: trophies at home for festivals and legends', () => {
+  it('a first place and a legend each stand in the house, counting', () => {
+    const s = newState();
+    s.stats['festivalWins'] = 2;
+    s.stats['legends'] = 1;
+    const shown = landmarksOn(s, 'house');
+    expect(shown.map((l) => l.id).sort()).toEqual(['trophy.festival', 'trophy.legends']);
+    expect(shown.find((l) => l.id === 'trophy.legends')?.text).toBe(
+      'Legend Wall: legendary fish caught, 1 of 4.',
+    );
+    for (const l of shown) expect(measureText(l.text)).toBeLessThanOrEqual(184 * 2);
+  });
+});

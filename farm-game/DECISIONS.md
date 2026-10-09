@@ -500,6 +500,9 @@ wrote `agents/critiques/critique-9.md`: no blocker. Owner defaults for round 3 d
   **F7** the cart row names the use before you pay ("900g Market Road", data `tag`; seeds say their season).
   **F8** Clay's 2-heart scene no longer says "You keep beating me". The goal title "Craft something at the
   workbench" belongs to the onboarding agent's early goals and is left to them.
+- **Clay's 4-heart perk matters again:** "polite" Clay takes rows that are no point for him first (fish, wild
+  goods), then the smallest; the perk reads "Clay spares your farm goods". Critique 9 found it near dead (it only
+  changed which last-day row he took).
 - **The statue grows** (owner default): a repeatable project's landmark may have `levels`; the statue shows
   `obj_landmark_statue_1` .. `_6` (16x32), the last from level 6 on, with a placeholder that grows until the art
   lands.
@@ -514,6 +517,13 @@ wrote `agents/critiques/critique-9.md`: no blocker. Owner defaults for round 3 d
   no more than five at full strength, so cooking lengthens a day without making it endless.
 - The dish says it: from the 4th dish its card reads "Restores 20 now: dish 4 today.", the Eat button shows the
   real gain, and the toast adds "(dish 4 today)". A dish that would mostly be wasted is still refused.
+
+## Trophies at home (round 3)
+
+- The board trophy's data-driven `trophies` list now also holds Festival Ribbons (first places, `festivalWins`,
+  house 4,2, `obj_trophy_festival`) and a Legend Wall (legendary fish, `legends`, house 7,2,
+  `obj_trophy_legends`). Data only: the farmhouse becomes the place that shows what you achieved, and each one
+  says its count when tapped. A test keeps every landmark and trophy on its own reachable tile.
 
 ## Sim fidelity: a fisher (round 3)
 
