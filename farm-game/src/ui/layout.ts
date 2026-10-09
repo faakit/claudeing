@@ -143,15 +143,18 @@ export function rowLayout(
 /** The tool ring: 8 hotbar slots and "Bag" on an arc around Action, on the side away from the screen edge. */
 export const RING = {
   /** Distance of the item centres from Action's centre. */
-  radius: 50,
+  radius: 56,
   /** Item disc radius. */
   itemR: 12,
-  /** Arc (screen angles, y down, right-handed): from upper-left (255) to lower-left (105). */
-  from: 255,
-  to: 105,
+  /** Arc (screen angles, y down, right-handed): from straight up (270) round the left to low (100). */
+  from: 270,
+  to: 100,
   /** Fingers nearer the centre than this pick nothing (release there cancels). */
   dead: 22,
 } as const;
+
+/** Half-width of a pick sector, in item steps (0.5 would leave no gap between neighbours). */
+export const RING_SECTOR = 0.44;
 
 /** Centre of ring item `i` of `n` (logical px). Left-handed mirrors the arc. */
 export function ringItem(
@@ -180,6 +183,7 @@ export function ringPick(dx: number, dy: number, n: number, leftHanded: boolean)
   // position along the arc, 0 at `from`, n-1 at `to`
   const along = (RING.from - deg) / step;
   const i = Math.round(along) + 0; // never -0
-  if (i < 0 || i >= n || Math.abs(along - i) > 0.75) return null;
+  // Gaps between sectors: a finger between two items picks neither (a miss lands on nothing).
+  if (i < 0 || i >= n || Math.abs(along - i) > RING_SECTOR) return null;
   return i;
 }

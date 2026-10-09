@@ -531,3 +531,68 @@ These replace the M3 and M4 entries above where they differ.
 - **Options rows sit low:** the Options tab lays out from the tab strip up.
 - **Not done:** bag cells on the SE stay 37 CSS px. Eight columns on a 323 CSS px wide canvas cannot reach
   44 px (8 x 44 = 352); a 7-column bag would break the hotbar row's mapping. Left for the owner and the UI skin.
+
+### Controls review 3 fixes (painting)
+
+- **A slow tap is a tap (B1):** a paint that never left its first tile commits as a tap at the point the finger
+  landed (walk, or one of the tap's obvious acts). Still touches of 240-600 ms on grass work nothing.
+- **Resting before steering never paints (B2):** the arm moved from 250 to 300 ms; touches that land in the
+  thumb's rest band (the lowest 44 px of the world view, right above the dock) never arm; and after arming, a
+  push that gets 28 px from the start within 150 ms of leaving it is steering: the row is dropped quietly and
+  the stick takes the finger from where it landed. A deliberate paint moves about a tile per 100-150 ms and
+  passes. e2e: rests of 100-500 ms then a push walk and work 0 tiles; a 330 ms hold then a tile-by-tile drag
+  paints exactly the row.
+- **Line lock (M3):** the finger's main direction from where it landed (decided 3/4 of a tile out) and then the
+  last two tiles set a line; the finger stays on it until it is a whole tile off (the next row's centre),
+  measured from the landing height. Unit model (smooth wobble): a 3-tile row is exact 95%+ at 1.5 mm and 90%+
+  at 2 mm.
+- **Back to the start cancels (M4):** a row that grew to 2+ tiles and was dragged back to only its first tile
+  works nothing.
+- **Quieter rows (N6):** a painted row ticks once per finished tile (a ripe harvest stays medium), not per use.
+
+### M7 polish
+
+- **Help card two taps away:** Options shows a 2 x 2 card at the top (tap a tile: walk + do; hold, drag: a whole
+  row; drag low: steer; flick Action: tool ring). Menu, then Opts.
+- **First-run tips, once each:** after the third tile tilled one at a time with Action, "hold a tile a moment,
+  then drag, to work a whole row"; after the third tool change by swipe or hotbar (not by the ring), "flick
+  Action sideways for a ring of all your tools". The welcome tips say tap to walk and Action to till.
+- **Fine stick (two-speed, off by default):** with it on, a push under half the stick's radius walks at half
+  speed (Options > Controls).
+- **Perf:** a tap-walking scenario (long routes with path dots) joins the perf run, and the tap planner (intent
+  plus breadth-first path) is timed: about 0.2 ms per tap, budget 2 ms.
+- **Haptics:** native taps map tick to a light impact, medium to a medium impact, errors to the error
+  notification (a double pulse); the web uses the same patterns through `navigator.vibrate`. Strength is the
+  owner's call on a real phone.
+
+### Coordinator ruling after reviews 3 and 4 (2026-10-09): painting moves to Action
+
+This replaces the M5 world long-press and the review-3 fixes above (rest band, steer check, line lock).
+
+- **World touches never paint or till by duration.** A still world touch is a tap however long it lasts (walk,
+  plus the tap's obvious acts); a touch that reaches the 9 px deadzone is the stick. World long-press painting
+  is gone (`WorldTouch` no longer arms anything).
+- **Rows are painted from Action** (`ActionPress` in `input/gesture.ts`, pure and unit-tested): hold Action
+  still 300 ms (a tick and an icon pop), then drag. The drag direction picks a straight line from the farmer
+  (the tiles next to it that way; 4 directions with 1.6 hysteresis, so a 2-3 mm wobble never switches line)
+  and its length the number of tiles (the first at 8 px, one more per 10 px, up to 12; small because Action is
+  40 px from the screen edge on its thumb's side). The line is previewed live; lifting commits, lifting near
+  the start cancels with nothing done. A line can only ever be straight, so a wobble cannot add a neighbouring
+  row. Haptics: one tick per tile added while drawing, one medium confirm on commit, nothing while the farmer
+  works it. The farmer still works each painted tile until it is done for today (ruling 5 above).
+- **Holding Action no longer repeats it on touch** (the hold now arms painting): a tap acts once; Space held on a
+  keyboard still repeats for desktop testing. A press that wandered 9 px in any direction and did not become a
+  swipe or a flick does nothing on release.
+- **Action's four gestures:** tap (lift before 300 ms, under 9 px) acts once; a mostly vertical 14 px swipe
+  changes tool; a clearly sideways 14 px flick opens the tool ring and never acts; hold-then-drag paints.
+- **Tool ring:** only the hotbar's filled slots and Bag are on the arc (bigger sectors); radius 56 from straight
+  up round to low; the finger's aim is corrected for the thumb-base pull (`compensateTouch`); sectors have gaps
+  (0.44 of a step each side), so a miss between items picks nothing. Slide, rest 80 ms on the highlighted item
+  and lift to pick; a flick lifted at once (within 120 ms, or without resting on an item) leaves the ring open
+  as a tap menu (tap an item, tap elsewhere to close): never a silent pick. Model (7 items, 1.5 mm thumb-base
+  pull): 93% right / 1% neighbour at 2 mm on an iPhone 13, 85% / 6% on the SE.
+- **Options:** the volume rows sit last, right above the tab strip, so both thumbs reach their -/+ buttons.
+- **Cost:** the 3x3 plot loop is now 15 gestures (a tap beside each row and one paint per row, twice), 590-610
+  mm of thumb travel and about 21 s on an iPhone 13; it was 26 / 933 mm / 20 s before the controls work and 5 /
+  ~230 mm / 16 s with world painting. A paint that could turn (serpentine) or a 3-wide swath would bring it back
+  to about 5; both are owner questions in `agents/NEXT-STEPS-CONTROLS.md`.

@@ -30,7 +30,7 @@ import { buildAlmanac } from './AlmanacTab';
 import { TAB_LABELS } from './tabLabels';
 import { buildCraft } from './CraftTab';
 import { buildSkills } from './SkillsTab';
-import { buildControlsPage, controlsPage } from './ControlsTab';
+import { buildControlsPage, controlsPage, drawHelpCard } from './ControlsTab';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -364,8 +364,11 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   // already is) rather than from the top of a tall sheet.
   const STACK_H = 26 + 32 + 26 + 26 + 26 + 32 + 22;
   let y = Math.max(c.top + 4, c.bottom - STACK_H);
-  volumeRow(y, 'Music', 'music');
-  volumeRow((y += 26), 'Sound', 'sfx');
+  // How to play, two taps from anywhere (Menu, Opts), in the space above the rows.
+  if (y - c.top >= 60) drawHelpCard(c, 8, c.top);
+  // The volume rows go last, nearest the tabs: their small -/+ buttons sit at both edges, which only the
+  // lowest rows keep in reach for either thumb.
+  y -= 26 + 6;
 
   const half = 92;
   const pair = (
@@ -463,9 +466,11 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     { textColor: q === 'idle' ? C.cream : C.warn },
   );
   y += 32;
+  volumeRow(y, 'Music', 'music');
+  volumeRow((y += 26), 'Sound', 'sfx');
   c.label(
     8,
-    y,
+    y + 26,
     'Your game saves automatically when you sleep, change maps, or leave the page.',
     C.creamDim,
     1,

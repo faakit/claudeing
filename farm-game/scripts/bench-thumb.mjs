@@ -273,17 +273,29 @@ function makeWorld(page, thumb, L, reactionMs) {
   const hasRing = () => page.evaluate(() => !!window.__farm.game.scene.getScene('UI').ring);
   /** Flick sideways on Action, slide to ring item `i` (0-7 hotbar slots, 8 = Bag), let go: one drag. */
   async function ringPick(i) {
+    // The ring shows only filled hotbar slots and Bag (i = 8): find this item's place on the arc.
+    const at = await page.evaluate(
+      ({ i, left }) => {
+        const s = window.__farm.getState();
+        const items = [];
+        for (let k = 0; k < 8; k++) if (s.inventory.slots[k]) items.push(k);
+        items.push(8);
+        const n = items.length;
+        const t = n <= 1 ? 0.5 : items.indexOf(i) / (n - 1);
+        let deg = 270 + (100 - 270) * t;
+        if (left) deg = 180 - deg;
+        return (deg * Math.PI) / 180;
+      },
+      { i, left: hand === 'left' },
+    );
     const inward = hand === 'left' ? 1 : -1;
-    const deg0 = 255 + ((105 - 255) * i) / 8;
-    const deg = hand === 'left' ? 180 - deg0 : deg0;
-    const r = (deg * Math.PI) / 180;
     await thumb.down(ACTION.x, ACTION.y);
     await thumb.move(ACTION.x + inward * 9, ACTION.y);
     await sleep(16);
     await thumb.move(ACTION.x + inward * 18, ACTION.y);
-    await sleep(40);
-    await thumb.move(ACTION.x + Math.cos(r) * 50, ACTION.y + Math.sin(r) * 50);
-    await sleep(40);
+    await sleep(60);
+    await thumb.move(ACTION.x + Math.cos(at) * 56, ACTION.y + Math.sin(at) * 56);
+    await sleep(140); // rest on the item before lifting (a quick lift leaves the ring open as a menu)
     await thumb.up();
     if (i < 8) thumb.toolChanges++;
     await sleep(250);
@@ -335,13 +347,14 @@ function makeWorld(page, thumb, L, reactionMs) {
     const pts = [];
     for (const t of tiles) pts.push(await tileScreen(page, t.tx, t.ty));
     await thumb.down(pts[0].x, pts[0].y);
-    await sleep(330);
+    await sleep(360); // past the 300 ms arm
+    // a deliberate paint, about a tile every 120 ms (a fast straight push reads as steering)
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1];
       const b = pts[i];
       for (let k = 1; k <= 3; k++) {
         await thumb.move(a.x + ((b.x - a.x) * k) / 3, a.y + ((b.y - a.y) * k) / 3);
-        await sleep(12);
+        await sleep(40);
       }
     }
     await thumb.up();
@@ -387,18 +400,30 @@ function makeWorld(page, thumb, L, reactionMs) {
         .catch(() => undefined);
       await settleCamera();
     }
-    await tapTile(target.tx, target.ty);
-    await page
-      .waitForFunction(
-        () =>
-          window.__farm.game.scene
-            .getScene('UI')
-            .allModals()
-            .some((m) => m.isOpen),
-        null,
-        { timeout: 8000 },
-      )
-      .catch(() => undefined);
+    // A miss (aim spread) is retried, as a person would: each try is a counted gesture.
+    for (let attempt = 0; attempt < 4; attempt++) {
+      await settleCamera();
+      await tapTile(target.tx, target.ty);
+      await sleep(150);
+      const opened = await page
+        .waitForFunction(
+          () => {
+            const f = window.__farm;
+            const open = f.game.scene
+              .getScene('UI')
+              .allModals()
+              .some((m) => m.isOpen);
+            const w = f.game.scene.getScenes(true).find((s) => s.grid);
+            return open || w.route === null ? open : null;
+          },
+          null,
+          { timeout: 8000, polling: 50 },
+        )
+        .then((h) => h.jsonValue())
+        .catch(() => false);
+      if (opened) break;
+      thumb.retries++;
+    }
     await sleep(350);
   }
   return {
@@ -432,6 +457,7 @@ const fresh = (page, extra = '') =>
     const s = f.getState();
     const ui = f.game.scene.getScene('UI');
     ui.allModals().forEach((m) => m.isOpen && m.close());
+    ui.ring?.close(); // a ring left open as a tap menu would swallow the next task's touches
     s.player.x = 14 * 16 + 8;
     s.player.y = 8 * 16 + 11;
     s.player.facing = 'down';
@@ -492,6 +518,81 @@ const TASKS = {
     const auto = await page.evaluate(
       () => window.__farm.getState().settings.controls?.autoTool === true,
     );
+    // Row painting from Action (ruling 2026-10-09): each row is a tap to stand beside it and one
+    // hold-then-drag on Action toward the middle of the screen, three tiles long.
+    const actionPaint =
+      auto &&
+      (await tapModeOn(page)) &&
+      (await page.evaluate(() => 'paintTiles' in window.__farm.game.scene.getScene('UI')));
+    if (actionPaint) {
+      const right = w.hand !== 'left';
+      const toMid = right ? -1 : 1;
+      const standX = right ? 12 : 8; // 12 is the plot's spare right column; 8 is just outside it
+      const paintRow = async (ty) => {
+        await w.settleCamera();
+        await w.tapTile(standX, ty);
+        await sleep(150);
+        await page
+          .waitForFunction(
+            () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
+            null,
+            { timeout: 8000, polling: 50 },
+          )
+          .catch(() => undefined);
+        await w.thumb.down(w.ACTION.x, w.ACTION.y);
+        await sleep(340);
+        for (const d of [6, 12, 20, 27, 31]) {
+          await w.thumb.move(w.ACTION.x + toMid * d, w.ACTION.y);
+          await sleep(45);
+        }
+        await w.thumb.up();
+        await page
+          .waitForFunction(
+            () => {
+              const sc = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+              return sc.work === null && sc.route === null && sc.painting === null;
+            },
+            null,
+            { timeout: 20000, polling: 100 },
+          )
+          .catch(() => undefined);
+      };
+      for (const [tx, ty] of [
+        [standX, 13],
+        [standX, 16],
+      ]) {
+        await w.settleCamera();
+        await w.tapTile(tx, ty);
+        await sleep(150);
+        await page
+          .waitForFunction(
+            () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).route === null,
+            null,
+            { timeout: 8000, polling: 50 },
+          )
+          .catch(() => undefined);
+      }
+      const t0 = Date.now();
+      const travelBefore = w.thumb.ledger().travelMm;
+      await w.tapSlot(5); // the seeds, once (never chosen for you)
+      for (const ty of [18, 19, 20]) await paintRow(ty);
+      const tilled = await farmCount(page, 'tilled');
+      const planted = await farmCount(page, 'planted');
+      const watered = await farmCount(page, 'watered');
+      await ripen(page);
+      for (const ty of [18, 19, 20]) await paintRow(ty);
+      const harvested = await farmCount(page, 'harvested');
+      return {
+        ok: tilled >= 9 && planted === 9 && watered === 9 && harvested >= 9,
+        mode: 'action-paint',
+        plotTravelMm: w.thumb.ledger().travelMm - travelBefore,
+        tilled,
+        planted,
+        watered,
+        harvested,
+        seconds: (Date.now() - t0) / 1000,
+      };
+    }
     // With painting (M5+) every pass is one long-press-and-drag over the plot, worked by the farmer.
     const paint =
       auto &&
@@ -527,6 +628,7 @@ const TASKS = {
           .catch(() => undefined);
       }
       const t0 = Date.now();
+      const travelBefore = w.thumb.ledger().travelMm;
       // Pick the seeds once (never chosen for you), then one pass over grass tills, plants and waters
       // each tile (worked until done for today).
       await w.tapSlot(5);
@@ -538,9 +640,12 @@ const TASKS = {
       await w.paintTiles(serp);
       const harvested = await farmCount(page, 'harvested');
       const ok9 = tilled === 9 && planted === 9 && watered === 9 && harvested >= 9;
+      // Thumb travel once the plot is on screen (seed tap and the two paints), apart from the hops there.
+      const plotTravelMm = w.thumb.ledger().travelMm - travelBefore;
       return {
         ok: ok9,
         mode: 'paint',
+        plotTravelMm,
         log: ok9
           ? undefined
           : await page.evaluate(() =>
@@ -603,8 +708,7 @@ const TASKS = {
     if (await w.hasRing()) {
       await w.ringPick(8);
       await sleep(200);
-    }
-    else await w.tapMenu();
+    } else await w.tapMenu();
     const c = await page.evaluate(() => {
       const m = window.__farm.game.scene.getScene('UI').menu;
       const cells = m.content.list.filter((o) => o.type === 'Zone' && Math.round(o.width) === 23);

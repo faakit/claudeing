@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { CH } from '../ui/theme';
-import { actionDrag, GESTURE } from './gesture';
+import { GESTURE } from './gesture';
 
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
 
@@ -21,12 +21,13 @@ export interface TouchButtonOptions {
   onPress: () => void;
   /** 'down' buttons only: the press ended (lift, slide-off, or a swipe took over). */
   onRelease?: () => void;
-  /** 'down' buttons only: +1 / -1 per tool step when the finger slides up / down while pressing. */
-  onSwipe?: (step: number) => void;
-  /** 'down' buttons only: a clearly sideways flick while pressing (+1 right, -1 left), with the pointer. */
-  onFlick?: (dir: number, pointerId: number) => void;
-  /** 'down' buttons only: every pointer move of the press, relative to its anchor. */
-  onMove?: (dx: number, dy: number) => void;
+  /** 'down' buttons only: every pointer move of the press, relative to its anchor, with the pointer id. */
+  onMove?: (dx: number, dy: number, pointerId: number) => void;
+  /**
+   * 'down' buttons only: release when the finger slides off the button (default true). Action keeps the
+   * press while a drag paints a row far outside its disc; it ends on lift.
+   */
+  releaseOnOut?: boolean;
   /**
    * Final say on whether a touch at (x, y) belongs to this button, for overlapping touch circles (see
    * `resolveTouch` in ui/layout.ts). Defaults to "inside the touch circle".
@@ -95,20 +96,7 @@ export class TouchButton {
         }
         return;
       }
-      opts.onMove?.(p.x - this.anchor.x, p.y - this.anchor.y);
-      const kind = actionDrag(p.x - this.anchor.x, p.y - this.anchor.y);
-      if (kind === 'swipeUp' || kind === 'swipeDown') {
-        if (!opts.onSwipe) return;
-        this.anchor = { x: p.x, y: p.y };
-        opts.onSwipe(kind === 'swipeUp' ? 1 : -1); // first, so the release below knows it was a swipe
-        this.endPress(); // a swipe is not a work press: let go of the held action
-      } else if (kind === 'flick' && opts.onFlick) {
-        // The flick hands this finger to whatever it opens (the tool ring): stop tracking it here.
-        const dir = Math.sign(p.x - this.anchor.x);
-        this.pointerId = null;
-        opts.onFlick(dir, p.id); // first, so the release below knows it was not a tap
-        this.endPress();
-      }
+      opts.onMove?.(p.x - this.anchor.x, p.y - this.anchor.y, p.id);
     };
     const onUp = (p: Phaser.Input.Pointer) => {
       if (this.pointerId !== p.id) return;
@@ -130,7 +118,8 @@ export class TouchButton {
     );
     // A 'down' button that was actually pressed releases when the finger slides off it, so a mouse merely
     // crossing it can never cancel input held elsewhere (e.g. Space held for the tool).
-    if (opts.fireOn !== 'release') this.zone.on('pointerout', () => this.endPress());
+    if (opts.fireOn !== 'release' && opts.releaseOnOut !== false)
+      this.zone.on('pointerout', () => this.endPress());
   }
 
   private endPress(): void {

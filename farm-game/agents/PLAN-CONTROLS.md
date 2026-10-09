@@ -18,6 +18,10 @@ placeables; a tap never tills or plants (only harvest, water, clear, mine, pick 
 a held Action repeats only the step it started with; what you hold wins whenever it can act; seeds come only
 from the selected slot or the seed planted last (no first-seed fallback); interact targets have no magnets
 (own tile or drawn sprite only); Menu sits in thumb reach and acts on release; haptics light and on.
+Ruling of 2026-10-09 (after reviews 3 and 4): world touches never paint or till by duration; rows are painted
+from Action (hold 300 ms, drag a straight line, lift); the tool ring is the sideways flick only and never acts,
+a quick flick leaves it open as a tap menu; Options volume rows sit by the tabs. This answers open question 3
+("paint from Action").
 
 ## How to reproduce
 

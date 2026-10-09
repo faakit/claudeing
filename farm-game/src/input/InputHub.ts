@@ -14,14 +14,12 @@ export interface InputEvents {
   /** The previewed touch turned into a drag (the stick) or left the world: drop the preview. */
   tapCancel: undefined;
   /**
-   * A world touch held still for the paint delay: the world calls `accept()` if painting a row can start
-   * there (a tile Action can work); the touch then paints instead of being a tap or the stick.
+   * Painting a row from Action (held still, then dragged): the line's direction and length so far, live.
+   * Null direction / 0 tiles = armed but nothing chosen yet.
    */
-  paintArm: TapPoint & { accept: () => void };
-  /** The painting finger moved (logical screen coordinates). */
-  paintMove: TapPoint;
-  /** The painting finger lifted; `onDock` when it lifted outside the world view (cancel). */
-  paintEnd: TapPoint & { onDock: boolean };
+  paintLine: { dir: Direction | null; tiles: number };
+  /** The painting finger lifted: work the line (`commit`), or drop it. */
+  paintEnd: { commit: boolean };
   /** Hotbar slot picked by number key (0-based). */
   slot: number;
   /** Cycle the hotbar by +1 / -1 (wheel, Tab). */
@@ -47,6 +45,8 @@ export class InputHub {
    * by the world each frame so the Action button can show it. Null when Action has nothing to do.
    */
   actionSlot: number | null = null;
+  /** The stick is pushed less than halfway (the two-speed stick walks at half speed then). */
+  stickSlow = false;
   private listeners = new Map<keyof InputEvents, Set<Listener<never>>>();
 
   /** Joystick wins over keyboard; among keys the most recently pressed wins. */
@@ -71,6 +71,7 @@ export class InputHub {
   clearHeld(): void {
     this.keys = [];
     this.stick = null;
+    this.stickSlow = false;
     this.actionHeld = false;
   }
 

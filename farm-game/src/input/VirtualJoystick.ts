@@ -64,13 +64,6 @@ export class VirtualJoystick {
     }
   }
 
-  /** Let go of a pointer that has not engaged (it became a paint gesture): it never moves the stick. */
-  drop(id: number): void {
-    if (this.pointerId !== id || this.engaged) return;
-    this.pointerId = null;
-    this.current = null;
-  }
-
   /** Did this pointer's touch (current, or the one that just ended) move the stick past its deadzone? */
   wasEngaged(id: number): boolean {
     if (this.pointerId === id) return this.engaged;
@@ -112,6 +105,7 @@ export class VirtualJoystick {
     // Once engaged, the stick only stops when the thumb comes back near its centre.
     this.current = dominantDirection(dx, dy, deadzone / 2, axisBias, this.current);
     this.hub.setStick(this.current);
+    this.hub.stickSlow = Math.hypot(dx, dy) < radius * 0.5;
     // Only reveal the stick once it is actually being used, so quick taps stay clean.
     if (!this.shown && len >= deadzone) this.fade(true);
     this.gfx.setPosition(this.origin.x, this.origin.y);
@@ -128,6 +122,7 @@ export class VirtualJoystick {
     this.engaged = false;
     this.current = null;
     this.hub.setStick(null);
+    this.hub.stickSlow = false;
     this.fade(false);
   }
 

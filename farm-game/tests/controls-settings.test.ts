@@ -82,3 +82,17 @@ describe('control settings (save v16)', () => {
     }
   });
 });
+
+describe('help card and tips fit', () => {
+  it('each help card line fits beside its picture (70 px)', async () => {
+    const { HELP_ITEMS } = await import('../src/ui/panels/ControlsTab');
+    for (const it of HELP_ITEMS)
+      for (const l of it.lines) expect(measureText(l), l).toBeLessThanOrEqual(70);
+  });
+
+  it('each first-run tip fits a toast (186 px wide, at most 3 lines)', async () => {
+    const { TIPS } = await import('../src/ui/controlTips');
+    for (const t of Object.values(TIPS))
+      expect(measureText(t), t).toBeLessThanOrEqual(186 * 3 - 30);
+  });
+});

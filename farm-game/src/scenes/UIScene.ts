@@ -4,7 +4,7 @@ import { game, mapsData } from '../data';
 import { RainLayer } from '../fx/RainLayer';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
-import { holdMayStart } from '../input/gesture';
+import { ActionPress, type ActionEvent } from '../input/gesture';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { TouchButton } from '../input/TouchButton';
@@ -28,6 +28,7 @@ import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
 import { Label } from '../ui/font';
 import { Hud } from '../ui/Hud';
 import { ToolRing } from '../ui/ToolRing';
+import { TIPS } from '../ui/controlTips';
 import { dockLayout, resolveTouch, type DockLayout, type DockSpot } from '../ui/layout';
 import {
   BinPanel,
@@ -113,6 +114,9 @@ export class UIScene extends Phaser.Scene {
   private interactType: string | null = null;
   private worldTouch!: WorldTouch;
   private ring!: ToolRing;
+  private lastSelectedForTip = -1;
+  /** The last selection change came from the ring (it does not count toward the ring tip). */
+  private ringPicked = false;
   private joystick!: VirtualJoystick;
   /** Current dock geometry (mirrored in left-handed mode). */
   layout: DockLayout = dockLayout(false);
@@ -132,16 +136,11 @@ export class UIScene extends Phaser.Scene {
   private panels = new Map<PanelType, Modal>();
   private lastNight = -1;
   private lateWarnedDay = -1;
-  private swiped = false;
   /** The Action press in progress: when it began, its vertical travel, and when that last changed. */
-  private actionPress: {
-    at: number;
-    dy: number;
-    mark: number;
-    movedAt: number;
-    /** Rendered frames since the last vertical move. */
-    frames: number;
-  } | null = null;
+  private actionPress: ActionPress | null = null;
+  private actionPointer: number | null = null;
+  /** Tiles in the line being painted from Action (one tick per tile added). */
+  private paintTiles = 0;
   private actionIcon: Phaser.GameObjects.Image | null = null;
   private actionIconKey = '';
   private lastSeason = '';
@@ -184,6 +183,8 @@ export class UIScene extends Phaser.Scene {
     this.hud = new Hud(this, getState);
     this.ring = new ToolRing(this, getState, (c) => {
       if (c.kind === 'bag') return this.menu.openTab('bag');
+      this.ringPicked = true;
+      getState().stats['tip.ring'] = 1; // found the ring: no need to teach it
       selectSlot(getState(), c.slot);
       haptic('tick');
     });
@@ -265,16 +266,10 @@ export class UIScene extends Phaser.Scene {
       audio.setRain(0);
       audio.setNight(0);
     });
-    this.worldTouch = new WorldTouch(
-      this,
-      inputHub,
-      this.joystick,
-      () => {
-        this.idleMs = 0;
-        audio.unlock();
-      },
-      () => getState().settings.controls.paint,
-    );
+    this.worldTouch = new WorldTouch(this, inputHub, this.joystick, () => {
+      this.idleMs = 0;
+      audio.unlock();
+    });
   }
 
   update(time: number, delta: number): void {
@@ -285,9 +280,10 @@ export class UIScene extends Phaser.Scene {
       this.dragHint = null;
     }
     this.hud.update(time);
-    this.updateHold(this.time.now);
+    this.updateHold();
     this.worldTouch.update();
     this.updateActionIcon();
+    this.updateRingTip(s);
     this.updateIdleHint(delta);
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather !== 'sunny';
@@ -358,19 +354,13 @@ export class UIScene extends Phaser.Scene {
       hit: L.action.hit,
       icon: () => undefined, // the icon is the equipped item, drawn below
       owns: owns('action'),
+      // Tap, swipe, flick and hold-then-drag are told apart by ActionPress (input/gesture.ts).
+      releaseOnOut: false,
       onPress: () => this.pressAction(),
       onRelease: () => this.releaseAction(),
-      onMove: (_dx, dy) => this.moveAction(dy),
-      onSwipe: (step) => {
-        this.swiped = true;
-        cycleSlot(getState(), step, true);
-        audio.play('select');
-        haptic('tick');
-      },
-      // A sideways flick opens the tool ring under the same finger (slide to an item, let go to pick).
-      onFlick: (_dir, pointerId) => {
-        this.swiped = true;
-        this.ring.open(pointerId, { x: L.action.x, y: L.action.y }, getState().settings.leftHanded);
+      onMove: (dx, dy, pointerId) => {
+        this.actionPointer = pointerId;
+        this.actionEvents(this.actionPress?.move(dx, dy) ?? []);
       },
     });
     this.actionIcon?.destroy();
@@ -411,47 +401,82 @@ export class UIScene extends Phaser.Scene {
     this.buildDragHint();
   }
 
-  /**
-   * A press on Action only starts working after a beat, and only once the finger is not on its way to a
-   * tool step, so a swipe never swings the old tool while a rolling thumb pad still works. A quick tap
-   * acts once, on release.
-   */
+  /** A press on Action: what it becomes (tap, swipe, ring, paint) is decided as the finger moves. */
   private pressAction(): void {
-    this.swiped = false;
-    const now = this.time.now;
-    this.actionPress = { at: now, dy: 0, mark: 0, movedAt: now, frames: 0 };
+    this.actionPress = new ActionPress(this.time.now);
+    this.paintTiles = 0;
   }
 
-  private moveAction(dy: number): void {
-    const p = this.actionPress;
-    if (!p) return;
-    // Measured from the last mark, so even a very slow swipe keeps counting as moving.
-    if (Math.abs(dy - p.mark) >= 0.5) {
-      p.movedAt = this.time.now;
-      p.mark = dy;
-      p.frames = 0;
-    }
-    p.dy = dy;
-  }
-
-  /** Each frame: start the held action once the hold rule allows it. */
-  private updateHold(time: number): void {
-    const p = this.actionPress;
-    if (!p || this.swiped || inputHub.actionHeld) return;
-    p.frames++;
-    if (holdMayStart(time - p.at, p.dy, time - p.movedAt, p.frames)) inputHub.actionHeld = true;
+  /** Each frame: the paint arm (held still 300 ms). */
+  private updateHold(): void {
+    if (this.actionPress) this.actionEvents(this.actionPress.update(this.time.now));
   }
 
   private releaseAction(): void {
-    const wasHeld = inputHub.actionHeld;
+    const p = this.actionPress;
     this.actionPress = null;
-    if (!this.swiped && !wasHeld) {
-      // a tap: one action, held for just long enough for the world to see it
-      inputHub.actionHeld = true;
-      this.time.delayedCall(70, () => (inputHub.actionHeld = false));
+    if (p) this.actionEvents(p.up());
+  }
+
+  private actionEvents(events: ActionEvent[]): void {
+    for (const e of events) {
+      if (e.type === 'step') {
+        cycleSlot(getState(), e.dir, true);
+        audio.play('select');
+        haptic('tick');
+      } else if (e.type === 'ring') {
+        // A sideways flick: the tool ring opens under the same finger; nothing is used.
+        this.ring.open(
+          this.actionPointer ?? 0,
+          { x: this.layout.action.x, y: this.layout.action.y },
+          getState().settings.leftHanded,
+        );
+      } else if (e.type === 'tap') {
+        // one action, held for just long enough for the world to see it
+        inputHub.actionHeld = true;
+        this.time.delayedCall(70, () => (inputHub.actionHeld = false));
+      } else if (e.type === 'arm') {
+        haptic('tick'); // armed: the press pops (visible twin) and the farmer waits for the drag
+        this.pulseAction();
+        inputHub.emit('paintLine', { dir: null, tiles: 0 });
+      } else if (e.type === 'paint') {
+        if (e.tiles > this.paintTiles) haptic('tick'); // one light tick per tile added
+        this.paintTiles = e.tiles;
+        inputHub.emit('paintLine', { dir: e.dir, tiles: e.tiles });
+      } else if (e.type === 'commit') {
+        haptic('medium'); // the confirm: the row will be worked
+        inputHub.emit('paintEnd', { commit: true });
+      } else if (e.type === 'cancel') {
+        inputHub.emit('paintEnd', { commit: false });
+      }
+    }
+  }
+
+  /** The Action icon pops (paint armed); skipped in Calm mode. */
+  private pulseAction(): void {
+    if (!this.actionIcon || getState().settings.reduceMotion) return;
+    this.tweens.killTweensOf(this.actionIcon);
+    this.actionIcon.setScale(2.4);
+    this.tweens.add({ targets: this.actionIcon, scale: 1.9, duration: 160, ease: 'Back.easeOut' });
+  }
+
+  /** First-run tip: after a few tool changes by swipe or hotbar, teach the tool ring (once). */
+  private updateRingTip(s: ReturnType<typeof getState>): void {
+    const sel = s.inventory.selected;
+    if (this.lastSelectedForTip === -1 || sel === this.lastSelectedForTip) {
+      this.lastSelectedForTip = sel;
       return;
     }
-    inputHub.actionHeld = false;
+    this.lastSelectedForTip = sel;
+    if (s.stats['tip.ring'] || this.ring.isOpen || this.ringPicked) {
+      this.ringPicked = false;
+      return;
+    }
+    s.stats['tip.swaps'] = (s.stats['tip.swaps'] ?? 0) + 1;
+    if (s.stats['tip.swaps'] >= 3) {
+      s.stats['tip.ring'] = 1;
+      this.hud.toast(TIPS.ring, 'info');
+    }
   }
 
   /** Show the item Action will use on the Action button, so the button says what it will do. */

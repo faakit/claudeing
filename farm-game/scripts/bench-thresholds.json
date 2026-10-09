@@ -395,5 +395,74 @@
       "corrections": 0,
       "markMismatches": 0
     }
+  },
+  "M7": {
+    "_note": "Ruling 2026-10-09: rows are painted from Action as straight lines (a tap beside each row and one hold-then-drag), so the 3x3 plot is 2 hops + seeds + 6 rows x (tap + paint) = 15 gestures.",
+    "plot3x3": {
+      "gestures": 16,
+      "travelMm": 650,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 16,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 16,
+      "travelMm": 650,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
   }
 }

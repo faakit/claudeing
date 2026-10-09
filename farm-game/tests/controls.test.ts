@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  actionDrag,
-  GESTURE,
-  holdMayStart,
-  HOLD_ACTION_MS,
-  PressTrack,
-  worldRelease,
-} from '../src/input/gesture';
+import { GESTURE, PressTrack, worldRelease } from '../src/input/gesture';
 import { dockLayout, resolveTouch } from '../src/ui/layout';
 import { logicalPerMm, PHONES, THUMB, zoneAt } from '../src/ui/reach';
 import { markerActs, markerKind, MARKER_COLORS } from '../src/ui/targetMarker';
@@ -137,73 +130,6 @@ describe('world touches: tap or stick, never both', () => {
   });
 });
 
-describe('Action: hold, swipe, roll', () => {
-  it('a swipe step needs a full mostly-vertical step', () => {
-    expect(actionDrag(0, -13)).toBe('none');
-    expect(actionDrag(2, -14)).toBe('swipeUp');
-    expect(actionDrag(-3, 15)).toBe('swipeDown');
-    expect(actionDrag(10, -14)).toBe('swipeUp'); // an arcing thumb still swipes
-    expect(actionDrag(16, 2)).toBe('flick');
-    expect(actionDrag(12, 11)).toBe('none'); // a diagonal smear is nothing
-  });
-
-  /** Replay a press: moves at given times (dy), sampled each 16 ms frame; when does the hold start? */
-  function holdStart(moves: [number, number][], until = 1200): number | null {
-    let dy = 0;
-    let mark = 0;
-    let movedAt = 0;
-    for (let t = 0; t <= until; t += 16) {
-      for (const [mt, mdy] of moves)
-        if (mt <= t && mt > t - 16) {
-          if (Math.abs(mdy - mark) >= 0.5) {
-            movedAt = mt;
-            mark = mdy;
-          }
-          dy = mdy;
-        }
-      if (Math.abs(dy) >= GESTURE.swipeStep) return null; // a tool step happened first
-      if (holdMayStart(t, dy, t - movedAt)) return t;
-    }
-    return null;
-  }
-
-  it('one long frame without touch events never reads as a settled finger', () => {
-    expect(holdMayStart(200, 6, 100, 1)).toBe(false);
-    expect(holdMayStart(200, 6, 100, 2)).toBe(true);
-  });
-
-  it('a still press starts working after the hold delay', () => {
-    expect(holdStart([])).toBe(Math.ceil(HOLD_ACTION_MS / 16) * 16);
-  });
-
-  it('a 2.5 mm or 3 mm roll of the pad (any direction) still starts the hold, soon after it settles', () => {
-    const px = logicalPerMm(PHONES[0]!);
-    for (const [mm, ux, uy] of [
-      [2.5, 0, 1],
-      [2.5, 0.6, 0.8],
-      [3, 0.6, 0.8],
-      [3, 0, -1],
-    ] as const) {
-      const dy = mm * px * uy;
-      const at = holdStart([[40, dy]]);
-      expect(at, `${mm} mm`).not.toBeNull();
-      expect(at!).toBeLessThanOrEqual(HOLD_ACTION_MS + 16);
-      void ux;
-    }
-  });
-
-  it('a swipe (60 ms to 1 s for 18 px) reaches its tool step before any hold', () => {
-    // moves arrive every 16 ms (a phone: up to a 1 s crawl) or every 40 ms (a slow harness: up to 500 ms)
-    for (const every of [16, 40])
-      for (const ms of every === 16 ? [60, 150, 300, 500, 1000] : [60, 150, 300, 500]) {
-        const moves: [number, number][] = [];
-        for (let t = 0; t < ms; t += every) moves.push([t, (-18 * t) / ms]);
-        moves.push([ms, -18]);
-        expect(holdStart(moves), `${ms} ms every ${every}`).toBeNull();
-      }
-  });
-});
-
 describe('target marker', () => {
   it('says what Action will do, by plan kind', () => {
     expect(markerKind({ planKind: 'till', interactable: false })).toBe('work');
@@ -319,17 +245,64 @@ describe('tool ring', () => {
       for (let i = 0; i < 9; i++) {
         const it = ringItem(c, i, 9, left);
         expect(ringPick(it.x, it.y, 9, left), `${left} ${i}`).toBe(i);
-        // a sloppy finger 8 degrees off still picks it
-        const a = Math.atan2(it.y, it.x) + (8 * Math.PI) / 180;
+        // a sloppy finger 6 degrees off still picks it
+        const a = Math.atan2(it.y, it.x) + (6 * Math.PI) / 180;
         expect(ringPick(Math.cos(a) * 40, Math.sin(a) * 40, 9, left)).toBe(i);
+        // half way between two items picks neither (a miss lands on nothing, not on a neighbour)
+        if (i < 8) {
+          const b = ringItem(c, i + 1, 9, left);
+          const mid = Math.atan2(it.y + b.y, it.x + b.x);
+          expect(ringPick(Math.cos(mid) * 50, Math.sin(mid) * 50, 9, left)).toBeNull();
+        }
       }
       expect(ringPick(5, 5, 9, left)).toBeNull();
       expect(ringPick(left ? -RING.radius : RING.radius, 0, 9, left)).toBeNull(); // toward the edge: nothing
     }
   });
 
-  it('vertical swipes on Action never count as a sideways flick', () => {
+  it('vertical swipes on Action never open the ring', async () => {
+    const { ActionPress } = await import('../src/input/gesture');
     for (let ay = 14; ay <= 30; ay += 2)
-      for (let ax = 0; ax <= ay; ax += 2) expect(actionDrag(ax, -ay)).not.toBe('flick');
+      for (let ax = 0; ax <= ay; ax += 2) {
+        const p = new ActionPress(0);
+        const ev = [...p.move(ax / 2, -ay / 2), ...p.move(ax, -ay)];
+        expect(ev.some((e) => e.type === 'ring')).toBe(false);
+      }
+  });
+});
+
+describe('tool ring accuracy (model)', () => {
+  it('with 7 items, a slide aimed at each item picks it >= 95% at 1.2 mm and >= 85% at 2 mm; misses pick nothing more often than a neighbour', async () => {
+    const { ringItem, ringPick } = await import('../src/ui/layout');
+    const { compensateTouch } = await import('../src/systems/tapIntent');
+    let seed = 11;
+    const u = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+    const g = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+    for (const p of [PHONES[0]!, PHONES[2]!])
+      for (const left of [false, true]) {
+        const px = logicalPerMm(p);
+        const k = 1 / (px * ((25.4 / p.ppi) * p.dpr)); // css px per logical px
+        for (const [mm, need] of [
+          [1.2, 0.95],
+          [2, 0.85],
+        ] as const) {
+          let right = 0;
+          let wrong = 0;
+          const n = 7;
+          for (let r = 0; r < 700; r++) {
+            const i = r % n;
+            const it = ringItem({ x: 160, y: 324 }, i, n, left);
+            const off = 1.06 * px; // the 1.5 mm pull toward the thumb base, split over x and y
+            const x = it.x + g() * mm * px + (left ? -off : off);
+            const y = it.y + g() * mm * px + off;
+            const c = compensateTouch(x, y, left, k);
+            const got = ringPick(c.x - 160, c.y - 324, n, left);
+            if (got === i) right++;
+            else if (got !== null) wrong++;
+          }
+          expect(right / 700, `${p.id} ${left} ${mm}`).toBeGreaterThanOrEqual(need);
+          expect(wrong / 700, `${p.id} ${left} ${mm} wrong`).toBeLessThanOrEqual(0.06);
+        }
+      }
   });
 });

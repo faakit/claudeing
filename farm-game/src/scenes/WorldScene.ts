@@ -8,6 +8,7 @@ import {
   FADE_COLOR,
   FADE_MS,
   MAX_CLOCK_DT_MS,
+  PLAYER_SPEED,
   SEASON_TINT,
   tileKind,
   TILE_SIZE,
@@ -21,13 +22,7 @@ import { playActionFx } from '../fx/actionFx';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
 import { findPath, pathToFace } from '../systems/pathfind';
-import {
-  createWork,
-  nextWork,
-  paintRelease,
-  paintStep,
-  type WorkQueue,
-} from '../systems/workQueue';
+import { createWork, nextWork, type WorkQueue } from '../systems/workQueue';
 import { compensateTouch, tapIntent, type TapIntent, type TapWorld } from '../systems/tapIntent';
 import { cssPerLogical } from '../ui/hit';
 import { FarmRenderer } from '../game/FarmRenderer';
@@ -35,6 +30,8 @@ import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
 import { controlsLog } from '../input/controlsLog';
+import { DIR_VECTORS } from '../systems/direction';
+import { TIPS } from '../ui/controlTips';
 import { inputHub } from '../input/InputHub';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
@@ -118,8 +115,9 @@ export abstract class WorldScene extends Phaser.Scene {
   private routeEnd: { intent: TapIntent; face: Direction | null } | null = null;
   /** A tap preview is showing (touch held still on the world). */
   private preview = false;
-  /** The row being painted (finger down), and the painted row being worked (runtime only). */
+  /** The line being painted from Action (finger down), and the painted line being worked (runtime only). */
   private painting: TileCoord[] | null = null;
+  private paintDir: Direction | null = null;
   private work: WorkQueue | null = null;
   /** Turn-in-place and settle-on-release state (runtime only). */
   private move: MoveState = createMoveState();
@@ -216,9 +214,8 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
       inputHub.on('tapCancel', () => this.onTapCancel()),
-      inputHub.on('paintArm', (p) => this.onPaintArm(p.x, p.y, p.accept)),
-      inputHub.on('paintMove', (p) => this.onPaintMove(p.x, p.y)),
-      inputHub.on('paintEnd', (p) => this.onPaintEnd(p.x, p.y, p.onDock)),
+      inputHub.on('paintLine', (p) => this.onPaintLine(p.dir, p.tiles)),
+      inputHub.on('paintEnd', (p) => this.onPaintEnd(p.commit)),
       gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
@@ -298,7 +295,17 @@ export abstract class WorldScene extends Phaser.Scene {
         this.highlight.showPaint(null);
         this.cancelRoute();
       }
-      moving = stepMove(player, this.move, dir, delta, this.grid).moving;
+      // Two-speed stick (Options): a gentle push walks at half speed for fine positioning.
+      const slow = state.settings.controls.twoSpeed && inputHub.stickSlow && dir !== null;
+      moving = stepMove(
+        player,
+        this.move,
+        dir,
+        delta,
+        this.grid,
+        undefined,
+        slow ? PLAYER_SPEED / 2 : PLAYER_SPEED,
+      ).moving;
     }
     this.syncSprite(moving);
 
@@ -535,7 +542,7 @@ export abstract class WorldScene extends Phaser.Scene {
 
   // ---- actions ----
 
-  private tryAction(only?: TileCoord): void {
+  private tryAction(only?: TileCoord, quietHaptic = false): void {
     const state = getState();
     const tiles = only ? [only] : this.candidates();
     if (tiles.length === 0) return;
@@ -571,11 +578,26 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = false;
       playActionFx(this.fx, res, getState().player, stack?.item);
       // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
-      if (res.kind === 'harvest') haptic('medium');
+      if (quietHaptic) {
+        /* a painted row: no buzz per use */
+      } else if (res.kind === 'harvest') haptic('medium');
       else haptic('tick', { repeat: inputHub.actionHeld && this.holdUses > 0 });
       if (inputHub.actionHeld) {
         if (this.holdUses === 0) this.holdKind = res.kind;
         this.holdUses++;
+      }
+      // First-run tip: after a few tiles tilled one at a time with Action, teach painting a row (once).
+      if (
+        !only &&
+        res.kind === 'till' &&
+        state.settings.controls.paint &&
+        !state.stats['tip.paint']
+      ) {
+        state.stats['tip.tills'] = (state.stats['tip.tills'] ?? 0) + 1;
+        if (state.stats['tip.tills'] >= 3) {
+          state.stats['tip.paint'] = 1;
+          toast(TIPS.paint, 'info');
+        }
       }
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
@@ -804,7 +826,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const target = end.intent.target;
     if (end.intent.kind === 'interact') this.onInteract(target);
     else if (end.intent.kind === 'act') {
-      this.tryAction(target);
+      // A painted row buzzed once per tile when it was drawn, and once on commit: working it is quiet.
+      this.tryAction(target, this.work !== null);
       // A painted tile is worked until it is done for today (till, plant, water: at most 3 uses), so one
       // pass over grass leaves a planted, watered row. Each use waits for the swing like a held Action.
       const w = this.work;
@@ -822,16 +845,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!this.preview) this.highlight.showPlan(null, null, 'none');
   }
 
-  // ---- paint a row (M5) ----
-
-  /** The tile under a screen point (touch-offset compensated), or null outside the world. */
-  private tileAtScreen(x: number, y: number): TileCoord | null {
-    if (!this.worldPoint(x, y)) return null;
-    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
-    const w = this.worldPoint(c.x, c.y) ?? this.worldPoint(x, y)!;
-    const t = { tx: Math.floor(w.x / TILE_SIZE), ty: Math.floor(w.y / TILE_SIZE) };
-    return this.inMap(t) ? t : null;
-  }
+  // ---- paint a row from Action (M5, as ruled 2026-10-09) ----
 
   /** What Action would do on a tile right now (auto tool), if anything. */
   private actKindAt(t: TileCoord): string | null {
@@ -845,57 +859,47 @@ export abstract class WorldScene extends Phaser.Scene {
     }));
   }
 
-  /** A long-press: paint can start on a tile Action can work. */
-  private onPaintArm(x: number, y: number, accept: () => void): void {
-    if (this.transitioning || runtime.blocked || !getState().settings.controls.paint) return;
-    const t = this.tileAtScreen(x, y);
-    // Painting is deliberate, so your own tile counts (the farmer steps off to work it).
-    if (!t || this.interactableAt(t) || !this.actKindAt(t)) return;
-    accept();
-    this.cancelRoute();
-    this.work = null;
-    this.preview = false;
-    this.highlight.showPlan(null, null, 'none');
-    this.painting = [t];
-    this.highlight.showPaint(this.paintMarks(this.painting));
-    this.highlight.pulse();
-    audio.play('select');
-    controlsLog.push({ kind: 'paint', t: this.time.now, detail: `arm ${t.tx},${t.ty}` });
-  }
-
-  private onPaintMove(x: number, y: number): void {
-    if (!this.painting) return;
-    const t = this.tileAtScreen(x, y);
-    if (!t) return;
-    const r = paintStep(
-      this.painting,
-      t,
-      (c) => !this.interactableAt(c) && this.actKindAt(c) !== null,
-    );
-    if (!r.added && !r.removed) return;
-    this.painting = r.queue;
-    this.highlight.showPaint(this.paintMarks(this.painting));
-    if (r.added) {
-      haptic('tick'); // one light tick per tile added (throttled), the wash is its visible twin
-      audio.play('select');
+  /**
+   * Painting a row from Action (ruling 2026-10-09): the line runs straight from the tile next to the farmer in
+   * the drag's direction, as many tiles as the drag is long. Shown live; nothing changes until the lift.
+   */
+  private paintLineTiles(dir: Direction, tiles: number): TileCoord[] {
+    const here = playerTile(getState().player);
+    const v = DIR_VECTORS[dir];
+    const out: TileCoord[] = [];
+    for (let i = 1; i <= tiles; i++) {
+      const t = { tx: here.tx + v.x * i, ty: here.ty + v.y * i };
+      if (!this.inMap(t)) break;
+      out.push(t);
     }
+    return out;
   }
 
-  private onPaintEnd(x: number, y: number, onDock: boolean): void {
-    const tiles = this.painting;
-    this.painting = null;
-    if (!tiles) return;
-    const verdict = paintRelease(tiles, this.tileAtScreen(x, y), onDock);
-    controlsLog.push({
-      kind: 'paint',
-      t: this.time.now,
-      detail: `${verdict} ${tiles.length}`,
-    });
-    if (verdict === 'cancel') {
+  private onPaintLine(dir: Direction | null, tiles: number): void {
+    if (this.transitioning || runtime.blocked) return;
+    if (this.work) this.work = null;
+    this.cancelRoute();
+    if (!dir || tiles === 0) {
+      this.painting = [];
       this.highlight.showPaint(null);
-      audio.play('select');
       return;
     }
+    faceDirection(getState().player, dir);
+    this.syncSprite(false);
+    this.painting = this.paintLineTiles(dir, tiles);
+    this.paintDir = dir;
+    this.highlight.showPaint(this.paintMarks(this.painting));
+  }
+
+  private onPaintEnd(commit: boolean): void {
+    const tiles = this.painting;
+    this.painting = null;
+    if (!commit || !tiles?.length || !this.paintDir) {
+      this.highlight.showPaint(null);
+      controlsLog.push({ kind: 'paint', t: this.time.now, detail: 'cancel' });
+      return;
+    }
+    controlsLog.push({ kind: 'paint', t: this.time.now, detail: `work ${tiles.length}` });
     this.work = createWork(tiles);
     this.highlight.showPaint(this.paintMarks(tiles));
   }

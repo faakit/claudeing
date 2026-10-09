@@ -126,10 +126,11 @@ export function stepPlayer(
   dtMs: number,
   grid: CollisionGrid,
   hb: Hitbox = PLAYER_HITBOX,
+  speed: number = PLAYER_SPEED,
 ): { moving: boolean } {
   if (!dir) return { moving: false };
   player.facing = dir;
-  const dist = (PLAYER_SPEED * Math.min(dtMs, MAX_FRAME_MS)) / 1000;
+  const dist = (speed * Math.min(dtMs, MAX_FRAME_MS)) / 1000;
   const v = DIR_VECTORS[dir];
   const axis = v.x !== 0 ? 'x' : 'y';
   const delta = (v.x !== 0 ? v.x : v.y) * dist;
@@ -243,6 +244,8 @@ export function stepMove(
   dtMs: number,
   grid: CollisionGrid,
   hb: Hitbox = PLAYER_HITBOX,
+  /** Walking speed (px/s): half with the two-speed stick pushed gently. */
+  speed: number = PLAYER_SPEED,
 ): { moving: boolean } {
   const dt = Math.min(dtMs, MAX_FRAME_MS);
   if (dir) {
@@ -268,7 +271,7 @@ export function stepMove(
     }
     ms.axis = axis;
     ms.sign = sign;
-    const r = stepPlayer(player, dir, dt, grid, hb);
+    const r = stepPlayer(player, dir, dt, grid, hb, speed);
     ms.moving = r.moving;
     // Pushing into a wall from standstill still counts as walking (no turn delay next frame).
     if (!r.moving) ms.moving = true;

@@ -7,6 +7,7 @@ import {
   Thumb,
   dock,
   launch,
+  liveTargets,
   openGame,
   sleep,
   startPreview,
@@ -84,9 +85,10 @@ const closeSheets = (page) =>
       .forEach((m) => m.isOpen && m.close()),
   );
 
-try {
-  for (const p of PROFILES.filter((x) => which.includes(x.id)))
-    for (const hand of hands) {
+/** Every check for one phone and hand, in its own browser context. */
+async function runCombo(p, hand) {
+  {
+    {
       const tag = `${p.id} ${hand}`;
       const { page, cdp, geo, ctx, errors } = await openGame(browser, url, p, {
         leftHanded: hand === 'left',
@@ -457,66 +459,82 @@ try {
         JSON.stringify(acc),
       );
 
-      // --- Tool ring (M6): a sideways flick on Action opens the ring; slide to the can, let go: can in hand.
+      // --- Tool ring: a sideways flick on Action opens the ring and never acts; slide, rest, lift picks.
       await place(page, 10, 17, 'down');
       await sleep(300);
       const inward = hand === 'left' ? 1 : -1; // toward the middle of the screen
+      const ringItemAt = (slot) =>
+        page.evaluate(
+          ({ slot, left }) => {
+            const ui = window.__farm.game.scene.getScene('UI');
+            const s = window.__farm.getState();
+            const items = [];
+            for (let i = 0; i < 8; i++) if (s.inventory.slots[i]) items.push(i);
+            items.push('bag');
+            const n = items.length;
+            const i = items.indexOf(slot);
+            const t = n <= 1 ? 0.5 : i / (n - 1);
+            let deg = 270 + (100 - 270) * t;
+            if (left) deg = 180 - deg;
+            const r = (deg * Math.PI) / 180;
+            const L = ui.layout;
+            return { x: L.action.x + Math.cos(r) * 56, y: L.action.y + Math.sin(r) * 56 };
+          },
+          { slot, left: hand === 'left' },
+        );
+      const ringOpen = () =>
+        page.evaluate(() => window.__farm.game.scene.getScene('UI').ring.isOpen);
       await page.evaluate(() => window.__farm.controls.clear());
-      await t.down(L.action.x, L.action.y);
-      await t.move(L.action.x + inward * 8, L.action.y);
-      await sleep(20);
-      await t.move(L.action.x + inward * 18, L.action.y);
-      await sleep(80);
-      const ringOpen = await page.evaluate(
-        () => window.__farm.game.scene.getScene('UI').ring.isOpen,
-      );
-      // slot 2 (the can) is item 1 of 9 on the arc
-      const item = await page.evaluate(
-        ({ left }) => {
-          const ui = window.__farm.game.scene.getScene('UI');
-          const L = ui.layout;
-          const deg0 = 255 + ((105 - 255) * 1) / 8;
-          const deg = left ? 180 - deg0 : deg0;
-          const r = (deg * Math.PI) / 180;
-          return { x: L.action.x + Math.cos(r) * 50, y: L.action.y + Math.sin(r) * 50 };
-        },
-        { left: hand === 'left' },
-      );
-      await t.move(item.x, item.y);
-      await sleep(60);
-      await t.up();
-      await sleep(250);
+      // slow and fast flicks (14 px reached at 60-200 ms), each slid to the can and rested on it
+      let picked = 0;
+      for (const ms of [60, 120, 200]) {
+        await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));
+        await t.timedDrag(
+          L.action.x,
+          L.action.y,
+          L.action.x + inward * 18,
+          L.action.y + 1,
+          ms * 1.3,
+          true,
+        );
+        const can = await ringItemAt(1);
+        await t.move(can.x, can.y);
+        await sleep(140);
+        await t.up();
+        await sleep(200);
+        if ((await selected(page)) === 1) picked++;
+      }
       const ringActs = await page.evaluate(
         () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
       );
       check(
-        `${tag}: a sideways flick on Action opens the tool ring; sliding to the can picks it; nothing is used`,
-        ringOpen && (await selected(page)) === 1 && ringActs === 0 && (await soil(page)) === 0,
-        `open ${ringOpen}, slot ${await selected(page)}, acts ${ringActs}`,
+        `${tag}: flicks of 60-200 ms open the ring, slide-rest-lift picks the can, and nothing is used`,
+        picked === 3 && ringActs === 0 && (await soil(page)) === 0,
+        `picked ${picked}/3, acts ${ringActs}, soil ${await soil(page)}`,
       );
-      // Ring -> Bag opens the bag.
-      await t.down(L.action.x, L.action.y);
-      await t.move(L.action.x + inward * 18, L.action.y);
-      await sleep(80);
-      const bagAt = await page.evaluate(
-        ({ left }) => {
-          const L = window.__farm.game.scene.getScene('UI').layout;
-          const deg = left ? 180 - 105 : 105;
-          const r = (deg * Math.PI) / 180;
-          return { x: L.action.x + Math.cos(r) * 50, y: L.action.y + Math.sin(r) * 50 };
-        },
-        { left: hand === 'left' },
-      );
-      await t.move(bagAt.x, bagAt.y);
-      await sleep(60);
-      await t.up();
-      await sleep(400);
+      // flick and lift at once: the ring stays open as a tap menu; a tap on Bag opens the bag
+      await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));
+      await t.timedDrag(L.action.x, L.action.y, L.action.x + inward * 30, L.action.y, 70);
+      await sleep(150);
+      const stuck = (await ringOpen()) && (await selected(page)) === 0;
+      const bagAt = await ringItemAt('bag');
+      await t.tap(bagAt.x, bagAt.y, 70);
+      await sleep(450);
       const bagOpen = await page.evaluate(
         () => window.__farm.game.scene.getScene('UI').menu.isOpen,
       );
-      check(`${tag}: the ring's Bag opens the bag`, bagOpen);
       await closeSheets(page);
-      // Vertical swipes never open the ring.
+      // and a tap away from the items closes it, changing nothing
+      await t.timedDrag(L.action.x, L.action.y, L.action.x + inward * 30, L.action.y, 70);
+      await sleep(150);
+      await t.tap(100, 150, 70);
+      await sleep(200);
+      check(
+        `${tag}: a flick lifted at once leaves the ring open as a tap menu (no silent pick); taps pick or close`,
+        stuck && bagOpen && !(await ringOpen()) && (await selected(page)) === 0,
+        `stuck ${stuck}, bag ${bagOpen}, open ${await ringOpen()}, slot ${await selected(page)}`,
+      );
+      // vertical swipes never open the ring
       let ringFromSwipe = 0;
       for (const ms of [80, 200]) {
         await t.timedDrag(
@@ -527,8 +545,7 @@ try {
           ms,
           true,
         );
-        if (await page.evaluate(() => window.__farm.game.scene.getScene('UI').ring.isOpen))
-          ringFromSwipe++;
+        if (await ringOpen()) ringFromSwipe++;
         await t.up();
         await sleep(150);
       }
@@ -561,8 +578,51 @@ try {
         allX.join(','),
       );
 
-      // --- Paint a row (M5): long-press a tile, drag over three more, lift: the farmer tills all four.
-      const world = () => window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+      // --- M7: the help card is two taps away (Menu, then the Opts tab).
+      await place(page, 10, 17, 'down');
+      await sleep(300);
+      await t.tap(L.menu.x, L.menu.y, 70);
+      await sleep(450);
+      const opts = (await liveTargets(page)).find((x) => /^Opts$/.test(x.text));
+      if (opts) await t.tap(opts.cx, opts.cy, 70);
+      await sleep(400);
+      const helpShown = await page.evaluate(() => {
+        const m = window.__farm.game.scene.getScene('UI').menu;
+        const texts = [];
+        const walk = (n) => {
+          if (n.main?.text) texts.push(n.main.text);
+          if (n.list) n.list.forEach(walk);
+        };
+        walk(m.content);
+        return texts.includes('Tap a tile:') && texts.includes('Hold Action,');
+      });
+      await closeSheets(page);
+      check(`${tag}: the controls help card is two taps away (Menu, Opts)`, !!opts && helpShown);
+
+      // --- M7: the two-speed stick walks at half speed when pushed gently (Options > Fine stick).
+      const gentle = async () => {
+        await place(page, 6, 17, 'right');
+        await sleep(200);
+        const a0 = await player(page);
+        await t.down(L.stickHome.x, L.stickHome.y);
+        await t.move(L.stickHome.x + 10, L.stickHome.y);
+        await sleep(600);
+        const a1 = await player(page);
+        await t.up();
+        await sleep(300);
+        return a1.x - a0.x;
+      };
+      const full = await gentle();
+      await page.evaluate(() => (window.__farm.getState().settings.controls.twoSpeed = true));
+      const fine = await gentle();
+      await page.evaluate(() => (window.__farm.getState().settings.controls.twoSpeed = false));
+      check(
+        `${tag}: with Fine stick on, a gentle push walks about half as fast`,
+        fine > 4 && fine < full * 0.7,
+        `full ${full.toFixed(1)} px, fine ${fine.toFixed(1)} px in 600 ms`,
+      );
+
+      // --- Paint a row from Action (ruling 2026-10-09): hold Action still 300 ms, drag, lift.
       const paintDone = () =>
         page
           .waitForFunction(
@@ -574,102 +634,114 @@ try {
             { timeout: 15000, polling: 100 },
           )
           .catch(() => undefined);
-      await place(page, 10, 16, 'down');
-      await sleep(1300);
-      const row = [];
-      for (const tx of [9, 10, 11, 12]) row.push(await tileScreen(page, tx, 19));
-      await page.evaluate(() => (window.__vibrations = []));
-      await t.down(row[0].x, row[0].y);
-      await sleep(200);
-      const armedEarly = await page.evaluate(() => {
-        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
-        return w.painting !== null;
-      });
-      await sleep(110);
-      const armed = await page.evaluate(() => {
-        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
-        return { painting: w.painting !== null, shown: w.highlight.paintGfx.visible };
-      });
-      const armPulses = await page.evaluate(() => window.__vibrations.length);
-      for (let i = 1; i < row.length; i++) {
-        await t.move((row[i - 1].x + row[i].x) / 2, row[i].y);
-        await sleep(20);
-        await t.move(row[i].x, row[i].y);
-        await sleep(20);
-      }
-      await t.up();
-      await paintDone();
-      const painted = await page.evaluate(() =>
-        Object.keys(window.__farm.getState().farm.tiles).sort(),
-      );
-      check(
-        `${tag}: a long-press arms painting at 250 ms (seen and felt), and a drag over 4 tiles works all 4`,
-        !armedEarly &&
-          armed.painting &&
-          armed.shown &&
-          armPulses >= 1 &&
-          painted.join(' ') === '10,19 11,19 12,19 9,19',
-        `early ${armedEarly}, armed ${JSON.stringify(armed)}, pulses ${armPulses}, tiles ${painted.join(' ')}`,
-      );
-
-      // A long-press without a drag works exactly one tile.
-      await place(page, 10, 16, 'down');
-      await sleep(1300);
-      const one = await tileScreen(page, 11, 19);
-      await t.hold(one.x, one.y, 400);
-      await paintDone();
-      check(
-        `${tag}: a long-press without a drag works exactly one tile`,
-        (await soil(page)) === 1,
-        `soil ${await soil(page)}`,
-      );
-
-      // Lifting on the dock cancels: nothing is worked.
-      await place(page, 10, 16, 'down');
-      await sleep(1300);
-      const p0 = await tileScreen(page, 9, 19);
-      const p1 = await tileScreen(page, 10, 19);
-      await t.down(p0.x, p0.y);
-      await sleep(320);
-      await t.move(p1.x, p1.y);
-      await sleep(40);
-      await t.move(p1.x, 330);
-      await sleep(40);
-      await t.up();
-      await sleep(1200);
-      check(
-        `${tag}: a paint lifted on the dock is cancelled (0 tiles worked)`,
-        (await soil(page)) === 0,
-        `soil ${await soil(page)}`,
-      );
-
-      // A stick drag that starts on soil never arms painting.
-      await place(page, 10, 16, 'down');
-      await sleep(1300);
-      let arms = 0;
-      for (let i = 0; i < 6; i++) {
-        const s0 = await tileScreen(page, 9 + (i % 3), 19);
-        await t.down(s0.x, s0.y);
-        await sleep(60 + i * 25);
-        await t.move(s0.x + 14, s0.y);
-        await sleep(300);
-        if (
-          await page.evaluate(
-            () => window.__farm.game.scene.getScenes(true).find((s) => s.grid).painting !== null,
-          )
-        )
-          arms++;
+      const tiles = () =>
+        page.evaluate(() => Object.keys(window.__farm.getState().farm.tiles).sort());
+      /** Hold Action `holdMs`, then drag through `path` (dx, dy from Action) at ~a tile per 100 ms, lift. */
+      const paintFromAction = async (holdMs, path) => {
+        await t.down(L.action.x, L.action.y);
+        await sleep(holdMs);
+        for (const [dx, dy] of path) {
+          await t.move(L.action.x + dx, L.action.y + dy);
+          await sleep(50);
+        }
         await t.up();
-        await sleep(200);
-        await place(page, 10, 16, 'down');
+        await paintDone();
+      };
+      // three tiles of row 17 inside the home plot (x 9-12), drawn toward the middle of the screen (right hand:
+      // left from 12,17; left hand: right from 9,17), with a 2.5 mm wobble across the line
+      const toMid = hand === 'left' ? 1 : -1;
+      await place(page, hand === 'left' ? 9 : 12, 17, 'down');
+      await sleep(300);
+      await page.evaluate(() => (window.__vibrations = []));
+      await t.down(L.action.x, L.action.y);
+      await sleep(250);
+      const armedEarly = await page.evaluate(() => {
+        const ui = window.__farm.game.scene.getScene('UI');
+        return ui.actionPress?.armed ?? false;
+      });
+      await sleep(90);
+      const armedLate = await page.evaluate(
+        () => window.__farm.game.scene.getScene('UI').actionPress?.armed ?? false,
+      );
+      const wob = 2.5 * mm;
+      for (const [dx, dy] of [
+        [6, 0],
+        [14, wob],
+        [20, -wob],
+        [26, wob],
+        [31, 0],
+      ]) {
+        await t.move(L.action.x + toMid * dx, L.action.y + dy);
+        await sleep(60);
+      }
+      const shown = await page.evaluate(
+        () =>
+          window.__farm.game.scene.getScenes(true).find((s) => s.grid).highlight.paintGfx.visible,
+      );
+      await t.up();
+      await paintDone();
+      const vibs = await page.evaluate(() => window.__vibrations.length);
+      check(
+        `${tag}: Action held 300 ms arms painting; a wobbly drag right paints exactly the 3 tiles of that line`,
+        !armedEarly &&
+          armedLate &&
+          shown &&
+          (await tiles()).join(' ') ===
+            (hand === 'left' ? '10,17 11,17 12,17' : '10,17 11,17 9,17') &&
+          vibs <= 3 + 2,
+        `armed ${armedEarly}/${armedLate}, preview ${shown}, tiles ${(await tiles()).join(' ')}, buzzes ${vibs}`,
+      );
+      // Armed, then lifted without a drag, or dragged back to the start: nothing at all.
+      await place(page, 10, 17, 'down');
+      await sleep(300);
+      await page.evaluate(() => window.__farm.controls.clear());
+      await paintFromAction(400, []);
+      await paintFromAction(340, [
+        [-14, 0],
+        [-28, 0],
+        [-10, 0],
+        [-2, 0],
+      ]);
+      const cancelActs = await page.evaluate(
+        () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
+      );
+      check(
+        `${tag}: a held Action lifted without a drag, or dragged back to the start, does nothing`,
+        (await tiles()).length === 0 && cancelActs === 0,
+        `tiles ${(await tiles()).join(' ')}, acts ${cancelActs}`,
+      );
+
+      // World touches never paint or till by duration: slow taps on grass and rest-then-steer just walk.
+      let slowWorked = 0;
+      for (const ms of [240, 350, 600]) {
+        await place(page, 10, 17, 'down');
+        await sleep(1300);
+        const one = await tileScreen(page, 11, 19);
+        await t.hold(one.x, one.y, ms);
+        await sleep(900);
+        slowWorked += (await tiles()).length;
+      }
+      let restWorked = 0;
+      for (const rest of [100, 300, 500]) {
+        await place(page, 10, 17, 'down');
+        await sleep(1300);
+        const r0 = await tileScreen(page, 10, 19);
+        await t.down(r0.x, r0.y);
+        await sleep(rest);
+        for (const d of [5, 10, 16, 23, 30]) {
+          await t.move(r0.x + d, r0.y);
+          await sleep(16);
+        }
         await sleep(300);
+        await t.up();
+        await sleep(500);
+        restWorked += (await tiles()).length;
       }
       check(
-        `${tag}: stick drags that start on soil never arm painting`,
-        arms === 0,
-        `${arms} armed`,
+        `${tag}: still world touches of 240-600 ms and rest-then-steer drags work 0 tiles`,
+        slowWorked === 0 && restWorked === 0,
+        `slow taps ${slowWorked}, rest-then-steer ${restWorked}`,
       );
-      void world;
 
       // --- Grid feel (M2): a flick in a new direction turns in place; every release rests on a tile centre.
       const flickFails = [];
@@ -784,10 +856,12 @@ try {
         `icon ${icon} (seed icon ${seedIcon}), planted ${planted}, slot ${await selected(page)}`,
       );
 
-      // --- Hold under a rolling pad works 3 tiles in 1.2 s.
-      for (const [label, dx, dy] of [
-        ['2.5 mm vertical roll', 0, 2.5 * mm],
-        ['3 mm diagonal roll', 0.6 * 3 * mm, 0.8 * 3 * mm],
+      // --- Action under a rolling pad: a 2-2.5 mm roll still arms painting (nothing acts on lift); a touch
+      // that wandered 9 px or more never acts at all.
+      for (const [label, dx, dy, armed] of [
+        ['2 mm diagonal roll', 0.6 * 2 * mm, 0.8 * 2 * mm, true],
+        ['2 mm sideways roll', 2 * mm, 0, true],
+        ['3.5 mm diagonal roll', 0.6 * 3.5 * mm, 0.8 * 3.5 * mm, false],
       ]) {
         await place(page, 10, 17, 'down');
         await sleep(200);
@@ -795,18 +869,19 @@ try {
         await t.down(L.action.x, L.action.y);
         await sleep(40);
         await t.move(L.action.x + dx, L.action.y + dy);
-        await sleep(1160);
+        await sleep(400);
+        const isArmed = await page.evaluate(
+          () => window.__farm.game.scene.getScene('UI').actionPress?.armed ?? false,
+        );
         await t.up();
         await sleep(250);
-        // A hold repeats only the step it started with: it tills the 3 tiles in reach, then stops quietly.
-        // A cancelled hold would give 1.
         const n = await page.evaluate(
-          () => window.__farm.controls.entries.filter((e) => e.kind === 'act' && e.ok).length,
+          () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
         );
         check(
-          `${tag}: holding Action 1.2 s with a ${label} tills all 3 tiles in reach, and only tills`,
-          n === 3 && (await soil(page)) === 3,
-          `${n} uses, ${await soil(page)} tiles`,
+          `${tag}: holding Action with a ${label} ${armed ? 'arms painting' : 'does not arm'} and acts 0 times`,
+          isArmed === armed && n === 0 && (await soil(page)) === 0,
+          `armed ${isArmed}, acts ${n}, soil ${await soil(page)}`,
         );
       }
 
@@ -855,21 +930,23 @@ try {
         `slot ${await selected(page)}`,
       );
 
-      // --- Haptics: ticks at most 1 per 120 ms during a held action; vibrate off means none at all.
+      // --- Haptics: quick taps on Action tick at most 1 per 120 ms and never double up; vibrate off = none.
       await place(page, 10, 17, 'down');
       await page.evaluate(() => (window.__vibrations = []));
-      await t.hold(L.action.x, L.action.y, 1300);
+      for (let i = 0; i < 4; i++) {
+        await t.tap(L.action.x, L.action.y, 60);
+        await sleep(90);
+      }
       await sleep(200);
-      const vibs = await page.evaluate(() => window.__vibrations);
-      // Ticks (8 ms) at most 1 per 120 ms; any other pulse within 80 ms must be a stronger one replacing it.
-      const vib = vibs.filter((v) => v.pattern === 8).map((v) => v.t);
+      const tapVibs = await page.evaluate(() => window.__vibrations);
+      const vib = tapVibs.filter((v) => v.pattern === 8).map((v) => v.t);
       const gaps = vib.slice(1).map((v, i) => v - vib[i]);
-      const all = vibs.map((v) => v.t);
-      const close = all.slice(1).filter((v, i) => v - all[i] < 79 && vibs[i + 1].pattern === 8);
+      const all = tapVibs.map((v) => v.t);
+      const close = all.slice(1).filter((v, i) => v - all[i] < 79 && tapVibs[i + 1].pattern === 8);
       check(
-        `${tag}: a held action ticks at most 1 per 120 ms and never doubles up`,
+        `${tag}: quick Action taps tick at most 1 per 120 ms and never double up`,
         vib.length >= 1 && gaps.every((g) => g >= 119) && close.length === 0,
-        `${vib.length} pulses, gaps ${gaps.map(Math.round).join(',')}, patterns ${vibs.map((v) => JSON.stringify(v.pattern)).join(' ')}`,
+        `${vib.length} pulses, gaps ${gaps.map(Math.round).join(',')}, patterns ${tapVibs.map((v) => JSON.stringify(v.pattern)).join(' ')}`,
       );
       await place(page, 10, 17, 'down');
       await page.evaluate(() => {
@@ -877,10 +954,14 @@ try {
         window.__farm.haptics.setHapticsEnabled(false);
         window.__vibrations = [];
       });
-      await t.hold(L.action.x, L.action.y, 800);
-      await sleep(200);
+      await t.tap(L.action.x, L.action.y, 60);
+      await sleep(300);
+      await paintFromAction(340, [
+        [-10, 0],
+        [-20, 0],
+      ]);
       check(
-        `${tag}: with vibration off there are 0 vibrate calls`,
+        `${tag}: with vibration off there are 0 vibrate calls (taps, a paint arm and a painted row)`,
         (await page.evaluate(() => window.__vibrations.length)) === 0,
         `${await page.evaluate(() => window.__vibrations.length)} calls`,
       );
@@ -965,6 +1046,24 @@ try {
       check(`${tag}: no console errors`, errors.length === 0, errors.join(' | '));
       await ctx.close();
     }
+  }
+}
+
+// Phones and hands run two at a time (each in its own context), so the suite fits the verify budget.
+const combos = [];
+for (const p of PROFILES.filter((x) => which.includes(x.id)))
+  for (const hand of hands) combos.push([p, hand]);
+const PARALLEL = Number(process.env.E2E_CONTROLS_PARALLEL ?? 2);
+try {
+  const queue = [...combos];
+  await Promise.all(
+    Array.from({ length: Math.min(PARALLEL, queue.length) }, async () => {
+      while (queue.length) {
+        const [p, hand] = queue.shift();
+        await runCombo(p, hand);
+      }
+    }),
+  );
 } finally {
   await browser.close();
   stop();

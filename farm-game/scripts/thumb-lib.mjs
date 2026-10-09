@@ -229,6 +229,8 @@ export class Thumb {
     this.zones = { comfort: 0, stretch: 0, hard: 0 };
     this.corrections = 0;
     this.toolChanges = 0;
+    /** Taps repeated because the first missed its target (aim spread). */
+    this.retries = 0;
     /** Measured ms from the moment the bot "saw" its stop point to the stick release reaching the page. */
     this.releases = [];
   }
@@ -244,6 +246,7 @@ export class Thumb {
       travelMm: Math.round((this.contact + this.air) * k),
       corrections: this.corrections,
       toolChanges: this.toolChanges,
+      retries: this.retries,
       releaseMs: this.releases.length
         ? Math.round(this.releases.reduce((a, b) => a + b, 0) / this.releases.length)
         : null,

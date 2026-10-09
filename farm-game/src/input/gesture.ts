@@ -45,42 +45,124 @@ export function worldRelease(track: PressTrack, stickEngaged: boolean): 'tap' | 
   return !stickEngaged && track.still ? 'tap' : 'none';
 }
 
-export type ActionDrag = 'none' | 'swipeUp' | 'swipeDown' | 'flick';
+/** Hold Action still this long to arm painting a row (coordinator ruling 2026-10-09). */
+export const PAINT_ARM_MS = 300;
+/** After arming, the drag picks a direction once it is this far from where the finger was. */
+export const PAINT_DEADZONE = 8;
+/**
+ * Drag distance per extra tile of the painted line. Small, because Action sits 40 px from the screen edge on its
+ * thumb's side: a drag that way still reaches 4 tiles before the finger leaves the screen.
+ */
+export const PAINT_STEP_PX = 10;
+/** Longest painted line. */
+export const PAINT_MAX_TILES = 12;
+/** Direction hysteresis while painting: the other axis must be this many times stronger to switch lines. */
+export const PAINT_BIAS = 1.6;
+
+export type ActionEvent =
+  | { type: 'step'; dir: 1 | -1 }
+  | { type: 'ring' }
+  | { type: 'arm' }
+  | { type: 'paint'; dir: 'up' | 'down' | 'left' | 'right' | null; tiles: number }
+  | { type: 'tap' }
+  | { type: 'commit'; dir: 'up' | 'down' | 'left' | 'right'; tiles: number }
+  | { type: 'cancel' };
 
 /**
- * Classify the travel on the Action button since its anchor (the touch-down point, or the point of the
- * last tool step). A step needs a full `swipeStep` of mostly vertical travel; clearly horizontal travel
- * past a step is a sideways flick (the tool ring, later). A rolling pad never gets that far.
+ * One press on the Action button, pure (owner ruling 2026-10-09). The gestures stay apart:
+ *
+ * - **tap:** lifted before the paint arm, never having moved 9 px in any direction: act once;
+ * - **swipe:** a mostly vertical 14 px step changes tool (each further step changes again);
+ * - **flick:** a clearly sideways 14 px move opens the tool ring; nothing is ever used;
+ * - **paint:** held still 300 ms arms painting (a tick); the drag direction then picks a straight line
+ *   from the farmer (4 ways, hysteresis 1.6 so a wobble never switches line) and its length the number of
+ *   tiles (one per 14 px); lifting commits, lifting near the start cancels.
+ *
+ * Anything else (a touch that wandered 9 px or more and did none of these) does nothing on release.
  */
-export function actionDrag(dx: number, dy: number): ActionDrag {
-  const ax = Math.abs(dx);
-  const ay = Math.abs(dy);
-  if (ay >= GESTURE.swipeStep && ay > ax) return dy < 0 ? 'swipeUp' : 'swipeDown';
-  if (ax >= GESTURE.swipeStep && ax > ay * GESTURE.dominance) return 'flick';
-  return 'none';
-}
+export class ActionPress {
+  private phase: 'press' | 'swiping' | 'armed' | 'ring' = 'press';
+  private maxTravel = 0;
+  private anchorY = 0;
+  private armAt = { x: 0, y: 0 };
+  private last = { x: 0, y: 0 };
+  private dir: 'up' | 'down' | 'left' | 'right' | null = null;
+  private tiles = 0;
 
-/** Hold on Action before it starts working, so a swipe never swings the old tool. */
-export const HOLD_ACTION_MS = 110;
-/** A finger counts as settled once it has not moved 0.5 px vertically for this long. */
-export const HOLD_SETTLE_MS = 60;
-/** Vertical travel below this never delays a hold (a firm press wobbles a pixel or two). */
-export const HOLD_JITTER = 1.5;
+  constructor(private readonly t0: number) {}
 
-/**
- * May a held Action press start working now? After the hold delay, yes, unless the finger has strayed
- * vertically and is still moving: that is a swipe on its way to a tool step. A rolling pad settles, and
- * then the hold starts, wherever it settled (short of a full step, which would have changed tool).
- */
-export function holdMayStart(
-  sinceDownMs: number,
-  dy: number,
-  msSinceVerticalMove: number,
-  framesSinceVerticalMove = Infinity,
-): boolean {
-  if (sinceDownMs < HOLD_ACTION_MS) return false;
-  // Settled = no vertical change for 60 ms AND across at least 2 rendered frames, so one long frame (a GC
-  // pause holding the touch events back) never reads as a still finger mid-swipe.
-  const settled = msSinceVerticalMove >= HOLD_SETTLE_MS && framesSinceVerticalMove >= 2;
-  return Math.abs(dy) < HOLD_JITTER || settled;
+  get armed(): boolean {
+    return this.phase === 'armed';
+  }
+
+  move(dx: number, dy: number): ActionEvent[] {
+    this.last = { x: dx, y: dy };
+    this.maxTravel = Math.max(this.maxTravel, Math.hypot(dx, dy));
+    if (this.phase === 'ring') return [];
+    if (this.phase === 'armed') return this.paintMove(dx, dy);
+    const out: ActionEvent[] = [];
+    const ady = dy - this.anchorY;
+    if (Math.abs(ady) >= GESTURE.swipeStep && Math.abs(ady) > Math.abs(dx)) {
+      this.phase = 'swiping';
+      this.anchorY = dy;
+      out.push({ type: 'step', dir: ady < 0 ? 1 : -1 });
+    } else if (
+      this.phase === 'press' &&
+      Math.abs(dx) >= GESTURE.swipeStep &&
+      Math.abs(dx) > Math.abs(dy) * GESTURE.dominance
+    ) {
+      this.phase = 'ring';
+      out.push({ type: 'ring' });
+    }
+    return out;
+  }
+
+  /** Each frame: the paint arm. */
+  update(t: number): ActionEvent[] {
+    if (this.phase !== 'press' || this.maxTravel >= GESTURE.stickDeadzone) return [];
+    if (t - this.t0 < PAINT_ARM_MS) return [];
+    this.phase = 'armed';
+    this.armAt = { ...this.last };
+    return [{ type: 'arm' }];
+  }
+
+  up(): ActionEvent[] {
+    if (this.phase === 'armed') {
+      return this.dir && this.tiles > 0
+        ? [{ type: 'commit', dir: this.dir, tiles: this.tiles }]
+        : [{ type: 'cancel' }];
+    }
+    if (this.phase === 'press' && this.maxTravel < GESTURE.stickDeadzone) return [{ type: 'tap' }];
+    return [];
+  }
+
+  private paintMove(dx: number, dy: number): ActionEvent[] {
+    const px = dx - this.armAt.x;
+    const py = dy - this.armAt.y;
+    const d = Math.hypot(px, py);
+    let dir = this.dir;
+    if (d < PAINT_DEADZONE) dir = null;
+    else {
+      const ax = Math.abs(px);
+      const ay = Math.abs(py);
+      const horizontal =
+        dir === null
+          ? ax >= ay
+          : dir === 'left' || dir === 'right'
+            ? !(ay > ax * PAINT_BIAS)
+            : ax > ay * PAINT_BIAS;
+      dir = horizontal ? (px < 0 ? 'left' : 'right') : py < 0 ? 'up' : 'down';
+    }
+    // tiles: along the chosen direction only, one at the deadzone and one more per step
+    const along =
+      dir === null ? 0 : dir === 'left' ? -px : dir === 'right' ? px : dir === 'up' ? -py : py;
+    const tiles =
+      dir === null || along < PAINT_DEADZONE
+        ? 0
+        : Math.min(PAINT_MAX_TILES, 1 + Math.floor((along - PAINT_DEADZONE) / PAINT_STEP_PX));
+    if (dir === this.dir && tiles === this.tiles) return [];
+    this.dir = dir;
+    this.tiles = tiles;
+    return [{ type: 'paint', dir: tiles > 0 ? dir : null, tiles }];
+  }
 }
