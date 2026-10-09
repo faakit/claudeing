@@ -6599,5 +6599,77 @@
  "crop_tulip_0": {
   "authored": "seed_mound",
   "group": "world"
+ },
+ "item_tulip_seed": {
+  "src": "items8b/tulip_seed",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_tulip": {
+  "src": "items8b/tulip",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_parsnip_soup": {
+  "src": "items8b/parsnip_soup",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_baked_potato": {
+  "src": "items8b/baked_potato",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_fish_stew": {
+  "src": "items8a/fish_stew",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_berry_tart": {
+  "src": "items8b/berry_tart",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_kale_salad": {
+  "src": "items8b/kale_salad",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_old_whiskers": {
+  "src": "items8a/old_whiskers",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_ice_pike": {
+  "src": "items8a/ice_pike",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
  }
 }

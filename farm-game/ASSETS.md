@@ -7,7 +7,7 @@
   game's pixel grid by the deterministic scripts in `art-src/tools/` (keying, grid detection, downscale, quantization to
   the 32-colour palette, cleanup and outline), then reviewed in game screenshots and fixed where needed. Every prompt,
   the output it produced and the sprites it fed are listed in `art-src/flow/prompts.md`; per-sprite crops are in
-  `art-src/flow/crops/`. This art was not hand-drawn.
+  `art-src/flow/crops/`. This art was not hand-drawn (the code-authored and hand-drawn exceptions are listed below).
 - Generation record: Google Flow, model Nano Banana 2.1, the owner's Google account (a Google subscription shown as "PRO"
   in Flow; generations reported as using 0 credits), all generated on 2026-10-08. Google's SynthID watermark is
   present in the raw outputs; the shipped sprites are re-quantized, re-gridded derivatives, so it may not survive.
@@ -22,6 +22,13 @@
   (fences, cobbles, interior walls, rails, flora, clay roofs, chimney, cave mouth) and `art-src/tools/bake.py` (forest
   crowns, shores, path edges, mine rock, rendered per map); the remaining code-drawn placeholders in `src/art/`.
 - Round 2 (2026-10-08, same account and terms): Flow sheets `village2`, `nature2` and `fx2` (props, nature, effects).
+- Round 3 (2026-10-09, same account and terms): Flow sheet `items8` (generated 2026-10-09; downloaded to
+  `flow-raw/` by the coordinator with the owner's approval). It feeds nine item icons: tulip bulbs, tulip, parsnip
+  soup, baked potato, fish stew, berry tart, kale salad, Old Whiskers, Ice Pike.
+- **Hand-drawn in code** (original, this repo, round 3): `art-src/tools/drawn.py` draws pixel by pixel on the
+  palette the tulip growth stages, pumpkin pie, Glimmer Trout, Sun Carp, the scarecrow (item and object), the
+  Founder's Statue level frames, the onboarding coach marks, and the tool-use poses (arms and tools drawn onto the
+  Flow-derived player frames).
 - Usage terms: Google's generative AI terms apply to the Flow outputs; the owner is responsible for confirming they
   allow commercial redistribution before a store release. No third-party sprite packs, no scraped images, no
   trademarked characters were used (prompts ask for generic farm objects and original villagers).

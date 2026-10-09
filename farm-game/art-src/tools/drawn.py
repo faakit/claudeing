@@ -1,8 +1,9 @@
 """Sprites drawn by hand in code, pixel by pixel, as character grids over the palette (art round 3).
 
-Used where no Google Flow source was downloaded this round: tulips, six dishes, the four legendary fish, the
-scarecrow, the Founder's Statue (one frame per level), the onboarding coach marks, and the tool-use poses (built on
-the player's own frames, so the head always matches the walking sprite).
+Used where a hand-drawn sprite reads better at 1x than the Flow version (Flow sheet items8 supplies the tulip
+bulbs and bloom, four dishes, fish stew, Old Whiskers and the Ice Pike via sprites.json): the tulip growth, pumpkin
+pie, the Glimmer Trout and Sun Carp, the scarecrow, the Founder's Statue (one frame per level), the onboarding coach
+marks, and the tool-use poses (built on the player's own frames, so the head always matches the walking sprite).
 
 Every character is one palette slot by name (see CHARS); `.` is transparent. Outlines are drawn explicitly in ink
 (`K`), so thin stems and whiskers survive. `build(P, groups, pal, chars)` adds RGBA sprites to the atlas groups.
@@ -36,44 +37,6 @@ def grid(names: list[str], rows: list[str], w: int | None = None, h: int | None 
 
 
 # ---------------------------------------------------------------- tulips
-
-TULIP_SEED = [
-    "................",
-    "...KKKKKKKKKK...",
-    "..KswswswswswK..",
-    "..KsssssssssoK..",
-    "..KKKKKKKKKKKK..",
-    "..KppppppppppK..",
-    "..KpppK.KpppsK..",
-    "..KppKqKqKppsK..",
-    "..KppKkqqKppsK..",
-    "..KppKqqVKppsK..",
-    "..KpppKKKpppsK..",
-    "..KppGKgKGppsK..",
-    "..KpppGgGpppsK..",
-    "..KssssssssssK..",
-    "..KKKKKKKKKKKK..",
-    "................",
-]
-
-TULIP = [
-    "................",
-    ".....K.K.K......",
-    "....KqKqKqK.....",
-    "....KkqqqqK.....",
-    "....KkqqqVK.....",
-    "....KqqqqVK.....",
-    ".....KVqVK......",
-    "......KgK.......",
-    "......KgK.......",
-    "..KK..KgK..KK...",
-    ".KnnK.KgK.KnnK..",
-    ".KgnnKKgKKnngK..",
-    "..KgnnKgKnngK...",
-    "...KKgKgKgKK....",
-    ".....KKgKK......",
-    "......KKK.......",
-]
 
 CROP_TULIP = {
     1: [
@@ -170,101 +133,6 @@ CROP_TULIP = {
 
 # ---------------------------------------------------------------- dishes
 
-PARSNIP_SOUP = [
-    "................",
-    "................",
-    "........K.......",
-    ".......KnK......",
-    "....KKKKgKKKK...",
-    "..KKsspppppssKK.",
-    ".KsppppppppYppsK",
-    ".KspppYppppppppK",
-    ".KwsppppppppsswK",
-    ".KswssssssssswoK",
-    "..KwwwwwwwwwwoK.",
-    "..KswwwwwwwwooK.",
-    "...KowwwwwwooK..",
-    "....KKooooooK...",
-    ".....KKKKKKK....",
-    "................",
-]
-
-BAKED_POTATO = [
-    "................",
-    "................",
-    "................",
-    "........KK......",
-    "......KKgnK.....",
-    "....KKLLLKKKK...",
-    "...KwKYLLYKpwK..",
-    "..KwsKpYYpKpowK.",
-    ".KwsspKppKppowoK",
-    ".KswspppppppwooK",
-    ".KswwssppppwwooK",
-    "..KwwwwwwwwwooK.",
-    "...KoowwwwoooK..",
-    "...KKKooooooKK..",
-    "..KxxKKKKKKKxxK.",
-    "...KKKKKKKKKKK..",
-]
-
-FISH_STEW = [
-    "................",
-    "................",
-    "................",
-    "....KKKKKKKKK...",
-    "..KKOOpOOOgOOKK.",
-    ".KOOpppOOOOdOOOK",
-    ".KOOOpOOgOOOpOdK",
-    ".KSOOOOOOdOOppSK",
-    ".KDSSSSSSSSSSSDK",
-    ".KSDDDDDDDDDDDNK",
-    "..KSDDDDDDDDDNK.",
-    "..KDDDDDDDDDNNK.",
-    "...KNDDDDDDNNK..",
-    "....KKNNNNNNK...",
-    ".....KKKKKKK....",
-    "................",
-]
-
-BERRY_TART = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "....KKKKKKKK....",
-    "..KKsRRDRRRsKK..",
-    ".KsRkRRRDkRRRsK.",
-    ".KsRRDRRRRRDRsK.",
-    ".KsRRRRkRDRRRsK.",
-    ".KwsRRDRRRRRswK.",
-    ".KswsssssssswoK.",
-    ".KwswswswswswoK.",
-    "..KwwwwwwwwwoK..",
-    "...KKoooooooKK..",
-    ".....KKKKKKK....",
-    "................",
-]
-
-KALE_SALAD = [
-    "................",
-    "................",
-    ".....KK..KK.....",
-    "....KnnKKngK....",
-    "...KngnKnggnKK..",
-    "..KnggGKgnRgnnK.",
-    ".KgnRgnggGngnGK.",
-    ".KGgnngnRggnggK.",
-    ".KxGgGgGgGGgGxK.",
-    ".KpxxxxxxxxxxzK.",
-    "..KpppppppppzK..",
-    "..KxpppppppzzK..",
-    "...KxppppppzK...",
-    "....KKzzzzzK....",
-    ".....KKKKKK.....",
-    "................",
-]
-
 PUMPKIN_PIE = [
     "................",
     "................",
@@ -324,43 +192,6 @@ SUN_CARP = [
     "................",
 ]
 
-OLD_WHISKERS = [
-    "................",
-    "................",
-    "................",
-    ".......KKK......",
-    ".KK..KKZZZKK....",
-    "KZZKKZzzzzzzK...",
-    "KZzZZzzzzzKzzK..",
-    "KZzzZzzzzzzzzzK.",
-    "KZzZZxxxxxxxxKKK",
-    "KZZKKxxxxxxxKK.K",
-    ".KK.KKKZKKKKK..K",
-    "............K...",
-    "................",
-    "................",
-    "................",
-    "................",
-]
-
-ICE_PIKE = [
-    "................",
-    "................",
-    "................",
-    "........K..K....",
-    ".......KIKKIK...",
-    ".K....KDDDDDDKK.",
-    "KIK.KKDDSDDDDDKK",
-    "KIIKSSSSSSSSSSIK",
-    ".KSSSSSSSSSSIIKK",
-    "KIIKIIIIIIIIIK..",
-    "KIK.KKKIKKKKKK..",
-    ".K.....KK.......",
-    "................",
-    "................",
-    "................",
-    "................",
-]
 
 # ---------------------------------------------------------------- scarecrow
 
@@ -594,7 +425,6 @@ COACH_TAIL = [  # sits under the bubble's bottom edge, overlapping its outline r
 
 # ---------------------------------------------------------------- tool-use poses on the player's own frames
 
-
 def _pose(
     base: np.ndarray,
     names: list[str],
@@ -721,22 +551,13 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
     def add(group: str, key: str, idx: np.ndarray) -> None:
         groups[group][key] = px.idx_to_rgba(idx, pal)
 
-    add("ui", "item_tulip_seed", grid(names, TULIP_SEED))
-    add("ui", "item_tulip", grid(names, TULIP))
     # stage 0 is the shared seed mound (sprites.json); stages 1..4 from the drawn growth (sprout ... bloom)
     for k, stage in ((1, 2), (2, 3), (3, 4), (4, 5)):
         add("world", f"crop_tulip_{k}", grid(names, CROP_TULIP[stage]))
     for key, rows in (
-        ("item_parsnip_soup", PARSNIP_SOUP),
-        ("item_baked_potato", BAKED_POTATO),
-        ("item_fish_stew", FISH_STEW),
-        ("item_berry_tart", BERRY_TART),
-        ("item_kale_salad", KALE_SALAD),
         ("item_pumpkin_pie", PUMPKIN_PIE),
         ("item_glimmer_trout", GLIMMER_TROUT),
         ("item_sun_carp", SUN_CARP),
-        ("item_old_whiskers", OLD_WHISKERS),
-        ("item_ice_pike", ICE_PIKE),
         ("item_scarecrow", SCARECROW_ITEM),
     ):
         add("ui", key, grid(names, rows, 16, 16))

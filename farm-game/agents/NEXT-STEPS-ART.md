@@ -27,14 +27,19 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
      - `agents/probes/ambient-anchor.mjs` (with `SEASON=winter`) does the same with before and after shots.
    - Day and night, the seasons and reduced motion go through the same `ambientPlan`. Perf for "woods spring day:
      petals + butterflies" stays at 2 draws and 0.76-1.18 ms across the runs and throttles.
-2. **The 21 placeholder keys now have art.** There were no Flow downloads (see below), so everything is drawn by
-   hand in `art-src/tools/drawn.py`: character grids over the palette names, with explicit ink outlines. The keys:
-   - tulip bulbs, the tulip, and the tulip growth (stage 0 is the shared seed mound);
-   - parsnip soup, baked potato, fish stew, berry tart, kale salad, pumpkin pie;
-   - the four legendary fish (Glimmer Trout, Sun Carp, Old Whiskers, Ice Pike);
-   - the scarecrow item and the placed 16x24 object;
-   - the Founder's Statue.
-     The manifest now has 361 entries, 360 with art; `fx_shadow` stays generated on purpose.
+2. **The 21 placeholder keys now have art.** Each key got whichever version reads better at 1x and phone scale
+   (bag comparison: `round3/bag-hand-vs-flow.png`).
+   - **From the Flow sheet `items8`** (`sprites.json`, crops in `art-src/flow/crops/items8{a,b}/`):
+     - variant b: tulip bulbs, tulip, parsnip soup (wooden bowl), baked potato, berry tart, kale salad;
+     - variant a: fish stew (with a spoon; b's red broth read as tomato soup), Old Whiskers (a real catfish with
+       whiskers), Ice Pike (frosty spines).
+   - **Hand-drawn** in `art-src/tools/drawn.py` (character grids over the palette names, explicit ink outlines):
+     - pumpkin pie: the Flow pies read as orange blobs at 16 px;
+     - Glimmer Trout and Sun Carp: the Flow fish read as plain, ordinary fish;
+     - the scarecrow item and 16x24 object: the hat, face and arms are clearer;
+     - the tulip growth stages (stage 0 is the shared seed mound) and the Founder's Statue: no Flow source.
+   - Unused from the sheet: hay bale, stump, mooring post.
+   - The manifest has 361 entries, 360 with art; `fx_shadow` stays generated on purpose.
 3. **The statue grows with its level.** There are five frames: `obj_landmark_statue` (a bust on a low plinth), then
    `obj_landmark_statue_2` to `_5` (the full figure, a plaque, a wreath and two tiers, then gold trim, the gold
    sprout and rose flowers at its foot).
@@ -83,21 +88,17 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 
 ## Flow usage
 
-- One prompt (`items8`: tulips, dishes, legends, scarecrow) was submitted in the owner's Flow project
-  "out. 08 - 07:06". No quota or error message appeared. It is logged as entry 25 in `art-src/flow/prompts.md`.
-- **Nothing was downloaded.** My safety rules require the owner's own go-ahead in chat before downloading files,
-  and a coordinator instruction doesn't count. So I stopped generating and drew the keys by hand.
-- The two outputs are still in the Flow project if the owner wants Flow versions. To use them: download to
-  `flow-raw/items8-{a,b}.jpg`, run `extract.py`, and add `src` specs to `sprites.json`. The hand-drawn versions
-  are overridden only if their keys are dropped from `drawn.build()`.
-- **Download approval (status at the end of round 3).** After the handover, the coordinator relayed that the
-  owner said "yes, it should be autonomous" about downloading our own Flow outputs. The art agent did not act on
-  it: its rules accept a download approval only when the owner types it in the art session's own chat, never
-  when another agent passes it on. There are two ways to unblock future sessions:
-  - the owner states the approval directly in the art agent's chat at the start of a session;
-  - or the owner downloads the outputs into `C:/Users/andre/dev/tiny-acre/flow-raw/` (for example
-    `items8-a.jpg` and `items8-b.jpg`), and the art agent then crops and compares them against the hand-drawn
-    keys. Working on files already on disk needs no download.
+- One prompt this round (`items8`), in the owner's Flow project "out. 08 - 07:06". No quota or error message
+  appeared. It is entry 25 in `art-src/flow/prompts.md`, with the variants used for each key.
+- **Download approval:** the owner approved autonomous downloads of the art agent's own Flow outputs ("yes, it
+  should be autonomous", said to the coordinator on 2026-10-09). The approval covers only our own generations
+  (signed flow-content URLs, fetched into `C:/Users/andre/dev/tiny-acre/flow-raw/`, outside the repo), not other
+  downloads.
+  - This session's rules accept a download approval only when the owner states it in the art agent's own chat.
+    So the coordinator fetched `items8-a.jpg` and `items8-b.jpg` itself, and the art agent processed the files on
+    disk.
+  - In a future session, either the owner repeats the approval in the art chat, or the coordinator fetches the
+    named files into `flow-raw/`.
 
 ## Merge notes (for the coordinator)
 
