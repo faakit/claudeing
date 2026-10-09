@@ -23,8 +23,8 @@ export interface TouchButtonOptions {
   onRelease?: () => void;
   /** 'down' buttons only: +1 / -1 per tool step when the finger slides up / down while pressing. */
   onSwipe?: (step: number) => void;
-  /** 'down' buttons only: a clearly sideways flick while pressing (+1 right, -1 left). */
-  onFlick?: (dir: number) => void;
+  /** 'down' buttons only: a clearly sideways flick while pressing (+1 right, -1 left), with the pointer. */
+  onFlick?: (dir: number, pointerId: number) => void;
   /** 'down' buttons only: every pointer move of the press, relative to its anchor. */
   onMove?: (dx: number, dy: number) => void;
   /**
@@ -103,10 +103,11 @@ export class TouchButton {
         opts.onSwipe(kind === 'swipeUp' ? 1 : -1); // first, so the release below knows it was a swipe
         this.endPress(); // a swipe is not a work press: let go of the held action
       } else if (kind === 'flick' && opts.onFlick) {
+        // The flick hands this finger to whatever it opens (the tool ring): stop tracking it here.
         const dir = Math.sign(p.x - this.anchor.x);
-        this.anchor = { x: p.x, y: p.y };
+        this.pointerId = null;
+        opts.onFlick(dir, p.id); // first, so the release below knows it was not a tap
         this.endPress();
-        opts.onFlick(dir);
       }
     };
     const onUp = (p: Phaser.Input.Pointer) => {

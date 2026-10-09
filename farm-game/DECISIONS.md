@@ -513,3 +513,21 @@ These replace the M3 and M4 entries above where they differ.
 5. **Painting a row is unchanged by ruling 2** (it is a deliberate gesture, not a hold): each painted tile is
    worked until done for today, with the seed rule above (no chosen seed: tilled and watered, not planted).
    One constant (`WORK_USES_PER_TILE`) turns it into one step per tile if the owner prefers.
+
+### M6 reach and handedness
+
+- **Tool ring (`ui/ToolRing.ts`, geometry in `ui/layout.ts`):** a sideways flick on Action (14 px, clearly
+  horizontal, toward the middle of the screen or not) opens the 8 hotbar slots and "Bag" on an arc around
+  Action (radius 50, from upper-left to lower-left; mirrored for the left hand). The same finger slides and lets
+  go: items are picked by angle, a whole 19-degree sector, not by hitting the drawn disc; letting go in the
+  middle or toward the screen edge cancels, empty slots cannot be picked. Every item centre is comfortable for
+  both hands on all five phones (unit test). A flick never acts; vertical swipes never open the ring (unit
+  test and e2e). The rod is one drag away (fishing's fixed cost 7 -> 4), the bag too.
+- **Mirrored sheets:** `Modal.row` lays its buttons from the thumb's edge (`rowLayout`): left-handed, the
+  primary button sits at the left edge and the icon and text follow; the same room for text either way. The
+  bin's "Ship all produce" and the bag's "Use now" move to the left too; page arrows keep their order. Reach map
+  (iPhone 13): left-thumb targets outside the comfortable zone on the bin, board, gift, jar and shop sheets
+  went from 27 of 40 to 4 of 41 (the shop's top tabs and one arrow); the right thumb is unchanged.
+- **Options rows sit low:** the Options tab lays out from the tab strip up.
+- **Not done:** bag cells on the SE stay 37 CSS px. Eight columns on a 323 CSS px wide canvas cannot reach
+  44 px (8 x 44 = 352); a 7-column bag would break the hotbar row's mapping. Left for the owner and the UI skin.

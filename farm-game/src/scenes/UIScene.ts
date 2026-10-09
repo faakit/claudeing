@@ -27,6 +27,7 @@ import { mixColor } from '../ui/color';
 import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
 import { Label } from '../ui/font';
 import { Hud } from '../ui/Hud';
+import { ToolRing } from '../ui/ToolRing';
 import { dockLayout, resolveTouch, type DockLayout, type DockSpot } from '../ui/layout';
 import {
   BinPanel,
@@ -111,6 +112,7 @@ export class UIScene extends Phaser.Scene {
   private interactIcon: Phaser.GameObjects.Graphics | null = null;
   private interactType: string | null = null;
   private worldTouch!: WorldTouch;
+  private ring!: ToolRing;
   private joystick!: VirtualJoystick;
   /** Current dock geometry (mirrored in left-handed mode). */
   layout: DockLayout = dockLayout(false);
@@ -180,6 +182,11 @@ export class UIScene extends Phaser.Scene {
 
     this.rain = new RainLayer(this, 2);
     this.hud = new Hud(this, getState);
+    this.ring = new ToolRing(this, getState, (c) => {
+      if (c.kind === 'bag') return this.menu.openTab('bag');
+      selectSlot(getState(), c.slot);
+      haptic('tick');
+    });
     this.buildControls();
     this.buildPanels();
 
@@ -359,6 +366,11 @@ export class UIScene extends Phaser.Scene {
         cycleSlot(getState(), step, true);
         audio.play('select');
         haptic('tick');
+      },
+      // A sideways flick opens the tool ring under the same finger (slide to an item, let go to pick).
+      onFlick: (_dir, pointerId) => {
+        this.swiped = true;
+        this.ring.open(pointerId, { x: L.action.x, y: L.action.y }, getState().settings.leftHanded);
       },
     });
     this.actionIcon?.destroy();

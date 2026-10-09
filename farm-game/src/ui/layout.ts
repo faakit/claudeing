@@ -93,3 +93,93 @@ export function resolveTouch(
   }
   return best?.id ?? null;
 }
+
+/** Where a sheet row's parts go: the buttons on the thumb's side, the icon and text on the other. */
+export interface RowLayout {
+  iconX: number;
+  textX: number;
+  maxText: number;
+  /** Left edge of each button, in the order given (the first is the primary, nearest the thumb). */
+  buttonXs: number[];
+}
+
+/**
+ * Lay out one sheet row (`Modal.row`). Right-handed: icon and text on the left, buttons from the right edge
+ * inward. Left-handed (mirrored sheets): buttons from the left edge inward, icon and text after them, so the
+ * left thumb reaches the buttons without crossing the sheet.
+ */
+export function rowLayout(
+  panelW: number,
+  widths: readonly number[],
+  leftHanded: boolean,
+): RowLayout {
+  const gap = 3;
+  const margin = 8;
+  const total = widths.reduce((w, b) => w + b + gap, 0);
+  const buttonXs: number[] = [];
+  if (!leftHanded) {
+    let x = panelW - margin;
+    for (const w of widths) {
+      x -= w;
+      buttonXs.push(x);
+      x -= gap;
+    }
+    return { iconX: 15, textX: 28, maxText: panelW - margin - 28 - total - 2, buttonXs };
+  }
+  let x = margin;
+  for (const w of widths) {
+    buttonXs.push(x);
+    x += w + gap;
+  }
+  const start = margin + total;
+  return {
+    iconX: start + 7,
+    textX: start + 20,
+    maxText: panelW - margin - (start + 20) - 2,
+    buttonXs,
+  };
+}
+
+/** The tool ring: 8 hotbar slots and "Bag" on an arc around Action, on the side away from the screen edge. */
+export const RING = {
+  /** Distance of the item centres from Action's centre. */
+  radius: 50,
+  /** Item disc radius. */
+  itemR: 12,
+  /** Arc (screen angles, y down, right-handed): from upper-left (255) to lower-left (105). */
+  from: 255,
+  to: 105,
+  /** Fingers nearer the centre than this pick nothing (release there cancels). */
+  dead: 22,
+} as const;
+
+/** Centre of ring item `i` of `n` (logical px). Left-handed mirrors the arc. */
+export function ringItem(
+  centre: { x: number; y: number },
+  i: number,
+  n: number,
+  leftHanded: boolean,
+): { x: number; y: number } {
+  const t = n <= 1 ? 0.5 : i / (n - 1);
+  let deg = RING.from + (RING.to - RING.from) * t;
+  if (leftHanded) deg = 180 - deg;
+  const r = (deg * Math.PI) / 180;
+  return { x: centre.x + Math.cos(r) * RING.radius, y: centre.y + Math.sin(r) * RING.radius };
+}
+
+/**
+ * Which ring item a finger at (dx, dy) from Action's centre points at: by angle (a whole sector, much bigger
+ * than the drawn disc), or null inside the dead centre or outside the arc.
+ */
+export function ringPick(dx: number, dy: number, n: number, leftHanded: boolean): number | null {
+  if (Math.hypot(dx, dy) < RING.dead || n < 1) return null;
+  let deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+  if (leftHanded) deg = 180 - deg;
+  deg = ((deg % 360) + 360) % 360;
+  const step = n > 1 ? (RING.from - RING.to) / (n - 1) : 30;
+  // position along the arc, 0 at `from`, n-1 at `to`
+  const along = (RING.from - deg) / step;
+  const i = Math.round(along) + 0; // never -0
+  if (i < 0 || i >= n || Math.abs(along - i) > 0.75) return null;
+  return i;
+}

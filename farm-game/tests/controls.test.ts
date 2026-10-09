@@ -269,3 +269,67 @@ describe('benchmark phones match the reach model', () => {
     }
   });
 });
+
+describe('mirrored sheet rows (left hand)', () => {
+  it('right-handed rows keep the old geometry', async () => {
+    const { rowLayout } = await import('../src/ui/layout');
+    const r = rowLayout(200, [28, 22, 22], false);
+    expect(r.buttonXs).toEqual([
+      200 - 8 - 28,
+      200 - 8 - 28 - 3 - 22,
+      200 - 8 - 28 - 3 - 22 - 3 - 22,
+    ]);
+    expect(r.textX).toBe(28);
+  });
+
+  it('left-handed rows put the primary button at the left edge and the text after the buttons', async () => {
+    const { rowLayout } = await import('../src/ui/layout');
+    for (const widths of [[44], [28, 22, 22], [44, 30]]) {
+      const l = rowLayout(200, widths, true);
+      const r = rowLayout(200, widths, false);
+      expect(l.buttonXs[0]).toBe(8);
+      const lastRight = l.buttonXs[widths.length - 1]! + widths[widths.length - 1]!;
+      expect(l.iconX - 7).toBeGreaterThan(lastRight); // the icon never sits on a button
+      expect(l.textX + l.maxText).toBeLessThanOrEqual(192);
+      expect(l.maxText).toBe(r.maxText); // the same room for text either way
+    }
+  });
+});
+
+describe('tool ring', () => {
+  it('every ring item is comfortable for both hands on all five phones, and inside the screen', async () => {
+    const { ringItem } = await import('../src/ui/layout');
+    for (const p of PHONES)
+      for (const hand of ['right', 'left'] as const) {
+        const L = dockLayout(hand === 'left');
+        for (let i = 0; i < 9; i++) {
+          const c = ringItem(L.action, i, 9, hand === 'left');
+          expect(zoneAt(p, hand, c.x, c.y).zone, `${p.id} ${hand} item ${i}`).toBe('comfort');
+          expect(c.x - 12).toBeGreaterThanOrEqual(0);
+          expect(c.x + 12).toBeLessThanOrEqual(200);
+          expect(c.y + 12).toBeLessThanOrEqual(400);
+        }
+      }
+  });
+
+  it('a finger picks the item it points at, by angle; the dead centre picks nothing', async () => {
+    const { ringItem, ringPick, RING } = await import('../src/ui/layout');
+    for (const left of [false, true]) {
+      const c = { x: 0, y: 0 };
+      for (let i = 0; i < 9; i++) {
+        const it = ringItem(c, i, 9, left);
+        expect(ringPick(it.x, it.y, 9, left), `${left} ${i}`).toBe(i);
+        // a sloppy finger 8 degrees off still picks it
+        const a = Math.atan2(it.y, it.x) + (8 * Math.PI) / 180;
+        expect(ringPick(Math.cos(a) * 40, Math.sin(a) * 40, 9, left)).toBe(i);
+      }
+      expect(ringPick(5, 5, 9, left)).toBeNull();
+      expect(ringPick(left ? -RING.radius : RING.radius, 0, 9, left)).toBeNull(); // toward the edge: nothing
+    }
+  });
+
+  it('vertical swipes on Action never count as a sideways flick', () => {
+    for (let ay = 14; ay <= 30; ay += 2)
+      for (let ax = 0; ax <= ay; ax += 2) expect(actionDrag(ax, -ay)).not.toBe('flick');
+  });
+});

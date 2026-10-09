@@ -269,6 +269,25 @@ function makeWorld(page, thumb, L, reactionMs) {
       await sleep(120);
     }
   }
+  /** M6+: does this build have the tool ring? */
+  const hasRing = () => page.evaluate(() => !!window.__farm.game.scene.getScene('UI').ring);
+  /** Flick sideways on Action, slide to ring item `i` (0-7 hotbar slots, 8 = Bag), let go: one drag. */
+  async function ringPick(i) {
+    const inward = hand === 'left' ? 1 : -1;
+    const deg0 = 255 + ((105 - 255) * i) / 8;
+    const deg = hand === 'left' ? 180 - deg0 : deg0;
+    const r = (deg * Math.PI) / 180;
+    await thumb.down(ACTION.x, ACTION.y);
+    await thumb.move(ACTION.x + inward * 9, ACTION.y);
+    await sleep(16);
+    await thumb.move(ACTION.x + inward * 18, ACTION.y);
+    await sleep(40);
+    await thumb.move(ACTION.x + Math.cos(r) * 50, ACTION.y + Math.sin(r) * 50);
+    await sleep(40);
+    await thumb.up();
+    if (i < 8) thumb.toolChanges++;
+    await sleep(250);
+  }
   async function tapSlot(i) {
     const s = slot(i);
     await thumb.tap(s.x, s.y, 60);
@@ -395,6 +414,8 @@ function makeWorld(page, thumb, L, reactionMs) {
     swipeTool,
     tapSlot,
     tapMenu,
+    ringPick,
+    hasRing,
     tapTile,
     paintTiles,
     settleCamera,
@@ -578,7 +599,12 @@ const TASKS = {
   async bagUse(w, page) {
     await fresh(page, "s.inventory.slots[14] = { item: 'sprinkler', qty: 1 };");
     await w.walkTo(10, 17, 'down');
-    await w.tapMenu();
+    // M6: the ring's Bag is under the thumb; before, the Menu button.
+    if (await w.hasRing()) {
+      await w.ringPick(8);
+      await sleep(200);
+    }
+    else await w.tapMenu();
     const c = await page.evaluate(() => {
       const m = window.__farm.game.scene.getScene('UI').menu;
       const cells = m.content.list.filter((o) => o.type === 'Zone' && Math.round(o.width) === 23);
@@ -651,7 +677,9 @@ const TASKS = {
       return null;
     });
     if (!water) throw new Error('no water edge found');
-    await w.swipeTool(3);
+    // M6: the rod from the ring (one drag); before, three swipes on Action.
+    if (await w.hasRing()) await w.ringPick(3);
+    else await w.swipeTool(3);
     const tapMode = await tapModeOn(page);
     if (tapMode) {
       // M4: walk until the pond is on screen, then tap the water with the rod in hand: walk and cast in one

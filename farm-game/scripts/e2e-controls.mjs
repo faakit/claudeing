@@ -457,6 +457,110 @@ try {
         JSON.stringify(acc),
       );
 
+      // --- Tool ring (M6): a sideways flick on Action opens the ring; slide to the can, let go: can in hand.
+      await place(page, 10, 17, 'down');
+      await sleep(300);
+      const inward = hand === 'left' ? 1 : -1; // toward the middle of the screen
+      await page.evaluate(() => window.__farm.controls.clear());
+      await t.down(L.action.x, L.action.y);
+      await t.move(L.action.x + inward * 8, L.action.y);
+      await sleep(20);
+      await t.move(L.action.x + inward * 18, L.action.y);
+      await sleep(80);
+      const ringOpen = await page.evaluate(
+        () => window.__farm.game.scene.getScene('UI').ring.isOpen,
+      );
+      // slot 2 (the can) is item 1 of 9 on the arc
+      const item = await page.evaluate(
+        ({ left }) => {
+          const ui = window.__farm.game.scene.getScene('UI');
+          const L = ui.layout;
+          const deg0 = 255 + ((105 - 255) * 1) / 8;
+          const deg = left ? 180 - deg0 : deg0;
+          const r = (deg * Math.PI) / 180;
+          return { x: L.action.x + Math.cos(r) * 50, y: L.action.y + Math.sin(r) * 50 };
+        },
+        { left: hand === 'left' },
+      );
+      await t.move(item.x, item.y);
+      await sleep(60);
+      await t.up();
+      await sleep(250);
+      const ringActs = await page.evaluate(
+        () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
+      );
+      check(
+        `${tag}: a sideways flick on Action opens the tool ring; sliding to the can picks it; nothing is used`,
+        ringOpen && (await selected(page)) === 1 && ringActs === 0 && (await soil(page)) === 0,
+        `open ${ringOpen}, slot ${await selected(page)}, acts ${ringActs}`,
+      );
+      // Ring -> Bag opens the bag.
+      await t.down(L.action.x, L.action.y);
+      await t.move(L.action.x + inward * 18, L.action.y);
+      await sleep(80);
+      const bagAt = await page.evaluate(
+        ({ left }) => {
+          const L = window.__farm.game.scene.getScene('UI').layout;
+          const deg = left ? 180 - 105 : 105;
+          const r = (deg * Math.PI) / 180;
+          return { x: L.action.x + Math.cos(r) * 50, y: L.action.y + Math.sin(r) * 50 };
+        },
+        { left: hand === 'left' },
+      );
+      await t.move(bagAt.x, bagAt.y);
+      await sleep(60);
+      await t.up();
+      await sleep(400);
+      const bagOpen = await page.evaluate(
+        () => window.__farm.game.scene.getScene('UI').menu.isOpen,
+      );
+      check(`${tag}: the ring's Bag opens the bag`, bagOpen);
+      await closeSheets(page);
+      // Vertical swipes never open the ring.
+      let ringFromSwipe = 0;
+      for (const ms of [80, 200]) {
+        await t.timedDrag(
+          L.action.x,
+          L.action.y,
+          L.action.x + inward * 6,
+          L.action.y - 18,
+          ms,
+          true,
+        );
+        if (await page.evaluate(() => window.__farm.game.scene.getScene('UI').ring.isOpen))
+          ringFromSwipe++;
+        await t.up();
+        await sleep(150);
+      }
+      check(
+        `${tag}: vertical swipes on Action never open the ring`,
+        ringFromSwipe === 0,
+        `${ringFromSwipe}`,
+      );
+
+      // Mirrored sheets: in left-handed mode the bin's row buttons sit on the left.
+      await place(page, 12, 10, 'up', "s.inventory.slots[9] = { item: 'parsnip', qty: 3 };");
+      await sleep(300);
+      await page.evaluate(() => window.__farm.gameEvents.emit('openPanel', { type: 'bin' }));
+      await sleep(400);
+      const allX = await page.evaluate(() => {
+        const ui = window.__farm.game.scene.getScene('UI');
+        const bin = ui.panels.get('bin');
+        const out = [];
+        const walk = (n) => {
+          if (n.list) n.list.forEach(walk);
+          if (n.zone && n.label?.main?.text === 'All') out.push(n.x);
+        };
+        walk(bin.content);
+        return out;
+      });
+      await closeSheets(page);
+      check(
+        `${tag}: sheet rows put their buttons on the thumb's side`,
+        allX.length > 0 && allX.every((x) => (hand === 'left' ? x < 100 : x > 100)),
+        allX.join(','),
+      );
+
       // --- Paint a row (M5): long-press a tile, drag over three more, lift: the farmer tills all four.
       const world = () => window.__farm.game.scene.getScenes(true).find((s) => s.grid);
       const paintDone = () =>

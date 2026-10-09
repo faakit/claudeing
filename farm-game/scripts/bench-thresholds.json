@@ -326,5 +326,74 @@
       "corrections": 0,
       "markMismatches": 0
     }
+  },
+  "M6": {
+    "_note": "Tool ring: the rod and the bag are one drag away (fish fixed cost 4 + bite + reel holds).",
+    "plot3x3": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "markMismatches": 0
+    },
+    "switchSwipe": {
+      "gestures": 1,
+      "markMismatches": 0
+    },
+    "switchHotbar": {
+      "gestures": 2,
+      "markMismatches": 0
+    },
+    "bagUse": {
+      "gestures": 5,
+      "markMismatches": 0
+    },
+    "sell": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "villager": {
+      "gestures": 4,
+      "markMismatches": 0
+    },
+    "machine": {
+      "gestures": 3,
+      "markMismatches": 0
+    },
+    "fish": {
+      "gestures": 16,
+      "markMismatches": 0
+    },
+    "toTown": {
+      "gestures": 1,
+      "seconds": 10,
+      "markMismatches": 0
+    },
+    "plot3x3@human": {
+      "gestures": 8,
+      "travelMm": 160,
+      "toolChanges": 1,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "sell@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "villager@human": {
+      "gestures": 4,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "machine@human": {
+      "gestures": 3,
+      "corrections": 0,
+      "markMismatches": 0
+    },
+    "bagUse@human": {
+      "gestures": 5,
+      "corrections": 0,
+      "markMismatches": 0
+    }
   }
 }

@@ -226,7 +226,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
   if (cur && cursor !== null && cursor >= game.hotbarSlots)
     c.button(
-      110,
+      s.settings.leftHanded ? 8 : 110, // on the thumb's side
       y0 - 26,
       82,
       22,
@@ -360,7 +360,10 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     c.button(146, y, 24, 22, '+', () => step(0.1));
     c.label(174, y + 8, `${Math.round(s.settings[key] * 100)}%`, C.creamDim);
   };
-  let y = c.top + 4;
+  // Laid out from the bottom of the tab area up (the rows end right above the tab strip, where the thumb
+  // already is) rather than from the top of a tall sheet.
+  const STACK_H = 26 + 32 + 26 + 26 + 26 + 32 + 22;
+  let y = Math.max(c.top + 4, c.bottom - STACK_H);
   volumeRow(y, 'Music', 'music');
   volumeRow((y += 26), 'Sound', 'sfx');
 
