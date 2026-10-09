@@ -2,7 +2,7 @@
 
 Branch `depth/round2` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/agents-2026-10-08`, pushed to
 `origin/depth/round2`. Every commit passed `npm run verify` (lint, typecheck, unit, build, e2e, mobile e2e, perf).
-Save version is still **15**: everything new this round is an optional field or a stat. Unit tests 466 -> 522.
+Save version is still **15**: everything new this round is an optional field or a stat. Unit tests 466 -> 533.
 Round 1's handover is in git history (`git show 1d89c97:farm-game/agents/NEXT-STEPS-DEPTH.md`).
 
 ## Shipped in round 2 (oldest first)
@@ -19,17 +19,20 @@ Round 1's handover is in git history (`git show 1d89c97:farm-game/agents/NEXT-ST
 | `5d00670` | Kitchen (Home upgrade, kept as a stat) and six dishes; eat with Action or the bag card |
 | `ce43907` | Four legendary fish (`legend: true`), Finn's letter, a goal |
 | `f27999e` | Human-paced sim variant; report checkpoint |
+| `61e118e` | Sim bot keeps a coop of hens |
+| `933be12` | Critique 7 fixes: crop requests wait for ripening (`cropReadyIn`), Clay only on a request's last day and not on a day you filled one (`filled.day`), farm goods weighted 3x on the board, special's "Give N" keeps goods for a same-item request, no immediate repeat special, bench lines, dishes never wasted, Legends 1/4, 70% animal specials |
+| `3e1b9c5` | Traveling cart (`cart.json`, days 5/12/19/26), x5 cooking, legend-in-the-bin warning |
 
 ## Critiques
 
 - `agents/critiques/critique-6.md` (+ `shots-6/`): frozen `5fd9943`, 14 real-input days, all nine findings fixed in
   `316a162`.
-- Critique 7 was started on a frozen copy of `f27999e` (`C:/Users/andre/dev/tiny-acre/critique-7`); see below for its
-  status.
+- `agents/critiques/critique-7.md` (+ `shots-7/`): frozen `f27999e`, no blocker; all nine findings fixed in `933be12`.
+- Critique 8 was started on a frozen copy of `3e1b9c5` (`C:/Users/andre/dev/tiny-acre/critique-8b`).
 
 ## Next goals, in priority order
 
-1. **Triage critique 7** (if it finished, `agents/critiques/critique-7.md`) and fix its top findings.
+1. **Triage critique 8** (if it finished, `agents/critiques/critique-8.md`) and fix its top findings.
 2. **Long-press hotbar picker** (critique 3 F11, critique 4 F8, critique 6 F9): hold a hotbar slot to cycle bag stacks
    of usable types. Lives in `ui/Hud.ts`, which the controls agent owns; hand it over or do it after their merge.
    `systems/inventory.ts equipFromBag` already does the swap.
@@ -42,12 +45,12 @@ Round 1's handover is in git history (`git show 1d89c97:farm-game/agents/NEXT-ST
 
 Risks to keep in mind:
 - Goals are an index into a list: only append (this round appended statue3, cook, legend1).
-- `tests/sim.test.ts` pins the five-seed median at 195,194 (-20% / +25%); a deliberate balance change must move
+- `tests/sim.test.ts` pins the five-seed median at 227,442 (-20% / +25%); a deliberate balance change must move
   `SIM_EARNED` and say why in DECISIONS.md. The two-year run asserts the statue absorbs year-two gold.
 - Fish codes for the derby are indexes into `fish.json`: append fish, never insert.
 - `upgradeLevel` falls back to the `upgraded.<id>` stat for upgrades not in `state.upgrades` (the kitchen).
 - Clay acts lazily (board opened or order delivered after his hour) and overnight (`settleRival` in the morning
-  hook); `rival.day` keeps it to once a day.
+  hook); `rival.day` keeps it to once a day. He takes only requests on their last day, never on a day you filled one.
 
 ## New texture keys still needing art
 
