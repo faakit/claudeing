@@ -1,0 +1,503 @@
+[
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 0,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Ship all produce$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Ship all produce$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | INTERACT | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Gift$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Gift$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 12,
+  "travelMm": 12,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 5,
+  "holds": 2,
+  "drags": 4,
+  "gestures": 11,
+  "contactMm": 50,
+  "airMm": 78,
+  "travelMm": 128,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 11,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 8.276
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Ship all produce$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Ship all produce$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Gift$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Gift$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 25,
+  "travelMm": 25,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 0,
+  "drags": 4,
+  "gestures": 7,
+  "contactMm": 50,
+  "airMm": 86,
+  "travelMm": 136,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 22,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 0,
+   "seconds": 0.895
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 73,
+  "travelMm": 73,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 161,
+  "travelMm": 161,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 19,
+  "travelMm": 19,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 0,
+  "drags": 4,
+  "gestures": 7,
+  "contactMm": 52,
+  "airMm": 75,
+  "travelMm": 128,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 0,
+   "seconds": 0.898
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 1,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 1,
+  "contactMm": 0,
+  "airMm": 0,
+  "travelMm": 0,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Ship all produce$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Ship all produce$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 160,
+  "travelMm": 160,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 2,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 13,
+  "travelMm": 13,
+  "corrections": 0,
+  "toolChanges": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "error": "Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": [
+   "error: Error: no target /^Load$/ (have slot 1 | slot 2 | slot 3 | slot 4 | slot 5 | slot 6 | slot 7 | slot 8 | ACTION | MENU)"
+  ]
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 4,
+  "holds": 10,
+  "drags": 4,
+  "gestures": 18,
+  "contactMm": 52,
+  "airMm": 84,
+  "travelMm": 136,
+  "corrections": 0,
+  "toolChanges": 3,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 18,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 20.67
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ }
+]
