@@ -14,7 +14,7 @@ e2e, perf). Save version is still **16**: everything new this round is a stat or
 | `20c779f` | Festival Ribbons and a Legend Wall as trophies at home; polite Clay (4 hearts) spares your farm goods |
 | `70e861a` | Critique 10 fixes: toasts above open sheets, Clay takes farm rows first and ships a weekly crate, the race goes on at 5 hearts, last season on the score line, Ship all keeps the special, text fixes; four mastery goals appended |
 | `8a07167` | Make is the outermost button on every Make-tab row; early-gold sensitivity measured for the owner |
-| (last) | Critique 11 fixes: crates keep up with a leader and are announced, none on day 28, a friendly Clay still ships crates and stops gloating, year-two text, winter prize year, bin line, kept toast splits the special, special expiry note, a finished special keeps its row, sim timeouts; handover and report |
+| `9eb7b36` | Critique 11 fixes: crates keep up with a leader and are announced, none on day 28, a friendly Clay still ships crates and stops gloating, year-two text, winter prize year, bin line, kept toast splits the special, special expiry note, a finished special keeps its row, sim timeouts; handover and report |
 
 ## Critiques
 
