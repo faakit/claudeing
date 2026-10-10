@@ -541,8 +541,12 @@ sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
   moved a seed by 60k; the five-seed median fell back from 249,871 to 213,730 once the bot stopped winning prizes,
   repinned). Fish bounds are now against the pinned median. Whether early land should be gentler is an owner
   question; the human-paced sim is the better judge.
-- **Not changed:** the Make tab's right-most button is Make on workbench rows and the batch slot on kitchen rows
-  (harmless now); the goal title "Craft something at the workbench" belongs to the onboarding agent.
+- **Make tab columns:** Make is now the outermost button on every row; a dish's batch slot sits inside it.
+- **Not changed:** the goal title "Craft something at the workbench" belongs to the onboarding agent.
+- **Measured for the owner (F7):** the human-paced bot is as sensitive as the tireless one: 500g more on day 7 lifts
+  its year by 18% to 76% (seeds 42, 7, 99: 184k/140k/199k to 217k/246k/253k). The binding constraint is land (the
+  32-tile home plot fills at once; the first plot costs 700g). A cheaper first plot or a little more starting gold
+  would make the first fortnight matter less; left as an owner question.
 
 ## Eating: three dishes a day at full strength (owner default, round 3)
 
