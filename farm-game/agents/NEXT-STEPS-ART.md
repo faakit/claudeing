@@ -1,7 +1,7 @@
 # Art: next steps (handover, round 3, 2026-10-09)
 
-Branch `art/round3` (from `integration/round2-2026-10-09`). `npm run verify` is green after every commit: 684 unit
-tests, e2e (with a new ambient-anchor check), mobile e2e, controls e2e, and perf at 2-5 draws and at most 1.88 ms JS
+Branch `art/round3` (from `integration/round2-2026-10-09`). `npm run verify` is green after every commit: 687 unit
+tests, e2e (with a new ambient-anchor check), mobile e2e, controls e2e, and perf at 2-5 draws and at most 1.95 ms JS
 per frame (the busiest farm scene; machine noise varies it run to run) (budget: 12 draws, 3.5 ms). Before and after shots are in `agents/out/art-shots/round3/`
 (git-ignored). Everything was judged from **headless screenshots only**; nobody has looked at this on a phone.
 
