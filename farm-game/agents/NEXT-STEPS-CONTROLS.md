@@ -16,13 +16,14 @@ Round 2's handover (milestones M1-M7, rulings, the save at v16) is in git histor
 | item | commit | what |
 |---|---|---|
 | 1. Action press-and-lift | `d8591ce` | A still press acts once however long it was held (an armed lift with no drag is `cancel` + `tap`). Holding never repeats on touch. A paint dragged out and back to the start cancels. Bag hint fixed. |
-| 2. Serpentine paint | `d8591ce`, `9168924` | Painted paths turn corners: a 14 px sideways move off the leg's trend line, made sideways, starts a new leg; corners land where the finger ran while veering; never revisits, 16 tiles max, rows boxed to the first row, a U-turn steps one row. Paint step 10 -> 16 px. A leg stops growing only past 13 px off its line, and the lift settles the last leg to where the finger went (`9168924`, from the critic's round-6 data). |
-| 3. Ring | `d8591ce`, `9168924` | Radius 64 on a wider arc (285 -> 105), dead zone 36 px, picks by nearest item (clearly nearer than the next by 15% of the spacing, within 30 px) instead of by angle, ring aims correct the full modelled thumb-base pull. |
+| 2. Serpentine paint | `d8591ce`, `9168924`, `9e66c26`, `b9fb448` | Painted paths turn corners: a 14 px sideways move off the leg's trend line, made sideways, starts a new leg; corners land where the finger ran while veering; never revisits, 16 tiles max, rows boxed to the first row, a U-turn steps one row. Paint step 10 -> 16 px. A leg stops growing only past 13 px off its line, and the lift settles the last leg to where the finger went (`9168924`). A corner cut round still counts (`9e66c26`). Shown tiles never flicker or retract: a tile goes only half a step back past its boundary, and corners never take one back (`b9fb448`, critic review 6). |
+| 3. Ring | `d8591ce`, `9168924`, `b9fb448` | Radius 64 on a wider arc (285 -> 105), dead zone 36 px, picks by nearest item (clearly nearer than the next by 15% of the spacing, within 30 px) instead of by angle, ring aims correct the full modelled thumb-base pull; the dead centre is judged on the raw finger and sticky taps use the slide rule (`b9fb448`). |
 | 4. Options | `d8591ce` | Rows lower, mirrored for the left hand; Sound and Vibrate on the thumb's side in the two lowest rows. |
 | 5. Rolled press | `d8591ce` | 9-13 px roll after 100 ms still: acts once. A cut-short swipe or flick: error pulse + 2 px shake, never acts (`press: reject` in the log). |
 | 6. Left-hand bag | `d8591ce`, `727de0e` | A second tap on a bag item brings it to hand; the bench now mirrors the item's column by hand. |
 | 7. Stale comment | `d8591ce` | `ActionPress` doc rewritten (the step is now 16 px). |
-| Coordinator: taps | `d8591ce` | Door tiles walk through; solid art leads to its door or interactable (the farmhouse's door art, the wall above the bed); multi-tile things are reached from any open side (the bed's top half). |
+| Coordinator: taps | `d8591ce`, `b9fb448` | Door tiles walk through; solid art leads to its door or interactable (the farmhouse's door art, the wall above the bed); multi-tile things are reached from any open side (the bed's top half). A tap low on a wall's bottom edge walks to the ground below, so front-path taps no longer enter the house (critic review 6). |
+| e2e robustness | `6d67337` | Lagged ring flicks and grid flicks are retried, latency is best of 3 frame counts (bars unchanged), after depth saw two flakes under load. |
 
 Audio cues wired by the coordinator are untouched and still fire: `ringOpen`/`ringClose`/`confirm` in
 `ToolRing.ts`, `tick` per painted tile and `confirm` on commit in `UIScene.ts`, `target` on a tap route in
@@ -93,7 +94,14 @@ tiles outside the plot:
 With the old 10 px step the same model gave 8% (i13) and 2% (SE) at σ 2 mm, and 85% even with no wobble at all
 (the end overshoot alone). Straight 3-tile lines with lateral wobble only: 100% at σ 1-2 mm on i13, SE and Fold,
 0 turns; 77-100% at σ 3 mm. A 3 mm thumb arc over 9 tiles never turns; a slow 3 mm drift never turns; a
-deliberate 6 mm sideways move turns on every phone (unit tests in `tests/action-press.test.ts`).
+deliberate 6 mm sideways move turns on every phone (unit tests in `tests/action-press.test.ts`). Those open-loop
+numbers predate `b9fb448`; since then a rare first-row overshoot is no longer trimmed at the corner (about 3 in
+100 at σ 1 on an SE).
+
+**Closed loop** (the critic's painter: it turns when the preview shows the leg's tiles, carries on 6 px, backs up
+when it shows too many; `closedLoop` in `tests/paintModel.ts`), 200 trials at `b9fb448`: σ 1 mm 100% with 0
+strays and one tick per final tile on every phone; σ 2 mm 89-91% on i13, 81-85% on SE, 86-87% on the Fold,
+91-94% on the Pro Max (about 60% before shown tiles stopped retracting).
 
 ### Ring accuracy (model, 7 items, the critic's 1.5 mm thumb-base pull)
 
@@ -107,20 +115,39 @@ finger 4-5 mm from its item, halfway to a neighbour); at σ 1.2 mm 41-42 everywh
 Sound and Vibrate are comfortable for either thumb on i13, Pixel 7 and SE; no hard target in Options on those
 phones. Pro Max: Quit to title is still hard for either thumb (89 mm from the pivot).
 
+## Critic's verdict (review 7, on `26dda7e`)
+
+Ready for the owner's phone; no blocker; nothing regressed. Review-6 majors fixed (tiles no longer flicker or
+retract; front-path taps enter the house 0/96). Owner items 1, 3, 4, 5, 6 met; item 2 met on iPhone 13 and close
+on SE. The critic's own measurements: one use per press at 80-1500 ms; straight lines exact 59/60 at σ 2 mm;
+drift turns 0/24, a deliberate L 24/24, a 3 mm arc 0/24; closed-loop serpentine at σ 2 mm i13 18/20 and 20/20,
+SE 15/20 and 17/20; ring at σ 2 mm i13 80/84 and 83/84, SE 73/84 and 77/84, 0 picks from 22-35 px rests, 0
+acts; sticky taps 26-28/28 (SE left 23-26); Options 0 hard targets; world-touch blockers still hold (slow taps
+0/56 tiles, rest-then-steer 0/48, hesitant drags 0/60). Write-ups: `agents/critiques/controls-critic/` and
+`C:/Users/andre/dev/tiny-acre/controls-critique/review-6.md`, `review-7.md`.
+
 ## Open findings
 
 - **Paint step vs reach (trade-off):** 16 px steps buy margin against wobble at every corner and row end, at the
   cost of reach toward the screen edge on the thumb's side (3 tiles, was 4) and about 20 mm more drag per 3x3.
   The plot3x3 travel is 199-283 mm; the critic's bar was 250 mm (aim 150). Owner question 1.
-- **σ 2 mm serpentine:** an open-loop 2 mm wobble makes the 3x3 exact only 35-76% of the time. Arguing with the
-  critic that a person closes the loop (live preview, a tick per tile) and that the open-loop bar belongs at
-  σ 1 mm; see the critic's ledger for the outcome.
+- **σ 2 mm serpentine:** the critic agreed (review 6) that the open-loop bar belongs at σ 1 mm and σ 2 mm is
+  judged closed loop. Closed loop is 81-94% at σ 2 mm (bar 90% on i13 and SE): the remaining misses are mostly a
+  first leg that the 2 mm field sends the wrong way or vertical in its first 8 px, which a person would correct
+  and the bot does not.
+- **Minor (critic):** SE closed-loop serpentine at σ 2 mm is 75-85% (bar 90%); SE-left sticky taps 23-26/28
+  (misses pick nothing).
+- **Door tile taps (accepted):** taps aimed at the farmhouse door tile itself enter 40/48 (the misses land on the path tile
+  below the door and walk there); the door's art above enters 48/48 and front-path taps enter 0/96.
 - **Late stops** (round 2, accepted): about 1 in 5 stick stops at 180 +- 30 ms reaction land a tile late.
 - **SE bag cells** 37 px (accepted, geometry).
 - **Pro Max Options:** Quit to title is hard (secondary phone).
 
 ## Next steps
 
+0. **Serpentine row width (critic's suggestion):** a visible cue for the first row's width while painting, or
+   snapping U-turn rows to the edge of the tilled plot, would remove most remaining SE misses (a first row that
+   overshoots sets every row's span).
 1. **Real-phone pass** (checklist below) before tuning any number: paint step (16 px), turn threshold (14 px),
    veer/hold (6/13 px), ring radius/gap/reach (64, 15%, 30 px) and pull (0.9 / 1.2 mm), arm time (300 ms), roll dwell
    (100 ms).
