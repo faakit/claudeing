@@ -154,15 +154,7 @@ export interface MusicData {
 
 /** Where music can be: one piece per slot. */
 export type MusicSlot =
-  | 'title'
-  | 'spring'
-  | 'summer'
-  | 'fall'
-  | 'winter'
-  | 'mine'
-  | 'festival'
-  | 'shop'
-  | 'lullaby';
+  'title' | 'spring' | 'summer' | 'fall' | 'winter' | 'mine' | 'festival' | 'shop' | 'lullaby';
 
 export const MUSIC_SLOTS: readonly MusicSlot[] = [
   'title',

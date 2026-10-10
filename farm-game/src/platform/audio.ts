@@ -9,7 +9,15 @@
  * everything goes through the same gain buses.
  */
 import { Ambience } from '../audio/ambience';
-import { JINGLE_CUES, jingleOrSting, allFiles, instrumentFiles, jingleInstruments, slotInstruments, MANIFEST } from '../audio/assets';
+import {
+  JINGLE_CUES,
+  jingleOrSting,
+  allFiles,
+  instrumentFiles,
+  jingleInstruments,
+  slotInstruments,
+  MANIFEST,
+} from '../audio/assets';
 import { SampleBank } from '../audio/bank';
 import type { AmbienceTargets } from '../audio/director';
 import { MusicPlayer } from '../audio/music';
@@ -259,13 +267,14 @@ class AudioEngine {
         wet: { day: this.dayWet, night: this.nightWet, both: this.bothWet },
         sfx: this.sfxBus,
       },
-      (m, when, dur, vel, dest) => this.tone(midiToHz(m), Math.max(0.15, dur), {
-        type: 'triangle',
-        gain: 0.12 * vel,
-        bus: dest,
-        delay: when - ctx.currentTime,
-        attack: 0.01,
-      }),
+      (m, when, dur, vel, dest) =>
+        this.tone(midiToHz(m), Math.max(0.15, dur), {
+          type: 'triangle',
+          gain: 0.12 * vel,
+          bus: dest,
+          delay: when - ctx.currentTime,
+          attack: 0.01,
+        }),
     );
     this.setNight(this.night);
     // Decode in priority order: sound effects and jingles first, then the music being played.
@@ -423,7 +432,10 @@ class AudioEngine {
    * key of `key`'s piece), `delay` seconds from now; the music dips a little under it. Falls back to a
    * synth rendition of the same notes.
    */
-  sting(name: string, o: { key?: MusicSlot; delay?: number; volume?: number; duckDb?: number; lead?: boolean } = {}): void {
+  sting(
+    name: string,
+    o: { key?: MusicSlot; delay?: number; volume?: number; duckDb?: number; lead?: boolean } = {},
+  ): void {
     const ctx = this.ctx;
     if (!ctx || this.muted || !jingleOrSting(name)) return;
     const when = ctx.currentTime + (o.delay ?? 0);
@@ -431,7 +443,14 @@ class AudioEngine {
     this.duck.gain.setTargetAtTime(duck, when, 0.08);
     this.duck.gain.setTargetAtTime(1, when + 1.2, 0.5);
     const key = this.musicPlayer?.jingleKey(o.key) ?? 0;
-    if (this.musicPlayer?.jingle(name, ctx.currentTime, o.volume ?? 1, { key, delay: o.delay ?? 0, lead: o.lead })) return;
+    if (
+      this.musicPlayer?.jingle(name, ctx.currentTime, o.volume ?? 1, {
+        key,
+        delay: o.delay ?? 0,
+        lead: o.lead,
+      })
+    )
+      return;
     this.synthJingle(name, key, o.delay ?? 0, o.volume ?? 1);
   }
 
@@ -440,12 +459,17 @@ class AudioEngine {
    * moves to an instrument the playing piece is not using, so it stands out from the music.
    */
   motif(npc: string, heart = false): void {
-    this.sting(`motif-${npc}${heart ? '-heart' : ''}`, { delay: heart ? 0.8 : 0.05, duckDb: heart ? -5 : -4, lead: true });
+    this.sting(`motif-${npc}${heart ? '-heart' : ''}`, {
+      delay: heart ? 0.8 : 0.05,
+      duckDb: heart ? -5 : -4,
+      lead: true,
+    });
   }
 
   /** The season-change sting, under the sleep screen, in the new season's key. */
   seasonSting(season: string): void {
-    if (SEASON_SLOTS.has(season)) this.sting(`season-${season}`, { key: season as MusicSlot, delay: 2.4, duckDb: -6 });
+    if (SEASON_SLOTS.has(season))
+      this.sting(`season-${season}`, { key: season as MusicSlot, delay: 2.4, duckDb: -6 });
   }
 
   private synthJingle(name: string, key: number, delay: number, volume: number): void {
@@ -646,7 +670,8 @@ class AudioEngine {
     for (const s of [this.slot, this.homeSlot])
       if (s) slotInstruments(s).forEach((i) => instrumentFiles(i).forEach((z) => keep.add(z.file)));
     for (const [k, v] of Object.entries(this.ambienceTargets))
-      if ((v ?? 0) > 0 || k === 'rain') MANIFEST.ambience[k]?.files.forEach((z) => keep.add(z.file));
+      if ((v ?? 0) > 0 || k === 'rain')
+        MANIFEST.ambience[k]?.files.forEach((z) => keep.add(z.file));
     const others = allFiles()
       .map((z) => z.file)
       .filter((f) => !keep.has(f));
@@ -654,7 +679,9 @@ class AudioEngine {
   }
 
   /** Debug: render the real mix offline (see src/audio/render.ts and audio-src/tools/render.mjs). */
-  async renderOffline(o: import('../audio/render').RenderOptions): Promise<import('../audio/render').RenderResult> {
+  async renderOffline(
+    o: import('../audio/render').RenderOptions,
+  ): Promise<import('../audio/render').RenderResult> {
     const m = await import('../audio/render');
     return m.renderOffline(AUDIO_BASE, o);
   }

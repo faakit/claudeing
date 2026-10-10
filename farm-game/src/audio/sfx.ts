@@ -31,7 +31,9 @@ export class SfxPlayer {
   /** Decode every sfx file (they are small). */
   preload(): Promise<unknown> {
     return Promise.all(
-      Object.values(MANIFEST.sfx).flatMap((s) => s.files.map((z) => this.bank.load(this.ctx, z.file, z.onset))),
+      Object.values(MANIFEST.sfx).flatMap((s) =>
+        s.files.map((z) => this.bank.load(this.ctx, z.file, z.onset)),
+      ),
     );
   }
 
@@ -41,11 +43,16 @@ export class SfxPlayer {
     if (!a || a.files.length === 0) return false;
     // Too soon after the last copy (minGap), or masked by another cue: handled, by staying silent.
     const prevPlayed = this.lastAt.get(cue);
-    if ((a.minGap && prevPlayed !== undefined && now - prevPlayed < a.minGap) || (this.maskedUntil.get(cue) ?? -1) > now) {
+    if (
+      (a.minGap && prevPlayed !== undefined && now - prevPlayed < a.minGap) ||
+      (this.maskedUntil.get(cue) ?? -1) > now
+    ) {
       this.stats.dropped++;
       return true;
     }
-    const ready = a.files.map((z, i) => ({ z, i, d: this.bank.get(z.file, now) })).filter((x) => x.d);
+    const ready = a.files
+      .map((z, i) => ({ z, i, d: this.bank.get(z.file, now) }))
+      .filter((x) => x.d);
     if (ready.length === 0) {
       a.files.forEach((z) => void this.bank.load(this.ctx, z.file, z.onset));
       this.stats.fallback++;
@@ -61,7 +68,10 @@ export class SfxPlayer {
     // A held Action repeats a tool every ~200 ms: repeats that close are played 4 dB softer, so a
     // row of watering is a steady pour at the level of one can, not a pile-up.
     const prevAt = this.lastAt.get(cue);
-    const repeatDuck = prevAt !== undefined && now - prevAt < REPEAT_WINDOW ? Math.pow(10, (a.repeatDb ?? -4) / 20) : 1;
+    const repeatDuck =
+      prevAt !== undefined && now - prevAt < REPEAT_WINDOW
+        ? Math.pow(10, (a.repeatDb ?? -4) / 20)
+        : 1;
     this.lastAt.set(cue, now);
     for (const m of a.masks ?? []) this.maskedUntil.set(m, now + (a.maskFor ?? 0.08));
     const gain = a.gain * repeatDuck * Math.pow(10, (spread(this.rng) * a.vol) / 20);

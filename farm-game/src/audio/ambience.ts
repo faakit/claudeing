@@ -118,7 +118,9 @@ export class Ambience {
     if (now < due) return;
     this.nextShot.set(name, now + (every / target) * (0.4 + this.rng() * 1.2));
     const a = MANIFEST.ambience[name]!;
-    const ready = a.files.map((z, i) => ({ z, i, d: this.bank.get(z.file, now) })).filter((x) => x.d);
+    const ready = a.files
+      .map((z, i) => ({ z, i, d: this.bank.get(z.file, now) }))
+      .filter((x) => x.d);
     if (ready.length === 0) return;
     const prev = this.lastShot.get(name);
     const options = ready.length > 1 ? ready.filter((x) => x.i !== prev) : ready;
@@ -139,7 +141,11 @@ export class Ambience {
     // A bird often answers itself.
     if (name === 'birds' && this.rng() < 0.3) {
       const when = now + 0.2 + this.rng() * 0.3;
-      const answer = playSample(this.ctx, pick.d!, pick.z, dest, { when, rate: rate * 1.05, gain: gain * 0.7 });
+      const answer = playSample(this.ctx, pick.d!, pick.z, dest, {
+        when,
+        rate: rate * 1.05,
+        gain: gain * 0.7,
+      });
       if (answer.end > last.end) last = answer;
     }
     if (pan) {

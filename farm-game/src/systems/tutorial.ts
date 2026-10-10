@@ -26,7 +26,7 @@ import { isProduce, isShippable } from './economy';
 import { maxEnergy } from './energy';
 import { gameEvents } from './events';
 import { isMature, tileKey } from './farming';
-import { addStat, stat } from './goals';
+import { addStat, currentGoal, stat } from './goals';
 import { absoluteDay } from './time';
 
 export interface Tile {
@@ -279,6 +279,8 @@ export function hasKind(s: GameState, kind: TutorialKind, world?: CoachWorld): b
       return s.mail.list.some((l) => !l.read);
     case 'readLetter':
       return s.mail.list.some((l) => l.read);
+    case 'letterGift':
+      return s.mail.list.some((l) => l.read && !!l.gift && !l.taken);
     case 'emptyCan':
       return s.water <= 0;
     case 'explicitHand':
@@ -331,6 +333,7 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
     if (!today.some((j) => !j.done && j.stat === c.job)) return false;
   }
   if (c.npc !== undefined && !world.npcs.some((n) => n.id === c.npc)) return false;
+  if (c.goal !== undefined && currentGoal(s)?.id !== c.goal) return false;
   if (c.fact === 'npcNew' && !newNpcInView(s, world)) return false;
   if (
     c.touched !== undefined &&
@@ -431,7 +434,19 @@ export function guidedMorning(s: GameState): boolean {
 /** The one morning note a guided first morning keeps: the letter if there is one, else the first. */
 export function guidedNotes(notes: readonly string[]): string[] {
   const letter = notes.find((n) => /letter/i.test(n));
-  return letter ? [letter] : notes.slice(0, 1);
+  const can = notes.find((n) => n === CAN_NOTE);
+  const out = letter ? [letter] : notes.filter((n) => n !== CAN_NOTE).slice(0, 1);
+  return can ? [can, ...out] : out;
+}
+
+/** The first guided morning: Rosa fills the can, so day 2's watering never starts at an empty can. */
+export const CAN_NOTE = 'Rosa filled your watering can.';
+export function guidedMorningCan(s: GameState, capacity: number): boolean {
+  if (!tutorialOn(s) || absoluteDay(s) !== 2 || s.stats['tut.can']) return false;
+  s.stats['tut.can'] = 1;
+  if (s.water >= capacity) return false;
+  s.water = capacity;
+  return true;
 }
 
 // ---------------------------------------------------------------- what to show
@@ -532,6 +547,7 @@ function objectTile(world: CoachWorld, o: CoachObject): Tile {
 /** Straight lines of workable tiles from the farmer: the best direction to paint a row. */
 export function bestPaint(world: CoachWorld, max = 4): { dir: Direction; tiles: Tile[] } | null {
   let best: { dir: Direction; tiles: Tile[] } | null = null;
+  let facing: { dir: Direction; tiles: Tile[] } | null = null;
   for (const d of DIRS) {
     const tiles: Tile[] = [];
     let workable = 0;
@@ -545,8 +561,10 @@ export function bestPaint(world: CoachWorld, max = 4): { dir: Direction; tiles: 
     while (tiles.length && !WORK.includes(world.actKind(tiles.at(-1)!.tx, tiles.at(-1)!.ty) ?? ''))
       tiles.pop();
     if (workable >= 2 && (!best || workable > best.tiles.length)) best = { dir: d, tiles };
+    if (workable >= 2 && d === world.facing) facing = { dir: d, tiles };
   }
-  return best;
+  // The way the farmer faces wins when it has a row too, so the tip does not flip as counts change.
+  return facing ?? best;
 }
 
 function slotOf(s: GameState, pred: (item: string) => boolean): number | null {

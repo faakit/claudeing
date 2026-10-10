@@ -163,7 +163,7 @@ export class CoachMarks {
     this.marks = scene.add.graphics();
     this.line = new Label(scene, GAME_WIDTH / 2, 0, '', { align: 'center', color: CH.cream });
     this.count = new Label(scene, GAME_WIDTH - 6, 0, '', { align: 'right', color: CH.gold });
-    this.glyph = new Label(scene, GAME_WIDTH - 7, 0, '...', {
+    this.glyph = new Label(scene, GAME_WIDTH - 7, 0, '?', {
       align: 'center',
       color: CH.creamDim,
     });
@@ -382,12 +382,12 @@ export class CoachMarks {
     this.line
       .setText(fitText(this.lineText(), COACH_LINE_PX))
       .setColor(flashing ? CH.gold : CH.cream)
-      .setPosition(left ? 105 : 95, y + 5)
+      .setPosition(left ? 106 : 94, y + 5)
       .setVisible(true);
     const nextable = !!view.step.optional && this.stepMs >= NEXT_MS;
     const gx = left ? 8 : GAME_WIDTH - 8;
     this.glyph
-      .setText(nextable ? '>' : '...')
+      .setText(nextable ? '>' : '?')
       .setPosition(gx, y + 4)
       .setVisible(true);
     this.count.setVisible(false); // the goal bar already counts

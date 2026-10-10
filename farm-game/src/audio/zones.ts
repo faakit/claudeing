@@ -13,7 +13,10 @@ export function maxShift(name: string, inst: InstrumentAsset): number {
 }
 
 /** The sample nearest in pitch to `midi`, and the playback rate that tunes it there. */
-export function pickZone(zones: Zone[], midi: number): { zone: Zone; index: number; shift: number; rate: number } {
+export function pickZone(
+  zones: Zone[],
+  midi: number,
+): { zone: Zone; index: number; shift: number; rate: number } {
   let best = 0;
   let bestDist = Infinity;
   zones.forEach((z, i) => {

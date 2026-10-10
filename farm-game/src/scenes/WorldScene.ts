@@ -78,7 +78,7 @@ import {
   type WorldObject,
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
-import type { CoachObject } from '../systems/tutorial';
+import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutorial';
 import type { CoachScreenWorld } from '../ui/CoachMarks';
 import { npcLocation } from '../systems/npcs';
 import { npcs as npcData } from '../data';
@@ -97,6 +97,8 @@ const INK_HEX = '#2a1a24';
 const WORK_USES_PER_TILE = 3;
 /** Quiet time before the goal arrow appears. */
 const GUIDE_AFTER_MS = 14_000;
+/** The same while the guided start's first days run (between its coach marks). */
+const GUIDE_GUIDED_MS = 3_000;
 
 /** Shared behavior for every walkable map: render, move, collide, doors, farming input. */
 export abstract class WorldScene extends Phaser.Scene {
@@ -384,7 +386,10 @@ export abstract class WorldScene extends Phaser.Scene {
     else this.idleMs += delta;
     const where = currentGoal(getState())?.where?.[this.mapId];
     // While the guided start points at something, its own marks do this job.
-    if (!where || this.idleMs < GUIDE_AFTER_MS || runtime.coaching) {
+    // While the guided days run, free play shows the errand's arrow after a breath, not after 14 s.
+    const wait =
+      tutorialOn(getState()) && !guidedTracksDone(getState()) ? GUIDE_GUIDED_MS : GUIDE_AFTER_MS;
+    if (!where || this.idleMs < wait || runtime.coaching) {
       arrow.setVisible(false);
       return;
     }

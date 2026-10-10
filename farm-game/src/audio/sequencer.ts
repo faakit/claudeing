@@ -80,8 +80,10 @@ export class PiecePlayer {
     readonly piece: Piece,
     private patterns: Record<string, PatternStep[]>,
   ) {
-    for (const [id, s] of Object.entries(piece.sections)) this.sections.set(id, parseChords(s.chords, piece.meter));
-    for (const [id, p] of Object.entries(piece.phrases)) this.phrases.set(id, parsePhrase(p, piece.meter));
+    for (const [id, s] of Object.entries(piece.sections))
+      this.sections.set(id, parseChords(s.chords, piece.meter));
+    for (const [id, p] of Object.entries(piece.phrases))
+      this.phrases.set(id, parsePhrase(p, piece.meter));
   }
 
   get beatsPerBar(): number {
@@ -117,7 +119,10 @@ export class PiecePlayer {
         else f = (f + 1) % form.length;
       }
     }
-    return { section: intro < introLen ? this.piece.intro![intro]! : form[f % form.length]!, bar: b };
+    return {
+      section: intro < introLen ? this.piece.intro![intro]! : form[f % form.length]!,
+      bar: b,
+    };
   }
 
   /** The chord at a beat of a bar of a section. */
@@ -128,13 +133,17 @@ export class PiecePlayer {
   nextBar(rng: () => number, opt: BarOptions): BarOut {
     const inIntro = this.introIndex < (this.piece.intro?.length ?? 0);
     const form = this.formFor(opt);
-    const sectionId = inIntro ? this.piece.intro![this.introIndex]! : form[this.formIndex % form.length]!;
+    const sectionId = inIntro
+      ? this.piece.intro![this.introIndex]!
+      : form[this.formIndex % form.length]!;
     const section = this.sections.get(sectionId)!;
     const bar = this.barInSection;
     const events: NoteEvent[] = [];
     for (const layer of this.piece.layers) {
       // Always advance phrase choice so the rng sequence does not depend on day/night.
-      const melody = layer.phrases ? this.melodyFor(layer, sectionId, bar, rng, inIntro, opt.rain) : null;
+      const melody = layer.phrases
+        ? this.melodyFor(layer, sectionId, bar, rng, inIntro, opt.rain)
+        : null;
       if (layer.tacet?.includes(sectionId)) continue;
       if (opt.rain && PERC.has(layer.inst)) continue;
       if (opt.indoor && layer.outdoorOnly) continue;
@@ -199,12 +208,28 @@ export class PiecePlayer {
       if (n.midi === null || n.beat < from || n.beat >= from + meter) continue;
       const beat = this.swing(n.beat - from);
       const vel = Math.min(1, (0.72 + rng() * 0.12) * n.accent * (layer.gain ?? 1));
-      out.push({ layer: layer.id, inst: layer.inst, time: layer.time, beat, jitter: 0, midi: n.midi, perc: false, beats: n.beats, vel });
+      out.push({
+        layer: layer.id,
+        inst: layer.inst,
+        time: layer.time,
+        beat,
+        jitter: 0,
+        midi: n.midi,
+        perc: false,
+        beats: n.beats,
+        vel,
+      });
     }
     return out;
   }
 
-  private patternFor(layer: Layer, section: ParsedSection, bar: number, rng: () => number, opt: BarOptions): NoteEvent[] {
+  private patternFor(
+    layer: Layer,
+    section: ParsedSection,
+    bar: number,
+    rng: () => number,
+    opt: BarOptions,
+  ): NoteEvent[] {
     const steps = this.patterns[layer.pattern!]!;
     const meter = this.piece.meter;
     const patBars = Math.floor(Math.max(...steps.map((s) => s[0])) / meter) + 1;
@@ -216,7 +241,11 @@ export class PiecePlayer {
       if (vel <= 0 || b < from || b >= from + meter) continue;
       const beatInBar = b - from;
       // Rain thins the accompaniment to the main beats (1 and 3, or the downbeat in 3/4).
-      if (opt.rain && !isBass && (Math.abs(beatInBar - Math.round(beatInBar)) > 1e-6 || Math.round(beatInBar) % 2 === 1))
+      if (
+        opt.rain &&
+        !isBass &&
+        (Math.abs(beatInBar - Math.round(beatInBar)) > 1e-6 || Math.round(beatInBar) % 2 === 1)
+      )
         continue;
       const chord = chordAt(section.chords, bar * meter + beatInBar).chord;
       const v = Math.min(1, vel * (0.9 + rng() * 0.2) * (layer.gain ?? 1));

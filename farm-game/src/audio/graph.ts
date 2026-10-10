@@ -74,7 +74,8 @@ export function softClipCurve(n = 4097): Float32Array<ArrayBuffer> {
   for (let i = 0; i < n; i++) {
     const x = (i / (n - 1)) * 2 - 1;
     const a = Math.abs(x);
-    curve[i] = Math.sign(x) * (a <= CLIP_KNEE ? a : CLIP_KNEE + span * Math.tanh((a - CLIP_KNEE) / span));
+    curve[i] =
+      Math.sign(x) * (a <= CLIP_KNEE ? a : CLIP_KNEE + span * Math.tanh((a - CLIP_KNEE) / span));
   }
   return curve;
 }

@@ -468,6 +468,7 @@ export type TutorialKind =
   | 'forage'
   | 'unread'
   | 'readLetter'
+  | 'letterGift'
   | 'emptyCan'
   | 'explicitHand'
   | 'placeable';
@@ -500,6 +501,8 @@ export interface TutorialCond {
   job?: string;
   /** This villager is standing on the current map. */
   npc?: string;
+  /** The current goal's id. */
+  goal?: string;
   /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
   fact?: 'npcNew' | 'forageInView';
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
@@ -908,6 +911,7 @@ export function validateContent(): void {
 
 const TUT_KINDS = [
   'readLetter',
+  'letterGift',
   'emptyCan',
   'explicitHand',
   'ripe',
@@ -943,6 +947,7 @@ const TUT_COND_KEYS = new Set([
   'minute',
   'job',
   'npc',
+  'goal',
   'fact',
   'any',
   'all',
@@ -972,6 +977,8 @@ export function validateTutorial(t: TutorialData): void {
       if (k !== undefined && !TUT_KINDS.includes(k)) bad(`${where}: unknown kind "${k}"`);
     if (c.has !== undefined && !items[c.has]) bad(`${where}: unknown item "${c.has}"`);
     if (c.npc !== undefined && !npcs[c.npc]) bad(`${where}: unknown villager "${c.npc}"`);
+    if (c.goal !== undefined && !goals.some((g) => g.id === c.goal))
+      bad(`${where}: unknown goal "${c.goal}"`);
     if ((c.min !== undefined || c.max !== undefined) && !c.stat && !c.fresh)
       bad(`${where}: min/max need a stat`);
     if ((c.stat || c.fresh) && c.min === undefined && c.max === undefined)

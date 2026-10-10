@@ -497,3 +497,37 @@ describe('guided start: the wrong thing in hand', () => {
     expect(v.pointer).toEqual({ kind: 'slot', slot: 1 });
   });
 });
+
+describe('guided start: review 3', () => {
+  it('the first guided morning fills the can once, and says so', async () => {
+    const { guidedMorningCan, CAN_NOTE } = await import('../src/systems/tutorial');
+    const s = freshGuided();
+    s.water = 3;
+    expect(guidedMorningCan(s, 20)).toBe(false); // still day 1
+    s.time.day = 2;
+    expect(guidedMorningCan(s, 20)).toBe(true);
+    expect(s.water).toBe(20);
+    s.water = 0;
+    expect(guidedMorningCan(s, 20)).toBe(false); // once
+    expect(guidedNotes(['A new letter in the mailbox.', CAN_NOTE, 'New jobs.'])).toEqual([
+      CAN_NOTE,
+      'A new letter in the mailbox.',
+    ]);
+  });
+
+  it('arriving in town on the "buy" goal points at Mara, never at the rod', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    s.stats['tut.townHello'] = 1;
+    s.stats['foraged'] = 3; // the wild-goods intro is over
+    s.goalIndex = goals.findIndex((g) => g.id === 'buy');
+    s.time.day = 2;
+    s.time.minutes = 9 * 60;
+    s.jobs = {
+      day: 30,
+      list: [{ id: 'fish', giver: 'finn', stat: 'caught', base: 0, n: 1, reward: 20, done: false }],
+    };
+    const town = world(s, { map: 'town', npcs: [{ id: 'mara', tx: 8, ty: 10 }], objects: [] });
+    expect(step(s, town)).toBe('buySeeds');
+  });
+});

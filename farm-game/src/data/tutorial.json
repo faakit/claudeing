@@ -399,6 +399,22 @@
       "alt": [
         {
           "when": {
+            "all": [
+              {
+                "panel": "mail"
+              },
+              {
+                "some": "letterGift"
+              }
+            ]
+          },
+          "text": "A gift inside! Tap Take gift.",
+          "target": {
+            "button": "^Take gift$"
+          }
+        },
+        {
+          "when": {
             "panel": "mail"
           },
           "text": "Tap Read to open a letter.",
@@ -409,13 +425,21 @@
       ],
       "done": [
         {
-          "some": "readLetter"
+          "all": [
+            {
+              "some": "readLetter"
+            },
+            {
+              "none": "letterGift"
+            }
+          ]
         },
         {
           "none": "unread"
         }
       ],
-      "optional": true
+      "optional": true,
+      "closeSheet": true
     },
     {
       "id": "menu",
@@ -580,9 +604,56 @@
               "npc": "mara"
             }
           },
-          "text": "Mara's shop opens at 8 AM."
+          "text": "Mara's shop opens at 8 AM.",
+          "target": {
+            "object": "shop",
+            "map": "town"
+          }
         }
       ]
+    },
+    {
+      "id": "buySeeds",
+      "track": "intro",
+      "optional": true,
+      "when": {
+        "all": [
+          {
+            "map": "town"
+          },
+          {
+            "goal": "buy"
+          }
+        ]
+      },
+      "text": "Mara sells seeds: tap her to shop.",
+      "target": {
+        "npc": "mara"
+      },
+      "alt": [
+        {
+          "when": {
+            "not": {
+              "npc": "mara"
+            }
+          },
+          "text": "Mara's shop opens at 8 AM.",
+          "target": {
+            "object": "shop",
+            "map": "town"
+          }
+        }
+      ],
+      "done": [
+        {
+          "panel": "shop"
+        },
+        {
+          "stat": "bought",
+          "min": 1
+        }
+      ],
+      "leave": true
     },
     {
       "id": "shop",
@@ -633,6 +704,9 @@
           {
             "stat": "talked",
             "min": 1
+          },
+          {
+            "day": 3
           }
         ]
       },
@@ -679,6 +753,11 @@
           {
             "not": {
               "selected": "tool:fish"
+            }
+          },
+          {
+            "not": {
+              "map": "town"
             }
           }
         ]

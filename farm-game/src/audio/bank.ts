@@ -119,7 +119,10 @@ export class SampleBank {
         const buffer = await decode(ctx, bytes.slice(0));
         const out: Decoded = {
           buffer,
-          offset: onsetOffset(detectOnset(buffer.getChannelData(0), buffer.sampleRate), expectedOnset),
+          offset: onsetOffset(
+            detectOnset(buffer.getChannelData(0), buffer.sampleRate),
+            expectedOnset,
+          ),
         };
         this.decoded.set(file, out);
         return out;

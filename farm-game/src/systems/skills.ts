@@ -69,7 +69,8 @@ export function perk(state: GameState, key: string): number {
 }
 
 /** Has the house a kitchen? (A Home upgrade; its level is kept as the `upgraded.kitchen` stat.) */
-export const hasKitchen = (state: GameState): boolean => (state.stats['upgraded.kitchen'] ?? 0) >= 1;
+export const hasKitchen = (state: GameState): boolean =>
+  (state.stats['upgraded.kitchen'] ?? 0) >= 1;
 
 export const isRecipeUnlocked = (state: GameState, recipe: RecipeDef): boolean =>
   (!recipe.unlock || levelOf(state, recipe.unlock.skill) >= recipe.unlock.level) &&
