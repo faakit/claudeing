@@ -1,9 +1,11 @@
-# Art: next steps (handover, round 3, 2026-10-09)
+# Art: next steps (handover, round 3, 2026-10-10)
 
 Branch `art/round3` (from `integration/round2-2026-10-09`). `npm run verify` is green after every commit: 687 unit
-tests, e2e (with a new ambient-anchor check), mobile e2e, controls e2e, and perf at 2-5 draws and at most 1.95 ms JS
-per frame (the busiest farm scene; machine noise varies it run to run) (budget: 12 draws, 3.5 ms). Before and after shots are in `agents/out/art-shots/round3/`
-(git-ignored). Everything was judged from **headless screenshots only**; nobody has looked at this on a phone.
+tests, e2e (with a new ambient-anchor check), mobile e2e, controls e2e, and perf at 2-5 draws and at most 1.46-2.03 ms
+of script per frame across runs (budget: 12 draws, 3.5 ms), including two see-through-hole scenarios. The art
+critic accepted the round in reviews 9-12 (`C:/Users/andre/dev/tiny-acre/art-critique/review-8.md` to
+`review-12.md`). Before and after shots are in `agents/out/art-shots/round3/` (git-ignored). Everything was judged
+from **headless screenshots only**; nobody has looked at this on a phone.
 
 ## Shipped this round
 
