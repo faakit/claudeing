@@ -1,190 +1,189 @@
 # Next steps: one-thumb controls
 
-Branch `controls/one-thumb` (worktree `controls`), from the integration branch plus the plan (`e632754`).
-Everything below was measured in headless Chromium with emulated touch (CDP) on emulated phone profiles. **No
-real phone and no real hand were involved**; the thumb zones are a geometric model (`src/ui/reach.ts`) and the
-"human" in the benchmark is a bot with modelled reaction times and aim spread. `npm run verify` is green at the
-last commit (579 unit tests, e2e, mobile e2e, controls e2e on iPhone 13 and SE with both hands, perf within 12
-draws and 3.5 ms; verify takes about 7 minutes).
+Round 3 branch `controls/round3` (worktree `controls`), from `integration/round2-2026-10-09`. Everything below
+was measured in headless Chromium with emulated touch (CDP) on emulated phone profiles. **No real phone and no
+real hand were involved.** The thumb zones are a geometric model (`src/ui/reach.ts`), the "human" in the
+benchmark is a bot with modelled reaction times and aim spread, and the paint accuracy numbers come from the
+controls critic's wobble model, implemented in `tests/paintModel.ts`. `npm run verify` is green at the last
+commit (lint, typecheck, 694 unit tests, e2e, mobile e2e, controls e2e on iPhone 13 and SE with both hands,
+perf within 12 draws and 3.5 ms; about 7 minutes).
 
-## What shipped, per milestone
+Round 2's handover (milestones M1-M7, rulings, the save at v16) is in git history and in `DECISIONS.md`
+("One-thumb controls"). Round 3 is the section "Round 3 owner decisions" at the end of it.
 
-| milestone | commit | what |
+## What shipped in round 3
+
+| item | commit | what |
 |---|---|---|
-| M1 quick wins | `933d6b9` | Pure dock layout (`ui/layout.ts`): Action owns its disc and touch circle, 12 px off the edge; Interact clear of it; **Menu moved into thumb reach**, acting on a clean release and pass-through (a drag starting on it is the stick). One still/stick threshold (9 px). Swipe skips empty slots. Marker yes/no by shape. No silent world taps. Haptics: medium kind, per-kind throttle, merge. Bin "Ship all produce". `npm run bench:thumb`, `npm run e2e:controls` (in verify). |
-| M2 grid feel | `f015781` | Turn in place from a standstill (100 ms); settle on release to a tile centre (13 px back window); first tile of a walk commits after 4 px (no rubber-band nudges); axis hysteresis 1.6. |
-| M3 auto tool | `911e5c8` | `systems/autoTool.ts` + `registerAutoItem`: with a farm item in hand Action uses the hotbar farm item that fits the tile; the rod, placeables and goods stay explicit. **Save v16** (`settings.controls`, `controls.lastSeed`). Options > Controls page. Debug log `window.__farm.controls` (marker vs act). |
-| M4 tap to walk | `bebb9a9` | `WorldTouch`, `systems/tapIntent.ts`, `systems/pathfind.ts`, `stepRoute`: tap a tile to walk there and do the obvious thing; preview after 100 ms; touch-offset compensation; stick cancels, a second tap retargets, taps in a swing are buffered. Review-1 fixes. Marker depth pinned under every sprite. |
-| Owner rulings 1 + M5 | `931b9d8` | Taps only do harmless obvious things (never till or plant); no magnets; a hold repeats only its first step kind; explicit item wins; seeds only from the selected slot or the last planted. (World long-press painting, since removed.) |
-| M6 reach | `1962f0b` | Tool ring on a sideways flick; sheet rows mirrored for the left hand (`rowLayout`); Options rows low. |
-| Ruling 2 + M7 | `cb5dce5` | **Rows are painted from Action** (hold 300 ms, drag a straight line, lift) via the pure `ActionPress`; world touches never paint or till by duration. Forgiving ring (filled slots only, aim correction, sector gaps, tap-menu fallback). Options volume rows by the tabs. Help card in Options (two taps), first-run paint and ring tips, Fine stick (two-speed, off by default), perf tap-route scenario. |
+| 1. Action press-and-lift | `d8591ce` | A still press acts once however long it was held (an armed lift with no drag is `cancel` + `tap`). Holding never repeats on touch. A paint dragged out and back to the start cancels. Bag hint fixed. |
+| 2. Serpentine paint | `d8591ce`, `9168924`, `9e66c26`, `b9fb448` | Painted paths turn corners: a 14 px sideways move off the leg's trend line, made sideways, starts a new leg; corners land where the finger ran while veering; never revisits, 16 tiles max, rows boxed to the first row, a U-turn steps one row. Paint step 10 -> 16 px. A leg stops growing only past 13 px off its line, and the lift settles the last leg to where the finger went (`9168924`). A corner cut round still counts (`9e66c26`). Shown tiles never flicker or retract: a tile goes only half a step back past its boundary, and corners never take one back (`b9fb448`, critic review 6). |
+| 3. Ring | `d8591ce`, `9168924`, `b9fb448` | Radius 64 on a wider arc (285 -> 105), dead zone 36 px, picks by nearest item (clearly nearer than the next by 15% of the spacing, within 30 px) instead of by angle, ring aims correct the full modelled thumb-base pull; the dead centre is judged on the raw finger and sticky taps use the slide rule (`b9fb448`). |
+| 4. Options | `d8591ce` | Rows lower, mirrored for the left hand; Sound and Vibrate on the thumb's side in the two lowest rows. |
+| 5. Rolled press | `d8591ce` | 9-13 px roll after 100 ms still: acts once. A cut-short swipe or flick: error pulse + 2 px shake, never acts (`press: reject` in the log). |
+| 6. Left-hand bag | `d8591ce`, `727de0e` | A second tap on a bag item brings it to hand; the bench now mirrors the item's column by hand. |
+| 7. Stale comment | `d8591ce` | `ActionPress` doc rewritten (the step is now 16 px). |
+| Coordinator: taps | `d8591ce`, `b9fb448` | Door tiles walk through; solid art leads to its door or interactable (the farmhouse's door art, the wall above the bed); multi-tile things are reached from any open side (the bed's top half). A tap low on a wall's bottom edge walks to the ground below, so front-path taps no longer enter the house (critic review 6). |
+| e2e robustness | `6d67337` | Lagged ring flicks and grid flicks are retried, latency is best of 3 frame counts (bars unchanged), after depth saw two flakes under load. |
 
-Design record: `DECISIONS.md`, section "One-thumb controls" (every milestone, each ruling, and what each
-superseded). Plan: `agents/PLAN-CONTROLS.md` (the rulings are summarised at its top).
+Audio cues wired by the coordinator are untouched and still fire: `ringOpen`/`ringClose`/`confirm` in
+`ToolRing.ts`, `tick` per painted tile and `confirm` on commit in `UIScene.ts`, `target` on a tap route in
+`WorldScene.ts`.
 
-## Save versions
+### Events (for the onboarding agent)
 
-- **v16** (this branch): `settings.controls = { autoTool, tapToMove, paint, stickSize, twoSpeed }` (defaults on,
-  on, on, 'm', off) and `controls.lastSeed`. Migration `migrateV15` in `src/systems/save.ts`, per-field
-  `sanitizeControlSettings` / `sanitizeLastSeed` in `src/systems/settings.ts`, tested from a real v15 save
-  fixture (`tests/fixtures/save-v15.json`). If another branch also took 16, renumber this one at merge; nothing
-  else in the state changed. No later milestone changed the save.
+No inputHub or gameEvents name was added, renamed or removed. `paintLine` keeps `dir` (the last tile's
+direction, which is the current leg's once it has tiles) and `tiles` (the path's length) and gains an optional
+`path` (one direction per tile from the farmer). `paintEnd` is unchanged. An armed press lifted without a drag
+now emits `paintEnd { commit: false }` and then acts once. The debug hook `window.__farm.controls` gains
+`paintGeometry` ({step, deadzone, turn}) and `ringGeometry` ({radius, from, to, dead}) for probes, and log
+entries `{ kind: 'press', detail: 'reject' }`.
+
+### Save
+
+Unchanged (v16). No new setting.
 
 ## Benchmark: before and after
 
-`npm run bench:thumb` (perfect stop unless noted; per-milestone tables in `agents/out/controls/bench-m1.md` to
-`bench-m4.md`, the final run in `bench-final.md`). Before = the plan's measurement on the integration build.
+`npm run bench:thumb`, perfect stop, i13 / Pixel 7 / SE, both hands, thresholds `R3` in
+`scripts/bench-thresholds.json`: 54/54 rows ok at `9168924` (`bench-r3-m2.md`) and 90/90 on five phones at
+`d8d8c35` (`agents/out/controls/bench-r3-final.md`, identical within 3 mm)
+(and `bench-r3-m1.md`, the bag task still walking by stick); round 2's in `bench-final.md`. Human-like stops
+(`REACTION_MS=180`): `bench-r3-human.md`. Gestures, mm of thumb travel.
 
-| task | profile | hand | before: gestures, mm, s | after: gestures, mm, s | tool changes after |
-|---|---|---|---|---|---|
-| plot3x3 | i13 | right | 26, 933, 20.0 | 15, 590, 21.2 | 1 |
-| plot3x3 | i13 | left | 26, 927, 20.1 | 15, 612, 20.8 | 1 |
-| plot3x3 | pixel7 | right | 26, 974, 20.0 | 15, 616, 20.9 | 1 |
-| plot3x3 | pixel7 | left | 26, 969, 20.0 | 15, 639, 21.1 | 1 |
-| plot3x3 | se | right | 26, 744, 20.1 | 15, 470, 20.8 | 1 |
-| plot3x3 | se | left | 26, 740, 20.1 | 15, 488, 20.8 | 1 |
-| sell | i13 | right | 6, 165 | 3, 69 | 0 |
-| sell | i13 | left | 6, 172 | 3, 64 | 0 |
-| sell | pixel7 | right | 6, 172 | 3, 72 | 0 |
-| sell | pixel7 | left | 6, 180 | 3, 67 | 0 |
-| sell | se | right | 6, 132 | 3, 55 | 0 |
-| sell | se | left | 6, 137 | 3, 51 | 0 |
-| villager | i13 | right | 5, 185 | 4, 152 | 0 |
-| villager | i13 | left | 5, 169 | 4, 137 | 0 |
-| villager | pixel7 | right | 5, 193 | 4, 159 | 0 |
-| villager | pixel7 | left | 5, 177 | 4, 144 | 0 |
-| villager | se | right | 5, 147 | 4, 121 | 0 |
-| villager | se | left | 5, 135 | 4, 110 | 0 |
-| machine | i13 | right | 3, 100 | 3, 33 | 0 |
-| machine | i13 | left | 3, 107 | 3, 51 | 0 |
-| machine | pixel7 | right | 3, 105 | 3, 35 | 0 |
-| machine | pixel7 | left | 3, 112 | 3, 53 | 0 |
-| machine | se | right | 3, 80 | 3, 26 | 0 |
-| machine | se | left | 3, 85 | 3, 41 | 0 |
-| fish | i13 | right | 13, 148, 11.9 | 11, 107, 9.1 | 1 |
-| fish | i13 | left | 11, 148, 8.4 | 8, 105, 8.8 | 1 |
-| fish | pixel7 | right | 14, 154, 11.5 | 10, 112, 9.8 | 1 |
-| fish | pixel7 | left | 12, 154, 9.3 | 10, 110, 8.6 | 1 |
-| fish | se | right | 10, 118, 5.9 | 11, 85, 11.2 | 1 |
-| fish | se | left | 16, 118, 16.7 | 13, 84, 13.9 | 1 |
-| bagUse | i13 | right | 5, 135 | 5, 156 | 0 |
-| bagUse | i13 | left | 5, 119 | 5, 195 | 0 |
-| bagUse | pixel7 | right | 5, 141 | 5, 163 | 0 |
-| bagUse | pixel7 | left | 5, 125 | 5, 203 | 0 |
-| bagUse | se | right | 5, 107 | 5, 124 | 0 |
-| bagUse | se | left | 5, 95 | 5, 155 | 0 |
-| switchHotbar | i13 | right | 2, 30 | 2, 30 | 2 |
-| switchHotbar | i13 | left | 2, 30 | 2, 30 | 2 |
-| switchHotbar | pixel7 | right | 2, 32 | 2, 32 | 2 |
-| switchHotbar | pixel7 | left | 2, 32 | 2, 32 | 2 |
-| switchHotbar | se | right | 2, 24 | 2, 24 | 2 |
-| switchHotbar | se | left | 2, 24 | 2, 24 | 2 |
-| toTown | i13 | right | 1, 23, 9.6 | 1, 17, 9.0 | 0 |
-| toTown | i13 | left | 1, 23, 9.6 | 1, 17, 9.1 | 0 |
-| toTown | pixel7 | right | 1, 24, 9.6 | 1, 18, 9.0 | 0 |
-| toTown | pixel7 | left | 1, 24, 9.6 | 1, 18, 9.0 | 0 |
-| toTown | se | right | 1, 18, 9.6 | 1, 14, 9.1 | 0 |
-| toTown | se | left | 1, 18, 9.6 | 1, 14, 9.0 | 0 |
+| task | profile | hand | round 2 final | round 3 |
+|---|---|---|---|---|
+| plot3x3 | i13 | right | 15, 590 | **7, 250** |
+| plot3x3 | i13 | left | 15, 612 | **7, 271** |
+| plot3x3 | pixel7 | right | 15, 616 | **7, 261** |
+| plot3x3 | pixel7 | left | 15, 639 | **7, 283** |
+| plot3x3 | se | right | 15, 470 | **7, 199** |
+| plot3x3 | se | left | 15, 488 | **7, 216** |
+| bagUse, stick walk | i13 | right | 5, 156 | 5, 126 |
+| bagUse, stick walk | i13 | left | 5, 195 | 5, 126 (item in the mirrored column; 171 in the old slot) |
+| bagUse, stick walk | pixel7 | right | 5, 163 | 5, 132 |
+| bagUse, stick walk | pixel7 | left | 5, 203 | 5, 132 (179 in the old slot) |
+| bagUse, tap walk (new task default) | i13 | right / left | - | 5, 101 / 5, 80 |
+| bagUse, tap walk | pixel7 | right / left | - | 5, 106 / 5, 84 |
+| bagUse, tap walk | se | right / left | - | 5, 81 / 5, 64 |
+| plot3x3 | promax / fold | right | - | 7, 275 / 7, 218 |
+| plot3x3 | promax / fold | left | - | 7, 298 / 7, 236 |
 
-The 3x3 plot loop under the final ruling is two hop taps from the door, one tap on the seeds, then for each of
-the 3 rows a tap beside it and one paint from Action, twice (prepare, harvest). With world-painting (M5, removed
-by the ruling) it was 5 gestures and about 230 mm. Human-like stops (release 120 / 180 ms after the sprite
-looks centred, M2 on): 0 corrections everywhere (51 gestures and 25 corrections at 180 ms before M2).
+The bag task now walks onto the field by a tap (the default way to move) instead of a stick drag, and places
+the sprinkler in the column one in from the thumb's edge for each hand; the stick-walk rows are the like-for-like
+comparison with round 2.
 
-## Critic's final round (review 5, on `cb5dce5`)
+Every other task (sell, villager, machine, fish, hotbar, swipe, toTown) is unchanged within noise. The 3x3 plot
+is: a hop and a tap to stand by the plot's bottom corner, the seeds (hotbar for the right thumb, ring for the
+left), one serpentine paint; a tap and a paint to harvest. Every touch is in the comfortable zone, one tool
+change (the seeds).
 
-No blocker open; every review-3 and review-4 blocker verified fixed (world touches 0/112 worked, rest-then-steer
-0/96 painted, ring 0 acts in 460+ gestures, ring picks 98-100% at 1.2 mm, 2-3 vibrations per painted row).
-Write-ups: `C:/Users/andre/dev/tiny-acre/controls-critique/review-5.md` and `final.md`. Still open:
+### Paint accuracy (model)
 
-- **Major, do first:** a still Action press of 290 ms or more arms painting and, lifted without a drag, does
-  nothing. Two strings still teach the old hold and must change with whatever the owner picks for question 3:
-  `src/ui/panels/MenuPanel.ts` (around line 271, "Tip: hold Action to keep working.") and
-  `src/scenes/UIScene.ts` (around line 215, the welcome toast when tap-to-walk is off). The critic suggests: an
-  armed lift with no drag acts once (one line in `ActionPress.up`: return `tap` instead of `cancel` when no
-  direction was ever chosen; keep `cancel` when the drag went out and came back).
-- **Major, owner trade-off:** plot3x3 is 15 gestures and 470-612 mm (serpentine in next steps 3).
-- **Minor:** a ring slide resting 22-35 px out can pick the 180-degree item (raise `RING.dead` to about 36);
-  ring at 2 mm on SE left is 81% (misses mostly pick nothing); Options Sound (right thumb) and Vibrate (left
-  thumb) toggles are hard to reach; an Action press that rolls 9 px or more does nothing, silently (give it a
-  ring ping); left-hand bagUse travel 195 mm vs 119 mm before; the `PAINT_STEP_PX` comment once said 14 px (the
-  code and DECISIONS say 10).
+The controls critic's human model (`humanPath` in `tests/paintModel.ts`): a 2D wobble field (sinusoids of
+12-25 mm plus smoothed noise), 50 mm/s slowing to 40% near corners, corners cut with a 2 mm radius, 0-2 mm end
+overshoot, open loop (the bot does not watch the preview). A 3x3 serpentine, 200 trials, exact path / stray
+tiles outside the plot:
 
-## Open critic findings (controls critic, rounds 1-4), by severity
+| phone | σ 1 mm | σ 1.5 mm | σ 2 mm |
+|---|---|---|---|
+| iPhone 13 | 100%, 0 | 91%, 4 | 67%, 21 |
+| iPhone SE | 90%, 0 | 57%, 18 | 35%, 55 |
+| Galaxy Fold cover | 96%, 0 | 69%, 13 | 45%, 37 |
+| iPhone Pro Max | 100%, 0 | 95%, 2 | 76%, 10 |
 
-The critic's write-ups are in `C:/Users/andre/dev/tiny-acre/controls-critique/review-*.md`; its final round on
-`cb5dce5` had not reported when this was written.
+With the old 10 px step the same model gave 8% (i13) and 2% (SE) at σ 2 mm, and 85% even with no wobble at all
+(the end overshoot alone). Straight 3-tile lines with lateral wobble only: 100% at σ 1-2 mm on i13, SE and Fold,
+0 turns; 77-100% at σ 3 mm. A 3 mm thumb arc over 9 tiles never turns; a slow 3 mm drift never turns; a
+deliberate 6 mm sideways move turns on every phone (unit tests in `tests/action-press.test.ts`). Those open-loop
+numbers predate `b9fb448`; since then a rare first-row overshoot is no longer trimmed at the corner (about 3 in
+100 at σ 1 on an SE).
 
-- **Major, design (not yet re-tested by the critic):** the Action-paint design of the last ruling is new; the
-  critic was asked to re-test it from scratch (arming under jitter, line switching under 2-3 mm wobble,
-  cancellation, haptic count).
-- **Major, accepted trade-off:** a released stick stop lands one tile late for reactions over about 200 ms (the
-  settle window is 13 px; reaction spread is wider than a tile at 4 tiles/s). Measured: 78% on target at
-  180 +- 30 ms in the model. The Fine stick and tap-to-walk are the mitigations.
-- **Major, open:** the 3x3 plot by Action-paint costs 15 gestures and about 600 mm of thumb travel (the plan's
-  goal was 8 and 150 mm). See owner question 1.
-- **Minor:** SE bag cells are 37 CSS px (8 columns cannot reach 44 px on a 323 px canvas).
-- **Minor:** tap accuracy without magnets is the tile itself: the bin opens on 97% / 80% of 1 / 1.5 mm-spread
-  taps on an iPhone 13 (SE 88% / 64-68%); a crop tile 83-86% at 1.5 mm, with 0 wrong-tile acts.
-- **Minor:** the shop's top tabs (and one page arrow) are the only sheet targets outside the left thumb's
-  comfortable zone on an iPhone 13.
-- **Fixed, verified by the critic in later rounds:** review-1 F1-F3, F5-F10; review-2 via the rulings;
-  review-3 blockers and the review-4 ring blockers are addressed by the last ruling's redesign (to be confirmed
-  in its final round).
+**Closed loop** (the critic's painter: it turns when the preview shows the leg's tiles, carries on 6 px, backs up
+when it shows too many; `closedLoop` in `tests/paintModel.ts`), 200 trials at `b9fb448`: σ 1 mm 100% with 0
+strays and one tick per final tile on every phone; σ 2 mm 89-91% on i13, 81-85% on SE, 86-87% on the Fold,
+91-94% on the Pro Max (about 60% before shown tiles stopped retracting).
 
-## Next steps (start here)
+### Ring accuracy (model, 7 items, the critic's 1.5 mm thumb-base pull)
 
-1. **Read** `DECISIONS.md` "One-thumb controls", then `src/input/gesture.ts` (`ActionPress`, `PressTrack`),
-   `src/input/WorldTouch.ts`, `src/scenes/UIScene.ts` (`actionEvents`), `src/scenes/WorldScene.ts`
-   (tap-to-move, `onPaintLine` / `onPaintEnd`, `startNextWork`, `arrive`).
-2. **Run** `npm run build && npm run e2e:controls` (two phones at a time; set `E2E_CONTROLS_PARALLEL=1` on a slow
-   machine) and `PROFILES=i13,pixel7,se npm run bench:thumb`; the thresholds for the current design are the
-   `M7` block in `scripts/bench-thresholds.json`.
-3. **Plot cost (owner question 1):** if the owner wants the 3x3 loop near 5 gestures again, the smallest change
-   is letting a painted line turn: after the line is drawn, a pause of ~250 ms with the finger still, then a drag
-   at right angles, starts a second straight segment from the line's end (serpentine), still never adding
-   neighbours by wobble. `ActionPress.paintMove` would keep a list of segments; `WorldScene.paintLineTiles`
-   builds the tiles from them; tests in `tests/action-press.test.ts`.
-4. **Real-phone pass** (below) before tuning numbers: arm time (300 ms), paint step (8 px + 10 px per tile),
-   ring sector (0.44), settle window (13 px), turn hold (100 ms), touch compensation (0.7 mm).
-5. **Native haptics:** `src/platform/native.ts` maps tick to a light impact, medium to a medium impact, error to
-   the error notification. Tune on a phone with the owner.
-6. **Native edge gestures:** on Android, exclude the dock from system gestures
-   (`View.setSystemGestureExclusionRects`) so a flick on Action never triggers "back" (plan M6 note).
-7. **Bag on the SE:** gapless bag cells (hit areas that meet) would make the 37 px cells easier to hit without
-   changing the 8-column layout.
-8. **Hotbar (owner decision 5):** the benchmark now changes tools 0-1 times per loop; slots 1 and 8 stay a
-   stretch on big phones. Revisit the 8-slot row once the owner has played with the ring.
+σ 2 mm right / neighbour: i13 98% / 0.3%, SE 93% / 1.2%, Fold 95% / 0.9%; σ 1.2 mm 99-100% (unit test in
+`tests/controls.test.ts`). A slide resting 22-35 px out picks nothing. The critic's own probe (42 seeded
+trials) on `9168924` at σ 2 mm: i13 40-41, Pixel 7 40-42, SE right 37 (2 wrong), SE left 35 (7 none, each a
+finger 4-5 mm from its item, halfway to a neighbour); at σ 1.2 mm 41-42 everywhere.
+
+### Options reach (model)
+
+Sound and Vibrate are comfortable for either thumb on i13, Pixel 7 and SE; no hard target in Options on those
+phones. Pro Max: Quit to title is still hard for either thumb (89 mm from the pivot).
+
+## Critic's verdict (review 7, on `26dda7e`)
+
+Ready for the owner's phone; no blocker; nothing regressed. Review-6 majors fixed (tiles no longer flicker or
+retract; front-path taps enter the house 0/96). Owner items 1, 3, 4, 5, 6 met; item 2 met on iPhone 13 and close
+on SE. The critic's own measurements: one use per press at 80-1500 ms; straight lines exact 59/60 at σ 2 mm;
+drift turns 0/24, a deliberate L 24/24, a 3 mm arc 0/24; closed-loop serpentine at σ 2 mm i13 18/20 and 20/20,
+SE 15/20 and 17/20; ring at σ 2 mm i13 80/84 and 83/84, SE 73/84 and 77/84, 0 picks from 22-35 px rests, 0
+acts; sticky taps 26-28/28 (SE left 23-26); Options 0 hard targets; world-touch blockers still hold (slow taps
+0/56 tiles, rest-then-steer 0/48, hesitant drags 0/60). Write-ups: `agents/critiques/controls-critic/` and
+`C:/Users/andre/dev/tiny-acre/controls-critique/review-6.md`, `review-7.md`.
+
+## Open findings
+
+- **Paint step vs reach (trade-off):** 16 px steps buy margin against wobble at every corner and row end, at the
+  cost of reach toward the screen edge on the thumb's side (3 tiles, was 4) and about 20 mm more drag per 3x3.
+  The plot3x3 travel is 199-283 mm; the critic's bar was 250 mm (aim 150). Owner question 1.
+- **σ 2 mm serpentine:** the critic agreed (review 6) that the open-loop bar belongs at σ 1 mm and σ 2 mm is
+  judged closed loop. Closed loop is 81-94% at σ 2 mm (bar 90% on i13 and SE): the remaining misses are mostly a
+  first leg that the 2 mm field sends the wrong way or vertical in its first 8 px, which a person would correct
+  and the bot does not.
+- **Minor (critic):** SE closed-loop serpentine at σ 2 mm is 75-85% (bar 90%); SE-left sticky taps 23-26/28
+  (misses pick nothing).
+- **Door tile taps (accepted):** taps aimed at the farmhouse door tile itself enter 40/48 (the misses land on the path tile
+  below the door and walk there); the door's art above enters 48/48 and front-path taps enter 0/96.
+- **Late stops** (round 2, accepted): about 1 in 5 stick stops at 180 +- 30 ms reaction land a tile late.
+- **SE bag cells** 37 px (accepted, geometry).
+- **Pro Max Options:** Quit to title is hard (secondary phone).
+
+## Next steps
+
+0. **Serpentine row width (critic's suggestion):** a visible cue for the first row's width while painting, or
+   snapping U-turn rows to the edge of the tilled plot, would remove most remaining SE misses (a first row that
+   overshoots sets every row's span).
+1. **Real-phone pass** (checklist below) before tuning any number: paint step (16 px), turn threshold (14 px),
+   veer/hold (6/13 px), ring radius/gap/reach (64, 15%, 30 px) and pull (0.9 / 1.2 mm), arm time (300 ms), roll dwell
+   (100 ms).
+2. If the owner wants long rows toward the screen edge back, a per-direction step (10 px toward the edge on
+   the thumb's side, 16 elsewhere) is the smallest change; corners would then be less sure on that side.
+3. Native edge gestures on Android (`View.setSystemGestureExclusionRects` for the dock), from round 2.
+4. Native haptic strength with the owner (`src/platform/native.ts`).
+5. Gapless SE bag cells (hit areas that meet), from round 2.
 
 ## Real-phone checklist (owner)
 
-Do each with the right thumb only, then the left thumb only (Left hand on), phone held normally.
+Right thumb only, then left thumb only (Options > Left hand ON), phone held normally.
 
-- [ ] Tap a tile 4-6 tiles away: does the farmer walk there? Tap a dry crop, a ripe crop, the bin, a villager.
-- [ ] Tap grass and empty soil: it should only walk, never till or plant. Tap your own tile: a small ring.
-- [ ] Hold Action still until it ticks (about a third of a second), drag toward the middle of the screen, lift:
-      is the row the one you meant? Drag back to the start before lifting: nothing should happen.
-- [ ] Hold Action still and lift without dragging: nothing should happen. Quick taps on Action: one use each.
-- [ ] Flick Action sideways and lift at once: the ring stays open; tap an item. Flick, slide to an item, rest,
-      lift. Did a miss ever pick the neighbour?
-- [ ] Swipe Action up and down: tool changes only; never a swing of the old tool.
-- [ ] Drag anywhere on the world to steer; stop on a tile you choose five times. How many corrections?
-- [ ] Rest your thumb on the world, then steer: did anything get worked?
-- [ ] Menu (upper left of the dock for the right hand): can you open it without regripping? Did a stick drag
-      ever open it?
-- [ ] Options: the help card at the top, the volume -/+ by the tabs, Options > Controls switches.
-- [ ] With vibration on (Android web or the native app): are the ticks light enough? Is the paint confirm clear?
-- [ ] iPhone: does a swipe up from the hotbar ever trigger the home gesture? Android: does a flick from Action
-      toward the edge ever trigger "back"?
+- [ ] Press Action and lift, quickly and slowly (up to 2 s): one use each time, never more.
+- [ ] Press Action and let the pad roll as you lift: one use, or a little shake and buzz (nothing done). Which
+      did you get, and did it match what you meant?
+- [ ] Hold Action until it ticks, then drag a row toward the middle of the screen and lift: the row you meant?
+- [ ] Now a whole plot: hold, drag along the first row, turn up (or down) a row, drag back, turn, drag across,
+      lift. Did it turn where you turned? Did a wobble ever turn it? Did it ever paint outside the plot?
+- [ ] Drag a long row (6+ tiles) in one sweep: did your thumb's natural curve ever make it turn?
+- [ ] Drag back along the path: it should un-paint tile by tile; back to the start does nothing.
+- [ ] Flick Action sideways, slide to an item, rest, lift. Rest short of the items: nothing picked (the tap
+      menu stays). Any wrong picks?
+- [ ] Options: Sound and Vibrate without regripping?
+- [ ] Bag: tap an item, tap it again: it comes to hand.
+- [ ] Tap the farmhouse door (or the wall above it): you walk in. Inside, tap the top of the bed: you walk to it
+      and the sleep sheet opens. Tap the house door: you walk out.
+- [ ] iPhone: does a swipe up from the hotbar trigger the home gesture? Android: does a flick from Action
+      toward the edge trigger "back"?
 
 ## Questions for the owner
 
-1. The straight-line Action paint costs 15 gestures for a 3x3 plot. Allow a line to turn (serpentine, next steps
-   3), allow a 3-wide swath, or keep it strictly straight?
-2. Should painting keep working each tile "until done for today" (till, plant, water in one pass), or one step
-   per tile like a hold? (`WORK_USES_PER_TILE` in `WorldScene.ts`.)
-3. Holding Action on touch no longer repeats the action (the hold arms painting). Is that the feel you want, or
-   should a still hold that is not dragged repeat the step after the arm?
-4. The settle window favours late releases (up to about 200 ms). Do you release early or late when you stop the
-   farmer on a tile?
-5. Which phone do you play on? The bench can weight that profile.
+1. Paint step: 16 px (sure corners, 3 tiles toward the screen edge) or 10 px (4 tiles toward the edge, corners
+   less sure)? Or 10 toward the edge and 16 elsewhere?
+2. A rolled press: is "one use" right when your pad rolls after a press, and is the little "no" shake clear when
+   a swipe falls short?
+3. A U-turn in a painted path always steps exactly one row, and later rows never run past the first row: is
+   that the serpentine you want, or do you ever paint L shapes or gappy rows?
+4. Which phone do you play on? The bench can weight that profile.

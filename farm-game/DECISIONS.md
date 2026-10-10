@@ -871,3 +871,67 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
 - **Adapts:** targets are found live (nearest ripe or dry crop, what Action would do right now, the best row, the bed tile with a free side, the pond); an off-screen target gets an arrow where the way to it leaves the view; another map re-points to the door; a world target under an open sheet, or a button not on the sheet's page, points at the close button; the rod (or any item that turns auto tool off) in hand during a farm step points at the can or the seeds on the hotbar first; a step whose action is impossible is passed, one done early is passed (a day-1 step even before its moment, so an early night still finishes the bed step). Standing still on a spot the coach pointed at, the farmer turns toward the soil. After 15 s without progress the ring grows and the hand travels from the thumb to the target. Skipping says where to replay it (Menu > Opts > Controls > Replay guide, which never touches goals, gold or crops). Left-handed mirrors the hand and the buttons; Calm stills every mark.
 - **Data and state:** steps are `src/data/tutorial.json` (validated at load; step ids may not reuse the flag names), rules are pure in `systems/tutorial.ts`, drawing in `ui/CoachMarks.ts`, a stat watcher in `mechanics/tutorial.ts`. Progress is stats (`tut.*`), so no new state. The new early goals (pick the parsnips, plant 5, sell in the bin, pick up 3 wild goods, say hello, sleep when ready) replace "till 6, plant 5, water 5, sleep, forage" and need save v17 to keep old saves on their goal ("till" moves to "plant", "water" and "sleep" to "pick up wild goods"). New games start two tiles further south (14,11) so the plot is on screen. `?tutorial=0` starts a bare new game for automated checks.
 - **Retired:** the two welcome toasts (one taught the old "hold Action"), the "Drag to walk" ring while the guide runs, the swipe tip on the 2nd till (now on day 4), the paint and ring first-run tips once the guide has shown them, the summary tip "Hold the Action button..." (now "hold Action, then drag"), and the idle hint and goal arrow while a coach mark shows (they return in free play).
+
+### Round 3 owner decisions (2026-10-09, controls round 3)
+
+- **A press-and-lift on Action acts once, however long it was held** (`ActionPress.up`). A still press that
+  armed painting and lifted without a drag is a tap (`cancel` then `tap`); holding never repeats on touch
+  (Space on a keyboard still does). A paint dragged out and back to the start still cancels. The bag hint
+  now says "hold Action, then drag, to work a whole plot".
+- **A rolled press resolves to its likely intent:** a press that rolls 9-13 px without becoming a swipe or a
+  flick is a tap when the finger stayed within 4.5 px for its first 100 ms (`ROLL_DWELL_MS`): a press whose pad
+  rolled. One that moved at once was a swipe or flick cut short: it does nothing and says so (the error pulse
+  and a 2 px shake of the Action icon, or a dim in Calm mode; logged as `press: reject`). Diagonal moves past
+  14 px that are neither a swipe nor a flick also say no.
+- **Painted paths turn corners (serpentine).** The first leg is chosen as before (4 ways, hysteresis 1.6) and
+  locks at 2 tiles. A new leg starts when the finger is 14 px off the current leg's line, has been moving
+  mostly sideways (over its last 6 px of travel, or since it began to veer 6 px out, so a corner cut round as
+  thumbs do still counts), and the leg has tiles. The line is the finger's own trend (a
+  weighted least-squares fit as it moves along, with a strong prior toward straight), so a slow drift or a
+  thumb's arc tilts the line instead of turning it. Where the corner goes is the average of where the finger ran
+  while it veered off (from 6 px out); past 13 px off the leg stops growing (the lift then settles the last leg to
+  where the finger went). Dragging back un-paints tile by tile
+  and round corners. The path never revisits a tile or the farmer's, stops at 16 tiles, and rows after the
+  first stay inside the first row's span (an overshoot cannot paint past the plot). At a U-turn the step
+  between rows is one tile, and a row one tile short of the box edge reaches it.
+- **Paint step 10 -> 16 px** (about 5 mm). Every corner and row end is decided by the finger's position, and with
+  3 mm bands the controls critic's 2 mm wobble model made a 3x3 serpentine exact in under 10% of trials on an SE.
+  At 16 px (critic's 2D wobble model, corners cut 2 mm, 0-2 mm end overshoot; `tests/paintModel.ts`): σ 1 mm
+  exact 90-100% with 0 strays on i13, SE, Fold and Pro Max; σ 2 mm 35-76%. Reach cost: a drag toward the screen
+  edge on the thumb's side reaches 3 tiles, toward the middle 9.
+- **Events:** `paintLine` keeps `dir` (now the last tile's direction) and `tiles` (the path's length) and adds an
+  optional `path` (one direction per tile from the farmer). `paintEnd` is unchanged. New `ActionEvent` kind
+  `reject` (UI only). No inputHub or gameEvents name was added, renamed or removed.
+- **Ring:** radius 56 -> 64 on a wider arc (285 -> 105 degrees), dead zone 22 -> 36 px (a slide resting short of
+  the items leaves the tap menu), and ring aims correct the whole modelled thumb-base pull (0.9 mm sideways,
+  1.2 mm down; `RING_PULL_MM`). Picks go to the nearest item when it is clearly nearer than the next (by 15% of
+  the spacing) and within 30 px, instead of by angle: a finger that lands short of the ring keeps its tolerance
+  in mm. Model, 7 items: σ 2 mm right 98% / neighbour 0.3% on i13, 93% / 1.2% on SE, 95% / 0.9% on the Fold;
+  σ 1.2 mm 99-100%.
+- **Options:** the autosave note heads the rows and the rows sit as low as the tab strip allows; each row puts
+  its more used switch on the holding thumb's side (mirrored for the left hand), with Sound and Vibrate in the
+  two lowest rows. Reach model: both comfortable for either thumb on i13, Pixel 7 and SE; no hard target there
+  (Quit is still hard on the Pro Max).
+- **Bag:** tapping a bag item a second time brings it to hand (as the bag's help already said), so "Use now" no
+  longer needs a reach across the sheet.
+- **Taps on doors and solid art (guided-start findings):** a tap on a door tile walks through it; a tap on a
+  solid tile with nothing of its own belongs to what it is drawn for: straight down through the solid run to an
+  interactable or a door at its foot, else along the run's bottom row (a facade) to a door or to an
+  interactable just below it (`tapIntent`, `solidOwner`). Multi-tile things (the bed, a counter) are reached from
+  whichever side is open (`pathToFaceAny`): the top half of the bed no longer says "Can't get there".
+- **Review 6 (controls critic) fixes:**
+  - *Shown tiles never flicker or retract.* A painted tile appears at its boundary and goes only when the finger is
+    back half a step (8 px) along the leg past it, or back near the leg's start; a corner never takes back a shown
+    tile (it may only add one the leg had not grown yet), and a leg stops growing while the finger veers off
+    sideways. Only backtracking along the path removes tiles. The critic's closed-loop painter (turns when the
+    preview shows the leg): σ 1 mm 100% everywhere with ticks equal to tiles; σ 2 mm 89-91% on i13, 81-85% on SE,
+    91-94% on the Pro Max (was about 60%). Cost: open loop, a rare first-row overshoot (about 3 in 100 at σ 1 on an
+    SE) is no longer trimmed at the corner.
+  - *Front-path taps no longer enter the house.* A tap on the bottom row of a facade (or the bottom edge of any wall)
+    with open ground below walks to that ground (taps land low), except in the upper half of the tiles right
+    beside a door; the roof, the upper wall and the door tile itself still lead in. Measured (critic's
+    `r6-taps`, σ 1.5 mm): front-path walk taps entered 0/96 (was 6/48); door-art taps entered 48/48; taps aimed at
+    the door tile itself 40/48 (the misses land on the path below the door and walk there).
+  - *Ring:* the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
+    taps use the slide rule (nearest item, clearly nearer than the next, within reach).
+

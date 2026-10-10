@@ -142,8 +142,16 @@ export class MenuPanel extends Modal {
     if (this.cursor === null) {
       if (s.inventory.slots[i]) this.cursor = i;
     } else if (this.cursor === i) {
-      if (i < game.hotbarSlots) selectSlot(s, i);
+      // The same slot again equips it (as the bag's help says): a hotbar slot is selected; an item further in
+      // the bag comes to hand at once, like "Use now", without a reach across the sheet (round 3, left hand).
       this.cursor = null;
+      if (i >= game.hotbarSlots && s.inventory.slots[i]) {
+        equipFromBag(s, i);
+        audio.play('select');
+        this.close();
+        return;
+      }
+      selectSlot(s, i);
     } else {
       if (!swapSlots(s, this.cursor, i)) audio.play('error');
       this.cursor = null;
@@ -297,7 +305,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     C.creamDim,
   );
   c.label(8, ly + 12, `Gold ${fmt(s.money)}`, C.gold);
-  c.label(8, ly + 24, 'Tip: hold Action to keep working.', C.creamDim);
+  c.label(8, ly + 24, 'Tip: hold Action, then drag, to work a whole plot.', C.creamDim);
 }
 
 function buildGoals(c: MenuTabContext): void {
@@ -398,75 +406,35 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   // The volume rows go last, nearest the tabs: their small -/+ buttons sit at both edges, which only the
   // lowest rows keep in reach for either thumb.
   y -= 26 + 6;
+  // The autosave note heads the rows (it used to sit under them, keeping every row 22 px further up).
+  c.label(
+    8,
+    y + 32,
+    'Your game saves automatically when you sleep, change maps, or leave the page.',
+    C.creamDim,
+    1,
+    'left',
+    184,
+  );
+  y += 34; // the note, and the slack under the last row: the rows sit as low as the tab strip allows
 
   const half = 92;
+  // Each row puts its more used switch in the column on the holding thumb's side (mirrored for the left hand).
+  const thumbX = s.settings.leftHanded ? 8 : 100;
+  const farX = s.settings.leftHanded ? 100 : 8;
   const pair = (
     yy: number,
-    a: [string, () => void, number?],
-    b?: [string, () => void, number?],
+    thumb: [string, () => void, number?],
+    far?: [string, () => void, number?],
   ) => {
-    c.button(8, yy, half, 22, a[0], a[1], { textColor: a[2] ?? C.cream });
-    if (b) c.button(100, yy, half, 22, b[0], b[1], { textColor: b[2] ?? C.cream });
+    c.button(thumbX, yy, half, 22, thumb[0], thumb[1], { textColor: thumb[2] ?? C.cream });
+    if (far) c.button(farX, yy, half, 22, far[0], far[1], { textColor: far[2] ?? C.cream });
   };
+  // Top to bottom: the rarely used rows first (Save, Quit), the switches people flip mid-play last, just
+  // above the volume rows and the tab strip (round 3: Sound and Vibrate were in the top row, hard for the
+  // right and the left thumb respectively).
   y += 32;
-  pair(
-    y,
-    [
-      s.settings.muted ? 'Sound: OFF' : 'Sound: ON',
-      () => {
-        toggleMute(s);
-        apply();
-        c.rebuild();
-      },
-    ],
-    [
-      s.settings.vibrate ? 'Vibrate: ON' : 'Vibrate: OFF',
-      () => {
-        setHapticsEnabled(toggleVibration(s));
-        haptic('tick');
-        c.rebuild();
-      },
-    ],
-  );
-  y += 26;
-  pair(
-    y,
-    [
-      s.settings.leftHanded ? 'Left hand: ON' : 'Left hand: OFF',
-      () => {
-        toggleLeftHanded(s);
-        gameEvents.emit('settingsChanged', undefined);
-        c.rebuild();
-      },
-    ],
-    fullscreenSupported() ? ['Fullscreen', () => void toggleFullscreen()] : undefined,
-  );
-  if (!fullscreenSupported() && isIosSafari()) {
-    c.label(100, y + 2, 'Share > Add to', C.creamDim);
-    c.label(100, y + 12, 'Home Screen', C.creamDim);
-  }
-  y += 26;
-  pair(
-    y,
-    [
-      s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
-      () => {
-        toggleReduceMotion(s);
-        gameEvents.emit('settingsChanged', undefined);
-        c.rebuild();
-      },
-    ],
-    [
-      'Controls...',
-      () => {
-        controlsPage.open = true;
-        c.rebuild();
-      },
-      C.gold,
-    ],
-  );
-  y += 26;
-  const saveBtn: Button = c.button(8, y, half, 22, 'Save now', () => {
+  const saveBtn: Button = c.button(thumbX, y, half, 22, 'Save now', () => {
     void saveNow().then((ok) => {
       saveBtn.setLabel(ok ? 'Saved!' : 'Save failed');
       saveBtn.setTextColor(ok ? C.green : C.red);
@@ -475,7 +443,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   });
   const q = menu.quit;
   c.button(
-    100,
+    farX,
     y,
     half,
     22,
@@ -494,16 +462,65 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     },
     { textColor: q === 'idle' ? C.cream : C.warn },
   );
+  y += 26;
+  pair(
+    y,
+    [
+      s.settings.leftHanded ? 'Left hand: ON' : 'Left hand: OFF',
+      () => {
+        toggleLeftHanded(s);
+        gameEvents.emit('settingsChanged', undefined);
+        c.rebuild();
+      },
+    ],
+    fullscreenSupported() ? ['Fullscreen', () => void toggleFullscreen()] : undefined,
+  );
+  if (!fullscreenSupported() && isIosSafari()) {
+    c.label(farX, y + 2, 'Share > Add to', C.creamDim);
+    c.label(farX, y + 12, 'Home Screen', C.creamDim);
+  }
+  y += 26;
+  // Sound and Vibrate both on the thumb's side, in the two lowest rows (the far column is a stretch there).
+  pair(
+    y,
+    [
+      s.settings.vibrate ? 'Vibrate: ON' : 'Vibrate: OFF',
+      () => {
+        setHapticsEnabled(toggleVibration(s));
+        haptic('tick');
+        c.rebuild();
+      },
+    ],
+    [
+      'Controls...',
+      () => {
+        controlsPage.open = true;
+        c.rebuild();
+      },
+      C.gold,
+    ],
+  );
+  y += 26;
+  pair(
+    y,
+    [
+      s.settings.muted ? 'Sound: OFF' : 'Sound: ON',
+      () => {
+        toggleMute(s);
+        apply();
+        c.rebuild();
+      },
+    ],
+    [
+      s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
+      () => {
+        toggleReduceMotion(s);
+        gameEvents.emit('settingsChanged', undefined);
+        c.rebuild();
+      },
+    ],
+  );
   y += 32;
   volumeRow(y, 'Music', 'music');
-  volumeRow((y += 26), 'Sound', 'sfx');
-  c.label(
-    8,
-    y + 26,
-    'Your game saves automatically when you sleep, change maps, or leave the page.',
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
+  volumeRow(y + 26, 'Sound', 'sfx');
 }

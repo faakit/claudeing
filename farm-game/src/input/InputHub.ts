@@ -14,10 +14,11 @@ export interface InputEvents {
   /** The previewed touch turned into a drag (the stick) or left the world: drop the preview. */
   tapCancel: undefined;
   /**
-   * Painting a row from Action (held still, then dragged): the line's direction and length so far, live.
-   * Null direction / 0 tiles = armed but nothing chosen yet.
+   * Painting from Action (held still, then dragged): the path so far, live. `path` is one direction per tile
+   * from the farmer (a path may turn corners, round 3); `dir` is the current leg's direction and `tiles` the
+   * path's length. Null direction / 0 tiles = armed but nothing chosen yet.
    */
-  paintLine: { dir: Direction | null; tiles: number };
+  paintLine: { dir: Direction | null; tiles: number; path?: Direction[] };
   /** The painting finger lifted: work the line (`commit`), or drop it. */
   paintEnd: { commit: boolean };
   /** Hotbar slot picked by number key (0-based). */
@@ -38,7 +39,10 @@ type Listener<K extends keyof InputEvents> = (payload: InputEvents[K]) => void;
 export class InputHub {
   private keys: Direction[] = [];
   private stick: Direction | null = null;
-  /** True while the Action button or Space is held, so tools repeat. */
+  /**
+   * True while Space is held (tools repeat, for desktop testing), or for a brief moment after a tap on the
+   * Action button (one use: holding Action on touch never repeats).
+   */
   actionHeld = false;
   /**
    * The hotbar slot Action would use right now (auto tool may pick another than the selected one), set

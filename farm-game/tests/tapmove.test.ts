@@ -7,7 +7,7 @@ import {
   stepRoute,
   type CollisionGrid,
 } from '../src/systems/movement';
-import { findPath, pathToFace, standTiles } from '../src/systems/pathfind';
+import { findPath, pathToFace, pathToFaceAny, standTiles } from '../src/systems/pathfind';
 import { TAP_ACTS, tapIntent, type TapWorld } from '../src/systems/tapIntent';
 import type { TileCoord } from '../src/systems/world';
 
@@ -133,7 +133,14 @@ describe('tap intent', () => {
       plan: 'harvest',
     });
     expect(tapIntent(world(), ...at({ tx: 3, ty: 6 }))).toMatchObject({ kind: 'walk' });
-    expect(tapIntent(world(), ...at({ tx: 8, ty: 1 }))).toMatchObject({ kind: 'none' });
+    // a lone wall tile with open ground below: the thumb meant the ground (taps land low)
+    expect(tapIntent(world(), ...at({ tx: 8, ty: 1 }))).toEqual({
+      kind: 'walk',
+      target: { tx: 8, ty: 2 },
+    });
+    // solid with nothing open below it: nothing
+    const edge = world({ blocked: (t) => t.ty === 7 });
+    expect(tapIntent(edge, ...at({ tx: 4, ty: 7 }))).toMatchObject({ kind: 'none' });
   });
 
   it('no magnets: a tap on the walkable tile next to the bin walks there', () => {
@@ -195,5 +202,74 @@ describe('touch offset compensation', () => {
     expect(100 - r.x).toBeLessThan(3.5); // ~0.7 mm per axis on a 1.9 css/logical phone
     const l = compensateTouch(100, 200, true, 1.9);
     expect(l.x).toBeGreaterThan(100);
+  });
+});
+
+describe('taps on solid art and multi-tile things (round 3, guided-start findings)', () => {
+  // A house facade (rows 1-3, cols 2-6) with its door at (4,3); a bed (2x2) against the top-left wall of a
+  // room; the bin at (8,4) under a tall prop tile (8,3).
+  const rows = ['..........', '..#####...', '..#####...', '..##.##.#.', '........#.', '..........'];
+  const g = gridFrom(rows);
+  const world: TapWorld = {
+    tileSize: TS,
+    inMap: (t) => t.tx >= 0 && t.ty >= 0 && t.tx < 10 && t.ty < 6,
+    blocked: (t) => rows[t.ty]![t.tx] === '#',
+    interactable: (t) => (t.tx === 8 && t.ty === 4 ? 'bin' : null),
+    actKind: () => null,
+    door: (t) => t.tx === 4 && t.ty === 3,
+  };
+  const at = (tx: number, ty: number) => tapIntent(world, tx * TS + 8, ty * TS + 8);
+
+  it('a tap on a door walks through it; a tap anywhere on the facade leads to its door', () => {
+    expect(at(4, 3)).toEqual({ kind: 'walk', target: { tx: 4, ty: 3 }, door: true });
+    for (const [tx, ty] of [
+      [4, 2], // the door's top half, drawn on the wall
+      [4, 1],
+      [2, 1], // the facade's far corner
+      [3, 2], // the wall just above the bottom row, beside the door
+    ] as const)
+      expect(at(tx, ty), `${tx},${ty}`).toEqual({
+        kind: 'walk',
+        target: { tx: 4, ty: 3 },
+        door: true,
+      });
+  });
+
+  it("a tap on the facade's bottom row away from the door walks to the path below it", () => {
+    const tap = (tx: number, ty: number, oy: number) => tapIntent(world, tx * TS + 8, ty * TS + oy);
+    // two or more tiles from the door: the path below, wherever in the tile
+    for (const tx of [2, 6])
+      for (const oy of [3, 8, 13])
+        expect(tap(tx, 3, oy), `${tx}`).toEqual({ kind: 'walk', target: { tx, ty: 4 } });
+    // beside the door: its upper half leads in, its lower half (a thumb aiming at the path) walks below
+    for (const tx of [3, 5]) {
+      expect(tap(tx, 3, 4)).toEqual({ kind: 'walk', target: { tx: 4, ty: 3 }, door: true });
+      expect(tap(tx, 3, 12)).toEqual({ kind: 'walk', target: { tx, ty: 4 } });
+    }
+  });
+
+  it('a tap on the art above the bin opens the bin; plain walls far from anything stay nothing', () => {
+    expect(at(8, 3)).toMatchObject({ kind: 'interact', target: { tx: 8, ty: 4 }, type: 'bin' });
+    expect(findPath(g, { tx: 0, ty: 5 }, [{ tx: 4, ty: 3 }])).not.toBeNull();
+    const walls: TapWorld = { ...world, door: () => false, interactable: () => null };
+    expect(tapIntent(walls, 3 * TS + 8, 2 * TS + 8).kind).toBe('none');
+  });
+
+  it('a multi-tile thing is reached from whichever side is open', () => {
+    const room = gridFrom(
+      ['#####', '#XX.#', '#XX.#', '#...#', '#####'].map((r) => r.replace(/X/g, '#')),
+    );
+    const bed = [
+      { tx: 1, ty: 1 },
+      { tx: 2, ty: 1 },
+      { tx: 1, ty: 2 },
+      { tx: 2, ty: 2 },
+    ];
+    // the top-left tile alone has no open side: the bed as a whole does
+    expect(pathToFace(room, { tx: 3, ty: 3 }, { tx: 1, ty: 1 })).toBeNull();
+    const r = pathToFaceAny(room, { tx: 3, ty: 3 }, bed)!;
+    expect(r).not.toBeNull();
+    const stand = r.path[r.path.length - 1]!;
+    expect(Math.abs(stand.tx - r.target.tx) + Math.abs(stand.ty - r.target.ty)).toBe(1);
   });
 });
