@@ -64,5 +64,37 @@
     "perYear": 1,
     "maxTakes": 2,
     "calmHearts": 2
-  }
+  },
+  "trophies": [
+    {
+      "id": "board",
+      "stat": "boardWins",
+      "map": "house",
+      "tx": 6,
+      "ty": 2,
+      "sprite": "obj_trophy_board",
+      "color": "#e8c050",
+      "text": "Board Trophy: seasons won on the board, {n}."
+    },
+    {
+      "id": "festival",
+      "stat": "festivalWins",
+      "map": "house",
+      "tx": 4,
+      "ty": 2,
+      "sprite": "obj_trophy_festival",
+      "color": "#d05a6a",
+      "text": "Festival Ribbons: first places won, {n}."
+    },
+    {
+      "id": "legends",
+      "stat": "legends",
+      "map": "house",
+      "tx": 7,
+      "ty": 2,
+      "sprite": "obj_trophy_legends",
+      "color": "#5a9ad0",
+      "text": "Legend Wall: legendary fish caught, {n} of 4."
+    }
+  ]
 }

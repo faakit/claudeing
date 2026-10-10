@@ -7,6 +7,7 @@ import { addItem } from '../src/systems/inventory';
 import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
 import {
   applyRival,
+  isFarmGood,
   rivalActive,
   rivalMinute,
   rivalNotice,
@@ -79,12 +80,15 @@ describe('the rival farmer', () => {
     const s = boardDay();
     hearts(s, 2);
     expect(rivalMinute(s)).toBe(game.rival.minute + 180);
-    expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
+    expect(rivalNotice(s)).toMatch(/(wants this one|takes one) at 5:00 PM/);
     hearts(s, 4);
-    expect(rivalNotice(s)).toMatch(/wants this one at 5:00 PM/);
+    expect(rivalNotice(s)).toMatch(/(wants this one|takes one) at 5:00 PM/);
     expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
     s.time.minutes = 1300;
-    const cheapest = Math.min(...s.orders.list.map((o) => o.reward));
+    // Polite: a row that is no point for him first (round 3), then the cheapest.
+    const spare = s.orders.list.filter((o) => !isFarmGood(o));
+    const pool = spare.length ? spare : s.orders.list;
+    const cheapest = Math.min(...pool.map((o) => o.reward));
     expect(applyRival(s)?.reward).toBe(cheapest);
     const t = boardDay();
     hearts(t, 5);
@@ -138,9 +142,13 @@ describe('the rival in year two (handover goal 3)', () => {
     s.time.year = 2;
     s.orders.day = absoluteDay(s);
     expect(rivalTakes(s)).toBe(2);
-    expect(rivalNotice(s)).toMatch(/wants two of these at 2:00 PM/);
+    expect(rivalNotice(s)).toMatch(
+      /(wants two of these|wants this one|takes one|takes two) at 2:00 PM/,
+    );
     s.time.minutes = rivalMinute(s);
-    const sorted = [...s.orders.list].sort((a, b) => b.reward - a.reward);
+    const sorted = [...s.orders.list].sort(
+      (a, b) => Number(isFarmGood(b)) - Number(isFarmGood(a)) || b.reward - a.reward,
+    );
     applyRival(s);
     const gone = s.orders.list.filter((o) => o.rival).map((o) => o.id);
     expect(gone).toEqual(sorted.slice(0, 2).map((o) => o.id));

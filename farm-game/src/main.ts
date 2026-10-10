@@ -9,6 +9,7 @@ import { TownScene } from './scenes/TownScene';
 import { MineScene } from './scenes/MineScene';
 import { WoodsScene } from './scenes/WoodsScene';
 import { UIScene } from './scenes/UIScene';
+import { runtime } from './state/runtime';
 import { getState } from './state/store';
 import { audio } from './platform/audio';
 import { wireAudio } from './game/audioWiring';
@@ -74,5 +75,7 @@ if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
     audio,
     haptics: { setHapticsEnabled },
     controls: controlsLog,
+    // Read-only use: why the world is frozen (open modal count, a busy flow, the app suspended).
+    runtime,
   };
 }

@@ -169,17 +169,28 @@ export const isProduce = (itemId: string): boolean => PRODUCE.has(items[itemId]?
 /**
  * One tap at the bin: ship every stack of produce in the bag. Returns how many items moved and what
  * they will earn. Anything shipped by mistake comes back with the bin's "-" until morning.
+ *
+ * `keep` holds back goods by "item|of" (the open requests' wants, critique 9 F2), lowest quality first,
+ * since that is what a request takes; `kept` says how many of each kind stayed in the bag.
  */
-export function shipAllProduce(state: GameState): { count: number; gold: number } {
+export function shipAllProduce(
+  state: GameState,
+  keep: ReadonlyMap<string, number> = new Map(),
+): { count: number; gold: number; kept: Map<string, number> } {
   let count = 0;
   let gold = 0;
+  const kept = new Map<string, number>();
   const refs = new Map<string, ItemRef>();
   for (const st of state.inventory.slots)
     if (st && isProduce(st.item) && isShippable(st)) refs.set(keyOf(st), refOf(st));
-  for (const ref of refs.values()) {
-    const n = shipStack(state, ref, countStack(state, ref));
+  for (const ref of [...refs.values()].sort((a, b) => (a.q ?? 0) - (b.q ?? 0))) {
+    const kind = `${ref.item}|${ref.of ?? ''}`;
+    const have = countStack(state, ref);
+    const hold = Math.min(have, Math.max(0, (keep.get(kind) ?? 0) - (kept.get(kind) ?? 0)));
+    if (hold > 0) kept.set(kind, (kept.get(kind) ?? 0) + hold);
+    const n = have - hold > 0 ? shipStack(state, ref, have - hold) : 0;
     count += n;
     gold += n * sellValue(ref);
   }
-  return { count, gold };
+  return { count, gold, kept };
 }

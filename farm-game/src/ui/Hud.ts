@@ -15,6 +15,7 @@ import { hitSize } from './hit';
 import { CH, SEAM, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
+import { runtime } from '../state/runtime';
 
 /** Hotbar slot size: 23 logical px is ~45 CSS px on a typical phone, so taps land first time. */
 export const SLOT = 23;
@@ -440,12 +441,19 @@ export class Hud {
       t.lit?.setAlpha(a);
       return true;
     });
-    // Newest sits on the bottom; older ones stack upward by their real (wrapped) height.
-    let y = DOCK_Y - 6;
+    // Newest sits on the bottom; older ones stack upward by their real (wrapped) height. While a sheet is open
+    // the toasts move to the top of the screen, above the dim, so a sheet's own results ("Kept 4 Potato for the
+    // board.", "Order done!") are seen when they happen (critique 10, F1).
+    const sheet = runtime.modals > 0;
+    let y = sheet ? 4 : DOCK_Y - 6;
+    if (sheet) for (const t of this.toasts) y += t.label.textHeight + 2;
     for (let i = this.toasts.length - 1; i >= 0; i--) {
       const t = this.toasts[i]!;
       y -= t.label.textHeight + 2;
-      t.label.y += (y - t.label.y) * 0.3;
+      t.label.setDepth(sheet ? 232 : 80);
+      t.bg.setDepth(sheet ? 231 : 79);
+      t.lit?.setDepth(sheet ? 231.5 : 79.5);
+      t.label.y += (y - t.label.y) * (sheet ? 1 : 0.3);
       t.bg
         .setPosition(t.label.x, t.label.y + t.label.textHeight / 2)
         .setSize(t.label.textWidth + 10, t.label.textHeight + 5);

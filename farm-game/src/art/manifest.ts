@@ -1,6 +1,7 @@
 import { PLACEHOLDER_TILES, TILESET_KEY } from '../config';
 import {
   animals,
+  game,
   crops,
   items,
   mail,
@@ -280,18 +281,37 @@ export function artManifest(): ArtEntry[] {
           exact: false,
         });
   // Drawn on demand by game/fallbackTexture.ts when no art exists, so they count as optional here.
-  for (const [id, p] of Object.entries(projects))
-    if (p.landmark)
+  for (const [id, p] of Object.entries(projects)) {
+    const l = p.landmark;
+    if (!l) continue;
+    // A growing landmark (the statue) has one key per level, 16x32 so it can stand taller each level.
+    const keys = l.levels
+      ? Array.from({ length: l.levels }, (_, i) => `${l.sprite}_${i + 1}`)
+      : [l.sprite];
+    keys.forEach((texture, i) =>
       add({
-        texture: p.landmark.sprite,
+        texture,
         w: 16,
-        h: 16,
+        h: l.levels ? 32 : 16,
         group: 'world',
-        kind: `town landmark ${id}`,
+        kind: l.levels ? `town landmark ${id} level ${i + 1}` : `town landmark ${id}`,
         from: 'projects.json',
         exact: false,
         optional: true,
-      });
+      }),
+    );
+  }
+  for (const t of game.trophies ?? [])
+    add({
+      texture: t.sprite,
+      w: 16,
+      h: 16,
+      group: 'world',
+      kind: `trophy ${t.id} at home`,
+      from: 'game.json',
+      exact: false,
+      optional: true,
+    });
   add({
     texture: mail.mailbox.sprite,
     w: 16,

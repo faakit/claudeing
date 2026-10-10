@@ -343,7 +343,7 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 - **Mix:** sound effects are matched by role on max momentary loudness (K-weighted 400 ms; rewards -18, tools -20, swing/plant -22, door -21, error -23, ui -25, steps -28 LUFS in the file, about the same at the output at default volume), true peak <= -1 dBTP after MP3 encoding; music sits near -25 LUFS integrated by day and -28 at night at the default 60% volume; ambience beds under the music. A repeat of the same cue within 350 ms (a held tool) plays 4 dB softer, and water keeps one voice. Measured from offline renders of the real engine (`audio-src/tools/render.mjs`). The master "limiter" is a DynamicsCompressorNode (-3 dB, 20:1), which by spec adds about +1.7 dB of automatic make-up gain; the measured levels include it.
 - **Round 2: output calibration and peaks.** Each sfx recipe carries a `trim` (dB) measured on renders of the real
   mix (`audio-src/tools/sfxlevels.py`: median of 16 hits, K-weighted max momentary), so every cue lands within
-  about 1 dB of its role target *at the output* (they were 1-3 dB under). Peaks are fixed at the source: a cue's
+  about 1 dB of its role target _at the output_ (they were 1-3 dB under). Peaks are fixed at the source: a cue's
   file is limited so that its worst take, with its trim, volume spread and the compressor's make-up gain, peaks
   at or under -3.5 dBTP at the default volume (`tests/audio-assets.test.ts`). A WaveShaper soft clipper after
   the compressor (linear to -3 dBFS, tanh knee, ceiling -1.4 dBFS, 2x oversampling) is the brick wall; only
@@ -363,7 +363,7 @@ An independent critic played the build at `22fc304` (goals D1 to D4) and wrote `
 
 An independent critic played the build at `64eeb10` and wrote `agents/critiques/critique-5.md` (partial). Fixed:
 
-- **F1 Clay has teeth: requests stay two or three days** (`orders.json` `days`). Each morning filled and expired requests come down and new ones fill the free places, so a request you need a day to gather for can be taken by Clay at 2 PM, the best-paying one first. Rows say "Have 1/3  120g  2 days". Clay now stays in town until 6 PM, so his 2-heart perk ("comes at 5 PM") matches where he is. Old saves: a request with no last day ends the day it was posted (no version bump; `until` is optional). The sim earns about 10% more (more requests get filled), so `SIM_EARNED` moved from 208,549 to 230,261.
+- **F1 Clay has teeth: requests stay two or three days** (`orders.json` `days`). Each morning filled and expired requests come down and new ones fill the free places, so a request you need a day to gather for can be taken by Clay at 2 PM, the best-paying one first. Rows say "Have 1/3 120g 2 days". Clay now stays in town until 6 PM, so his 2-heart perk ("comes at 5 PM") matches where he is. Old saves: a request with no last day ends the day it was posted (no version bump; `until` is optional). The sim earns about 10% more (more requests get filled), so `SIM_EARNED` moved from 208,549 to 230,261.
 - **F2 baskets count goods, not qualities:** three pumpkins of three qualities are one good and are refused. Kinds come from the festival's data (`kinds`): the Harvest Fair now also takes forage and counts Veg, Fruit and Wild; at the Winter Feast every preserve is its own kind and all animal goods are one. Each row names its kind and the basket line shows "+30%". Feast rivals rose to 260/480/900, so a single gold wine is second, not first.
 - **F3 a chore tap never lifts an occupied building:** behaviors may say what they hold (`occupants`); for a coop, barn, sty or stocked silo the second tap opens a Move sheet with a "Move it" button instead of picking it up. Empty ones still go with a second tap. Auto tool: none (Interact).
 - **F4 the derby talks:** an improving catch toasts "Derby best! Catfish. Score 195."; the derby page names each fish; handing in before 6 PM asks once ("Sure? Tap to hand in"). Derby day stocks catfish in the town river whatever the weather (`stocked`), and the page says so; the third rival dropped to 95 so three bluegill from the farm pond reach the podium.
@@ -471,6 +471,136 @@ The critic played the build at `3e1b9c5` (two 16-day real-input runs, probes, a 
 - **F4 the cart resold store goods:** it never offers what the store sells that day, nor seeds that cannot ripen this season (without a greenhouse); its pool is rare seeds, bars, quartz, cloth, a ruby, amethyst, rich fertilizer and a quality sprinkler, each with a one-line use shown when bought ("Bought Quartz. For the Library and Greenhouse."); its sheet closes back to the board.
 - **F6** the bag cursor clears after any Eat tap, and "Not hungry" is drawn dim. **F7** batch cooking ("x3") uses plain-quality ingredients only and toasts the real count. **F8** goal and tip text say "Make", not "Craft"; the pre-Clay notice says "Requests stay a few days."; the statue page says "Next level: ... Now +2%."
 - **Sim:** the median rose 16% across critique 7 and 8 work; measured, it is about 9k of eggs (180 a year from the bot's hens), about 7k more of board requests, and more jars kept busy along a richer early path. Repinned at 213,730.
+
+## Critique 9 fixes (depth round 3)
+
+The critic played `1a7464d` (two 31-day and two 14-day real-input runs, season probes, a two-year board sim) and
+wrote `agents/critiques/critique-9.md`: no blocker. Owner defaults for round 3 decided the open questions. Fixed:
+
+- **F1 the season score was hidden from a losing player, and a farmer who never fishes could not win** (the sim lost
+  72 of 72 seasons). The board now has a score line of its own every day once Clay is about ("This season: you 3,
+  Clay 6."), and Clay's line below it says his target, what he took, last season's result for three days ("Last
+  season: you won 25 to 7."), or else "Clay scores on farm goods only." **Clay scores only on farm goods:** crops,
+  animal goods, and preserves made from them. Fish, wild goods and jam or pickles of wild goods he still takes on
+  their last day, but without a point ("Clay took it: no point."). Owner default: a farmer who never fishes must be
+  able to win; a fisher simply has more chances. **Stakes are said up front:** Clay's intro letter and his losing
+  letter name the prize; a draw is said. **The prize lasts** (owner default): a Board Trophy in the house
+  (`game.json` `trophies`, texture `obj_trophy_board` at house 6,2) that counts `boardWins`, a letter from Mara,
+  and still a modest 300g a year of play. Sim (two years, three seeds, no fishing): a farmer who keeps what the
+  requests want wins 23 of 24 seasons; one who ships everything wins 13.
+- **F2 crop requests needed the whole harvest:** a crop request asks for three quarters of what you could hand over
+  (`CROP_SHARE`, at least one). The bin's "Ship all produce" keeps back what open requests want, lowest quality
+  first, and toasts "Kept 4 Potato for the board."; the row's "All" and "+" still ship them, with "The board wants 4
+  Potato." when the bag drops below what is asked; wanted goods read in the warning colour.
+- **F3** the special's Give keeps back the full quantity of every same-item request you can fill or that has days
+  left (`keepForRequests`), so one you are part-way to is never emptied. **F4** the Make tab's batch slot is always
+  there (a dim "x1"), so Make never slides under the thumb. **F5** requests are drawn first and the special last.
+  **F6** the season result comes after Clay's overnight take that decided it, last season stays on the board three
+  days, a win brings Mara's letter, and "You could finish the ... today" is said once a season per project.
+  **F7** the cart row names the use before you pay ("900g Market Road", data `tag`; seeds say their season).
+  **F8** Clay's 2-heart scene no longer says "You keep beating me". The goal title "Craft something at the
+  workbench" belongs to the onboarding agent's early goals and is left to them.
+- **Clay's 4-heart perk matters again:** "polite" Clay takes rows that are no point for him first (fish, wild
+  goods), then the smallest; the perk reads "Clay spares your farm goods". Critique 9 found it near dead (it only
+  changed which last-day row he took).
+- **The statue grows** (owner default): a repeatable project's landmark may have `levels`; the statue shows
+  `obj_landmark_statue_1` .. `_6` (16x32), the last from level 6 on, with a placeholder that grows until the art
+  lands.
+- **Sim:** the five-seed median rose 17% (213,730 to 249,871), within the band. Smaller crop requests are filled by
+  the bot's harvest more often and it now wins some board prizes; the early gold compounds through earlier land
+  (seed 7 moved most, 189k to 241k; seed 42 only 3%). Repinned.
+
+## Critique 11 fixes (depth round 3)
+
+The critic played `70e861a` (two 32-day pure-farmer games, edge probes, a sensitivity sim) and wrote
+`agents/critiques/critique-11.md`: no blocker, no major. Fixed:
+
+- **F1 a keeper still walked the race** (13 to 3; Clay's points were only his crates, since a keeper fills every farm
+  row before its last day). Clay's crates now keep up with a leader: every 7th day of a season, every 3rd while you
+  lead by 4 or more (`crateDue`). Rows still stay safe until their last day, so "3 days" on a row stays true.
+  Sim: the keeper's seasons are closer (17-8, 15-11, 8-5 ...); it wins 19 of 24, a shipper 1. The sim keeper fills
+  fewer spring rows than a played one (critic: 4 against 13), so its win count is a floor, not a prediction.
+- **F2 the crate was never announced and decided seasons on day 28.** No crate on a season's last day (your move is
+  last); the board says "Clay ships a crate tonight: a point." when he has no scoring target; his intro and losing
+  letters name the weekly crate.
+- **F3 a friendly Clay made every season a free win.** At 5 hearts he still ships his crates (he only stops taking
+  requests), and he no longer sends the gloating letter.
+- **F4** year two: "Clay takes two at 2:00 PM: no point.", and "wants two of these" only when both score.
+  **F5** the wanted bin line fits with a bin count ("Board 4  bin 2", else "Board 4  x9"); the kept toast splits the
+  special ("Kept 5 Potato for the board and 11 for Rosa."). **F6** a special that ran out is said on the same morning
+  a new one is posted. **F7** a finished special keeps its row ("Special done! Thank you!") until the board closes,
+  so nothing slides under the thumb. **F8** sim tests have a 60 s timeout. **F9** winter of year one pays year one's
+  prize. **F10** of this round's appended goals, the fishing one moved last (round-2 goals stay in place: the legend
+  goal at #54 still comes before the board goal).
+- **Not changed:** three long toasts over a tall sheet cover its header (nothing tappable); the early-gold
+  sensitivity (an owner question, see below).
+
+## Critique 10 fixes (depth round 3)
+
+The critic played `e23349b` (four 32-day new games as a farmer who never fishes, edge probes, a sweep, a sensitivity
+sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
+
+- **F1 (major) toasts were drawn under every open sheet**, so "Kept 4 Potato for the board.", "The board wants 4
+  Potato.", "Order done!" and "Bought ..." were unseen. While a sheet is open, toasts now sit at the top of the
+  screen above the dim (`ui/Hud.ts`, depth only; flagged for the controls agent, who owns the HUD). A wanted bin row
+  also says it in words: "Board 4  have 9".
+- **F2 the race had become a formality** (a keeper won 15 to 0; Clay's named target was usually a row that could not
+  score). Clay now plays to win: on a last day he takes farm goods first, best-paying first, and a fish or wild row
+  only when no farm row is due. "Clay's!" marks only a target that would score; otherwise the board says "Clay
+  takes one at 2:00 PM: no point." And every 7th day of a season he ships a crate from his own field, a point
+  (`rivalCrate`, said in the morning), so keeping goods is needed but not enough. Sim, two years and three seeds:
+  a keeper wins 16 of 24 seasons, a farmer who ships everything 1.
+- **F3 at 5 hearts the race ended silently** (no score, no settlement, the last goal stranded). The board keeps score
+  from day 8 whatever his hearts (`boardRaceOn`); a friendly Clay only stops taking requests and shipping crates
+  ("Clay no longer takes requests."), and seasons still settle.
+- **F4** in the first days of a season, while it is still 0 to 0, the score line names last season ("Last season: you
+  won 15 to 0."); a 0 to 0 season is said; a take that scored nothing reads "Clay cleared 5 Trout off the board: no
+  point."; Mara's letter says "out-scored".
+- **F5** "Ship all produce" also keeps what the special order still needs (after the requests); the sim keeper now
+  hands the special what the requests do not need.
+- **F6** the stakes say the year's prize; Clay's intro says "what you make of them"; three kept kinds name two
+  ("Kept 2 Potato, 3 Egg and more..."); a cart row shows "N left" once you bought some; an out-of-season seed says
+  "Greenhouse"; a four-digit reward drops "Have" to keep "last day"; the special's title is "Special: 15
+  Cauliflower" with the giver on its second line; the cook goal's hint says "Menu > Make".
+- **F7 (balance, not changed):** year one is very sensitive to early gold for the tireless bot (one 300g spring prize
+  moved a seed by 60k; the five-seed median fell back from 249,871 to 213,730 once the bot stopped winning prizes,
+  repinned). Fish bounds are now against the pinned median. Whether early land should be gentler is an owner
+  question; the human-paced sim is the better judge.
+- **Make tab columns:** Make is now the outermost button on every row; a dish's batch slot sits inside it.
+- **Not changed:** the goal title "Craft something at the workbench" belongs to the onboarding agent.
+- **Measured for the owner (F7):** the human-paced bot is as sensitive as the tireless one: 500g more on day 7 lifts
+  its year by 18% to 76% (seeds 42, 7, 99: 184k/140k/199k to 217k/246k/253k). The binding constraint is land (the
+  32-tile home plot fills at once; the first plot costs 700g). A cheaper first plot or a little more starting gold
+  would make the first fortnight matter less; left as an owner question.
+
+## Eating: three dishes a day at full strength (owner default, round 3)
+
+- No hard cap, but the 4th dish of a day gives half its energy and the 5th and later a quarter
+  (`FULL_DISHES`, `LATER_DISH_SHARE` in `systems/food.ts`; stats `ate.day`, `ate.today`). Ten pies in a day give
+  no more than five at full strength, so cooking lengthens a day without making it endless.
+- The dish says it: from the 4th dish its card reads "Restores 20 now: dish 4 today.", the Eat button shows the
+  real gain, and the toast adds "(dish 4 today)". A dish that would mostly be wasted is still refused.
+
+## Trophies at home (round 3)
+
+- The board trophy's data-driven `trophies` list now also holds Festival Ribbons (first places, `festivalWins`,
+  house 4,2, `obj_trophy_festival`) and a Legend Wall (legendary fish, `legends`, house 7,2,
+  `obj_trophy_legends`). Data only: the farmhouse becomes the place that shows what you achieved, and each one
+  says its count when tapped. A test keeps every landmark and trophy on its own reachable tile.
+- Four mastery goals are appended to the chain (goals are an index: append only): first place at a festival,
+  beat Clay in four seasons, all four legends, the statue at level 6 (gilded). Each points at a trophy or the
+  statue, so the late chain ends in things you can see at home and in town.
+
+## Sim fidelity: a fisher (round 3)
+
+- The sim bot can keep goods for the board (as "Ship all produce" now does) and fish four casts an evening
+  (a real cast through `performAction`, three bites in four landed, the reel skipped); it now ships fish too.
+- Measured over two years and three seeds: the keeper wins 23 of 24 board seasons, the fisher-keeper 24 of 24 and
+  scores more points (fish rows are points only a fisher fills). The fisher's first year earns 44% to 58% more
+  than the same farmer, although its fish are only about 2k by day 14: early gold compounds (more seeds, then
+  land on day 28 instead of later). That is a property of the early economy, not of fish prices. Since critique
+  11 it is bounded at under twice the pinned median (one farmer is too chaotic a yardstick: seed 7's fisher made
+  2.1 times its farmer).
 
 ## One-thumb controls (PLAN-CONTROLS.md, owner decisions 2026-10-08)
 

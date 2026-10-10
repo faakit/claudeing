@@ -561,9 +561,9 @@
         "id": "bet",
         "title": "A friendly bet",
         "lines": [
-          "You keep beating me to the board.",
+          "This board race keeps me sharp.",
           "Fine. I will come by later in the day.",
-          "Here, winner's purse. For now."
+          "Here, a purse for a good rival."
         ],
         "reward": {
           "gold": 300
@@ -576,7 +576,7 @@
         "lines": [
           "Want to know my secret? Speed-Gro.",
           "Sow it with the seeds. Faster crops.",
-          "Take some. I will leave you the big requests."
+          "Take some. I will leave your farm goods be."
         ],
         "reward": {
           "item": "speed_gro",
@@ -588,7 +588,7 @@
         "id": "partners",
         "title": "Partners",
         "lines": [
-          "I am done racing you for the board.",
+          "I will stop taking your requests. Crates, though...",
           "The town needs both our farms.",
           "Partners? Take these bars, partner."
         ],

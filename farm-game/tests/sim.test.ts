@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Year-long sims take seconds each; never fail on vitest's 5 s default under load (critique 11, F8).
+vi.setConfig({ testTimeout: 60_000 });
 import { crops, items, jobs as jobDefs, plots, projects, shops } from '../src/data';
 import { JOBS_PER_DAY, jobReward } from '../src/systems/jobs';
 import { performAction, type TileInfo } from '../src/systems/actions';
@@ -20,11 +23,21 @@ import {
   visibleProjects,
 } from '../src/systems/projects';
 import { keyOf, refOf, sellValue, type ItemRef } from '../src/systems/itemRef';
-import { deliverOrder, ensureOrders, haveFor } from '../src/systems/orders';
+import {
+  boardWants,
+  deliverOrder,
+  ensureOrders,
+  haveFor,
+  keepForRequests,
+} from '../src/systems/orders';
+import { giveToSpecial } from '../src/systems/specials';
 import { interactWith, objectsOn } from '../src/systems/placeables';
 import { buyPlot, ownsPlot, ownsTile } from '../src/systems/plots';
 import { jarContents, loadJar, preserveOf } from '../src/systems/preserves';
 import { createInitialState, type GameState } from '../src/state/GameState';
+import { gameEvents } from '../src/systems/events';
+import { resolveCatch } from '../src/systems/fishing';
+import { random } from '../src/systems/rng';
 
 const STORE = 'town_general_store';
 /** Grass tiles outside every plot, beside the house, where the bot puts its jars. */
@@ -113,6 +126,24 @@ function act(s: GameState, t: TileInfo): ReturnType<typeof performAction> {
   return performAction(s, t);
 }
 
+/** Casts a fisher makes an evening (a few minutes at the reel for a person). */
+const FISHER_CASTS = 4;
+
+/**
+ * The fisher's evening: a few casts at the farm pond while more than 20 energy is left, landing three bites in
+ * four (a fair player at the reel). The cast is a real Action; the reel is skipped.
+ */
+function fishEvening(s: GameState): void {
+  const bite: { fish: string | null } = { fish: null };
+  const off = gameEvents.on('startFishing', ({ fish }) => (bite.fish = fish));
+  for (let i = 0; i < FISHER_CASTS && s.energy > 20; i++) {
+    bite.fish = null;
+    if (!equipItem(s, 'fishing_rod') || !act(s, POND).ok || !bite.fish) break;
+    resolveCatch(s, bite.fish, { caught: random(s) < 0.75, perfect: false });
+  }
+  off();
+}
+
 /** Where the gold came from, for the log and the bounds. */
 interface Ledger {
   shipped: number;
@@ -125,8 +156,15 @@ interface Ledger {
  * A competent but not obsessive player: waters daily, harvests, fills the board requests it can, keeps up to
  * six preserve jars busy and a coop of three hens, ships the rest, buys land and upgrades when comfortably
  * affordable. It does not fish, mine, do jobs on purpose or fund projects (except in the two-year run).
+ * With `keepForBoard` it keeps back what the open requests want when it ships (as the bin's "Ship all
+ * produce" does since critique 9, F2), instead of shipping everything.
  */
-function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
+function playDay(
+  s: GameState,
+  ledger: Ledger,
+  budget = Infinity,
+  opts: { keepForBoard?: boolean; fish?: boolean } = {},
+): void {
   actions.left = budget;
   const FIELD = field(s);
   const refill = () => {
@@ -146,6 +184,8 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
       const before = s.money;
       if (deliverOrder(s, o.id) === 'ok') ledger.orders += s.money - before;
     }
+  // 2b. a board-minded farmer also hands the special what the requests do not need
+  if (opts.keepForBoard && s.special) giveToSpecial(s, keepForRequests(s, s.special.item));
   // 3. keep jars busy with the most valuable fruit or vegetable on hand
   for (const obj of objectsOn(s, 'farm')) {
     if (obj.type !== 'preserve_jar' || jarContents(obj)) continue;
@@ -158,9 +198,19 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
   // 4. ship everything sellable that is not a seed, tool or machine
   const kinds = new Map<string, ItemRef>();
   for (const st of s.inventory.slots)
-    if (st && ['crop', 'preserve', 'material', 'forage', 'product'].includes(items[st.item]!.type))
+    if (
+      st &&
+      ['crop', 'preserve', 'material', 'forage', 'product', 'fish'].includes(items[st.item]!.type)
+    )
       kinds.set(keyOf(st), refOf(st));
-  for (const ref of kinds.values()) shipStack(s, ref, countStack(s, ref));
+  const keep = opts.keepForBoard ? boardWants(s) : new Map<string, number>();
+  for (const ref of [...kinds.values()].sort((a, b) => (a.q ?? 0) - (b.q ?? 0))) {
+    const kind = `${ref.item}|${ref.of ?? ''}`;
+    const have = countStack(s, ref);
+    const hold = Math.min(have, keep.get(kind) ?? 0);
+    keep.set(kind, (keep.get(kind) ?? 0) - hold);
+    if (have - hold > 0) shipStack(s, ref, have - hold);
+  }
   // 5. a scarecrow in the middle of every block of 9x9 of each plot it owns (crows take the odd crop)
   for (const [x, y] of scarecrowSpots(s))
     if (!objectsOn(s, 'farm').some((o) => o.tx === x && o.ty === y) && !getSoil(s, x, y)?.crop) {
@@ -181,6 +231,13 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
     if (countItem(s, 'chicken_feed') < 3) buyItem(s, STORE, 'chicken_feed', 9);
     feed(s, coop);
   }
+  // 6b. a board-minded farmer looks at the board again with the eggs in hand (before the rival's hour)
+  if (opts.keepForBoard)
+    for (const o of s.orders.list)
+      if (!o.done && haveFor(s, o) >= o.qty) {
+        const before = s.money;
+        if (deliverOrder(s, o.id) === 'ok') ledger.orders += s.money - before;
+      }
   // 6. craft and place jars once unlocked (it buys the fiber), then land and upgrades when comfortable
   const jars = objectsOn(s, 'farm').filter((o) => o.type === 'preserve_jar').length;
   if (jars < JAR_SPOTS.length && s.money > 600) {
@@ -208,6 +265,7 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
     }
   }
   // 8. buy and plant the best in-season seed with spare energy
+  if (opts.fish && s.energy < 40) return void fishEvening(s);
   const best = stockFor(STORE, s.time.season, s)
     .filter((id) => items[id]?.type === 'seed')
     .map((id) => ({ id, sc: score(s, id) }))
@@ -235,13 +293,18 @@ function playDay(s: GameState, ledger: Ledger, budget = Infinity): void {
     equipItem(s, 'watering_can');
     act(s, tile(s, x, y));
   }
+  // 9. a fisher casts at the pond with the energy left (keeping 20 back), like a player's evening
+  if (opts.fish) fishEvening(s);
 }
 
 /**
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
  * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow, and
- * a coop of three hens, Clay on last days only, crop requests sized to the field). Seed 42 alone: 228,569. A balance change that
- * moves the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
+ * a coop of three hens, Clay on last days only, crop requests sized to the field; depth round 3: crop requests
+ * at three quarters of the field; Clay scores farm goods only, takes them first and ships a weekly crate, so
+ * this bot, which ships everything, wins almost no board prize). Seed 42 alone: 228,569. Year one is very
+ * sensitive to early gold: one 300g prize in spring moved a seed by 60k (critique 10, F7). A balance change that moves the median by a fifth down or a quarter up fails the five-seed
+ * test and needs a DECISIONS.md note.
  */
 const SIM_EARNED = 213_730;
 
@@ -388,6 +451,68 @@ describe('balance simulation (two years, funding projects)', () => {
     expect(s.money).toBeLessThan(100_000);
     expect(projectLevel(s, 'statue')).toBeGreaterThanOrEqual(3);
     expect(s.stats['projectsDone']).toBe(Object.values(projects).filter((p) => !p.repeat).length);
+  });
+});
+
+/**
+ * The board race against Clay for a farmer who never fishes or forages (critique 9, F1): he scores only on
+ * farm goods, so a farmer who keeps what the requests want wins most seasons, and one who ships everything
+ * still wins some. Two years, three seeds, from spring of year one (Clay starts on day 8).
+ */
+describe('balance simulation: the board race for a pure farmer', () => {
+  const run = (opts: { keepForBoard?: boolean; fish?: boolean }, seed: number) => {
+    const s = createInitialState();
+    s.rng = seed;
+    const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
+    let yearOne = 0;
+    for (let day = 1; day <= 224; day++) {
+      playDay(s, ledger, Infinity, opts);
+      endDay(s, { passedOut: false, weedCandidates: [] });
+      if (day === 112) yearOne = s.stats['earned'] ?? 0;
+    }
+    const out: { you: number; rival: number }[] = [];
+    for (let i = 0; i < 8; i++)
+      out.push({ you: s.stats[`board.s${i}.you`] ?? 0, rival: s.stats[`board.s${i}.rival`] ?? 0 });
+    return { out, wins: s.stats['boardWins'] ?? 0, yearOne, caught: s.stats['caught'] ?? 0 };
+  };
+  const line = (r: ReturnType<typeof run>) => r.out.map((t) => `${t.you}-${t.rival}`).join(' ');
+  it('a farmer who keeps goods for the board wins most seasons; shipping everything wins fewer', () => {
+    const log: string[] = [];
+    let keepWins = 0;
+    let shipWins = 0;
+    for (const seed of [42, 7, 99]) {
+      const keep = run({ keepForBoard: true }, seed);
+      const ship = run({}, seed);
+      keepWins += keep.wins;
+      shipWins += ship.wins;
+      log.push(`seed ${seed}: keep ${line(keep)} | ship ${line(ship)}`);
+    }
+    console.log(log.join(String.fromCharCode(10)));
+    // Of 24 seasons. Critique 9: 0 of 72. Round 3 first fix: keep 23, ship 13 (a formality, critique 10 F2).
+    // Now Clay takes farm rows first and ships crates (weekly, every 3rd day while you lead by 4): keep 19, ship 1.
+    expect(keepWins).toBeGreaterThanOrEqual(12);
+    expect(keepWins).toBeLessThanOrEqual(22); // a race, not a walkover
+    expect(shipWins).toBeLessThan(keepWins / 2); // keeping goods for the board is what wins it
+  });
+
+  it('fishing in the evening adds board points and some gold, never a runaway (sim fidelity, round 3)', () => {
+    const log: string[] = [];
+    for (const seed of [42, 7, 99]) {
+      const farmer = run({ keepForBoard: true }, seed);
+      const fisher = run({ keepForBoard: true, fish: true }, seed);
+      log.push(
+        `seed ${seed}: farmer y1 ${farmer.yearOne} ${line(farmer)} | fisher y1 ${fisher.yearOne} caught ${fisher.caught} ${line(fisher)}`,
+      );
+      const you = (r: ReturnType<typeof run>) => r.out.reduce((n, t) => n + t.you, 0);
+      expect(fisher.caught).toBeGreaterThan(100);
+      expect(you(fisher)).toBeGreaterThan(you(farmer) * 0.8); // fishing costs no board points
+      // A few fish an evening are only about 2k by day 14, but early gold compounds: seeds, then land on day 28
+      // instead of later (round 3: 379k to 407k for the year against a 250k median). So sensitive is year one to
+      // early gold (critique 10, F7: one 300g board prize moved a seed by 60k) that the bound is against the
+      // pinned median, not one farmer.
+      expect(fisher.yearOne).toBeLessThan(SIM_EARNED * 2);
+    }
+    console.log(log.join(String.fromCharCode(10)));
   });
 });
 

@@ -43,20 +43,7 @@ export function buildCraft(c: MenuTabContext): void {
           ? C.red
           : C.creamDim,
       buttons: [
-        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five.
-        ...(r.kitchen && unlocked && batch >= 2 && block === null
-          ? [
-              {
-                label: `x${batch}`,
-                width: 24,
-                color: C.cream,
-                onClick: () => {
-                  audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
-                  c.rebuild();
-                },
-              },
-            ]
-          : []),
+        // Make is always the outermost button, on every row (critique 10: the same column means the same thing).
         {
           label: 'Make',
           width: 38,
@@ -68,6 +55,23 @@ export function buildCraft(c: MenuTabContext): void {
             c.rebuild();
           },
         },
+        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five. The slot is
+        // always there, inside Make (a dim "x1" when fewer than two can be made), so nothing slides under the
+        // thumb after a batch (critique 9, F4).
+        ...(r.kitchen && unlocked
+          ? [
+              {
+                label: batch >= 2 && block === null ? `x${batch}` : 'x1',
+                width: 24,
+                enabled: batch >= 2 && block === null,
+                color: batch >= 2 && block === null ? C.cream : C.creamDim,
+                onClick: () => {
+                  audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
+                  c.rebuild();
+                },
+              },
+            ]
+          : []),
       ],
     });
   }

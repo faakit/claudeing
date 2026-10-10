@@ -14,7 +14,7 @@ import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { isShippable } from '../../systems/economy';
-import { eat, eatGain, foodEnergy, tooFullFor } from '../../systems/food';
+import { dishText, eat, eatGain, foodEnergy, tooFullFor } from '../../systems/food';
 import { displayName, iconKey, refOf, sellValue } from '../../systems/itemRef';
 import {
   adjustVolume,
@@ -266,7 +266,9 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     const def = items[cur.item]!;
     c.icon(16, dy + 8, iconKey(ref));
     c.label(30, dy + 4, displayName(ref), C.gold, 1, 'left', 160);
-    c.label(8, dy + 20, def.description, C.cream, 1, 'left', 184);
+    // A dish says today's energy (less from the 4th dish of a day).
+    const desc = foodEnergy(cur.item) > 0 ? dishText(s, cur.item) : def.description;
+    c.label(8, dy + 20, desc, C.cream, 1, 'left', 184);
     // Only say what the bin pays for things the bin takes (machines and decorations are kept, not sold).
     if (isShippable(ref)) c.label(8, dy + 52, `Sells for ${fmt(sellValue(ref))}g`, C.creamDim);
     if (def.buyPrice) c.label(8, dy + 64, `Costs ${fmt(def.buyPrice)}g in town`, C.creamDim);

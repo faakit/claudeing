@@ -166,7 +166,7 @@
       "id": "clay_intro",
       "from": "clay",
       "title": "Hello, neighbour",
-      "text": "Heard there is a new farmer in the valley. I fill requests on the town board too: any you leave to their last day, I take at 2 PM. The board keeps score each season. May the best farmer win.",
+      "text": "New farmer? I fill town board requests too: any left to its last day, I take at 2 PM. Crops, eggs and what you make of them are my points (fish and wild goods are not), and each week I ship a crate of my own. Out-score me in a season: the town pays 300g and puts a trophy in your house.",
       "when": {
         "day": 7
       }

@@ -166,7 +166,7 @@ describe('fixed spots on the maps', () => {
   });
 
   it('landmarks, the mailbox and project plots sit on open ground you can walk up to', async () => {
-    const { mail, plots, projects } = await import('../src/data');
+    const { game, mail, plots, projects } = await import('../src/data');
     const spots: [string, number, number, string][] = [
       [mail.mailbox.map, mail.mailbox.tx, mail.mailbox.ty, 'mailbox'],
       ...Object.entries(projects).flatMap(([id, p]) =>
@@ -174,7 +174,14 @@ describe('fixed spots on the maps', () => {
           ? [[p.landmark.map, p.landmark.tx, p.landmark.ty, id] as [string, number, number, string]]
           : [],
       ),
+      // Trophies at home (critique 9 F1, round 3).
+      ...(game.trophies ?? []).map(
+        (t) => [t.map, t.tx, t.ty, `trophy ${t.id}`] as [string, number, number, string],
+      ),
     ];
+    // Two things never share a tile.
+    const keys = spots.map(([m, x, y]) => `${m}:${x},${y}`);
+    expect(new Set(keys).size).toBe(keys.length);
     for (const [map, tx, ty, what] of spots) {
       expect(isTileBlocked(grids[map]!, tx, ty), what).toBe(false);
       const open = [

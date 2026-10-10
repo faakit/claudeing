@@ -7,13 +7,61 @@
     { "item": "blueberry_seed", "mult": 2 },
     { "item": "cranberry_seed", "mult": 2 },
     { "item": "snowpea_seed", "mult": 2 },
-    { "item": "copper_bar", "mult": 1, "price": 150, "use": "For upgrades and projects." },
-    { "item": "iron_bar", "mult": 1, "price": 300, "use": "For upgrades and projects." },
-    { "item": "quartz", "mult": 1, "price": 250, "use": "For the Library and Greenhouse." },
-    { "item": "cloth", "mult": 1, "price": 180, "use": "For the bag and Fair Hall." },
-    { "item": "ruby", "mult": 1, "price": 900, "use": "For the Market Road." },
-    { "item": "amethyst", "mult": 1, "price": 300, "use": "A gift villagers love." },
-    { "item": "rich_fertilizer", "mult": 1, "price": 60, "use": "Better crop quality." },
-    { "item": "quality_sprinkler", "mult": 1, "price": 600, "use": "Waters 8 tiles." }
+    {
+      "item": "copper_bar",
+      "mult": 1,
+      "price": 150,
+      "use": "For upgrades and projects.",
+      "tag": "Upgrades"
+    },
+    {
+      "item": "iron_bar",
+      "mult": 1,
+      "price": 300,
+      "use": "For upgrades and projects.",
+      "tag": "Upgrades"
+    },
+    {
+      "item": "quartz",
+      "mult": 1,
+      "price": 250,
+      "use": "For the Library and Greenhouse.",
+      "tag": "Library"
+    },
+    {
+      "item": "cloth",
+      "mult": 1,
+      "price": 180,
+      "use": "For the bag and Fair Hall.",
+      "tag": "Bag, Fair Hall"
+    },
+    {
+      "item": "ruby",
+      "mult": 1,
+      "price": 900,
+      "use": "For the Market Road.",
+      "tag": "Market Road"
+    },
+    {
+      "item": "amethyst",
+      "mult": 1,
+      "price": 300,
+      "use": "A gift villagers love.",
+      "tag": "Loved gift"
+    },
+    {
+      "item": "rich_fertilizer",
+      "mult": 1,
+      "price": 60,
+      "use": "Better crop quality.",
+      "tag": "Quality"
+    },
+    {
+      "item": "quality_sprinkler",
+      "mult": 1,
+      "price": 600,
+      "use": "Waters 8 tiles.",
+      "tag": "Waters 8"
+    }
   ]
 }

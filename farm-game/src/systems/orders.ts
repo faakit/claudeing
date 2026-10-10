@@ -9,7 +9,7 @@ import { preserveOf } from './preserves';
 import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
-import { applyRival, scoreFill } from './rival';
+import { applyRival, FARM_TYPES, scoreFill } from './rival';
 import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
@@ -28,6 +28,12 @@ function seedOnSale(state: GameState, cropId: string): boolean {
  * a week, so a fresh field is on the board early (critique 8, F5).
  */
 export const CROP_WAIT = 7;
+
+/**
+ * A crop request asks for at most this share of what you could hand over (at least one), so one crop sold,
+ * gifted, cooked or lost to crows does not cost the row (critique 9, F2).
+ */
+export const CROP_SHARE = 0.75;
 
 /** How many of a crop you could hand over within `days`: what you carry plus what ripens by then. */
 export function cropSupply(state: GameState, item: string, days: number): number {
@@ -96,9 +102,6 @@ export function orderCandidates(state: GameState): ItemRef[] {
 const between = (state: GameState, [lo, hi]: [number, number]): number =>
   lo + Math.floor(random(state) * (hi - lo + 1));
 
-/** Goods of the farm (weighted up on the board): crops, preserves, animal goods. */
-const FARM_TYPES = ['crop', 'preserve', 'product'];
-
 /** How many requests the board holds. Town projects (the board canopy) can post extra ones. */
 export const boardSize = (state: GameState): number =>
   ordersCfg.perDay + Math.max(0, Math.round(perk(state, 'orderSlots')));
@@ -138,14 +141,14 @@ export function generateOrders(
       today + between(state, ordersCfg.days ?? [1, 1]) - 1,
       today + (ready.get(ref.item) ?? 0) + 1,
     );
-    // Animal goods: never more than about two days of what the farm makes. Crops: never more than you
-    // carry plus what ripens before the request ends (critique 8, F3).
+    // Animal goods: never more than about two days of what the farm makes. Crops: about three quarters of
+    // what you carry plus what ripens before the request ends (critique 8 F3, critique 9 F2).
     const perDay = made.get(ref.item);
     const crop = ready.has(ref.item) ? cropSupply(state, ref.item, until - today) : 999;
     const qty = Math.min(
       between(state, tier.qty),
       perDay ? animalOrderCap(perDay) : 999,
-      Math.max(1, crop),
+      Math.max(1, Math.floor(crop * CROP_SHARE)),
     );
     const [lo, hi] = ordersCfg.rewardMultiplier;
     const mult = lo + random(state) * (hi - lo);
@@ -261,6 +264,53 @@ export function deliverOrder(state: GameState, id: number): DeliverResult {
   scoreFill(state, absoluteDay(state)); // a point on the season's board against the rival
   toast(`Order done! +${gold}g`, 'good');
   return 'ok';
+}
+
+/** Open requests you could still fill today or later (not done, not past their last day). */
+const liveOrders = (state: GameState): Order[] =>
+  state.orders.list.filter((o) => !o.done && lastDayOf(state, o) >= absoluteDay(state));
+
+/** "item|of" for a stack or a request: what a request accepts, whatever the quality. */
+const kindOf = (r: ItemRef): string => `${r.item}|${r.of ?? ''}`;
+
+/**
+ * How many of each good the open requests and the special order still want, by "item|of" (any quality): what
+ * the bin's "Ship all produce" keeps back and warns about (critique 9 F2, critique 10 F5).
+ */
+export function boardWants(state: GameState): Map<string, number> {
+  const out = requestWants(state);
+  const sp = state.special;
+  if (sp && absoluteDay(state) <= sp.due && sp.given < sp.qty) {
+    const k = kindOf({ item: sp.item });
+    out.set(k, (out.get(k) ?? 0) + sp.qty - sp.given);
+  }
+  return out;
+}
+
+/** What the open requests alone want, by "item|of" (any quality). */
+export function requestWants(state: GameState): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const o of liveOrders(state)) {
+    const k = kindOf(parseKey(o.item));
+    out.set(k, (out.get(k) ?? 0) + o.qty);
+  }
+  return out;
+}
+
+/** How many of this stack's kind the open requests and the special want (see `boardWants`). */
+export const wantedByBoard = (state: GameState, ref: ItemRef): number =>
+  boardWants(state).get(kindOf(ref)) ?? 0;
+
+/**
+ * Goods of `item` the special order's Give keeps back for same-item requests (critique 9, F3): the full
+ * quantity of every open one you can fill now or that has days left (so one you are part-way to keeps
+ * what you hold). A request on its last day that you cannot fill keeps nothing.
+ */
+export function keepForRequests(state: GameState, item: string): number {
+  return liveOrders(state)
+    .filter((o) => parseKey(o.item).item === item)
+    .filter((o) => haveFor(state, o) >= o.qty || daysLeft(state, o) > 1)
+    .reduce((n, o) => n + o.qty, 0);
 }
 
 export const openOrders = (state: GameState): number =>

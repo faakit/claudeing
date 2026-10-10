@@ -104,8 +104,16 @@ describe('critique 7 small fixes', () => {
 
 it('C8 F2: the board keeps score each season, and the leader is rewarded', async () => {
   const { deliverOrder, ensureOrders } = await import('../src/systems/orders');
-  const { applyRival, boardTally, rivalMinute, rivalNotice, settleSeason, BOARD_PRIZE } =
-    await import('../src/systems/rival');
+  const {
+    applyRival,
+    boardScoreLine,
+    boardTally,
+    isFarmGood,
+    rivalMinute,
+    rivalNotice,
+    settleSeason,
+    BOARD_PRIZE,
+  } = await import('../src/systems/rival');
   const { addItem } = await import('../src/systems/inventory');
   const { measureText } = await import('../src/ui/fontMetrics');
   const s = newState();
@@ -119,8 +127,10 @@ it('C8 F2: the board keeps score each season, and the leader is rewarded', async
   addItem(s, a!.item.split('|')[0]!, a!.qty);
   expect(deliverOrder(s, a!.id)).toBe('ok');
   s.time.minutes = rivalMinute(s);
-  expect(applyRival(s)).not.toBeNull(); // filling one does not send him home
-  expect(boardTally(s, absoluteDay(s))).toEqual({ you: 1, rival: 1 });
+  const took = applyRival(s);
+  expect(took).not.toBeNull(); // filling one does not send him home
+  // Only a farm good is a point for him (critique 9, F1).
+  expect(boardTally(s, absoluteDay(s))).toEqual({ you: 1, rival: isFarmGood(took!) ? 1 : 0 });
   expect(measureText('This season: you 99, Clay 99.')).toBeLessThanOrEqual(184);
   // Lead at the season's end: a prize on the first morning of the next.
   s.stats[`board.s0.you`] = 5;
@@ -136,7 +146,9 @@ it('C8 F2: the board keeps score each season, and the leader is rewarded', async
   t.time.day = 1;
   expect(settleSeason(t)).toMatch(/Clay won the board/);
   expect(t.mail.list.some((l) => l.from === 'clay')).toBe(true);
-  expect(rivalNotice(t)).toBe('This season: you 0, Clay 0.');
+  // Early in a season still 0 to 0, the score line names last season (critique 10, F4).
+  expect(boardScoreLine(t)).toBe('Last season: Clay won 4 to 0.');
+  expect(rivalNotice(t)).toBe('Clay scores on farm goods only.');
 });
 
 it('C8 F3/F5: a crop request never asks for more than your field gives, and a fresh field is asked for', () => {

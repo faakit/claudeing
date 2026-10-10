@@ -75,6 +75,8 @@ export interface Order {
   from?: number;
   /** Absolute day the rival took it. */
   takenOn?: number;
+  /** The rival took it without scoring (not a farm good: critique 9, F1). */
+  noPoint?: boolean;
 }
 
 /** A special order: deliver `qty` of `item` by absolute day `due`, a little at a time. */

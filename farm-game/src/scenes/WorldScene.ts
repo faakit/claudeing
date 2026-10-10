@@ -45,7 +45,6 @@ import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
 import { landmarkAt, landmarksOn } from '../systems/projects';
 import { mailboxAt } from '../systems/mail';
 import { mail } from '../data';
-import { projects } from '../data';
 import { type TileInfo } from '../systems/actions';
 import { actOn, chooseAction } from '../systems/autoTool';
 import { gameEvents, toast } from '../systems/events';
@@ -681,8 +680,9 @@ export abstract class WorldScene extends Phaser.Scene {
       return void gameEvents.emit('talkTo', { id });
     }
     if (hit.type.startsWith('landmark:')) {
-      const p = projects[hit.type.slice(9)];
-      return void (p && toast(`${p.name}: funded by you! ${p.reward}`, 'good'));
+      const id = hit.type.slice(9);
+      const l = landmarksOn(getState(), this.mapId).find((x) => x.id === id);
+      return void (l && toast(l.text, 'good'));
     }
     if (hit.type === 'mailbox') return void gameEvents.emit('openPanel', { type: 'mail' });
     if (hit.type === 'bed') return void gameEvents.emit('openPanel', { type: 'sleep' });
