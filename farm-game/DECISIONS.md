@@ -510,6 +510,31 @@ wrote `agents/critiques/critique-9.md`: no blocker. Owner defaults for round 3 d
   the bot's harvest more often and it now wins some board prizes; the early gold compounds through earlier land
   (seed 7 moved most, 189k to 241k; seed 42 only 3%). Repinned.
 
+## Critique 11 fixes (depth round 3)
+
+The critic played `70e861a` (two 32-day pure-farmer games, edge probes, a sensitivity sim) and wrote
+`agents/critiques/critique-11.md`: no blocker, no major. Fixed:
+
+- **F1 a keeper still walked the race** (13 to 3; Clay's points were only his crates, since a keeper fills every farm
+  row before its last day). Clay's crates now keep up with a leader: every 7th day of a season, every 3rd while you
+  lead by 4 or more (`crateDue`). Rows still stay safe until their last day, so "3 days" on a row stays true.
+  Sim: the keeper's seasons are closer (17-8, 15-11, 8-5 ...); it wins 19 of 24, a shipper 1. The sim keeper fills
+  fewer spring rows than a played one (critic: 4 against 13), so its win count is a floor, not a prediction.
+- **F2 the crate was never announced and decided seasons on day 28.** No crate on a season's last day (your move is
+  last); the board says "Clay ships a crate tonight: a point." when he has no scoring target; his intro and losing
+  letters name the weekly crate.
+- **F3 a friendly Clay made every season a free win.** At 5 hearts he still ships his crates (he only stops taking
+  requests), and he no longer sends the gloating letter.
+- **F4** year two: "Clay takes two at 2:00 PM: no point.", and "wants two of these" only when both score.
+  **F5** the wanted bin line fits with a bin count ("Board 4  bin 2", else "Board 4  x9"); the kept toast splits the
+  special ("Kept 5 Potato for the board and 11 for Rosa."). **F6** a special that ran out is said on the same morning
+  a new one is posted. **F7** a finished special keeps its row ("Special done! Thank you!") until the board closes,
+  so nothing slides under the thumb. **F8** sim tests have a 60 s timeout. **F9** winter of year one pays year one's
+  prize. **F10** of this round's appended goals, the fishing one moved last (round-2 goals stay in place: the legend
+  goal at #54 still comes before the board goal).
+- **Not changed:** three long toasts over a tall sheet cover its header (nothing tappable); the early-gold
+  sensitivity (an owner question, see below).
+
 ## Critique 10 fixes (depth round 3)
 
 The critic played `e23349b` (four 32-day new games as a farmer who never fishes, edge probes, a sweep, a sensitivity
@@ -573,8 +598,9 @@ sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
 - Measured over two years and three seeds: the keeper wins 23 of 24 board seasons, the fisher-keeper 24 of 24 and
   scores more points (fish rows are points only a fisher fills). The fisher's first year earns 44% to 58% more
   than the same farmer, although its fish are only about 2k by day 14: early gold compounds (more seeds, then
-  land on day 28 instead of later). That is a property of the early economy, not of fish prices; bounded
-  at under twice the farmer.
+  land on day 28 instead of later). That is a property of the early economy, not of fish prices. Since critique
+  11 it is bounded at under twice the pinned median (one farmer is too chaotic a yardstick: seed 7's fisher made
+  2.1 times its farmer).
 
 ## One-thumb controls (PLAN-CONTROLS.md, owner decisions 2026-10-08)
 

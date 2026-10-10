@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Year-long sims take seconds each; never fail on vitest's 5 s default under load (critique 11, F8).
+vi.setConfig({ testTimeout: 60_000 });
 import { crops, items, jobs as jobDefs, plots, projects, shops } from '../src/data';
 import { JOBS_PER_DAY, jobReward } from '../src/systems/jobs';
 import { performAction, type TileInfo } from '../src/systems/actions';
@@ -486,7 +489,7 @@ describe('balance simulation: the board race for a pure farmer', () => {
     }
     console.log(log.join(String.fromCharCode(10)));
     // Of 24 seasons. Critique 9: 0 of 72. Round 3 first fix: keep 23, ship 13 (a formality, critique 10 F2).
-    // Now Clay takes farm rows first and ships a crate of his own once a week: keep 16, ship 1.
+    // Now Clay takes farm rows first and ships crates (weekly, every 3rd day while you lead by 4): keep 19, ship 1.
     expect(keepWins).toBeGreaterThanOrEqual(12);
     expect(keepWins).toBeLessThanOrEqual(22); // a race, not a walkover
     expect(shipWins).toBeLessThan(keepWins / 2); // keeping goods for the board is what wins it

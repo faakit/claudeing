@@ -278,11 +278,7 @@ const kindOf = (r: ItemRef): string => `${r.item}|${r.of ?? ''}`;
  * the bin's "Ship all produce" keeps back and warns about (critique 9 F2, critique 10 F5).
  */
 export function boardWants(state: GameState): Map<string, number> {
-  const out = new Map<string, number>();
-  for (const o of liveOrders(state)) {
-    const k = kindOf(parseKey(o.item));
-    out.set(k, (out.get(k) ?? 0) + o.qty);
-  }
+  const out = requestWants(state);
   const sp = state.special;
   if (sp && absoluteDay(state) <= sp.due && sp.given < sp.qty) {
     const k = kindOf({ item: sp.item });
@@ -291,7 +287,17 @@ export function boardWants(state: GameState): Map<string, number> {
   return out;
 }
 
-/** How many of this stack's kind the open requests want (see `boardWants`). */
+/** What the open requests alone want, by "item|of" (any quality). */
+export function requestWants(state: GameState): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const o of liveOrders(state)) {
+    const k = kindOf(parseKey(o.item));
+    out.set(k, (out.get(k) ?? 0) + o.qty);
+  }
+  return out;
+}
+
+/** How many of this stack's kind the open requests and the special want (see `boardWants`). */
 export const wantedByBoard = (state: GameState, ref: ItemRef): number =>
   boardWants(state).get(kindOf(ref)) ?? 0;
 

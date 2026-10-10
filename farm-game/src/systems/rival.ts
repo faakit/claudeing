@@ -84,17 +84,24 @@ export function rivalPicks(state: GameState, day = state.orders.day): Order[] {
  */
 export function rivalNotice(state: GameState): string {
   if (!boardRaceOn(state)) return 'Requests stay a few days.';
-  if (!rivalActive(state)) return `${rivalName()} no longer takes requests.`;
+  const name = rivalName();
+  const crate =
+    crateDue(state, absoluteDay(state)) && state.stats['rival.crate'] !== absoluteDay(state);
+  if (!rivalActive(state))
+    return crate ? `${name} ships a crate tonight: a point.` : `${name} no longer takes requests.`;
   const took = state.orders.list.filter((o) => o.rival && o.takenOn === absoluteDay(state)).length;
-  if (took) return `${rivalName()} took ${NUMBER_WORDS[took] ?? took} today.`;
+  if (took) return `${name} took ${NUMBER_WORDS[took] ?? took} today.`;
   const picks = state.stats['rival.day'] === absoluteDay(state) ? [] : rivalPicks(state);
-  if (picks.length === 0) return `${rivalName()} scores on farm goods only.`;
   const at = formatClock(rivalMinute(state));
-  // His target is named only when it would score; a fish or wild row he clears is said to be no point.
-  if (!picks.some(isFarmGood)) return `${rivalName()} takes one at ${at}: no point.`;
-  return picks.length > 1
-    ? `${rivalName()} wants two of these at ${at}.`
-    : `${rivalName()} wants this one at ${at}.`;
+  const scoring = picks.filter(isFarmGood).length;
+  // His target is named only when it would score (critique 10, F2), counted right in year two (critique 11, F4).
+  if (scoring > 1) return `${name} wants two of these at ${at}.`;
+  if (scoring === 1) return `${name} wants this one at ${at}.`;
+  // A crate tonight is said before it scores (critique 11, F2).
+  if (crate) return `${name} ships a crate tonight: a point.`;
+  if (picks.length > 1) return `${name} takes two at ${at}: no point.`;
+  if (picks.length === 1) return `${name} takes one at ${at}: no point.`;
+  return `${name} scores on farm goods only.`;
 }
 
 /** The board rows the rival is after today that would score for him (marked "Clay's!" on the board). */
@@ -187,7 +194,8 @@ export function settleSeason(state: GameState): string | null {
   state.stats['board.last.rival'] = t.rival;
   const name = rivalName();
   if (t.you > t.rival) {
-    const gold = BOARD_PRIZE * state.time.year;
+    // The year of the season settled, not the new one: winter of year one pays year one's prize (critique 11, F9).
+    const gold = BOARD_PRIZE * yearOf(day);
     state.money += gold;
     state.stats['earned'] = (state.stats['earned'] ?? 0) + gold;
     gameEvents.emit('moneyChanged', { delta: gold });
@@ -206,11 +214,13 @@ export function settleSeason(state: GameState): string | null {
     return `You beat ${name} on the board last season (${t.you} to ${t.rival}): +${gold}g.`;
   }
   if (t.rival > t.you) {
-    sendLetter(state, {
-      from: game.rival.npc,
-      title: 'The board is mine',
-      text: `Last season the board was ${t.rival} to ${t.you}, my way. A farm good left to its last day is mine. Beat me this season and ${boardStakes(state)}.`,
-    });
+    // A friend who no longer takes requests does not gloat (critique 11, F3).
+    if (rivalActive(state))
+      sendLetter(state, {
+        from: game.rival.npc,
+        title: 'The board is mine',
+        text: `Last season the board was ${t.rival} to ${t.you}, my way: a farm good left to its last day is mine, and so is a crate of my own each week. Beat me this season and ${boardStakes(state)}.`,
+      });
     return `${name} won the board last season (${t.rival} to ${t.you}).`;
   }
   return `A draw with ${name} on the board last season (${t.you} to ${t.rival}).`;
@@ -218,17 +228,35 @@ export function settleSeason(state: GameState): string | null {
 
 /** Clay's own crates: every this-many days of a season he scores a point from his own field. */
 export const CRATE_EVERY = 7;
+/** While you lead by at least `CATCH_UP_LEAD`, he ships one every `CATCH_UP_EVERY` days instead. */
+export const CATCH_UP_LEAD = 4;
+export const CATCH_UP_EVERY = 3;
+
+/** The year an absolute day belongs to. */
+const yearOf = (day: number): number => Math.floor((day - 1) / (game.seasonLength * 4)) + 1;
 
 /**
- * Overnight: on every `CRATE_EVERY`th day of a season the rival ships a crate from his own field, a point on the
- * board (critique 10, F2: keeping goods for the board is needed, not enough on its own). Only while he still
- * competes. Settles the day that just ended; returns true when he scored.
+ * Is a crate due on absolute day `day` (shipped that night)? Every 7th day of a season, every 3rd while you lead by
+ * 4 or more (critique 11, F1: a keeper must keep filling, not only turn up), and never on a season's last day, so
+ * the last move of a season is yours (critique 11, F2). He keeps shipping crates once he is your friend, so a
+ * friendly season still has an opponent (critique 11, F3).
+ */
+export function crateDue(state: GameState, day: number): boolean {
+  const seasonDay = ((day - 1) % game.seasonLength) + 1;
+  if (!boardRaceOn(state, day) || seasonDay >= game.seasonLength) return false;
+  const t = boardTally(state, day);
+  const every = t.you - t.rival >= CATCH_UP_LEAD ? CATCH_UP_EVERY : CRATE_EVERY;
+  return seasonDay % every === 0;
+}
+
+/**
+ * Overnight: the rival ships a crate from his own field when one is due (`crateDue`), a point on the board
+ * (critique 10, F2: keeping goods for the board is needed, not enough on its own). Settles the day that just
+ * ended; returns true when he scored.
  */
 export function rivalCrate(state: GameState): boolean {
   const day = absoluteDay(state) - 1;
-  const seasonDay = ((day - 1) % game.seasonLength) + 1;
-  if (!boardRaceOn(state, day) || perk(state, 'rivalOff') >= 1) return false;
-  if (seasonDay % CRATE_EVERY !== 0 || state.stats['rival.crate'] === day) return false;
+  if (!crateDue(state, day) || state.stats['rival.crate'] === day) return false;
   state.stats['rival.crate'] = day;
   state.stats[`${tallyKey(day)}.rival`] = boardTally(state, day).rival + 1;
   return true;

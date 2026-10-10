@@ -142,7 +142,9 @@ describe('the rival in year two (handover goal 3)', () => {
     s.time.year = 2;
     s.orders.day = absoluteDay(s);
     expect(rivalTakes(s)).toBe(2);
-    expect(rivalNotice(s)).toMatch(/(wants two of these|takes one) at 2:00 PM/);
+    expect(rivalNotice(s)).toMatch(
+      /(wants two of these|wants this one|takes one|takes two) at 2:00 PM/,
+    );
     s.time.minutes = rivalMinute(s);
     const sorted = [...s.orders.list].sort(
       (a, b) => Number(isFarmGood(b)) - Number(isFarmGood(a)) || b.reward - a.reward,

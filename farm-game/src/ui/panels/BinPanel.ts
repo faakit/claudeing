@@ -24,7 +24,8 @@ import {
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt } from './format';
-import { boardWants, wantedByBoard } from '../../systems/orders';
+import { boardWants, requestWants, wantedByBoard } from '../../systems/orders';
+import { npcs } from '../../data';
 import { binWantedSub, boardWantsLine, keptLine } from './binText';
 
 const ROWS = 6;
@@ -130,7 +131,21 @@ export class BinPanel extends Modal {
         audio.play('coin');
         haptic('tick');
       }
-      const kept = keptLine(res.kept);
+      const sp = getState().special;
+      const spKind = sp ? `${sp.item}|` : '';
+      const kept = keptLine(
+        res.kept,
+        sp
+          ? {
+              kind: spKind,
+              giver: npcs[sp.giver]?.name ?? sp.giver,
+              requests: Math.min(
+                res.kept.get(spKind) ?? 0,
+                requestWants(getState()).get(spKind) ?? 0,
+              ),
+            }
+          : undefined,
+      );
       if (kept) toast(kept, 'warn');
       this.rebuild();
     }).setEnabled(produce);

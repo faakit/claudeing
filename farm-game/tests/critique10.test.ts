@@ -169,9 +169,9 @@ describe('critique 10 F6: text and numbers', () => {
   });
 
   it('a wanted bin row says the number in words, and fits', () => {
-    expect(binWantedSub(15, 99, 0)).toBe('Board 15  have 99');
+    expect(binWantedSub(15, 99, 0)).toBe('Board 15  x99');
     // The bin row's text room (three buttons) after its usual shortening ("have 9" to "x9").
-    expect(measureText(binWantedSub(15, 99, 0).replace('have ', 'x'))).toBeLessThanOrEqual(81);
+    expect(measureText(binWantedSub(15, 99, 0))).toBeLessThanOrEqual(81);
     expect(items['potato']).toBeDefined();
   });
 });

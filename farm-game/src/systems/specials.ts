@@ -98,7 +98,9 @@ export function morningSpecial(state: GameState): string | null {
     if (pool.length > 0) {
       const def = pool[Math.floor(random(state) * pool.length)] as SpecialDef;
       state.special = makeSpecial(state, def);
-      news = `Special order: ${specialLabel(state.special)}, by the season's end.`;
+      const posted = `Special order: ${specialLabel(state.special)}, by the season's end.`;
+      // Both lines when the old one ran out this morning (critique 11, F6).
+      news = news ? `${news} ${posted}` : posted;
     }
   }
   return news;

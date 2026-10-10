@@ -34,6 +34,17 @@ export class BoardPanel extends Modal {
     super(scene, 196);
   }
 
+  /**
+   * The special just finished while the sheet is open: its row stays as "Special done!" until the board closes,
+   * so the rows above never slide under the thumb (critique 11, F7).
+   */
+  private doneSpecial: string | null = null;
+
+  override open(): void {
+    this.doneSpecial = null;
+    super.open();
+  }
+
   protected build(): void {
     const s = getState();
     ensureOrders(s);
@@ -48,7 +59,13 @@ export class BoardPanel extends Modal {
     const score = boardScoreLine(s);
     const top = score ? 42 : 34;
     this.setHeight(
-      top + (sp ? 26 : 0) + rows * 26 + (festOpen ? 26 : 0) + (cartOpen ? 26 : 0) + 26 + 34,
+      top +
+        (sp || this.doneSpecial ? 26 : 0) +
+        rows * 26 +
+        (festOpen ? 26 : 0) +
+        (cartOpen ? 26 : 0) +
+        26 +
+        34,
     );
     this.panel();
     this.label(8, 8, 'Requests', C.gold);
@@ -124,7 +141,9 @@ export class BoardPanel extends Modal {
             enabled: give > 0,
             color: give > 0 ? C.green : C.creamDim,
             onClick: () => {
+              const title = specialTitle(sp);
               const res = giveToSpecial(getState(), keepForRequests(getState(), sp.item));
+              if (res.ok && res.finished) this.doneSpecial = title;
               if (res.ok) {
                 audio.play(res.finished ? 'order' : 'buy');
                 haptic('success');
@@ -135,6 +154,15 @@ export class BoardPanel extends Modal {
         ],
       });
     }
+    if (!sp && this.doneSpecial)
+      y = this.row(y, {
+        title: this.doneSpecial,
+        sub: 'Special done! Thank you!',
+        subColor: C.green,
+        buttons: [
+          { label: 'Done', width: 40, enabled: false, color: C.creamDim, onClick: () => {} },
+        ],
+      });
     if (fest && festOpen) {
       this.button(
         8,
