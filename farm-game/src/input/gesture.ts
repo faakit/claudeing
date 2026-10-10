@@ -142,7 +142,7 @@ interface Leg {
   fit: { w: number; a: number; l: number; aa: number; al: number };
   lastAlong: number;
   /** While veering off the line: where along it the finger runs (weighted by sideways travel). */
-  veer: { sum: number; w: number; lastLat: number } | null;
+  veer: { sum: number; w: number; lastLat: number; a0: number; l0: number } | null;
 }
 
 /** The leg's line at `along`: its lateral there. */
@@ -388,19 +388,26 @@ export class ActionPress {
       }
       if (!veering) leg.veer = null;
       else {
-        leg.veer ??= { sum: 0, w: 0, lastLat: lat };
+        leg.veer ??= { sum: 0, w: 0, lastLat: lat, a0: along, l0: lat };
         const w = Math.abs(lat - leg.veer.lastLat);
         leg.veer.sum += along * w;
         leg.veer.w += w;
         leg.veer.lastLat = lat;
       }
       leg.lastAlong = along;
-      // Length: as far as the finger reaches; held while it is well off the line (the corner decides), unless
-      // it is clearly following a thumb's arc along it.
+      // ... or got this far off it by moving sideways since it began to veer (a corner cut round, as thumbs do).
+      const veered = leg.veer;
+      const wentSideways =
+        sideways ||
+        (veered !== null &&
+          Math.abs(lat - veered.l0) >= Math.abs(along - veered.a0) &&
+          (lat - veered.l0) * off > 0);
+      // Length: as far as the finger reaches; held while it is well off the line (the corner decides).
       if (Math.abs(off) < PAINT_HOLD_PX) leg.tiles = this.room(i, along);
       // A corner: the leg is locked and has its tiles, the finger is a clear 14 px off its line, and it got
       // there moving sideways, not by wobbling or drifting along the line.
-      if (!this.locked() || leg.tiles === 0 || Math.abs(off) < PAINT_TURN_PX || !sideways) return;
+      if (!this.locked() || leg.tiles === 0 || Math.abs(off) < PAINT_TURN_PX || !wentSideways)
+        return;
       // The corner sits where the finger ran while it veered off (a wobble there cannot add or drop a tile).
       const veer = leg.veer;
       const cornerAlong = veer && veer.w > 0 ? veer.sum / veer.w : along;

@@ -747,7 +747,8 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   14 px that are neither a swipe nor a flick also say no.
 - **Painted paths turn corners (serpentine).** The first leg is chosen as before (4 ways, hysteresis 1.6) and
   locks at 2 tiles. A new leg starts when the finger is 14 px off the current leg's line, has been moving
-  mostly sideways over its last 6 px of travel, and the leg has tiles. The line is the finger's own trend (a
+  mostly sideways (over its last 6 px of travel, or since it began to veer 6 px out, so a corner cut round as
+  thumbs do still counts), and the leg has tiles. The line is the finger's own trend (a
   weighted least-squares fit as it moves along, with a strong prior toward straight), so a slow drift or a
   thumb's arc tilts the line instead of turning it. Where the corner goes is the average of where the finger ran
   while it veered off (from 6 px out); past 13 px off the leg stops growing (the lift then settles the last leg to

@@ -16,8 +16,8 @@ Round 2's handover (milestones M1-M7, rulings, the save at v16) is in git histor
 | item | commit | what |
 |---|---|---|
 | 1. Action press-and-lift | `d8591ce` | A still press acts once however long it was held (an armed lift with no drag is `cancel` + `tap`). Holding never repeats on touch. A paint dragged out and back to the start cancels. Bag hint fixed. |
-| 2. Serpentine paint | `d8591ce` | Painted paths turn corners: a 14 px sideways move off the leg's trend line, made sideways, starts a new leg; corners land where the finger ran while veering; never revisits, 16 tiles max, rows boxed to the first row, a U-turn steps one row. Paint step 10 -> 16 px. |
-| 3. Ring | `d8591ce` | Radius 60 on a wider arc (285 -> 105), dead zone 36 px, sectors 0.40, ring aims correct the full modelled thumb-base pull. |
+| 2. Serpentine paint | `d8591ce`, `9168924` | Painted paths turn corners: a 14 px sideways move off the leg's trend line, made sideways, starts a new leg; corners land where the finger ran while veering; never revisits, 16 tiles max, rows boxed to the first row, a U-turn steps one row. Paint step 10 -> 16 px. A leg stops growing only past 13 px off its line, and the lift settles the last leg to where the finger went (`9168924`, from the critic's round-6 data). |
+| 3. Ring | `d8591ce`, `9168924` | Radius 64 on a wider arc (285 -> 105), dead zone 36 px, picks by nearest item (clearly nearer than the next by 15% of the spacing, within 30 px) instead of by angle, ring aims correct the full modelled thumb-base pull. |
 | 4. Options | `d8591ce` | Rows lower, mirrored for the left hand; Sound and Vibrate on the thumb's side in the two lowest rows. |
 | 5. Rolled press | `d8591ce` | 9-13 px roll after 100 ms still: acts once. A cut-short swipe or flick: error pulse + 2 px shake, never acts (`press: reject` in the log). |
 | 6. Left-hand bag | `d8591ce`, `727de0e` | A second tap on a bag item brings it to hand; the bench now mirrors the item's column by hand. |
@@ -44,7 +44,8 @@ Unchanged (v16). No new setting.
 ## Benchmark: before and after
 
 `npm run bench:thumb`, perfect stop, i13 / Pixel 7 / SE, both hands, thresholds `R3` in
-`scripts/bench-thresholds.json`: 90/90 rows ok on five phones. Full table `agents/out/controls/bench-r3-final.md`
+`scripts/bench-thresholds.json`: 54/54 rows ok at `9168924` (`bench-r3-m2.md`) and 90/90 on five phones at
+`d8d8c35` (`agents/out/controls/bench-r3-final.md`, identical within 3 mm)
 (and `bench-r3-m1.md`, the bag task still walking by stick); round 2's in `bench-final.md`. Human-like stops
 (`REACTION_MS=180`): `bench-r3-human.md`. Gestures, mm of thumb travel.
 
@@ -96,8 +97,10 @@ deliberate 6 mm sideways move turns on every phone (unit tests in `tests/action-
 
 ### Ring accuracy (model, 7 items, the critic's 1.5 mm thumb-base pull)
 
-σ 2 mm right / neighbour: i13 95% / 0.3%, Pixel 7 similar, SE 88% / 1.8%, Fold 91% / 1%; σ 1.2 mm 99-100%
-(unit test in `tests/controls.test.ts`). A slide resting 22-35 px out picks nothing.
+σ 2 mm right / neighbour: i13 98% / 0.3%, SE 93% / 1.2%, Fold 95% / 0.9%; σ 1.2 mm 99-100% (unit test in
+`tests/controls.test.ts`). A slide resting 22-35 px out picks nothing. The critic's own probe (42 seeded
+trials) on `9168924` at σ 2 mm: i13 40-41, Pixel 7 40-42, SE right 37 (2 wrong), SE left 35 (7 none, each a
+finger 4-5 mm from its item, halfway to a neighbour); at σ 1.2 mm 41-42 everywhere.
 
 ### Options reach (model)
 
@@ -119,7 +122,7 @@ phones. Pro Max: Quit to title is still hard for either thumb (89 mm from the pi
 ## Next steps
 
 1. **Real-phone pass** (checklist below) before tuning any number: paint step (16 px), turn threshold (14 px),
-   veer/hold (6/10 px), ring radius/sector (60, 0.40) and pull (0.9 / 1.2 mm), arm time (300 ms), roll dwell
+   veer/hold (6/13 px), ring radius/gap/reach (64, 15%, 30 px) and pull (0.9 / 1.2 mm), arm time (300 ms), roll dwell
    (100 ms).
 2. If the owner wants long rows toward the screen edge back, a per-direction step (10 px toward the edge on
    the thumb's side, 16 elsewhere) is the smallest change; corners would then be less sure on that side.
