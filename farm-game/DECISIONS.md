@@ -790,8 +790,10 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
     91-94% on the Pro Max (was about 60%). Cost: open loop, a rare first-row overshoot (about 3 in 100 at σ 1 on an
     SE) is no longer trimmed at the corner.
   - *Front-path taps no longer enter the house.* A tap on the bottom row of a facade (or the bottom edge of any wall)
-    with open ground below walks to that ground (taps land low); the roof, the upper wall and the door tile
-    itself still lead in.
+    with open ground below walks to that ground (taps land low), except in the upper half of the tiles right
+    beside a door; the roof, the upper wall and the door tile itself still lead in. Measured (critic's
+    `r6-taps`, σ 1.5 mm): front-path walk taps entered 0/96 (was 6/48); door-art taps entered 48/48; taps aimed at
+    the door tile itself 40/48 (the misses land on the path below the door and walk there).
   - *Ring:* the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
     taps use the slide rule (nearest item, clearly nearer than the next, within reach).
 
