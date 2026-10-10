@@ -1,47 +1,41 @@
-# Next steps (round 2, 2026-10-09)
+# Next steps (round 3, 2026-10-10)
 
-Four agents worked in parallel on their own branches, three of them paired with a critic agent that reviewed
-every checkpoint. This branch (`integration/round2-2026-10-09`) merges all of them on top of round 1
-(`integration/agents-2026-10-08`). Start a new session from here, not from the agent branches.
+Four agents worked in parallel this round, three with a critic agent reviewing each checkpoint. This branch
+(`integration/round3-2026-10-10`) merges all of them on top of round 2 (`integration/round2-2026-10-09`).
+Start a new session from here, not from the agent branches.
 
-| Area                              | Handover                                         | Critic notes                                                                                             | Top next step                                                                                                                                                                          |
-| --------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| One-thumb controls (top priority) | [NEXT-STEPS-CONTROLS.md](NEXT-STEPS-CONTROLS.md) | [critiques/controls-critic/](critiques/controls-critic/final.md) (final: no blockers, ready for a phone) | A slow press on Action does nothing (make press-and-lift act once, fix the two "Hold Action" hints); then let a painted line turn a corner to bring the plot from 15 gestures toward 8 |
-| Game depth                        | [NEXT-STEPS-DEPTH.md](NEXT-STEPS-DEPTH.md)       | `critiques/critique-6.md` to `critique-9.md`                                                             | Critique 9: show the season score when losing, a non-fishing path to beat Clay, warn before a request eats the harvest                                                                 |
-| Art                               | [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md)           | [critiques/art-critic/](critiques/art-critic/final.md) (accepted, no majors left)                        | Art for the 21 newest keys (tulips, dishes, legendary fish, scarecrow, statue); the "New Game" doubled label; redo tool poses                                                          |
-| Audio                             | [NEXT-STEPS-AUDIO.md](NEXT-STEPS-AUDIO.md)       | [critiques/audio-critic/](critiques/audio-critic/final.md) (nothing open)                                | Paused until a human has listened; then act on that feedback                                                                                                                           |
+| Area               | Handover                                             | Critic notes                                                                                                     | Top next step                                                                                             |
+| ------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Guided start (new) | [NEXT-STEPS-ONBOARDING.md](NEXT-STEPS-ONBOARDING.md) | [critiques/onboarding-critic/](critiques/onboarding-critic/final.md) (no blockers; 12/12 naive runs reach day 2) | Shorten day 2's watering beat; re-verify the last four fixes (reported fixed, not replayed by the critic) |
+| One-thumb controls | [NEXT-STEPS-CONTROLS.md](NEXT-STEPS-CONTROLS.md)     | [critiques/controls-critic/](critiques/controls-critic/final.md) (no blockers; plot in 7 gestures)               | SE serpentine accuracy with a shaky thumb (a row-width cue or snapping U-turn rows to the tilled edge)    |
+| Game depth         | [NEXT-STEPS-DEPTH.md](NEXT-STEPS-DEPTH.md)           | `critiques/critique-10.md`, `critique-11.md`                                                                     | Critique 12, then play-test the closer Clay race with real input                                          |
+| Art                | [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md)               | [critiques/art-critic/](critiques/art-critic/final.md) (proportions accepted)                                    | The well as a three-tile prop; bigger footprints for farm buildings if the owner wants them               |
+| Audio              | [NEXT-STEPS-AUDIO.md](NEXT-STEPS-AUDIO.md)           | [critiques/audio-critic/](critiques/audio-critic/final.md) (nothing open)                                        | Paused until a human has listened                                                                         |
 
 ## What changed at the merge
 
-- The audio touch cues are now wired into the controls code: `ringOpen` and `ringClose` on the tool ring,
-  `confirm` on a ring pick and a committed row, `tick` per painted tile (with the existing light haptic), and
-  `target` when a tap sets a walk route. Nobody has heard them in game yet.
-- Conflicts were resolved by keeping both sides: the art tool poses plus the controls haptics in
-  `WorldScene`, the audio, controls and atmosphere scenarios in `scripts/perf.mjs`, and both sets of
-  `DECISIONS.md` sections. A `clearCursor` method that two branches added to `MenuPanel` was de-duplicated.
-- The save is version 16 (controls settings and last-planted seed). Depth, art and audio did not bump it.
+- Statue naming: depth's six levels (`obj_landmark_statue_1` to `_6`, chosen by `landmarksOn`) won over the art
+  branch's parallel level path; the stale `obj_landmark_statue` frame was removed and the atlases rebuilt.
+- The v17 migration (guided start) now knows the four mastery goals depth appended at v16 (`fest1`, `board4`,
+  `statue6`, `legend4`), so saves on those goals migrate correctly.
+- The Controls help card combines the round-3 painting sentence with the guided start's auto-tool wording.
+- Save version is 17 (guided-start goals). Controls, depth and art did not bump it.
 
 ## Needs a human
 
-- **Play it on a real phone, one-handed.** Every control was measured with emulated touch only. The checklist
-  is in `NEXT-STEPS-CONTROLS.md` (tap-to-walk, hold Action then drag to paint, the sideways flick for the
-  ring, resting the thumb before steering, Menu reach, haptics strength, the iOS and Android edge gestures).
-- **Listen.** No one has heard any audio. Start with `critiques/audio-critic/final.md` (listening order); the
-  renders were made outside the repo and can be regenerated with `node audio-src/tools/render.mjs <dir>`.
-- **Look.** All art was judged from headless screenshots.
-- **Decide** the open questions at the end of each handover, for example: serpentine or strip painting,
-  whether holding Action should repeat, scarecrow crows, statue growth, eating caps, truly round ponds,
-  whether art may add collision, and composed versus commissioned music.
-- **Licensing before any store release:** re-check Google's terms for Flow images (see `ASSETS.md` and
-  `critiques/art-critic/decisions.md`; not legal advice).
+- **Play it as a first-time player on a real phone, one-handed:** the 12-step checklist is in
+  `critiques/onboarding-critic/final.md`; the controls checklist is in `critiques/controls-critic/final.md`.
+- **Listen** to the audio (`critiques/audio-critic/final.md` has the order). Nobody has heard any of it.
+- **Decide** the open questions at the end of each handover, notably: free play until 6 PM vs bed after the
+  errands on day 1, Rosa or Mara as the greeter, paint step 16 px vs 10 px, softening the early game, Clay's
+  crates, the goal blocked behind the legendary fish, bigger footprints for farm buildings and landmarks.
+- **Licensing before any store release:** re-check Google's terms for Flow images (see `ASSETS.md`).
 
 ## Notes for the next session
 
-- The walnut and parchment UI is the default; `?skin=plum` shows the old one.
-- After changing a map, run `npm run art:maps`; a test fails if a map asks for a tile the tileset lacks.
-- `npm run bench:thumb` measures the one-thumb core loops per phone and hand; thresholds are in
-  `scripts/bench-thresholds.json`.
-- `npm run verify` now takes about 7 minutes (the controls e2e runs two phones at a time). On Windows set
-  `CHROMIUM_PATH`, and `E2E_PORT`, `E2E_MOBILE_PORT`, `PERF_PORT` when two checkouts run checks at once.
-- Raw Flow downloads, audio renders and critics' screenshots are kept outside the repo; prompts, per-sprite
-  crops and audio sources are in the repo, so both pipelines re-run from it.
+- `npm run verify` takes about 8 minutes; run it in the background. On Windows set `CHROMIUM_PATH`, and the
+  `E2E_PORT`, `E2E_MOBILE_PORT`, `PERF_PORT`, `E2E_CONTROLS_PORT` variables when two checkouts run checks at once.
+- New saves start the guided start; `?tutorial=0` gives a bare new game for tests and probes.
+- After changing a map, run `npm run art:maps`. `npm run bench:thumb` measures the one-thumb loops.
+- Flow downloads: the owner approved art agents downloading their own Flow images; if an agent still declines,
+  the coordinator fetches them into `C:/Users/andre/dev/tiny-acre/flow-raw/` and the agent processes them.

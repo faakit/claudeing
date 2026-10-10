@@ -17,22 +17,22 @@
 
 ## Review-6 follow-ups
 
-| id | result |
-|---|---|
-| 6.1 flicker and retract | **FIXED.** Closed loop at σ 2, 20 per row, plotted below. Traces now grow monotonically, and retracts come only from the bot's own back-ups. Before the fix: 7-14/20 exact with 7-10 strays per row. |
+| id                                  | result                                                                                                                                                                                                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6.1 flicker and retract             | **FIXED.** Closed loop at σ 2, 20 per row, plotted below. Traces now grow monotonically, and retracts come only from the bot's own back-ups. Before the fix: 7-14/20 exact with 7-10 strays per row.                                                             |
 | 6.2 front-path taps enter the house | **FIXED:** 0/96 entries (i13 and SE, both hands; it was 3/24 per phone). Pushback accepted: the door tile itself enters 67-100% because a miss lands on the path tile below, but the door art enters 100% (agent's probe), which is what the bar now applies to. |
-| 6.3 open loop at σ 2 | **ACCEPTED as scoped.** Open loop at σ 1: 59/60 exact, 0 strays (SE left 14/15). At σ 2: 5-13/15 exact with 2-12 strays, as agreed (closed-loop bar). |
-| 6.4 ring dead zone on SE | **FIXED.** A 150 ms rest at 34 px stays sticky on i13 and SE, both hands (16/16). |
-| 6.5 sticky taps on SE right | **FIXED:** 26/28 (was 22-25). |
+| 6.3 open loop at σ 2                | **ACCEPTED as scoped.** Open loop at σ 1: 59/60 exact, 0 strays (SE left 14/15). At σ 2: 5-13/15 exact with 2-12 strays, as agreed (closed-loop bar).                                                                                                            |
+| 6.4 ring dead zone on SE            | **FIXED.** A 150 ms rest at 34 px stays sticky on i13 and SE, both hands (16/16).                                                                                                                                                                                |
+| 6.5 sticky taps on SE right         | **FIXED:** 26/28 (was 22-25).                                                                                                                                                                                                                                    |
 
 Closed-loop serpentine at σ 2 (20 trials per row):
 
 | phone, hand | exact (of 20) | stray tiles |
-|---|---|---|
-| i13 right | 18 | 8 |
-| i13 left | 20 | 0 |
-| SE right | 15 | 9 |
-| SE left | 17 | 4 |
+| ----------- | ------------- | ----------- |
+| i13 right   | 18            | 8           |
+| i13 left    | 20            | 0           |
+| SE right    | 15            | 9           |
+| SE left     | 17            | 4           |
 
 ## Owner items, final
 

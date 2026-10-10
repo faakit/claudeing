@@ -24,23 +24,23 @@
 
 ## Owner items
 
-| item | result |
-|---|---|
-| O1 press-and-lift acts once | **MET.** Still presses of 80, 180, 290, 400, 700 and 1500 ms gave exactly 1 use, 18/18 per phone (i13, Pixel 7, SE, both hands). The bag hint is fixed. |
+| item                              | result                                                                                                                                                                                                                |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| O1 press-and-lift acts once       | **MET.** Still presses of 80, 180, 290, 400, 700 and 1500 ms gave exactly 1 use, 18/18 per phone (i13, Pixel 7, SE, both hands). The bag hint is fixed.                                                               |
 | O2 serpentine, no accidental work | **PARTLY.** See F1 and F3. Open-loop σ 1: exact on 14-20 of 15-20 trials, 0 strays. Turns: drift 0/6, deliberate L 6/6, 3 mm arc 0/6 (d8591ce). The bench plot3x3 is 7 gestures, every touch comfortable, 199-286 mm. |
-| O3 ring | **MET within noise.** Results below the table. |
-| O4 Options reach | **MET.** Sound and Vibrate are comfortable for both thumbs (i13). menu-opts has 5/19 targets outside comfort, all stretch, 0 hard. All screens: i13 80% for both hands. |
-| O5 rolled press | **MET.** An immediate 9.5-11 px roll gives a reject log entry and a vibration, 0 uses (16/16 per phone). Still for 150 ms then a 9.5-13 px roll: 1 use (12/12 on i13 and SE). Rolls under 9 px act once. |
-| O6 left-hand bag | **MET.** i13: 103 mm right, 83 left; Pixel 7: 108 / 87 (agent bench, tap-walk). With the column mirrored, left equals right. |
-| Events | **MET.** Names unchanged. paintLine keeps dir and tiles, plus an optional path. |
-| Old blockers | **Hold.** Slow world taps worked 0 tiles in 112; rest-then-steer painted 0 of 96; hesitant stick drags armed 0 of 120. Ring acts: 0. |
+| O3 ring                           | **MET within noise.** Results below the table.                                                                                                                                                                        |
+| O4 Options reach                  | **MET.** Sound and Vibrate are comfortable for both thumbs (i13). menu-opts has 5/19 targets outside comfort, all stretch, 0 hard. All screens: i13 80% for both hands.                                               |
+| O5 rolled press                   | **MET.** An immediate 9.5-11 px roll gives a reject log entry and a vibration, 0 uses (16/16 per phone). Still for 150 ms then a 9.5-13 px roll: 1 use (12/12 on i13 and SE). Rolls under 9 px act once.              |
+| O6 left-hand bag                  | **MET.** i13: 103 mm right, 83 left; Pixel 7: 108 / 87 (agent bench, tap-walk). With the column mirrored, left equals right.                                                                                          |
+| Events                            | **MET.** Names unchanged. paintLine keeps dir and tiles, plus an optional path.                                                                                                                                       |
+| Old blockers                      | **Hold.** Slow world taps worked 0 tiles in 112; rest-then-steer painted 0 of 96; hesitant stick drags armed 0 of 120. Ring acts: 0.                                                                                  |
 
 O3 ring detail:
 
-| check | i13 right | i13 left | SE right | SE left |
-|---|---|---|---|---|
-| picks at σ 2 mm (seeds 1+2, 84 per row) | 80/84 | 83/84 | 73/84 (2 wrong, 2.4%) | 38/42 (1 wrong) |
-| sticky tap | 27/28 | 27/28 | 22-25/28 | 26/28 |
+| check                                   | i13 right | i13 left | SE right              | SE left         |
+| --------------------------------------- | --------- | -------- | --------------------- | --------------- |
+| picks at σ 2 mm (seeds 1+2, 84 per row) | 80/84     | 83/84    | 73/84 (2 wrong, 2.4%) | 38/42 (1 wrong) |
+| sticky tap                              | 27/28     | 27/28    | 22-25/28              | 26/28           |
 
 - σ 1.2 mm on SE: 41/42 right and 42/42 left.
 - Flick-and-lift goes sticky 16/16.

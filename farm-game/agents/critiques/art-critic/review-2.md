@@ -8,6 +8,7 @@ world and UI look almost the same as round 1: none of the round-1 findings were 
 map-layer generator are not wired in, and plum is still the default.
 
 New findings:
+
 - R2-1 major: clay roofs are 1-row alternating red/orange stripes, high-frequency banding that is the loudest thing on
   screen; the sand ridge cap is a 1 px line that does not read (r2_roof_zoom.png). Ask: staggered tile courses (tiles
   ~4 px wide, 3 px courses offset by half, 1 px wine shadow under each course, orange only as a small highlight),
