@@ -323,6 +323,9 @@ def _statue(level: int) -> list[str]:
             "KxxxxxxxxxxxxxxK",
             "KKKKKKKKKKKKKKKK",
         ]
+    if level >= 6:  # level 6: the figure itself gilded, on the level 5 pedestal
+        gild = str.maketrans({"z": "Y", "x": "L", "Z": "O"})
+        body = [r.translate(gild) for r in body]
     # level 5: gold trim, the gold sprout emblem and rose-pink flowers at its foot
     return [r for r in body] + [
         "..KKKKKKKKKKKK..",
@@ -342,6 +345,66 @@ def _statue(level: int) -> list[str]:
         "KqkqKKKKKKKKqkqK",
         "KKKKK......KKKKK",
     ]
+
+
+# ---------------------------------------------------------------- house trophies (depth/round3 keys, 16 x 16)
+
+TROPHY_FESTIVAL = [  # a gold festival cup with a rose ribbon on a wooden base
+    "................",
+    "....KKKKKKKK....",
+    "..KKLLYYYYYOKK..",
+    ".KYKLYYYYYYOKYK.",
+    ".KYKLYYYYYYOKYK.",
+    "..KKYLYYYYYOKK..",
+    "....KYYYYYOK....",
+    ".....KYYYOK.....",
+    "......KYOK......",
+    ".....KqqqqK.....",
+    ".....KYYYOK.....",
+    "....KYYYYYOK....",
+    "...KwwwwwwwwK...",
+    "...KwsssssswK...",
+    "...KooooooooK...",
+    "....KKKKKKKK....",
+]
+
+TROPHY_LEGENDS = [  # a golden fish mounted on a dark wooden plaque
+    "................",
+    ".KKKKKKKKKKKKKK.",
+    ".KwwwwwwwwwwwwK.",
+    ".KwEEEEEEEEEEoK.",
+    ".KwEEEEEKKKEEoK.",
+    ".KwKKEEKYYYKEoK.",
+    ".KwKYKKYLYYYKoK.",
+    ".KwEKYYLYYKYYKK.",
+    ".KwEKYYYYYYYYKK.",
+    ".KwKYKKOYOYOKoK.",
+    ".KwKKEEKOOOKEoK.",
+    ".KwEEEEEKKKEEoK.",
+    ".KwEEEEEEEEEEoK.",
+    ".KwoooooooooooK.",
+    ".KKKKKKKKKKKKKK.",
+    "................",
+]
+
+TROPHY_BOARD = [  # the town's thanks: a carved plaque with the gold sprout and a rose rosette
+    "................",
+    ".KKKKKKKKKKKKKK.",
+    ".KsssssssssssoK.",
+    ".KsppppppppppoK.",
+    ".KspppKKpKKppoK.",
+    ".KsppKnnKggKpoK.",
+    ".KsppKgnKgGKpoK.",
+    ".KspppKKgKKppoK.",
+    ".KsppppKYKpppoK.",
+    ".KsppppKYKpppoK.",
+    ".KspppKYYOKppoK.",
+    ".KsppppppppppoK.",
+    ".KooooooooooooK.",
+    ".KKKKKKqqKKKKKK.",
+    "......KqRK......",
+    "......KRKR......",
+]
 
 
 # ---------------------------------------------------------------- onboarding coach marks (ui atlas)
@@ -618,6 +681,15 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
     add("world", "obj_landmark_statue", grid(names, _statue(1), 16))
     for lv in range(2, 6):
         add("world", f"obj_landmark_statue_{lv}", grid(names, _statue(lv), 16))
+    # depth/round3 renames the levels to _1.._6 (16 x 32 canvases, level 6 gilded): provide those keys too
+    for lv in range(1, 7):
+        add("world", f"obj_landmark_statue_{lv}", grid(names, _statue(lv), 16, 32))
+    for key, rows in (
+        ("obj_trophy_festival", TROPHY_FESTIVAL),
+        ("obj_trophy_legends", TROPHY_LEGENDS),
+        ("obj_trophy_board", TROPHY_BOARD),
+    ):
+        add("world", key, grid(names, rows, 16, 16))
     for key, idx in fruit_trees(P, names).items():
         add("world", key, idx)
     add("ui", "ui_coach_hand", grid(names, COACH_HAND))

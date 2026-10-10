@@ -369,6 +369,25 @@ export function artManifest(): ArtEntry[] {
           exact: false,
           optional: true,
         });
+  // Keys the depth branch (depth/round3) draws after the merge: the statue as levels _1.._6 and three house trophies.
+  // Optional here, so they are aliased when the atlas has them and nothing else changes on this branch.
+  for (const [k, kind] of [
+    ['obj_landmark_statue_1', 'statue level 1 (depth/round3 naming)'],
+    ['obj_landmark_statue_6', 'statue level 6, gilded (depth/round3)'],
+    ['obj_trophy_board', 'house trophy: town board (depth/round3)'],
+    ['obj_trophy_festival', 'house trophy: festivals (depth/round3)'],
+    ['obj_trophy_legends', 'house trophy: legendary fish (depth/round3)'],
+  ] as const)
+    add({
+      texture: k,
+      w: 16,
+      h: 16,
+      group: 'world',
+      kind,
+      from: 'depth/round3',
+      exact: false,
+      optional: true,
+    });
   add({
     texture: mail.mailbox.sprite,
     w: 16,

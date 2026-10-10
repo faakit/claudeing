@@ -312,7 +312,19 @@
    "town3-a.jpg",
    "town3-b.jpg"
   ],
-  "used": "a: fish ladder, library, hot spring, fair hall, market gate (native about 30x38, no downscale). b was smaller (about 24 px); the coop was not needed",
+  "used": "a: fish ladder, hot spring, market gate (native about 30x38, no downscale); the library and fair hall from it were replaced by town4 (they read as dollhouses). b was smaller; the coop was not needed",
   "note": "round 3 proportions (review 9): the other five town landmarks at about 32x40, plus a coop for scale; submitted by the art agent, downloaded by the coordinator"
+ },
+ {
+  "id": "town4",
+  "aspect": "1:1",
+  "preamble": "tinyacre",
+  "body": "A 2x2 grid of 4 separate small town structures with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: a little free lending library, a tall wooden book cabinet with glass doors full of colorful books under a small red shingled roof, standing on a post with a reading bench beside it; an open wooden bandstand pavilion with a round shingled roof on carved posts, a raised wooden floor with a few steps, and colorful bunting flags; the same lending library cabinet seen slightly from the left; the same bandstand pavilion with festival lanterns.",
+  "raw": [
+   "town4-a.jpg",
+   "town4-b.jpg"
+  ],
+  "used": "a: the library as a lending-library book cabinet on a post with a bench; b: the fair hall as an open bandstand with bunting (review 11, R11-1)",
+  "note": "round 3, art critic review 11 (R11-1): the library and fair hall drawn as things that honestly fit 32x40 on one tile (a book kiosk, a bandstand) instead of dollhouses; submitted by the art agent, downloaded by the coordinator"
  }
 ]

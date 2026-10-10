@@ -5423,13 +5423,16 @@
   "noscale": true
  },
  "obj_landmark_library": {
-  "src": "town3a/library",
+  "src": "town4a/library",
   "size": [
    32,
    40
   ],
-  "group": "world",
-  "noscale": true
+  "fit": [
+   32,
+   40
+  ],
+  "group": "world"
  },
  "obj_landmark_bathhouse": {
   "src": "town3a/bathhouse",
@@ -5441,13 +5444,16 @@
   "noscale": true
  },
  "obj_landmark_fairhall": {
-  "src": "town3a/fairhall",
+  "src": "town4b/bandstand",
   "size": [
    32,
    40
   ],
-  "group": "world",
-  "noscale": true
+  "fit": [
+   32,
+   40
+  ],
+  "group": "world"
  },
  "obj_landmark_market": {
   "src": "town3a/market",

@@ -124,9 +124,11 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
    - **Lamps:** the garden lamp is 10x36, and the town and farm lamps are three-tile props about 8x36 with the
      head above the player's head. Their lights moved up.
    - **Small things:** sprinkler 10x10, quality sprinkler 12x12, jar 12x14, flower pot 10x12.
-   - **Landmarks** are 32x40 from the new Flow sheets: board canopy and seed exchange from `village3` a; fish
-     ladder, library, hot spring (32x42), fair hall and market gate from `town3` a at native size. They overhang
-     their one tile by 8 px a side and upward only (shot: `proportions/after/landmarks_*.png`).
+   - **Landmarks** are 32x40 Flow art on their one tile, overhanging up and to the sides only: board canopy and
+     seed exchange (`village3` a), fish ladder, hot spring (32x42) and market gate (`town3` a, native size), and,
+     after review 11 (R11-1: house shapes with tiny doors read as dollhouses), the library as a lending-library
+     book cabinet with a bench (`town4` a) and the fair hall as an open bandstand (`town4` b). Shots:
+     `proportions/after/landmarks_*.png`, `landmarks_east_r11_zoom.png`.
    - **Ground items:** forage and the animal-house product bubbles use new 12 px `world_<item>` sprites drawn at
      1x. The twinkle star is at 1x too.
    - **The rest:**
@@ -143,8 +145,8 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 
 ## Flow usage
 
-- Three prompts this round in the owner's Flow project "out. 08 - 07:06" (1:1, Nano Banana 2.1, x2): `items8`,
-  `village3` and `town3` (entries 25-27 in `art-src/flow/prompts.md`, with the variants used per key). No quota or
+- Four prompts this round in the owner's Flow project "out. 08 - 07:06" (1:1, Nano Banana 2.1, x2): `items8`,
+  `village3`, `town3` and `town4` (entries 25-28 in `art-src/flow/prompts.md`, with the variants used per key). No quota or
   error message appeared. Check the aspect before submitting: it had flipped to 16:9 once.
 - **Download approval:** the owner approved autonomous downloads of the art agent's own Flow outputs ("yes, it
   should be autonomous", said to the coordinator on 2026-10-09). The approval covers only our own generations
@@ -170,6 +172,11 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 - **Coach-mark names:** the onboarding branch was told `ui_coach_hand` and `ui_coach_ring`. Mine add
   `ui_coach_ring_wide`, `ui_coach_bubble` and `ui_coach_bubble_tail`. Rename them in `COACH_SPRITES` and in
   `drawn.build()` if theirs differ.
+- **depth/round3 keys, drawn here:** the statue as `obj_landmark_statue_1` to `_6` (16x32 canvases; `_1` is the
+  bust, `_6` the gilded figure on the level 5 pedestal; `obj_landmark_statue` stays as an alias of `_1`) and the
+  house trophies `obj_trophy_board` (carved sprout plaque with a rosette), `obj_trophy_festival` (gold cup) and
+  `obj_trophy_legends` (golden fish plaque), 16x16, all in `drawn.py` and as optional manifest entries. At merge,
+  take depth's statue naming and point `landmarkLevelKey`/`syncLandmarks` at `_1`..`_6` (or keep the alias).
 - **Optional, for the depth agent:** emitting `placedChanged` on every statue level-up in `systems/projects.ts`
   would let the renderer drop the per-frame level check.
 - **Proportions pass, shared files:**
@@ -189,7 +196,8 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 
 1. **The proportions pass, what is left** (review 10 accepted it; the barn and landmarks now come from Flow,
    `village3`/`town3`):
-   - the well at 20x30 needs a two-column map prop (its Flow source is in `flow-raw/village3-*.jpg`);
+   - nit: the well at 20x30 needs a three-column map prop (a 20 px well overhangs both neighbours); its Flow
+     source is in `flow-raw/village3-*.jpg`;
    - real 2x2/3x2 footprints remain the owner's and depth agent's decision.
    - Perf now has two see-through-hole scenarios (behind a lone tree, behind a grown fruit tree; review 10's ask).
 2. **The critic's eye on the rest of round 3:** the hand-drawn dishes and fish, the statue's growth, the new poses, the coach

@@ -24,7 +24,7 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **27** prompts.
+Generations: **28** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -223,5 +223,13 @@ Generations: **27** prompts.
 > A grid of 2 rows and 3 columns of 6 separate small town building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: grey stone fish ladder steps in a small river with blue water cascading down them; a cozy little town library with a red roof, a round window and a wooden book sign; a small hot spring bath house with a wooden roof, a stone pool and rising white steam; a festival fair hall with colorful bunting flags and a big wooden double door; a market gate at the start of a paved road, with a striped awning and crates of vegetables; a small wooden chicken coop with a ramp, about 24 pixels wide.
 
 - raw: town3-a.jpg, town3-b.jpg
-- used: a: fish ladder, library, hot spring, fair hall, market gate (native about 30x38, no downscale). b was smaller (about 24 px); the coop was not needed
+- used: a: fish ladder, hot spring, market gate (native about 30x38, no downscale); the library and fair hall from it were replaced by town4 (they read as dollhouses). b was smaller; the coop was not needed
 - note: round 3 proportions (review 9): the other five town landmarks at about 32x40, plus a coop for scale; submitted by the art agent, downloaded by the coordinator
+
+## 28. `town4` (1:1, preamble: tinyacre)
+
+> A 2x2 grid of 4 separate small town structures with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: a little free lending library, a tall wooden book cabinet with glass doors full of colorful books under a small red shingled roof, standing on a post with a reading bench beside it; an open wooden bandstand pavilion with a round shingled roof on carved posts, a raised wooden floor with a few steps, and colorful bunting flags; the same lending library cabinet seen slightly from the left; the same bandstand pavilion with festival lanterns.
+
+- raw: town4-a.jpg, town4-b.jpg
+- used: a: the library as a lending-library book cabinet on a post with a bench; b: the fair hall as an open bandstand with bunting (review 11, R11-1)
+- note: round 3, art critic review 11 (R11-1): the library and fair hall drawn as things that honestly fit 32x40 on one tile (a book kiosk, a bandstand) instead of dollhouses; submitted by the art agent, downloaded by the coordinator
