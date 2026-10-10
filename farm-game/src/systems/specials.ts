@@ -107,9 +107,13 @@ export function morningSpecial(state: GameState): string | null {
 export const specialLabel = (sp: SpecialOrder): string =>
   `${sp.qty} ${items[sp.item]?.name ?? sp.item} for ${npcs[sp.giver]?.name ?? sp.giver}`;
 
-/** The board row's second line. Specials are always due at the season's end. */
+/** The board row's title: "Special: 15 Cauliflower" (the giver moves to the second line: critique 10, F6). */
+export const specialTitle = (sp: SpecialOrder): string =>
+  `Special: ${sp.qty} ${items[sp.item]?.name ?? sp.item}`;
+
+/** The board row's second line: "Rosa 4/15  2,250g". Specials are always due at the season's end. */
 export const specialSub = (sp: SpecialOrder): string =>
-  `Special ${sp.given}/${sp.qty}  ${sp.reward.toLocaleString('en-US')}g`;
+  `${npcs[sp.giver]?.name ?? sp.giver} ${sp.given}/${sp.qty}  ${sp.reward.toLocaleString('en-US')}g`;
 
 export type SpecialResult =
   { ok: true; gave: number; finished: boolean } | { ok: false; reason: 'none' | 'nothing' };

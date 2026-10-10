@@ -35,11 +35,15 @@ const STORE = 'town_general_store';
  * What a cart good is for in a word or two, shown on its row before you pay (critique 9, F7): the data's
  * `tag`, or a seed's season ("Summer crop").
  */
-export function cartTag(item: string): string | undefined {
+export function cartTag(item: string, state?: GameState): string | undefined {
   const tag = cart.stock.find((e) => e.item === item)?.tag;
   if (tag) return tag;
-  const season = crops[items[item]?.plants ?? '']?.seasons[0];
-  return season ? `${season[0]!.toUpperCase()}${season.slice(1)} crop` : undefined;
+  const crop = crops[items[item]?.plants ?? ''];
+  if (!crop) return undefined;
+  // Out of season it can only grow under glass: say so, not "Spring crop" in fall (critique 10, F6).
+  if (state && !crop.seasons.includes(state.time.season)) return 'Greenhouse';
+  const season = crop.seasons[0]!;
+  return `${season[0]!.toUpperCase()}${season.slice(1)} crop`;
 }
 
 /** What a cart good is for, if the data says. */

@@ -769,10 +769,23 @@ try {
       until: s.orders.day + 2,
     });
     s.inventory.slots[7] = { item: 'potato', qty: 5 };
+    s.special = null; // only the request wants potatoes here
     f.gameEvents.emit('openPanel', { type: 'bin' });
   });
   await pp.waitForTimeout(400);
   const tappedShip = await tapLabel('Ship all produce');
+  await pp.waitForTimeout(200);
+  // Critique 10, F1: a toast raised while a sheet is open is drawn above the sheet (depth over 210).
+  const keptDepth = await ui(() => {
+    const has = (o) =>
+      (o.type === 'BitmapText' && o.text === 'Kept 3 Potato for the board.') ||
+      (o.list ?? []).some(has);
+    const hit = window.__farm.game.scene
+      .getScene('UI')
+      .children.list.find((o) => o.type !== 'Rectangle' && has(o));
+    return hit?.depth ?? -1;
+  });
+  check('a toast over an open sheet is drawn above it', keptDepth > 210, `depth ${keptDepth}`);
   ps = await pState();
   check(
     '"Ship all produce" keeps the potatoes a request wants and ships the rest',

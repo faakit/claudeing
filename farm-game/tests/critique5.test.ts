@@ -16,7 +16,7 @@ import {
   setPickupClock,
 } from '../src/systems/placeables';
 import { POINTS_PER_HEART } from '../src/systems/friendship';
-import { applyRival, rivalMinute, rivalNotice, rivalPicks } from '../src/systems/rival';
+import { applyRival, isFarmGood, rivalMinute, rivalNotice, rivalPicks } from '../src/systems/rival';
 import { migrate } from '../src/systems/save';
 import { siloStock } from '../src/systems/silo';
 import { absoluteDay } from '../src/systems/time';
@@ -84,10 +84,17 @@ describe('critique 5 fixes', () => {
     s.time.minutes = 420;
     refreshBoard(s);
     const target = rivalPicks(s)[0]!;
-    const best = [a!, b!].sort((x, y) => y.reward - x.reward)[0]!;
+    // He plays to win (critique 10, F2): a farm good first, then the best-paying.
+    const best = [a!, b!].sort(
+      (x, y) => Number(isFarmGood(y)) - Number(isFarmGood(x)) || y.reward - x.reward,
+    )[0]!;
     expect(target.id).toBe(best.id);
     expect(rivalPicks(s).some((o) => o.id === c!.id)).toBe(false);
-    expect(rivalNotice(s)).toBe('Clay wants this one at 2:00 PM.');
+    expect(rivalNotice(s)).toBe(
+      isFarmGood(target)
+        ? 'Clay wants this one at 2:00 PM.'
+        : 'Clay takes one at 2:00 PM: no point.',
+    );
     expect(orderSub(s, target, 0, true)).toMatch(/Clay's!$/);
     s.time.minutes = rivalMinute(s);
     expect(applyRival(s)?.id).toBe(target.id);
@@ -102,7 +109,7 @@ describe('critique 5 fixes', () => {
     const sum = sleep(s);
     expect(s.stats['rivalTook']).toBe(1);
     expect(s.orders.list.find((o) => o.id === target.id)).toBeUndefined();
-    expect(sum.notes?.some((n) => n.startsWith('Clay filled'))).toBe(true);
+    expect(sum.notes?.some((n) => /^Clay (filled|cleared)/.test(n))).toBe(true);
     // Never twice for a day he already acted on.
     const t = rivalDay();
     for (const o of t.orders.list) o.until = absoluteDay(t) + 1;

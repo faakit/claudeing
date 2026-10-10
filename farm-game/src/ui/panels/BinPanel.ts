@@ -25,7 +25,7 @@ import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt } from './format';
 import { boardWants, wantedByBoard } from '../../systems/orders';
-import { boardWantsLine, keptLine } from './binText';
+import { binWantedSub, boardWantsLine, keptLine } from './binText';
 
 const ROWS = 6;
 
@@ -66,11 +66,14 @@ export class BinPanel extends Modal {
       const have = countStack(s, ref);
       const inBin = s.shipping[keyOf(ref)] ?? 0;
       // Goods an open request wants read in the warning colour (critique 9, F2).
-      const wanted = have > 0 && wantedByBoard(s, ref) > 0;
+      const want = have > 0 ? wantedByBoard(s, ref) : 0;
+      const wanted = want > 0;
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),
-        sub: `${fmt(sellValue(ref))}g  have ${have}  bin ${inBin}`,
+        sub: wanted
+          ? binWantedSub(want, have, inBin)
+          : `${fmt(sellValue(ref))}g  have ${have}  bin ${inBin}`,
         subColor: wanted ? C.warn : inBin ? C.gold : C.creamDim,
         buttons: [
           {

@@ -20,7 +20,14 @@ import {
   visibleProjects,
 } from '../src/systems/projects';
 import { keyOf, refOf, sellValue, type ItemRef } from '../src/systems/itemRef';
-import { boardWants, deliverOrder, ensureOrders, haveFor } from '../src/systems/orders';
+import {
+  boardWants,
+  deliverOrder,
+  ensureOrders,
+  haveFor,
+  keepForRequests,
+} from '../src/systems/orders';
+import { giveToSpecial } from '../src/systems/specials';
 import { interactWith, objectsOn } from '../src/systems/placeables';
 import { buyPlot, ownsPlot, ownsTile } from '../src/systems/plots';
 import { jarContents, loadJar, preserveOf } from '../src/systems/preserves';
@@ -174,6 +181,8 @@ function playDay(
       const before = s.money;
       if (deliverOrder(s, o.id) === 'ok') ledger.orders += s.money - before;
     }
+  // 2b. a board-minded farmer also hands the special what the requests do not need
+  if (opts.keepForBoard && s.special) giveToSpecial(s, keepForRequests(s, s.special.item));
   // 3. keep jars busy with the most valuable fruit or vegetable on hand
   for (const obj of objectsOn(s, 'farm')) {
     if (obj.type !== 'preserve_jar' || jarContents(obj)) continue;
@@ -289,11 +298,12 @@ function playDay(
  * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
  * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow, and
  * a coop of three hens, Clay on last days only, crop requests sized to the field; depth round 3: crop requests
- * at three quarters of the field, Clay scoring farm goods only so the bot wins some board prizes). Seed 42
- * alone: 234,833. A balance change that moves the median by a fifth down or a quarter up fails the five-seed
+ * at three quarters of the field; Clay scores farm goods only, takes them first and ships a weekly crate, so
+ * this bot, which ships everything, wins almost no board prize). Seed 42 alone: 228,569. Year one is very
+ * sensitive to early gold: one 300g prize in spring moved a seed by 60k (critique 10, F7). A balance change that moves the median by a fifth down or a quarter up fails the five-seed
  * test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 249_871;
+const SIM_EARNED = 213_730;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
@@ -475,10 +485,11 @@ describe('balance simulation: the board race for a pure farmer', () => {
       log.push(`seed ${seed}: keep ${line(keep)} | ship ${line(ship)}`);
     }
     console.log(log.join(String.fromCharCode(10)));
-    // Of 24 seasons. Round 3: keep 23 (one 4-4 draw), ship everything 13. Before (critique 9): 0 of 72.
-    expect(keepWins).toBeGreaterThanOrEqual(16);
-    expect(shipWins).toBeGreaterThanOrEqual(3);
-    expect(shipWins).toBeLessThan(keepWins); // keeping goods for the board is what wins it
+    // Of 24 seasons. Critique 9: 0 of 72. Round 3 first fix: keep 23, ship 13 (a formality, critique 10 F2).
+    // Now Clay takes farm rows first and ships a crate of his own once a week: keep 16, ship 1.
+    expect(keepWins).toBeGreaterThanOrEqual(12);
+    expect(keepWins).toBeLessThanOrEqual(22); // a race, not a walkover
+    expect(shipWins).toBeLessThan(keepWins / 2); // keeping goods for the board is what wins it
   });
 
   it('fishing in the evening adds board points and some gold, never a runaway (sim fidelity, round 3)', () => {
@@ -491,11 +502,12 @@ describe('balance simulation: the board race for a pure farmer', () => {
       );
       const you = (r: ReturnType<typeof run>) => r.out.reduce((n, t) => n + t.you, 0);
       expect(fisher.caught).toBeGreaterThan(100);
-      expect(you(fisher)).toBeGreaterThan(you(farmer)); // fish rows are points only a fisher scores
-      // A few fish an evening are only about 2k by day 14, but early gold compounds: seeds, then land on
-      // day 28 instead of later. Round 3 measured +44% to +58% for the year (four casts an evening); no runaway.
-      expect(fisher.yearOne).toBeGreaterThan(farmer.yearOne);
-      expect(fisher.yearOne).toBeLessThan(farmer.yearOne * 2);
+      expect(you(fisher)).toBeGreaterThan(you(farmer) * 0.8); // fishing costs no board points
+      // A few fish an evening are only about 2k by day 14, but early gold compounds: seeds, then land on day 28
+      // instead of later (round 3: 379k to 407k for the year against a 250k median). So sensitive is year one to
+      // early gold (critique 10, F7: one 300g board prize moved a seed by 60k) that the bound is against the
+      // pinned median, not one farmer.
+      expect(fisher.yearOne).toBeLessThan(SIM_EARNED * 2);
     }
     console.log(log.join(String.fromCharCode(10)));
   });

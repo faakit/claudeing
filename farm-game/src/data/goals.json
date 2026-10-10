@@ -483,7 +483,7 @@
     "stat": "cooked",
     "target": 1,
     "reward": 300,
-    "hint": "Buy a kitchen (shop, Home tab), then cook at the workbench."
+    "hint": "Buy a kitchen (shop, Home tab), then cook in Menu > Make."
   },
   {
     "id": "legend1",
@@ -500,5 +500,37 @@
     "target": 1,
     "reward": 1000,
     "hint": "Out-fill Clay in a season. He scores farm goods only."
+  },
+  {
+    "id": "fest1",
+    "text": "Win first place at a festival",
+    "stat": "festivalWins",
+    "target": 1,
+    "reward": 800,
+    "hint": "A festival each season. Win one for a ribbon at home."
+  },
+  {
+    "id": "board4",
+    "text": "Beat Clay in four seasons",
+    "stat": "boardWins",
+    "target": 4,
+    "reward": 3000,
+    "hint": "Keep goods for requests. The trophy at home counts wins."
+  },
+  {
+    "id": "legend4",
+    "text": "Catch all four legendary fish",
+    "stat": "legends",
+    "target": 4,
+    "reward": 5000,
+    "hint": "One a season. Finn knows where each one hides."
+  },
+  {
+    "id": "statue6",
+    "text": "Raise your statue to level 6",
+    "stat": "projectLevels",
+    "target": 6,
+    "reward": 8000,
+    "hint": "At level 6 the Founder's Statue is gilded."
   }
 ]

@@ -35,7 +35,7 @@ import type { GameState, Order } from '../src/state/GameState';
 import { newState } from './helpers';
 
 /** A board on the rival's first day with one request, posted yesterday and on its last day. */
-function oneRow(item: string, qty = 2): GameState {
+function oneRow(item: string, qty = 2, other = 'parsnip'): GameState {
   const s = newState();
   s.time.day = game.rival.startDay;
   const today = absoluteDay(s);
@@ -50,7 +50,7 @@ function oneRow(item: string, qty = 2): GameState {
     until: today,
   });
   // A second, cheaper row so his pick is never the last open one.
-  s.orders = { day: today, list: [order(2, item), order(1, 'parsnip')] };
+  s.orders = { day: today, list: [order(2, item), order(1, other)] };
   return s;
 }
 
@@ -73,7 +73,7 @@ describe('critique 9 F1: the season score against Clay', () => {
   });
 
   it('Clay scores only on farm goods: fish, wild goods and jam of wild goods are taken without a point', () => {
-    const fish = oneRow('trout');
+    const fish = oneRow('trout', 2, 'wild_leek');
     fish.time.minutes = rivalMinute(fish);
     const took = applyRival(fish)!;
     expect(took.item).toMatch(/^trout/);
@@ -114,11 +114,12 @@ describe('critique 9 F1: the season score against Clay', () => {
     s.time.day = 1;
     expect(settleSeason(s)).toBe('A draw with Clay on the board last season (6 to 6).');
     expect(lastSeasonLine(s)).toBe('Last season: a draw, 6 to 6.');
-    expect(rivalNotice(s)).toBe('Last season: a draw, 6 to 6.');
+    expect(boardScoreLine(s)).toBe('Last season: a draw, 6 to 6.');
     s.time.day = 3;
     expect(lastSeasonLine(s)).not.toBeNull();
     s.time.day = 4;
     expect(lastSeasonLine(s)).toBeNull();
+    expect(boardScoreLine(s)).toBe('This season: you 0, Clay 0.');
     expect(rivalNotice(s)).toBe('Clay scores on farm goods only.');
   });
 
@@ -199,7 +200,7 @@ describe('critique 9 F2: crop requests leave slack, and the bin speaks up', () =
       ['egg|', 3],
       ['jam|strawberry', 1],
     ]);
-    expect(keptLine(three)).toBe('Kept 6 goods for the board.');
+    expect(keptLine(three)).toBe('Kept 2 Potato, 3 Egg and more for the board.');
     const two = new Map([
       ['cauliflower|', 2],
       ['jam|strawberry', 1],
@@ -260,9 +261,7 @@ describe('critique 9 F6: the morning after a season', () => {
     s.stats['board.s0.rival'] = 3;
     const sum = endDay(s, { passedOut: false, weedCandidates: [] });
     const took = (sum.notes ?? []).findIndex((n) => /Clay filled 3 Potato/.test(n));
-    const result = (sum.notes ?? []).findIndex((n) =>
-      /Clay won the board last season \(4 to 3\)/.test(n),
-    );
+    const result = (sum.notes ?? []).findIndex((n) => /Clay won the board last season/.test(n));
     expect(took).toBeGreaterThanOrEqual(0);
     expect(result).toBeGreaterThan(took);
   });

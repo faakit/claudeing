@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { items } from '../../data';
+import { cart, items } from '../../data';
 import { audio } from '../../platform/audio';
 import { getState } from '../../state/store';
 import { buyFromCart, cartLeft, cartPrice, cartStock, cartTag, cartUse } from '../../systems/cart';
@@ -31,7 +31,7 @@ export class CartPanel extends Modal {
       y = this.row(y, {
         icon: items[id]?.icon,
         title: items[id]?.name ?? id,
-        sub: cartSub(price, left, cartTag(id)),
+        sub: cartSub(price, left, cartTag(id, s), cart.limit),
         subColor: left > 0 ? C.creamDim : C.warn,
         buttons: [
           {

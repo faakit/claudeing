@@ -510,6 +510,40 @@ wrote `agents/critiques/critique-9.md`: no blocker. Owner defaults for round 3 d
   the bot's harvest more often and it now wins some board prizes; the early gold compounds through earlier land
   (seed 7 moved most, 189k to 241k; seed 42 only 3%). Repinned.
 
+## Critique 10 fixes (depth round 3)
+
+The critic played `e23349b` (four 32-day new games as a farmer who never fishes, edge probes, a sweep, a sensitivity
+sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
+
+- **F1 (major) toasts were drawn under every open sheet**, so "Kept 4 Potato for the board.", "The board wants 4
+  Potato.", "Order done!" and "Bought ..." were unseen. While a sheet is open, toasts now sit at the top of the
+  screen above the dim (`ui/Hud.ts`, depth only; flagged for the controls agent, who owns the HUD). A wanted bin row
+  also says it in words: "Board 4  have 9".
+- **F2 the race had become a formality** (a keeper won 15 to 0; Clay's named target was usually a row that could not
+  score). Clay now plays to win: on a last day he takes farm goods first, best-paying first, and a fish or wild row
+  only when no farm row is due. "Clay's!" marks only a target that would score; otherwise the board says "Clay
+  takes one at 2:00 PM: no point." And every 7th day of a season he ships a crate from his own field, a point
+  (`rivalCrate`, said in the morning), so keeping goods is needed but not enough. Sim, two years and three seeds:
+  a keeper wins 16 of 24 seasons, a farmer who ships everything 1.
+- **F3 at 5 hearts the race ended silently** (no score, no settlement, the last goal stranded). The board keeps score
+  from day 8 whatever his hearts (`boardRaceOn`); a friendly Clay only stops taking requests and shipping crates
+  ("Clay no longer takes requests."), and seasons still settle.
+- **F4** in the first days of a season, while it is still 0 to 0, the score line names last season ("Last season: you
+  won 15 to 0."); a 0 to 0 season is said; a take that scored nothing reads "Clay cleared 5 Trout off the board: no
+  point."; Mara's letter says "out-scored".
+- **F5** "Ship all produce" also keeps what the special order still needs (after the requests); the sim keeper now
+  hands the special what the requests do not need.
+- **F6** the stakes say the year's prize; Clay's intro says "what you make of them"; three kept kinds name two
+  ("Kept 2 Potato, 3 Egg and more..."); a cart row shows "N left" once you bought some; an out-of-season seed says
+  "Greenhouse"; a four-digit reward drops "Have" to keep "last day"; the special's title is "Special: 15
+  Cauliflower" with the giver on its second line; the cook goal's hint says "Menu > Make".
+- **F7 (balance, not changed):** year one is very sensitive to early gold for the tireless bot (one 300g spring prize
+  moved a seed by 60k; the five-seed median fell back from 249,871 to 213,730 once the bot stopped winning prizes,
+  repinned). Fish bounds are now against the pinned median. Whether early land should be gentler is an owner
+  question; the human-paced sim is the better judge.
+- **Not changed:** the Make tab's right-most button is Make on workbench rows and the batch slot on kitchen rows
+  (harmless now); the goal title "Craft something at the workbench" belongs to the onboarding agent.
+
 ## Eating: three dishes a day at full strength (owner default, round 3)
 
 - No hard cap, but the 4th dish of a day gives half its energy and the 5th and later a quarter
@@ -524,6 +558,9 @@ wrote `agents/critiques/critique-9.md`: no blocker. Owner defaults for round 3 d
   house 4,2, `obj_trophy_festival`) and a Legend Wall (legendary fish, `legends`, house 7,2,
   `obj_trophy_legends`). Data only: the farmhouse becomes the place that shows what you achieved, and each one
   says its count when tapped. A test keeps every landmark and trophy on its own reachable tile.
+- Four mastery goals are appended to the chain (goals are an index: append only): first place at a festival,
+  beat Clay in four seasons, all four legends, the statue at level 6 (gilded). Each points at a trophy or the
+  statue, so the late chain ends in things you can see at home and in town.
 
 ## Sim fidelity: a fisher (round 3)
 

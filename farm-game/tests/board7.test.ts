@@ -146,8 +146,9 @@ it('C8 F2: the board keeps score each season, and the leader is rewarded', async
   t.time.day = 1;
   expect(settleSeason(t)).toMatch(/Clay won the board/);
   expect(t.mail.list.some((l) => l.from === 'clay')).toBe(true);
-  expect(boardScoreLine(t)).toBe('This season: you 0, Clay 0.');
-  expect(rivalNotice(t)).toBe('Last season: Clay won 4 to 0.');
+  // Early in a season still 0 to 0, the score line names last season (critique 10, F4).
+  expect(boardScoreLine(t)).toBe('Last season: Clay won 4 to 0.');
+  expect(rivalNotice(t)).toBe('Clay scores on farm goods only.');
 });
 
 it('C8 F3/F5: a crop request never asks for more than your field gives, and a fresh field is asked for', () => {

@@ -19,14 +19,13 @@ import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
 import { cartStock } from '../../systems/cart';
 import { items } from '../../data';
-import { giveToSpecial, specialGiveCount, specialLabel, specialSub } from '../../systems/specials';
+import { giveToSpecial, specialGiveCount, specialSub, specialTitle } from '../../systems/specials';
 import {
   applyRival,
   boardScoreLine,
-  rivalActive,
   rivalName,
   rivalNotice,
-  rivalPicks,
+  rivalTargets,
 } from '../../systems/rival';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
@@ -57,10 +56,9 @@ export class BoardPanel extends Modal {
     if (score) this.label(8, 19, score, C.cream);
     this.label(8, score ? 30 : 20, rivalNotice(s), C.creamDim);
     let y = top;
-    // The requests Clay is after today are marked, so the race is about a known target.
-    const eyed = new Set(
-      rivalActive(s) && s.stats['rival.day'] !== s.orders.day ? rivalPicks(s).map((o) => o.id) : [],
-    );
+    // The requests Clay is after today that would score are marked, so the race is about a known target
+    // (a fish or wild row he only clears is not: critique 10, F2).
+    const eyed = new Set(rivalTargets(s).map((o) => o.id));
     // Requests first, the special last: a hurried first tap goes to a request, not to the special
     // (critique 9, F5).
     for (const o of s.orders.list) {
@@ -112,7 +110,7 @@ export class BoardPanel extends Modal {
       const give = specialGiveCount(s, keep);
       y = this.row(y, {
         icon: items[sp.item]?.icon,
-        title: specialLabel(sp),
+        title: specialTitle(sp),
         // When every one you carry is spoken for by a request, say so instead of offering them.
         sub:
           give === 0 && keep > 0 && countItem(s, sp.item) > 0
