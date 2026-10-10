@@ -81,6 +81,8 @@ export const PAINT_VEER_PX = 6;
 export const PAINT_HOLD_PX = 13;
 /** A corner needs the finger's last this-many px of travel to be mostly sideways to the line. */
 export const PAINT_SIDE_WINDOW_PX = 6;
+/** A shown tile is taken back only once the finger is this far back along the leg past its boundary. */
+export const PAINT_UNPAINT_PX = 8;
 /** Back within this distance of the old line (and not veering), the newest leg is undone. */
 export const PAINT_UNTURN_PX = 4;
 /** Ridge prior on the line's slope (px^2): a few tiles of travel are needed before the line may tilt. */
@@ -402,8 +404,17 @@ export class ActionPress {
         (veered !== null &&
           Math.abs(lat - veered.l0) >= Math.abs(along - veered.a0) &&
           (lat - veered.l0) * off > 0);
-      // Length: as far as the finger reaches; held while it is well off the line (the corner decides).
-      if (Math.abs(off) < PAINT_HOLD_PX) leg.tiles = this.room(i, along);
+      // Length: as far as the finger reaches. It stops growing while the finger is well off the line, or
+      // veering off it sideways (heading round a corner): the corner keeps what was shown.
+      const holding = Math.abs(off) >= PAINT_HOLD_PX || (veering && wentSideways);
+      const grow = this.room(i, along);
+      if (grow > leg.tiles && !holding) leg.tiles = grow;
+      else if (grow < leg.tiles && Math.abs(off) < PAINT_HOLD_PX) {
+        // A shown (and ticked) tile goes only when the finger is back half a step along the leg past its
+        // boundary, so a wobble at the boundary never makes it flicker; back near the leg's start, all go.
+        leg.tiles =
+          along < leg.first / 2 ? 0 : Math.min(leg.tiles, this.room(i, along + PAINT_UNPAINT_PX));
+      }
       // A corner: the leg is locked and has its tiles, the finger is a clear 14 px off its line, and it got
       // there moving sideways, not by wobbling or drifting along the line.
       if (!this.locked() || leg.tiles === 0 || Math.abs(off) < PAINT_TURN_PX || !wentSideways)
@@ -413,7 +424,9 @@ export class ActionPress {
       const cornerAlong = veer && veer.w > 0 ? veer.sum / veer.w : along;
       const dir = off > 0 ? CW[leg.dir] : CCW[leg.dir];
       const before = leg.tiles;
-      leg.tiles = Math.max(1, this.room(i, cornerAlong));
+      // A shown tile never retracts at a corner (the player turned because they saw it); a corner may only
+      // place a tile the leg had not grown yet when the finger veered off.
+      leg.tiles = Math.max(1, leg.tiles, this.room(i, cornerAlong));
       const v0 = VEC[this.legs[0]!.dir];
       if (i >= 2 && v.x * v0.y - v.y * v0.x === 0) {
         // A row of a serpentine turning into the next U-turn: one tile short of the box edge means the edge.

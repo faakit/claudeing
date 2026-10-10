@@ -60,7 +60,12 @@ export function tapIntent(w: TapWorld, x: number, y: number): TapIntent {
   const act = w.actKind(tapped);
   if (act && TAP_ACTS.has(act)) return { kind: 'act', target: tapped, plan: act };
   if (!w.blocked(tapped)) return { kind: 'walk', target: tapped };
-  return solidOwner(w, tapped) ?? { kind: 'none', target: tapped };
+  const owner = solidOwner(w, tapped, (y - tapped.ty * ts) / ts > 0.5);
+  if (owner) return owner;
+  // The bottom edge of a wall with open ground below it: the thumb meant the ground (taps land low).
+  const below = { tx: tapped.tx, ty: tapped.ty + 1 };
+  if (w.inMap(below) && !w.blocked(below)) return { kind: 'walk', target: below };
+  return { kind: 'none', target: tapped };
 }
 
 /** How far a tall drawing reaches above what it belongs to, and how far along a facade its door may be. */
@@ -72,7 +77,7 @@ const FACADE_SIDE = 4;
  * solid run (a building, a tall prop): an interactable or a door at its foot; else along the run's bottom row
  * (a facade) to a door in it, or to an interactable or door just below it.
  */
-function solidOwner(w: TapWorld, t: TileCoord): TapIntent | null {
+function solidOwner(w: TapWorld, t: TileCoord, lowHalf = false): TapIntent | null {
   const hit = (c: TileCoord): TapIntent | null => {
     if (!w.inMap(c)) return null;
     const type = w.interactable(c);
@@ -90,9 +95,13 @@ function solidOwner(w: TapWorld, t: TileCoord): TapIntent | null {
     y++;
     if (k === ART_UP - 1) return null;
   }
-  // along the bottom row of the run, both ways, while it stays solid
+  // Along the bottom row of the run, both ways, while it stays solid. A tap in the lower half of that bottom
+  // row is usually a thumb aiming at the path below it (taps land low), so it never leads along the row to a
+  // door; in its upper half, only beside the door (critic review 6: front-path taps walked into the house 1 in 8,
+  // and 1 in 32 with the door's column +-1 over the whole row).
+  const side = y === t.ty ? (lowHalf ? 0 : 1) : FACADE_SIDE;
   for (const dx of [-1, 1]) {
-    for (let k = 1; k <= FACADE_SIDE; k++) {
+    for (let k = 1; k <= side; k++) {
       const c = { tx: t.tx + dx * k, ty: y };
       if (!w.inMap(c)) break;
       const owner = hit(c) ?? (w.blocked(c) ? hit({ tx: c.tx, ty: y + 1 }) : null);

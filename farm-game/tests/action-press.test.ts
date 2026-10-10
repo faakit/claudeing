@@ -9,7 +9,7 @@ import {
   type PaintDir,
 } from '../src/input/gesture';
 import { logicalPerMm, PHONES } from '../src/ui/reach';
-import { committed, drawPath, humanPath, play, types, wobble } from './paintModel';
+import { closedLoop, committed, drawPath, humanPath, play, types, wobble } from './paintModel';
 
 /** Finger distance that aims at the middle of tile `n`'s band, on a first leg or a turned one. */
 const at = (n: number, turned = false) =>
@@ -322,7 +322,46 @@ describe('serpentine paint (owner decision, round 3)', () => {
         ).length;
       }
       expect(exact, `${id} exact`).toBeGreaterThanOrEqual(88);
-      expect(stray, `${id} stray`).toBeLessThanOrEqual(1);
+      // a shown tile is never taken back at a corner (review 6), so a rare 2.5-sigma overshoot of the first row
+      // (about 3 in 100 on an SE) widens the plot by one column
+      expect(stray, `${id} stray`).toBeLessThanOrEqual(10);
+    }
+  });
+
+  it('a shown tile never flickers: a 1-2 px wobble at its boundary, or a turn, never takes it back', () => {
+    const b = at(3) - PAINT_STEP_PX / 2; // the third tile's boundary
+    const moves: [number, number, number][] = [];
+    let t = PAINT_ARM_MS + 40;
+    for (let x = 0; x <= b + 1; x += 2) moves.push([(t += 16), x, 0]);
+    for (const dx of [-1, 1, -2, 1, -2, 2, -1]) moves.push([(t += 16), b + dx, 0]);
+    const e = play(moves, t + 100);
+    const counts = e.filter((x) => x.type === 'paint').map((x) => (x as { tiles: number }).tiles);
+    expect(counts).toEqual([1, 2, 3]);
+  });
+
+  it("the critic's closed-loop painter (turns when the preview shows the leg): every tile it saw is kept", () => {
+    const legs = [
+      { dx: -1, dy: 0, n: 3 },
+      { dx: 0, dy: 1, n: 1 },
+      { dx: 1, dy: 0, n: 2 },
+      { dx: 0, dy: 1, n: 1 },
+      { dx: -1, dy: 0, n: 2 },
+    ];
+    const want = 'left left left down right right down left left';
+    for (const id of ['i13', 'se']) {
+      const mm = logicalPerMm(PHONES.find((x) => x.id === id)!);
+      for (const [sigma, need] of [
+        [1, 100],
+        [2, 80],
+      ] as const) {
+        let exact = 0;
+        for (let k = 0; k < 100; k++) {
+          const r = closedLoop(legs, { pxPerMm: mm, sigmaMm: sigma, seed: k * 31 + 7 });
+          if (r.path?.join(' ') === want) exact++;
+          if (sigma === 1) expect(r.ticks, `${id} ticks`).toBe(r.path?.length);
+        }
+        expect(exact, `${id} closed loop sigma ${sigma}`).toBeGreaterThanOrEqual(need);
+      }
     }
   });
 });

@@ -781,3 +781,17 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   interactable or a door at its foot, else along the run's bottom row (a facade) to a door or to an
   interactable just below it (`tapIntent`, `solidOwner`). Multi-tile things (the bed, a counter) are reached from
   whichever side is open (`pathToFaceAny`): the top half of the bed no longer says "Can't get there".
+- **Review 6 (controls critic) fixes:**
+  - *Shown tiles never flicker or retract.* A painted tile appears at its boundary and goes only when the finger is
+    back half a step (8 px) along the leg past it, or back near the leg's start; a corner never takes back a shown
+    tile (it may only add one the leg had not grown yet), and a leg stops growing while the finger veers off
+    sideways. Only backtracking along the path removes tiles. The critic's closed-loop painter (turns when the
+    preview shows the leg): σ 1 mm 100% everywhere with ticks equal to tiles; σ 2 mm 89-91% on i13, 81-85% on SE,
+    91-94% on the Pro Max (was about 60%). Cost: open loop, a rare first-row overshoot (about 3 in 100 at σ 1 on an
+    SE) is no longer trimmed at the corner.
+  - *Front-path taps no longer enter the house.* A tap on the bottom row of a facade (or the bottom edge of any wall)
+    with open ground below walks to that ground (taps land low); the roof, the upper wall and the door tile
+    itself still lead in.
+  - *Ring:* the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
+    taps use the slide rule (nearest item, clearly nearer than the next, within reach).
+

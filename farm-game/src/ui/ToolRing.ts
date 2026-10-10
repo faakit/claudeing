@@ -186,8 +186,13 @@ export class ToolRing {
     };
   }
 
-  /** The arc position a finger at (x, y) points at, aim corrected for the thumb-base pull. */
+  /**
+   * The arc position a finger at (x, y) points at, aim corrected for the thumb-base pull. The dead centre is
+   * judged on the raw finger (the correction is bigger in logical px on small phones, and a rest 22-35 px out
+   * must stay a rest everywhere).
+   */
   private pick(x: number, y: number): number | null {
+    if (Math.hypot(x - this.centre.x, y - this.centre.y) < RING.dead) return null;
     const c = this.aim(x, y);
     return ringPick(c.x - this.centre.x, c.y - this.centre.y, this.items.length, this.left);
   }
@@ -230,15 +235,10 @@ export class ToolRing {
   /** Tap menu: a tap on an item picks it (a generous disc, aim corrected), a tap anywhere else closes. */
   private stickyTap(p: Phaser.Input.Pointer): void {
     if (!this.sticky) return;
-    const c = this.aim(p.x, p.y);
-    const n = this.items.length;
-    let best: { i: number; d: number } | null = null;
-    for (let i = 0; i < n; i++) {
-      const at = ringItem(this.centre, i, n, this.left);
-      const d = Math.hypot(c.x - at.x, c.y - at.y);
-      if (d <= RING.itemR + 6 && (!best || d < best.d)) best = { i, d };
-    }
-    if (best) this.choose(best.i);
+    // The same rule as a slide (nearest item, clearly nearer than the next, within reach), so a tap that lands
+    // a little off the disc still picks it, and one between two items closes the menu.
+    const i = this.pick(p.x, p.y);
+    if (i !== null) this.choose(i);
     else {
       audio.play('ringClose');
       this.close();

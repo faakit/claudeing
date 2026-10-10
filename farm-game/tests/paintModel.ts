@@ -187,3 +187,64 @@ export function humanPath(
   }
   return out;
 }
+
+/**
+ * The controls critic's closed-loop painter (review 6, `r8-closed.mjs`): it moves 2 px at a time along each
+ * leg until the live preview shows that leg's tiles, carries on 6 px (a person reacts to the tick, not
+ * instantly), backs up while the preview shows too many, then turns. The same 2D wobble field (sinusoids of
+ * 12-25 mm plus noise knots every 3 mm). Returns the final path and how many tiles were ever added (ticks).
+ */
+export function closedLoop(
+  legs: { dx: number; dy: number; n: number }[],
+  o: { pxPerMm: number; sigmaMm: number; seed: number },
+): { path: string[] | null; ticks: number } {
+  let x = o.seed >>> 0 || 1;
+  const u = () => ((x = (x * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+  const g = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+  const mm = o.pxPerMm;
+  const sig = o.sigmaMm * mm;
+  const lx = (12 + u() * 13) * mm;
+  const ly = (12 + u() * 13) * mm;
+  const px0 = u() * 6.283;
+  const py0 = u() * 6.283;
+  const knot = 3 * mm;
+  const kx = Array.from({ length: 200 }, g);
+  const ky = Array.from({ length: 200 }, g);
+  const nz = (k: number[], s: number) => {
+    const i = Math.floor(s / knot);
+    const f = s / knot - i;
+    return k[i]! * (1 - f) + k[i + 1]! * f;
+  };
+  const wob = (s: number) => ({
+    x: sig * (0.8 * Math.sin((6.283 * s) / lx + px0) + 0.3 * nz(kx, s)),
+    y: sig * (0.8 * Math.sin((6.283 * s) / ly + py0) + 0.3 * nz(ky, s)),
+  });
+  const press = new ActionPress(0);
+  press.update(PAINT_ARM_MS + 20);
+  const w0 = wob(0);
+  let t = PAINT_ARM_MS + 40;
+  let path: string[] = [];
+  let ticks = 0;
+  let pos = { x: 0, y: 0 };
+  let sv = 0;
+  const step = (dx: number, dy: number) => {
+    pos = { x: pos.x + dx * 2, y: pos.y + dy * 2 };
+    sv += 2;
+    const w = wob(sv);
+    for (const e of press.move(pos.x + w.x - w0.x, pos.y + w.y - w0.y, t))
+      if (e.type === 'paint') {
+        if (e.path.length > path.length) ticks += e.path.length - path.length;
+        path = e.path;
+      }
+    t += 16;
+  };
+  let target = 0;
+  for (const l of legs) {
+    target += l.n;
+    for (let guard = 0; path.length < target && guard <= 40; guard++) step(l.dx, l.dy);
+    for (let q = 0; q < 3; q++) step(l.dx, l.dy);
+    for (let back = 0; path.length > target && back < 12; back++) step(-l.dx, -l.dy);
+  }
+  const end = press.up().at(-1);
+  return { path: end?.type === 'commit' ? end.path : null, ticks };
+}
