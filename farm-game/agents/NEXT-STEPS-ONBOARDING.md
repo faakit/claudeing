@@ -34,7 +34,7 @@ wrong taps, wandering and reopening. `npm run verify` is green at the last commi
 - **Day 2:** water the dry crops (with a count, the row tip and the pond when the can is empty), the letter,
   Menu > Goal (jobs), and the walk to town taught with the stick.
 - **Later introductions,** each shown once when it matters: late night, low energy, wild goods in view, Mara and
-  the shop, a new villager, gifts, the board, the rod through the tool ring, casting, the mine, placing a
+  the shop, a new villager, gifts, the board, Clay's board race (day 8, in town), the rod through the tool ring, casting, the mine, placing a
   machine.
 - **Never trapped:**
   - Skip from the strip or the line's menu. A toast says where to replay it: Options > Controls > Replay guide.
@@ -93,7 +93,32 @@ Both are code-drawn placeholders in `ensureCoachTextures`; a real texture under 
 
 ## Open findings and next steps
 
-See the critic's latest review (`C:/Users/andre/dev/tiny-acre/onboarding-critique/`) for what is still open.
+The critic's reviews are in `C:/Users/andre/dev/tiny-acre/onboarding-critique/` (ledger.md, review-*.md).
+Round 2b ran on 9ff96f2. Two human-like runs reached town on day 2. Two stalled on water2 because the rod was in
+hand (taps and Action then only fish). That case is fixed after 9ff96f2: the coach points at the can, or at the
+seeds, first. The critic was cut off by a usage limit before it wrote review 3.
+
+1. **Re-test with a human-like bot** (thumb spread, wrong taps, reopening) on the final build. That is the
+   critic's `tools/human.mjs`. The in-repo e2e follows the hand exactly.
+2. **The evening bed step** is unit-tested only. An e2e would need about 6 real minutes of play. Day 1 in the
+   e2e ends when the bot chooses to sleep after the errands.
+3. **After the depth branch merges:**
+   - While a sheet is open, toasts draw at the top of the screen. Check they do not collide with the coach line
+     (y 76-94) and move the line if they do.
+   - Clay's day-7 letter: the day-8 intro points at the board in town. It could also point at the letter.
+4. **After the controls branch merges:**
+   - Remove the "Not your land" and "Can't get there" rewordings if the new refusals read well.
+   - Re-check the door tap and the bed's top half.
+   - Fix the bag tab's stale "hold Action to keep working".
+5. **Day 2's goal bar** ("Buy 5 items") and the water, letter and menu steps still say different things. Only the
+   walk to town matches it.
+6. **Art:** replace the `ui_coach_ring` and `ui_coach_hand` placeholders, and give the hand a back-of-hand pose
+   for drags.
+7. **Real phone pass:**
+   - Is the top line readable at arm's length?
+   - Is the "..." reachable, and is it found?
+   - Does the hand animation read as "hold, then drag"?
+   - Is the clock policy (never paused) right for a slow reader?
 
 ## Questions for the owner
 

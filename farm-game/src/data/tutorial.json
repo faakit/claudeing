@@ -99,7 +99,18 @@
             "none": "emptySoil"
           }
         ]
-      }
+      },
+      "alt": [
+        {
+          "when": {
+            "some": "explicitHand"
+          },
+          "text": "Tap the seed packet on the hotbar.",
+          "target": {
+            "ui": "seedSlot"
+          }
+        }
+      ]
     },
     {
       "id": "water",
@@ -125,6 +136,15 @@
       "alt": [
         {
           "when": {
+            "some": "explicitHand"
+          },
+          "text": "Tap the can on the hotbar first.",
+          "target": {
+            "ui": "canSlot"
+          }
+        },
+        {
+          "when": {
             "some": "emptyCan"
           },
           "text": "Your can is empty: tap the pond.",
@@ -148,6 +168,15 @@
       },
       "elseText": "Tap here, then press Action.",
       "alt": [
+        {
+          "when": {
+            "some": "explicitHand"
+          },
+          "text": "Tap the seed packet on the hotbar.",
+          "target": {
+            "ui": "seedSlot"
+          }
+        },
         {
           "when": {
             "some": "emptyCan"
@@ -325,6 +354,15 @@
       ],
       "optional": true,
       "alt": [
+        {
+          "when": {
+            "some": "explicitHand"
+          },
+          "text": "Tap the can on the hotbar first.",
+          "target": {
+            "ui": "canSlot"
+          }
+        },
         {
           "when": {
             "some": "emptyCan"
@@ -719,6 +757,32 @@
       ],
       "leave": true,
       "optional": true
+    },
+    {
+      "id": "clay",
+      "track": "intro",
+      "optional": true,
+      "when": {
+        "all": [
+          {
+            "day": 8
+          },
+          {
+            "map": "town"
+          }
+        ]
+      },
+      "text": "Clay now races you to the board.",
+      "target": {
+        "object": "board",
+        "map": "town"
+      },
+      "done": [
+        {
+          "panel": "board"
+        }
+      ],
+      "leave": true
     }
   ],
   "refusals": {

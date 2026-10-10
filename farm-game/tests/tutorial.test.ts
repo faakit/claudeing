@@ -483,3 +483,17 @@ describe('guided start: day 1 ends in the evening, never at breakfast', () => {
     expect(v.pointer).toMatchObject({ kind: 'tile', tx: 18, ty: 33 });
   });
 });
+
+describe('guided start: the wrong thing in hand', () => {
+  it('with the rod in hand, watering points at the can on the hotbar first', () => {
+    const s = freshGuided();
+    for (const id of ['harvest', 'seeds', 'plant']) s.stats[`tut.${id}`] = 1;
+    s.farm.tiles['10,16']!.crop = { cropId: 'parsnip', stage: 0, daysInStage: 0, regrow: false };
+    s.inventory.selected = 3; // the rod: Action and taps do only what it does
+    const cur = advance(s, world(s), NO_SHEET).current!;
+    expect(cur.id).toBe('water');
+    const v = coachView(s, world(s), NO_SHEET, cur);
+    expect(v.text).toBe('Tap the can on the hotbar first.');
+    expect(v.pointer).toEqual({ kind: 'slot', slot: 1 });
+  });
+});

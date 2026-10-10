@@ -152,6 +152,7 @@ async function run(p, hand, deviant = false) {
   }
   let openedMenu = false;
   let barTested = false;
+  let rodTested = false;
   let step = null;
   let stepSince = Date.now();
   let firstHarvestS = null;
@@ -236,6 +237,19 @@ async function run(p, hand, deviant = false) {
         continue;
       }
       await sleep(400);
+      continue;
+    }
+    if (deviant && k.step === 'water' && !rodTested) {
+      // ...picks the rod on the hotbar by mistake: the coach asks for the can first.
+      rodTested = true;
+      await t.tap(88.5, 383.5, 70);
+      await sleep(500);
+      const kr = (await coach()).coach;
+      check(
+        `${tag}: with the rod in hand, the coach points at the can`,
+        kr?.text === 'Tap the can on the hotbar first.' && kr.pointer?.kind === 'slot',
+        JSON.stringify(kr),
+      );
       continue;
     }
     if (deviant && k.step === 'grow' && !barTested) {

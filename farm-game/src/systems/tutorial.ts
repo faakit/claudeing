@@ -21,6 +21,7 @@ import type {
   TutorialTarget,
 } from '../data';
 import type { Direction, GameState } from '../state/GameState';
+import { autoMode } from './autoTool';
 import { isProduce, isShippable } from './economy';
 import { maxEnergy } from './energy';
 import { gameEvents } from './events';
@@ -280,6 +281,9 @@ export function hasKind(s: GameState, kind: TutorialKind, world?: CoachWorld): b
       return s.mail.list.some((l) => l.read);
     case 'emptyCan':
       return s.water <= 0;
+    case 'explicitHand':
+      // the rod, a placeable or goods in hand: Action and taps do only what that item does (no auto tool)
+      return !autoMode(s);
     case 'placeable':
       return s.inventory.slots.some((st, i) => !!st && i < 8 && items[st.item]?.placeable === true);
   }
@@ -600,6 +604,10 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     const dir: Direction =
       Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
     return { kind: 'stick', dir };
+  }
+  if (g.ui === 'canSlot') {
+    const i = slotOf(s, (it) => tools[items[it]?.tool ?? '']?.action === 'water');
+    return i === null ? null : { kind: 'slot', slot: i };
   }
   if (g.ui === 'seedSlot') {
     const i = slotOf(s, (it) => items[it]?.type === 'seed');

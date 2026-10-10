@@ -125,7 +125,7 @@
   },
   {
     "id": "craft",
-    "text": "Craft something at the workbench",
+    "text": "Make something in Menu > Make",
     "stat": "crafted",
     "target": 1,
     "reward": 60,

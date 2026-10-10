@@ -469,6 +469,7 @@ export type TutorialKind =
   | 'unread'
   | 'readLetter'
   | 'emptyCan'
+  | 'explicitHand'
   | 'placeable';
 /** A condition: every field given must hold (`any`, `all`, `not` combine). */
 export interface TutorialCond {
@@ -519,7 +520,7 @@ export interface TutorialTarget {
   door?: string;
   /** A long walk to the door that leads to this map: shows a stick drag, then the door once it is near. */
   steer?: string;
-  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'placeSlot';
+  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot';
   gesture?: 'paint' | 'ring';
   /** A button in the open sheet whose label matches this regular expression. */
   button?: string;
@@ -908,6 +909,7 @@ export function validateContent(): void {
 const TUT_KINDS = [
   'readLetter',
   'emptyCan',
+  'explicitHand',
   'ripe',
   'dry',
   'crops',
@@ -922,7 +924,7 @@ const TUT_KINDS = [
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop'];
-const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'placeSlot'];
+const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot'];
 const TUT_COND_KEYS = new Set([
   'stat',
   'touched',
