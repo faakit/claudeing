@@ -750,7 +750,8 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   mostly sideways over its last 6 px of travel, and the leg has tiles. The line is the finger's own trend (a
   weighted least-squares fit as it moves along, with a strong prior toward straight), so a slow drift or a
   thumb's arc tilts the line instead of turning it. Where the corner goes is the average of where the finger ran
-  while it veered off (from 6 px out); past 10 px off the leg stops growing. Dragging back un-paints tile by tile
+  while it veered off (from 6 px out); past 13 px off the leg stops growing (the lift then settles the last leg to
+  where the finger went). Dragging back un-paints tile by tile
   and round corners. The path never revisits a tile or the farmer's, stops at 16 tiles, and rows after the
   first stay inside the first row's span (an overshoot cannot paint past the plot). At a U-turn the step
   between rows is one tile, and a row one tile short of the box edge reaches it.
@@ -762,10 +763,12 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
 - **Events:** `paintLine` keeps `dir` (now the last tile's direction) and `tiles` (the path's length) and adds an
   optional `path` (one direction per tile from the farmer). `paintEnd` is unchanged. New `ActionEvent` kind
   `reject` (UI only). No inputHub or gameEvents name was added, renamed or removed.
-- **Ring:** radius 56 -> 60 on a wider arc (285 -> 105 degrees), dead zone 22 -> 36 px (a slide resting short of
-  the items leaves the tap menu), sectors 0.44 -> 0.40 of a step, and ring aims correct the whole modelled
-  thumb-base pull (0.9 mm sideways, 1.2 mm down; `RING_PULL_MM`). Model, 7 items: σ 2 mm right 95% / neighbour
-  0.3% on i13, 88% / 1.8% on SE; σ 1.2 mm 99-100%.
+- **Ring:** radius 56 -> 64 on a wider arc (285 -> 105 degrees), dead zone 22 -> 36 px (a slide resting short of
+  the items leaves the tap menu), and ring aims correct the whole modelled thumb-base pull (0.9 mm sideways,
+  1.2 mm down; `RING_PULL_MM`). Picks go to the nearest item when it is clearly nearer than the next (by 15% of
+  the spacing) and within 30 px, instead of by angle: a finger that lands short of the ring keeps its tolerance
+  in mm. Model, 7 items: σ 2 mm right 98% / neighbour 0.3% on i13, 93% / 1.2% on SE, 95% / 0.9% on the Fold;
+  σ 1.2 mm 99-100%.
 - **Options:** the autosave note heads the rows and the rows sit as low as the tab strip allows; each row puts
   its more used switch on the holding thumb's side (mirrored for the left hand), with Sound and Vibrate in the
   two lowest rows. Reach model: both comfortable for either thumb on i13, Pixel 7 and SE; no hard target there

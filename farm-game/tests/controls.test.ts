@@ -238,16 +238,19 @@ describe('tool ring', () => {
       }
   });
 
-  it('a finger picks the item it points at, by angle; the dead centre picks nothing', async () => {
+  it('a finger picks the item it points at (nearest, clearly); the dead centre and the gaps pick nothing', async () => {
     const { ringItem, ringPick, RING } = await import('../src/ui/layout');
     for (const left of [false, true]) {
       const c = { x: 0, y: 0 };
       for (let i = 0; i < 9; i++) {
         const it = ringItem(c, i, 9, left);
         expect(ringPick(it.x, it.y, 9, left), `${left} ${i}`).toBe(i);
-        // a sloppy finger 6 degrees off still picks it
+        // a sloppy finger 6 degrees off, a little short of the ring, still picks it; so does one well short
+        // (40 px out) on its ray
         const a = Math.atan2(it.y, it.x) + (6 * Math.PI) / 180;
-        expect(ringPick(Math.cos(a) * 40, Math.sin(a) * 40, 9, left)).toBe(i);
+        expect(ringPick(Math.cos(a) * 54, Math.sin(a) * 54, 9, left)).toBe(i);
+        const a0 = Math.atan2(it.y, it.x);
+        expect(ringPick(Math.cos(a0) * 40, Math.sin(a0) * 40, 9, left)).toBe(i);
         // half way between two items picks neither (a miss lands on nothing, not on a neighbour)
         if (i < 8) {
           const b = ringItem(c, i + 1, 9, left);

@@ -73,8 +73,12 @@ export const PAINT_TURN_PX = 14;
  * (averaged) is where the corner goes, so a wobble there cannot add or drop a tile.
  */
 export const PAINT_VEER_PX = 6;
-/** Past this distance off the line the leg stops growing (the corner decides its length). */
-export const PAINT_HOLD_PX = 10;
+/**
+ * Past this distance off the line the leg stops growing (the corner decides its length). Just under the turn
+ * threshold, so a wobble peak while drawing along the line rarely holds a tile back; at the lift the last leg
+ * is as long as the finger went in any case (`settleLastLeg`).
+ */
+export const PAINT_HOLD_PX = 13;
 /** A corner needs the finger's last this-many px of travel to be mostly sideways to the line. */
 export const PAINT_SIDE_WINDOW_PX = 6;
 /** Back within this distance of the old line (and not veering), the newest leg is undone. */
@@ -230,6 +234,7 @@ export class ActionPress {
 
   up(): ActionEvent[] {
     if (this.phase === 'armed') {
+      this.settleLastLeg();
       const path = this.path;
       if (path.length > 0)
         return [{ type: 'commit', dir: path[path.length - 1]!, tiles: path.length, path }];
@@ -255,6 +260,21 @@ export class ActionPress {
       if (s >= len) return { x: end.x - h[k - 1]!.x, y: end.y - h[k - 1]!.y };
     }
     return { x: end.x - h[0]!.x, y: end.y - h[0]!.y };
+  }
+
+  /**
+   * At the lift: a leg held back while the finger wobbled well off its line (in case a corner was coming) and
+   * then lifted without one is as long as the finger went along it.
+   */
+  private settleLastLeg(): void {
+    const i = this.legs.length - 1;
+    const leg = this.legs[i];
+    if (!leg) return;
+    const v = VEC[leg.dir];
+    const px = this.last.x - this.armAt.x;
+    const py = this.last.y - this.armAt.y;
+    const along = (px - leg.ox) * v.x + (py - leg.oy) * v.y;
+    leg.tiles = Math.max(leg.tiles, this.room(i, along));
   }
 
   private paintMove(dx: number, dy: number): ActionEvent[] {

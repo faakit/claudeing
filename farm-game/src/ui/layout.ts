@@ -143,10 +143,11 @@ export function rowLayout(
 /** The tool ring: 8 hotbar slots and "Bag" on an arc around Action, on the side away from the screen edge. */
 export const RING = {
   /**
-   * Distance of the item centres from Action's centre. Round 3: 56 -> 60 and a wider arc, so 7 items sit
-   * 9 mm apart even on an SE (8 mm before): enough that a 2 mm scatter picks right 88%+ and a neighbour < 2%.
+   * Distance of the item centres from Action's centre. Round 3: 56 -> 64 and a wider arc, so 7 items sit
+   * about 10 mm apart even on an SE (8 mm before): a 2 mm scatter picks right 90%+ there and a neighbour ~1%.
+   * The lowest item stays inside the canvas (unit test).
    */
-  radius: 60,
+  radius: 64,
   /** Item disc radius. */
   itemR: 12,
   /** Arc (screen angles, y down, right-handed): from a little right of straight up (285) round the left to low. */
@@ -160,8 +161,12 @@ export const RING = {
   dead: 36,
 } as const;
 
-/** Half-width of a pick sector, in item steps (0.5 would leave no gap between neighbours). */
-export const RING_SECTOR = 0.4;
+/**
+ * A pick goes to the nearest item when it is clearly nearer than the next one (by this share of the spacing
+ * between items: a finger between two items picks neither) and within `RING_REACH` px of it (about 9 mm).
+ */
+export const RING_GAP = 0.15;
+export const RING_REACH = 30;
 /**
  * A finger resting on a ring item sits about 1.5 mm toward the thumb base (0.9 mm toward the holding side,
  * 1.2 mm down: the controls critic's thumb model); ring picks correct for all of it (taps on the world correct
@@ -184,19 +189,27 @@ export function ringItem(
 }
 
 /**
- * Which ring item a finger at (dx, dy) from Action's centre points at: by angle (a whole sector, much bigger
- * than the drawn disc), or null inside the dead centre or outside the arc.
+ * Which ring item a finger at (dx, dy) from Action's centre picks: the nearest item centre, if it is clearly
+ * nearer than the next one and within reach (a zone much bigger than the drawn disc); null inside the dead
+ * centre, between two items, or away from the arc. Round 3: by distance rather than by angle, so a finger that
+ * lands short of the ring keeps the same tolerance in mm (an angle shrinks toward the centre).
  */
 export function ringPick(dx: number, dy: number, n: number, leftHanded: boolean): number | null {
   if (Math.hypot(dx, dy) < RING.dead || n < 1) return null;
-  let deg = (Math.atan2(dy, dx) * 180) / Math.PI;
-  if (leftHanded) deg = 180 - deg;
-  deg = ((deg % 360) + 360) % 360;
-  const step = n > 1 ? (RING.from - RING.to) / (n - 1) : 30;
-  // position along the arc, 0 at `from`, n-1 at `to`
-  const along = (RING.from - deg) / step;
-  const i = Math.round(along) + 0; // never -0
-  // Gaps between sectors: a finger between two items picks neither (a miss lands on nothing).
-  if (i < 0 || i >= n || Math.abs(along - i) > RING_SECTOR) return null;
-  return i;
+  const at = (i: number) => ringItem({ x: 0, y: 0 }, i, n, leftHanded);
+  const spacing = n > 1 ? Math.hypot(at(1).x - at(0).x, at(1).y - at(0).y) : RING.radius;
+  let best = -1;
+  let d1 = Infinity;
+  let d2 = Infinity;
+  for (let i = 0; i < n; i++) {
+    const c = at(i);
+    const d = Math.hypot(dx - c.x, dy - c.y);
+    if (d < d1) {
+      d2 = d1;
+      d1 = d;
+      best = i;
+    } else if (d < d2) d2 = d;
+  }
+  if (d1 > RING_REACH || d2 - d1 < RING_GAP * spacing) return null;
+  return best;
 }
