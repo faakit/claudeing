@@ -1,1553 +1,1448 @@
 {
- "instruments": {
-  "piano": {
-   "kind": "decay",
-   "zones": [
-    {
-     "file": "inst/piano-41.mp3",
-     "onset": 0.00166,
-     "dur": 2.4,
-     "root": 40.94
+  "instruments": {
+    "piano": {
+      "kind": "decay",
+      "zones": [
+        {
+          "file": "inst/piano-41.mp3",
+          "onset": 0.00166,
+          "dur": 2.4,
+          "root": 40.94
+        },
+        {
+          "file": "inst/piano-45.mp3",
+          "onset": 0.00175,
+          "dur": 2.4,
+          "root": 44.86
+        },
+        {
+          "file": "inst/piano-49.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 48.94
+        },
+        {
+          "file": "inst/piano-53.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 52.97
+        },
+        {
+          "file": "inst/piano-57.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 57.03
+        },
+        {
+          "file": "inst/piano-61.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 61.0
+        },
+        {
+          "file": "inst/piano-65.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 65.01
+        },
+        {
+          "file": "inst/piano-69.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 69.01
+        },
+        {
+          "file": "inst/piano-73.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 73.04
+        },
+        {
+          "file": "inst/piano-77.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 77.04
+        },
+        {
+          "file": "inst/piano-81.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 81.05
+        },
+        {
+          "file": "inst/piano-85.mp3",
+          "onset": 0.002,
+          "dur": 2.4,
+          "root": 85.09
+        }
+      ]
     },
-    {
-     "file": "inst/piano-45.mp3",
-     "onset": 0.00175,
-     "dur": 2.4,
-     "root": 44.86
+    "harp": {
+      "kind": "decay",
+      "zones": [
+        {
+          "file": "inst/harp-38.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 37.88
+        },
+        {
+          "file": "inst/harp-41.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 40.9
+        },
+        {
+          "file": "inst/harp-45.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 44.93
+        },
+        {
+          "file": "inst/harp-48.mp3",
+          "onset": 0.00023,
+          "dur": 2.2,
+          "root": 47.98
+        },
+        {
+          "file": "inst/harp-52.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 51.94
+        },
+        {
+          "file": "inst/harp-55.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 54.9
+        },
+        {
+          "file": "inst/harp-59.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 58.88
+        },
+        {
+          "file": "inst/harp-62.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 61.88
+        },
+        {
+          "file": "inst/harp-65.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 65.0
+        },
+        {
+          "file": "inst/harp-69.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 68.9
+        },
+        {
+          "file": "inst/harp-72.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 71.88
+        },
+        {
+          "file": "inst/harp-76.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 75.89
+        },
+        {
+          "file": "inst/harp-79.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 78.95
+        },
+        {
+          "file": "inst/harp-83.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 82.92
+        }
+      ]
     },
-    {
-     "file": "inst/piano-49.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 48.94
+    "marimba": {
+      "kind": "decay",
+      "zones": [
+        {
+          "file": "inst/marimba-55.mp3",
+          "onset": 0.002,
+          "dur": 1.6,
+          "root": 54.98
+        },
+        {
+          "file": "inst/marimba-59.mp3",
+          "onset": 0.002,
+          "dur": 1.6,
+          "root": 59.03
+        },
+        {
+          "file": "inst/marimba-65.mp3",
+          "onset": 0.002,
+          "dur": 1.6,
+          "root": 65.0
+        },
+        {
+          "file": "inst/marimba-72.mp3",
+          "onset": 0.002,
+          "dur": 1.6,
+          "root": 72.04
+        },
+        {
+          "file": "inst/marimba-79.mp3",
+          "onset": 0.002,
+          "dur": 1.14,
+          "root": 78.98
+        },
+        {
+          "file": "inst/marimba-83.mp3",
+          "onset": 0.002,
+          "dur": 1.01,
+          "root": 83.0
+        },
+        {
+          "file": "inst/marimba-89.mp3",
+          "onset": 0.002,
+          "dur": 1.15,
+          "root": 88.98
+        },
+        {
+          "file": "inst/marimba-96.mp3",
+          "onset": 0.002,
+          "dur": 1.26,
+          "root": 96.0
+        }
+      ]
     },
-    {
-     "file": "inst/piano-53.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 52.97
+    "glock": {
+      "kind": "decay",
+      "zones": [
+        {
+          "file": "inst/glock-79.mp3",
+          "onset": 0.0,
+          "dur": 1.8,
+          "root": 79.08
+        },
+        {
+          "file": "inst/glock-84.mp3",
+          "onset": 0.0,
+          "dur": 1.8,
+          "root": 84.12
+        },
+        {
+          "file": "inst/glock-91.mp3",
+          "onset": 0.002,
+          "dur": 1.8,
+          "root": 91.12
+        },
+        {
+          "file": "inst/glock-96.mp3",
+          "onset": 0.0,
+          "dur": 1.8,
+          "root": 96.16
+        },
+        {
+          "file": "inst/glock-103.mp3",
+          "onset": 2e-5,
+          "dur": 1.8,
+          "root": 103.16
+        },
+        {
+          "file": "inst/glock-108.mp3",
+          "onset": 0.002,
+          "dur": 1.39,
+          "root": 108.24
+        }
+      ]
     },
-    {
-     "file": "inst/piano-57.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 57.03
+    "vibes": {
+      "kind": "decay",
+      "zones": [
+        {
+          "file": "inst/vibes-60.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 60.0
+        },
+        {
+          "file": "inst/vibes-64.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 64.0
+        },
+        {
+          "file": "inst/vibes-67.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 67.0
+        },
+        {
+          "file": "inst/vibes-71.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 71.0
+        },
+        {
+          "file": "inst/vibes-74.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 74.0
+        },
+        {
+          "file": "inst/vibes-77.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 77.0
+        },
+        {
+          "file": "inst/vibes-81.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 81.0
+        },
+        {
+          "file": "inst/vibes-84.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 84.0
+        },
+        {
+          "file": "inst/vibes-88.mp3",
+          "onset": 0.002,
+          "dur": 2.2,
+          "root": 88.0
+        }
+      ]
     },
-    {
-     "file": "inst/piano-61.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 61.0
+    "pizz": {
+      "kind": "decay",
+      "zones": [
+        {
+          "file": "inst/pizz-40.mp3",
+          "onset": 0.002,
+          "dur": 1.3,
+          "root": 39.77
+        },
+        {
+          "file": "inst/pizz-47.mp3",
+          "onset": 0.002,
+          "dur": 1.3,
+          "root": 46.81
+        },
+        {
+          "file": "inst/pizz-50.mp3",
+          "onset": 0.00104,
+          "dur": 1.3,
+          "root": 50.1
+        },
+        {
+          "file": "inst/pizz-53.mp3",
+          "onset": 0.002,
+          "dur": 1.3,
+          "root": 53.11
+        },
+        {
+          "file": "inst/pizz-57.mp3",
+          "onset": 0.00084,
+          "dur": 1.3,
+          "root": 57.1
+        },
+        {
+          "file": "inst/pizz-60.mp3",
+          "onset": 0.002,
+          "dur": 1.3,
+          "root": 59.97
+        },
+        {
+          "file": "inst/pizz-64.mp3",
+          "onset": 0.00141,
+          "dur": 1.25,
+          "root": 64.03
+        }
+      ]
     },
-    {
-     "file": "inst/piano-65.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 65.01
+    "recorder": {
+      "kind": "sustain",
+      "zones": [
+        {
+          "file": "inst/recorder-68.mp3",
+          "onset": 0.00193,
+          "dur": 1.7865,
+          "root": 68.04,
+          "loop": [0.76, 1.70646]
+        },
+        {
+          "file": "inst/recorder-72.mp3",
+          "onset": 0.0019,
+          "dur": 1.7589,
+          "root": 71.97,
+          "loop": [0.68, 1.67891]
+        },
+        {
+          "file": "inst/recorder-76.mp3",
+          "onset": 0.00195,
+          "dur": 1.9706,
+          "root": 76.01,
+          "loop": [0.68, 1.89061]
+        },
+        {
+          "file": "inst/recorder-80.mp3",
+          "onset": 0.00195,
+          "dur": 1.6765,
+          "root": 80.02,
+          "loop": [0.6, 1.59646]
+        },
+        {
+          "file": "inst/recorder-84.mp3",
+          "onset": 0.002,
+          "dur": 2.0456,
+          "root": 84.0,
+          "loop": [0.76, 1.96565]
+        },
+        {
+          "file": "inst/recorder-88.mp3",
+          "onset": 0.002,
+          "dur": 1.8522,
+          "root": 88.03,
+          "loop": [0.6, 1.77218]
+        }
+      ]
     },
-    {
-     "file": "inst/piano-69.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 69.01
+    "ocarina": {
+      "kind": "sustain",
+      "zones": [
+        {
+          "file": "inst/ocarina-69.mp3",
+          "onset": 0.00014,
+          "dur": 2.2314,
+          "root": 68.98,
+          "loop": [0.84, 2.15136]
+        },
+        {
+          "file": "inst/ocarina-73.mp3",
+          "onset": 9e-5,
+          "dur": 2.2301,
+          "root": 72.97,
+          "loop": [0.84, 2.15014]
+        },
+        {
+          "file": "inst/ocarina-78.mp3",
+          "onset": 0.00054,
+          "dur": 1.7844,
+          "root": 78.08,
+          "loop": [0.6, 1.70442]
+        },
+        {
+          "file": "inst/ocarina-81.mp3",
+          "onset": 0.00018,
+          "dur": 1.8875,
+          "root": 81.11,
+          "loop": [0.84, 1.80748]
+        },
+        {
+          "file": "inst/ocarina-85.mp3",
+          "onset": 7e-5,
+          "dur": 1.6665,
+          "root": 85.07,
+          "lag": 0.0847,
+          "loop": [0.68, 1.58653]
+        }
+      ]
     },
-    {
-     "file": "inst/piano-73.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 73.04
+    "viola": {
+      "kind": "sustain",
+      "zones": [
+        {
+          "file": "inst/viola-52.mp3",
+          "onset": 0.00082,
+          "dur": 2.1341,
+          "root": 52.08,
+          "lag": 0.0491,
+          "loop": [0.84, 2.05408]
+        },
+        {
+          "file": "inst/viola-55.mp3",
+          "onset": 0.00073,
+          "dur": 2.2492,
+          "root": 54.99,
+          "lag": 0.0591,
+          "loop": [0.84, 2.16921]
+        },
+        {
+          "file": "inst/viola-59.mp3",
+          "onset": 0.0012,
+          "dur": 1.9803,
+          "root": 58.96,
+          "lag": 0.0587,
+          "loop": [0.68, 1.90027]
+        },
+        {
+          "file": "inst/viola-62.mp3",
+          "onset": 0.00116,
+          "dur": 1.9239,
+          "root": 62.06,
+          "loop": [0.6, 1.84395]
+        },
+        {
+          "file": "inst/viola-65.mp3",
+          "onset": 0.00132,
+          "dur": 2.0209,
+          "root": 64.98,
+          "lag": 0.0236,
+          "loop": [0.76, 1.94091]
+        },
+        {
+          "file": "inst/viola-69.mp3",
+          "onset": 0.00132,
+          "dur": 1.9993,
+          "root": 69.0,
+          "lag": 0.0885,
+          "loop": [0.6, 1.91932]
+        },
+        {
+          "file": "inst/viola-72.mp3",
+          "onset": 0.00104,
+          "dur": 2.0468,
+          "root": 71.97,
+          "lag": 0.0588,
+          "loop": [0.76, 1.96678]
+        },
+        {
+          "file": "inst/viola-76.mp3",
+          "onset": 0.00122,
+          "dur": 2.0459,
+          "root": 76.02,
+          "lag": 0.0337,
+          "loop": [0.84, 1.96592]
+        }
+      ]
     },
-    {
-     "file": "inst/piano-77.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 77.04
+    "cello": {
+      "kind": "sustain",
+      "zones": [
+        {
+          "file": "inst/cello-36.mp3",
+          "onset": 0.00059,
+          "dur": 1.8044,
+          "root": 35.96,
+          "loop": [0.76, 1.7244]
+        },
+        {
+          "file": "inst/cello-40.mp3",
+          "onset": 0.00163,
+          "dur": 1.7791,
+          "root": 39.97,
+          "lag": 0.0233,
+          "loop": [0.68, 1.69912]
+        },
+        {
+          "file": "inst/cello-43.mp3",
+          "onset": 0.001,
+          "dur": 1.7527,
+          "root": 42.9,
+          "lag": 0.0439,
+          "loop": [0.6, 1.6727]
+        },
+        {
+          "file": "inst/cello-47.mp3",
+          "onset": 0.00163,
+          "dur": 1.6992,
+          "root": 46.98,
+          "lag": 0.1131,
+          "loop": [0.6, 1.61921]
+        },
+        {
+          "file": "inst/cello-50.mp3",
+          "onset": 0.00138,
+          "dur": 2.0985,
+          "root": 49.87,
+          "lag": 0.0285,
+          "loop": [0.68, 2.01853]
+        },
+        {
+          "file": "inst/cello-53.mp3",
+          "onset": 0.00088,
+          "dur": 2.0837,
+          "root": 53.11,
+          "lag": 0.1139,
+          "loop": [0.76, 2.00374]
+        },
+        {
+          "file": "inst/cello-57.mp3",
+          "onset": 0.00193,
+          "dur": 2.2608,
+          "root": 57.01,
+          "lag": 0.033,
+          "loop": [0.84, 2.18077]
+        },
+        {
+          "file": "inst/cello-60.mp3",
+          "onset": 0.00188,
+          "dur": 1.9843,
+          "root": 60.04,
+          "lag": 0.038,
+          "loop": [0.6, 1.90433]
+        }
+      ]
     },
-    {
-     "file": "inst/piano-81.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 81.05
+    "shaker": {
+      "kind": "perc",
+      "hits": [
+        {
+          "file": "inst/shaker-0.mp3",
+          "onset": 0.0,
+          "dur": 0.26
+        },
+        {
+          "file": "inst/shaker-1.mp3",
+          "onset": 0.0,
+          "dur": 0.26
+        },
+        {
+          "file": "inst/shaker-2.mp3",
+          "onset": 0.0,
+          "dur": 0.12
+        },
+        {
+          "file": "inst/shaker-3.mp3",
+          "onset": 0.0,
+          "dur": 0.16
+        }
+      ]
     },
-    {
-     "file": "inst/piano-85.mp3",
-     "onset": 0.002,
-     "dur": 2.4,
-     "root": 85.09
+    "tamb": {
+      "kind": "perc",
+      "hits": [
+        {
+          "file": "inst/tamb-0.mp3",
+          "onset": 0.00063,
+          "dur": 0.9
+        },
+        {
+          "file": "inst/tamb-1.mp3",
+          "onset": 0.00127,
+          "dur": 0.9
+        },
+        {
+          "file": "inst/tamb-2.mp3",
+          "onset": 0.00098,
+          "dur": 0.81
+        }
+      ]
+    },
+    "sleigh": {
+      "kind": "perc",
+      "hits": [
+        {
+          "file": "inst/sleigh-0.mp3",
+          "onset": 0.00029,
+          "dur": 1.2
+        },
+        {
+          "file": "inst/sleigh-1.mp3",
+          "onset": 0.00034,
+          "dur": 1.2
+        }
+      ]
+    },
+    "triangle": {
+      "kind": "perc",
+      "hits": [
+        {
+          "file": "inst/triangle-0.mp3",
+          "onset": 0.00011,
+          "dur": 2.0
+        },
+        {
+          "file": "inst/triangle-1.mp3",
+          "onset": 0.00018,
+          "dur": 2.0
+        }
+      ]
     }
-   ]
   },
-  "harp": {
-   "kind": "decay",
-   "zones": [
-    {
-     "file": "inst/harp-38.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 37.88
+  "sfx": {
+    "till": {
+      "files": [
+        {
+          "file": "sfx/till-1.mp3",
+          "onset": 0.0,
+          "dur": 0.3,
+          "tp": -6.6
+        },
+        {
+          "file": "sfx/till-2.mp3",
+          "onset": 0.0,
+          "dur": 0.3,
+          "tp": -7.0
+        },
+        {
+          "file": "sfx/till-3.mp3",
+          "onset": 0.0,
+          "dur": 0.33,
+          "tp": -6.42
+        }
+      ],
+      "gain": 1.2882,
+      "pitch": 1.2,
+      "vol": 1.5,
+      "voices": 2
     },
-    {
-     "file": "inst/harp-41.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 40.9
+    "water": {
+      "files": [
+        {
+          "file": "sfx/water-1.mp3",
+          "onset": 0.00043,
+          "dur": 0.42,
+          "tp": -8.82
+        },
+        {
+          "file": "sfx/water-2.mp3",
+          "onset": 0.00082,
+          "dur": 0.42,
+          "tp": -6.78
+        },
+        {
+          "file": "sfx/water-3.mp3",
+          "onset": 0.00039,
+          "dur": 0.42,
+          "tp": -6.88
+        }
+      ],
+      "gain": 1.2303,
+      "pitch": 1.0,
+      "vol": 1.5,
+      "voices": 1
     },
-    {
-     "file": "inst/harp-45.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 44.93
+    "refill": {
+      "files": [
+        {
+          "file": "sfx/refill-1.mp3",
+          "onset": 0.00073,
+          "dur": 0.7,
+          "tp": -5.7
+        },
+        {
+          "file": "sfx/refill-2.mp3",
+          "onset": 0.00082,
+          "dur": 0.7,
+          "tp": -5.54
+        }
+      ],
+      "gain": 1.1614,
+      "pitch": 0.8,
+      "vol": 1,
+      "voices": 1
     },
-    {
-     "file": "inst/harp-48.mp3",
-     "onset": 0.00023,
-     "dur": 2.2,
-     "root": 47.98
+    "plant": {
+      "files": [
+        {
+          "file": "sfx/plant-1.mp3",
+          "onset": 0.0,
+          "dur": 0.13,
+          "tp": -5.89
+        },
+        {
+          "file": "sfx/plant-2.mp3",
+          "onset": 0.0,
+          "dur": 0.13,
+          "tp": -6.09
+        },
+        {
+          "file": "sfx/plant-3.mp3",
+          "onset": 0.0,
+          "dur": 0.13,
+          "tp": -6.57
+        }
+      ],
+      "gain": 1.1614,
+      "pitch": 1.5,
+      "vol": 1.5,
+      "voices": 2
     },
-    {
-     "file": "inst/harp-52.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 51.94
+    "harvest": {
+      "files": [
+        {
+          "file": "sfx/harvest-1.mp3",
+          "onset": 0.0,
+          "dur": 0.3,
+          "tp": -6.1
+        },
+        {
+          "file": "sfx/harvest-2.mp3",
+          "onset": 0.0,
+          "dur": 0.3,
+          "tp": -5.84
+        },
+        {
+          "file": "sfx/harvest-3.mp3",
+          "onset": 0.0,
+          "dur": 0.29,
+          "tp": -6.17
+        }
+      ],
+      "gain": 1.2303,
+      "pitch": 1.5,
+      "vol": 1,
+      "voices": 3
     },
-    {
-     "file": "inst/harp-55.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 54.9
+    "cut": {
+      "files": [
+        {
+          "file": "sfx/cut-1.mp3",
+          "onset": 0.00125,
+          "dur": 0.28,
+          "tp": -5.56
+        },
+        {
+          "file": "sfx/cut-2.mp3",
+          "onset": 0.00156,
+          "dur": 0.27,
+          "tp": -5.45
+        },
+        {
+          "file": "sfx/cut-3.mp3",
+          "onset": 0.00132,
+          "dur": 0.26,
+          "tp": -5.52
+        },
+        {
+          "file": "sfx/cut-4.mp3",
+          "onset": 0.00129,
+          "dur": 0.25,
+          "tp": -5.37
+        }
+      ],
+      "gain": 1.0839,
+      "pitch": 1.5,
+      "vol": 1.5,
+      "voices": 2
     },
-    {
-     "file": "inst/harp-59.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 58.88
+    "swing": {
+      "files": [
+        {
+          "file": "sfx/swing-1.mp3",
+          "onset": 0.00138,
+          "dur": 0.11,
+          "tp": -5.53
+        },
+        {
+          "file": "sfx/swing-2.mp3",
+          "onset": 0.002,
+          "dur": 0.1,
+          "tp": -5.95
+        },
+        {
+          "file": "sfx/swing-3.mp3",
+          "onset": 0.00147,
+          "dur": 0.08,
+          "tp": -5.31
+        },
+        {
+          "file": "sfx/swing-4.mp3",
+          "onset": 0.00152,
+          "dur": 0.07,
+          "tp": -5.69
+        }
+      ],
+      "gain": 1.0715,
+      "pitch": 1.5,
+      "vol": 1.5,
+      "voices": 2
     },
-    {
-     "file": "inst/harp-62.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 61.88
+    "coin": {
+      "files": [
+        {
+          "file": "sfx/coin-1.mp3",
+          "onset": 0.00057,
+          "dur": 0.26,
+          "tp": -6.6
+        },
+        {
+          "file": "sfx/coin-2.mp3",
+          "onset": 0.00039,
+          "dur": 0.36,
+          "tp": -6.23
+        },
+        {
+          "file": "sfx/coin-3.mp3",
+          "onset": 0.00077,
+          "dur": 0.31,
+          "tp": -6.38
+        }
+      ],
+      "gain": 1.2589,
+      "pitch": 1.0,
+      "vol": 1,
+      "voices": 2
     },
-    {
-     "file": "inst/harp-65.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 65.0
+    "buy": {
+      "files": [
+        {
+          "file": "sfx/buy-1.mp3",
+          "onset": 0.00188,
+          "dur": 0.49,
+          "tp": -6.14
+        },
+        {
+          "file": "sfx/buy-2.mp3",
+          "onset": 0.00098,
+          "dur": 0.5,
+          "tp": -6.1
+        }
+      ],
+      "gain": 1.2445,
+      "pitch": 0.5,
+      "vol": 1,
+      "voices": 1
     },
-    {
-     "file": "inst/harp-69.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 68.9
+    "ui": {
+      "files": [
+        {
+          "file": "sfx/ui-1.mp3",
+          "onset": 0.0,
+          "dur": 0.05,
+          "tp": -5.61
+        },
+        {
+          "file": "sfx/ui-2.mp3",
+          "onset": 2e-5,
+          "dur": 0.03,
+          "tp": -5.52
+        },
+        {
+          "file": "sfx/ui-3.mp3",
+          "onset": 5e-5,
+          "dur": 0.03,
+          "tp": -5.54
+        }
+      ],
+      "gain": 1.1885,
+      "pitch": 1.0,
+      "vol": 1,
+      "voices": 2,
+      "repeatDb": 0
     },
-    {
-     "file": "inst/harp-72.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 71.88
+    "select": {
+      "files": [
+        {
+          "file": "sfx/select-1.mp3",
+          "onset": 0.0,
+          "dur": 0.04,
+          "tp": -9.14
+        },
+        {
+          "file": "sfx/select-2.mp3",
+          "onset": 0.0,
+          "dur": 0.05,
+          "tp": -9.37
+        }
+      ],
+      "gain": 1.6218,
+      "pitch": 1.0,
+      "vol": 1,
+      "voices": 2,
+      "repeatDb": 0
     },
-    {
-     "file": "inst/harp-76.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 75.89
+    "door": {
+      "files": [
+        {
+          "file": "sfx/door-1.mp3",
+          "onset": 0.002,
+          "dur": 0.74,
+          "tp": -6.48
+        },
+        {
+          "file": "sfx/door-2.mp3",
+          "onset": 0.002,
+          "dur": 0.86,
+          "tp": -5.37
+        }
+      ],
+      "gain": 1.122,
+      "pitch": 0.8,
+      "vol": 1,
+      "voices": 1
     },
-    {
-     "file": "inst/harp-79.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 78.95
+    "stepGrass": {
+      "files": [
+        {
+          "file": "sfx/stepGrass-1.mp3",
+          "onset": 0.0,
+          "dur": 0.18,
+          "tp": -8.44
+        },
+        {
+          "file": "sfx/stepGrass-2.mp3",
+          "onset": 0.0,
+          "dur": 0.18,
+          "tp": -10.88
+        },
+        {
+          "file": "sfx/stepGrass-3.mp3",
+          "onset": 0.0,
+          "dur": 0.18,
+          "tp": -10.74
+        },
+        {
+          "file": "sfx/stepGrass-4.mp3",
+          "onset": 0.0,
+          "dur": 0.18,
+          "tp": -7.45
+        }
+      ],
+      "gain": 1.122,
+      "pitch": 1.5,
+      "vol": 2,
+      "voices": 3,
+      "repeatDb": 0
     },
-    {
-     "file": "inst/harp-83.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 82.92
+    "stepWood": {
+      "files": [
+        {
+          "file": "sfx/stepWood-1.mp3",
+          "onset": 0.002,
+          "dur": 0.22,
+          "tp": -7.3
+        },
+        {
+          "file": "sfx/stepWood-2.mp3",
+          "onset": 0.002,
+          "dur": 0.25,
+          "tp": -6.67
+        },
+        {
+          "file": "sfx/stepWood-3.mp3",
+          "onset": 0.002,
+          "dur": 0.22,
+          "tp": -8.54
+        },
+        {
+          "file": "sfx/stepWood-4.mp3",
+          "onset": 0.002,
+          "dur": 0.22,
+          "tp": -10.13
+        }
+      ],
+      "gain": 1.0233,
+      "pitch": 1.2,
+      "vol": 2,
+      "voices": 3,
+      "repeatDb": 0
+    },
+    "error": {
+      "files": [
+        {
+          "file": "sfx/error-1.mp3",
+          "onset": 0.0,
+          "dur": 0.19,
+          "tp": -6.81
+        },
+        {
+          "file": "sfx/error-2.mp3",
+          "onset": 0.0,
+          "dur": 0.13,
+          "tp": -6.81
+        }
+      ],
+      "gain": 1.2589,
+      "pitch": 0.5,
+      "vol": 1,
+      "voices": 1
+    },
+    "tick": {
+      "files": [
+        {
+          "file": "sfx/tick-1.mp3",
+          "onset": 0.002,
+          "dur": 0.04,
+          "tp": -10.43
+        },
+        {
+          "file": "sfx/tick-2.mp3",
+          "onset": 0.002,
+          "dur": 0.03,
+          "tp": -8.99
+        },
+        {
+          "file": "sfx/tick-3.mp3",
+          "onset": 0.00197,
+          "dur": 0.04,
+          "tp": -10.48
+        }
+      ],
+      "gain": 1.122,
+      "pitch": 1.0,
+      "vol": 1.5,
+      "voices": 2,
+      "repeatDb": -8,
+      "minGap": 0.07,
+      "masks": ["stepGrass", "stepWood"],
+      "maskFor": 0.08
+    },
+    "target": {
+      "files": [
+        {
+          "file": "sfx/target-1.mp3",
+          "onset": 0.00029,
+          "dur": 0.03,
+          "tp": -6.05
+        },
+        {
+          "file": "sfx/target-2.mp3",
+          "onset": 0.0,
+          "dur": 0.06,
+          "tp": -5.24
+        },
+        {
+          "file": "sfx/target-3.mp3",
+          "onset": 0.0,
+          "dur": 0.075,
+          "tp": -5.56
+        }
+      ],
+      "gain": 1.122,
+      "pitch": 0.8,
+      "vol": 1,
+      "voices": 1,
+      "repeatDb": -8,
+      "minGap": 0.07
+    },
+    "ringOpen": {
+      "files": [
+        {
+          "file": "sfx/ringOpen-1.mp3",
+          "onset": 0.0,
+          "dur": 0.05,
+          "tp": -9.41
+        },
+        {
+          "file": "sfx/ringOpen-2.mp3",
+          "onset": 0.002,
+          "dur": 0.06,
+          "tp": -4.76
+        },
+        {
+          "file": "sfx/ringOpen-3.mp3",
+          "onset": 0.0,
+          "dur": 0.05,
+          "tp": -9.65
+        }
+      ],
+      "gain": 1.0593,
+      "pitch": 0.5,
+      "vol": 1,
+      "voices": 1,
+      "repeatDb": -8
+    },
+    "ringClose": {
+      "files": [
+        {
+          "file": "sfx/ringClose-1.mp3",
+          "onset": 0.002,
+          "dur": 0.07,
+          "tp": -4.44
+        },
+        {
+          "file": "sfx/ringClose-2.mp3",
+          "onset": 0.002,
+          "dur": 0.075,
+          "tp": -5.57
+        },
+        {
+          "file": "sfx/ringClose-3.mp3",
+          "onset": 0.0,
+          "dur": 0.07,
+          "tp": -10.47
+        }
+      ],
+      "gain": 1.0351,
+      "pitch": 0.5,
+      "vol": 1,
+      "voices": 1,
+      "repeatDb": -8
+    },
+    "confirm": {
+      "files": [
+        {
+          "file": "sfx/confirm-1.mp3",
+          "onset": 0.0,
+          "dur": 0.075,
+          "tp": -6.76
+        },
+        {
+          "file": "sfx/confirm-2.mp3",
+          "onset": 0.0,
+          "dur": 0.075,
+          "tp": -7.96
+        },
+        {
+          "file": "sfx/confirm-3.mp3",
+          "onset": 0.0,
+          "dur": 0.075,
+          "tp": -6.36
+        }
+      ],
+      "gain": 1.2589,
+      "pitch": 0.5,
+      "vol": 1,
+      "voices": 1,
+      "repeatDb": -8
     }
-   ]
   },
-  "marimba": {
-   "kind": "decay",
-   "zones": [
-    {
-     "file": "inst/marimba-55.mp3",
-     "onset": 0.002,
-     "dur": 1.6,
-     "root": 54.98
+  "ambience": {
+    "rain": {
+      "files": [
+        {
+          "file": "amb/rain.mp3",
+          "onset": 0,
+          "dur": 13.1,
+          "loop": [1.0, 13.0]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
     },
-    {
-     "file": "inst/marimba-59.mp3",
-     "onset": 0.002,
-     "dur": 1.6,
-     "root": 59.03
+    "crickets": {
+      "files": [
+        {
+          "file": "amb/crickets.mp3",
+          "onset": 0,
+          "dur": 10.1,
+          "loop": [1.0, 10.0]
+        },
+        {
+          "file": "amb/crickets-2.mp3",
+          "onset": 0,
+          "dur": 8.4333,
+          "loop": [1.0, 8.33333]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
     },
-    {
-     "file": "inst/marimba-65.mp3",
-     "onset": 0.002,
-     "dur": 1.6,
-     "root": 65.0
+    "wind": {
+      "files": [
+        {
+          "file": "amb/wind.mp3",
+          "onset": 0,
+          "dur": 16.1,
+          "loop": [1.0, 16.0]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
     },
-    {
-     "file": "inst/marimba-72.mp3",
-     "onset": 0.002,
-     "dur": 1.6,
-     "root": 72.04
+    "cave": {
+      "files": [
+        {
+          "file": "amb/cave.mp3",
+          "onset": 0,
+          "dur": 17.1,
+          "loop": [1.0, 17.0]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
     },
-    {
-     "file": "inst/marimba-79.mp3",
-     "onset": 0.002,
-     "dur": 1.14,
-     "root": 78.98
+    "birds": {
+      "files": [
+        {
+          "file": "amb/birds-1.mp3",
+          "onset": 0.002,
+          "dur": 0.96
+        },
+        {
+          "file": "amb/birds-2.mp3",
+          "onset": 0.002,
+          "dur": 0.45
+        },
+        {
+          "file": "amb/birds-3.mp3",
+          "onset": 0.002,
+          "dur": 0.6
+        },
+        {
+          "file": "amb/birds-4.mp3",
+          "onset": 0.002,
+          "dur": 0.82
+        },
+        {
+          "file": "amb/birds-5.mp3",
+          "onset": 0.002,
+          "dur": 1.27
+        },
+        {
+          "file": "amb/birds-6.mp3",
+          "onset": 0.002,
+          "dur": 0.55
+        },
+        {
+          "file": "amb/birds-7.mp3",
+          "onset": 0.002,
+          "dur": 1.14
+        },
+        {
+          "file": "amb/birds-8.mp3",
+          "onset": 0.002,
+          "dur": 0.75
+        },
+        {
+          "file": "amb/birds-9.mp3",
+          "onset": 0.002,
+          "dur": 0.67
+        }
+      ],
+      "gain": 1,
+      "mode": "shots",
+      "every": 4.5
     },
-    {
-     "file": "inst/marimba-83.mp3",
-     "onset": 0.002,
-     "dur": 1.01,
-     "root": 83.0
+    "drips": {
+      "files": [
+        {
+          "file": "amb/drips-1.mp3",
+          "onset": 0.00091,
+          "dur": 0.39
+        },
+        {
+          "file": "amb/drips-2.mp3",
+          "onset": 0.00134,
+          "dur": 0.34
+        },
+        {
+          "file": "amb/drips-3.mp3",
+          "onset": 0.00109,
+          "dur": 0.32
+        },
+        {
+          "file": "amb/drips-4.mp3",
+          "onset": 0.00082,
+          "dur": 0.36
+        },
+        {
+          "file": "amb/drips-5.mp3",
+          "onset": 0.00034,
+          "dur": 0.31
+        }
+      ],
+      "gain": 1,
+      "mode": "shots",
+      "every": 2.5
     },
-    {
-     "file": "inst/marimba-89.mp3",
-     "onset": 0.002,
-     "dur": 1.15,
-     "root": 88.98
+    "thunder": {
+      "files": [
+        {
+          "file": "amb/thunder-1.mp3",
+          "onset": 0.00057,
+          "dur": 3.74
+        },
+        {
+          "file": "amb/thunder-2.mp3",
+          "onset": 0.00057,
+          "dur": 4.4
+        }
+      ],
+      "gain": 1,
+      "mode": "shots",
+      "every": 28
     },
-    {
-     "file": "inst/marimba-96.mp3",
-     "onset": 0.002,
-     "dur": 1.26,
-     "root": 96.0
+    "clock": {
+      "files": [
+        {
+          "file": "amb/clock.mp3",
+          "onset": 0,
+          "dur": 13.1,
+          "loop": [1.0, 13.0]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
+    },
+    "forge": {
+      "files": [
+        {
+          "file": "amb/forge.mp3",
+          "onset": 0,
+          "dur": 17.1,
+          "loop": [1.0, 17.0]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
+    },
+    "anvil": {
+      "files": [
+        {
+          "file": "amb/anvil-1.mp3",
+          "onset": 0.0,
+          "dur": 1.6
+        },
+        {
+          "file": "amb/anvil-2.mp3",
+          "onset": 0.0,
+          "dur": 1.6
+        },
+        {
+          "file": "amb/anvil-3.mp3",
+          "onset": 0.0,
+          "dur": 0.73
+        },
+        {
+          "file": "amb/anvil-4.mp3",
+          "onset": 0.0,
+          "dur": 0.12
+        },
+        {
+          "file": "amb/anvil-5.mp3",
+          "onset": 0.0,
+          "dur": 0.24
+        }
+      ],
+      "gain": 1,
+      "mode": "shots",
+      "every": 3.5
+    },
+    "shop": {
+      "files": [
+        {
+          "file": "amb/shop-1.mp3",
+          "onset": 0.002,
+          "dur": 0.59
+        },
+        {
+          "file": "amb/shop-2.mp3",
+          "onset": 0.002,
+          "dur": 0.76
+        },
+        {
+          "file": "amb/shop-3.mp3",
+          "onset": 0.002,
+          "dur": 0.28
+        },
+        {
+          "file": "amb/shop-4.mp3",
+          "onset": 0.002,
+          "dur": 0.65
+        },
+        {
+          "file": "amb/shop-5.mp3",
+          "onset": 0.002,
+          "dur": 0.38
+        },
+        {
+          "file": "amb/shop-6.mp3",
+          "onset": 0.002,
+          "dur": 0.21
+        }
+      ],
+      "gain": 1,
+      "mode": "shots",
+      "every": 5.0
     }
-   ]
-  },
-  "glock": {
-   "kind": "decay",
-   "zones": [
-    {
-     "file": "inst/glock-79.mp3",
-     "onset": 0.0,
-     "dur": 1.8,
-     "root": 79.08
-    },
-    {
-     "file": "inst/glock-84.mp3",
-     "onset": 0.0,
-     "dur": 1.8,
-     "root": 84.12
-    },
-    {
-     "file": "inst/glock-91.mp3",
-     "onset": 0.002,
-     "dur": 1.8,
-     "root": 91.12
-    },
-    {
-     "file": "inst/glock-96.mp3",
-     "onset": 0.0,
-     "dur": 1.8,
-     "root": 96.16
-    },
-    {
-     "file": "inst/glock-103.mp3",
-     "onset": 2e-05,
-     "dur": 1.8,
-     "root": 103.16
-    },
-    {
-     "file": "inst/glock-108.mp3",
-     "onset": 0.002,
-     "dur": 1.39,
-     "root": 108.24
-    }
-   ]
-  },
-  "vibes": {
-   "kind": "decay",
-   "zones": [
-    {
-     "file": "inst/vibes-60.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 60.0
-    },
-    {
-     "file": "inst/vibes-64.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 64.0
-    },
-    {
-     "file": "inst/vibes-67.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 67.0
-    },
-    {
-     "file": "inst/vibes-71.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 71.0
-    },
-    {
-     "file": "inst/vibes-74.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 74.0
-    },
-    {
-     "file": "inst/vibes-77.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 77.0
-    },
-    {
-     "file": "inst/vibes-81.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 81.0
-    },
-    {
-     "file": "inst/vibes-84.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 84.0
-    },
-    {
-     "file": "inst/vibes-88.mp3",
-     "onset": 0.002,
-     "dur": 2.2,
-     "root": 88.0
-    }
-   ]
-  },
-  "pizz": {
-   "kind": "decay",
-   "zones": [
-    {
-     "file": "inst/pizz-40.mp3",
-     "onset": 0.002,
-     "dur": 1.3,
-     "root": 39.77
-    },
-    {
-     "file": "inst/pizz-47.mp3",
-     "onset": 0.002,
-     "dur": 1.3,
-     "root": 46.81
-    },
-    {
-     "file": "inst/pizz-50.mp3",
-     "onset": 0.00104,
-     "dur": 1.3,
-     "root": 50.1
-    },
-    {
-     "file": "inst/pizz-53.mp3",
-     "onset": 0.002,
-     "dur": 1.3,
-     "root": 53.11
-    },
-    {
-     "file": "inst/pizz-57.mp3",
-     "onset": 0.00084,
-     "dur": 1.3,
-     "root": 57.1
-    },
-    {
-     "file": "inst/pizz-60.mp3",
-     "onset": 0.002,
-     "dur": 1.3,
-     "root": 59.97
-    },
-    {
-     "file": "inst/pizz-64.mp3",
-     "onset": 0.00141,
-     "dur": 1.25,
-     "root": 64.03
-    }
-   ]
-  },
-  "recorder": {
-   "kind": "sustain",
-   "zones": [
-    {
-     "file": "inst/recorder-68.mp3",
-     "onset": 0.00193,
-     "dur": 1.7865,
-     "root": 68.04,
-     "loop": [
-      0.76,
-      1.70646
-     ]
-    },
-    {
-     "file": "inst/recorder-72.mp3",
-     "onset": 0.0019,
-     "dur": 1.7589,
-     "root": 71.97,
-     "loop": [
-      0.68,
-      1.67891
-     ]
-    },
-    {
-     "file": "inst/recorder-76.mp3",
-     "onset": 0.00195,
-     "dur": 1.9706,
-     "root": 76.01,
-     "loop": [
-      0.68,
-      1.89061
-     ]
-    },
-    {
-     "file": "inst/recorder-80.mp3",
-     "onset": 0.00195,
-     "dur": 1.6765,
-     "root": 80.02,
-     "loop": [
-      0.6,
-      1.59646
-     ]
-    },
-    {
-     "file": "inst/recorder-84.mp3",
-     "onset": 0.002,
-     "dur": 2.0456,
-     "root": 84.0,
-     "loop": [
-      0.76,
-      1.96565
-     ]
-    },
-    {
-     "file": "inst/recorder-88.mp3",
-     "onset": 0.002,
-     "dur": 1.8522,
-     "root": 88.03,
-     "loop": [
-      0.6,
-      1.77218
-     ]
-    }
-   ]
-  },
-  "ocarina": {
-   "kind": "sustain",
-   "zones": [
-    {
-     "file": "inst/ocarina-69.mp3",
-     "onset": 0.00014,
-     "dur": 2.2314,
-     "root": 68.98,
-     "loop": [
-      0.84,
-      2.15136
-     ]
-    },
-    {
-     "file": "inst/ocarina-73.mp3",
-     "onset": 9e-05,
-     "dur": 2.2301,
-     "root": 72.97,
-     "loop": [
-      0.84,
-      2.15014
-     ]
-    },
-    {
-     "file": "inst/ocarina-78.mp3",
-     "onset": 0.00054,
-     "dur": 1.7844,
-     "root": 78.08,
-     "loop": [
-      0.6,
-      1.70442
-     ]
-    },
-    {
-     "file": "inst/ocarina-81.mp3",
-     "onset": 0.00018,
-     "dur": 1.8875,
-     "root": 81.11,
-     "loop": [
-      0.84,
-      1.80748
-     ]
-    },
-    {
-     "file": "inst/ocarina-85.mp3",
-     "onset": 7e-05,
-     "dur": 1.6665,
-     "root": 85.07,
-     "lag": 0.0847,
-     "loop": [
-      0.68,
-      1.58653
-     ]
-    }
-   ]
-  },
-  "viola": {
-   "kind": "sustain",
-   "zones": [
-    {
-     "file": "inst/viola-52.mp3",
-     "onset": 0.00082,
-     "dur": 2.1341,
-     "root": 52.08,
-     "lag": 0.0491,
-     "loop": [
-      0.84,
-      2.05408
-     ]
-    },
-    {
-     "file": "inst/viola-55.mp3",
-     "onset": 0.00073,
-     "dur": 2.2492,
-     "root": 54.99,
-     "lag": 0.0591,
-     "loop": [
-      0.84,
-      2.16921
-     ]
-    },
-    {
-     "file": "inst/viola-59.mp3",
-     "onset": 0.0012,
-     "dur": 1.9803,
-     "root": 58.96,
-     "lag": 0.0587,
-     "loop": [
-      0.68,
-      1.90027
-     ]
-    },
-    {
-     "file": "inst/viola-62.mp3",
-     "onset": 0.00116,
-     "dur": 1.9239,
-     "root": 62.06,
-     "loop": [
-      0.6,
-      1.84395
-     ]
-    },
-    {
-     "file": "inst/viola-65.mp3",
-     "onset": 0.00132,
-     "dur": 2.0209,
-     "root": 64.98,
-     "lag": 0.0236,
-     "loop": [
-      0.76,
-      1.94091
-     ]
-    },
-    {
-     "file": "inst/viola-69.mp3",
-     "onset": 0.00132,
-     "dur": 1.9993,
-     "root": 69.0,
-     "lag": 0.0885,
-     "loop": [
-      0.6,
-      1.91932
-     ]
-    },
-    {
-     "file": "inst/viola-72.mp3",
-     "onset": 0.00104,
-     "dur": 2.0468,
-     "root": 71.97,
-     "lag": 0.0588,
-     "loop": [
-      0.76,
-      1.96678
-     ]
-    },
-    {
-     "file": "inst/viola-76.mp3",
-     "onset": 0.00122,
-     "dur": 2.0459,
-     "root": 76.02,
-     "lag": 0.0337,
-     "loop": [
-      0.84,
-      1.96592
-     ]
-    }
-   ]
-  },
-  "cello": {
-   "kind": "sustain",
-   "zones": [
-    {
-     "file": "inst/cello-36.mp3",
-     "onset": 0.00059,
-     "dur": 1.8044,
-     "root": 35.96,
-     "loop": [
-      0.76,
-      1.7244
-     ]
-    },
-    {
-     "file": "inst/cello-40.mp3",
-     "onset": 0.00163,
-     "dur": 1.7791,
-     "root": 39.97,
-     "lag": 0.0233,
-     "loop": [
-      0.68,
-      1.69912
-     ]
-    },
-    {
-     "file": "inst/cello-43.mp3",
-     "onset": 0.001,
-     "dur": 1.7527,
-     "root": 42.9,
-     "lag": 0.0439,
-     "loop": [
-      0.6,
-      1.6727
-     ]
-    },
-    {
-     "file": "inst/cello-47.mp3",
-     "onset": 0.00163,
-     "dur": 1.6992,
-     "root": 46.98,
-     "lag": 0.1131,
-     "loop": [
-      0.6,
-      1.61921
-     ]
-    },
-    {
-     "file": "inst/cello-50.mp3",
-     "onset": 0.00138,
-     "dur": 2.0985,
-     "root": 49.87,
-     "lag": 0.0285,
-     "loop": [
-      0.68,
-      2.01853
-     ]
-    },
-    {
-     "file": "inst/cello-53.mp3",
-     "onset": 0.00088,
-     "dur": 2.0837,
-     "root": 53.11,
-     "lag": 0.1139,
-     "loop": [
-      0.76,
-      2.00374
-     ]
-    },
-    {
-     "file": "inst/cello-57.mp3",
-     "onset": 0.00193,
-     "dur": 2.2608,
-     "root": 57.01,
-     "lag": 0.033,
-     "loop": [
-      0.84,
-      2.18077
-     ]
-    },
-    {
-     "file": "inst/cello-60.mp3",
-     "onset": 0.00188,
-     "dur": 1.9843,
-     "root": 60.04,
-     "lag": 0.038,
-     "loop": [
-      0.6,
-      1.90433
-     ]
-    }
-   ]
-  },
-  "shaker": {
-   "kind": "perc",
-   "hits": [
-    {
-     "file": "inst/shaker-0.mp3",
-     "onset": 0.0,
-     "dur": 0.26
-    },
-    {
-     "file": "inst/shaker-1.mp3",
-     "onset": 0.0,
-     "dur": 0.26
-    },
-    {
-     "file": "inst/shaker-2.mp3",
-     "onset": 0.0,
-     "dur": 0.12
-    },
-    {
-     "file": "inst/shaker-3.mp3",
-     "onset": 0.0,
-     "dur": 0.16
-    }
-   ]
-  },
-  "tamb": {
-   "kind": "perc",
-   "hits": [
-    {
-     "file": "inst/tamb-0.mp3",
-     "onset": 0.00063,
-     "dur": 0.9
-    },
-    {
-     "file": "inst/tamb-1.mp3",
-     "onset": 0.00127,
-     "dur": 0.9
-    },
-    {
-     "file": "inst/tamb-2.mp3",
-     "onset": 0.00098,
-     "dur": 0.81
-    }
-   ]
-  },
-  "sleigh": {
-   "kind": "perc",
-   "hits": [
-    {
-     "file": "inst/sleigh-0.mp3",
-     "onset": 0.00029,
-     "dur": 1.2
-    },
-    {
-     "file": "inst/sleigh-1.mp3",
-     "onset": 0.00034,
-     "dur": 1.2
-    }
-   ]
-  },
-  "triangle": {
-   "kind": "perc",
-   "hits": [
-    {
-     "file": "inst/triangle-0.mp3",
-     "onset": 0.00011,
-     "dur": 2.0
-    },
-    {
-     "file": "inst/triangle-1.mp3",
-     "onset": 0.00018,
-     "dur": 2.0
-    }
-   ]
   }
- },
- "sfx": {
-  "till": {
-   "files": [
-    {
-     "file": "sfx/till-1.mp3",
-     "onset": 0.0,
-     "dur": 0.3,
-     "tp": -6.6
-    },
-    {
-     "file": "sfx/till-2.mp3",
-     "onset": 0.0,
-     "dur": 0.3,
-     "tp": -7.0
-    },
-    {
-     "file": "sfx/till-3.mp3",
-     "onset": 0.0,
-     "dur": 0.33,
-     "tp": -6.42
-    }
-   ],
-   "gain": 1.2882,
-   "pitch": 1.2,
-   "vol": 1.5,
-   "voices": 2
-  },
-  "water": {
-   "files": [
-    {
-     "file": "sfx/water-1.mp3",
-     "onset": 0.00043,
-     "dur": 0.42,
-     "tp": -8.82
-    },
-    {
-     "file": "sfx/water-2.mp3",
-     "onset": 0.00082,
-     "dur": 0.42,
-     "tp": -6.78
-    },
-    {
-     "file": "sfx/water-3.mp3",
-     "onset": 0.00039,
-     "dur": 0.42,
-     "tp": -6.88
-    }
-   ],
-   "gain": 1.2303,
-   "pitch": 1.0,
-   "vol": 1.5,
-   "voices": 1
-  },
-  "refill": {
-   "files": [
-    {
-     "file": "sfx/refill-1.mp3",
-     "onset": 0.00073,
-     "dur": 0.7,
-     "tp": -5.7
-    },
-    {
-     "file": "sfx/refill-2.mp3",
-     "onset": 0.00082,
-     "dur": 0.7,
-     "tp": -5.54
-    }
-   ],
-   "gain": 1.1614,
-   "pitch": 0.8,
-   "vol": 1,
-   "voices": 1
-  },
-  "plant": {
-   "files": [
-    {
-     "file": "sfx/plant-1.mp3",
-     "onset": 0.0,
-     "dur": 0.13,
-     "tp": -5.89
-    },
-    {
-     "file": "sfx/plant-2.mp3",
-     "onset": 0.0,
-     "dur": 0.13,
-     "tp": -6.09
-    },
-    {
-     "file": "sfx/plant-3.mp3",
-     "onset": 0.0,
-     "dur": 0.13,
-     "tp": -6.57
-    }
-   ],
-   "gain": 1.1614,
-   "pitch": 1.5,
-   "vol": 1.5,
-   "voices": 2
-  },
-  "harvest": {
-   "files": [
-    {
-     "file": "sfx/harvest-1.mp3",
-     "onset": 0.0,
-     "dur": 0.3,
-     "tp": -6.1
-    },
-    {
-     "file": "sfx/harvest-2.mp3",
-     "onset": 0.0,
-     "dur": 0.3,
-     "tp": -5.84
-    },
-    {
-     "file": "sfx/harvest-3.mp3",
-     "onset": 0.0,
-     "dur": 0.29,
-     "tp": -6.17
-    }
-   ],
-   "gain": 1.2303,
-   "pitch": 1.5,
-   "vol": 1,
-   "voices": 3
-  },
-  "cut": {
-   "files": [
-    {
-     "file": "sfx/cut-1.mp3",
-     "onset": 0.00125,
-     "dur": 0.28,
-     "tp": -5.56
-    },
-    {
-     "file": "sfx/cut-2.mp3",
-     "onset": 0.00156,
-     "dur": 0.27,
-     "tp": -5.45
-    },
-    {
-     "file": "sfx/cut-3.mp3",
-     "onset": 0.00132,
-     "dur": 0.26,
-     "tp": -5.52
-    },
-    {
-     "file": "sfx/cut-4.mp3",
-     "onset": 0.00129,
-     "dur": 0.25,
-     "tp": -5.37
-    }
-   ],
-   "gain": 1.0839,
-   "pitch": 1.5,
-   "vol": 1.5,
-   "voices": 2
-  },
-  "swing": {
-   "files": [
-    {
-     "file": "sfx/swing-1.mp3",
-     "onset": 0.00138,
-     "dur": 0.11,
-     "tp": -5.53
-    },
-    {
-     "file": "sfx/swing-2.mp3",
-     "onset": 0.002,
-     "dur": 0.1,
-     "tp": -5.95
-    },
-    {
-     "file": "sfx/swing-3.mp3",
-     "onset": 0.00147,
-     "dur": 0.08,
-     "tp": -5.31
-    },
-    {
-     "file": "sfx/swing-4.mp3",
-     "onset": 0.00152,
-     "dur": 0.07,
-     "tp": -5.69
-    }
-   ],
-   "gain": 1.0715,
-   "pitch": 1.5,
-   "vol": 1.5,
-   "voices": 2
-  },
-  "coin": {
-   "files": [
-    {
-     "file": "sfx/coin-1.mp3",
-     "onset": 0.00057,
-     "dur": 0.26,
-     "tp": -6.6
-    },
-    {
-     "file": "sfx/coin-2.mp3",
-     "onset": 0.00039,
-     "dur": 0.36,
-     "tp": -6.23
-    },
-    {
-     "file": "sfx/coin-3.mp3",
-     "onset": 0.00077,
-     "dur": 0.31,
-     "tp": -6.38
-    }
-   ],
-   "gain": 1.2589,
-   "pitch": 1.0,
-   "vol": 1,
-   "voices": 2
-  },
-  "buy": {
-   "files": [
-    {
-     "file": "sfx/buy-1.mp3",
-     "onset": 0.00188,
-     "dur": 0.49,
-     "tp": -6.14
-    },
-    {
-     "file": "sfx/buy-2.mp3",
-     "onset": 0.00098,
-     "dur": 0.5,
-     "tp": -6.1
-    }
-   ],
-   "gain": 1.2445,
-   "pitch": 0.5,
-   "vol": 1,
-   "voices": 1
-  },
-  "ui": {
-   "files": [
-    {
-     "file": "sfx/ui-1.mp3",
-     "onset": 0.0,
-     "dur": 0.05,
-     "tp": -5.61
-    },
-    {
-     "file": "sfx/ui-2.mp3",
-     "onset": 2e-05,
-     "dur": 0.03,
-     "tp": -5.52
-    },
-    {
-     "file": "sfx/ui-3.mp3",
-     "onset": 5e-05,
-     "dur": 0.03,
-     "tp": -5.54
-    }
-   ],
-   "gain": 1.1885,
-   "pitch": 1.0,
-   "vol": 1,
-   "voices": 2,
-   "repeatDb": 0
-  },
-  "select": {
-   "files": [
-    {
-     "file": "sfx/select-1.mp3",
-     "onset": 0.0,
-     "dur": 0.04,
-     "tp": -9.14
-    },
-    {
-     "file": "sfx/select-2.mp3",
-     "onset": 0.0,
-     "dur": 0.05,
-     "tp": -9.37
-    }
-   ],
-   "gain": 1.6218,
-   "pitch": 1.0,
-   "vol": 1,
-   "voices": 2,
-   "repeatDb": 0
-  },
-  "door": {
-   "files": [
-    {
-     "file": "sfx/door-1.mp3",
-     "onset": 0.002,
-     "dur": 0.74,
-     "tp": -6.48
-    },
-    {
-     "file": "sfx/door-2.mp3",
-     "onset": 0.002,
-     "dur": 0.86,
-     "tp": -5.37
-    }
-   ],
-   "gain": 1.122,
-   "pitch": 0.8,
-   "vol": 1,
-   "voices": 1
-  },
-  "stepGrass": {
-   "files": [
-    {
-     "file": "sfx/stepGrass-1.mp3",
-     "onset": 0.0,
-     "dur": 0.18,
-     "tp": -8.44
-    },
-    {
-     "file": "sfx/stepGrass-2.mp3",
-     "onset": 0.0,
-     "dur": 0.18,
-     "tp": -10.88
-    },
-    {
-     "file": "sfx/stepGrass-3.mp3",
-     "onset": 0.0,
-     "dur": 0.18,
-     "tp": -10.74
-    },
-    {
-     "file": "sfx/stepGrass-4.mp3",
-     "onset": 0.0,
-     "dur": 0.18,
-     "tp": -7.45
-    }
-   ],
-   "gain": 1.122,
-   "pitch": 1.5,
-   "vol": 2,
-   "voices": 3,
-   "repeatDb": 0
-  },
-  "stepWood": {
-   "files": [
-    {
-     "file": "sfx/stepWood-1.mp3",
-     "onset": 0.002,
-     "dur": 0.22,
-     "tp": -7.3
-    },
-    {
-     "file": "sfx/stepWood-2.mp3",
-     "onset": 0.002,
-     "dur": 0.25,
-     "tp": -6.67
-    },
-    {
-     "file": "sfx/stepWood-3.mp3",
-     "onset": 0.002,
-     "dur": 0.22,
-     "tp": -8.54
-    },
-    {
-     "file": "sfx/stepWood-4.mp3",
-     "onset": 0.002,
-     "dur": 0.22,
-     "tp": -10.13
-    }
-   ],
-   "gain": 1.0233,
-   "pitch": 1.2,
-   "vol": 2,
-   "voices": 3,
-   "repeatDb": 0
-  },
-  "error": {
-   "files": [
-    {
-     "file": "sfx/error-1.mp3",
-     "onset": 0.0,
-     "dur": 0.19,
-     "tp": -6.81
-    },
-    {
-     "file": "sfx/error-2.mp3",
-     "onset": 0.0,
-     "dur": 0.13,
-     "tp": -6.81
-    }
-   ],
-   "gain": 1.2589,
-   "pitch": 0.5,
-   "vol": 1,
-   "voices": 1
-  },
-  "tick": {
-   "files": [
-    {
-     "file": "sfx/tick-1.mp3",
-     "onset": 0.002,
-     "dur": 0.04,
-     "tp": -10.43
-    },
-    {
-     "file": "sfx/tick-2.mp3",
-     "onset": 0.002,
-     "dur": 0.03,
-     "tp": -8.99
-    },
-    {
-     "file": "sfx/tick-3.mp3",
-     "onset": 0.00197,
-     "dur": 0.04,
-     "tp": -10.48
-    }
-   ],
-   "gain": 1.122,
-   "pitch": 1.0,
-   "vol": 1.5,
-   "voices": 2,
-   "repeatDb": -8,
-   "minGap": 0.07,
-   "masks": [
-    "stepGrass",
-    "stepWood"
-   ],
-   "maskFor": 0.08
-  },
-  "target": {
-   "files": [
-    {
-     "file": "sfx/target-1.mp3",
-     "onset": 0.00029,
-     "dur": 0.03,
-     "tp": -6.05
-    },
-    {
-     "file": "sfx/target-2.mp3",
-     "onset": 0.0,
-     "dur": 0.06,
-     "tp": -5.24
-    },
-    {
-     "file": "sfx/target-3.mp3",
-     "onset": 0.0,
-     "dur": 0.075,
-     "tp": -5.56
-    }
-   ],
-   "gain": 1.122,
-   "pitch": 0.8,
-   "vol": 1,
-   "voices": 1,
-   "repeatDb": -8,
-   "minGap": 0.07
-  },
-  "ringOpen": {
-   "files": [
-    {
-     "file": "sfx/ringOpen-1.mp3",
-     "onset": 0.0,
-     "dur": 0.05,
-     "tp": -9.41
-    },
-    {
-     "file": "sfx/ringOpen-2.mp3",
-     "onset": 0.002,
-     "dur": 0.06,
-     "tp": -4.76
-    },
-    {
-     "file": "sfx/ringOpen-3.mp3",
-     "onset": 0.0,
-     "dur": 0.05,
-     "tp": -9.65
-    }
-   ],
-   "gain": 1.0593,
-   "pitch": 0.5,
-   "vol": 1,
-   "voices": 1,
-   "repeatDb": -8
-  },
-  "ringClose": {
-   "files": [
-    {
-     "file": "sfx/ringClose-1.mp3",
-     "onset": 0.002,
-     "dur": 0.07,
-     "tp": -4.44
-    },
-    {
-     "file": "sfx/ringClose-2.mp3",
-     "onset": 0.002,
-     "dur": 0.075,
-     "tp": -5.57
-    },
-    {
-     "file": "sfx/ringClose-3.mp3",
-     "onset": 0.0,
-     "dur": 0.07,
-     "tp": -10.47
-    }
-   ],
-   "gain": 1.0351,
-   "pitch": 0.5,
-   "vol": 1,
-   "voices": 1,
-   "repeatDb": -8
-  },
-  "confirm": {
-   "files": [
-    {
-     "file": "sfx/confirm-1.mp3",
-     "onset": 0.0,
-     "dur": 0.075,
-     "tp": -6.76
-    },
-    {
-     "file": "sfx/confirm-2.mp3",
-     "onset": 0.0,
-     "dur": 0.075,
-     "tp": -7.96
-    },
-    {
-     "file": "sfx/confirm-3.mp3",
-     "onset": 0.0,
-     "dur": 0.075,
-     "tp": -6.36
-    }
-   ],
-   "gain": 1.2589,
-   "pitch": 0.5,
-   "vol": 1,
-   "voices": 1,
-   "repeatDb": -8
-  }
- },
- "ambience": {
-  "rain": {
-   "files": [
-    {
-     "file": "amb/rain.mp3",
-     "onset": 0,
-     "dur": 13.1,
-     "loop": [
-      1.0,
-      13.0
-     ]
-    }
-   ],
-   "gain": 1,
-   "mode": "loop"
-  },
-  "crickets": {
-   "files": [
-    {
-     "file": "amb/crickets.mp3",
-     "onset": 0,
-     "dur": 10.1,
-     "loop": [
-      1.0,
-      10.0
-     ]
-    },
-    {
-     "file": "amb/crickets-2.mp3",
-     "onset": 0,
-     "dur": 8.4333,
-     "loop": [
-      1.0,
-      8.33333
-     ]
-    }
-   ],
-   "gain": 1,
-   "mode": "loop"
-  },
-  "wind": {
-   "files": [
-    {
-     "file": "amb/wind.mp3",
-     "onset": 0,
-     "dur": 16.1,
-     "loop": [
-      1.0,
-      16.0
-     ]
-    }
-   ],
-   "gain": 1,
-   "mode": "loop"
-  },
-  "cave": {
-   "files": [
-    {
-     "file": "amb/cave.mp3",
-     "onset": 0,
-     "dur": 17.1,
-     "loop": [
-      1.0,
-      17.0
-     ]
-    }
-   ],
-   "gain": 1,
-   "mode": "loop"
-  },
-  "birds": {
-   "files": [
-    {
-     "file": "amb/birds-1.mp3",
-     "onset": 0.002,
-     "dur": 0.96
-    },
-    {
-     "file": "amb/birds-2.mp3",
-     "onset": 0.002,
-     "dur": 0.45
-    },
-    {
-     "file": "amb/birds-3.mp3",
-     "onset": 0.002,
-     "dur": 0.6
-    },
-    {
-     "file": "amb/birds-4.mp3",
-     "onset": 0.002,
-     "dur": 0.82
-    },
-    {
-     "file": "amb/birds-5.mp3",
-     "onset": 0.002,
-     "dur": 1.27
-    },
-    {
-     "file": "amb/birds-6.mp3",
-     "onset": 0.002,
-     "dur": 0.55
-    },
-    {
-     "file": "amb/birds-7.mp3",
-     "onset": 0.002,
-     "dur": 1.14
-    },
-    {
-     "file": "amb/birds-8.mp3",
-     "onset": 0.002,
-     "dur": 0.75
-    },
-    {
-     "file": "amb/birds-9.mp3",
-     "onset": 0.002,
-     "dur": 0.67
-    }
-   ],
-   "gain": 1,
-   "mode": "shots",
-   "every": 4.5
-  },
-  "drips": {
-   "files": [
-    {
-     "file": "amb/drips-1.mp3",
-     "onset": 0.00091,
-     "dur": 0.39
-    },
-    {
-     "file": "amb/drips-2.mp3",
-     "onset": 0.00134,
-     "dur": 0.34
-    },
-    {
-     "file": "amb/drips-3.mp3",
-     "onset": 0.00109,
-     "dur": 0.32
-    },
-    {
-     "file": "amb/drips-4.mp3",
-     "onset": 0.00082,
-     "dur": 0.36
-    },
-    {
-     "file": "amb/drips-5.mp3",
-     "onset": 0.00034,
-     "dur": 0.31
-    }
-   ],
-   "gain": 1,
-   "mode": "shots",
-   "every": 2.5
-  },
-  "thunder": {
-   "files": [
-    {
-     "file": "amb/thunder-1.mp3",
-     "onset": 0.00057,
-     "dur": 3.74
-    },
-    {
-     "file": "amb/thunder-2.mp3",
-     "onset": 0.00057,
-     "dur": 4.4
-    }
-   ],
-   "gain": 1,
-   "mode": "shots",
-   "every": 28
-  },
-  "clock": {
-   "files": [
-    {
-     "file": "amb/clock.mp3",
-     "onset": 0,
-     "dur": 13.1,
-     "loop": [
-      1.0,
-      13.0
-     ]
-    }
-   ],
-   "gain": 1,
-   "mode": "loop"
-  },
-  "forge": {
-   "files": [
-    {
-     "file": "amb/forge.mp3",
-     "onset": 0,
-     "dur": 17.1,
-     "loop": [
-      1.0,
-      17.0
-     ]
-    }
-   ],
-   "gain": 1,
-   "mode": "loop"
-  },
-  "anvil": {
-   "files": [
-    {
-     "file": "amb/anvil-1.mp3",
-     "onset": 0.0,
-     "dur": 1.6
-    },
-    {
-     "file": "amb/anvil-2.mp3",
-     "onset": 0.0,
-     "dur": 1.6
-    },
-    {
-     "file": "amb/anvil-3.mp3",
-     "onset": 0.0,
-     "dur": 0.73
-    },
-    {
-     "file": "amb/anvil-4.mp3",
-     "onset": 0.0,
-     "dur": 0.12
-    },
-    {
-     "file": "amb/anvil-5.mp3",
-     "onset": 0.0,
-     "dur": 0.24
-    }
-   ],
-   "gain": 1,
-   "mode": "shots",
-   "every": 3.5
-  },
-  "shop": {
-   "files": [
-    {
-     "file": "amb/shop-1.mp3",
-     "onset": 0.002,
-     "dur": 0.59
-    },
-    {
-     "file": "amb/shop-2.mp3",
-     "onset": 0.002,
-     "dur": 0.76
-    },
-    {
-     "file": "amb/shop-3.mp3",
-     "onset": 0.002,
-     "dur": 0.28
-    },
-    {
-     "file": "amb/shop-4.mp3",
-     "onset": 0.002,
-     "dur": 0.65
-    },
-    {
-     "file": "amb/shop-5.mp3",
-     "onset": 0.002,
-     "dur": 0.38
-    },
-    {
-     "file": "amb/shop-6.mp3",
-     "onset": 0.002,
-     "dur": 0.21
-    }
-   ],
-   "gain": 1,
-   "mode": "shots",
-   "every": 5.0
-  }
- }
 }

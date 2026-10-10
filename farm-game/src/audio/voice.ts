@@ -28,7 +28,13 @@ export interface Voice {
  * Play one decoded sample through a gain envelope into `dest`. Loops sustain samples between the
  * zone's loop points (shifted by the decoder priming offset) for as long as the note lasts.
  */
-export function playSample(ctx: BaseAudioContext, d: Decoded, zone: Zone, dest: AudioNode, o: VoiceOptions): Voice {
+export function playSample(
+  ctx: BaseAudioContext,
+  d: Decoded,
+  zone: Zone,
+  dest: AudioNode,
+  o: VoiceOptions,
+): Voice {
   const rate = o.rate ?? 1;
   const src = ctx.createBufferSource();
   src.buffer = d.buffer;
@@ -76,7 +82,8 @@ export function playSample(ctx: BaseAudioContext, d: Decoded, zone: Zone, dest: 
 
 /** Freeze an automated value at `at` (so a new ramp starts from where the old one was, no jump). */
 export function holdAt(p: AudioParam, at: number): void {
-  const hold = (p as AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam }).cancelAndHoldAtTime;
+  const hold = (p as AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam })
+    .cancelAndHoldAtTime;
   if (hold) hold.call(p, at);
   else {
     p.cancelScheduledValues(at);

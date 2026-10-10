@@ -225,6 +225,34 @@ audio-src/tools/seasons.py [--renders <dir>]` prints the same numbers.
   `python -I audio-src/tools/measure.py <dir>` (`sfxlevels.py <dir>` for each cue's output level against
   its target; the `trim` in a recipe closes the gap), then listen on a phone.
 
+## 10. The guided start (tutorial steps)
+
+A brand-new game runs a guided start: one instruction line at the top of the world view, a ring and a hand on
+one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.json` (validated at load by
+`validateTutorial`), rules in `systems/tutorial.ts` (pure, unit tested), drawing in `ui/CoachMarks.ts`.
+
+- **Tracks:** `day1` steps run in order from New Game, `day2` steps once day 2 begins, then `intro` steps one
+  at a time whenever their `when` holds (shown once each).
+- **A step** has a `text` (one row, at most 184 px: a test measures it), a `target` (what to point at),
+  `done` (any of these finishes it), optional `skip` (it cannot be done now: pass it), `alt` variants (the first
+  whose `when` holds replaces the text and target), `tag` (a HUD element), `teaches` (stats set when it shows,
+  e.g. `tip.paint` so the old first-run tip does not repeat it), `leave` (an intro that was shown and whose
+  `when` stopped holding is finished) and `optional` (its line offers Next after a long stall).
+- **Conditions** read the state and what the screen shows: `stat`/`fresh` with `min`/`max` (counted from the
+  guide's start or the step's first showing), `map`, `day`, `panel`, `tab`, `selected`, `has`, `none`/`some`
+  (ripe, dry, crops, wetCrop, emptySoil, seeds, shippable, forage, unread, readLetter, placeable), `energyBelow`,
+  `minute`, `job`, `npc`, `fact` (npcNew, forageInView), and `any`/`all`/`not`.
+- **Targets:** `find` (nearest ripe, dry, emptySoil, workable, forage, node, npcNew; `stand` points at a free
+  tile beside it), `npc`, `object` (bin, bed, mailbox, board, shop), `door` (the door to a map), `ui` (action,
+  menu, interact, seedSlot, placeSlot), `gesture` (paint, ring), `button` (a regular expression for a button in
+  the open sheet; `a||b` lists them by priority), `hud`, and `action` + `else` (Action when it would do one of
+  these kinds right now, else the `else` target). A target with a `map` the player is not on points at the door
+  that leads there; with a sheet open and a world target, the coach points at the sheet's close button.
+- **A new feature's introduction** is one `intro` step: a `when` for the moment it matters, a target, a `done`
+  for the action it teaches, and `leave: true`. No code.
+- **State:** progress is stats only (`tut.<id>`, `tut.on`, `tut.off`, `tut.seen.<id>`, `tut.at.<id>.<stat>`,
+  `tut.base.<stat>`, `tut.gift`). `?tutorial=0` in the URL starts a bare new game (automated checks use it).
+
 ## Checklist for a new mechanic
 
 - [ ] Rules as pure functions in `systems/` with unit tests
@@ -232,4 +260,5 @@ audio-src/tools/seasons.py [--renders <dir>]` prints the same numbers.
 - [ ] Data in JSON; validation added if it references other data
 - [ ] UI as a tab or sheet; text proven to fit
 - [ ] A goal in `goals.json` that introduces it
+- [ ] An `intro` step in `tutorial.json` if it needs showing the first time
 - [ ] `npm run verify`

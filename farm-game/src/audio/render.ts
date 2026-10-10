@@ -57,7 +57,11 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
   const music = new MusicPlayer(
     ctx,
     bank,
-    { dry: { day: g.dayBus, night: g.nightBus, both: g.bothBus }, wet: { day: g.dayWet, night: g.nightWet, both: g.bothWet }, sfx: g.sfxBus },
+    {
+      dry: { day: g.dayBus, night: g.nightBus, both: g.bothBus },
+      wet: { day: g.dayWet, night: g.nightWet, both: g.bothWet },
+      sfx: g.sfxBus,
+    },
     (m, when, dur, vel, dest) => {
       const osc = ctx.createOscillator();
       const env = ctx.createGain();
@@ -83,7 +87,8 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
   const loads: Promise<unknown>[] = [sfx.preload()];
   if (o.slot) loads.push(music.preload(o.slot));
   for (const k of Object.keys(o.ambience ?? {})) loads.push(amb.preload(k));
-  for (const i of jingleInstruments()) for (const z of instrumentFiles(i)) loads.push(bank.load(ctx, z.file, z.onset));
+  for (const i of jingleInstruments())
+    for (const z of instrumentFiles(i)) loads.push(bank.load(ctx, z.file, z.onset));
   await Promise.all(loads);
   music.setMood({ rain: o.rain, year: o.year }, 0);
   if (o.slot) music.setSlot(o.slot, !!o.indoor, 0);
@@ -115,7 +120,8 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
   }
   const bytes = new Uint8Array(pcm.buffer);
   let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  for (let i = 0; i < bytes.length; i += 0x8000)
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return {
     sampleRate: sr,
     pcm16: btoa(bin),

@@ -9,7 +9,7 @@ export const SUMMARY_TIPS: { text: string; seasons?: Season[] }[] = [
     text: 'Winter has no wild crops, but kale grows in the cold. Plan ahead!',
     seasons: ['fall', 'winter'],
   },
-  { text: 'Hold the Action button to work a whole row of tiles.' },
+  { text: 'Hold Action, then drag, to work a whole row of tiles.' },
   { text: 'Upgrade the watering can to spend less time at the pond.' },
   { text: 'Passing out at 2 AM only restores half your energy. Sleep earlier!' },
   { text: 'Weeds sprout in the field. Cut them with the scythe for fiber.' },

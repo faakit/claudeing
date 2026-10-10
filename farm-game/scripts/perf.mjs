@@ -7,7 +7,7 @@ import { chromium } from 'playwright-core';
 
 // Override with PERF_PORT when another checkout runs its checks at the same time.
 const PORT = Number(process.env.PERF_PORT ?? 4174);
-const URL_ = `http://localhost:${PORT}/?debug`;
+const URL_ = `http://localhost:${PORT}/?debug&tutorial=0`; // a bare new game (no guided start)
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const throttles = (process.argv[2] ?? '1,4,6').split(',').map(Number);
 
@@ -141,6 +141,27 @@ try {
       });
     });
     await page.evaluate(() => (window.__farm.inputHub.actionHeld = false));
+    // Guided start: the coach line, a HUD tag, the row preview and the hand's press-and-drag animation over the
+    // full field (the heaviest step to draw: the paint tip of "dig, plant, water").
+    await sample('full field + guided start coach marks (row tip)', () =>
+      page.evaluate(() => {
+        const s = window.__farm.getState();
+        delete s.stats['tut.off'];
+        s.stats['tut.on'] = 1;
+        for (const id of ['harvest', 'seeds', 'plant', 'water']) s.stats[`tut.${id}`] = 1;
+        s.stats['tut.seen.grow'] = 1;
+        s.stats.tilled = 2;
+        s.stats['tut.at.grow.tilled'] = 0;
+        s.stats['tut.at.grow.painted'] = 0;
+        s.stats.planted = 0;
+        s.player.x = 13 * 16 + 8;
+        s.player.y = 18 * 16 + 11;
+      }),
+    );
+    await page.evaluate(() => {
+      const s = window.__farm.getState();
+      s.stats['tut.off'] = 1;
+    });
     // Sound-effect storm: 20 cues a second (tools, rewards, steps, touch ticks) on top of the full
     // field and the music, so the budget covers the sfx path (take choice, voice caps, node churn).
     const sfxBefore = await page.evaluate(() => window.__farm.audio.debugInfo().sfx?.played ?? 0);

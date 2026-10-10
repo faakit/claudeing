@@ -1,5 +1,11 @@
 import Phaser from 'phaser';
-import { MomentClock, PanelTracker, chooseAmbience, chooseMusic, type Scene } from '../audio/director';
+import {
+  MomentClock,
+  PanelTracker,
+  chooseAmbience,
+  chooseMusic,
+  type Scene,
+} from '../audio/director';
 import { inputHub } from '../input/InputHub';
 import { mapsData } from '../data';
 import { audio } from '../platform/audio';
@@ -20,7 +26,15 @@ const SEASON_INDEX: Record<string, number> = { spring: 0, summer: 1, fall: 2, wi
 
 function describe(): Scene {
   if (!runtime.inGame)
-    return { inGame: false, map: '', outdoor: false, season: 'spring', night: 0, weather: 'sunny', festival: false };
+    return {
+      inGame: false,
+      map: '',
+      outdoor: false,
+      season: 'spring',
+      night: 0,
+      weather: 'sunny',
+      festival: false,
+    };
   const s = getState();
   const fest = festivalToday(s);
   return {
@@ -46,7 +60,11 @@ function serviceWorkerSettled(): Promise<unknown> {
   if (!import.meta.env.PROD || isNative() || !sw || sw.controller) return Promise.resolve();
   return Promise.race([
     sw.ready.then(() =>
-      sw.controller ? undefined : new Promise((resolve) => sw.addEventListener('controllerchange', resolve, { once: true })),
+      sw.controller
+        ? undefined
+        : new Promise((resolve) =>
+            sw.addEventListener('controllerchange', resolve, { once: true }),
+          ),
     ),
     new Promise((resolve) => setTimeout(resolve, 8000)),
   ]);

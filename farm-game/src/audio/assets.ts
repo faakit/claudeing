@@ -14,7 +14,11 @@ export const jingleOrSting = (name: string) => MUSIC.jingles[name] ?? MUSIC.stin
 export const JINGLE_CUES = new Set(Object.keys(MUSIC.jingles));
 
 /** The sample (and playback rate) that plays `midi` on an instrument; hits for percussion. */
-export function sampleFor(inst: string, midi: number, perc: boolean): { zone: Zone; rate: number } | null {
+export function sampleFor(
+  inst: string,
+  midi: number,
+  perc: boolean,
+): { zone: Zone; rate: number } | null {
   const a = MANIFEST.instruments[inst];
   if (!a) return null;
   if (perc || a.kind === 'perc') {
@@ -42,7 +46,11 @@ export function slotInstruments(slot: MusicSlot): string[] {
 /** Instruments the event jingles use (loaded early, with the sound effects). */
 export function jingleInstruments(): string[] {
   return [
-    ...new Set([...Object.values(MUSIC.jingles), ...Object.values(MUSIC.stings)].flatMap((j) => j.parts.map((p) => p.inst))),
+    ...new Set(
+      [...Object.values(MUSIC.jingles), ...Object.values(MUSIC.stings)].flatMap((j) =>
+        j.parts.map((p) => p.inst),
+      ),
+    ),
   ];
 }
 

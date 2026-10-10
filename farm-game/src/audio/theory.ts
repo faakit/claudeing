@@ -46,7 +46,8 @@ export interface Chord {
 export function parseChord(symbol: string): Chord {
   const m = /^([A-G])([#b]?)([a-z0-9]*)(?:\/([A-G])([#b]?))?$/.exec(symbol);
   if (!m) throw new Error(`bad chord "${symbol}"`);
-  const pc = (l: string, a: string) => (LETTERS[l]! + (a === '#' ? 1 : a === 'b' ? -1 : 0) + 12) % 12;
+  const pc = (l: string, a: string) =>
+    (LETTERS[l]! + (a === '#' ? 1 : a === 'b' ? -1 : 0) + 12) % 12;
   const tones = QUALITIES[m[3]!];
   if (!tones) throw new Error(`unknown chord quality "${m[3]}" in "${symbol}"`);
   const root = pc(m[1]!, m[2]!);
@@ -66,9 +67,12 @@ export function parseChords(line: string, meter: number): { bars: number; chords
   const chords: ChordAt[] = [];
   bars.forEach((bar, i) => {
     const syms = bar.split(/\s+/).filter(Boolean);
-    if (syms.length === 0 || syms.length > 2) throw new Error(`bar ${i + 1} needs 1 or 2 chords: "${bar}"`);
+    if (syms.length === 0 || syms.length > 2)
+      throw new Error(`bar ${i + 1} needs 1 or 2 chords: "${bar}"`);
     const each = meter / syms.length;
-    syms.forEach((s, j) => chords.push({ beat: i * meter + j * each, beats: each, chord: parseChord(s) }));
+    syms.forEach((s, j) =>
+      chords.push({ beat: i * meter + j * each, beats: each, chord: parseChord(s) }),
+    );
   });
   return { bars: bars.length, chords };
 }
@@ -123,8 +127,10 @@ export function chordPcs(chord: Chord): Set<number> {
 export function fitToChord(midi: number, chord: Chord): number {
   const pcs = chordPcs(chord);
   const pc = ((midi % 12) + 12) % 12;
-  if (pcs.has(pc) || ![...pcs].some((c) => (pc - c + 12) % 12 === 1 || (c - pc + 12) % 12 === 1)) return midi;
-  for (const d of [-1, 1, -2, 2, -3, 3]) if (pcs.has((((midi + d) % 12) + 12) % 12)) return midi + d;
+  if (pcs.has(pc) || ![...pcs].some((c) => (pc - c + 12) % 12 === 1 || (c - pc + 12) % 12 === 1))
+    return midi;
+  for (const d of [-1, 1, -2, 2, -3, 3])
+    if (pcs.has((((midi + d) % 12) + 12) % 12)) return midi + d;
   return midi;
 }
 
@@ -165,7 +171,8 @@ export function parsePhrase(text: string, meter: number): { bars: number; notes:
       });
       t += beats;
     }
-    if (Math.abs(t - meter) > 1e-6) throw new Error(`bar ${i + 1} has ${t} beats, expected ${meter}: "${bar}"`);
+    if (Math.abs(t - meter) > 1e-6)
+      throw new Error(`bar ${i + 1} has ${t} beats, expected ${meter}: "${bar}"`);
   });
   return { bars: bars.length, notes };
 }
@@ -180,7 +187,12 @@ export function parseNotes(text: string): PhraseNote[] {
       const m = /^(r|[A-G][#b]?-?\d):(\d*\.?\d+)$/.exec(tok);
       if (!m) throw new Error(`bad note token "${tok}"`);
       const beats = Number(m[2]);
-      const n: PhraseNote = { beat: t, beats, midi: m[1] === 'r' ? null : noteToMidi(m[1]!), accent: 1 };
+      const n: PhraseNote = {
+        beat: t,
+        beats,
+        midi: m[1] === 'r' ? null : noteToMidi(m[1]!),
+        accent: 1,
+      };
       t += beats;
       return n;
     });

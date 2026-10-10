@@ -11,6 +11,8 @@ export const runtime = {
   suspended: false,
   /** False on the title screen, so autosave never writes a half-initialised game. */
   inGame: false,
+  /** A guided-start coach mark is showing: the idle hint and the goal arrow stay quiet. */
+  coaching: false,
   get blocked(): boolean {
     return this.modals > 0 || this.busy || this.suspended;
   },

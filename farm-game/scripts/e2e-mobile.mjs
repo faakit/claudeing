@@ -110,7 +110,7 @@ try {
     });
     const cdp = await ctx.newCDPSession(page);
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: p.insets });
-    await page.goto(`${BASE}?debug`);
+    await page.goto(`${BASE}?debug&tutorial=0`); // a bare new game (no guided start)
     await page.waitForTimeout(1500);
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1800);

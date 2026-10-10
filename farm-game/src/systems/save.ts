@@ -263,7 +263,7 @@ const GOALS_V12 = [
 
 /** v12 -> v13: the order goal moved after the jar goals; keep each save on the goal it was on. */
 function migrateV12(raw: Raw): Raw {
-  return { ...remapGoalIndex(raw, GOALS_V12), version: 13 };
+  return { ...remapGoalIndex(raw, GOALS_V12, GOALS_V16), version: 13 };
 }
 
 /** v13 -> v14: buildings can be moved with their contents (nothing is being moved in an old save). */
@@ -287,6 +287,28 @@ function migrateV15(raw: Raw): Raw {
   };
 }
 
+/** Goal ids of the save-version-13 to 16 releases. */
+// prettier-ignore
+export const GOALS_V16 = [
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'job1', 'harvest', 'ship', 'fish', 'craft', 'place', 'preserve', 'order', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'jobs20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll', 'greenhouse20', 'truffles10', 'rare', 'gold50', 'book8', 'special1', 'statue3', 'cook', 'legend1', 'board1',
+] as const;
+
+/**
+ * v16 -> v17: the guided start's early goals ("pick the parsnips", "plant 5", "sell in the bin", then the day-1
+ * errands "pick up wild goods" and "say hello" before "sleep"). A save on "till" moves to "plant" (it never got
+ * the parsnips); one on "water" or "sleep" moves to the first errand (its seeds are in; sleep follows). Goals added before the current one are
+ * skipped, so no reward is paid twice. The guide itself never starts on an old save (only a replay).
+ */
+function migrateV16(raw: Raw): Raw {
+  const at = typeof raw['goalIndex'] === 'number' ? Math.max(0, Math.floor(raw['goalIndex'])) : 0;
+  const was = GOALS_V16[at];
+  const rename: Record<string, string> = { till: 'plant', water: 'forage', sleep: 'forage' };
+  const ids = goals.map((g) => g.id);
+  if (was && rename[was])
+    return { ...raw, version: 17, goalIndex: Math.max(0, ids.indexOf(rename[was]!)) };
+  return { ...remapGoalIndex(raw, GOALS_V16, ids), version: 17 };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -303,6 +325,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   13: migrateV13,
   14: migrateV14,
   15: migrateV15,
+  16: migrateV16,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */

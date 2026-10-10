@@ -229,6 +229,11 @@ export class Button extends Phaser.GameObjects.Container {
     }
   }
 
+  /** The label text (the guided start finds buttons in a sheet by it). */
+  get text(): string {
+    return this.label.text;
+  }
+
   setLabel(text: string): this {
     this.label.setText(text);
     return this;

@@ -193,7 +193,7 @@ describe('benchmark phones match the reach model', () => {
       const q = lib.PROFILES.find((x) => x.id === p.id);
       expect(q, p.id).toMatchObject({ w: p.w, h: p.h, dpr: p.dpr, ppi: p.ppi, chin: p.chin });
     }
-  });
+  }, 20_000); // importing playwright-core can take seconds on a loaded machine
 });
 
 describe('mirrored sheet rows (left hand)', () => {

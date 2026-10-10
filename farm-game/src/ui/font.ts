@@ -126,6 +126,10 @@ export class Label extends Phaser.GameObjects.Container {
     return this;
   }
 
+  get text(): string {
+    return this.main.text;
+  }
+
   get textWidth(): number {
     return this.main.width; // BitmapText.width is already scaled
   }

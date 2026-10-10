@@ -36,8 +36,10 @@ export function chooseMusic(s: Scene): MusicChoice {
   if (!s.inGame) return { slot: 'title', indoor: false, ...mood, rain: false };
   if (s.panel === 'shop') return { slot: 'shop', indoor: true, ...mood };
   if (s.map === 'mine') return { slot: 'mine', indoor: true, ...mood };
-  if (s.map === 'town' && s.festival && s.night < 0.5) return { slot: 'festival', indoor: false, ...mood };
-  if (s.map === 'house' && s.night >= LULLABY_NIGHT) return { slot: 'lullaby', indoor: true, ...mood };
+  if (s.map === 'town' && s.festival && s.night < 0.5)
+    return { slot: 'festival', indoor: false, ...mood };
+  if (s.map === 'house' && s.night >= LULLABY_NIGHT)
+    return { slot: 'lullaby', indoor: true, ...mood };
   const season = (SEASONS.has(s.season) ? s.season : 'spring') as MusicSlot;
   return { slot: season, indoor: !s.outdoor, ...mood };
 }
@@ -72,11 +74,23 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
   };
   if (!s.inGame) return none;
   // The General Store with the smithy next door: creaks and pages, the forge, now and then the anvil.
-  if (s.panel === 'shop') return { ...none, shop: 0.8, forge: 0.7, anvil: 0.5, clock: 0.4, thunder: s.weather === 'storm' ? 0.5 : 0 };
+  if (s.panel === 'shop')
+    return {
+      ...none,
+      shop: 0.8,
+      forge: 0.7,
+      anvil: 0.5,
+      clock: 0.4,
+      thunder: s.weather === 'storm' ? 0.5 : 0,
+    };
   if (s.map === 'mine') return { ...none, cave: 1, drips: 1 };
   // Thunder carries indoors too, a little softer. The house has a wall clock, clearer at night.
   if (!s.outdoor)
-    return { ...none, thunder: s.weather === 'storm' ? 0.6 : 0, clock: s.map === 'house' ? (s.night >= LULLABY_NIGHT ? 0.9 : 0.5) : 0 };
+    return {
+      ...none,
+      thunder: s.weather === 'storm' ? 0.6 : 0,
+      clock: s.map === 'house' ? (s.night >= LULLABY_NIGHT ? 0.9 : 0.5) : 0,
+    };
   const wet = s.weather !== 'sunny';
   const storm = s.weather === 'storm';
   const day = 1 - s.night;
@@ -85,7 +99,10 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     // Birds sing by day (fewer in fall, none in winter or rain), fading out at dusk.
     birds: wet || winter ? 0 : Math.max(0, day * 2 - 1) * (s.season === 'fall' ? 0.6 : 1),
     // Crickets from dusk, warm seasons only, quieter in spring.
-    crickets: wet || winter ? 0 : Math.min(1, Math.max(0, s.night * 1.4 - 0.3)) * (s.season === 'spring' ? 0.6 : 1),
+    crickets:
+      wet || winter
+        ? 0
+        : Math.min(1, Math.max(0, s.night * 1.4 - 0.3)) * (s.season === 'spring' ? 0.6 : 1),
     // Winter always has a little wind, more at night; storms bring it in any season.
     wind: storm ? 0.8 : winter ? 0.5 + 0.4 * s.night : 0,
     cave: 0,

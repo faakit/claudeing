@@ -26,3 +26,4 @@ import './cart';
 import './jobs';
 import './mail';
 import './specials';
+import './tutorial';

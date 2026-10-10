@@ -219,7 +219,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 16;
+export const STATE_VERSION = 17;
 
 /** Owner defaults: tap-to-move, auto tool and painting on; medium stick; one speed. */
 export const defaultControlSettings = (): ControlSettings => ({

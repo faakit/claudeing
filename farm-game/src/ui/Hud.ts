@@ -368,8 +368,15 @@ export class Hud {
     });
   }
 
+  /**
+   * A hook that may take a message instead of a toast (returns true when it did): while the guided start shows a
+   * coach line, refusals appear there, so there is only ever one instruction on screen.
+   */
+  intercept: ((text: string, kind: 'info' | 'warn' | 'good') => boolean) | null = null;
+
   // ---- toasts ----
   toast(text: string, kind: 'info' | 'warn' | 'good' = 'info'): void {
+    if (this.intercept?.(text, kind)) return;
     const now = this.scene.time.now;
     const dup = this.toasts.find((t) => t.text === text && now - t.born < 1400);
     if (dup) {

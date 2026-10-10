@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { performAction } from '../src/systems/actions';
 import { endDay } from '../src/systems/day';
 import { buyItem, shipStack } from '../src/systems/economy';
-import { currentGoal } from '../src/systems/goals';
+import { addStat, currentGoal } from '../src/systems/goals';
 import { countItem } from '../src/systems/inventory';
 import { tickTime } from '../src/systems/time';
 import { equip, grass, newState, pond } from './helpers';
@@ -98,8 +98,8 @@ describe('full loop', () => {
 
   it('goals advance and pay out as the player plays', () => {
     const s = newState();
-    expect(currentGoal(s)?.id).toBe('till');
-    for (let x = 0; x < 6; x++) performAction(s, grass(x, 5));
+    expect(currentGoal(s)?.id).toBe('gift');
+    addStat(s, 'harvested', 3); // the guided start's ripe parsnips
     expect(currentGoal(s)?.id).toBe('plant');
     expect(s.money).toBe(520);
   });

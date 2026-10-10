@@ -1,4 +1,11 @@
-import { MANIFEST, MUSIC, instrumentFiles, jingleOrSting, sampleFor, slotInstruments } from './assets';
+import {
+  MANIFEST,
+  MUSIC,
+  instrumentFiles,
+  jingleOrSting,
+  sampleFor,
+  slotInstruments,
+} from './assets';
 import { SAMPLED_MUSIC_GAIN } from './graph';
 import type { SampleBank } from './bank';
 import { PiecePlayer, catchUp, makeRng } from './sequencer';
@@ -19,7 +26,13 @@ export interface MusicBuses {
 }
 
 /** Fallback for one note when its instrument cannot play (missing or failed file). */
-export type SynthNote = (midi: number, when: number, dur: number, vel: number, dest: AudioNode) => void;
+export type SynthNote = (
+  midi: number,
+  when: number,
+  dur: number,
+  vel: number,
+  dest: AudioNode,
+) => void;
 
 /** How far ahead bars are generated and nodes created (seconds). Short, so mute and fades act fast. */
 const BAR_LOOKAHEAD = 0.5;
@@ -166,7 +179,9 @@ export class MusicPlayer {
   /** Start decoding everything a slot needs. */
   preload(slot: MusicSlot): Promise<unknown> {
     return Promise.all(
-      slotInstruments(slot).flatMap((i) => instrumentFiles(i).map((z) => this.bank.load(this.ctx, z.file, z.onset))),
+      slotInstruments(slot).flatMap((i) =>
+        instrumentFiles(i).map((z) => this.bank.load(this.ctx, z.file, z.onset)),
+      ),
     );
   }
 
@@ -270,7 +285,8 @@ export class MusicPlayer {
       this.stats.bars++;
       a.history.push({ t0: a.nextBar, section: bar.section, bar: bar.bar });
       if (a.history.length > 16) a.history.shift();
-      for (const ev of bar.events) a.queue.push({ t: a.nextBar + ev.beat * spb + ev.jitter, dur: ev.beats * spb, ev });
+      for (const ev of bar.events)
+        a.queue.push({ t: a.nextBar + ev.beat * spb + ev.jitter, dur: ev.beats * spb, ev });
       a.nextBar += barLen;
     }
     a.queue.sort((x, y) => x.t - y.t);
@@ -342,7 +358,12 @@ export class MusicPlayer {
    * starting `delay` seconds from now. Returns false if none of its instruments can play yet, so the
    * caller uses the synth instead.
    */
-  jingle(cue: string, now: number, volume = 1, o: { key?: number; delay?: number; lead?: boolean } = {}): boolean {
+  jingle(
+    cue: string,
+    now: number,
+    volume = 1,
+    o: { key?: number; delay?: number; lead?: boolean } = {},
+  ): boolean {
     const j = jingleOrSting(cue);
     if (!j) return false;
     const tr = o.key ?? this.jingleKey();
@@ -352,9 +373,15 @@ export class MusicPlayer {
     // it, whichever was asked for first; the lesser one is dropped (reported as played).
     const prio = j.priority ?? 1;
     this.recentJingles = this.recentJingles.filter((r) => r.start > now - 5);
-    if (this.recentJingles.some((r) => r.priority > prio && Math.abs(r.start - start) < JINGLE_PRIORITY_WINDOW)) return true;
+    if (
+      this.recentJingles.some(
+        (r) => r.priority > prio && Math.abs(r.start - start) < JINGLE_PRIORITY_WINDOW,
+      )
+    )
+      return true;
     for (const r of this.recentJingles)
-      if (r.priority < prio && Math.abs(r.start - start) < JINGLE_PRIORITY_WINDOW) r.voices.forEach((v) => v.stop(start, 0.06));
+      if (r.priority < prio && Math.abs(r.start - start) < JINGLE_PRIORITY_WINDOW)
+        r.voices.forEach((v) => v.stop(start, 0.06));
     // Chord-aware only in the playing piece's own key (a sting for the next season is in its key).
     const follow = tr === this.jingleKey();
     const spb = 60 / j.bpm;
@@ -380,13 +407,15 @@ export class MusicPlayer {
       const p = sampleFor(n.inst, n.midi, false)!;
       const d = this.bank.get(p.zone.file, now)!;
       const mix = MUSIC.instruments[n.inst];
-      voices.push(playSample(this.ctx, d, p.zone, this.buses.sfx, {
-        when: start + 0.01 + n.t,
-        rate: p.rate,
-        gain: volume * n.gain * (mix?.gain ?? 0.6) * 0.9,
-        dur: n.dur,
-        release: Math.max(0.3, mix?.release ?? 0.3),
-      }));
+      voices.push(
+        playSample(this.ctx, d, p.zone, this.buses.sfx, {
+          when: start + 0.01 + n.t,
+          rate: p.rate,
+          gain: volume * n.gain * (mix?.gain ?? 0.6) * 0.9,
+          dur: n.dur,
+          release: Math.max(0.3, mix?.release ?? 0.3),
+        }),
+      );
     }
     this.recentJingles.push({ priority: prio, start, voices });
     return true;
