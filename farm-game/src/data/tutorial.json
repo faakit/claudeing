@@ -13,6 +13,16 @@
       {
         "item": "wild_leek",
         "tile": [11, 11]
+      },
+      {
+        "item": "daffodil",
+        "tile": [8, 4],
+        "map": "town"
+      },
+      {
+        "item": "wild_leek",
+        "tile": [17, 2],
+        "map": "town"
       }
     ]
   },
@@ -111,7 +121,18 @@
       "skip": {
         "none": "crops"
       },
-      "tag": "water"
+      "tag": "water",
+      "alt": [
+        {
+          "when": {
+            "some": "emptyCan"
+          },
+          "text": "Your can is empty: tap the pond.",
+          "target": {
+            "find": "water"
+          }
+        }
+      ]
     },
     {
       "id": "grow",
@@ -127,6 +148,15 @@
       },
       "elseText": "Tap here, then press Action.",
       "alt": [
+        {
+          "when": {
+            "some": "emptyCan"
+          },
+          "text": "Your can is empty: tap the pond.",
+          "target": {
+            "find": "water"
+          }
+        },
         {
           "when": {
             "all": [
@@ -160,7 +190,6 @@
         "stat": "planted",
         "of": 5
       },
-      "tag": "energy",
       "teaches": ["tip.paint"]
     },
     {
@@ -191,12 +220,52 @@
       "skip": {
         "none": "shippable"
       },
-      "tag": "gold"
+      "tag": "gold",
+      "closeSheet": true
+    },
+    {
+      "id": "clock",
+      "track": "day1",
+      "text": "Days end at 2 AM. Sleep any time.",
+      "target": {
+        "hud": "clock"
+      },
+      "done": [
+        {
+          "touched": 1
+        }
+      ]
+    },
+    {
+      "id": "energy",
+      "track": "day1",
+      "text": "Work uses energy. Sleep refills it.",
+      "target": {
+        "hud": "energy"
+      },
+      "done": [
+        {
+          "touched": 1
+        }
+      ]
+    },
+    {
+      "id": "errands",
+      "track": "day1",
+      "text": "Free time! Try the errand up top.",
+      "target": {
+        "hud": "goal"
+      },
+      "done": [
+        {
+          "touched": 1
+        }
+      ]
     },
     {
       "id": "sleep",
       "track": "day1",
-      "text": "Tap the bed: crops grow overnight.",
+      "text": "Evening! Tap the bed to sleep.",
       "target": {
         "object": "bed",
         "map": "house"
@@ -227,7 +296,16 @@
           "min": 1
         }
       ],
-      "tag": "clock"
+      "when": {
+        "any": [
+          {
+            "minute": 1080
+          },
+          {
+            "energyBelow": 0.25
+          }
+        ]
+      }
     },
     {
       "id": "water2",
@@ -235,7 +313,7 @@
       "when": {
         "day": 2
       },
-      "text": "Crops need water daily: tap one.",
+      "text": "Water every dry crop: {dry} left.",
       "target": {
         "find": "dry",
         "map": "farm"
@@ -245,8 +323,29 @@
           "none": "dry"
         }
       ],
-      "tag": "gold",
-      "optional": true
+      "optional": true,
+      "alt": [
+        {
+          "when": {
+            "some": "emptyCan"
+          },
+          "text": "Your can is empty: tap the pond.",
+          "target": {
+            "find": "water"
+          }
+        },
+        {
+          "when": {
+            "fresh": "watered",
+            "min": 2
+          },
+          "text": "Tip: hold Action, drag {dir}: a row.",
+          "target": {
+            "gesture": "paint",
+            "map": "farm"
+          }
+        }
+      ]
     },
     {
       "id": "mail",
@@ -335,7 +434,7 @@
       },
       "text": "Wild goods are in town: walk south.",
       "target": {
-        "door": "town"
+        "steer": "town"
       },
       "alt": [
         {
@@ -402,14 +501,13 @@
       },
       "done": [
         {
-          "fresh": "foraged",
-          "min": 1
+          "stat": "foraged",
+          "min": 3
         }
       ],
       "when": {
         "fact": "forageInView"
       },
-      "leave": true,
       "optional": true
     },
     {
@@ -487,7 +585,7 @@
       "optional": true
     },
     {
-      "id": "gift",
+      "id": "giving",
       "track": "intro",
       "when": {
         "all": [
@@ -502,7 +600,7 @@
       },
       "text": "A gift they like adds hearts.",
       "target": {
-        "button": "^Gift$"
+        "button": "^Give$||^Gift$"
       },
       "done": [
         {
@@ -625,6 +723,7 @@
   ],
   "refusals": {
     "Not your land yet. Buy it at a sign.": "Not your land yet. Follow the ring.",
-    "Pick seeds on the hotbar first.": "Tap the seed packet on the hotbar."
+    "Pick seeds on the hotbar first.": "Tap the seed packet on the hotbar.",
+    "Can't get there.": "Tap the ringed tile."
   }
 }

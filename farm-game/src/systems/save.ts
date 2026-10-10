@@ -294,15 +294,15 @@ export const GOALS_V16 = [
 ] as const;
 
 /**
- * v16 -> v17: the guided start's early goals ("pick the parsnips", "plant 5", "sell in the bin" replace "till 6",
- * "plant 5", "water 5"). A save on "till" moves to "plant" (it never got the parsnips); one on "water" moves to
- * "sleep" (its seeds are in, and it may have nothing to sell yet). Goals added before the current one are
+ * v16 -> v17: the guided start's early goals ("pick the parsnips", "plant 5", "sell in the bin", then the day-1
+ * errands "pick up wild goods" and "say hello" before "sleep"). A save on "till" moves to "plant" (it never got
+ * the parsnips); one on "water" or "sleep" moves to the first errand (its seeds are in; sleep follows). Goals added before the current one are
  * skipped, so no reward is paid twice. The guide itself never starts on an old save (only a replay).
  */
 function migrateV16(raw: Raw): Raw {
   const at = typeof raw['goalIndex'] === 'number' ? Math.max(0, Math.floor(raw['goalIndex'])) : 0;
   const was = GOALS_V16[at];
-  const rename: Record<string, string> = { till: 'plant', water: 'sleep' };
+  const rename: Record<string, string> = { till: 'plant', water: 'forage', sleep: 'forage' };
   const ids = goals.map((g) => g.id);
   if (was && rename[was])
     return { ...raw, version: 17, goalIndex: Math.max(0, ids.indexOf(rename[was]!)) };

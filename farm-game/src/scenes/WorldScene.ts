@@ -170,6 +170,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.preview = false;
     this.work = null;
     this.painting = null;
+    this.water = null;
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
@@ -460,6 +461,7 @@ export abstract class WorldScene extends Phaser.Scene {
       npcs,
       blocked: (tx, ty) => !this.inMap({ tx, ty }) || isTileBlocked(this.grid, tx, ty),
       actKind: (tx, ty) => (this.inMap({ tx, ty }) ? this.actKindAt({ tx, ty }) : null),
+      water: this.waterTiles(),
       inView: (tx, ty) => {
         const p = screen(tx, ty);
         return (
@@ -468,6 +470,30 @@ export abstract class WorldScene extends Phaser.Scene {
       },
       screen,
     };
+  }
+
+  /** Water tiles a farmer can stand beside (the coach points at the nearest to refill the can). Cached per visit. */
+  private water: TileCoord[] | null = null;
+  private waterTiles(): TileCoord[] {
+    if (this.water) return this.water;
+    const out: TileCoord[] = [];
+    for (let ty = 0; ty < this.grid.height; ty++)
+      for (let tx = 0; tx < this.grid.width; tx++) {
+        if (tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) !== 'water') continue;
+        const shore = [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ].some(
+          ([dx, dy]) =>
+            this.inMap({ tx: tx + dx!, ty: ty + dy! }) &&
+            !isTileBlocked(this.grid, tx + dx!, ty + dy!),
+        );
+        if (shore) out.push({ tx, ty });
+      }
+    this.water = out;
+    return out;
   }
 
   // ---- setup ----

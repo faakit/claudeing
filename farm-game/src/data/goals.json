@@ -33,28 +33,40 @@
     }
   },
   {
-    "id": "sleep",
-    "text": "Sleep in bed to grow your crops",
-    "stat": "daysSlept",
-    "target": 1,
-    "reward": 30,
-    "hint": "Walk into the house and use the bed with Interact.",
-    "where": {
-      "farm": [14, 8],
-      "house": [2, 4]
-    }
-  },
-  {
     "id": "forage",
     "text": "Pick up 3 wild goods off the ground",
     "stat": "foraged",
     "target": 3,
     "reward": 40,
-    "hint": "Look for sparkling goods on the ground and press Action.",
+    "hint": "Tap sparkling goods on the ground. Town has some too.",
     "where": {
-      "woods": [10, 10],
-      "town": [9, 24],
-      "farm": [14, 42]
+      "farm": [14, 43],
+      "town": [12, 3]
+    }
+  },
+  {
+    "id": "talk",
+    "text": "Say hello to a villager",
+    "stat": "talked",
+    "target": 1,
+    "reward": 40,
+    "hint": "Tap someone with a ! over their head.",
+    "where": {
+      "farm": [16, 12],
+      "town": [8, 11]
+    }
+  },
+  {
+    "id": "sleep",
+    "text": "Sleep in bed when you're ready",
+    "stat": "daysSlept",
+    "target": 1,
+    "reward": 30,
+    "hint": "Go into the house and tap the bed. Any time is fine.",
+    "where": {
+      "farm": [14, 7],
+      "house": [2, 3],
+      "town": [11, 0]
     }
   },
   {
@@ -154,18 +166,6 @@
     "target": 5,
     "reward": 150,
     "hint": "Put fertilizer on tilled soil before planting."
-  },
-  {
-    "id": "talk",
-    "text": "Say hello to a villager",
-    "stat": "talked",
-    "target": 1,
-    "reward": 40,
-    "hint": "Walk up to someone with a ! and press Interact.",
-    "where": {
-      "farm": [15, 12],
-      "town": [8, 11]
-    }
   },
   {
     "id": "chicken",

@@ -151,6 +151,7 @@ async function run(p, hand, deviant = false) {
     }
   }
   let openedMenu = false;
+  let barTested = false;
   let step = null;
   let stepSince = Date.now();
   let firstHarvestS = null;
@@ -158,8 +159,11 @@ async function run(p, hand, deviant = false) {
   let lastGoal = first.goal;
   let guard = 0;
   let paintSeen = false;
+  const infoLines = [];
+  let freeTaps = 0;
+  let stickUsed = false;
   let dayOne = null;
-  while (guard++ < 400) {
+  while (guard++ < 1500) {
     const c = await coach();
     if (c.day === 2 && !dayOne) dayOne = { s: Math.round((Date.now() - t0) / 1000), ...t.ledger() };
     if (c.goal !== lastGoal && firstGoalS === null) firstGoalS = (Date.now() - t0) / 1000;
@@ -180,13 +184,97 @@ async function run(p, hand, deviant = false) {
       stepSince = Date.now();
       if (step) await shot(`${String(timeline.length + 1).padStart(2, '0')}-${step}`);
     }
-    if (c.map === 'town') break;
-    if (Date.now() - stepSince > STALL_MS) {
+    if (c.map === 'town' && c.day >= 2) break;
+    if (Date.now() - t0 > 8 * 60_000) {
+      check(
+        `${tag}: reaches town on day 2 within 8 minutes`,
+        false,
+        `${step} ${JSON.stringify(k)}`,
+      );
+      break;
+    }
+    if (step && Date.now() - stepSince > STALL_MS) {
       check(`${tag}: never stalls on a step`, false, `stuck on ${step}: ${JSON.stringify(k)}`);
       break;
     }
+    if (k?.visible && k.pointer?.kind === 'hud' && !k.aim) {
+      // An info line (clock, energy, errands): read it, then simply carry on playing (a tap on the world).
+      infoLines.push(k.step);
+      await sleep(1600);
+      await t.tap(100, 230, 70);
+      await sleep(500);
+      continue;
+    }
     if (!k || !k.visible || !k.aim) {
+      // Free play: no coach mark. Follow what else the screen offers: the goal's own arrow (it appears after
+      // a quiet spell) and, for "Sleep in bed when you're ready", the bed sheet's Sleep button.
+      if (/^Sleep in bed/.test(c.goal) && (await tapText(/^Sleep$/))) {
+        await sleep(1500);
+        continue;
+      }
+      // A sheet left open after an introduction: a player closes it.
+      if (await tapText(/^(Close|Done|Not now|Leave it)$/)) {
+        await sleep(500);
+        continue;
+      }
+      const arrow = await page.evaluate(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((x) => x.grid);
+        const g = w?.arrow;
+        if (!g?.visible) return null;
+        const cam = w.cameras.main;
+        return { x: Math.round(g.x + cam.x), y: Math.round(g.y + cam.y) };
+      });
+      if (arrow) {
+        freeTaps++;
+        if (process.env.DEBUG)
+          console.log(
+            `      free ${tag} goal "${c.goal}" ${c.map} @${Math.round(c.x / 16)},${Math.round(c.y / 16)} ${c.minutes} arrow ${arrow.x},${arrow.y}`,
+          );
+        await t.tap(arrow.x, arrow.y, 70);
+        await sleep(250);
+        await settle();
+        continue;
+      }
       await sleep(400);
+      continue;
+    }
+    if (deviant && k.step === 'grow' && !barTested) {
+      // A stray tap on the coach line itself, then on its "..." button: neither hides the guide for good.
+      barTested = true;
+      const bar = await page.evaluate(() => {
+        const ui = window.__farm.game.scene.getScene('UI');
+        const z = ui.coach.barZone;
+        return { gx: z.x, gy: z.y };
+      });
+      await t.tap(100, bar.gy, 70);
+      await sleep(500);
+      const k1 = (await coach()).coach;
+      check(
+        `${tag}: a stray tap on the coach line leaves the guide showing`,
+        k1?.visible && !!k1.aim && k1.step === 'grow',
+        JSON.stringify(k1),
+      );
+      await t.tap(bar.gx, bar.gy, 70);
+      await sleep(400);
+      const k2 = (await coach()).coach;
+      const menuShown = await page.evaluate(
+        () => window.__farm.game.scene.getScene('UI').coach.menuOpen,
+      );
+      check(
+        `${tag}: the "..." opens Skip guide / Back (and no hand meanwhile)`,
+        menuShown && !k2.aim,
+        JSON.stringify(k2),
+      );
+      await sleep(4600);
+      const k3 = (await coach()).coach;
+      const menuAfter = await page.evaluate(
+        () => window.__farm.game.scene.getScene('UI').coach.menuOpen,
+      );
+      check(
+        `${tag}: the line's menu closes by itself and the hand returns`,
+        !menuAfter && !!k3.aim && k3.visible,
+        JSON.stringify(k3),
+      );
       continue;
     }
     if (deviant && k.step === 'ship' && !openedMenu) {
@@ -225,6 +313,18 @@ async function run(p, hand, deviant = false) {
       await t.up();
       await sleep(400);
       await settle(9000);
+    } else if (a.kind === 'stick') {
+      // steer: push the way the hand drags and hold it for a moment
+      const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[a.dir];
+      await t.down(a.x, a.y);
+      for (let i = 1; i <= 6; i++) {
+        await t.move(a.x + d[0] * 5 * i, a.y + d[1] * 5 * i);
+        await sleep(20);
+      }
+      await sleep(1500);
+      await t.up();
+      await sleep(300);
+      stickUsed = true;
     } else if (a.kind === 'ring') {
       const dx = a.dir === 'left' ? -1 : 1;
       await t.drag(a.x, a.y, a.x + dx * 50, a.y, 140, 6);
@@ -235,7 +335,18 @@ async function run(p, hand, deviant = false) {
   const end = await coach();
   const seconds = Math.round((Date.now() - t0) / 1000);
   const ledger = t.ledger();
-  const dayOneSteps = ['harvest', 'seeds', 'plant', 'water', 'grow', 'ship', 'sleep'];
+  const dayOneSteps = [
+    'harvest',
+    'seeds',
+    'plant',
+    'water',
+    'grow',
+    'ship',
+    'clock',
+    'energy',
+    'errands',
+    'sleep',
+  ];
   const stats = await page.evaluate(() => window.__farm.getState().stats);
   check(
     `${tag}: every day-1 step done by doing it`,
@@ -258,13 +369,13 @@ async function run(p, hand, deviant = false) {
     `${firstGoalS}`,
   );
   check(`${tag}: the row tip was offered`, paintSeen || !!stats['painted'], '');
-  await sleep(1500);
-  const town = await coach();
+  check(`${tag}: the long walk to town teaches the stick`, stickUsed, '');
   check(
-    `${tag}: town shows one introduction (Mara, a wild good or the rod)`,
-    ['townHello', 'forage', 'fish'].includes(town.coach?.step) && town.coach.visible,
-    JSON.stringify(town.coach),
+    `${tag}: the clock, energy and errands lines each showed and went with a touch`,
+    ['clock', 'energy', 'errands'].every((id) => infoLines.includes(id)),
+    JSON.stringify(infoLines),
   );
+  check(`${tag}: day-1 free play followed the goals' own arrows`, freeTaps > 0, `${freeTaps}`);
   await shot('20-town');
   check(`${tag}: no console errors`, errors.length === 0, errors.join(' | '));
   const r = {
@@ -287,7 +398,7 @@ for (const p of PROFILES.filter((x) => which.includes(x.id)))
   for (const hand of hands) combos.push([p, hand, false]);
 // One player who wanders off and opens the Menu mid-step (recovery).
 if (which.includes('i13') && hands.includes('right')) combos.push([PROFILES[0], 'right', true]);
-const PARALLEL = Number(process.env.E2E_ONBOARDING_PARALLEL ?? 2);
+const PARALLEL = Number(process.env.E2E_ONBOARDING_PARALLEL ?? 3);
 try {
   const queue = [...combos];
   await Promise.all(

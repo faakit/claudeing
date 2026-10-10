@@ -111,7 +111,7 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
   c.label(
     8,
     c.top + 4,
-    'Tap a tile to walk there (and harvest, water, open...). Hold Action, then drag, to work a straight row. Flick Action sideways for the tool ring. Auto tool picks the hoe, seeds, can, scythe or pickaxe.',
+    'Tap a tile to walk there (and harvest, water, open...). Hold Action, then drag, to work a straight row. Flick Action sideways for the tool ring. Auto tool picks the hoe, can, scythe or pickaxe, and the seeds you planted last.',
     C.creamDim,
     1,
     'left',
@@ -126,7 +126,7 @@ export const HELP_ITEMS: readonly {
 }[] = [
   { icon: 'tap', lines: ['Tap a tile:', 'walk + do'] },
   { icon: 'paint', lines: ['Hold Action,', 'drag: a row'] },
-  { icon: 'stick', lines: ['Drag low:', 'steer'] },
+  { icon: 'stick', lines: ['Drag:', 'steer'] },
   { icon: 'ring', lines: ['Flick Action:', 'tool ring'] },
 ];
 

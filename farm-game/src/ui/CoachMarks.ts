@@ -21,6 +21,7 @@ import { faceDirection } from '../systems/movement';
 import { toggleLeftHanded } from '../systems/settings';
 import {
   advance,
+  CLOSE_BUTTON,
   COACH_LINE_PX,
   rewriteRefusal,
   coachView,
@@ -29,6 +30,7 @@ import {
   skipTutorial,
   stepDone,
   tutorialOn,
+  tutorialStep,
   welcome,
   type CoachFacts,
   type CoachView,
@@ -36,6 +38,7 @@ import {
   type Pointer,
 } from '../systems/tutorial';
 import type { TutorialHud } from '../data';
+import { edgePoint } from './coachGeometry';
 import { fitText, Label } from './font';
 import { HOTBAR_X, HOTBAR_Y, SLOT } from './Hud';
 import type { DockLayout } from './layout';
@@ -51,6 +54,13 @@ export const ESCALATE_MS = 15_000;
 export const NEXT_MS = 45_000;
 const DEPTH = 260;
 const BAR_H = 18;
+/** The "..." button at the end of the coach line (touch size). */
+const GLYPH_HIT = 26;
+/** The line's menu closes by itself after this long untouched. */
+const MENU_MS = 4000;
+/** An info line counts touches only after it has been up this long (so a quick tap cannot skip reading it). */
+const INFO_MIN_MS = 1200;
+export const SKIPPED_TOAST = 'Guide off. Replay it: Menu > Opts > Controls.';
 const WELCOME_H = 60;
 
 /** World view as the coach sees it, plus a tile -> screen mapping. */
@@ -85,28 +95,6 @@ const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number;
   };
 
 const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] } as const;
-
-/**
- * Where the straight way from `from` to `to` leaves the box (the last point inside it); `from` is clamped into
- * the box first. Pure, so a test can check the arrow never sits on the farmer's own tile.
- */
-export function edgePoint(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-  box: { x0: number; x1: number; y0: number; y1: number },
-): { x: number; y: number } {
-  const fx = Math.max(box.x0, Math.min(box.x1, from.x));
-  const fy = Math.max(box.y0, Math.min(box.y1, from.y));
-  const dx = to.x - fx;
-  const dy = to.y - fy;
-  let t = 1;
-  if (dx > 0) t = Math.min(t, (box.x1 - fx) / dx);
-  if (dx < 0) t = Math.min(t, (box.x0 - fx) / dx);
-  if (dy > 0) t = Math.min(t, (box.y1 - fy) / dy);
-  if (dy < 0) t = Math.min(t, (box.y0 - fy) / dy);
-  t = Math.max(0, t);
-  return { x: Math.round(fx + dx * t), y: Math.round(fy + dy * t) };
-}
 
 /** Draw the placeholder ring and hand once (the art agent can replace them by key). */
 export function ensureCoachTextures(scene: Phaser.Scene): void {
@@ -159,6 +147,10 @@ export class CoachMarks {
   private stillMs = 0;
   private refusals = 0;
   private progressKey = '';
+  private touches = 0;
+  private shownAt = 0;
+  private menuAt = 0;
+  private barLow = false;
   private lastTile = '';
   private cleanup: (() => void)[] = [];
 
@@ -171,15 +163,20 @@ export class CoachMarks {
     this.marks = scene.add.graphics();
     this.line = new Label(scene, GAME_WIDTH / 2, 0, '', { align: 'center', color: CH.cream });
     this.count = new Label(scene, GAME_WIDTH - 6, 0, '', { align: 'right', color: CH.gold });
-    this.glyph = new Label(scene, GAME_WIDTH - 7, 0, 'x', { align: 'center', color: CH.creamDim });
+    this.glyph = new Label(scene, GAME_WIDTH - 7, 0, '...', {
+      align: 'center',
+      color: CH.creamDim,
+    });
     this.tagLabel = new Label(scene, 0, 0, '', { color: CH.gold });
     this.ring = scene.add.image(0, 0, COACH_RING).setVisible(false);
     this.hand = scene.add.image(0, 0, COACH_HAND).setOrigin(0.27, 0.06).setVisible(false);
-    this.barZone = scene.add
-      .zone(0, 0, GAME_WIDTH, BAR_H + 6)
-      .setOrigin(0, 0)
-      .setInteractive();
+    // Only the "..." at the end of the line is a button (Skip guide / Back): the rest of the line lets touches
+    // through to the world, so a tap aimed at something near the top is never swallowed.
+    this.barZone = scene.add.zone(0, 0, GLYPH_HIT, GLYPH_HIT).setOrigin(0.5, 0.5).setInteractive();
     this.barZone.on('pointerup', () => this.tapLine());
+    // Every touch counts toward an info line ("Days end at 2 AM...") and closes the line's menu if it is
+    // outside it.
+    scene.input.on('pointerdown', this.onAnyTouch, this);
     this.root.add([
       this.plates,
       this.marks,
@@ -202,6 +199,7 @@ export class CoachMarks {
   }
 
   destroy(): void {
+    this.scene.input.off('pointerdown', this.onAnyTouch, this);
     this.cleanup.forEach((c) => c());
     setCoachContext(null, { panel: null, tab: null });
     this.root.destroy();
@@ -237,29 +235,52 @@ export class CoachMarks {
 
   update(time: number, delta: number): void {
     const s = getState();
-    const world = this.host.world();
-    const facts = this.host.facts();
-    if (!tutorialOn(s) || !world) {
-      this.view = null;
-      runtime.coaching = false;
-      setCoachContext(world, facts);
-      this.root.setVisible(false);
+    // Off (skipped, finished or never started): no work at all each frame.
+    const world = tutorialOn(s) ? this.host.world() : null;
+    if (!world) {
+      if (this.view || this.root.visible) {
+        this.view = null;
+        runtime.coaching = false;
+        setCoachContext(null, { panel: null, tab: null });
+        this.root.setVisible(false);
+        this.barZone.disableInteractive();
+      }
       return;
     }
-    setCoachContext(world, facts);
+    const facts: CoachFacts = {
+      ...this.host.facts(),
+      touches: this.touches,
+      touchStep: this.stepId,
+    };
+    // The stat watcher may advance between frames: it must never see this frame's touches (they belong to the
+    // step showing now, not to one that a stat change shows next).
+    setCoachContext(world, { ...facts, touches: 0 });
     const { current, completed } = advance(s, world, facts);
     if (completed.length && current?.id !== this.stepId) {
       audio.play('confirm');
       haptic('tick');
+      // Ship all: the bin closes by itself and the guide goes on (no "close this" step that teaches nothing).
+      if (completed.some((id) => tutorialStep(id)?.closeSheet)) this.host.openModal()?.close();
     }
     if (current && current.id !== this.stepId) {
       this.stepId = current.id;
       this.stepMs = 0;
+      this.shownAt = this.scene.time.now;
+      this.touches = 0;
       this.flash = null;
       this.closeMenu();
     } else if (!current) this.stepId = null;
+    if (this.menuOpen && time - this.menuAt > MENU_MS) this.closeMenu();
     if (!runtime.blocked) this.stepMs += delta;
     this.view = current ? coachView(s, world, facts, current) : null;
+    // The button a step points at is not in the open sheet (another page of it): lead out of the sheet instead.
+    const v = this.view;
+    if (v?.pointer?.kind === 'button' && facts.panel && !this.findButton(v.pointer.pattern))
+      this.view = {
+        ...v,
+        text: 'Close this to carry on.',
+        pointer: { kind: 'button', pattern: CLOSE_BUTTON },
+      };
     // Progress (a count moving, the target changing) restarts the stall clock that escalates the marks.
     const progress = this.view ? `${this.view.count}|${JSON.stringify(this.view.pointer)}` : '';
     if (progress !== this.progressKey) {
@@ -267,13 +288,7 @@ export class CoachMarks {
       this.stepMs = 0;
     }
     // While a sheet is open, only a step that points inside it (or into the HUD) shows.
-    const sheet = facts.panel !== null;
-    const inSheet = this.view?.pointer?.kind === 'button';
-    const show =
-      !!this.view &&
-      !runtime.busy &&
-      facts.panel !== 'summary' &&
-      (!sheet || inSheet || this.menuOpen);
+    const show = !!this.view && !runtime.busy && facts.panel !== 'summary';
     runtime.coaching = show;
     this.root.setVisible(show);
     // Hidden parts must never swallow a touch meant for the world.
@@ -342,16 +357,23 @@ export class CoachMarks {
       this.placeWelcome(y);
       y += WELCOME_H + 2;
     }
-    // The coach line.
+    // The coach line: at the top of the world, or at its bottom while the target sits right under the top.
+    const top = y;
+    if (sc && sc.x > 0 && sc.x < GAME_WIDTH) {
+      if (sc.y < top + BAR_H + 14 && sc.y > WORLD_VIEW.y) this.barLow = true;
+      else if (sc.y > top + BAR_H + 30 || sc.y < WORLD_VIEW.y) this.barLow = false;
+    } else this.barLow = false;
+    if (this.barLow) y = WORLD_VIEW.y + WORLD_VIEW.h - BAR_H - 4;
     if (this.menuOpen) {
       drawPanel(g, 3, y, 194, BAR_H + 10, undefined, undefined, 'chrome');
       this.placeMenu(y + 3);
       this.line.setVisible(false);
       this.glyph.setVisible(false);
       this.count.setVisible(false);
-      this.barZone.setPosition(0, y).setSize(GAME_WIDTH, BAR_H + 10);
+      this.barZone.setPosition(-100, -100);
       this.ring.setVisible(false);
       this.hand.setVisible(false);
+      this.aim = null; // nothing is pointed at while the menu shows
       return;
     }
     drawPanel(g, 3, y, 194, BAR_H, undefined, undefined, 'chrome');
@@ -362,13 +384,22 @@ export class CoachMarks {
       .setPosition(96, y + 5)
       .setVisible(true);
     const nextable = !!view.step.optional && this.stepMs >= NEXT_MS;
+    const gx = left ? 10 : GAME_WIDTH - 10;
     this.glyph
-      .setText(nextable ? '>' : 'x')
-      .setPosition(GAME_WIDTH - 6, y + 5)
+      .setText(nextable ? '>' : '...')
+      .setPosition(gx, y + 4)
       .setVisible(true);
     this.count.setVisible(false); // the goal bar already counts
-    this.barZone.setPosition(0, y - 3).setSize(GAME_WIDTH, BAR_H + 6);
-    this.drawPointer(time, view.pointer, world, calm, left, y + BAR_H + 4);
+    this.barZone.setPosition(gx, y + BAR_H / 2);
+    this.drawPointer(
+      time,
+      view.pointer,
+      world,
+      calm,
+      left,
+      this.barLow ? top : y + BAR_H + 4,
+      this.barLow ? y - 4 : WORLD_VIEW.y + WORLD_VIEW.h - 8,
+    );
   }
 
   private drawPointer(
@@ -378,6 +409,7 @@ export class CoachMarks {
     calm: boolean,
     left: boolean,
     topY: number,
+    bottomY: number,
   ): void {
     const m = this.marks;
     const escalated = this.stepMs >= ESCALATE_MS;
@@ -395,7 +427,7 @@ export class CoachMarks {
     if (p.kind === 'tile') {
       const sc = world.screen(p.tx, p.ty);
       const minY = Math.max(WORLD_VIEW.y + 8, topY + 4);
-      const maxY = WORLD_VIEW.y + WORLD_VIEW.h - 8;
+      const maxY = bottomY;
       if (sc.x < 6 || sc.x > GAME_WIDTH - 6 || sc.y < minY || sc.y > maxY) {
         // Off screen (or under the coach's own strip): an arrow where the way to it leaves the visible world,
         // so tapping the arrow always walks the farmer toward the target.
@@ -438,6 +470,29 @@ export class CoachMarks {
       );
       this.ring.setVisible(false);
       this.hand.setVisible(false);
+      return;
+    } else if (p.kind === 'stick') {
+      // A drag anywhere off the buttons steers: the hand drags from the open dock the way to go.
+      const home = L.stickHome;
+      const d = VEC[p.dir];
+      const cycle = calm ? 0.6 : (time % 1600) / 1600;
+      const k = Math.min(1, cycle / 0.35);
+      m.lineStyle(1, CH.cream, 0.5).strokeCircle(home.x, home.y, 18);
+      const ex = home.x + d[0] * 26;
+      const ey = home.y + d[1] * 26;
+      m.lineStyle(2, CH.gold, 1).lineBetween(home.x, home.y, ex, ey);
+      const ang = Math.atan2(d[1], d[0]);
+      m.fillStyle(CH.gold, 1).fillTriangle(
+        ex + Math.cos(ang) * 5,
+        ey + Math.sin(ang) * 5,
+        ex + Math.cos(ang + 2.4) * 6,
+        ey + Math.sin(ang + 2.4) * 6,
+        ex + Math.cos(ang - 2.4) * 6,
+        ey + Math.sin(ang - 2.4) * 6,
+      );
+      this.ring.setVisible(false);
+      this.placeHand(home.x + d[0] * 26 * k, home.y + d[1] * 26 * k, left);
+      this.aim = { x: home.x, y: home.y, kind: 'stick', dir: p.dir };
       return;
     } else if (p.kind === 'paint' || p.kind === 'ring') {
       at = { x: L.action.x, y: L.action.y };
@@ -579,11 +634,18 @@ export class CoachMarks {
   // ---- the line's menu: Skip guide, Next, Back ----
 
   private tapLine(): void {
-    if (!this.view) return;
-    if (this.menuOpen) return;
-    this.menuOpen = true;
+    if (!this.view || this.menuOpen) return;
     audio.play('select');
     this.buildMenu();
+  }
+
+  /** Any touch: counts toward an info line, and a touch outside the line's menu closes it. */
+  private onAnyTouch(_p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]): void {
+    if (this.scene.time.now - this.shownAt > INFO_MIN_MS) this.touches++;
+    if (!this.menuOpen) return;
+    const mine = (o: Phaser.GameObjects.GameObject): boolean =>
+      this.menuButtons.some((b) => b === o || b.list.includes(o));
+    if (!over.some(mine)) this.closeMenu();
   }
 
   private closeMenu(): void {
@@ -592,41 +654,56 @@ export class CoachMarks {
     this.menuButtons.length = 0;
   }
 
+  /** The guide is off: say where it comes back from (once, as a plain toast). */
+  private skipped(): void {
+    skipTutorial(getState());
+    this.closeMenu();
+    this.dropWelcome();
+    this.root.setVisible(false);
+    this.barZone.disableInteractive();
+    runtime.coaching = false;
+    gameEvents.emit('toast', { text: SKIPPED_TOAST, kind: 'info' });
+  }
+
   private buildMenu(): void {
     this.closeMenu();
     this.menuOpen = true;
+    this.menuAt = this.scene.time.now;
     const nextable = !!this.view?.step.optional && this.stepMs >= NEXT_MS;
     const left = getState().settings.leftHanded;
-    const specs: [string, () => void, number][] = [
+    let armed = 0;
+    type Spec = [string, (b: Button) => void, number];
+    const specs: Spec[] = [
       [
         'Skip guide',
-        () => {
-          skipTutorial(getState());
-          this.closeMenu();
-          this.root.setVisible(false);
-          runtime.coaching = false;
+        (b) => {
+          // Two taps: the first asks, the second (within 3 s) skips.
+          const now = this.scene.time.now;
+          this.menuAt = now;
+          if (now < armed) return this.skipped();
+          armed = now + 3000;
+          b.setLabel('Sure? Skip');
         },
         CH.warn,
       ],
-      ...(nextable
-        ? ([
-            [
-              'Next',
-              () => {
-                if (this.view) skipStep(getState(), this.view.step.id);
-                this.closeMenu();
-              },
-              CH.cream,
-            ],
-          ] as [string, () => void, number][])
-        : []),
-      ['Back', () => this.closeMenu(), CH.cream],
     ];
+    if (nextable)
+      specs.push([
+        'Next',
+        () => {
+          if (this.view) skipStep(getState(), this.view.step.id);
+          this.closeMenu();
+        },
+        CH.cream,
+      ]);
+    specs.push(['Back', () => this.closeMenu(), CH.cream]);
     const w = Math.floor((190 - (specs.length - 1) * 4) / specs.length);
     // Back (the safe choice) sits nearest the thumb; Skip farthest from it.
     const order = left ? [...specs].reverse() : specs;
     order.forEach(([label, fn, color], i) => {
-      const b = new Button(this.scene, 5 + i * (w + 4), 0, w, 20, label, fn, { textColor: color });
+      const b: Button = new Button(this.scene, 5 + i * (w + 4), 0, w, 20, label, () => fn(b), {
+        textColor: color,
+      });
       this.root.add(b);
       this.menuButtons.push(b);
     });
@@ -676,12 +753,7 @@ export class CoachMarks {
       'Skip guide',
       () => {
         const now = this.scene.time.now;
-        if (now < this.skipArmedUntil) {
-          skipTutorial(getState());
-          this.root.setVisible(false);
-          runtime.coaching = false;
-          return;
-        }
+        if (now < this.skipArmedUntil) return this.skipped();
         this.skipArmedUntil = now + 3000;
         this.welcomeSkip?.setLabel('Sure? Skip');
         this.scene.time.delayedCall(3000, () => {

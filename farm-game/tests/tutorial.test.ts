@@ -83,7 +83,8 @@ describe('guided start: content', () => {
     expect(bad((t) => (t.steps[0]!.target = { ui: 'menu', hud: 'goal' }))).toThrow(/exactly one/);
     expect(bad((t) => (t.gift.tiles = [[1, 1]]))).toThrow(/home plot/);
     expect(bad((t) => t.steps.push({ ...t.steps[0]! }))).toThrow(/unique/);
-    expect(bad((t) => (t.steps[8]!.when = undefined))).toThrow(/when/);
+    expect(bad((t) => (t.steps[0]!.id = 'gift'))).toThrow(/reserved/);
+    expect(bad((t) => (t.steps.find((x) => x.id === 'water2')!.when = undefined))).toThrow(/when/);
     expect(bad((t) => (t.steps[0]!.target = { find: 'ripe', map: 'moon' }))).toThrow(/map/);
   });
 
@@ -94,8 +95,15 @@ describe('guided start: content', () => {
   });
 
   it('every early goal agrees with the guided day: pick, plant, sell, sleep', () => {
-    expect(goals.slice(0, 4).map((g) => g.id)).toEqual(['gift', 'plant', 'ship1', 'sleep']);
-    for (const g of goals.slice(0, 4)) expect(measureText(g.text), g.id).toBeLessThanOrEqual(182);
+    expect(goals.slice(0, 6).map((g) => g.id)).toEqual([
+      'gift',
+      'plant',
+      'ship1',
+      'forage',
+      'talk',
+      'sleep',
+    ]);
+    for (const g of goals.slice(0, 6)) expect(measureText(g.text), g.id).toBeLessThanOrEqual(182);
   });
 });
 
@@ -151,6 +159,14 @@ describe('guided start: the step machine', () => {
     expect(step(s, w)).toBe('ship');
     expect(step(s, w)).toBe('ship');
     addStat(s, 'shipped', 3);
+    // three info lines (clock, energy, errands), each gone with the player's next touch
+    expect(step(s, w)).toBe('clock');
+    const touch = (id: string) => ({ panel: null, tab: null, touches: 1, touchStep: id });
+    expect(step(s, w, touch('clock'))).toBe('energy');
+    expect(step(s, w, touch('clock'))).toBe('energy'); // a touch counted for another step does nothing
+    expect(step(s, w, touch('energy'))).toBe('errands');
+    expect(step(s, w, touch('errands'))).not.toBe('sleep'); // free play until evening
+    s.time.minutes = 1080;
     expect(step(s, w)).toBe('sleep');
     addStat(s, 'daysSlept', 1);
     step(s, w);
@@ -209,8 +225,19 @@ describe('guided start: the step machine', () => {
 
   it('points at the bed tile that has a free side (the top half has none)', () => {
     const s = freshGuided();
-    for (const id of ['harvest', 'seeds', 'plant', 'water', 'grow', 'ship'])
+    for (const id of [
+      'harvest',
+      'seeds',
+      'plant',
+      'water',
+      'grow',
+      'ship',
+      'clock',
+      'energy',
+      'errands',
+    ])
       s.stats[`tut.${id}`] = 1;
+    s.time.minutes = 1100;
     const house = world(s, {
       map: 'house',
       tile: { tx: 5, ty: 7 },
@@ -276,7 +303,9 @@ describe('guided start: the step machine', () => {
   it('day 2 waits for day 2, then intros come one at a time', () => {
     const s = freshGuided();
     for (const st of tutorial.steps) if (st.track === 'day1') s.stats[`tut.${st.id}`] = 1;
-    expect(step(s)).toBeNull(); // still day 1: the day-2 track waits
+    // still day 1: the day-2 track waits; meanwhile only introductions (the wild leek in view)
+    expect(tutorial.steps.find((x) => x.id === step(s))?.track).toBe('intro');
+    s.stats['tut.forage'] = 1;
     s.time.day = 2;
     // nothing dry and no letter: those two pass at once, the Menu is next
     expect(step(s)).toBe('menu');
@@ -329,8 +358,8 @@ describe('save v17: the guided start goals', () => {
   it.each([
     ['till', 'plant'],
     ['plant', 'plant'],
-    ['water', 'sleep'],
-    ['sleep', 'sleep'],
+    ['water', 'forage'],
+    ['sleep', 'forage'],
     ['forage', 'forage'],
     ['buy', 'buy'],
     ['board1', 'board1'],
@@ -354,12 +383,103 @@ describe('save v17: the guided start goals', () => {
     };
     const s = migrate(raw);
     expect(Object.keys(s.farm.tiles)).toEqual(['10,17']);
-    expect(goals[s.goalIndex]?.id).toBe('sleep');
+    expect(goals[s.goalIndex]?.id).toBe('forage');
   });
 
   it('every save past the end stays past the end', () => {
     const raw = at('board1');
     raw['goalIndex'] = GOALS_V16.length;
     expect(migrate(raw).goalIndex).toBe(goals.length);
+  });
+});
+
+describe('coach marks geometry', () => {
+  it('the off-screen arrow sits where the way to the target leaves the view, never on the farmer', async () => {
+    const { edgePoint } = await import('../src/ui/coachGeometry');
+    const box = { x0: 10, x1: 190, y0: 120, y1: 280 };
+    const me = { x: 100, y: 181 };
+    // straight up, behind the coach strip: the arrow is at the top of what is visible
+    expect(edgePoint(me, { x: 100, y: 60 }, box)).toEqual({ x: 100, y: 120 });
+    // far down-left: on the way, inside the box
+    const e = edgePoint(me, { x: -200, y: 500 }, box);
+    expect(e.x).toBe(10);
+    expect(e.y).toBeGreaterThan(181);
+    expect(Math.hypot(e.x - me.x, e.y - me.y)).toBeGreaterThan(16);
+  });
+});
+
+describe('guided start: never stalls far from the plot', () => {
+  const grown = (): GameState => {
+    const s = freshGuided();
+    for (const id of ['harvest', 'seeds', 'plant', 'water']) s.stats[`tut.${id}`] = 1;
+    s.inventory.selected = 5;
+    return s;
+  };
+
+  it('"dig, plant, water" points at a spot beside the plot from anywhere on the farm', () => {
+    const s = grown();
+    const far = world(s, { tile: { tx: 2, ty: 31 } });
+    const cur = advance(s, far, NO_SHEET).current!;
+    expect(cur.id).toBe('grow');
+    const v = coachView(s, far, NO_SHEET, cur);
+    expect(v.pointer?.kind).toBe('tile');
+    expect(v.text).toBe('Tap here, then press Action.');
+  });
+
+  it('the long walk to town is a stick drag, then a tap on the gate once it is near', () => {
+    const s = grown();
+    for (const st of tutorial.steps) if (st.track === 'day1') s.stats[`tut.${st.id}`] = 1;
+    for (const id of ['water2', 'mail', 'menu', 'jobs']) s.stats[`tut.${id}`] = 1;
+    s.time.day = 2;
+    const w = world(s);
+    const cur = advance(s, w, NO_SHEET).current!;
+    expect(cur.id).toBe('town');
+    expect(coachView(s, w, NO_SHEET, cur).pointer).toEqual({ kind: 'stick', dir: 'down' });
+    const near = world(s, { tile: { tx: 14, ty: 40 } });
+    expect(coachView(s, near, NO_SHEET, cur).pointer).toMatchObject({
+      kind: 'tile',
+      tx: 14,
+      ty: 43,
+    });
+  });
+});
+
+describe('guided start: day 1 ends in the evening, never at breakfast', () => {
+  it('the bed step waits for 6 PM or low energy; sleeping earlier still finishes it', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps)
+      if (st.track === 'day1' && st.id !== 'sleep') s.stats[`tut.${st.id}`] = 1;
+    s.time.minutes = 9 * 60;
+    expect(step(s)).not.toBe('sleep');
+    s.energy = 20;
+    expect(step(s)).toBe('sleep');
+    s.energy = 100;
+    s.stats['daysSlept'] = 1; // went to bed early anyway
+    step(s);
+    expect(stepDone(s, 'sleep')).toBe(true);
+  });
+
+  it('an info line goes with the next touch, not by itself', () => {
+    const s = freshGuided();
+    for (const id of ['harvest', 'seeds', 'plant', 'water', 'grow', 'ship'])
+      s.stats[`tut.${id}`] = 1;
+    expect(step(s)).toBe('clock');
+    expect(step(s)).toBe('clock');
+    expect(step(s, world(s), { panel: null, tab: null, touches: 1, touchStep: 'clock' })).toBe(
+      'energy',
+    );
+  });
+
+  it('an empty can points at the pond', () => {
+    const s = freshGuided();
+    for (const id of ['harvest', 'seeds', 'plant']) s.stats[`tut.${id}`] = 1;
+    s.farm.tiles['10,16']!.crop = { cropId: 'parsnip', stage: 0, daysInStage: 0, regrow: false };
+    s.water = 0;
+    const w = world(s, { water: [{ tx: 18, ty: 33 }] });
+    const cur = advance(s, w, NO_SHEET).current!;
+    expect(cur.id).toBe('water');
+    const v = coachView(s, w, NO_SHEET, cur);
+    expect(v.text).toBe('Your can is empty: tap the pond.');
+    expect(v.pointer).toMatchObject({ kind: 'tile', tx: 18, ty: 33 });
   });
 });

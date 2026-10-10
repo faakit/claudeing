@@ -455,7 +455,8 @@ export interface GameData {
 
 /** The guided start (see systems/tutorial.ts and docs/EXTENDING.md "Tutorial steps"). */
 export type TutorialHud = 'goal' | 'hotbar' | 'water' | 'energy' | 'gold' | 'clock';
-export type TutorialFind = 'ripe' | 'dry' | 'emptySoil' | 'workable' | 'forage' | 'node' | 'npcNew';
+export type TutorialFind =
+  'ripe' | 'dry' | 'emptySoil' | 'workable' | 'forage' | 'node' | 'npcNew' | 'water';
 export type TutorialKind =
   | 'ripe'
   | 'dry'
@@ -467,6 +468,7 @@ export type TutorialKind =
   | 'forage'
   | 'unread'
   | 'readLetter'
+  | 'emptyCan'
   | 'placeable';
 /** A condition: every field given must hold (`any`, `all`, `not` combine). */
 export interface TutorialCond {
@@ -499,6 +501,8 @@ export interface TutorialCond {
   npc?: string;
   /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
   fact?: 'npcNew' | 'forageInView';
+  /** The player touched the screen this many times since the step showed (an info line goes on the next). */
+  touched?: number;
   any?: TutorialCond[];
   all?: TutorialCond[];
   not?: TutorialCond;
@@ -513,6 +517,8 @@ export interface TutorialTarget {
   object?: string;
   /** The door that leads to this map. */
   door?: string;
+  /** A long walk to the door that leads to this map: shows a stick drag, then the door once it is near. */
+  steer?: string;
   ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'placeSlot';
   gesture?: 'paint' | 'ring';
   /** A button in the open sheet whose label matches this regular expression. */
@@ -548,6 +554,8 @@ export interface TutorialStep {
   count?: { stat: string; of: number };
   /** The HUD element tagged while this step runs. */
   tag?: TutorialHud;
+  /** Close the open sheet when this step finishes (Ship all: the bin closes, the guide goes on). */
+  closeSheet?: boolean;
   /** Stats set to 1 when the step first shows (e.g. `tip.paint`: the old first-run tip is then not needed). */
   teaches?: string[];
 }
@@ -560,7 +568,7 @@ export interface TutorialData {
     map: string;
     crop: string;
     tiles: [number, number][];
-    forage: { item: string; tile: [number, number] }[];
+    forage: { item: string; tile: [number, number]; map?: string }[];
   };
   steps: TutorialStep[];
   /** Refusals the coach line rewords while the guide runs (game text -> guide text). */
@@ -899,6 +907,7 @@ export function validateContent(): void {
 
 const TUT_KINDS = [
   'readLetter',
+  'emptyCan',
   'ripe',
   'dry',
   'crops',
@@ -910,12 +919,13 @@ const TUT_KINDS = [
   'unread',
   'placeable',
 ];
-const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew'];
+const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop'];
 const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'placeSlot'];
 const TUT_COND_KEYS = new Set([
   'stat',
+  'touched',
   'fresh',
   'min',
   'max',
@@ -974,6 +984,7 @@ export function validateTutorial(t: TutorialData): void {
       'npc',
       'object',
       'door',
+      'steer',
       'ui',
       'gesture',
       'button',
@@ -988,6 +999,7 @@ export function validateTutorial(t: TutorialData): void {
     if (g.object !== undefined && !TUT_OBJECTS.includes(g.object))
       bad(`${where}: unknown object "${g.object}"`);
     if (g.door !== undefined && !mapIds.includes(g.door)) bad(`${where}: no map "${g.door}"`);
+    if (g.steer !== undefined && !mapIds.includes(g.steer)) bad(`${where}: no map "${g.steer}"`);
     if (g.map !== undefined && !mapIds.includes(g.map)) bad(`${where}: unknown map "${g.map}"`);
     if (g.ui !== undefined && !TUT_UI.includes(g.ui)) bad(`${where}: unknown ui "${g.ui}"`);
     if (g.hud !== undefined && !TUT_HUD.includes(g.hud)) bad(`${where}: unknown hud "${g.hud}"`);
@@ -1006,6 +1018,9 @@ export function validateTutorial(t: TutorialData): void {
   for (const st of t.steps) {
     const w = `step "${st.id}"`;
     if (!st.id || ids.has(st.id)) bad(`${w} needs a unique id`);
+    // Progress is kept in `tut.<id>` stats next to these flags: a step may not share their names.
+    if (['on', 'off', 'gift', 'seen', 'at', 'base'].includes(st.id))
+      bad(`${w}: "${st.id}" is a reserved name`);
     ids.add(st.id);
     if (!['day1', 'day2', 'intro'].includes(st.track)) bad(`${w} has an unknown track`);
     if (!st.text) bad(`${w} needs text`);

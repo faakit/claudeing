@@ -56,12 +56,17 @@ export interface CoachWorld {
   actKind(tx: number, ty: number): string | null;
   /** Is the tile inside the world view? */
   inView(tx: number, ty: number): boolean;
+  /** Water tiles of this map (to refill the can). */
+  water?: readonly Tile[];
 }
 
 /** UI facts the scene knows: the open sheet and the menu tab. */
 export interface CoachFacts {
   panel: string | null;
   tab: string | null;
+  /** Touches on the screen since `touchStep` showed on screen (an info line goes on the next touch). */
+  touches?: number;
+  touchStep?: string | null;
 }
 
 export type Pointer =
@@ -71,6 +76,8 @@ export type Pointer =
   | { kind: 'slot'; slot: number }
   | { kind: 'paint'; dir: Direction; tiles: Tile[] }
   | { kind: 'ring' }
+  /** Steer with the stick (a drag on the world) this way: the target is far off screen. */
+  | { kind: 'stick'; dir: Direction }
   | { kind: 'button'; pattern: string }
   | { kind: 'hud'; id: TutorialHud };
 
@@ -109,6 +116,8 @@ const MAP_NAMES: Record<string, string> = {
 
 // ---------------------------------------------------------------- on, off, replay
 
+export const tutorialStep = (id: string): TutorialStep | undefined =>
+  data().steps.find((st) => st.id === id);
 export const tutorialOn = (s: GameState): boolean => s.stats['tut.on'] === 1 && !s.stats['tut.off'];
 export const stepDone = (s: GameState, id: string): boolean => (s.stats[`tut.${id}`] ?? 0) > 0;
 
@@ -142,12 +151,14 @@ export function layGift(s: GameState): boolean {
     };
   }
   for (const f of g.forage) {
+    const map = f.map ?? g.map;
     const key = tileKey(f.tile[0], f.tile[1]);
-    if (s.farm.tiles[key]) continue;
-    (s.forage[g.map] ??= {})[key] = f.item;
+    if (map === 'farm' && s.farm.tiles[key]) continue;
+    (s.forage[map] ??= {})[key] = f.item;
   }
   gameEvents.emit('farmChanged', undefined);
-  gameEvents.emit('forageChanged', { map: g.map });
+  for (const map of new Set(g.forage.map((f) => f.map ?? g.map)))
+    gameEvents.emit('forageChanged', { map });
   return true;
 }
 
@@ -219,6 +230,8 @@ interface Ctx {
   world: CoachWorld;
   facts: CoachFacts;
   step: TutorialStep;
+  /** The step showed for the first time in this very check (its touch count belongs to the step before). */
+  justSeen?: boolean;
 }
 
 const relStat = (s: GameState, name: string): number =>
@@ -265,6 +278,8 @@ export function hasKind(s: GameState, kind: TutorialKind, world?: CoachWorld): b
       return s.mail.list.some((l) => !l.read);
     case 'readLetter':
       return s.mail.list.some((l) => l.read);
+    case 'emptyCan':
+      return s.water <= 0;
     case 'placeable':
       return s.inventory.slots.some((st, i) => !!st && i < 8 && items[st.item]?.placeable === true);
   }
@@ -313,6 +328,11 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   }
   if (c.npc !== undefined && !world.npcs.some((n) => n.id === c.npc)) return false;
   if (c.fact === 'npcNew' && !newNpcInView(s, world)) return false;
+  if (
+    c.touched !== undefined &&
+    (ctx.justSeen || facts.touchStep !== step.id || (facts.touches ?? 0) < c.touched)
+  )
+    return false;
   if (c.fact === 'forageInView' && !forageInView(s, world)) return false;
   if (c.any && !c.any.some((x) => holds(x, ctx))) return false;
   if (c.all && !c.all.every((x) => holds(x, ctx))) return false;
@@ -323,8 +343,8 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
 // ---------------------------------------------------------------- the machine
 
 /** Remember when a step first showed, and the stats its `fresh` conditions count from. */
-function markSeen(s: GameState, st: TutorialStep): void {
-  if (s.stats[`tut.seen.${st.id}`]) return;
+function markSeen(s: GameState, st: TutorialStep): boolean {
+  if (s.stats[`tut.seen.${st.id}`]) return false;
   s.stats[`tut.seen.${st.id}`] = 1;
   for (const k of st.teaches ?? []) s.stats[k] = 1;
   const fresh = new Set<string>();
@@ -339,6 +359,7 @@ function markSeen(s: GameState, st: TutorialStep): void {
   walk(st.skip);
   st.alt?.forEach((a) => walk(a.when));
   for (const name of fresh) s.stats[`tut.at.${st.id}.${name}`] = stat(s, name);
+  return true;
 }
 
 function finish(s: GameState, st: TutorialStep, out: string[]): void {
@@ -355,20 +376,23 @@ export function advance(
 ): { current: TutorialStep | null; completed: string[] } {
   const completed: string[] = [];
   if (!tutorialOn(s)) return { current: null, completed };
-  for (const track of ['day1', 'day2'] as const) {
+  outer: for (const track of ['day1', 'day2'] as const) {
     for (const st of steps) {
       if (st.track !== track || stepDone(s, st.id)) continue;
-      const ctx = { s, world, facts, step: st };
-      if (st.when && !holds(st.when, ctx)) return { current: null, completed }; // the track waits
-      markSeen(s, st);
-      if ((st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx))) {
+      const ctx: Ctx = { s, world, facts, step: st };
+      const on = !st.when || holds(st.when, ctx);
+      if (on) ctx.justSeen = markSeen(s, st);
+      // A day-1 step done early (the bed before evening) still counts; day-2 steps wait for their day.
+      const over = (st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx));
+      if ((on || track === 'day1') && over) {
         finish(s, st, completed);
         continue;
       }
+      if (!on) break outer; // the track waits for this step's moment; meanwhile introductions may show
       return { current: st, completed };
     }
   }
-  // Both tracks done: one-off introductions, the first that applies.
+  // No track step to show: one-off introductions, the first that applies.
   for (const st of steps) {
     if (st.track !== 'intro' || stepDone(s, st.id)) continue;
     const ctx = { s, world, facts, step: st };
@@ -377,7 +401,7 @@ export function advance(
       if (st.leave && s.stats[`tut.seen.${st.id}`]) finish(s, st, completed);
       continue;
     }
-    markSeen(s, st);
+    (ctx as Ctx).justSeen = markSeen(s, st);
     if ((st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx))) {
       finish(s, st, completed);
       continue;
@@ -454,14 +478,14 @@ function findAll(s: GameState, world: CoachWorld, find: string): Tile[] {
       return soil((t) => !t.crop);
     case 'workable':
       return farm
-        ? ownedTiles(s)
-            .filter((t) => dist(t, world.tile) <= 12)
-            .filter((t) => WORK.includes(world.actKind(t.tx, t.ty) ?? ''))
+        ? ownedTiles(s).filter((t) => WORK.includes(world.actKind(t.tx, t.ty) ?? ''))
         : [];
     case 'forage':
       return keyTiles(s.forage[world.map] ?? {});
     case 'node':
       return keyTiles(s.nodes[world.map] ?? {});
+    case 'water':
+      return [...(world.water ?? [])];
     case 'npcNew': {
       const n = newNpcInView(s, world);
       return n ? [n] : [];
@@ -562,6 +586,21 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     );
     return d ? { kind: 'tile', tx: d.tx, ty: d.ty } : null;
   }
+  if (g.steer) {
+    // A long walk to a door: teach the stick (a drag on the world steers); once the door shows, tap it.
+    const d = nearest(
+      world.tile,
+      world.objects.filter((o) => o.type === 'door' && o.to === g.steer),
+    );
+    if (!d) return null;
+    if (world.inView(d.tx, d.ty) && dist(world.tile, d) <= 6)
+      return { kind: 'tile', tx: d.tx, ty: d.ty };
+    const dx = d.tx - world.tile.tx;
+    const dy = d.ty - world.tile.ty;
+    const dir: Direction =
+      Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+    return { kind: 'stick', dir };
+  }
   if (g.ui === 'seedSlot') {
     const i = slotOf(s, (it) => items[it]?.type === 'seed');
     return i === null ? null : { kind: 'slot', slot: i };
@@ -598,6 +637,10 @@ function fill(text: string, s: GameState, world: CoachWorld, pointer: Pointer | 
   let out = text;
   if (out.includes('{dir}'))
     out = out.replace('{dir}', pointer?.kind === 'paint' ? pointer.dir : 'down');
+  if (out.includes('{dry}')) {
+    const n = soils(s).filter(([, t]) => !!t.crop && !t.watered && !isMature(t.crop)).length;
+    out = out.replace('{dry}', String(n));
+  }
   if (out.includes('{npc}')) {
     const n = newNpcInView(s, world);
     out = out.replace('{npc}', n ? (npcs[n.id]?.name ?? n.id) : 'them');
@@ -692,13 +735,15 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
   const dirs = ['up', 'down', 'left', 'right'];
   out.push(...Object.values(data().refusals ?? {}));
   const names = Object.values(npcs).map((n) => n.name);
-  return out.flatMap((t) =>
-    t.includes('{dir}')
-      ? dirs.map((d) => t.replace('{dir}', d))
-      : t.includes('{npc}')
-        ? names.map((n) => t.replace('{npc}', n))
-        : [t],
-  );
+  return out
+    .map((t) => t.replace('{dry}', '12'))
+    .flatMap((t) =>
+      t.includes('{dir}')
+        ? dirs.map((d) => t.replace('{dir}', d))
+        : t.includes('{npc}')
+          ? names.map((n) => t.replace('{npc}', n))
+          : [t],
+    );
 }
 
 /** Jobs a step can point at exist (data sanity used by tests). */
