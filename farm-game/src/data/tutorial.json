@@ -432,7 +432,7 @@
       "when": {
         "day": 2
       },
-      "text": "Wild goods are in town: walk south.",
+      "text": "Seeds are in town: walk south.",
       "target": {
         "steer": "town"
       },
@@ -571,7 +571,7 @@
       "when": {
         "fact": "npcNew"
       },
-      "text": "Say hello to {npc}: tap them.",
+      "text": "Tap {npc} to say hello.",
       "target": {
         "find": "npcNew"
       },

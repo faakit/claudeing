@@ -259,9 +259,10 @@ export class CoachMarks {
     if (completed.length && current?.id !== this.stepId) {
       audio.play('confirm');
       haptic('tick');
-      // Ship all: the bin closes by itself and the guide goes on (no "close this" step that teaches nothing).
-      if (completed.some((id) => tutorialStep(id)?.closeSheet)) this.host.openModal()?.close();
     }
+    // Ship all: the bin closes by itself once its step is over (it may have finished in the stat watcher).
+    if (this.stepId && current?.id !== this.stepId && tutorialStep(this.stepId)?.closeSheet)
+      this.host.openModal()?.close();
     if (current && current.id !== this.stepId) {
       this.stepId = current.id;
       this.stepMs = 0;
@@ -381,10 +382,10 @@ export class CoachMarks {
     this.line
       .setText(fitText(this.lineText(), COACH_LINE_PX))
       .setColor(flashing ? CH.gold : CH.cream)
-      .setPosition(96, y + 5)
+      .setPosition(left ? 105 : 95, y + 5)
       .setVisible(true);
     const nextable = !!view.step.optional && this.stepMs >= NEXT_MS;
-    const gx = left ? 10 : GAME_WIDTH - 10;
+    const gx = left ? 8 : GAME_WIDTH - 8;
     this.glyph
       .setText(nextable ? '>' : '...')
       .setPosition(gx, y + 4)
