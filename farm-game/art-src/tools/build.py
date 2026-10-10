@@ -77,6 +77,12 @@ def build_crop_sprite(spec: dict, pal, pal_lab, outline: int) -> np.ndarray:
         a, b = int(h0 * 0.55), int(h0 * 0.9)
         rows = sorted({int(a + (b - a) * (k + 0.5) / drop) for k in range(drop)})
         idx = np.delete(idx, rows, axis=0)
+    stretch = spec.get("stretch")
+    if stretch:  # make a tall thing taller on its native grid: repeat rows spread over a uniform band (a post, a silo)
+        n, a, b = stretch
+        h0 = idx.shape[0]
+        rows = sorted(int(h0 * a + (h0 * (b - a)) * (k + 0.5) / n) for k in range(n))
+        idx = np.insert(idx, rows, idx[rows], axis=0)
     if not spec.get("noscale"):
         idx = px.downscale_idx(idx, fit[0], fit[1], outline)
     else:  # keep the native scale (consistent animation frames); trim the sides to the frame width

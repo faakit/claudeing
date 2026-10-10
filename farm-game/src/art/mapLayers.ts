@@ -37,11 +37,35 @@ export const MAP_ART_LAYERS = [
 export const FADE_RADIUS = 1;
 export const FADE_ALPHA = 0.45;
 
-/** Tiles to fade around the player: the 3x3 around the feet and the head tile above. Pure, for tests. */
-export function fadeTiles(tx: number, ty: number): [number, number][] {
+/**
+ * Tiles to fade: about 24 px around the player's body (feet tile, head tile above, and the ring around them, without
+ * the far corners) plus the 3x3 around the target tile, so a big tree crown never hides you, your target marker or
+ * the crop and forage you are working. Pure, for tests.
+ */
+export function fadeTiles(
+  tx: number,
+  ty: number,
+  target?: { tx: number; ty: number },
+): [number, number][] {
   const out: [number, number][] = [];
-  for (let y = ty - FADE_RADIUS - 1; y <= ty + FADE_RADIUS; y++)
-    for (let x = tx - FADE_RADIUS; x <= tx + FADE_RADIUS; x++) out.push([x, y]);
+  const seen = new Set<string>();
+  const add = (x: number, y: number): void => {
+    const k = `${x},${y}`;
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push([x, y]);
+    }
+  };
+  for (let y = ty - FADE_RADIUS - 2; y <= ty + FADE_RADIUS; y++)
+    for (let x = tx - FADE_RADIUS - 1; x <= tx + FADE_RADIUS + 1; x++) {
+      const far =
+        Math.abs(x - tx) === FADE_RADIUS + 1 &&
+        (y === ty - FADE_RADIUS - 2 || y === ty + FADE_RADIUS);
+      if (!far) add(x, y);
+    }
+  if (target)
+    for (let y = target.ty - 1; y <= target.ty + 1; y++)
+      for (let x = target.tx - 1; x <= target.tx + 1; x++) add(x, y);
   return out;
 }
 
@@ -68,15 +92,15 @@ export class MapArt {
     }
   }
 
-  /** Call when the player moves: overhead tiles near them fade, the rest come back. */
-  follow(tx: number, ty: number): void {
+  /** Call when the player moves or turns: overhead tiles near them and their target fade, the rest come back. */
+  follow(tx: number, ty: number, target?: { tx: number; ty: number }): void {
     if (!this.overhead) return;
-    const key = `${tx},${ty}`;
+    const key = `${tx},${ty},${target?.tx},${target?.ty}`;
     if (key === this.last) return;
     this.last = key;
     for (const t of this.faded) t.setAlpha(1);
     this.faded = [];
-    for (const [x, y] of fadeTiles(tx, ty)) {
+    for (const [x, y] of fadeTiles(tx, ty, target)) {
       const t = this.overhead.getTileAt(x, y);
       if (t) {
         t.setAlpha(FADE_ALPHA);

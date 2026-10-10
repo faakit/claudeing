@@ -348,7 +348,9 @@ export abstract class WorldScene extends Phaser.Scene {
     this.syncSprite(moving);
 
     const here = playerTile(player);
-    this.mapArt?.follow(here.tx, here.ty);
+    const facing = facingTile(player);
+    this.mapArt?.follow(here.tx, here.ty, facing);
+    this.things?.fadeBehind(player.x, player.y, facing);
     const door = objectAt(this.objects, here.tx, here.ty, 'door');
     if (door) {
       this.useDoor(door);

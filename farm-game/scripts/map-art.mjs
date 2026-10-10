@@ -280,6 +280,14 @@ const COMPOSITION = {
   },
 };
 
+/** Facade decor moved up to head height on a two-storey wall (the forge stays at ground level). */
+const HIGH = {
+  f_window: 'f_window_hi',
+  f_window_box: 'f_window_box_hi',
+  f_lantern: 'f_lantern_hi',
+  f_door: 'f_door',
+};
+
 const LIGHT_OF = {
   t_streetlamp: 'lamp',
   t_lanternpole: 'lamp',
@@ -621,35 +629,16 @@ export function artLayers(name, m, objects, extraReserved = []) {
   }
 
   // --- forest mass, fences, bushes, standalone trees (props); overhangs and canopies (overhead) ---
-  const overTop = (x, y, n) => {
-    // an overhead tile above (x, y): only where nothing overhead is drawn yet
-    if (y - 1 >= 0) setIfFree('overhead', x, y - 1, n);
-  };
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const k = kind(x, y);
       const i = y * w + x;
       if (k === 'tree' && woods(x, y)) {
-        set(
-          'props',
-          x,
-          y,
-          bake(
-            'canopy',
-            seed,
-            x,
-            y,
-            'in',
-            nb(x, y, 5, (_, nx, ny) => woods(nx, ny), true),
-          ),
-        );
+        // the forest mass: big crowns, baked below with the other trees
       } else if (k === 'tree' && wet(x, y)) {
         set('props', x, y, 'reeds_s');
       } else if (k === 'tree' && !cliff.has(i) && C.trees.length) {
-        const t = C.trees[hash(x, y, 5) % C.trees.length];
-        set('props', x, y, `tree_${t}_base`);
-        const up = kind(x, y - 1);
-        if (up !== null && up !== 'tree') overTop(x, y, `tree_${t}_top`);
+        // a standalone tree: trunk and crown baked below (big crowns over the one-tile trunk)
       } else if (k === 'bush') {
         if (wet(x, y)) set('props', x, y, hash(x, y, 4) % 2 ? 'reeds_s' : 'p_boulder');
         else if (C.bushes.length) set('props', x, y, C.bushes[hash(x, y, 7) % C.bushes.length]);
@@ -774,18 +763,183 @@ export function artLayers(name, m, objects, extraReserved = []) {
         const f = (hash(x, y, 61) % 1000) / 1000;
         if (byTree && f < 0.55) set('props', x, y, `seasonal_${hash(x, y, 62) % 3}`);
       }
-  // the forest's edge: crowns spilling over the open tiles around it (under the player, or overhead where the
-  // wood is south of the tile so you walk behind it), with its shadow cast down-right
+  // --- trees in proportion (round 3): every tree is a crown in world pixels, baked per tile and layer ---
+  // The player is 28 px tall; a standalone tree is up to ~3 tiles wide and ~4 tall over its one-tile trunk, the
+  // wood's edge is a row of big trees with trunks, the wood behind them a darker mass. Collision is unchanged.
+  // Crowns of trees south of a tile go overhead (you walk behind them, and the layer fades near the player);
+  // crowns on the tile's row or north of it are drawn under the player.
+  const crowns = [];
+  const treeKind = (x, y) => {
+    const t = C.trees.length ? C.trees[hash(x, y, 5) % C.trees.length] : 'oak';
+    return t === 'birch' ? 'b' : t === 'pine' ? 'p' : 'o';
+  };
+  const BUILT = new Set(['wall', 'door', 'shopwall', 'shopdoor', 'wallin', 'rock']);
+  // forage must stay readable: no crown over a forage zone (weeds may sit under a crown, the fade shows them)
+  const forageTiles = new Set();
+  for (const o of objects)
+    if (o.type === 'forage')
+      for (let j = o.y / 16; j < (o.y + o.height) / 16; j++)
+        for (let i = o.x / 16; i < (o.x + o.width) / 16; i++) forageTiles.add(j * w + i);
+  /** May a standalone tree's crown spread over this cell? Never over forage, reserved spots or buildings. */
+  const crownFree = (x, y) =>
+    x >= 0 &&
+    y >= 0 &&
+    x < w &&
+    y < h &&
+    !BUILT.has(kind(x, y)) &&
+    !forageTiles.has(y * w + x) &&
+    !(reserved.has(y * w + x) && kind(x, y) !== 'tree') &&
+    !L.roof[y * w + x];
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
-      if (kind(x, y) === 'tree' && woods(x, y)) continue;
-      const f5 = nb(x, y, 5, (_, nx, ny) => woods(nx, ny) && kind(nx, ny) === 'tree', false);
-      const near = [6, 7, 8, 11, 13, 16, 17, 18].some((k) => f5[k] === '1');
-      if (!near) continue;
-      const full = nb(x, y, 5, (_, nx, ny) => woods(nx, ny), true);
-      set('shade', x, y, bake('canopy', seed, x, y, 'under', full));
-      if ([16, 17, 18].some((k) => full[k] === '1'))
-        set('overhead', x, y, bake('canopy', seed, x, y, 'over', full));
+      if (kind(x, y) !== 'tree' || wet(x, y) || cliff.has(y * w + x)) continue;
+      const hx = hash(x, y, 91);
+      const jx = (hx % 5) - 2;
+      const jy = ((hx >>> 4) % 3) - 1;
+      const base = y * 16 + 14;
+      if (woods(x, y)) {
+        const southOpen = !woods(x, y + 1);
+        const k = hx % 9 === 0 ? 'p' : hx % 9 === 4 ? 'b' : 'o';
+        if (southOpen && (x + (seed % 2)) % 2 === 0) {
+          // the edge: big trees with their trunks showing
+          crowns.push({
+            k,
+            cx: x * 16 + 8 + jx,
+            cy: y * 16 - 12 + jy,
+            r: 16 + ((hx >>> 8) % 3),
+            base,
+            flags: 't',
+          });
+        } else if (southOpen) {
+          crowns.push({
+            k: 'o',
+            cx: x * 16 + 8 + jx,
+            cy: y * 16 - 10 + jy,
+            r: 13,
+            base: base - 6,
+            flags: 'k',
+          });
+        } else if (!woods(x - 1, y) || !woods(x + 1, y)) {
+          // the wood's east and west sides: a crown on every cell, so the side reads as trees, not floor
+          const side = !woods(x - 1, y) ? 3 : -3;
+          crowns.push({ k, cx: x * 16 + 8 + side, cy: y * 16 + 2 + jy, r: 14, base, flags: '-' });
+        } else if ((x + y) % 2 === 0)
+          crowns.push({
+            k,
+            cx: x * 16 + 8 + jx,
+            cy: y * 16 + 6 + jy,
+            r: 13 + ((hx >>> 8) % 3),
+            base,
+            flags: 'k',
+          });
+        continue;
+      }
+      if (!C.trees.length) continue;
+      if (C.bigOak && x === C.bigOak[0] && y === C.bigOak[1]) continue; // the old oak, below
+      // standalone: the biggest crown that fits over free cells (2 rows above the trunk, else 1, else small).
+      // Sizes from the art critic's scale table (review 8): oak about 30x44, birch 20x40, pine 22x44.
+      const k = treeKind(x, y);
+      const fits = (rows) => {
+        for (let j = 1; j <= rows; j++)
+          for (let i = -1; i <= 1; i++) if (!crownFree(x + i, y - j)) return false;
+        return crownFree(x - 1, y) && crownFree(x + 1, y);
+      };
+      const big = { o: [14, 28], b: [12, 28], p: [11, 29] }[k];
+      if (fits(2))
+        crowns.push({
+          k,
+          cx: x * 16 + 8 + (jx >> 1),
+          cy: base - big[1] + jy,
+          r: big[0],
+          base,
+          flags: 't',
+        });
+      else if (fits(1)) crowns.push({ k, cx: x * 16 + 8, cy: base - 19, r: 10, base, flags: 't' });
+      else crowns.push({ k, cx: x * 16 + 8, cy: base - 13, r: 8, base, flags: 'ts' });
+    }
+  // the old oak (woods landmark): a crown about 60 px across over its one solid tile, with a gnarled trunk
+  if (C.bigOak && kind(...C.bigOak) === 'tree') {
+    const [ox, oy] = C.bigOak;
+    crowns.push({
+      k: 'o',
+      cx: ox * 16 + 8,
+      cy: oy * 16 + 14 - 40,
+      r: 27,
+      base: oy * 16 + 14,
+      flags: 'tg',
+    });
+  }
+  const reach = (c) => ({
+    x0: Math.floor((c.cx - c.r * 1.2 - 2) / 16),
+    x1: Math.floor((c.cx + c.r * 1.2 + 6) / 16),
+    y0: Math.floor((c.cy - c.r * 1.4 - 2) / 16),
+    y1: Math.floor((c.base + 6) / 16),
+  });
+  const byCell = new Map();
+  for (const c of crowns) {
+    const b = reach(c);
+    for (let y = Math.max(0, b.y0); y <= Math.min(h - 1, b.y1); y++)
+      for (let x = Math.max(0, b.x0); x <= Math.min(w - 1, b.x1); x++) {
+        const key = y * w + x;
+        if (!byCell.has(key)) byCell.set(key, []);
+        byCell.get(key).push(c);
+      }
+  }
+  const entry = (c, draw) =>
+    `${c.k}${draw ? 1 : 0}_${Math.round(c.cx)}_${Math.round(c.cy)}_${c.r}_${c.base}_${c.flags || '-'}`;
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const k = kind(x, y);
+      const list = byCell.get(y * w + x) ?? [];
+      const forestHere = k === 'tree' && woods(x, y);
+      if (forestHere) {
+        const mode =
+          'f' + nb(x, y, 3, (_, nx, ny) => woods(nx, ny) && kind(nx, ny) === 'tree', true);
+        set(
+          'props',
+          x,
+          y,
+          bake('crown', seed, x, y, mode, list.map((c) => entry(c, true)).join('~')),
+        );
+        continue;
+      }
+      if (!list.length || BUILT.has(k) || cliff.has(y * w + x) || wet(x, y)) continue;
+      const row = (c) => Math.floor(c.base / 16);
+      /** Does this crown (or its shadow, shifted down-right) touch the tile? */
+      const hits = (c, dx = 0, dy = 0) => {
+        const r = c.r * 1.2 + 2;
+        const nx = Math.max(x * 16, Math.min(c.cx + dx, x * 16 + 16));
+        const ny = Math.max(y * 16, Math.min(c.cy + dy, y * 16 + 16));
+        return (nx - c.cx - dx) ** 2 + (ny - c.cy - dy) ** 2 <= r * r;
+      };
+      const trunkHere = (c) =>
+        c.flags.includes('t') && Math.abs(c.cx - (x * 16 + 8)) < 12 && row(c) === y;
+      // over forage, plots, doors, signs and villager spots nothing hangs overhead: the crowns there are drawn
+      // under the player and the goods instead (no hard cut through the crown, nothing hidden)
+      const guarded = forageTiles.has(y * w + x) || reserved.has(y * w + x);
+      const front = (c) => row(c) > y && !guarded;
+      const under = list.filter((c) => !front(c));
+      const over = list.filter((c) => front(c) && hits(c));
+      const layer = k === 'tree' ? 'props' : 'shade';
+      // shadows fall from every crown nearby; only this row's and the northern crowns are drawn here
+      if (
+        k === 'tree' ||
+        under.some((c) => hits(c) || trunkHere(c)) ||
+        list.some((c) => hits(c, 3, 4) && !hits(c))
+      )
+        set(
+          layer,
+          x,
+          y,
+          bake('crown', seed, x, y, 'u', list.map((c) => entry(c, !front(c))).join('~')),
+        );
+      if (over.length)
+        setIfFree(
+          'overhead',
+          x,
+          y,
+          bake('crown', seed, x, y, 'o', over.map((c) => entry(c, true)).join('~')),
+        );
     }
   // the bed object: one 2x2 sprite over its four (already solid) tiles
   for (let y = 0; y < h; y++)
@@ -831,18 +985,29 @@ export function artLayers(name, m, objects, extraReserved = []) {
       const top = Math.min(...cells.map((c) => c[1]));
       const bottom = Math.max(...cells.map((c) => c[1]));
       if (top === bottom) continue;
-      blocks.push({ style, cells, top, bottom });
+      // two-storey facade (review 8): blocks of 4+ rows keep their two bottom rows as wall (32 px, taller than
+      // the player) and roof the rest; smaller blocks keep a one-row facade. Same rectangle, same door tiles.
+      const wallRows = bottom - top >= 3 ? 2 : 1;
+      const eaveRow = bottom - wallRows + 1;
+      blocks.push({ style, cells, top, bottom, eaveRow });
       const inBlock = (cx, cy) => cells.some(([a, b]) => a === cx && b === cy);
       for (const [cx, cy] of cells) {
         const col = !inBlock(cx - 1, cy) ? 'l' : !inBlock(cx + 1, cy) ? 'r' : 'c';
         if (cy === top && top > 0) set('overhead', cx, cy - 1, `eave_${style}_${col}`);
-        if (cy === bottom) {
-          if (has('eave_shadow')) set('shade', cx, cy, 'eave_shadow');
+        if (cy >= eaveRow) {
+          if (cy === eaveRow && has('eave_shadow')) set('shade', cx, cy, 'eave_shadow');
           continue;
         }
-        const row = cy === bottom - 1 ? 'b' : cy === top ? 't' : 'm';
+        const row = cy === eaveRow - 1 ? 'b' : cy === top ? 't' : 'm';
         set('roof', cx, cy, `roof_${style}_${row}${col}`);
       }
+      // tall doors over the two wall rows: the lower half replaces the door tile's art, the top sits above it
+      if (wallRows === 2)
+        for (const [cx, cy] of cells)
+          if (cy === bottom && (kind(cx, cy) === 'door' || kind(cx, cy) === 'shopdoor')) {
+            set('props', cx, cy, `f_doorlow_${style}`);
+            set('props', cx, cy - 1, `f_doortop_${style}`);
+          }
     }
   for (const [x, y] of C.chimney ?? []) {
     const b = blocks.find((q) => q.top === y && q.cells.some(([a, c]) => a === x && c === y));
@@ -861,26 +1026,21 @@ export function artLayers(name, m, objects, extraReserved = []) {
       console.warn(`map-art: ${name}: no facade at ${x},${y}`);
       continue;
     }
+    const b = blocks.find((q) => q.cells.some(([a, c]) => a === x && c === y));
+    if (b && b.eaveRow < b.bottom && y === b.bottom && HIGH[n]) {
+      // a two-storey wall: windows and the lantern at head height on the row above, doors split over both rows
+      if (n === 'f_door') {
+        set('props', x, y, `f_doorlow_${b.style}`);
+        set('props', x, y - 1, `f_doortop_${b.style}`);
+      } else set('props', x, y - 1, HIGH[n]);
+      if (LIGHT_OF[n])
+        lights.push({ type: LIGHT_OF[n], tx: x, ty: y - (n === 'f_door' ? 0 : 0.75) });
+      continue;
+    }
     set('props', x, y, n);
     if (LIGHT_OF[n]) lights.push({ type: LIGHT_OF[n], tx: x, ty: y });
   }
 
-  // --- the old oak (woods landmark): trunk on a solid tree tile, canopy overhead, roots flat ---
-  if (C.bigOak) {
-    const [ox, oy] = C.bigOak;
-    if (kind(ox, oy) !== 'tree')
-      console.warn(`map-art: ${name}: the old oak needs a tree tile at ${ox},${oy}`);
-    else
-      for (let j = 0; j < 4; j++)
-        for (let i = 0; i < 3; i++) {
-          const n = `bigoak_${i}_${j}`;
-          if (!has(n)) continue;
-          const x = ox - 1 + i;
-          const y = oy - 3 + j;
-          if (j === 3) set(i === 1 ? 'props' : 'shade', x, y, n);
-          else set('overhead', x, y, n);
-        }
-  }
   for (const [x, y] of C.boats ?? []) {
     if (kind(x, y) !== 'water' || kind(x, y + 1) !== 'water') continue;
     set('props', x, y, 'boat_t');
@@ -941,6 +1101,7 @@ export function artLayers(name, m, objects, extraReserved = []) {
     if (n.startsWith('t_')) {
       ok = place(`${n}_base`, x, y, on);
       if (ok) set('overhead', x, y - 1, `${n}_top`);
+      if (ok && has(`${n}_top2`) && y >= 2) set('overhead', x, y - 2, `${n}_top2`);
     } else if (n.startsWith('w_')) {
       if (open(x, y, on) && open(x + 1, y, on)) {
         ok = place(`${n}_l`, x, y, on) && place(`${n}_r`, x + 1, y, on);
@@ -950,7 +1111,9 @@ export function artLayers(name, m, objects, extraReserved = []) {
       if (ok) set('props', x, y - 1, 'i_shelf_top');
     } else ok = place(n, x, y, on);
     const light = LIGHT_OF[n];
-    if (light && ok) lights.push({ type: light, tx: x, ty: n.startsWith('t_') ? y - 1 : y });
+    // the light sits at the lamp's head: one tile up, or near the top of a three-tile lamp
+    const up = n.startsWith('t_') ? (has(`${n}_top2`) ? 1.6 : 1) : 0;
+    if (light && ok) lights.push({ type: light, tx: x, ty: y - up });
   }
   if (C.crystals) {
     // crystals on wall faces that look onto the cavern floor (already solid rock)

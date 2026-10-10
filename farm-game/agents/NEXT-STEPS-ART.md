@@ -86,6 +86,56 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
    - **`python art-src/tools/build.py --sprites`** rebuilds only the atlases, in about 1 minute instead of 5. The
      tileset and `atlases.json` are left alone.
 
+8. **Proportions pass (owner's ask; the art critic's review 8, in its fix order, on one-tile footprints as the
+   coordinator ruled).** Ruler: the player is 28 px tall. Shots are in
+   `agents/out/art-shots/round3/proportions/`: `cmp_*.png` are the critic's lineups before and after,
+   `before/` and `after/` hold whole-map renders, and `after/night_under_crowns.png` checks the fade.
+   - **Trees.** Every map tree is now a crown in world pixels, baked per tile and layer by
+     `art-src/tools/crowns.py` (recipe `crown:`) and placed by `scripts/map-art.mjs`. The old one-tile canopy
+     balls are retired.
+     - **The wood's edge** is a row of big trees, 32-40 px crowns with trunks every other cell. The mass behind is
+       a darker back row. The side edges get a crown on every cell. The floor stops halfway down the south-edge
+       cells, so the trunks stand on grass in their own shade.
+     - **Lone trees** are oak about 30x44, birch 20x40 and pine 22x44 where two rows of free cells fit above the
+       trunk. Otherwise they are medium (about 22x32) or small. A crown never spreads over forage, reserved cells
+       (plots plus a margin, doors, signs, villager spots), roofs or buildings.
+     - **The old oak** is a crown about 60 px across, with a gnarled trunk on its one solid tile.
+     - **Layering:** crowns of trees south of a tile go on the overhead layer (you walk behind them), the rest
+       under the player. Over guarded cells the crown is drawn under the player and goods instead, so there is no
+       hard cut and nothing is hidden. Test: `tests/proportions.test.ts`.
+     - **Grown fruit trees** are 32x40 with outlined 4 px fruit (cherry blossom in rose). Young trees show three
+       stages: seedling 8x10, sapling 12x20, young tree 20x28. That needed a sprite pick by age in
+       `mechanics/fruitTree.ts` `sprite()`, which is art only. The ready star sits above the crown.
+     - **Fade:** the overhead fade now covers about 24 px around the player and the 3x3 around the target tile
+       (`fadeTiles`). Tall placed objects, such as grown trees and the bigger houses, fade to 45% while the player
+       or their target is behind them (`ObjectsRenderer.fadeBehind`).
+   - **Facades.** Building blocks of 4 or more rows keep their two bottom rows as wall (32 px) under a shorter
+     roof. Doors are 14x26 with a stone step, split over the two rows. The shop keeps its striped awning, now
+     above head height. Windows, window boxes and the wall lantern are at head height. Same rectangles, same door
+     tiles; window lights moved up with them.
+   - **Animal houses, silo and animals** are rebuilt at native resolution from their Flow sources:
+     - coop 23x24, barn 24x22, shed 24x24, sty 21x19;
+     - silo 16x40, its body grown on the native grid with the new `stretch` spec option;
+     - cow 19x14, sheep 18x14, pig 18x12.
+       The barn's ideal 28x28 needs a new source (its source is only 24 px wide natively).
+   - **Lamps:** the garden lamp is 10x36, and the town and farm lamps are three-tile props about 8x36 with the
+     head above the player's head. Their lights moved up.
+   - **Small things:** sprinkler 10x10, quality sprinkler 12x12, jar 12x14, flower pot 10x12.
+   - **Landmarks** are at native 20-24 px wide and 20-24 tall. 32x40 needs new Flow sources or bigger footprints.
+   - **Ground items:** forage and the animal-house product bubbles use new 12 px `world_<item>` sprites drawn at
+     1x. The twinkle star is at 1x too.
+   - **The rest:**
+     - scarecrow 16x30 (the placeable and the farm's decor scarecrow);
+     - loom and furnace 16x22;
+     - placeable fence 16x14, bench 16x14;
+     - rowboat 12x32;
+     - mature corn 12x26.
+   - **Not done:**
+     - the well at 20x30: it is wider than its tile, so the prop needs a 2-column form;
+     - the baked map fences at 16x14;
+     - the HUD bolt and drop icons at 1x (`Hud.ts` is the controls agent's file);
+     - the item-pop tween snapping.
+
 ## Flow usage
 
 - One prompt this round (`items8`), in the owner's Flow project "out. 08 - 07:06". No quota or error message
@@ -116,33 +166,47 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
   `drawn.build()` if theirs differ.
 - **Optional, for the depth agent:** emitting `placedChanged` on every statue level-up in `systems/projects.ts`
   would let the renderer drop the per-frame level check.
+- **Proportions pass, shared files:**
+  - `src/mechanics/fruitTree.ts` `sprite()`: a sapling stage by age, art only;
+  - `ObjectsRenderer`: the forage and bubble sprites at 1x, the ready star above tall sprites, and `fadeBehind`;
+  - `WorldScene`: the fade gets the facing tile and calls `fadeBehind`.
+- **Recommendation for the depth agent (coordinator ruling: out of scope this round):** real footprints, so the
+  art can reach the critic's ideal sizes. These change placement rules and saves:
+  - coop 2x2 (32x32);
+  - barn 3x2 (48x40);
+  - shed 2x2;
+  - the town-project landmarks 2x2 (32 wide by 32-40 tall).
 
 ## Open items (by priority)
 
-1. **The critic's eye on round 3:** the hand-drawn dishes and fish, the statue's growth, the new poses, the coach
+1. **The critic's check of the proportions pass** (review 8 follow-up). Then:
+   - new Flow sources for the barn (28x28), the landmarks (32x40) and the well (20x30);
+   - the baked fences at 16x14.
+2. **The critic's eye on the rest of round 3:** the hand-drawn dishes and fish, the statue's growth, the new poses, the coach
    marks (mock only: the onboarding UI isn't merged here), and the winter ice rim.
-2. **Poses:**
+3. **Poses:**
    - add a hoe pose for left and right (`toolPose` still shows the hoe only facing down);
    - add back-view poses, then drop the rule that facing up has no pose;
    - add scythe and pickaxe poses.
      Draw them in `drawn.poses()` on `player_walk_*` frames.
-3. **Statue:** it is 16 px wide, so even level 5 is modest in the square. If the coordinator allows, a 2-tile-wide
+4. **Statue:** it is 16 px wide, so even level 5 is modest in the square. If the coordinator allows, a 2-tile-wide
    level 5 needs a footprint change (`projects.json` landmark plus collision).
-4. **Earlier batches still open:** mine depth (ore veins baked into rock faces, crystal glints in steps), woods
+5. **Earlier batches still open:** mine depth (ore veins baked into rock faces, crystal glints in steps), woods
    glade clusters (keep the mushroom ring off forage zones, or skip it, since mushrooms are forage), and the
    unused `fx2a` ember, glint and glow.
-5. **Winter:** paths keep their summer sand (the `path` category isn't snowed). Consider a light snow remap on
+6. **Winter:** paths keep their summer sand (the `path` category isn't snowed). Consider a light snow remap on
    `creep:path` and the path base.
 
 How to run things: `npm run art:maps` (maps plus baked tiles), `python art-src/tools/build.py` (everything, about 5
 minutes on this machine) or `--sprites`, `python art-src/tools/mapview.py <dir> 2 [tileset.png]` (whole maps),
 `node art-src/tools/shots2.mjs` and `shots.mjs` (views), `node agents/probes/art-round3.mjs` (this round's staged
-shots), `node agents/probes/ambient-anchor.mjs` (the anchor proof).
+shots), `node agents/probes/ambient-anchor.mjs` (the anchor proof), `node agents/probes/proportions-night.mjs`
+(crowns at night, the fade, fruit trees).
 
 ## Questions for the owner
 
-- **Flow downloads:** may I download Flow outputs in future rounds? If so, say so in chat yourself. Until then,
-  art is drawn by hand.
+- **Footprints:** may the animal houses and town landmarks get real 2x2 or 3x2 footprints (a depth-agent change
+  to placement and saves)? That is the only way to reach the critic's ideal sizes for them.
 - **Look on a phone:** everything since round 2 has been judged only from headless screenshots.
 - **Ponds, art-added collision, Flow licensing:** these are unchanged from round 2 (see `ASSETS.md`); this is
   not legal advice.

@@ -195,7 +195,7 @@ SUN_CARP = [
 
 # ---------------------------------------------------------------- scarecrow
 
-SCARECROW = [  # placed object, 16 x 24
+SCARECROW = [  # placed object, 16 x 30 (person-sized on a post, review 8)
     "................",
     ".....KKKKKK.....",
     "....KswsswsK....",
@@ -216,6 +216,12 @@ SCARECROW = [  # placed object, 16 x 24
     "....KYKwwKYK....",
     "....KY.Kw.YK....",
     "......KwwK......",
+    "......KwoK......",
+    "......KwoK......",
+    "......KwoK......",
+    "......KwoK......",
+    "......KwoK......",
+    "......KwoK......",
     "......KwoK......",
     "......KwoK......",
     ".....KEwoEK.....",
@@ -539,6 +545,53 @@ def poses(names: list[str], player: dict[str, np.ndarray]) -> dict[str, np.ndarr
     return out
 
 
+# ---------------------------------------------------------------- fruit trees in proportion (review 8)
+
+SEEDLING = [  # a fruit tree's first days: 8 x 10
+    "..KK.KK.",
+    ".KnnKgnK",
+    ".KgnKgK.",
+    "..KKgKK.",
+    "....gK..",
+    "...KwK..",
+    "...KwK..",
+    "...KwK..",
+    "..KEwoK.",
+    "..KKKKK.",
+]
+
+FRUIT = {  # (fruit colour, highlight, leaf blossom) per tree
+    "cherry": ("wine", "red", True),
+    "peach": ("orange", "skin light", False),
+    "apple": ("red", "lamp", False),
+    "plum": ("plum", "lilac", False),
+}
+
+
+def _tree(P, names, w: int, h: int, crown: dict, seed: int, fruit=None) -> np.ndarray:
+    import crowns
+
+    ys, xs = np.mgrid[0:h, 0:w]
+    c = {"kind": "o", "draw": True, "back": False, "small": False, "trunk": True, **crown}
+    return crowns.paint(P, xs + 0.5, ys + 0.5, [c], seed, fruit=fruit)
+
+
+def fruit_trees(P, names) -> dict[str, np.ndarray]:
+    """Grown fruit trees 32 x 40 (trunk on the base tile, crown over the tiles above) and three young stages."""
+    out = {}
+    for k, (tree, (col, light, blossom)) in enumerate(FRUIT.items()):
+        out[f"obj_tree_{tree}_sapling"] = _tree(
+            P, names, 32, 40,
+            {"cx": 16, "cy": 15, "r": 13.0, "base": 38, "blossom": blossom},
+            seed=31 + k * 7,
+            fruit=(names.index(col), names.index(light), 5),
+        )
+    out["obj_sapling"] = grid(names, SEEDLING)
+    out["obj_sapling_2"] = _tree(P, names, 12, 20, {"cx": 6, "cy": 6, "r": 5.0, "base": 18, "tiny": True}, 41)
+    out["obj_sapling_3"] = _tree(P, names, 20, 28, {"cx": 10, "cy": 9, "r": 8.5, "base": 26, "small": True}, 43)
+    return out
+
+
 def to_idx(rgba: np.ndarray, pal) -> np.ndarray:
     """An RGBA sprite already on the palette -> palette indices (-1 = transparent)."""
     out = np.full(rgba.shape[:2], -1, dtype=np.int32)
@@ -561,10 +614,12 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
         ("item_scarecrow", SCARECROW_ITEM),
     ):
         add("ui", key, grid(names, rows, 16, 16))
-    add("world", "obj_scarecrow", grid(names, SCARECROW, 16, 24))
+    add("world", "obj_scarecrow", grid(names, SCARECROW, 16, 30))
     add("world", "obj_landmark_statue", grid(names, _statue(1), 16))
     for lv in range(2, 6):
         add("world", f"obj_landmark_statue_{lv}", grid(names, _statue(lv), 16))
+    for key, idx in fruit_trees(P, names).items():
+        add("world", key, idx)
     add("ui", "ui_coach_hand", grid(names, COACH_HAND))
     add("ui", "ui_coach_ring", grid(names, COACH_RING))
     add("ui", "ui_coach_ring_wide", grid(names, _ring_wide()))
