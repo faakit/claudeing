@@ -1,149 +1,143 @@
 # Tiny Acre one-thumb controls: critic's final report
 
 **What I reviewed:**
-
-- Branch `controls/one-thumb` at `cb5dce5` (docs `9457256`), from plan commit `e632754`.
-- Five review rounds (`review-1.md` to `review-5.md`); ledger in `ledger.md`.
+- **Round 1-2:** branch `controls/one-thumb` (`e632754` to `cb5dce5`), `review-1.md` to `review-5.md`.
+- **Round 3:** branch `controls/round3` from `integration/round2-2026-10-09`, up to `b9fb448` (docs and bench `26dda7e`), `review-6.md` and `review-7.md`.
+- Ledger: `ledger.md`.
 - Everything was measured in headless Chromium with real CDP touch events on emulated phones.
 - "Human" means a bot with modelled imperfection:
-  - 1-2.5 mm aim jitter;
+  - 1-3 mm aim jitter;
   - a 1.5 mm offset toward the thumb base;
   - pad roll;
   - 120-180 ms releases;
-  - reaction ± 30 ms.
+  - reaction ± 30 ms;
+  - for painting, a continuous 2D wobble field: λ 12-25 mm, slowing into corners, corners cut round, end overshoot.
 - No real hand or phone was involved. The owner checklist at the end is what only a real phone can answer.
 
 ## Verdict
 
 **It is ready for the owner's phone.**
-
 - One thumb now:
   - walks by tapping;
-  - opens the bin, villagers and machines in one tap;
+  - opens things in one tap;
   - stops on a tile reliably at normal reaction times;
-  - switches tools from a ring that never fires the old tool;
-  - paints straight rows from Action.
+  - switches tools from a forgiving ring;
+  - **paints a whole 3x3 plot in one serpentine drag from Action (7 gestures for the full loop).**
 - The left hand reaches as well as the right.
-- No blocker is open.
-- One major predictability issue remains (a slow Action press does nothing), plus two owner trade-offs: the plot loop's cost and late stops.
+- No blocker or major is open.
+- What remains:
+  - SE-sized phones paint serpentines a little less reliably when the thumb is very shaky;
+  - two accepted trade-offs: plot travel slightly over 250 mm on bigger phones, and late stops.
 
 ## Open findings by severity
 
-**Blocker:** none.
-
-**Major**
-
-1. **A slow Action press does nothing.**
-   - Still presses of 290 ms or more arm painting, and lifting without a drag cancels: 0 tiles worked on i13, Pixel 7 and SE, both hands. Presses of 80-260 ms work 1 tile.
-   - Two strings still say "Hold Action to keep working" (`MenuPanel.ts:271`, `UIScene.ts:215`).
-   - Suggested fix: an armed press lifted without a drag acts once (owner question 3).
-2. **The plot loop is 15 gestures and 470-612 mm** (plan target <= 8 and <= 150 mm). This is the cost of the owner/coordinator ruling that moved painting onto Action with straight lines only. The next experiment is a serpentine continuation.
-3. **Late stops** (accepted trade-off): about 1 in 6 to 1 in 5 stops at 180 ± 30 ms reaction land one tile late. Mitigated by tap-to-walk and the Fine stick.
+**Blocker:** none. **Major:** none.
 
 **Minor**
 
-4. Ring picks at σ 2 mm are 81% on SE left (85% bar). The misses are mostly "nothing", which is safe; i13 is 90-93%.
-5. A ring slide that rests 22-35 px out, short of the items, picks the 180-degree item.
-6. Options: Sound (right thumb) and Vibrate (left thumb) are in the hard zone; 7-8/19 targets are outside comfort.
-7. An Action press that rolls 3 mm (2.4 mm on SE) does nothing, silently.
-8. bagUse thumb travel for the left hand rose (195 vs 119 mm on i13), with the same 5 gestures.
-9. Accepted:
+1. **Serpentine on SE with a shaky thumb.** With 2 mm wobble, following the preview: 75-85% exactly right on SE, against 90%. i13 is 90-100%. The misses are a misread first leg, or a 4-wide first row that sets every row's width; strays were 4-9 tiles per 20 attempts in my bot. With steadier thumbs (1 mm, without even watching the preview) it is 59/60 exact with 0 strays on every phone.
+2. **Ring sticky-menu taps on SE left: 23-26/28** (90% bar). Misses pick nothing.
+3. **Accepted trade-offs:**
+   - plot3x3 travel is 250-286 mm on i13 left and Pixel 7 (SE 199-218), because the 16 px paint step is what keeps serpentines accurate;
+   - late stops: about 1 in 6 at 180 ± 30 ms reaction land one tile late;
+   - straight lines on SE at 3 mm wobble are below 85%;
+   - a tap on the door tile itself enters 67-100% (the door art enters 100%);
    - SE bag cells are 37 px;
    - without magnets the bin opens on 64-68% of 1.5 mm-spread taps on SE;
    - the shop's top tabs are outside comfort.
 
-**Nit:** the paint-step comment (14 px) disagrees with the code (10 px).
-
 ## What improved because of the conversation
 
-| issue (found in round)                              | before                                                             | after                                                                            |
-| --------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Rolled taps used the lift point (r1)                | 50-63% right tile at 1.5 mm roll (SE)                              | down point: rolls < 9 px hit the right tile 8/8 at every size                    |
-| Tap/stick dead band (r1)                            | 0-5 of 30 taps did nothing                                         | one threshold: every touch is a tap or the stick                                 |
-| Rubber-band nudges (r1)                             | a 120-160 ms push walked 8-12 px and slid back                     | a 120 ms push is exactly 1 tile, with 0 slide-back                               |
-| Taps dropped in the swing lock (r1)                 | 2 of 3 at 150-200 ms spacing                                       | 3 of 3                                                                           |
-| Menu tap on SE (r1)                                 | 82%                                                                | 90%                                                                              |
-| Interact steal on SE (r1)                           | 1.3%                                                               | <= 1% (unit test, 5 phones)                                                      |
-| Bag "Use now" bug (r1, found via the bench)         | the reopened bag deselected the cell                               | fixed                                                                            |
-| Taps tilled the lawn (r2)                           | 2/30 random walk taps tilled                                       | 0: taps only harvest, water, clear, mine or open (ruling 1)                      |
-| Magnets swallowed walk taps (r2)                    | a centre tap beside the bin opened it 6/6                          | walks 96% (magnets removed, ruling 4)                                            |
-| Auto-planting unchosen seeds (r2)                   | a hoe hold tilled, planted and watered with seeds you never picked | explicit item wins; seeds only selected or last planted (ruling 3)               |
-| Broken bench errand rows (r2)                       | sell/machine invalid on every row                                  | 36/36 rows ok                                                                    |
-| Slow tap tills (r3, blocker)                        | still touches >= 240 ms tilled 100%                                | 0/112                                                                            |
-| Rest-then-steer paints (r3, blocker)                | 100% painted at rests >= 200 ms; hesitant drags armed 30%          | 0/96 painted, 0/120 armed                                                        |
-| Paint wobble and loop-back (r3)                     | 2-3 mm wobble added rows; loop-back worked 1 tile                  | straight lines; back to start = 0                                                |
-| Haptic density (r3)                                 | 9-16 vibrations per 3-tile row                                     | 2-3                                                                              |
-| Ring fires Action (r4, blocker)                     | every unhurried pick tilled a tile (8/8)                           | 0 acts in 460+ ring gestures                                                     |
-| Flick-and-lift silent pick (r4)                     | 4/4 tool changes                                                   | sticky menu 16/16, 0 changes                                                     |
-| Ring accuracy (r4)                                  | 83-88% at σ 1.2 mm, 57-71% at 2 mm                                 | 98-100% at 1.2 mm, 81-93% at 2 mm                                                |
-| Settle window variance (r1, rejected with evidence) | -                                                                  | the bench gained REACTION_SD and anticipatory modes; the trade-off is documented |
+**Round 1-2** (`controls/one-thumb`):
 
-## Before and after, whole branch
+| issue (found in round) | before | after |
+|---|---|---|
+| Rolled taps used the lift point (r1) | 50-63% right tile at 1.5 mm roll (SE) | down point: rolls < 9 px hit the right tile 8/8 at every size |
+| Tap/stick dead band (r1) | 0-5 of 30 taps did nothing | every touch is a tap or the stick |
+| Rubber-band nudges (r1) | a 120-160 ms push walked 8-12 px and slid back | a 120 ms push is exactly 1 tile |
+| Taps dropped in the swing lock (r1) | 2 of 3 | 3 of 3 |
+| Menu tap on SE (r1) | 82% | 90% |
+| Bag "Use now" bug (r1, via the bench) | deselected the cell | fixed |
+| Taps tilled the lawn (r2) | 2/30 random walk taps | 0 (ruling 1) |
+| Magnets swallowed walk taps (r2) | 6/6 beside the bin | walks 96% (ruling 4) |
+| Auto-planting unchosen seeds (r2) | yes | explicit item wins (ruling 3) |
+| Slow tap tills (r3, blocker) | 100% at >= 240 ms | 0/112 |
+| Rest-then-steer paints (r3, blocker) | 100% at rests >= 200 ms | 0/96 |
+| Ring fires Action (r4, blocker) | 8/8 picks tilled | 0 acts in 460+ gestures |
+| Flick-and-lift silent pick (r4) | 4/4 | sticky menu 16/16 |
+| Ring accuracy (r4) | 57-71% at 2 mm | 81-93% |
+
+**Round 3** (`controls/round3`):
+
+| issue | before | after |
+|---|---|---|
+| Slow Action press did nothing | presses >= 290 ms: 0 uses | 1 use at 80-1500 ms (18/18 per phone) |
+| Plot loop cost | 15 gestures, 590 mm (i13), 470 mm (SE) | **7 gestures**, 250 mm (i13 R), 199 mm (SE R); every touch comfortable |
+| Painted tiles flickered and retracted (r6) | following the preview: 7-14/20 exact, 7-10 strays per row | i13 18-20/20, SE 15-17/20; tiles only leave when you back up |
+| Front-path taps entered the house (r6) | 3/24 per phone | 0/96 |
+| Ring dead zone | a rest 22-35 px out picked an item (and 34 px on SE after the first fix) | stays a sticky menu (16/16) |
+| Ring on SE left at 2 mm | 81% | 92% (77/84) |
+| Sticky taps on SE right | 79-89% | 93% |
+| Options Sound and Vibrate | in the hard zone | comfortable for both thumbs; 0 hard targets |
+| Rolled Action press | did nothing, silently | an immediate roll says "no" (vibration and shake); a roll after a still press acts once |
+| Left-hand bag use | 195 mm | 83 mm (i13) |
+| Stale "hold Action to keep working" hint | 2 strings | fixed |
+| Onboarding event names | - | unchanged against `integration/round2` (diffed every round) |
+
+## Before and after, whole effort
 
 Bench (perfect stop unless noted, i13 right):
 
-| task                                            | before                              | after                                       |
-| ----------------------------------------------- | ----------------------------------- | ------------------------------------------- |
-| plot3x3                                         | 26 gestures, 933 mm, 2 tool changes | 15 gestures, 590 mm, 1 tool change          |
-| plot3x3, human stop at 180 ms (i13 / Pixel 7 R) | 51 gestures, 25 corrections         | 26 gestures, 0 corrections (measured at M2) |
-| Sell three kinds                                | 6                                   | 3                                           |
-| Talk and gift a villager                        | 5                                   | 4                                           |
-| Load a machine                                  | 3 gestures, 100 mm                  | 3 gestures, 33 mm                           |
-| Fish                                            | 7 fixed gestures                    | 4                                           |
-| Hoe to seeds                                    | 3-5 swipes                          | 1 swipe, or the ring                        |
+| task | M0 | now |
+|---|---|---|
+| plot3x3 | 26 gestures, 933 mm, 2 tool changes | 7 gestures, 250 mm, 1 (the seed pick) |
+| plot3x3, human stop at 180 ms | 51 gestures, 25 corrections | 26 gestures, 0 corrections (stick play) |
+| Sell three kinds | 6 | 3 |
+| Talk and gift a villager | 5 | 4 |
+| Load a machine | 3 gestures, 100 mm | 3 gestures, 33 mm |
+| Fish | 7 fixed gestures | 4 |
+| Use a bag item | 5 gestures, 135 mm | 5 gestures, 103 mm (left 83) |
 
 Controls and reach:
 
-| check                                                  | before   | after                 |
-| ------------------------------------------------------ | -------- | --------------------- |
-| Action disc going to Interact                          | 10.8%    | 0%                    |
-| Menu opens from drags                                  | opened   | 0/500                 |
-| Left thumb, all screens comfortable (i13)              | 55%      | 78% (right thumb 79%) |
-| Left thumb, bin/board/gift/jar targets outside comfort | 13 of 40 | 0                     |
+| check | M0 | now |
+|---|---|---|
+| Action disc going to Interact | 10.8% | 0% |
+| Menu opens from drags | opened | 0/500 |
+| Left thumb, all screens comfortable (i13) | 55% | 80% (right 80%) |
 
-Feel and performance:
-
-| check        | after                                                                                  |
-| ------------ | -------------------------------------------------------------------------------------- |
-| Tap feel     | preview 104 ms after down; walk 1 frame after lift                                     |
-| Perf         | within budget at every throttle (<= 3 draws, about 1 ms at 1x, tap-route row included) |
-| Unit tests   | 579                                                                                    |
-| e2e:controls | green on all 5 phones                                                                  |
+Health: perf within budget (frames 2/2/2/0), 697 unit tests, e2e:controls green, bench 54/54.
 
 ## Owner's real-phone checklist
 
 Do each with the right thumb only, then the left thumb only (Options > Controls > Left hand ON), phone held normally, no table.
 
 **Taps and walking**
-
 - [ ] Tap a tile 4-6 tiles away: does the farmer walk there at once? Tap a ripe crop, a dry crop, the bin, Rosa.
-- [ ] Tap grass and empty soil: it should only walk, never till or plant. Try slow, firm taps too.
-- [ ] Tap the tile just in front of the bin and the mailbox: it should walk, not open them. How often does a tap _on_ the bin miss? (On an SE-sized phone, expect about 1 in 3.)
+- [ ] Tap grass and empty soil, including slow, firm taps: it should only walk, never till or plant.
+- [ ] Walk along the path in front of the farmhouse by tapping: you should never end up inside. Tap the door itself, or the wall above it: you should go in.
 - [ ] Tap two or three tiles quickly in a row: does every tap do something?
 
 **Stopping and steering**
-
-- [ ] Drag anywhere on the world to steer. Rest your thumb on the field first, then steer: did anything get worked? (It should not.)
-- [ ] Stop exactly on a tile you choose, five times. Count corrections. Do you stop early or late?
-- [ ] Flick the stick briefly to turn without stepping; push a bit longer to step exactly one tile.
+- [ ] Rest your thumb on the field, then steer: nothing should get worked.
+- [ ] Stop exactly on a tile you choose, five times. Count the corrections. Do you stop early or late?
 - [ ] Try the Fine stick (Options > Controls) for precise stops.
 
 **Action, paint and the ring**
-
-- [ ] Quick taps on Action: one use each. Then **press and hold Action without moving and lift**: what did you expect? (Today: nothing happens. Tell the agent if you want one use instead.)
-- [ ] Hold Action until it ticks, drag toward the middle, lift: is the row the one you meant, and the length you meant? Drag back to the start before lifting: nothing should happen.
+- [ ] Quick taps and slow presses on Action: exactly one use each, however long you hold.
+- [ ] Hold Action until it ticks, then drag a serpentine over a 3x3 plot (along, down one, back, down one, along) and lift.
+  - Was it the plot you meant?
+  - Did a tile ever appear and then disappear?
+  - Did a row come out wider than you wanted?
+  - Drag back to the start before lifting: nothing should happen.
+- [ ] Press Action and roll your thumb a little before lifting: did it act or say no? Did either surprise you?
+- [ ] Flick Action sideways and let go at once: the ring stays open; tap an item. Flick, slide, rest, lift: did a miss ever pick the neighbour?
 - [ ] Swipe Action up or down: tool change only, never a swing of the old tool.
-- [ ] Flick Action sideways and let go at once: the ring stays open; tap an item. Flick, slide to an item, rest, lift: did a miss ever pick the neighbour? Did the ring ever swing a tool?
-- [ ] Does a 3x3 plot feel quick enough at 15 gestures, or do you want lines that turn (serpentine)?
 
 **Reach**
-
-- [ ] Menu (upper left of the dock for the right hand): open it without regripping? Did a stick drag ever open it?
-- [ ] Options: help card, volume by the tabs, the Sound and Vibrate toggles. Which needed a regrip?
-- [ ] Shop tabs and hotbar slots 1 and 8: regrip needed?
+- [ ] Menu, the Options Sound and Vibrate switches, the bag, the shop tabs: which needed a regrip?
 
 **System and feel**
-
 - [ ] iPhone: does a swipe up from the hotbar ever trigger the home gesture? Android (gesture navigation): does a flick on Action toward the edge ever trigger "back"?
-- [ ] With vibration on (Android web or the native app): are the ticks light enough? Is the paint confirm clear? On iPhone web there is no vibration: is every action still clear on screen?
+- [ ] With vibration on: are the ticks light enough? Is one tick per painted tile clear, and the "no" buzz distinct? On iPhone web there is no vibration: is everything still clear on screen?
 - [ ] Any moment where a touch felt late, or where something happened that you didn't ask for?
