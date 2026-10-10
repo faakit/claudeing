@@ -7,7 +7,7 @@ import { getState } from '../state/store';
 import { houseOf, speciesOf } from '../systems/animals';
 import { spriteOf, statusOf } from '../systems/placeables';
 import { hasArt } from '../art/registry';
-import { animalIdleKey } from '../art/manifest';
+import { animalIdleKey, worldItemKey } from '../art/manifest';
 import { landmarksOn } from '../systems/projects';
 import { ownsPlot, signVisible } from '../systems/plots';
 import { unreadCount } from '../systems/mail';
@@ -103,6 +103,41 @@ export class ObjectsRenderer {
         .setData('sprite', l.sprite);
       this.landmarks.set(l.id, sprite);
     }
+  }
+
+  /**
+   * Tall, wide placed things (grown fruit trees, the bigger houses) get the see-through hole while the player or
+   * their target stands behind them. Posts, lamps and signs (under 20 px wide) hide nothing and are left alone.
+   * Returns whether any sprite uses the hole.
+   */
+  seeThrough(
+    px: number,
+    py: number,
+    target: { tx: number; ty: number },
+    hole: Phaser.Display.Masks.GeometryMask,
+  ): boolean {
+    const tx = target.tx * TILE_SIZE + TILE_SIZE / 2;
+    const ty = target.ty * TILE_SIZE + TILE_SIZE / 2;
+    let any = false;
+    for (const { sprite } of this.placed.values()) {
+      if (sprite.height <= 24 || sprite.width < 20) continue;
+      const half = sprite.width / 2;
+      const top = sprite.y - sprite.height;
+      const covers = (x: number, y: number): boolean =>
+        x > sprite.x - half - 2 && x < sprite.x + half + 2 && y > top - 2 && y < sprite.y - 4;
+      const hide = covers(px, py - 6) || covers(px, py - 20) || covers(tx, ty);
+      if (hide && !sprite.mask) sprite.setMask(hole);
+      else if (!hide && sprite.mask) sprite.clearMask();
+      any ||= hide;
+    }
+    return any;
+  }
+
+  /** Cheap per-frame check: a repeatable landmark went up a level (funding fires no map event after the first). */
+  syncLandmarkLevels(state: GameState): void {
+    for (const l of landmarksOn(state, this.mapId))
+      if (this.landmarks.get(l.id)?.getData('sprite') !== l.sprite)
+        return this.syncLandmarks(state);
   }
 
   /** Ore nodes: solid rocks with veins. They stay until broken. */
@@ -205,9 +240,12 @@ export class ObjectsRenderer {
       const x = tx * TILE_SIZE + TILE_SIZE / 2;
       const y = ty * TILE_SIZE + TILE_SIZE / 2;
       const shadow = this.scene.add.ellipse(x, y + 5, 9, 3, 0x14101f, 0.3).setDepth(0.7);
+      // its own 1x world sprite when the art has one (crisp pixels), else the item icon shrunk
+      const own = hasArt(worldItemKey(item));
+      const scale = own ? 1 : 0.8;
       const sprite = this.scene.add
-        .image(x, y, items[item]?.icon ?? 'ui_coin')
-        .setScale(0.8)
+        .image(x, y, own ? worldItemKey(item) : (items[item]?.icon ?? 'ui_coin'))
+        .setScale(scale)
         .setDepth(0.8 + ty * 0.001);
       // A gentle bob + a twinkle makes goods easy to spot from across a field.
       if (!calm())
@@ -234,10 +272,7 @@ export class ObjectsRenderer {
           repeat: -1,
           delay: (tx * 97 + ty * 53) % 1100,
         });
-      const twinkle = this.scene.add
-        .image(x + 4, y - 5, 'ui_star')
-        .setScale(0.8)
-        .setDepth(0.9);
+      const twinkle = this.scene.add.image(x + 4, y - 5, 'ui_star').setDepth(0.9);
       twinkle.setTint(0xfff1b0);
       if (calm()) twinkle.setAlpha(0.8);
       else
@@ -251,7 +286,7 @@ export class ObjectsRenderer {
         });
       if (animate) {
         sprite.setScale(0.3);
-        this.scene.tweens.add({ targets: sprite, scale: 0.8, duration: 260, ease: 'Back.easeOut' });
+        this.scene.tweens.add({ targets: sprite, scale, duration: 260, ease: 'Back.easeOut' });
       }
       this.forage.set(key, { sprite, extra: [shadow, ring, twinkle], sig: item });
     }
@@ -296,11 +331,13 @@ export class ObjectsRenderer {
       const extra: Phaser.GameObjects.GameObject[] = [];
       if (sig.startsWith('busy') && def.behavior === 'jar') sprite.setTint(0xd9d9d9);
       if (sig.startsWith('ready')) {
+        // above the sprite: over a fruit tree's crown, not inside it (art critic, review 8)
+        const top = y - Math.max(17, sprite.height + 3);
         const mark = this.scene.add
-          .image(x, y - 17, 'ui_star')
+          .image(x, top, 'ui_star')
           .setTint(0xf4d35e)
           .setDepth(10 + y);
-        this.scene.tweens.add({ targets: mark, y: y - 20, duration: 500, yoyo: true, repeat: -1 });
+        this.scene.tweens.add({ targets: mark, y: top - 3, duration: 500, yoyo: true, repeat: -1 });
         extra.push(mark);
       }
       const species = house ? speciesOf(obj) : undefined;
@@ -341,14 +378,19 @@ export class ObjectsRenderer {
           extra.push(critter);
         }
         if (house.ready > 0) {
+          const own = hasArt(worldItemKey(species.product));
           const bubble = this.scene.add
-            .image(x, y - 19, items[species.product]?.icon ?? 'ui_star')
-            .setScale(0.8)
+            .image(
+              x,
+              y - Math.max(19, sprite.height + 4),
+              own ? worldItemKey(species.product) : (items[species.product]?.icon ?? 'ui_star'),
+            )
+            .setScale(own ? 1 : 0.8)
             .setDepth(10 + y + 8);
           if (!calm())
             this.scene.tweens.add({
               targets: bubble,
-              y: y - 22,
+              y: bubble.y - 3,
               duration: 520,
               yoyo: true,
               repeat: -1,

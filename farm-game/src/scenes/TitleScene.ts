@@ -12,7 +12,7 @@ import { setState } from '../state/store';
 import { hasNewerSave, loadGame } from '../systems/save';
 import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
-import { CH as C } from '../ui/theme';
+import { C as INK, CH as C } from '../ui/theme';
 import { Button } from '../ui/widgets';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */
@@ -148,9 +148,11 @@ export class TitleScene extends Phaser.Scene {
     if (this.loaded) {
       const t = this.loaded.time;
       this.buttons.push(
+        // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
+        // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
         new Button(this, x, y, w, 30, 'Continue', () => this.start(this.loaded as GameState), {
-          textColor: C.green,
-          rim: C.green,
+          textColor: INK.green,
+          rim: INK.green,
         }),
       );
       new Label(
@@ -178,7 +180,7 @@ export class TitleScene extends Phaser.Scene {
           }
           this.start(createInitialState());
         },
-        { textColor: this.confirmNew ? C.warn : C.cream },
+        { textColor: this.confirmNew ? INK.red : INK.cream },
       ),
     );
   }

@@ -76,7 +76,7 @@ const door = (name, tx, ty, targetMap, spawnTx, spawnTy, facing) =>
 const zone = (type, name, tx, ty, tw, th) => obj(type, name, tx, ty, tw, th);
 
 /** Tile layers drawn over the ground by the art tileset (see scripts/map-art.mjs), in draw order. */
-const ART_LAYERS = ['detail', 'shade', 'props', 'roof', 'overhead'];
+const ART_LAYERS = ['detail', 'shade', 'props', 'roof', 'overhead', 'lamps'];
 
 function toTmj({ w, h, ground }, objects, art) {
   const collision = ground.map((row) => row.map((t) => (SOLID.has(t) ? t : 0)));
@@ -106,8 +106,8 @@ function toTmj({ w, h, ground }, objects, art) {
     type: 'map',
     tilewidth: 16,
     tileheight: 16,
-    nextlayerid: 4 + (art ? ART_LAYERS.length + 1 : 0),
-    nextobjectid: nextId + (art ? art.lights.length : 0),
+    nextlayerid: 4 + (art ? ART_LAYERS.length + 2 : 0),
+    nextobjectid: nextId + (art ? art.lights.length + art.blooms.length : 0),
     layers: [
       layer(1, 'ground', ground, true),
       ...(art
@@ -147,6 +147,29 @@ function toTmj({ w, h, ground }, objects, art) {
                 point: true,
                 rotation: 0,
                 visible: true,
+              })),
+            },
+            {
+              id: 5 + ART_LAYERS.length,
+              name: 'blooms',
+              type: 'objectgroup',
+              x: 0,
+              y: 0,
+              opacity: 1,
+              visible: false,
+              draworder: 'topdown',
+              objects: art.blooms.map((b, k) => ({
+                id: nextId + art.lights.length + k,
+                name: 'bloom',
+                type: 'bloom',
+                x: b.x,
+                y: b.y,
+                width: 0,
+                height: 0,
+                point: true,
+                rotation: 0,
+                visible: true,
+                properties: [{ name: 'flowers', type: 'int', value: b.n }],
               })),
             },
           ]

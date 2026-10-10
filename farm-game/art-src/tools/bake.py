@@ -356,6 +356,10 @@ def bake(P, name: str, grass: np.ndarray, floor: np.ndarray | None = None) -> np
         return creep(P, r, grass)
     if r[0] == "canopy":
         return canopy(P, r)
+    if r[0] == "crown":
+        import crowns  # big tree crowns (round 3, proportions)
+
+        return crowns.crown_tile(P, r)
     if r[0] == "rock":
         return rock(P, r, floor)
     if r[0] == "water":

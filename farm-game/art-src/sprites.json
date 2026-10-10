@@ -724,9 +724,13 @@
   "src": "crops2b/crop_corn_4",
   "size": [
    16,
-   24
+   26
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   12,
+   26
+  ]
  },
  "crop_pumpkin_0": {
   "authored": "seed_mound",
@@ -828,46 +832,6 @@
   ],
   "group": "world"
  },
- "obj_sapling": {
-  "src": "crops3a/obj_sapling",
-  "size": [
-   16,
-   24
-  ],
-  "group": "world"
- },
- "obj_tree_cherry_sapling": {
-  "src": "crops3a/obj_tree_cherry_sapling",
-  "size": [
-   16,
-   24
-  ],
-  "group": "world"
- },
- "obj_tree_peach_sapling": {
-  "src": "crops3a/obj_tree_peach_sapling",
-  "size": [
-   16,
-   24
-  ],
-  "group": "world"
- },
- "obj_tree_apple_sapling": {
-  "src": "crops3a/obj_tree_apple_sapling",
-  "size": [
-   16,
-   24
-  ],
-  "group": "world"
- },
- "obj_tree_plum_sapling": {
-  "src": "crops3a/obj_tree_plum_sapling",
-  "size": [
-   16,
-   24
-  ],
-  "group": "world"
- },
  "node_rock_node": {
   "src": "crops3b/node_rock_node",
   "size": [
@@ -923,10 +887,11 @@
  "obj_coop": {
   "src": "world1b/obj_coop",
   "size": [
-   16,
-   20
+   24,
+   24
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "item_coop": {
   "src": "world1b/obj_coop",
@@ -937,12 +902,16 @@
   "group": "ui"
  },
  "obj_barn": {
-  "src": "world1b/obj_barn",
+  "src": "village3b/barn",
   "size": [
-   16,
-   20
+   32,
+   28
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   32,
+   28
+  ]
  },
  "item_barn": {
   "src": "world1b/obj_barn",
@@ -955,10 +924,11 @@
  "obj_shed": {
   "src": "world1b/obj_shed",
   "size": [
-   16,
-   20
+   24,
+   24
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "item_shed": {
   "src": "world1b/obj_shed",
@@ -974,7 +944,11 @@
    16,
    16
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   10,
+   10
+  ]
  },
  "item_sprinkler": {
   "src": "world1b/obj_sprinkler",
@@ -990,7 +964,11 @@
    16,
    16
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   12,
+   12
+  ]
  },
  "item_quality_sprinkler": {
   "src": "world1b/obj_sprinkler_q",
@@ -1004,9 +982,13 @@
   "src": "world1b/obj_jar",
   "size": [
    16,
-   18
+   16
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   12,
+   14
+  ]
  },
  "item_preserve_jar": {
   "src": "world1b/obj_jar",
@@ -1052,9 +1034,13 @@
   "src": "world1a/obj_loom",
   "size": [
    16,
-   18
+   22
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   16,
+   22
+  ]
  },
  "item_loom": {
   "src": "world1a/obj_loom",
@@ -1068,9 +1054,13 @@
   "src": "world1b/obj_furnace",
   "size": [
    16,
-   18
+   22
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   16,
+   22
+  ]
  },
  "item_furnace": {
   "src": "world1b/obj_furnace",
@@ -5078,26 +5068,20 @@
  "animal_cow": {
   "src": "animals1a/animal_cow",
   "size": [
-   16,
+   20,
    16
   ],
-  "fit": [
-   16,
-   12
-  ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "animal_cow_1": {
   "src": "animals1a/animal_cow_1",
   "size": [
-   16,
+   20,
    16
   ],
-  "fit": [
-   16,
-   12
-  ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "item_cow": {
   "src": "animals1a/animal_cow",
@@ -5110,26 +5094,20 @@
  "animal_sheep": {
   "src": "animals1a/animal_sheep",
   "size": [
-   16,
+   18,
    16
   ],
-  "fit": [
-   14,
-   12
-  ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "animal_sheep_1": {
   "src": "animals1a/animal_sheep_1",
   "size": [
-   16,
+   18,
    16
   ],
-  "fit": [
-   14,
-   12
-  ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "item_sheep": {
   "src": "animals1a/animal_sheep",
@@ -5210,9 +5188,15 @@
   "src": "items6a/obj_garden_lamp",
   "size": [
    16,
-   20
+   36
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true,
+  "stretch": [
+   15,
+   0.5,
+   0.88
+  ]
  },
  "item_garden_lamp": {
   "src": "items6a/obj_garden_lamp",
@@ -5257,10 +5241,11 @@
  "obj_sty": {
   "src": "items6a/obj_sty",
   "size": [
-   16,
-   18
+   24,
+   20
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "item_sty": {
   "src": "items6a/obj_sty",
@@ -5274,9 +5259,15 @@
   "src": "items6a/obj_silo",
   "size": [
    16,
-   24
+   40
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true,
+  "stretch": [
+   16,
+   0.35,
+   0.85
+  ]
  },
  "item_silo": {
   "src": "items6a/obj_silo",
@@ -5292,7 +5283,11 @@
    16,
    16
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   16,
+   14
+  ]
  },
  "item_fence": {
   "src": "items6a/obj_fence",
@@ -5316,7 +5311,11 @@
    16,
    16
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   10,
+   12
+  ]
  },
  "item_flower_pot": {
   "src": "items5a/decor_flowerpot",
@@ -5332,7 +5331,11 @@
    16,
    16
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   16,
+   14
+  ]
  },
  "item_garden_bench": {
   "src": "items5a/decor_bench",
@@ -5353,26 +5356,26 @@
  "animal_pig": {
   "src": "items6a/animal_pig",
   "size": [
-   16,
+   18,
    16
   ],
+  "group": "world",
   "fit": [
-   14,
-   11
-  ],
-  "group": "world"
+   18,
+   12
+  ]
  },
  "animal_pig_1": {
   "src": "items6a/animal_pig_1",
   "size": [
-   16,
+   18,
    16
   ],
+  "group": "world",
   "fit": [
-   14,
-   11
-  ],
-  "group": "world"
+   18,
+   12
+  ]
  },
  "item_pig": {
   "src": "items6a/animal_pig",
@@ -5399,52 +5402,67 @@
   "group": "ui"
  },
  "obj_landmark_canopy": {
-  "src": "land1a/obj_landmark_canopy",
+  "src": "village3a/canopy",
   "size": [
-   16,
-   22
+   32,
+   40
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   32,
+   40
+  ]
  },
  "obj_landmark_fishladder": {
-  "src": "land1a/obj_landmark_fishladder",
+  "src": "town3a/fishladder",
   "size": [
-   16,
-   22
+   32,
+   40
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "obj_landmark_library": {
-  "src": "land1a/obj_landmark_library",
+  "src": "town4a/library",
   "size": [
-   16,
-   22
+   32,
+   40
+  ],
+  "fit": [
+   32,
+   40
   ],
   "group": "world"
  },
  "obj_landmark_bathhouse": {
-  "src": "land1a/obj_landmark_bathhouse",
+  "src": "town3a/bathhouse",
   "size": [
-   16,
-   22
+   32,
+   42
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "obj_landmark_fairhall": {
-  "src": "land1a/obj_landmark_fairhall",
+  "src": "town4b/bandstand",
   "size": [
-   16,
-   22
+   32,
+   40
+  ],
+  "fit": [
+   32,
+   40
   ],
   "group": "world"
  },
  "obj_landmark_market": {
-  "src": "land1a/obj_landmark_market",
+  "src": "town3a/market",
   "size": [
-   16,
-   22
+   32,
+   40
   ],
-  "group": "world"
+  "group": "world",
+  "noscale": true
  },
  "npc_clay_down_0": {
   "src": "npcs4a/clay_down",
@@ -6281,12 +6299,16 @@
   "group": "ui"
  },
  "obj_landmark_seedexchange": {
-  "src": "items7a/obj_landmark_seedexchange",
+  "src": "village3a/seedexchange",
   "size": [
-   16,
-   22
+   32,
+   40
   ],
-  "group": "world"
+  "group": "world",
+  "fit": [
+   32,
+   40
+  ]
  },
  "fx_petal": {
   "src": "ambient1a/fx_petal",
@@ -6596,34 +6618,224 @@
   "group": "ui",
   "island": 0
  },
- "player_use_hoe": {
-  "src": "npcs4a/pose_hoe",
-  "size": [
-   32,
-   32
-  ],
-  "group": "chars",
-  "noscale": true,
-  "drop_rows": 3
+ "crop_tulip_0": {
+  "authored": "seed_mound",
+  "group": "world"
  },
- "player_use_can": {
-  "src": "npcs4a/pose_can",
+ "item_tulip_seed": {
+  "src": "items8b/tulip_seed",
   "size": [
-   32,
-   32
+   16,
+   16
   ],
-  "group": "chars",
-  "noscale": true,
-  "drop_rows": 2
+  "group": "ui"
  },
- "player_use_rod": {
-  "src": "npcs4a/pose_rod",
+ "item_tulip": {
+  "src": "items8b/tulip",
   "size": [
-   32,
-   32
+   16,
+   16
   ],
-  "group": "chars",
-  "noscale": true,
-  "drop_rows": 3
+  "group": "ui"
+ },
+ "item_parsnip_soup": {
+  "src": "items8b/parsnip_soup",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_baked_potato": {
+  "src": "items8b/baked_potato",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_fish_stew": {
+  "src": "items8a/fish_stew",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_berry_tart": {
+  "src": "items8b/berry_tart",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_kale_salad": {
+  "src": "items8b/kale_salad",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_old_whiskers": {
+  "src": "items8a/old_whiskers",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "item_ice_pike": {
+  "src": "items8a/ice_pike",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
+ },
+ "world_wild_leek": {
+  "src": "items1a/wild_leek",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_daffodil": {
+  "src": "items2b/daffodil",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_mushroom": {
+  "src": "items2b/mushroom",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_wild_berry": {
+  "src": "items2b/wild_berry",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_wild_sunflower": {
+  "src": "items2b/wild_sunflower",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_blackberry": {
+  "src": "items2b/blackberry",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_winter_root": {
+  "src": "items2b/winter_root",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_holly": {
+  "src": "items2b/holly",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_egg": {
+  "src": "items3b/egg",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_milk": {
+  "src": "items3b/milk",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_wool": {
+  "src": "items3b/wool",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
+ },
+ "world_truffle": {
+  "src": "items6a/item_truffle",
+  "size": [
+   12,
+   12
+  ],
+  "fit": [
+   11,
+   11
+  ],
+  "group": "world"
  }
 }

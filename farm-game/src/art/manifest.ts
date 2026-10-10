@@ -3,6 +3,7 @@ import {
   animals,
   game,
   crops,
+  forage,
   items,
   mail,
   nodes,
@@ -97,6 +98,38 @@ export const FX_SPRITES: [string, number, number][] = [
   ['fx_glint', 7, 7],
 ];
 
+/**
+ * Onboarding coach marks (ui atlas, art round 3), for the guided start: a pointing hand (finger up; flip it to
+ * point down), a target ring and a wider, thinner ring for a stepped pulse, and a speech bubble as a 12 x 12
+ * nine-slice source (4 px corners) with a tail that overlaps its bottom outline row.
+ */
+export const COACH_SPRITES: [string, number, number][] = [
+  ['ui_coach_hand', 13, 17],
+  ['ui_coach_ring', 16, 16],
+  ['ui_coach_ring_wide', 22, 22],
+  ['ui_coach_bubble', 12, 12],
+  ['ui_coach_bubble_tail', 7, 4],
+];
+
+/**
+ * A repeatable project's landmark grows with its level: level 1 is the plain sprite, then `<sprite>_<level>` up
+ * to the last level with its own frame (the statue: 5, its perk levels). Pure, so tests and the renderer agree.
+ */
+export function landmarkLevelKey(sprite: string, level: number, frames: number): string {
+  const lv = Math.min(Math.max(1, Math.floor(level)), frames);
+  return lv <= 1 ? sprite : `${sprite}_${lv}`;
+}
+
+/** A ground item's own small world sprite (forage, an animal house's product bubble). */
+export const worldItemKey = (item: string): string => `world_${item}`;
+/** Items that lie in the world: forage, and the products shown over animal houses. */
+export function worldItems(): string[] {
+  const out = new Set<string>();
+  for (const f of forage.table) out.add(f.item);
+  for (const a of Object.values(animals)) if (a.product) out.add(a.product);
+  return [...out];
+}
+
 const UI_GLYPHS: [string, number, number][] = [
   ['ui_coin', 9, 9],
   ['ui_bolt', 9, 11],
@@ -167,13 +200,28 @@ export function artManifest(): ArtEntry[] {
     });
   add({
     texture: 'obj_sapling',
-    w: 16,
-    h: 16,
+    w: 8,
+    h: 10,
     group: 'world',
-    kind: 'young fruit tree',
+    kind: 'young fruit tree (seedling)',
     from: 'mechanics/fruitTree.ts',
     exact: false,
   });
+  // the sapling and young-tree stages (art round 3, proportions); optional: the seedling stands in without them
+  for (const [k, w, h] of [
+    ['obj_sapling_2', 12, 20],
+    ['obj_sapling_3', 20, 28],
+  ] as const)
+    add({
+      texture: k,
+      w,
+      h,
+      group: 'world',
+      kind: 'young fruit tree',
+      from: 'mechanics/fruitTree.ts',
+      exact: false,
+      optional: true,
+    });
   add({
     texture: 'obj_sign',
     w: 16,
@@ -200,6 +248,7 @@ export function artManifest(): ArtEntry[] {
       group: 'world',
       kind: `animal ${id}`,
       from: 'animals.json',
+      exact: false, // a cow is wider than a tile (review 8)
     });
     add({
       texture: animalIdleKey(a.sprite),
@@ -208,6 +257,7 @@ export function artManifest(): ArtEntry[] {
       group: 'world',
       kind: `animal ${id} idle frame 2`,
       from: 'animals.json',
+      exact: false,
     });
   }
 
@@ -237,6 +287,19 @@ export function artManifest(): ArtEntry[] {
     });
   for (const [k, w, h] of FX_SPRITES)
     add({ texture: k, w, h, group: 'ui', kind: 'fx / ambient', from: 'fx/*', optional: true });
+  // Ground items at world scale, drawn at 1x (review 8: the 16 px icon at 0.8 dropped pixel rows)
+  for (const it of worldItems())
+    add({
+      texture: worldItemKey(it),
+      w: 12,
+      h: 12,
+      group: 'world',
+      kind: `world item ${it}`,
+      from: 'forage.json / animals.json',
+      optional: true,
+    });
+  for (const [k, w, h] of COACH_SPRITES)
+    add({ texture: k, w, h, group: 'ui', kind: 'coach mark', from: 'onboarding', optional: true });
   add({
     texture: 'fx_shadow',
     w: 14,

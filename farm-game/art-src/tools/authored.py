@@ -383,6 +383,8 @@ def tile_sprite(make, src: str, fit=(16, 16), anchor="bottom") -> np.ndarray:
 def build(pal, outline, groups, specs, make, names=None):
     P = Pal(pal, outline)
     P.names = list(names or [])
+    if "--sprites" in __import__("sys").argv:  # quick pass: sprites only, the tileset files stay as they are
+        return sprites_only(P, pal, groups, specs)
     import maptiles as mt
     tiles: dict[str, np.ndarray] = {
         "grass": mt.grass_base(P),
@@ -452,6 +454,12 @@ def build(pal, outline, groups, specs, make, names=None):
     import seasons
 
     season_rgba = {k: px.idx_to_rgba(v, pal) for k, v in seasons.season_sheets(sheet, slot_names, cols, P.names, tiles_extra.SEASON_OVERRIDES).items()}
+    sprites_only(P, pal, groups, specs)
+    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_index": index, "columns": cols, "seasons": season_rgba}
+
+
+def sprites_only(P: Pal, pal, groups, specs) -> dict:
+    """Atlas sprites written in code (glyphs, seed mound, soil, the hand-drawn set); no tileset."""
     for key, (colours, rows) in GLYPHS.items():
         groups["ui"][key] = px.idx_to_rgba(glyph(P, colours, rows), pal)
     seed = px.idx_to_rgba(seed_mound(P), pal)
@@ -460,6 +468,10 @@ def build(pal, outline, groups, specs, make, names=None):
             groups["world"][key] = seed
         if spec.get("authored") == "stepping_stones":
             groups[spec["group"]][key] = px.idx_to_rgba(stepping_stones(P), pal)
-    groups["world"]["soil_tilled"] = px.idx_to_rgba(tiles["tilled"], pal)
-    groups["world"]["soil_watered"] = px.idx_to_rgba(tiles["watered"], pal)
-    return {"tileset": px.idx_to_rgba(sheet, pal), "tile_index": index, "columns": cols, "seasons": season_rgba}
+    import drawn  # hand-drawn character-grid sprites (round 3): tulips, dishes, legends, statue, coach marks, poses
+
+    if groups.get("ui") is not None and groups.get("chars"):
+        drawn.build(P, groups, pal, P.names)
+    groups["world"]["soil_tilled"] = px.idx_to_rgba(soil(P, False), pal)
+    groups["world"]["soil_watered"] = px.idx_to_rgba(soil(P, True), pal)
+    return {}

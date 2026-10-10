@@ -1,3 +1,4 @@
+import { hasArt } from '../art/registry';
 import { items } from '../data';
 import { toast } from '../systems/events';
 import { addStat } from '../systems/goals';
@@ -10,7 +11,13 @@ registerPlaceableBehavior('fruitTree', {
   // Trees stay put: checking a tree for fruit is a common double tap, and it must never dig the tree up.
   canPickUp: () => false,
   status: (obj) => (treeOf(obj).fruit > 0 ? 'ready' : isGrown(obj) ? 'idle' : 'busy'),
-  sprite: (obj, def) => (isGrown(obj) ? def.sprite : 'obj_sapling'),
+  // Art only: a seedling, a sapling, then a young tree as it grows (falls back to the seedling without the art).
+  sprite: (obj, def) => {
+    if (isGrown(obj)) return def.sprite;
+    const grow = treeDef(obj)?.growDays ?? 1;
+    const stage = Math.min(3, 1 + Math.floor((treeOf(obj).age * 3) / grow));
+    return stage === 1 || !hasArt(`obj_sapling_${stage}`) ? 'obj_sapling' : `obj_sapling_${stage}`;
+  },
   onMorning(state, obj, _def, ctx) {
     if (growTree(obj, state.time.season)) ctx.notes.push('Fruit is ripe on a tree.');
     // A storm shakes ripe fruit to the ground. The forecast gives you a night to pick it first.

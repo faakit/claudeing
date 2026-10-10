@@ -24,7 +24,7 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **24** prompts.
+Generations: **28** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -201,3 +201,35 @@ Generations: **24** prompts.
 - raw: items7-a.jpg, items7-b.jpg
 - used: 
 - note: round 2, submitted while crops4 was running
+
+## 25. `items8` (1:1, preamble: tinyacre)
+
+> A 4x4 grid of 16 separate sprites with wide even spacing, in this order, left to right, top to bottom: small paper seed packet with a picture of a pink tulip, a single pink tulip flower with a green stem and two leaves, a bowl of creamy parsnip soup, a baked potato split open with melting butter, a bowl of hearty fish stew, a round berry tart with red and blue berries, a bowl of green kale salad, a pumpkin pie with one slice cut out, then four big legendary fish seen from the side: a shimmering silver trout with pink sparkles, a big golden carp glowing like the sun, a huge old dark grey catfish with long whiskers, a pale icy blue pike with frosty fins, then, seen in three-quarter front view as they stand on the ground: a straw scarecrow with a patched shirt and a straw hat on a wooden post, a round hay bale, an old tree stump with a cluster of brown mushrooms, a short wooden mooring post with a coil of rope.
+
+- raw: items8-a.jpg, items8-b.jpg
+- used: b: tulip bulbs, tulip, parsnip soup, baked potato, berry tart, kale salad; a: fish stew, Old Whiskers, Ice Pike. Kept hand-drawn (read better at 1x): pumpkin pie, Glimmer Trout, Sun Carp, scarecrow; unused: hay bale, stump, mooring post
+- note: round 3: submitted by the art agent; the coordinator downloaded both outputs with the owner's approval; compared per key with the hand-drawn versions at 1x and phone scale
+
+## 26. `village3` (1:1, preamble: tinyacre)
+
+> A 2x2 grid of 4 separate building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: a big red wooden farm barn with white trim, a hay loft door and a grey shingle roof, wider than it is tall, about 32 pixels wide and 28 pixels tall; a small round stone water well with a little wooden roof on two posts, a rope winch and a wooden bucket, about 20 pixels wide and 30 pixels tall; a wooden town notice board under a small shingled canopy roof on two posts, about 32 pixels wide and 40 pixels tall; a small wooden seed exchange kiosk with shelves of seed jars under a little green roof, about 32 pixels wide and 40 pixels tall.
+
+- raw: village3-a.jpg, village3-b.jpg
+- used: b: barn (32x28, clearly bigger than the coop); a: board canopy and seed exchange landmarks (32x40). Not used: the well (a 20 px well needs a two-column map prop; it stays as before)
+- note: round 3 proportions (review 9): a barn bigger than the coop, the well, the board canopy and seed exchange landmarks; submitted by the art agent, downloaded by the coordinator
+
+## 27. `town3` (1:1, preamble: tinyacre)
+
+> A grid of 2 rows and 3 columns of 6 separate small town building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: grey stone fish ladder steps in a small river with blue water cascading down them; a cozy little town library with a red roof, a round window and a wooden book sign; a small hot spring bath house with a wooden roof, a stone pool and rising white steam; a festival fair hall with colorful bunting flags and a big wooden double door; a market gate at the start of a paved road, with a striped awning and crates of vegetables; a small wooden chicken coop with a ramp, about 24 pixels wide.
+
+- raw: town3-a.jpg, town3-b.jpg
+- used: a: fish ladder, hot spring, market gate (native about 30x38, no downscale); the library and fair hall from it were replaced by town4 (they read as dollhouses). b was smaller; the coop was not needed
+- note: round 3 proportions (review 9): the other five town landmarks at about 32x40, plus a coop for scale; submitted by the art agent, downloaded by the coordinator
+
+## 28. `town4` (1:1, preamble: tinyacre)
+
+> A 2x2 grid of 4 separate small town structures with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: a little free lending library, a tall wooden book cabinet with glass doors full of colorful books under a small red shingled roof, standing on a post with a reading bench beside it; an open wooden bandstand pavilion with a round shingled roof on carved posts, a raised wooden floor with a few steps, and colorful bunting flags; the same lending library cabinet seen slightly from the left; the same bandstand pavilion with festival lanterns.
+
+- raw: town4-a.jpg, town4-b.jpg
+- used: a: the library as a lending-library book cabinet on a post with a bench; b: the fair hall as an open bandstand with bunting (review 11, R11-1)
+- note: round 3, art critic review 11 (R11-1): the library and fair hall drawn as things that honestly fit 32x40 on one tile (a book kiosk, a bandstand) instead of dollhouses; submitted by the art agent, downloaded by the coordinator

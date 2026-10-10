@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { TILESET_KEY } from '../config';
 import index from './atlases.json';
+import { holeCircles, holeTiles } from '../fx/SeeThrough';
 
 /** Texture key of a season's tileset (palette swaps of the spring tiles, built by art-src/tools/seasons.py). */
 export const seasonTilesetKey = (season: string): string => `${TILESET_KEY}_${season}`;
@@ -31,23 +32,13 @@ export const MAP_ART_LAYERS = [
   { name: 'props', depth: 0.06 },
   { name: 'roof', depth: 0.1 },
   { name: 'overhead', depth: 5000 },
+  // lamp-post tops: above the player, never cut away (they hide nothing)
+  { name: 'lamps', depth: 5000 },
 ] as const;
-
-/** Overhead tiles this close to the player (in tiles) turn see-through, so you and your target stay visible. */
-export const FADE_RADIUS = 1;
-export const FADE_ALPHA = 0.45;
-
-/** Tiles to fade around the player: the 3x3 around the feet and the head tile above. Pure, for tests. */
-export function fadeTiles(tx: number, ty: number): [number, number][] {
-  const out: [number, number][] = [];
-  for (let y = ty - FADE_RADIUS - 1; y <= ty + FADE_RADIUS; y++)
-    for (let x = tx - FADE_RADIUS; x <= tx + FADE_RADIUS; x++) out.push([x, y]);
-  return out;
-}
 
 export class MapArt {
   private overhead: Phaser.Tilemaps.TilemapLayer | null = null;
-  private faded: Phaser.Tilemaps.Tile[] = [];
+  private near = false;
   private last = '';
 
   constructor(
@@ -68,20 +59,29 @@ export class MapArt {
     }
   }
 
-  /** Call when the player moves: overhead tiles near them fade, the rest come back. */
-  follow(tx: number, ty: number): void {
-    if (!this.overhead) return;
-    const key = `${tx},${ty}`;
-    if (key === this.last) return;
-    this.last = key;
-    for (const t of this.faded) t.setAlpha(1);
-    this.faded = [];
-    for (const [x, y] of fadeTiles(tx, ty)) {
-      const t = this.overhead.getTileAt(x, y);
-      if (t) {
-        t.setAlpha(FADE_ALPHA);
-        this.faded.push(t);
-      }
+  /**
+   * Call when the player moves or turns. While an overhead tile (a crown, an eave) stands near them or their target,
+   * the overhead layer gets the see-through hole (`src/fx/SeeThrough.ts`); otherwise it is drawn whole. Returns
+   * whether the hole is in use. The tiles themselves always stay fully opaque (review 9: no translucent disc).
+   */
+  follow(
+    tx: number,
+    ty: number,
+    target: { tx: number; ty: number } | undefined,
+    hole: Phaser.Display.Masks.GeometryMask | null,
+    px = tx * 16 + 8,
+    py = ty * 16 + 11,
+  ): boolean {
+    if (!this.overhead) return false;
+    const key = `${Math.round(px)},${Math.round(py)},${target?.tx},${target?.ty}`;
+    if (key !== this.last) {
+      this.last = key;
+      const layer = this.overhead;
+      // only tiles the hole itself would touch count, so a well roof or an eave nearby costs nothing
+      this.near = holeTiles(holeCircles(px, py, target)).some(([x, y]) => !!layer.getTileAt(x, y));
+      if (this.near && hole) layer.setMask(hole);
+      else layer.clearMask();
     }
+    return this.near;
   }
 }

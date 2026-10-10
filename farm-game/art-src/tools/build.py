@@ -1,6 +1,7 @@
 """Build every shipped sprite, the packed atlases and the tileset from committed sources.
 
     python art-src/tools/build.py            # rebuild everything
+    python art-src/tools/build.py --sprites  # only the sprite atlases (about a minute; the tileset is untouched)
 
 Sources:
   art-src/flow/crops/<sheet>/<name>.png   per-sprite crops of Google Flow output (see art-src/flow/prompts.md)
@@ -76,6 +77,12 @@ def build_crop_sprite(spec: dict, pal, pal_lab, outline: int) -> np.ndarray:
         a, b = int(h0 * 0.55), int(h0 * 0.9)
         rows = sorted({int(a + (b - a) * (k + 0.5) / drop) for k in range(drop)})
         idx = np.delete(idx, rows, axis=0)
+    stretch = spec.get("stretch")
+    if stretch:  # make a tall thing taller on its native grid: repeat rows spread over a uniform band (a post, a silo)
+        n, a, b = stretch
+        h0 = idx.shape[0]
+        rows = sorted(int(h0 * a + (h0 * (b - a)) * (k + 0.5) / n) for k in range(n))
+        idx = np.insert(idx, rows, idx[rows], axis=0)
     if not spec.get("noscale"):
         idx = px.downscale_idx(idx, fit[0], fit[1], outline)
     else:  # keep the native scale (consistent animation frames); trim the sides to the frame width
@@ -202,7 +209,7 @@ def main() -> None:
         print(f"{g}: {len(sprites)} frames, {sheet.shape[1]}x{sheet.shape[0]}")
     if "--prune" in sys.argv:
         prune_crops()
-    if tiles_only:
+    if tiles_only or "--sprites" in sys.argv:  # --sprites: atlases only, the tileset and its index stay as built
         return
     with open(os.path.join(GAME, "src", "art", "atlases.json"), "w", newline="\n") as f:
         atl = ", ".join(json.dumps(a) for a in index["atlases"])

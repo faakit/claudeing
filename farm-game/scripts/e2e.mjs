@@ -953,6 +953,69 @@ try {
   check('town projects: no console errors', pErrors.length === 0, pErrors.join(' | '));
   await pCtx.close();
 
+  // 6b. Ambient life is anchored in the world: scrolling the camera leaves drifting petals and butterflies where
+  // they are (owner's bug, art round 3: they used to follow the screen).
+  const aCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const ap = await aCtx.newPage();
+  const aErrors = [];
+  ap.on('pageerror', (e) => aErrors.push(String(e)));
+  await ap.goto(URL_);
+  await ap.waitForTimeout(1500);
+  await ap.keyboard.press('Enter');
+  await ap.waitForTimeout(1500);
+  await ap.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    Object.assign(s, { weather: 'sunny' });
+    Object.assign(s.time, { season: 'spring', minutes: 700 });
+    s.settings.reduceMotion = false;
+    s.player.x = 15 * 16 + 8;
+    s.player.y = 20 * 16 + 11;
+    f.game.scene.getScene('Farm').scene.restart();
+  });
+  await ap.waitForTimeout(5000); // let a few petals drift in
+  const anchor = () =>
+    ap.evaluate(() => {
+      const w = window.__farm.game.scene.getScene('Farm');
+      const cam = w.cameras.main;
+      return { ...w.ambient.debugPositions(), scroll: [cam.scrollX, cam.scrollY] };
+    });
+  await ap.evaluate(() => {
+    const w = window.__farm.game.scene.getScene('Farm');
+    w.ambient.emitter.timeScale = 0; // freeze the motes so only the camera moves
+    w.cameras.main.stopFollow();
+  });
+  await ap.waitForTimeout(200);
+  const a0 = await anchor();
+  await ap.evaluate(() => {
+    const cam = window.__farm.game.scene.getScene('Farm').cameras.main;
+    cam.scrollX -= 24;
+    cam.scrollY += 64;
+  });
+  await ap.waitForTimeout(400);
+  const a1 = await anchor();
+  const moteShift = Math.max(
+    0,
+    ...a0.motes.map((m, i) => Math.hypot(m.x - a1.motes[i].x, m.y - a1.motes[i].y)),
+  );
+  const flyShift = Math.max(
+    0,
+    ...a0.flies.map((m, i) => Math.hypot(m.x - a1.flies[i].x, m.y - a1.flies[i].y)),
+  );
+  const camShift = Math.hypot(a1.scroll[0] - a0.scroll[0], a1.scroll[1] - a0.scroll[1]);
+  check(
+    'ambient: drifting petals keep their world position when the camera scrolls',
+    a0.motes.length >= 2 && a1.motes.length === a0.motes.length && camShift > 40 && moteShift < 0.5,
+    JSON.stringify({ motes: a0.motes.length, after: a1.motes.length, camShift, moteShift }),
+  );
+  check(
+    'ambient: butterflies fly in the world, not with the camera',
+    a0.flies.length === 2 && flyShift < 16,
+    JSON.stringify({ flies: a0.flies.length, flyShift, camShift }),
+  );
+  check('ambient: no page errors', aErrors.length === 0, aErrors.join(' | '));
+  await aCtx.close();
+
   // 7. Offline: after the first visit the whole game works with the network cut
   const offCtx = await browser.newContext({
     viewport: { width: 390, height: 844 },

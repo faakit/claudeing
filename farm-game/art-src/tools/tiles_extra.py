@@ -169,7 +169,7 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     out["lily_1"] = np.fliplr(make({"src": "village2a/p2_lily", "size": [T, T], "fit": [10, 8], "anchor": "center"}))
     out["reeds_n"] = make({"src": "village2a/p2_reeds", "size": [T, T], "fit": [14, 15]})
     out["reeds_s"] = make({"src": "village2a/p2_reeds", "size": [T, T], "fit": [12, 13]})
-    boat = make({"src": "village2a/p2_boat", "size": [T, 32], "fit": [13, 28], "anchor": "center"})
+    boat = make({"src": "village2a/p2_boat", "size": [T, 32], "noscale": True, "stretch": [10, 0.3, 0.7]})
     out["boat_t"], out["boat_b"] = split_v(boat)
 
     # --- props: single solid tiles, transparent background, bottom-anchored ---
@@ -210,6 +210,10 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     prop("p_rocks", "nature2a/n2_rocks", (14, 10))
     prop("p_hollowlog", "nature2a/n2_hollowlog", (16, 10))
     prop("p_rootstump", "nature2a/n2_stump", (15, 14))
+    # round 3: Flow sheet items7 leftovers, placed as quiet decor (nothing that suggests a new interaction)
+    prop("p_trellis", "items7a/trellis", (14, 16))
+    prop("p_stonelantern", "items7a/stone_lantern", (10, 14))
+    prop("p_stalagmite", "items7a/stalagmite", (10, 14))
     # bushes and ferns: transparent bases (R2-3: the detail layer paints the ground under them)
     bush = make({"src": "land1a/decor_bush", "size": [T, T], "fit": [16, 14]})
     out["bush_big"] = bush
@@ -235,6 +239,39 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     wb = out["f_window"].copy()
     wb[box >= 0] = box[box >= 0]
     out["f_window_box"] = wb
+    # two-storey facades (review 8: walls 32 px, not 16): windows and the wall lantern at head height on the row
+    # above the ground row, and tall doors (14 x 26 with a step) split over the two rows
+    hi = np.full((T, T), -1, dtype=np.int32)
+    hi[3:12] = win[(T - 9) // 2 : (T - 9) // 2 + 9]
+    out["f_window_hi"] = hi.copy()
+    box5 = make({"src": "village2a/p2_windowbox", "size": [T, T], "fit": [14, 5]})
+    hib = hi.copy()
+    hib[box5 >= 0] = box5[box5 >= 0]
+    out["f_window_box_hi"] = hib
+    out["f_lantern_hi"] = make({"src": "village2a/p2_lantern", "size": [T, T], "fit": [9, 13]})
+    door_key = {"w": "wood", "b": "soil", "d": "earth dark", "g": "gold", "s": "stone lt", "z": "stone"}
+    plank = ".odwbwwbbwwbwdo."
+    top = ["." * 16] * 6 + [
+        "...oooooooooo...",
+        "..odwwwwwwwwdo..",
+        ".owwwwwwwwwwwwo.",
+    ] + [plank] * 7
+    low = [plank] * 5 + [".odwbwwbbwgbwdo."] + [plank] * 6 + [
+        ".odwwwwwwwwwwdo.",
+        ".oooooooooooooo.",
+        "osssssssssssssso",
+        "ozzzzzzzzzzzzzzo",
+    ]
+    for style, wall in (("red", base["wall"]), ("slate", base["shopwall"])):
+        out[f"f_doortop_{style}"] = mt.draw(P, top, door_key)
+        if style == "slate":  # the shop keeps its striped awning, now above head height (review 8)
+            aw = np.full((T, T), -1, dtype=np.int32)
+            aw[7:16] = base["shopdoor"][:9]
+            out["f_doortop_slate"] = aw
+        lo = wall.copy()
+        d = mt.draw(P, low, door_key)
+        lo[d >= 0] = d[d >= 0]
+        out[f"f_doorlow_{style}"] = lo
     vane = make({"src": "village2a/p2_weathervane", "size": [T, T], "fit": [12, 16]})
     out["vane"] = vane
     out["cave_l"] = mt.cave_mouth(P, "l")
@@ -265,11 +302,17 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
         img = make({"src": src, "size": [T, 32], "fit": list(fit)})
         out[f"{name}_top"], out[f"{name}_base"] = split_v(img)
 
-    tall("t_streetlamp", "items6a/decor_street_lamp", (16, 28))
-    tall("t_lanternpole", "land1a/decor_lantern_pole", (14, 28))
+    def tall3(name, src, stretch):
+        """Three tiles: base (props, solid), mid and top (overhead). Grown on the native grid (review 8)."""
+        img = make({"src": src, "size": [T, 48], "noscale": True, "stretch": list(stretch)})
+        out[f"{name}_top2"], out[f"{name}_top"], out[f"{name}_base"] = img[:T], img[T : 2 * T], img[2 * T :]
+
+    # lamps 36 px tall with the head above the player's head; the scarecrow person-sized (review 8)
+    tall3("t_streetlamp", "items6a/decor_street_lamp", (13, 0.45, 0.9))
+    tall3("t_lanternpole", "land1a/decor_lantern_pole", (16, 0.45, 0.9))
     tall("t_well", "world1b/obj_well", (16, 22))
     tall("t_beams", "land1a/decor_mine_beams", (16, 26))
-    tall("t_scarecrow", "items5a/decor_scarecrow", (16, 24))
+    tall3("t_scarecrow", "items5a/decor_scarecrow", (11, 0.62, 0.95))
     # standalone trees: transparent bases (R2-3), canopy top drawn overhead
     for kind in ("oak", "pine", "birch"):
         img = make({"src": f"land1a/decor_{kind}", "size": [T, 32], "fit": [16, 30]})

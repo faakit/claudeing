@@ -20,7 +20,8 @@ GROUND_PREFIX = (
 )
 GROUND_EXACT = {"grass", "flower", "fence", "path", "board", "bin", "puddle", "stepping"}
 FLORA_PREFIX = ("bloom_", "patch_", "rose_", "tallgrass", "fern_flat")
-BOX_PREFIX = ("f_window_box", "p_flowerbed")
+BOX_PREFIX = ("f_window_box", "p_flowerbed", "p_trellis")
+AQUATIC_PREFIX = ("lily_", "reeds_")
 
 REMAP = {
     "summer": {
@@ -54,7 +55,9 @@ REMAP = {
         "box": {"rose": "leaf mid", "red": "leaf dark", "gold": "leaf mid", "parchment": "leaf mid", "wine": "leaf dark"},
     },
 }
-CLEAR = {"winter": {"flora"}}
+# winter: flowers and pond plants are gone; the water's edge freezes (shore tiles only, open water stays fishable)
+CLEAR = {"winter": {"flora", "aquatic"}}
+SHORE_WINTER = {"water": "sky", "dusk blue": "water"}
 
 
 def category(name: str) -> str | None:
@@ -66,6 +69,10 @@ def category(name: str) -> str | None:
         return "roof"
     if name.startswith(FLORA_PREFIX):
         return "flora"
+    if name.startswith(AQUATIC_PREFIX):
+        return "aquatic"
+    if name.startswith("shore:"):
+        return "shore"
     if name.startswith(BOX_PREFIX):
         return "box"
     if name.startswith(("lush_", "gv_")):
@@ -98,6 +105,13 @@ def season_sheets(
             if cat in CLEAR.get(season, ()):
                 tile[:] = -1
                 continue
+            if cat == "shore":  # the ground's own remap, plus an ice rim in winter
+                cat = "ground"
+                if season == "winter":
+                    src = sheet[y * T : (y + 1) * T, x * T : (x + 1) * T]
+                    for a, b in {**table["ground"], **SHORE_WINTER}.items():
+                        tile[src == names.index(a)] = names.index(b)
+                    continue
             if cat == "lush" and cat not in table:
                 cat = "ground"
             if not cat or cat not in table:

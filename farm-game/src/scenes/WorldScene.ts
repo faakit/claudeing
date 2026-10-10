@@ -20,7 +20,8 @@ import { items, mapsData } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
-import { Ambient } from '../fx/Ambient';
+import { Ambient, parseBlooms } from '../fx/Ambient';
+import { SeeThrough } from '../fx/SeeThrough';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
 import { findPath, pathToFace } from '../systems/pathfind';
@@ -107,6 +108,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private farm: FarmRenderer | null = null;
   private mapArt: MapArt | null = null;
   private ambient: Ambient | null = null;
+  /** The pixel-art see-through hole over crowns and tall objects in front of the player (review 9). */
+  private seeThrough: SeeThrough | null = null;
   /** The tool-use pose shown for a moment after a tool action (art only; see toolPose). */
   private pose: Phaser.GameObjects.Image | null = null;
   private poseUntil = 0;
@@ -206,7 +209,12 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.fx = new Effects(this);
-    this.ambient = new Ambient(this, this.mapId, outdoor);
+    this.ambient = new Ambient(
+      this,
+      this.mapId,
+      outdoor,
+      parseBlooms(raw as unknown as Parameters<typeof parseBlooms>[0]),
+    );
     if (this.mapId === 'farm') {
       this.farm = new FarmRenderer(this);
       this.farm.sync(state, false);
@@ -284,11 +292,14 @@ export abstract class WorldScene extends Phaser.Scene {
       publishGlow(this.mapId, false, [], null);
       this.ambient?.destroy();
       this.ambient = null;
+      this.seeThrough?.destroy();
+      this.seeThrough = null;
     });
   }
 
   update(time: number, delta: number): void {
     this.ambient?.update(time, getState());
+    this.things?.syncLandmarkLevels(getState());
     if (this.transitioning) return;
     const state = getState();
     const player = state.player;
@@ -341,7 +352,14 @@ export abstract class WorldScene extends Phaser.Scene {
     this.syncSprite(moving);
 
     const here = playerTile(player);
-    this.mapArt?.follow(here.tx, here.ty);
+    const facing = facingTile(player);
+    this.seeThrough ??= new SeeThrough(this);
+    const holeMap =
+      this.mapArt?.follow(here.tx, here.ty, facing, this.seeThrough.mask, player.x, player.y) ??
+      false;
+    const holeObj =
+      this.things?.seeThrough(player.x, player.y, facing, this.seeThrough.mask) ?? false;
+    if (holeMap || holeObj) this.seeThrough.update(player.x, player.y, facing);
     const door = objectAt(this.objects, here.tx, here.ty, 'door');
     if (door) {
       this.useDoor(door);
