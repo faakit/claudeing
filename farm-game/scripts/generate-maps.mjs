@@ -76,7 +76,7 @@ const door = (name, tx, ty, targetMap, spawnTx, spawnTy, facing) =>
 const zone = (type, name, tx, ty, tw, th) => obj(type, name, tx, ty, tw, th);
 
 /** Tile layers drawn over the ground by the art tileset (see scripts/map-art.mjs), in draw order. */
-const ART_LAYERS = ['detail', 'shade', 'props', 'roof', 'overhead'];
+const ART_LAYERS = ['detail', 'shade', 'props', 'roof', 'overhead', 'lamps'];
 
 function toTmj({ w, h, ground }, objects, art) {
   const collision = ground.map((row) => row.map((t) => (SOLID.has(t) ? t : 0)));

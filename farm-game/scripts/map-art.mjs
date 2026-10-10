@@ -387,7 +387,10 @@ export function artLayers(name, m, objects, extraReserved = []) {
   const G = m.ground.map((row) => row.slice());
   const kind = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? null : GROUND[G[y][x] - 1]);
   const L = Object.fromEntries(
-    ['detail', 'shade', 'roof', 'props', 'overhead'].map((k) => [k, new Array(w * h).fill(0)]),
+    ['detail', 'shade', 'roof', 'props', 'overhead', 'lamps'].map((k) => [
+      k,
+      new Array(w * h).fill(0),
+    ]),
   );
   const set = (layer, x, y, n) => {
     if (x >= 0 && y >= 0 && x < w && y < h) L[layer][y * w + x] = gid(n);
@@ -769,6 +772,8 @@ export function artLayers(name, m, objects, extraReserved = []) {
   // Crowns of trees south of a tile go overhead (you walk behind them, and the layer fades near the player);
   // crowns on the tile's row or north of it are drawn under the player.
   const crowns = [];
+  /** Tree tiles drawn as a bush or stump instead (no room for a full tree): kept out of the crown pass. */
+  const shrubs = new Set();
   const treeKind = (x, y) => {
     const t = C.trees.length ? C.trees[hash(x, y, 5) % C.trees.length] : 'oak';
     return t === 'birch' ? 'b' : t === 'pine' ? 'p' : 'o';
@@ -780,16 +785,6 @@ export function artLayers(name, m, objects, extraReserved = []) {
     if (o.type === 'forage')
       for (let j = o.y / 16; j < (o.y + o.height) / 16; j++)
         for (let i = o.x / 16; i < (o.x + o.width) / 16; i++) forageTiles.add(j * w + i);
-  /** May a standalone tree's crown spread over this cell? Never over forage, reserved spots or buildings. */
-  const crownFree = (x, y) =>
-    x >= 0 &&
-    y >= 0 &&
-    x < w &&
-    y < h &&
-    !BUILT.has(kind(x, y)) &&
-    !forageTiles.has(y * w + x) &&
-    !(reserved.has(y * w + x) && kind(x, y) !== 'tree') &&
-    !L.roof[y * w + x];
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (kind(x, y) !== 'tree' || wet(x, y) || cliff.has(y * w + x)) continue;
@@ -836,16 +831,21 @@ export function artLayers(name, m, objects, extraReserved = []) {
       }
       if (!C.trees.length) continue;
       if (C.bigOak && x === C.bigOak[0] && y === C.bigOak[1]) continue; // the old oak, below
-      // standalone: the biggest crown that fits over free cells (2 rows above the trunk, else 1, else small).
-      // Sizes from the art critic's scale table (review 8): oak about 30x44, birch 20x40, pine 22x44.
+      // standalone: a full-size tree (review 8: oak about 30x44, birch 20x40, pine 22x44) wherever no building,
+      // roof or map edge is in the way. Over plots and other reserved cells its crown is drawn under the player
+      // (see `guarded` below); over a forage zone a tree would sit in the goods, so a bush or a stump stands there
+      // instead. Nothing ends up as a tree shorter than the player (review 9).
       const k = treeKind(x, y);
-      const fits = (rows) => {
+      const fits = (rows, test) => {
         for (let j = 1; j <= rows; j++)
-          for (let i = -1; i <= 1; i++) if (!crownFree(x + i, y - j)) return false;
-        return crownFree(x - 1, y) && crownFree(x + 1, y);
+          for (let i = -1; i <= 1; i++) if (!test(x + i, y - j)) return false;
+        return test(x - 1, y) && test(x + 1, y);
       };
+      const room = (cx, cy) =>
+        cx >= 0 && cy >= 0 && cx < w && cy < h && !BUILT.has(kind(cx, cy)) && !L.roof[cy * w + cx];
+      const noForage = (cx, cy) => room(cx, cy) && !forageTiles.has(cy * w + cx);
       const big = { o: [14, 28], b: [12, 28], p: [11, 29] }[k];
-      if (fits(2))
+      if (fits(2, noForage))
         crowns.push({
           k,
           cx: x * 16 + 8 + (jx >> 1),
@@ -854,8 +854,21 @@ export function artLayers(name, m, objects, extraReserved = []) {
           base,
           flags: 't',
         });
-      else if (fits(1)) crowns.push({ k, cx: x * 16 + 8, cy: base - 19, r: 10, base, flags: 't' });
-      else crowns.push({ k, cx: x * 16 + 8, cy: base - 13, r: 8, base, flags: 'ts' });
+      else if (fits(1, noForage))
+        crowns.push({ k, cx: x * 16 + 8, cy: base - 19, r: 10, base, flags: 't' });
+      else {
+        set(
+          'props',
+          x,
+          y,
+          hx % 3 === 0
+            ? 'p_rootstump'
+            : C.bushes.includes('bush_berry')
+              ? 'bush_berry'
+              : 'bush_big',
+        );
+        shrubs.add(y * w + x);
+      }
     }
   // the old oak (woods landmark): a crown about 60 px across over its one solid tile, with a gnarled trunk
   if (C.bigOak && kind(...C.bigOak) === 'tree') {
@@ -904,6 +917,7 @@ export function artLayers(name, m, objects, extraReserved = []) {
         continue;
       }
       if (!list.length || BUILT.has(k) || cliff.has(y * w + x) || wet(x, y)) continue;
+      if (shrubs.has(y * w + x)) continue;
       const row = (c) => Math.floor(c.base / 16);
       /** Does this crown (or its shadow, shifted down-right) touch the tile? */
       const hits = (c, dx = 0, dy = 0) => {
@@ -1100,8 +1114,10 @@ export function artLayers(name, m, objects, extraReserved = []) {
     let ok = false;
     if (n.startsWith('t_')) {
       ok = place(`${n}_base`, x, y, on);
-      if (ok) set('overhead', x, y - 1, `${n}_top`);
-      if (ok && has(`${n}_top2`) && y >= 2) set('overhead', x, y - 2, `${n}_top2`);
+      // lamp posts hide nothing: their tops go on their own overhead layer, which never fades (review 9)
+      const top = LIGHT_OF[n] ? 'lamps' : 'overhead';
+      if (ok) set(top, x, y - 1, `${n}_top`);
+      if (ok && has(`${n}_top2`) && y >= 2) set(top, x, y - 2, `${n}_top2`);
     } else if (n.startsWith('w_')) {
       if (open(x, y, on) && open(x + 1, y, on)) {
         ok = place(`${n}_l`, x, y, on) && place(`${n}_r`, x + 1, y, on);

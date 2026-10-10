@@ -103,22 +103,31 @@ export class ObjectsRenderer {
   }
 
   /**
-   * Tall placed things (grown fruit trees, big houses) turn see-through while the player or their target stands
-   * behind them, like the overhead layer: their tops overhang the tiles north of their base.
+   * Tall, wide placed things (grown fruit trees, the bigger houses) get the see-through hole while the player or
+   * their target stands behind them. Posts, lamps and signs (under 20 px wide) hide nothing and are left alone.
+   * Returns whether any sprite uses the hole.
    */
-  fadeBehind(px: number, py: number, target: { tx: number; ty: number }): void {
+  seeThrough(
+    px: number,
+    py: number,
+    target: { tx: number; ty: number },
+    hole: Phaser.Display.Masks.GeometryMask,
+  ): boolean {
     const tx = target.tx * TILE_SIZE + TILE_SIZE / 2;
     const ty = target.ty * TILE_SIZE + TILE_SIZE / 2;
+    let any = false;
     for (const { sprite } of this.placed.values()) {
-      if (sprite.height <= 24) continue;
+      if (sprite.height <= 24 || sprite.width < 20) continue;
       const half = sprite.width / 2;
       const top = sprite.y - sprite.height;
       const covers = (x: number, y: number): boolean =>
         x > sprite.x - half - 2 && x < sprite.x + half + 2 && y > top - 2 && y < sprite.y - 4;
-      // the player's body (feet to head) or the target tile, behind the sprite's base
       const hide = covers(px, py - 6) || covers(px, py - 20) || covers(tx, ty);
-      sprite.setAlpha(hide ? 0.45 : 1);
+      if (hide && !sprite.mask) sprite.setMask(hole);
+      else if (!hide && sprite.mask) sprite.clearMask();
+      any ||= hide;
     }
+    return any;
   }
 
   /** Cheap per-frame check: a repeatable landmark went up a level (funding fires no map event after the first). */

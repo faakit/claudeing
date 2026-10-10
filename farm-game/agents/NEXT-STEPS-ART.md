@@ -97,8 +97,9 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
        a darker back row. The side edges get a crown on every cell. The floor stops halfway down the south-edge
        cells, so the trunks stand on grass in their own shade.
      - **Lone trees** are oak about 30x44, birch 20x40 and pine 22x44 where two rows of free cells fit above the
-       trunk. Otherwise they are medium (about 22x32) or small. A crown never spreads over forage, reserved cells
-       (plots plus a margin, doors, signs, villager spots), roofs or buildings.
+       trunk, else medium (about 22x32). Nothing is left shorter than the player (review 9): where a forage zone
+       leaves no room, a bush or a root stump stands on the tree tile instead. Over plots and other reserved
+       cells the crown is drawn under the player; it never spreads over roofs or buildings.
      - **The old oak** is a crown about 60 px across, with a gnarled trunk on its one solid tile.
      - **Layering:** crowns of trees south of a tile go on the overhead layer (you walk behind them), the rest
        under the player. Over guarded cells the crown is drawn under the player and goods instead, so there is no
@@ -106,9 +107,12 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
      - **Grown fruit trees** are 32x40 with outlined 4 px fruit (cherry blossom in rose). Young trees show three
        stages: seedling 8x10, sapling 12x20, young tree 20x28. That needed a sprite pick by age in
        `mechanics/fruitTree.ts` `sprite()`, which is art only. The ready star sits above the crown.
-     - **Fade:** the overhead fade now covers about 24 px around the player and the 3x3 around the target tile
-       (`fadeTiles`). Tall placed objects, such as grown trees and the bigger houses, fade to 45% while the player
-       or their target is behind them (`ObjectsRenderer.fadeBehind`).
+     - **See-through hole (review 9, replacing the 45% fade):** while a crown, an eave or a tall, wide placed
+       object stands in front of the player or their target, it is cut away with an inverted geometry mask
+       (`src/fx/SeeThrough.ts`). The cut is fully clear inside about 11 px of the player's body and 10 px of the
+       target tile, with a 2 px checker rim. Nothing turns translucent, and the player is never tinted. The mask
+       is applied only while something covers the player: `MapArt.follow` (only when an overhead tile lies under the hole itself, `holeTiles`) and `ObjectsRenderer.seeThrough`. Lamp, post and sign tops are on their own
+       `lamps` overhead layer, and placed sprites under 20 px wide are left alone: they hide nothing.
    - **Facades.** Building blocks of 4 or more rows keep their two bottom rows as wall (32 px) under a shorter
      roof. Doors are 14x26 with a stone step, split over the two rows. The shop keeps its striped awning, now
      above head height. Windows, window boxes and the wall lantern are at head height. Same rectangles, same door
@@ -168,8 +172,10 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
   would let the renderer drop the per-frame level check.
 - **Proportions pass, shared files:**
   - `src/mechanics/fruitTree.ts` `sprite()`: a sapling stage by age, art only;
-  - `ObjectsRenderer`: the forage and bubble sprites at 1x, the ready star above tall sprites, and `fadeBehind`;
-  - `WorldScene`: the fade gets the facing tile and calls `fadeBehind`.
+  - `ObjectsRenderer`: the forage and bubble sprites at 1x, the ready star above tall sprites, and `seeThrough`;
+  - `WorldScene`: creates the `SeeThrough` hole and passes it, with the facing tile, to `MapArt.follow` and
+    `ObjectsRenderer.seeThrough`;
+  - maps: a new `lamps` tile layer after `overhead` (`ART_LAYERS` in `generate-maps.mjs`, `MAP_ART_LAYERS`).
 - **Recommendation for the depth agent (coordinator ruling: out of scope this round):** real footprints, so the
   art can reach the critic's ideal sizes. These change placement rules and saves:
   - coop 2x2 (32x32);
@@ -179,9 +185,12 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 
 ## Open items (by priority)
 
-1. **The critic's check of the proportions pass** (review 8 follow-up). Then:
-   - new Flow sources for the barn (28x28), the landmarks (32x40) and the well (20x30);
-   - the baked fences at 16x14.
+1. **The proportions pass, what is left (review 9 accepted it; the hole, the lamps and the small trees are
+   fixed):**
+   - a new Flow source for a barn about 32x28, visibly bigger than the coop, on its one-tile footprint;
+   - new Flow sources for the landmarks (32x40) and the well (20x30, as a 2-column prop);
+   - the baked fences at 16x14;
+   - the item-pop tween snap.
 2. **The critic's eye on the rest of round 3:** the hand-drawn dishes and fish, the statue's growth, the new poses, the coach
    marks (mock only: the onboarding UI isn't merged here), and the winter ice rim.
 3. **Poses:**

@@ -210,12 +210,14 @@ describe('map art layers', () => {
     }
   });
 
-  it('fades the overhead tiles around the player and the head tile above', async () => {
-    const { fadeTiles } = await import('../src/art/mapLayers');
-    const t = fadeTiles(5, 5).map(([x, y]) => `${x},${y}`);
+  it('cuts the see-through hole on the tiles around the player body and the target', async () => {
+    const { holeCircles, holeTiles } = await import('../src/fx/SeeThrough');
+    const t = holeTiles(holeCircles(5 * 16 + 8, 5 * 16 + 11, { tx: 5, ty: 6 })).map(
+      ([x, y]) => `${x},${y}`,
+    );
     expect(t).toContain('5,4');
     expect(t).toContain('5,3');
-    expect(t).toContain('4,6');
-    expect(t).not.toContain('5,7');
+    expect(t).toContain('5,6');
+    expect(t).not.toContain('5,8');
   });
 });

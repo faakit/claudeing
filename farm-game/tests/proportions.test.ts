@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('phaser', () => ({ default: {} }));
 
-import { fadeTiles } from '../src/art/mapLayers';
+import { HOLE, holeCircles, holeRuns } from '../src/fx/SeeThrough';
 import { artKeys } from '../src/art/registry';
 import { spriteOf } from '../src/systems/placeables';
 import '../src/mechanics';
@@ -21,14 +21,6 @@ const map = (id: string) =>
   };
 
 describe('proportions (art round 3, review 8)', () => {
-  it('fades the overhead layer about 24 px around the player and around the target tile', () => {
-    const t = new Set(fadeTiles(10, 10, { tx: 10, ty: 12 }).map(([x, y]) => `${x},${y}`));
-    for (const k of ['8,10', '12,10', '10,7', '9,8', '10,11']) expect(t.has(k), k).toBe(true);
-    for (const k of ['9,13', '11,13', '10,13']) expect(t.has(k), `target ${k}`).toBe(true);
-    expect(t.has('8,7')).toBe(false); // the far corners stay
-    expect(t.has('10,14')).toBe(false);
-  });
-
   it('never bakes an overhanging crown over a forage zone or a door', () => {
     for (const id of ['farm', 'town', 'woods']) {
       const m = map(id);
@@ -59,5 +51,24 @@ describe('proportions (art round 3, review 8)', () => {
     expect(spriteOf(tree(8))).toBe('obj_sapling_3');
     expect(spriteOf(tree(30))).toBe('obj_tree_apple_sapling');
     artKeys.clear();
+  });
+
+  it('cuts a pixel-art hole around the player and the target: clear inside, a checker rim, nothing translucent', () => {
+    const runs = holeRuns(holeCircles(100, 200, { tx: 6, ty: 13 }));
+    const on = new Set<string>();
+    for (const [x, y, w] of runs) for (let i = 0; i < w; i++) on.add(`${x + i},${y}`);
+    // the chest, the head and the target tile's centre are fully clear
+    for (const [x, y] of [
+      [100, 194],
+      [100, 182],
+      [104, 200],
+      [104, 216],
+    ])
+      expect(on.has(`${x},${y}`), `${x},${y}`).toBe(true);
+    // the rim alternates (checker), and nothing beyond the rim is cut
+    const rimY = 194;
+    const edge = 100 + HOLE.body + 1;
+    expect(on.has(`${edge},${rimY}`)).not.toBe(on.has(`${edge + 1},${rimY}`));
+    expect(on.has(`${100 + HOLE.body + HOLE.rim + 2},${rimY}`)).toBe(false);
   });
 });
