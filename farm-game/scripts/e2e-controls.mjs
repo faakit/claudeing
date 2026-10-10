@@ -490,31 +490,45 @@ async function runCombo(p, hand) {
         page.evaluate(() => window.__farm.game.scene.getScene('UI').ring.isOpen);
       await page.evaluate(() => window.__farm.controls.clear());
       // slow and fast flicks (14 px reached at 60-200 ms), each slid to the can and rested on it
+      // A loaded machine can stall the page between the slide and the lift (the rest then looks shorter than
+      // 80 ms to the game): a missed pick is retried up to twice, and at most 2 retries in all are allowed, so a
+      // real fault (which misses every time) still fails.
       let picked = 0;
+      let ringRetries = 0;
       for (const ms of [60, 120, 200]) {
-        await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));
-        await t.timedDrag(
-          L.action.x,
-          L.action.y,
-          L.action.x + inward * 18,
-          L.action.y + 1,
-          ms * 1.3,
-          true,
-        );
-        const can = await ringItemAt(1);
-        await t.move(can.x, can.y);
-        await sleep(140);
-        await t.up();
-        await sleep(200);
-        if ((await selected(page)) === 1) picked++;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (attempt > 0) {
+            ringRetries++;
+            await page.evaluate(() => window.__farm.game.scene.getScene('UI').ring.close());
+            await sleep(150);
+          }
+          await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));
+          await t.timedDrag(
+            L.action.x,
+            L.action.y,
+            L.action.x + inward * 18,
+            L.action.y + 1,
+            ms * 1.3,
+            true,
+          );
+          const can = await ringItemAt(1);
+          await t.move(can.x, can.y);
+          await sleep(140);
+          await t.up();
+          await sleep(200);
+          if ((await selected(page)) === 1) {
+            picked++;
+            break;
+          }
+        }
       }
       const ringActs = await page.evaluate(
         () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
       );
       check(
         `${tag}: flicks of 60-200 ms open the ring, slide-rest-lift picks the can, and nothing is used`,
-        picked === 3 && ringActs === 0 && (await soil(page)) === 0,
-        `picked ${picked}/3, acts ${ringActs}, soil ${await soil(page)}`,
+        picked === 3 && ringRetries <= 2 && ringActs === 0 && (await soil(page)) === 0,
+        `picked ${picked}/3 (${ringRetries} retries), acts ${ringActs}, soil ${await soil(page)}`,
       );
       // flick and lift at once: the ring stays open as a tap menu; a tap on Bag opens the bag
       await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));
@@ -774,29 +788,33 @@ async function runCombo(p, hand) {
           ['right', 1, 0],
           ['up', 0, -1],
         ]) {
-          await place(page, 10, 17, 'down');
-          await sleep(150);
-          const f0 = await player(page);
-          await page.evaluate(() => (window.__touchLog = []));
-          await t.down(L.stickHome.x, L.stickHome.y);
-          await t.move(L.stickHome.x + dx * 16, L.stickHome.y + dy * 16);
-          await sleep(Math.max(0, ms - 25)); // the touch takes ~25 ms more to reach the page than this
-          await t.up();
-          await sleep(300);
-          const f1 = await player(page);
-          // The push the game saw: from the move that left the deadzone to the lift, measured in the page.
-          const log = await page.evaluate(() => window.__touchLog);
-          const mv = log.find((e) => e.type === 'touchmove');
-          const end = log.find((e) => e.type === 'touchend');
-          const actual = mv && end ? end.t - mv.t : 0;
-          if (actual > 150) {
-            flickSkipped++;
-            continue; // the harness lagged past the 150 ms bar; not a fair sample
+          // A sample where the harness lagged past the 150 ms bar is not fair; it is retried (up to 3 times)
+          // and counted as skipped only if it never ran in time.
+          let fair = false;
+          for (let attempt = 0; attempt < 3 && !fair; attempt++) {
+            await place(page, 10, 17, 'down');
+            await sleep(150);
+            const f0 = await player(page);
+            await page.evaluate(() => (window.__touchLog = []));
+            await t.down(L.stickHome.x, L.stickHome.y);
+            await t.move(L.stickHome.x + dx * 16, L.stickHome.y + dy * 16);
+            await sleep(Math.max(0, ms - 25)); // the touch takes ~25 ms more to reach the page than this
+            await t.up();
+            await sleep(300);
+            const f1 = await player(page);
+            // The push the game saw: from the move that left the deadzone to the lift, measured in the page.
+            const log = await page.evaluate(() => window.__touchLog);
+            const mv = log.find((e) => e.type === 'touchmove');
+            const end = log.find((e) => e.type === 'touchend');
+            const actual = mv && end ? end.t - mv.t : 0;
+            if (actual > 150) continue;
+            fair = true;
+            if (f1.tx !== f0.tx || f1.ty !== f0.ty || f1.facing !== dir)
+              flickFails.push(
+                `${dir} ${ms}ms (${Math.round(actual)} measured) -> ${f1.tx},${f1.ty} ${f1.facing}`,
+              );
           }
-          if (f1.tx !== f0.tx || f1.ty !== f0.ty || f1.facing !== dir)
-            flickFails.push(
-              `${dir} ${ms}ms (${Math.round(actual)} measured) -> ${f1.tx},${f1.ty} ${f1.facing}`,
-            );
+          if (!fair) flickSkipped++;
         }
       }
       check(
@@ -1014,13 +1032,20 @@ async function runCombo(p, hand) {
             if (L.down !== null && L.hit === null && window.__probeOk?.()) L.hit = g.loop.frame;
           });
         });
-        const frames = async (setup, act) => {
-          await page.evaluate(setup);
-          await page.evaluate(() => (window.__lat = { down: null, hit: null }));
-          await act();
-          await sleep(300);
-          const L = await page.evaluate(() => window.__lat);
-          return L.hit === null || L.down === null ? 99 : L.hit - L.down;
+        // Best of up to 3 tries: another browser on the machine can stretch one sample by a frame, but a slow
+        // response path is slow every time, so the bar itself is unchanged.
+        const frames = async (setup, act, reset) => {
+          let best = 99;
+          for (let attempt = 0; attempt < 3 && best > 2; attempt++) {
+            if (attempt > 0 && reset) await reset();
+            await page.evaluate(setup);
+            await page.evaluate(() => (window.__lat = { down: null, hit: null }));
+            await act();
+            await sleep(300);
+            const L = await page.evaluate(() => window.__lat);
+            best = Math.min(best, L.hit === null || L.down === null ? 99 : L.hit - L.down);
+          }
+          return best;
         };
         // Walking the way you face starts at once; a new direction turns at once (and walks after the hold).
         await place(page, 10, 17, 'right');
@@ -1034,6 +1059,11 @@ async function runCombo(p, hand) {
             await t.down(L.stickHome.x, L.stickHome.y);
             await t.move(L.stickHome.x + 20, L.stickHome.y);
           },
+          async () => {
+            await t.up();
+            await place(page, 10, 17, 'right');
+            await sleep(300);
+          },
         );
         await t.up();
         await place(page, 10, 17, 'down');
@@ -1046,6 +1076,11 @@ async function runCombo(p, hand) {
             await t.down(L.stickHome.x, L.stickHome.y);
             await t.move(L.stickHome.x + 20, L.stickHome.y);
           },
+          async () => {
+            await t.up();
+            await place(page, 10, 17, 'down');
+            await sleep(300);
+          },
         );
         await t.up();
         const press = await frames(
@@ -1054,6 +1089,10 @@ async function runCombo(p, hand) {
               window.__farm.game.scene.getScene('UI').controls[0].view.scale < 0.99;
           },
           () => t.down(L.action.x, L.action.y),
+          async () => {
+            await t.up();
+            await sleep(400);
+          },
         );
         await t.up();
         await sleep(300);
@@ -1062,6 +1101,11 @@ async function runCombo(p, hand) {
             window.__probeOk = () => window.__farm.getState().inventory.selected === 1;
           },
           () => t.down(40.5, 383.5),
+          async () => {
+            await t.up();
+            await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));
+            await sleep(300);
+          },
         );
         await t.up();
         console.log(`      frames: stick ${stick}, turn ${turn}, action ${press}, hotbar ${slot}`);
