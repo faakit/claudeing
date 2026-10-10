@@ -290,5 +290,29 @@
   ],
   "used": "b: tulip bulbs, tulip, parsnip soup, baked potato, berry tart, kale salad; a: fish stew, Old Whiskers, Ice Pike. Kept hand-drawn (read better at 1x): pumpkin pie, Glimmer Trout, Sun Carp, scarecrow; unused: hay bale, stump, mooring post",
   "note": "round 3: submitted by the art agent; the coordinator downloaded both outputs with the owner's approval; compared per key with the hand-drawn versions at 1x and phone scale"
+ },
+ {
+  "id": "village3",
+  "aspect": "1:1",
+  "preamble": "tinyacre",
+  "body": "A 2x2 grid of 4 separate building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: a big red wooden farm barn with white trim, a hay loft door and a grey shingle roof, wider than it is tall, about 32 pixels wide and 28 pixels tall; a small round stone water well with a little wooden roof on two posts, a rope winch and a wooden bucket, about 20 pixels wide and 30 pixels tall; a wooden town notice board under a small shingled canopy roof on two posts, about 32 pixels wide and 40 pixels tall; a small wooden seed exchange kiosk with shelves of seed jars under a little green roof, about 32 pixels wide and 40 pixels tall.",
+  "raw": [
+   "village3-a.jpg",
+   "village3-b.jpg"
+  ],
+  "used": "b: barn (32x28, clearly bigger than the coop); a: board canopy and seed exchange landmarks (32x40). Not used: the well (a 20 px well needs a two-column map prop; it stays as before)",
+  "note": "round 3 proportions (review 9): a barn bigger than the coop, the well, the board canopy and seed exchange landmarks; submitted by the art agent, downloaded by the coordinator"
+ },
+ {
+  "id": "town3",
+  "aspect": "1:1",
+  "preamble": "tinyacre",
+  "body": "A grid of 2 rows and 3 columns of 6 separate small town building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: grey stone fish ladder steps in a small river with blue water cascading down them; a cozy little town library with a red roof, a round window and a wooden book sign; a small hot spring bath house with a wooden roof, a stone pool and rising white steam; a festival fair hall with colorful bunting flags and a big wooden double door; a market gate at the start of a paved road, with a striped awning and crates of vegetables; a small wooden chicken coop with a ramp, about 24 pixels wide.",
+  "raw": [
+   "town3-a.jpg",
+   "town3-b.jpg"
+  ],
+  "used": "a: fish ladder, library, hot spring, fair hall, market gate (native about 30x38, no downscale). b was smaller (about 24 px); the coop was not needed",
+  "note": "round 3 proportions (review 9): the other five town landmarks at about 32x40, plus a coop for scale; submitted by the art agent, downloaded by the coordinator"
  }
 ]

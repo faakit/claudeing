@@ -230,6 +230,32 @@ try {
     await sample('woods spring day: petals + butterflies', () =>
       visit('woods', 'Woods', 11, 10, 700, 'spring'),
     );
+    // The see-through hole (art round 3): a geometry mask over the overhead layer while a crown covers the
+    // player, and over a placed fruit tree the player stands behind.
+    await sample('farm: behind a lone tree (see-through hole)', async () => {
+      await visit('farm', 'Farm', 7, 1, 700, 'spring');
+      await page.waitForTimeout(800);
+      await page.evaluate(() => (window.__farm.getState().player.facing = 'down'));
+    });
+    await sample('farm: behind a grown fruit tree (see-through hole)', () =>
+      page.evaluate(() => {
+        const f = window.__farm;
+        const s = f.getState();
+        s.placed.farm = [
+          {
+            id: 901,
+            type: 'apple_sapling',
+            tx: 14,
+            ty: 20,
+            data: { tree: { age: 20, timer: 0, fruit: 2 } },
+          },
+        ];
+        s.player.x = 14 * 16 + 8;
+        s.player.y = 19 * 16 + 11;
+        s.player.facing = 'down';
+        f.gameEvents.emit('placedChanged', { map: 'farm' });
+      }),
+    );
     // The budget above includes the audio engine's scheduling: report that music really was playing.
     const au = await page.evaluate(() => window.__farm.audio.debugInfo());
     console.log(

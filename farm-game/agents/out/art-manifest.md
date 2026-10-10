@@ -114,7 +114,7 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `obj_sprinkler_q` |  | 16x16 | min | placeable quality_sprinkler | placeables.json | art (atlas_world 16x16) |
 | `obj_jar` |  | 16x16 | min | placeable preserve_jar | placeables.json | art (atlas_world 16x16) |
 | `obj_coop` |  | 16x16 | min | placeable coop | placeables.json | art (atlas_world 24x24) |
-| `obj_barn` |  | 16x16 | min | placeable barn | placeables.json | art (atlas_world 24x24) |
+| `obj_barn` |  | 16x16 | min | placeable barn | placeables.json | art (atlas_world 32x28) |
 | `obj_keg` |  | 16x16 | min | placeable keg | placeables.json | art (atlas_world 16x18) |
 | `obj_bee_house` |  | 16x16 | min | placeable bee_house | placeables.json | art (atlas_world 16x18) |
 | `obj_tree_cherry_sapling` |  | 16x16 | min | tree cherry_sapling (grown) | placeables.json | art (atlas_world 32x40) |
@@ -162,13 +162,13 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `world_milk` |  | 12x12 | yes | world item milk | forage.json / animals.json | art (atlas_world 12x12) |
 | `world_wool` |  | 12x12 | yes | world item wool | forage.json / animals.json | art (atlas_world 12x12) |
 | `world_truffle` |  | 12x12 | yes | world item truffle | forage.json / animals.json | art (atlas_world 12x12) |
-| `obj_landmark_canopy` |  | 16x16 | min | town landmark canopy | projects.json | art (atlas_world 24x24) |
-| `obj_landmark_seedexchange` |  | 16x16 | min | town landmark seedexchange | projects.json | art (atlas_world 24x24) |
-| `obj_landmark_fishladder` |  | 16x16 | min | town landmark fishladder | projects.json | art (atlas_world 24x24) |
-| `obj_landmark_library` |  | 16x16 | min | town landmark library | projects.json | art (atlas_world 24x24) |
-| `obj_landmark_bathhouse` |  | 16x16 | min | town landmark bathhouse | projects.json | art (atlas_world 24x24) |
-| `obj_landmark_fairhall` |  | 16x16 | min | town landmark fairhall | projects.json | art (atlas_world 24x24) |
-| `obj_landmark_market` |  | 16x16 | min | town landmark market | projects.json | art (atlas_world 24x24) |
+| `obj_landmark_canopy` |  | 16x16 | min | town landmark canopy | projects.json | art (atlas_world 32x40) |
+| `obj_landmark_seedexchange` |  | 16x16 | min | town landmark seedexchange | projects.json | art (atlas_world 32x40) |
+| `obj_landmark_fishladder` |  | 16x16 | min | town landmark fishladder | projects.json | art (atlas_world 32x40) |
+| `obj_landmark_library` |  | 16x16 | min | town landmark library | projects.json | art (atlas_world 32x40) |
+| `obj_landmark_bathhouse` |  | 16x16 | min | town landmark bathhouse | projects.json | art (atlas_world 32x42) |
+| `obj_landmark_fairhall` |  | 16x16 | min | town landmark fairhall | projects.json | art (atlas_world 32x40) |
+| `obj_landmark_market` |  | 16x16 | min | town landmark market | projects.json | art (atlas_world 32x40) |
 | `obj_landmark_statue` |  | 16x16 | min | town landmark statue | projects.json | art (atlas_world 16x16) |
 | `obj_landmark_statue_2` |  | 16x16 | min | town landmark statue level 2 | projects.json | art (atlas_world 16x21) |
 | `obj_landmark_statue_3` |  | 16x16 | min | town landmark statue level 3 | projects.json | art (atlas_world 16x25) |

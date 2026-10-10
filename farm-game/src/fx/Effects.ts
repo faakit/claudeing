@@ -192,15 +192,19 @@ export class Effects {
     });
   }
 
-  /** An item icon hops up from a point and fades, like it was just picked up. */
+  /**
+   * An item icon hops up from a point and fades, like it was just picked up. Its size steps from half to full
+   * (never an in-between scale that drops pixel rows) and it moves on whole pixels (review 8).
+   */
   itemPop(x: number, y: number, iconKey: string): void {
     const img = this.scene.add.image(x, y, iconKey).setDepth(9400).setScale(0.5);
+    this.scene.time.delayedCall(90, () => img.active && img.setScale(1));
     this.scene.tweens.add({
       targets: img,
       y: y - 18,
-      scale: 1,
       duration: 260,
       ease: 'Back.easeOut',
+      onUpdate: () => img.setY(Math.round(img.y)),
     });
     this.scene.tweens.add({
       targets: img,

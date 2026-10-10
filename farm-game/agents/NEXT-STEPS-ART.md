@@ -118,14 +118,15 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
      above head height. Windows, window boxes and the wall lantern are at head height. Same rectangles, same door
      tiles; window lights moved up with them.
    - **Animal houses, silo and animals** are rebuilt at native resolution from their Flow sources:
-     - coop 23x24, barn 24x22, shed 24x24, sty 21x19;
+     - coop 23x24, shed 24x24, sty 21x19; the barn is 32x28 from the new Flow sheet `village3` (review 10's R9-4);
      - silo 16x40, its body grown on the native grid with the new `stretch` spec option;
      - cow 19x14, sheep 18x14, pig 18x12.
-       The barn's ideal 28x28 needs a new source (its source is only 24 px wide natively).
    - **Lamps:** the garden lamp is 10x36, and the town and farm lamps are three-tile props about 8x36 with the
      head above the player's head. Their lights moved up.
    - **Small things:** sprinkler 10x10, quality sprinkler 12x12, jar 12x14, flower pot 10x12.
-   - **Landmarks** are at native 20-24 px wide and 20-24 tall. 32x40 needs new Flow sources or bigger footprints.
+   - **Landmarks** are 32x40 from the new Flow sheets: board canopy and seed exchange from `village3` a; fish
+     ladder, library, hot spring (32x42), fair hall and market gate from `town3` a at native size. They overhang
+     their one tile by 8 px a side and upward only (shot: `proportions/after/landmarks_*.png`).
    - **Ground items:** forage and the animal-house product bubbles use new 12 px `world_<item>` sprites drawn at
      1x. The twinkle star is at 1x too.
    - **The rest:**
@@ -136,14 +137,15 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
      - mature corn 12x26.
    - **Not done:**
      - the well at 20x30: it is wider than its tile, so the prop needs a 2-column form;
-     - the baked map fences at 16x14;
      - the HUD bolt and drop icons at 1x (`Hud.ts` is the controls agent's file);
-     - the item-pop tween snapping.
+     - (done later: the item pop now steps from half to full size on whole pixels; the baked map fences were
+       already 14 px tall at their posts, so they needed no change)
 
 ## Flow usage
 
-- One prompt this round (`items8`), in the owner's Flow project "out. 08 - 07:06". No quota or error message
-  appeared. It is entry 25 in `art-src/flow/prompts.md`, with the variants used for each key.
+- Three prompts this round in the owner's Flow project "out. 08 - 07:06" (1:1, Nano Banana 2.1, x2): `items8`,
+  `village3` and `town3` (entries 25-27 in `art-src/flow/prompts.md`, with the variants used per key). No quota or
+  error message appeared. Check the aspect before submitting: it had flipped to 16:9 once.
 - **Download approval:** the owner approved autonomous downloads of the art agent's own Flow outputs ("yes, it
   should be autonomous", said to the coordinator on 2026-10-09). The approval covers only our own generations
   (signed flow-content URLs, fetched into `C:/Users/andre/dev/tiny-acre/flow-raw/`, outside the repo), not other
@@ -185,12 +187,11 @@ per frame (the busiest farm scene; machine noise varies it run to run) (budget: 
 
 ## Open items (by priority)
 
-1. **The proportions pass, what is left (review 9 accepted it; the hole, the lamps and the small trees are
-   fixed):**
-   - a new Flow source for a barn about 32x28, visibly bigger than the coop, on its one-tile footprint;
-   - new Flow sources for the landmarks (32x40) and the well (20x30, as a 2-column prop);
-   - the baked fences at 16x14;
-   - the item-pop tween snap.
+1. **The proportions pass, what is left** (review 10 accepted it; the barn and landmarks now come from Flow,
+   `village3`/`town3`):
+   - the well at 20x30 needs a two-column map prop (its Flow source is in `flow-raw/village3-*.jpg`);
+   - real 2x2/3x2 footprints remain the owner's and depth agent's decision.
+   - Perf now has two see-through-hole scenarios (behind a lone tree, behind a grown fruit tree; review 10's ask).
 2. **The critic's eye on the rest of round 3:** the hand-drawn dishes and fish, the statue's growth, the new poses, the coach
    marks (mock only: the onboarding UI isn't merged here), and the winter ice rim.
 3. **Poses:**

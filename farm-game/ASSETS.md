@@ -24,7 +24,8 @@
 - Round 2 (2026-10-08, same account and terms): Flow sheets `village2`, `nature2` and `fx2` (props, nature, effects).
 - Round 3 (2026-10-09, same account and terms): Flow sheet `items8` (generated 2026-10-09; downloaded to
   `flow-raw/` by the coordinator with the owner's approval). It feeds nine item icons: tulip bulbs, tulip, parsnip
-  soup, baked potato, fish stew, berry tart, kale salad, Old Whiskers, Ice Pike.
+  soup, baked potato, fish stew, berry tart, kale salad, Old Whiskers, Ice Pike. Flow sheets `village3` and
+  `town3` (same day, same route) feed the barn and the seven town landmarks.
 - **Hand-drawn in code** (original, this repo, round 3): `art-src/tools/drawn.py` draws pixel by pixel on the
   palette the tulip growth stages, pumpkin pie, Glimmer Trout, Sun Carp, the scarecrow (item and object), the
   Founder's Statue level frames, the onboarding coach marks, and the tool-use poses (arms and tools drawn onto the

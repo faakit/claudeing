@@ -902,13 +902,16 @@
   "group": "ui"
  },
  "obj_barn": {
-  "src": "world1b/obj_barn",
+  "src": "village3b/barn",
   "size": [
-   24,
-   24
+   32,
+   28
   ],
   "group": "world",
-  "noscale": true
+  "fit": [
+   32,
+   28
+  ]
  },
  "item_barn": {
   "src": "world1b/obj_barn",
@@ -5399,55 +5402,58 @@
   "group": "ui"
  },
  "obj_landmark_canopy": {
-  "src": "land1a/obj_landmark_canopy",
+  "src": "village3a/canopy",
   "size": [
-   24,
-   24
+   32,
+   40
   ],
   "group": "world",
-  "noscale": true
+  "fit": [
+   32,
+   40
+  ]
  },
  "obj_landmark_fishladder": {
-  "src": "land1a/obj_landmark_fishladder",
+  "src": "town3a/fishladder",
   "size": [
-   24,
-   24
+   32,
+   40
   ],
   "group": "world",
   "noscale": true
  },
  "obj_landmark_library": {
-  "src": "land1a/obj_landmark_library",
+  "src": "town3a/library",
   "size": [
-   24,
-   24
+   32,
+   40
   ],
   "group": "world",
   "noscale": true
  },
  "obj_landmark_bathhouse": {
-  "src": "land1a/obj_landmark_bathhouse",
+  "src": "town3a/bathhouse",
   "size": [
-   24,
-   24
+   32,
+   42
   ],
   "group": "world",
   "noscale": true
  },
  "obj_landmark_fairhall": {
-  "src": "land1a/obj_landmark_fairhall",
+  "src": "town3a/fairhall",
   "size": [
-   24,
-   24
+   32,
+   40
   ],
   "group": "world",
   "noscale": true
  },
  "obj_landmark_market": {
-  "src": "land1a/obj_landmark_market",
+  "src": "town3a/market",
   "size": [
-   24,
-   24
+   32,
+   40
   ],
   "group": "world",
   "noscale": true
@@ -6287,13 +6293,16 @@
   "group": "ui"
  },
  "obj_landmark_seedexchange": {
-  "src": "items7a/obj_landmark_seedexchange",
+  "src": "village3a/seedexchange",
   "size": [
-   24,
-   24
+   32,
+   40
   ],
   "group": "world",
-  "noscale": true
+  "fit": [
+   32,
+   40
+  ]
  },
  "fx_petal": {
   "src": "ambient1a/fx_petal",

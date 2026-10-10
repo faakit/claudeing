@@ -24,7 +24,7 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **25** prompts.
+Generations: **27** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -209,3 +209,19 @@ Generations: **25** prompts.
 - raw: items8-a.jpg, items8-b.jpg
 - used: b: tulip bulbs, tulip, parsnip soup, baked potato, berry tart, kale salad; a: fish stew, Old Whiskers, Ice Pike. Kept hand-drawn (read better at 1x): pumpkin pie, Glimmer Trout, Sun Carp, scarecrow; unused: hay bale, stump, mooring post
 - note: round 3: submitted by the art agent; the coordinator downloaded both outputs with the owner's approval; compared per key with the hand-drawn versions at 1x and phone scale
+
+## 26. `village3` (1:1, preamble: tinyacre)
+
+> A 2x2 grid of 4 separate building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: a big red wooden farm barn with white trim, a hay loft door and a grey shingle roof, wider than it is tall, about 32 pixels wide and 28 pixels tall; a small round stone water well with a little wooden roof on two posts, a rope winch and a wooden bucket, about 20 pixels wide and 30 pixels tall; a wooden town notice board under a small shingled canopy roof on two posts, about 32 pixels wide and 40 pixels tall; a small wooden seed exchange kiosk with shelves of seed jars under a little green roof, about 32 pixels wide and 40 pixels tall.
+
+- raw: village3-a.jpg, village3-b.jpg
+- used: b: barn (32x28, clearly bigger than the coop); a: board canopy and seed exchange landmarks (32x40). Not used: the well (a 20 px well needs a two-column map prop; it stays as before)
+- note: round 3 proportions (review 9): a barn bigger than the coop, the well, the board canopy and seed exchange landmarks; submitted by the art agent, downloaded by the coordinator
+
+## 27. `town3` (1:1, preamble: tinyacre)
+
+> A grid of 2 rows and 3 columns of 6 separate small town building sprites with wide even spacing, seen in three-quarter front view as they stand on the ground, each about 32 pixels wide and 40 pixels tall, drawn larger than a tile but on the same chunky pixel grid, in this order, left to right, top to bottom: grey stone fish ladder steps in a small river with blue water cascading down them; a cozy little town library with a red roof, a round window and a wooden book sign; a small hot spring bath house with a wooden roof, a stone pool and rising white steam; a festival fair hall with colorful bunting flags and a big wooden double door; a market gate at the start of a paved road, with a striped awning and crates of vegetables; a small wooden chicken coop with a ramp, about 24 pixels wide.
+
+- raw: town3-a.jpg, town3-b.jpg
+- used: a: fish ladder, library, hot spring, fair hall, market gate (native about 30x38, no downscale). b was smaller (about 24 px); the coop was not needed
+- note: round 3 proportions (review 9): the other five town landmarks at about 32x40, plus a coop for scale; submitted by the art agent, downloaded by the coordinator
