@@ -12,7 +12,7 @@
     "forage": [
       {
         "item": "wild_leek",
-        "tile": [11, 11]
+        "tile": [10, 13]
       },
       {
         "item": "daffodil",
@@ -152,7 +152,13 @@
             "find": "water"
           }
         }
-      ]
+      ],
+      "refusals": {
+        "Pick seeds on the hotbar first.": "Tap a dry crop to water it.",
+        "Something is already growing here.": "Tap a dry crop to water it.",
+        "Till the soil first.": "Tap a dry crop to water it.",
+        "Nothing to water here.": "Tap a dry crop to water it."
+      }
     },
     {
       "id": "grow",
@@ -383,7 +389,13 @@
             "map": "farm"
           }
         }
-      ]
+      ],
+      "refusals": {
+        "Pick seeds on the hotbar first.": "Tap a dry crop to water it.",
+        "Something is already growing here.": "Tap a dry crop to water it.",
+        "Till the soil first.": "Tap a dry crop to water it.",
+        "Nothing to water here.": "Tap a dry crop to water it."
+      }
     },
     {
       "id": "mail",

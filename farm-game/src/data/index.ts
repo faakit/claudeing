@@ -558,6 +558,8 @@ export interface TutorialStep {
   count?: { stat: string; of: number };
   /** The HUD element tagged while this step runs. */
   tag?: TutorialHud;
+  /** Refusals reworded while this step shows (game text -> guide text), before the guide-wide list. */
+  refusals?: Record<string, string>;
   /** Close the open sheet when this step finishes (Ship all: the bin closes, the guide goes on). */
   closeSheet?: boolean;
   /** Stats set to 1 when the step first shows (e.g. `tip.paint`: the old first-run tip is then not needed). */

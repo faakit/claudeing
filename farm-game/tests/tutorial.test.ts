@@ -531,3 +531,29 @@ describe('guided start: review 3', () => {
     expect(step(s, town)).toBe('buySeeds');
   });
 });
+
+describe('guided start: final-round fixes', () => {
+  it('the stick is only shown when the straight way is open; otherwise the gate is pointed at', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track === 'day1') s.stats[`tut.${st.id}`] = 1;
+    for (const id of ['water2', 'mail', 'menu', 'jobs']) s.stats[`tut.${id}`] = 1;
+    s.time.day = 2;
+    const blockedBelow = world(s, { blocked: (tx, ty) => tx === 14 && ty === 13 });
+    const cur = advance(s, blockedBelow, NO_SHEET).current!;
+    expect(coachView(s, blockedBelow, NO_SHEET, cur).pointer).toMatchObject({
+      kind: 'tile',
+      tx: 14,
+      ty: 43,
+    });
+  });
+
+  it('while watering, a planting refusal never says "seed packet"', async () => {
+    const { rewriteRefusal } = await import('../src/systems/tutorial');
+    expect(rewriteRefusal('Pick seeds on the hotbar first.', 'water2')).toBe(
+      'Tap a dry crop to water it.',
+    );
+    expect(rewriteRefusal('Pick seeds on the hotbar first.', 'grow')).toBe(
+      'Tap the seed packet on the hotbar.',
+    );
+  });
+});

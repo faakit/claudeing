@@ -212,7 +212,10 @@ export class CoachMarks {
   /** The Hud's toast hook: while a step shows, a refusal appears in the coach line, not as a second message. */
   intercept(text: string, kind: 'info' | 'warn' | 'good'): boolean {
     if (kind !== 'warn' || !this.active) return false;
-    this.flash = { text: rewriteRefusal(text), until: this.scene.time.now + 2400 };
+    this.flash = {
+      text: rewriteRefusal(text, this.view?.step.id),
+      until: this.scene.time.now + 2400,
+    };
     this.refusals++;
     return true;
   }

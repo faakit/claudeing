@@ -621,7 +621,12 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     const dy = d.ty - world.tile.ty;
     const dir: Direction =
       Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
-    return { kind: 'stick', dir };
+    // Only teach the stick when the straight way is open for a few tiles; else the tap and its edge arrow
+    // (which walk around obstacles) lead on.
+    const clear = [1, 2, 3, 4].every(
+      (i) => !world.blocked(world.tile.tx + VEC[dir].tx * i, world.tile.ty + VEC[dir].ty * i),
+    );
+    return clear ? { kind: 'stick', dir } : { kind: 'tile', tx: d.tx, ty: d.ty };
   }
   if (g.ui === 'canSlot') {
     const i = slotOf(s, (it) => tools[items[it]?.tool ?? '']?.action === 'water');
@@ -722,7 +727,10 @@ export function coachView(
     pointer?.kind !== 'button' &&
     pointer?.kind !== 'hud'
   ) {
-    text = 'Close this to carry on.';
+    text =
+      facts.panel === 'menu' && facts.tab === 'goals'
+        ? 'Read your jobs, then tap Close.'
+        : 'Close this to carry on.';
     pointer = { kind: 'button', pattern: CLOSE_BUTTON };
     away = false;
   }
@@ -740,8 +748,9 @@ export function coachView(
 }
 
 /** A refusal said in the coach line, in the guide's words where the game's would mislead a beginner. */
-export function rewriteRefusal(text: string): string {
-  return data().refusals?.[text] ?? text;
+export function rewriteRefusal(text: string, stepId?: string | null): string {
+  const st = stepId ? tutorialStep(stepId) : undefined;
+  return st?.refusals?.[text] ?? data().refusals?.[text] ?? text;
 }
 
 /** The speaker's name and the welcome line (shown while the first step runs). */
@@ -760,6 +769,8 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
   }
   const dirs = ['up', 'down', 'left', 'right'];
   out.push(...Object.values(data().refusals ?? {}));
+  for (const st of steps) out.push(...Object.values(st.refusals ?? {}));
+  out.push('Read your jobs, then tap Close.');
   const names = Object.values(npcs).map((n) => n.name);
   return out
     .map((t) => t.replace('{dry}', '12'))

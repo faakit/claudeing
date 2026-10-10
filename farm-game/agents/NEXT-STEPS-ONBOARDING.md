@@ -60,8 +60,7 @@ wrong taps, wandering and reopening. `npm run verify` is green at the last commi
 | Day 1 gestures / time         | 21 gestures, about 4.5 min (41 s of it stuck)           | 42-49 gestures, 110-121 s including the town errand (bot)                                        |
 | Refusals on day 1             | 4                                                       | 0 (1 for the wanderer, shown in the coach line)                                                  |
 
-Bot runs (`npm run e2e:onboarding`, New Game to town on day 2): i13 R 146 s / 61 gestures, i13 L 148 / 62, SE R
-145 / 61, SE L 146 / 62, wanderer 157 / 68. Screenshots: `agents/out/onboarding/after/`.
+Bot runs (`npm run e2e:onboarding`, New Game to town on day 2, M4): i13 R 110 s / 59 gestures, i13 L 111 / 60, SE R 109 / 59, SE L 111 / 60, wanderer 130 / 70. The critic's human-like bot (M3): 12/12 runs reach town on day 2, first harvest 9-19 s. Screenshots: `agents/out/onboarding/after/` (m1, m2, m4).
 
 ## Save versions
 
@@ -93,32 +92,48 @@ Both are code-drawn placeholders in `ensureCoachTextures`; a real texture under 
 
 ## Open findings and next steps
 
-The critic's reviews are in `C:/Users/andre/dev/tiny-acre/onboarding-critique/` (ledger.md, review-*.md).
-Round 2b ran on 9ff96f2. Two human-like runs reached town on day 2. Two stalled on water2 because the rod was in
-hand (taps and Action then only fish). That case is fixed after 9ff96f2: the coach points at the can, or at the
-seeds, first. The critic was cut off by a usage limit before it wrote review 3.
+The critic's final report is `C:/Users/andre/dev/tiny-acre/onboarding-critique/final.md`. It ran on M4
+(fd9dcfc) and found no blockers. 12 of 12 human-like runs (i13 and SE, both hands, wrong taps, wandering, reopening,
+never painting a row) reached town on day 2 by following on-screen guidance, with 0 accidental skips. The first
+harvest came at 9-20 s. New Game to waking on day 2 took 108-146 s clean and 139-204 s human-like. Nothing was
+pointed at for only 6-7 s per run.
 
-1. **Re-test with a human-like bot** (thumb spread, wrong taps, reopening) on the final build. That is the
-   critic's `tools/human.mjs`. The in-repo e2e follows the hand exactly.
-2. **The evening bed step** is unit-tested only. An e2e would need about 6 real minutes of play. Day 1 in the
-   e2e ends when the bot chooses to sleep after the errands.
-3. **After the depth branch merges:**
-   - While a sheet is open, toasts draw at the top of the screen. Check they do not collide with the coach line
-     (y 76-94) and move the line if they do.
-   - Clay's day-7 letter: the day-8 intro points at the board in town. It could also point at the letter.
-4. **After the controls branch merges:**
-   - Remove the "Not your land" and "Can't get there" rewordings if the new refusals read well.
-   - Re-check the door tap and the bed's top half.
-   - Fix the bag tab's stale "hold Action to keep working".
-5. **Day 2's goal bar** ("Buy 5 items") and the water, letter and menu steps still say different things. Only the
-   walk to town matches it.
-6. **Art:** replace the `ui_coach_ring` and `ui_coach_hand` placeholders, and give the hand a back-of-hand pose
-   for drags.
-7. **Real phone pass:**
-   - Is the top line readable at arm's length?
-   - Is the "..." reachable, and is it found?
-   - Does the hand animation read as "hold, then drag"?
-   - Is the clock policy (never paused) right for a slow reader?
+Its six open findings, and what the commit after M4 did about each:
+
+1. **Major: water2 for players who press Action instead of painting.** With the empty seed slot in hand, Action
+   on soil gave the planting refusal, reworded as "Tap the seed packet on the hotbar."
+   - **Fixed after M4.** Water steps have their own refusal words ("Tap a dry crop to water it."). The "seed
+     packet" wording is only used outside them.
+   - Not re-tested by the critic.
+2. **Major: the stick lesson demoed a fixed "drag down" into the woodpile and stump.**
+   - **Fixed after M4.** The stick is shown only when the straight way is open for 4 tiles. Otherwise the coach
+     points at the gate, and the tap and its edge arrow walk around obstacles.
+   - Unit-tested; not re-tested by the critic.
+3. **Minor: water2 is still the longest beat** (12-101 s, median about 36 s; the can ran dry in 3 of 12 runs; the
+   row tip showed 2-4 directions). **Open.** Ideas:
+   - water2 done at "most" crops;
+   - a sprinkler gift on day 3;
+   - lock the tip's direction for the whole step (layer state).
+4. **Minor: the day-1 leek sat beside the mailbox,** so a low tap opened an empty mailbox. **Fixed after M4:** the
+   leek moved to (10,13).
+5. **Minor: after Menu > Goal, "Close this to carry on."** **Fixed after M4:** the line now reads "Read your jobs,
+   then tap Close."
+6. **Minor: the bag hint "Tip: hold Action to keep working."** (`MenuPanel.ts`) still contradicts the row tip.
+   **Open.** It is the controls agent's string and must change before release.
+
+Other next steps:
+
+- **The evening bed step** is unit-tested only. An e2e would need about 6 real minutes of play. In the e2e, day 1
+  ends when the bot chooses to sleep after the errands, which the clock line allows.
+- **After the depth branch merges:**
+  - While a sheet is open, toasts draw at the top of the screen. Check they do not collide with the coach line
+    (y 76-94).
+  - Clay's day-7 letter: the day-8 intro points at the board in town, and could also point at the letter.
+- **After the controls branch merges:**
+  - Re-check the door tap and the bed's top half.
+  - Drop the "Not your land" and "Can't get there" rewordings if the new refusals read well.
+- **Art:** replace the `ui_coach_ring` and `ui_coach_hand` placeholders, and give the hand a pose for drags.
+- **A real phone pass:** use the critic's owner checklist at the end of `final.md`.
 
 ## Questions for the owner
 
