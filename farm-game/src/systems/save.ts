@@ -287,10 +287,10 @@ function migrateV15(raw: Raw): Raw {
   };
 }
 
-/** Goal ids of the save-version-13 to 16 releases. */
+/** Goal ids of the save-version-13 to 16 releases (the last four were appended at v16 without a bump). */
 // prettier-ignore
 export const GOALS_V16 = [
-  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'job1', 'harvest', 'ship', 'fish', 'craft', 'place', 'preserve', 'order', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'jobs20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll', 'greenhouse20', 'truffles10', 'rare', 'gold50', 'book8', 'special1', 'statue3', 'cook', 'legend1', 'board1',
+  'till', 'plant', 'water', 'sleep', 'forage', 'buy', 'job1', 'harvest', 'ship', 'fish', 'craft', 'place', 'preserve', 'order', 'quality', 'talk', 'chicken', 'eggs', 'tree', 'friend', 'earn1k', 'upgrade', 'bag', 'earn5k', 'land', 'project1', 'decor10', 'jars', 'fish20', 'jobs20', 'orders10', 'heart5', 'event', 'craft10', 'mine10', 'smelt', 'toolbar', 'festival', 'book3', 'collect50', 'earn20k', 'project3', 'earn50k', 'earn100k', 'collect200', 'projectAll', 'greenhouse20', 'truffles10', 'rare', 'gold50', 'book8', 'special1', 'statue3', 'cook', 'legend1', 'board1', 'fest1', 'board4', 'statue6', 'legend4',
 ] as const;
 
 /**

@@ -678,10 +678,7 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
     ):
         add("ui", key, grid(names, rows, 16, 16))
     add("world", "obj_scarecrow", grid(names, SCARECROW, 16, 30))
-    add("world", "obj_landmark_statue", grid(names, _statue(1), 16))
-    for lv in range(2, 6):
-        add("world", f"obj_landmark_statue_{lv}", grid(names, _statue(lv), 16))
-    # depth/round3 renames the levels to _1.._6 (16 x 32 canvases, level 6 gilded): provide those keys too
+    # the statue's levels _1.._6 (16 x 32 canvases, level 6 gilded), as named by the projects data
     for lv in range(1, 7):
         add("world", f"obj_landmark_statue_{lv}", grid(names, _statue(lv), 16, 32))
     for key, rows in (
