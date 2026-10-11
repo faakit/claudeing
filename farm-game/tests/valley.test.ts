@@ -33,6 +33,8 @@ import {
   GREEN_SEEN,
   mapLook,
   paletteOf,
+  revealPending,
+  valleyStage,
   takeFirstGreenMoment,
   valleyHolds,
 } from '../src/systems/valley';
@@ -56,11 +58,29 @@ describe('the valley: how maps look', () => {
     const s = newState();
     expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@dry.tmj', palette: 'dry' });
     expect(paletteOf(s, 'farm')).toBe('dry');
-    expect(dryMaps(s)).toEqual(['farm']);
+    expect(dryMaps(s)).toEqual(['farm']); // Wendhead's dry stage is its stone bed, not the palette
     s.stats[FARM_GREEN] = 1;
     expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@waking.tmj' });
     expect(paletteOf(s, 'farm')).toBeNull();
     expect(dryMaps(s)).toEqual([]);
+  });
+
+  it("the farm's dry stage and the dry palette switch on the same stat", () => {
+    const s = newState();
+    for (const green of [0, 1, 0]) {
+      s.stats[FARM_GREEN] = green;
+      expect(valleyStage(s, 'farm').variant === 'dry').toBe(paletteOf(s, 'farm') === 'dry');
+      expect(paletteOf(s, 'farm') === 'dry').toBe(green === 0);
+    }
+  });
+
+  it('the dry tileset is held on the first-green morning until the farmer has stepped out', () => {
+    const s = newState();
+    expect(revealPending(s)).toBe(false);
+    s.stats[FARM_GREEN] = 1;
+    expect(revealPending(s)).toBe(true);
+    takeFirstGreenMoment(s);
+    expect(revealPending(s)).toBe(false);
   });
 
   it('maps with no rows look as they always have', () => {
@@ -97,13 +117,15 @@ describe('the valley: how maps look', () => {
 });
 
 describe('the dry palette', () => {
-  it('stays on the palette, never touches water, and has no autumn orange or gold', () => {
-    for (const table of Object.values(DRY_REMAP))
+  it('stays on the palette, never touches water, and the crowns never turn autumn orange or gold', () => {
+    for (const [cat, table] of Object.entries(DRY_REMAP))
       for (const [from, to] of Object.entries(table)) {
         expect(PALETTE[from], from).toBeDefined();
         expect(PALETTE[to], to).toBeDefined();
         expect(['water', 'sky', 'dusk blue', 'night navy']).not.toContain(from);
-        expect(['orange', 'gold', 'red']).not.toContain(to);
+        expect(['orange', 'red']).not.toContain(to);
+        // golden straw flecks the ground; crowns stay grey-green (fall is told by orange and gold crowns)
+        if (cat === 'foliage' || cat === 'evergreen') expect(['gold']).not.toContain(to);
       }
   });
 
@@ -270,6 +292,13 @@ describe("Rosa's letter", () => {
     expect(L.buttonY + TITLE_BUTTON_H).toBeLessThanOrEqual(340); // above the field at the bottom
   });
 
+  it("the first green's banner is two lines that fit its slot", () => {
+    const [title, line] = valley.farmGreen.banner.split('\n');
+    expect(title).toBe('FIRST GREEN');
+    expect(measureText(title!, 2)).toBeLessThanOrEqual(190);
+    expect(measureText(line!)).toBeLessThanOrEqual(190);
+  });
+
   it('wraps on words and keeps its line breaks', () => {
     expect(wrapText('aaa bbb\nccc', 1000)).toEqual(['aaa bbb', 'ccc']);
     expect(wrapText('aaa bbb', measureText('aaa'))).toEqual(['aaa', 'bbb']);
@@ -289,7 +318,9 @@ describe("Rosa's letter", () => {
   });
 
   it('the welcome strip and the new letters fit', () => {
-    expect(tutorial.welcome).toBe("You came! I'm Rosa. The farm's yours.");
+    // two rows by design: no orphaned "yours." on an SE or iPhone 13 (critic, M1 review 2)
+    expect(tutorial.welcome).toBe("You came! I'm Rosa.\nThe farm's yours.");
+    expect(wrapText(tutorial.welcome, 158)).toEqual(["You came! I'm Rosa.", "The farm's yours."]);
     // the strip wraps at 158 px (ui/CoachMarks.ts) into at most two rows, and is shorter than the old line
     expect(wrapText(tutorial.welcome, 158).length).toBeLessThanOrEqual(2);
     expect(measureText(tutorial.welcome)).toBeLessThan(

@@ -1,0 +1,20 @@
+{
+  "title": "The Old Spring's opening morning, Rosa at the site",
+  "about": "Spring 10, 08:00: the spring opened overnight (place.spring 3). The pool is full and the creek head runs; Rosa waits beside the site until the evening (\"I'd forgotten that sound.\"); the HUD reads \"The Old Spring is open!\". Interact at the site: her three lines.",
+  "version": 17,
+  "tags": ["wendhead", "valley", "spring"],
+  "valley": { "farmGreen": 1, "spring": 3 },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 5
+  },
+  "at": { "map": "wendhead", "tx": 5, "ty": 15, "facing": "right" },
+  "time": { "day": 10, "clock": "08:00" },
+  "letters": []
+}

@@ -92,7 +92,8 @@ export class ObjectsRenderer {
       if (shown?.getData('sprite') === l.sprite) continue;
       shown?.destroy();
       const y = (l.ty + 1) * TILE_SIZE;
-      const shape = l.kind === 'trophy' ? 'trophy' : l.level ? 'statue' : 'house';
+      const shape =
+        l.kind === 'site' ? 'site' : l.kind === 'trophy' ? 'trophy' : l.level ? 'statue' : 'house';
       const sprite = this.scene.add
         .image(
           l.tx * TILE_SIZE + TILE_SIZE / 2,

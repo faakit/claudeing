@@ -16,9 +16,12 @@ import {
   mapsData,
   placeables,
   valley,
+  projects,
   type MapStageDef,
+  type PlaceDef,
   type StageWhen,
   type ValleyWhen,
+  type WorkDayDef,
 } from '../data';
 import type { GameState, PlacedObject } from '../state/GameState';
 import { absoluteDay } from './time';
@@ -316,3 +319,264 @@ export const ROSA_LETTER_STAT = 'mail.rosa_letter';
 export function rosaLetterDue(state: GameState): boolean {
   return !state.stats[ROSA_LETTER_STAT] && absoluteDay(state) >= valley.letter.keepDay;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// The restoration pattern (docs/WORLD-PLAN.md 2): ask, gather, work days, opening. Stats only:
+//   place.<id>         0 untouched, 1 asked, 2 funded, 3 restored
+//   place.<id>.since   absolute day the current step began (a step with no progress for 3 days waits)
+//   place.<id>.opened  absolute day it opened
+//   site.<id>.work     work days done;  site.<id>.last  absolute day of the last one
+//   placesDone         restorations finished (each also counts in projectsDone)
+
+export const PLACE_WAIT_DAYS = 3;
+export const placeIds = (): string[] => Object.keys(valley.places);
+const def = (id: string): PlaceDef => valley.places[id] as PlaceDef;
+const st = (s: GameState, k: string): number => s.stats[k] ?? 0;
+export const stageOf = (s: GameState, id: string): number => st(s, placeStat(id));
+export const workDone = (s: GameState, id: string): number => st(s, `site.${id}.work`);
+const setStage = (s: GameState, id: string, stage: number): void => {
+  s.stats[placeStat(id)] = stage;
+  s.stats[`place.${id}.since`] = absoluteDay(s);
+};
+
+/** The morning's asks: every untouched place whose `ask` holds is asked for today. Returns their ids. */
+export function askPlaces(s: GameState): string[] {
+  const out: string[] = [];
+  for (const id of placeIds())
+    if (stageOf(s, id) === 0 && valleyHolds(s, def(id).ask)) {
+      setStage(s, id, 1);
+      out.push(id);
+    }
+  return out;
+}
+
+/** The fund is complete (projects.ts calls this when a `place` project finishes). */
+export function markFunded(s: GameState, id: string): void {
+  if (valley.places[id] && stageOf(s, id) < 2) setStage(s, id, 2);
+}
+
+export type WorkRefusal = 'stage' | 'today' | 'done' | 'energy';
+
+/** Can the farmer do a work day here now? Once a day, after the fund, with the energy for it. */
+export function canWork(s: GameState, id: string): WorkRefusal | null {
+  const p = def(id);
+  if (stageOf(s, id) !== 2) return 'stage';
+  if (workDone(s, id) >= p.workDays) return 'done';
+  if (st(s, `site.${id}.last`) === absoluteDay(s)) return 'today';
+  if (s.energy < p.energy) return 'energy';
+  return null;
+}
+
+/** One work day (nothing changes on a refusal). Returns the day done (1-based) and its taste, or the refusal. */
+export function workAt(
+  s: GameState,
+  id: string,
+): { ok: true; day: number; work: WorkDayDef } | { ok: false; reason: WorkRefusal } {
+  const no = canWork(s, id);
+  if (no) return { ok: false, reason: no };
+  const p = def(id);
+  s.energy -= p.energy;
+  const day = workDone(s, id) + 1;
+  s.stats[`site.${id}.work`] = day;
+  s.stats[`site.${id}.last`] = absoluteDay(s);
+  s.stats[`place.${id}.since`] = absoluteDay(s);
+  return { ok: true, day, work: p.work[day - 1] ?? p.work[p.work.length - 1]! };
+}
+
+/**
+ * The morning's openings: a place whose last work day was before today is restored (maps change overnight,
+ * the villager waits at the site). Counts once in `placesDone` and `projectsDone`. Returns their ids.
+ */
+export function openPlaces(s: GameState): string[] {
+  const out: string[] = [];
+  const today = absoluteDay(s);
+  for (const id of placeIds()) {
+    const p = def(id);
+    if (stageOf(s, id) !== 2 || workDone(s, id) < p.workDays) continue;
+    if (st(s, `site.${id}.last`) >= today) continue;
+    setStage(s, id, 3);
+    s.stats[`place.${id}.opened`] = today;
+    s.stats['placesDone'] = st(s, 'placesDone') + 1;
+    s.stats['projectsDone'] = st(s, 'projectsDone') + 1;
+    out.push(id);
+  }
+  return out;
+}
+
+/**
+ * The site sprite now: before the work, then one per work day; the last work day's sprite (the water following
+ * the first cut) is also the restored look.
+ */
+export function siteSprite(s: GameState, id: string): string {
+  const p = def(id);
+  const last = p.sprites.length - 1;
+  const i = stageOf(s, id) >= 3 ? last : Math.min(workDone(s, id), last);
+  return p.sprites[Math.max(0, i)]!;
+}
+
+/** Everything the fund still needs: gold, then goods (what the project sheet would take). */
+export function fundLeft(
+  s: GameState,
+  id: string,
+): { gold: number; items: { item: string; qty: number }[] } {
+  const key = def(id).project;
+  const proj = projects[key];
+  if (!proj) return { gold: 0, items: [] };
+  const gold = Math.max(0, proj.gold - st(s, `fund.${key}`));
+  const left = (proj.items ?? [])
+    .map((n) => ({ item: n.item, qty: Math.max(0, n.qty - st(s, `fund.${key}.${n.item}`)) }))
+    .filter((n) => n.qty > 0);
+  return { gold, items: left };
+}
+
+const countOf = (s: GameState, item: string): number =>
+  s.inventory.slots.reduce((n, x) => (x && x.item === item ? n + x.qty : n), 0);
+
+/** Do the purse and the bag hold everything the fund still needs? */
+export function canFundNow(s: GameState, id: string): boolean {
+  const left = fundLeft(s, id);
+  return s.money >= left.gold && left.items.every((n) => countOf(s, n.item) >= n.qty);
+}
+
+export type SiteAnswer =
+  | { kind: 'say'; text: string }
+  | { kind: 'fund'; project: string }
+  | { kind: 'work'; day: number; of: number; work: WorkDayDef }
+  | { kind: 'lines'; npc: string; lines: string[] }
+  | { kind: 'upgrade'; project: string };
+
+/** What Interact at a site does: one tap a day (a work day happens on the tap, with no sheet). */
+export function interactSite(s: GameState, id: string): SiteAnswer {
+  const p = def(id);
+  const stage = stageOf(s, id);
+  if (stage === 0) return { kind: 'say', text: p.sign };
+  if (stage === 1) return { kind: 'fund', project: p.project };
+  if (stage === 2) {
+    const r = workAt(s, id);
+    if (r.ok) return { kind: 'work', day: r.day, of: p.workDays, work: r.work };
+    if (r.reason === 'done')
+      return { kind: 'say', text: 'That will do. See what the morning brings.' };
+    if (r.reason === 'today') return { kind: 'say', text: 'Enough for today. Back tomorrow.' };
+    return { kind: 'say', text: `Too tired. A work day takes ${p.energy} energy.` };
+  }
+  if (st(s, `place.${id}.opened`) === absoluteDay(s))
+    return { kind: 'lines', npc: p.npc, lines: p.opening.lines };
+  const up = Object.entries(projects).find(([, r]) => r.site === id);
+  if (up && !st(s, `project.${up[0]}`)) {
+    const after = up[1].after;
+    if (after && !st(s, `project.${after}`))
+      return {
+        kind: 'say',
+        text: `${p.phrase} ${up[1].name}: after the ${projects[after]?.name}.`,
+      };
+    return { kind: 'upgrade', project: up[0] };
+  }
+  return { kind: 'say', text: p.phrase };
+}
+
+/** The valley's line for the HUD (WORLD-PLAN 2, "On the HUD"). */
+export interface ValleyStep {
+  place: string;
+  text: string;
+  /** Work days: done so far and the total, for the bar. */
+  count?: [number, number];
+}
+
+/**
+ * A valley step that can be done today and has not waited 3 days, in place order: the ask (its day), ready to
+ * fund (purse and bag hold it), a work day not done today, the opening morning. Null: the goal chain shows.
+ */
+export function valleyStep(s: GameState): ValleyStep | null {
+  const today = absoluteDay(s);
+  for (const id of placeIds()) {
+    const p = def(id);
+    const stage = stageOf(s, id);
+    const since = st(s, `place.${id}.since`);
+    if (stage === 3) {
+      if (st(s, `place.${id}.opened`) === today)
+        return { place: id, text: `The ${p.name} is open!` };
+      continue;
+    }
+    if (stage === 0 || today - since >= PLACE_WAIT_DAYS) continue;
+    if (stage === 1 && since === today) return { place: id, text: p.asked };
+    if (stage === 1 && canFundNow(s, id)) return { place: id, text: `${p.name}: ready to fund` };
+    const done = workDone(s, id);
+    if (stage === 2 && done < p.workDays && st(s, `site.${id}.last`) !== today)
+      return {
+        place: id,
+        text: `Work at the ${p.name} (${done + 1} of ${p.workDays})`,
+        count: [done, p.workDays],
+      };
+  }
+  return null;
+}
+
+/** THE VALLEY in Menu > Goal: one row per asked place and its next step. */
+export function valleyRows(s: GameState): { place: string; name: string; next: string }[] {
+  const today = absoluteDay(s);
+  const out: { place: string; name: string; next: string }[] = [];
+  for (const id of placeIds()) {
+    const p = def(id);
+    const stage = stageOf(s, id);
+    if (stage === 0) continue;
+    let next: string;
+    if (stage === 1) {
+      const left = fundLeft(s, id);
+      const parts = [
+        ...(left.gold > 0 ? [`${left.gold}g`] : []),
+        ...left.items.map((n) => `${n.qty} ${(items[n.item]?.name ?? n.item).toLowerCase()}`),
+      ];
+      next = `fund ${parts.join(', ')}`;
+    } else if (stage === 2) {
+      const done = workDone(s, id);
+      next =
+        done >= p.workDays
+          ? 'opens tomorrow morning'
+          : st(s, `site.${id}.last`) === today
+            ? `worked today (${done} of ${p.workDays})`
+            : `work day ${done + 1} of ${p.workDays}`;
+    } else next = `open. ${p.phrase}`;
+    out.push({ place: id, name: p.name, next });
+  }
+  return out;
+}
+
+/** Where the goal arrow points for a place, by map: its site, and the doors toward it on other maps. */
+export function placeWhere(id: string): Record<string, [number, number]> {
+  const p = def(id);
+  return { ...(p.where ?? {}), ...(p.map && p.site ? { [p.map]: p.site } : {}) };
+}
+
+/** Until the evening of the opening morning, the place's villager waits beside its site. */
+export const SITE_VISIT_UNTIL = 18 * 60;
+export function siteVisit(
+  s: Pick<GameState, 'stats' | 'time'>,
+  npc: string,
+  minutes: number,
+): { map: string; tx: number; ty: number } | null {
+  if (minutes >= SITE_VISIT_UNTIL) return null;
+  for (const id of placeIds()) {
+    const p = def(id);
+    if (p.npc !== npc || !p.map || !p.site || stageOf(s as GameState, id) < 3) continue;
+    if (st(s as GameState, `place.${id}.opened`) !== absoluteDay(s as GameState)) continue;
+    return { map: p.map, tx: p.site[0] + 1, ty: p.site[1] }; // beside it, the farmer on the other side
+  }
+  return null;
+}
+
+/** On a place's opening day, its villager's first opening line (the rest are said at the site). */
+export function openingLine(s: GameState, npc: string): string | null {
+  for (const id of placeIds()) {
+    const p = def(id);
+    if (p.npc === npc && stageOf(s, id) >= 3 && st(s, `place.${id}.opened`) === absoluteDay(s))
+      return p.opening.lines[0] ?? null;
+  }
+  return null;
+}
+
+/**
+ * The first green's morning, before the farmer has stepped out: the dry tileset is held so the straw can dissolve
+ * into green around them (critic, M1 review 2; released at the next sleep).
+ */
+export const revealPending = (s: StatsOnly): boolean =>
+  (s.stats[FARM_GREEN] ?? 0) >= 1 && !s.stats[GREEN_SEEN];

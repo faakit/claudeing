@@ -1,7 +1,14 @@
 import Phaser from 'phaser';
 import { MapArt, tilesetFor } from '../art/mapLayers';
-import { ensureDryTileset } from '../art/dryTiles';
-import { paletteOf, takeFirstGreenMoment } from '../systems/valley';
+import { DRY_SAFETY_NET, dryTilesetKey, ensureDryTileset } from '../art/dryTiles';
+import { GreenReveal } from '../fx/GreenReveal';
+import {
+  interactSite,
+  paletteOf,
+  placeWhere,
+  takeFirstGreenMoment,
+  valleyStep,
+} from '../systems/valley';
 import { hasArt } from '../art/registry';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
@@ -210,6 +217,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private farmDirty = false;
   /** Built this frame (the first update is skipped). */
   private fresh = false;
+  /** The first green's straw-to-green dissolve while it plays (fx/GreenReveal.ts). */
+  reveal: GreenReveal | null = null;
   private lastTile = { tx: -1, ty: -1 };
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
@@ -274,7 +283,11 @@ export abstract class WorldScene extends Phaser.Scene {
     const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
     // The dry palette's tileset is made at the title or the sleep fade; making it here is only a safety net.
     const palette = paletteOf(state, this.mapId);
-    if (outdoor && palette === 'dry') ensureDryTileset(this, state.time.season);
+    if (outdoor && palette === 'dry' && !this.textures.exists(dryTilesetKey(state.time.season))) {
+      // a slow frame here: the title or the sleep fade should have made it (the e2e fails on this warning)
+      if ((window as unknown as { __farm?: unknown }).__farm) console.warn(DRY_SAFETY_NET);
+      ensureDryTileset(this, state.time.season);
+    }
     const look = tilesetFor(this.textures, state.time.season, outdoor, palette);
     const tileset = map.addTilesetImage('placeholder', look.key, TILE_SIZE, TILE_SIZE, 0, 0);
     if (!tileset) throw new Error('Tileset "placeholder" missing from map');
@@ -321,11 +334,25 @@ export abstract class WorldScene extends Phaser.Scene {
       this.farm = new FarmRenderer(this);
       this.farm.sync(state, false);
     }
-    // The first green (systems/valley.ts): the first time the farmer stands on the green farm, once the wipe opens.
-    if (this.mapId === 'farm' && takeFirstGreenMoment(state))
-      this.time.delayedCall(WIPE_OPEN_MS, () =>
-        gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner }),
-      );
+    // The first green (systems/valley.ts): the first time the farmer stands on the green farm, the straw gives way
+    // to green outward from them (the dry tileset is held for this one morning), with its banner and jingle.
+    if (this.mapId === 'farm' && takeFirstGreenMoment(state)) {
+      const dry = dryTilesetKey(state.time.season);
+      if (this.textures.exists(dry)) {
+        this.reveal = new GreenReveal(
+          this,
+          activeMapKey(this.mapId),
+          dry,
+          { x: state.player.x, y: state.player.y - 8 },
+          state.settings.reduceMotion,
+        );
+        runtime.valleyReveal = !this.reveal.done;
+      }
+      this.time.delayedCall(WIPE_OPEN_MS, () => {
+        this.reveal?.start();
+        gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner });
+      });
+    }
 
     this.npcs = new NpcRenderer(this, this.mapId);
     this.npcs.sync(state, playerTile(state.player));
@@ -417,10 +444,20 @@ export abstract class WorldScene extends Phaser.Scene {
       this.ambient = null;
       this.seeThrough?.destroy();
       this.seeThrough = null;
+      this.reveal?.destroy();
+      this.reveal = null;
+      runtime.valleyReveal = false;
     });
   }
 
   update(time: number, delta: number): void {
+    if (this.reveal) {
+      this.reveal.update(delta);
+      if (this.reveal.done) {
+        this.reveal = null;
+        runtime.valleyReveal = false;
+      }
+    }
     if (this.farmDirty && this.time.now >= this.impactAt) {
       this.farmDirty = false;
       this.farm?.sync(getState(), true);
@@ -559,7 +596,11 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!arrow) return;
     if (inputHub.direction !== null || inputHub.actionHeld) this.idleMs = 0;
     else this.idleMs += delta;
-    const where = currentGoal(getState())?.where?.[this.mapId];
+    // a valley step on the HUD points at its site (or the door toward it), else the goal's own spot
+    const step = valleyStep(getState());
+    const where = step
+      ? placeWhere(step.place)[this.mapId]
+      : currentGoal(getState())?.where?.[this.mapId];
     // While the guided start points at something, its own marks do this job.
     // While the guided days run, free play shows the errand's arrow after a breath, not after 14 s.
     const wait =
@@ -621,9 +662,12 @@ export abstract class WorldScene extends Phaser.Scene {
       }));
     if (mail.mailbox.map === this.mapId)
       objects.push({ type: 'mailbox', tx: mail.mailbox.tx, ty: mail.mailbox.ty, w: 1, h: 1 });
+    for (const pl of Object.values(valley.places))
+      if (pl.map === this.mapId && pl.site)
+        objects.push({ type: 'site', tx: pl.site[0], ty: pl.site[1], w: 1, h: 1 });
     const npcs: { id: string; tx: number; ty: number }[] = [];
     for (const id of Object.keys(npcData)) {
-      const at = npcLocation(id, state.time.minutes);
+      const at = npcLocation(id, state.time.minutes, state);
       if (at && at.map === this.mapId) npcs.push({ id, tx: at.tx, ty: at.ty });
     }
     const screen = (tx: number, ty: number) => ({
@@ -1047,6 +1091,43 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * A broken place's site (systems/valley.ts): one tap a day. Before it is asked for it reads its sign; asked, it
+   * opens the fund; funded, the tap is the work day itself (a ten-second taste of the place's verb); on the opening
+   * morning the villager's lines; then the site's upgrade.
+   */
+  private useSite(id: string, tile: TileCoord): void {
+    const state = getState();
+    const res = interactSite(state, id);
+    if (res.kind === 'say') return void toast(res.text, 'info');
+    if (res.kind === 'fund' || res.kind === 'upgrade')
+      return void gameEvents.emit('openProject', { id: res.project });
+    if (res.kind === 'lines') {
+      const name = npcData[res.npc]?.name ?? res.npc;
+      res.lines.forEach((l) => toast(`${name}: ${l}`, 'good'));
+      return;
+    }
+    // The work day: the taste plays where the farmer stands, the site's sprite changes on the spot.
+    const at = { ...state.player };
+    const sx = tile.tx * TILE_SIZE + TILE_SIZE / 2;
+    const sy = tile.ty * TILE_SIZE + TILE_SIZE / 2;
+    this.fx.swing(
+      at.x,
+      at.y,
+      res.work.taste === 'channel' ? 'item_spade' : 'item_pickaxe',
+      at.facing,
+    );
+    this.time.delayedCall(140, () => {
+      if (!this.sys.isActive()) return;
+      if (res.work.taste === 'channel') this.fx.splash(sx, sy);
+      else this.fx.dust(sx, sy);
+      audio.play(res.work.taste === 'channel' ? 'water' : 'swing');
+      haptic('medium');
+    });
+    gameEvents.emit('energyChanged', undefined);
+    toast(`${res.work.text} (${res.day} of ${res.of})`, 'good');
+  }
+
   private onInteract(tile?: TileCoord): void {
     if (this.transitioning || runtime.blocked || this.inputLocked) return;
     const hit = tile ? { tile, type: this.interactableAt(tile) } : this.interactTile();
@@ -1062,6 +1143,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.npcs?.faceToward(id, p.x, p.y);
       return void gameEvents.emit('talkTo', { id });
     }
+    if (hit.type.startsWith('landmark:site.'))
+      return void this.useSite(hit.type.slice(14), hit.tile);
     if (hit.type.startsWith('landmark:')) {
       const id = hit.type.slice(9);
       const l = landmarksOn(getState(), this.mapId).find((x) => x.id === id);

@@ -1,4 +1,18 @@
 {
+  "place_spring": {
+    "name": "Old Spring",
+    "blurb": "Clear the rockfall from the spring, so the water finds Ilse's creek.",
+    "gold": 300,
+    "items": [
+      {
+        "item": "stone",
+        "qty": 20
+      }
+    ],
+    "perks": {},
+    "reward": "Three work days, then the creek runs.",
+    "place": "spring"
+  },
   "canopy": {
     "name": "Board Canopy",
     "blurb": "A roof over the town board, so more folks post their requests.",
@@ -115,8 +129,8 @@
     "reward": "32 tiles where any crop grows in any season."
   },
   "bathhouse": {
-    "name": "Hot Spring",
-    "blurb": "A warm bath by the river. You wake up with more pep.",
+    "name": "Warm Pool",
+    "blurb": "A warm pool at the Old Spring. You wake up with more pep.",
     "after": "library",
     "gold": 15000,
     "items": [
@@ -134,12 +148,13 @@
     },
     "reward": "+30 max energy every day.",
     "landmark": {
-      "map": "town",
-      "tx": 19,
-      "ty": 13,
+      "map": "wendhead",
+      "tx": 3,
+      "ty": 17,
       "sprite": "obj_landmark_bathhouse",
       "color": "#d98a8a"
-    }
+    },
+    "site": "spring"
   },
   "fairhall": {
     "name": "Fair Hall",

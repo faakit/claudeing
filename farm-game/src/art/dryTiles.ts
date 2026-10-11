@@ -1,9 +1,13 @@
 import type Phaser from 'phaser';
 import { TILESET_KEY } from '../config';
 import type { GameState } from '../state/GameState';
-import { dryMaps } from '../systems/valley';
+import { dryMaps, revealPending } from '../systems/valley';
 import { remapDry, slotCategories, type DryCategory } from './dryPalette';
 import { dryTilesetKey, seasonTilesetKey } from './mapLayers';
+
+/** Logged (debug builds) when a world scene had to make the dry tileset itself: the e2e suites fail on it. */
+export const DRY_SAFETY_NET =
+  'dry tileset made by the world scene (safety net): it belongs at the title or the sleep fade';
 
 /** Cache key of the tile index (public/assets/tilesets/tiles.json), loaded with the tileset. */
 export const TILE_INDEX_KEY = 'tiles_index';
@@ -52,7 +56,8 @@ export function ensureDryTileset(scene: Phaser.Scene, season: string): string | 
  * at a door, and only while no world scene is drawing with a tileset it would release.
  */
 export function syncDryTiles(scene: Phaser.Scene, state: GameState): void {
-  const need = dryMaps(state).length > 0 ? dryTilesetKey(state.time.season) : null;
+  const need =
+    dryMaps(state).length > 0 || revealPending(state) ? dryTilesetKey(state.time.season) : null;
   for (const s of SEASONS) {
     const key = dryTilesetKey(s);
     if (key !== need && scene.textures.exists(key)) scene.textures.remove(key);

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { mapLook } from '../systems/valley';
+import { paletteOf } from '../systems/valley';
 import {
   MomentClock,
   PanelTracker,
@@ -48,7 +48,8 @@ function describe(): Scene {
     festival: !!fest && !hasEntered(s, fest.id),
     panel: panels.current(performance.now()),
     year: s.time.year,
-    dry: mapLook(s, s.player.map).palette === 'dry',
+    // the first green's dissolve keeps the dry bed; the birdsong swells back in as it ends (the bed glides)
+    dry: paletteOf(s, s.player.map) === 'dry' || runtime.valleyReveal,
   };
 }
 

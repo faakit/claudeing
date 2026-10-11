@@ -167,7 +167,7 @@
         "Fishing is mostly waiting.",
         "Nice lake, huh?",
         {
-          "text": "The river ran right through town. Now it's mud and a trickle.",
+          "text": "The Wend came down from the gorge, once. Town's water is all that's left.",
           "when": {
             "place": "weir",
             "max": 2
@@ -179,7 +179,7 @@
         "Bait helps. A lot.",
         "The big ones bite in the rain.",
         {
-          "text": "My dad built the Heron. She's sat on the mud for seven years.",
+          "text": "My dad built the Heron. She's sat high and dry for seven years.",
           "when": {
             "place": "weir",
             "max": 2
@@ -198,7 +198,7 @@
         "You are getting good at this!",
         "Best catches come at dusk, friend.",
         {
-          "text": "If the water ever comes back, you're first aboard the Heron.",
+          "text": "If the river ever runs full again, you're first aboard the Heron.",
           "when": {
             "place": "weir",
             "max": 2

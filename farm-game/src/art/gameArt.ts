@@ -343,6 +343,12 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(4, 3, 4, 1, '#8fd07a');
     r(10, 4, 1, 1, c);
     r(5, 5, 1, 1, c);
+  } else if (it.type === 'key' && id === 'spade') {
+    for (let i = 0; i < 9; i++) r(9 - (i >> 2), 2 + i, 2, 1, '#9a6a3a'); // shaft
+    r(6, 1, 6, 2, '#9a6a3a'); // T grip
+    r(4, 10, 7, 5, c); // blade
+    r(4, 10, 7, 1, lt);
+    r(5, 14, 5, 1, dk);
   } else if (it.type === 'key' && id === 'ilse_journal') {
     r(3, 3, 10, 11, c); // cloth-bound journal, a ribbon down the page edge
     r(3, 3, 10, 1, lt);

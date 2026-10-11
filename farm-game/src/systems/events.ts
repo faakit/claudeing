@@ -24,6 +24,8 @@ export interface GameEvents {
   goalChanged: undefined;
   goalCompleted: { text: string; reward: number };
   openPanel: { type: PanelType };
+  /** Open one project's page (a place's fund or a site upgrade, from its site). */
+  openProject: { id: string };
   daySummary: DaySummary;
   levelUp: { skill: string; level: number };
   /** Objects were placed/removed/changed on a map: renderers should resync. */

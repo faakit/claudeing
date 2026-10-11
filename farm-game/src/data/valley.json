@@ -11,27 +11,64 @@
     "min": 5,
     "minDay": 4,
     "note": "The farm looks greener this morning.",
-    "banner": "FIRST GREEN"
+    "banner": "FIRST GREEN\nThe farm remembers."
   },
   "places": {
     "spring": {
-      "name": "Old Spring"
-    },
-    "forge": {
-      "name": "Cold Forge"
-    },
-    "weir": {
-      "name": "Weir"
-    },
-    "seedhouse": {
-      "name": "Seed House"
-    },
-    "orchard": {
-      "name": "Bucket Orchard"
-    },
-    "market": {
-      "name": "Market Field"
+      "name": "Old Spring",
+      "map": "wendhead",
+      "site": [6, 15],
+      "where": {
+        "farm": [29, 3]
+      },
+      "npc": "rosa",
+      "ask": {
+        "stat": "valley.farmGreen",
+        "min": 1
+      },
+      "project": "place_spring",
+      "workDays": 3,
+      "energy": 20,
+      "sign": "The Old Spring. Choked with stones.",
+      "asked": "Rosa asked: the Old Spring",
+      "work": [
+        {
+          "taste": "pickaxe",
+          "text": "You lever stones off the spring's mouth. Water glints under them."
+        },
+        {
+          "taste": "pickaxe",
+          "text": "The last big stone rolls clear. The pool fills, slowly."
+        },
+        {
+          "taste": "channel",
+          "text": "Rosa hands you Ilse's spade. One cut, and the water follows it."
+        }
+      ],
+      "sprites": [
+        "obj_site_spring_0",
+        "obj_site_spring_1",
+        "obj_site_spring_2",
+        "obj_site_spring_3"
+      ],
+      "color": "#8a8694",
+      "opening": {
+        "note": "Water in the old creek bed this morning!",
+        "lines": [
+          "I'd forgotten that sound.",
+          "Ilse dug that first channel the spring I was born.",
+          "Go on. The farm's been waiting for it."
+        ]
+      },
+      "phrase": "The creek runs."
     }
+  },
+  "planned": {
+    "forge": "Cold Forge",
+    "weir": "Weir",
+    "seedhouse": "Seed House",
+    "orchard": "Bucket Orchard",
+    "market": "Market Field"
   },
   "maps": {
     "farm": {
@@ -60,6 +97,26 @@
         [26, 7, 2, 25]
       ],
       "deltaText": "The old creek bed. Best left clear."
+    },
+    "wendhead": {
+      "variants": [
+        {
+          "variant": "dry",
+          "when": {
+            "place": "spring",
+            "max": 2
+          }
+        },
+        {
+          "variant": "spring"
+        }
+      ],
+      "delta": [
+        [7, 16, 5, 3],
+        [10, 19, 2, 3],
+        [10, 23, 2, 5]
+      ],
+      "deltaText": "The spring's old bed. Best left clear."
     }
   }
 }

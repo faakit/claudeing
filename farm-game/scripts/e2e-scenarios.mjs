@@ -4,7 +4,7 @@
 //   SMOKE=1      only the smoke block (npm run verify:fast): one profile, a few core flows, a few seconds
 //   default      smoke + every scenario starts + the mechanics and ambient blocks moved here from e2e.mjs
 //   E2E_SCENARIOS_PORT (default E2E_PORT + 30), PROFILE (default i13), SHOTS=<dir> to keep a screenshot per scenario
-import { checker, launch, openScenario, serve } from './lib/farm.mjs';
+import { checker, launch, liveTargets, openScenario, serve } from './lib/farm.mjs';
 
 const PORT = Number(process.env.E2E_SCENARIOS_PORT ?? Number(process.env.E2E_PORT ?? 4800) + 30);
 const SMOKE = process.env.SMOKE === '1';
@@ -518,24 +518,52 @@ async function valley() {
   s = await farm.state();
   const letter = s.mail.list.find((l) => l.title === 'First green');
   check(
-    'first green: day 6 wakes green, the letter brings the tin, no dry tileset stays resident',
+    'first green: day 6 wakes green, the letter brings the tin, the dry tileset held for the step-out',
     s.stats['valley.farmGreen'] === 1 &&
       letter?.gift?.item === 'ilse_tin' &&
       !letter.read &&
-      (await dryResident(farm)).length === 0,
+      (await dryResident(farm)).length === 1,
     JSON.stringify({ letter, dry: await dryResident(farm) }),
   );
 
   // The morning: step out onto the green farm; the moment plays once.
   await farm.load('valley-farm-green');
-  check('valley-farm-green: no dry tileset is loaded', (await dryResident(farm)).length === 0);
+  check(
+    'valley-farm-green: the dry tileset is held this one morning, for the step-out',
+    (await dryResident(farm)).length === 1,
+  );
   const moment = await farm.event('valleyMoment', () =>
     farm.eval(() => window.__farm.dev.goto('farm', 12, 14, 'down')),
   );
   check(
     'valley-farm-green: stepping out plays the first-green moment on the normal tileset',
-    moment?.text === 'FIRST GREEN' && (await groundKey(farm)) === 'tiles_placeholder',
+    moment?.text?.startsWith('FIRST GREEN') && (await groundKey(farm)) === 'tiles_placeholder',
     JSON.stringify(moment),
+  );
+
+  // The reveal (critic, M1 review 2): the straw dissolves into green around the farmer, then goes.
+  await farm.load('valley-farm-green-reveal');
+  const r0 = await farm.eval(() => ({
+    live: window.__farm.game.scene.getScene('Farm').reveal?.live ?? 0,
+  }));
+  check(
+    'valley-farm-green-reveal: the farm builds green with the straw drawn over it',
+    r0.live > 0 && (await groundKey(farm)) === 'tiles_placeholder',
+    JSON.stringify(r0),
+  );
+  await farm.strip('first-green-reveal', 8, 10, process.env.SHOTS ?? 'agents/out/shots');
+  await farm.until((_s, w) => !w.runtime.valleyReveal, null, 'the reveal to end', 5000);
+  check(
+    'valley-farm-green-reveal: the dissolve ends, its overlay goes, the dry tiles wait for the night',
+    (await farm.eval(() => window.__farm.game.scene.getScene('Farm').reveal)) === null &&
+      (await dryResident(farm)).length === 1,
+  );
+  await farm.during('sceneReady', [], () =>
+    farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
+  );
+  check(
+    'valley-farm-green-reveal: the next morning no dry tileset is resident',
+    (await dryResident(farm)).length === 0,
   );
   // Rosa's letter: take the gift, both key items arrive
   await farm.mutate((st) => {
@@ -573,8 +601,104 @@ async function valley() {
   await farm.close();
 }
 
+/** The HUD goal line's text (a valley step, or the goal chain). */
+const hudLine = (farm) =>
+  farm.eval(() => {
+    const hud = window.__farm.game.scene.getScene('UI').hud;
+    return hud.goalLabel.main?.text ?? hud.goalLabel.text ?? '';
+  });
+/** The sprite key a site shows now (the landmark path). */
+const siteKey = (farm, id) =>
+  farm.eval((key) => {
+    const w = window.__farm.game.scene.getScenes(true).find((x) => 'coachWorld' in x);
+    return w?.things?.landmarks?.get(key)?.getData('sprite') ?? null;
+  }, `site.${id}`);
+/** Tap a button in the open sheet by its label. */
+async function tapSheetButton(farm, re) {
+  const t = (await liveTargets(farm.page)).find((x) => re.test(x.text));
+  if (!t) return false;
+  await farm.thumb.tap(t.cx, t.cy, 70);
+  return true;
+}
+
+// The Old Spring (M3): ask, fund in one tap, three work days (one tap each), the opening morning, the creek runs.
+async function spring() {
+  const farm = await openScenario(browser, url, 'spring-site-ask', { profile: PROFILE });
+  check(
+    "spring-site-ask: the HUD line is the ask, and Ilse's gate is open",
+    (await hudLine(farm)) === 'Rosa asked: the Old Spring',
+    await hudLine(farm),
+  );
+  const sprites = [await siteKey(farm, 'spring')];
+  await farm.press('KeyE');
+  await farm.panel('projects');
+  const tapped = await farm.during('panelClosed', [], () => tapSheetButton(farm, /^Fund it$/));
+  let s = await farm.state();
+  check(
+    'spring-site-ask: Interact opens the fund, and Fund it takes 300g and 20 stone in one tap',
+    tapped !== false &&
+      s.stats['place.spring'] === 2 &&
+      s.stats['fund.place_spring'] === 300 &&
+      !s.inventory.slots.some((x) => x?.item === 'stone'),
+    JSON.stringify({ money: s.money, stage: s.stats['place.spring'] }),
+  );
+  check(
+    "the fund never shows on the town board's list",
+    await farm.eval(() => !window.__farm.getState().stats['projectNag.place_spring']),
+  );
+  for (let day = 1; day <= 3; day++) {
+    await farm.frames(10); // a fresh scene ignores input until a frame with nothing held
+    const e0 = (await farm.state()).energy;
+    await farm.press('KeyE');
+    await farm.frames(5);
+    s = await farm.state();
+    sprites.push(await siteKey(farm, 'spring'));
+    if (process.env.SHOTS) await farm.shot(`spring-work-day-${day}`, process.env.SHOTS);
+    check(
+      `work day ${day}: one tap, 20 energy, and the site changes`,
+      s.stats['site.spring.work'] === day &&
+        e0 - s.energy === 20 &&
+        sprites[day] !== sprites[day - 1],
+      JSON.stringify({ work: s.stats['site.spring.work'], energy: [e0, s.energy], sprites }),
+    );
+    if (day === 1) {
+      await farm.press('KeyE');
+      await farm.frames(3);
+      check(
+        'a second tap the same day changes nothing',
+        (await farm.state()).stats['site.spring.work'] === 1,
+      );
+    }
+    await farm.during('sceneReady', [], () =>
+      farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
+    );
+  }
+  s = await farm.state();
+  check(
+    'the morning after the third work day: the spring is open, counted once, Rosa waits at the site',
+    s.stats['place.spring'] === 3 &&
+      s.stats['placesDone'] === 1 &&
+      (await hudLine(farm)) === 'The Old Spring is open!' &&
+      (await farm.eval(() => window.__farm.game.scene.getScene('Wendhead').npcs.at(7, 15))) ===
+        'rosa',
+    JSON.stringify({ stage: s.stats['place.spring'], hud: await hudLine(farm) }),
+  );
+  if (process.env.SHOTS) await farm.shot('spring-opened', process.env.SHOTS);
+  await farm.eval(() => window.__farm.dev.goto('farm', 25, 12, 'right'));
+  const creek = await farmTile(farm, 26, 12);
+  check(
+    'farm-creek-running: the farm wakes to a running creek (water in the bed)',
+    creek.ground === 5,
+    JSON.stringify(creek),
+  );
+  check('spring: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 try {
-  const blocks = SMOKE ? [smoke] : [smoke, everyScenario, mechanics, stages, ambient, valley];
+  const blocks = SMOKE
+    ? [smoke]
+    : [smoke, everyScenario, mechanics, stages, ambient, valley, spring];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

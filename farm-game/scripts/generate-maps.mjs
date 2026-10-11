@@ -363,7 +363,7 @@ function farm(v) {
         3,
         'wendhead',
         1,
-        13,
+        25,
         'right',
         locked('place.spring', 1, "Ilse's old gate. Locked."),
       ),
@@ -374,14 +374,47 @@ function farm(v) {
 }
 for (const v of VARIANTS('farm')) farm(v);
 
-// ---- Wendhead (a placeholder until M3): a fenced meadow behind Ilse's gate, the way back at the south-west ----
-{
+// ---- Wendhead 24x28: the valley's head, above Ilse's gate (the way back at the south-west corner) ----
+// West half: the Old Spring under its rockfall (the site, 6,8), its pool and the head of the farm creek. East half:
+// the dry gorge and the broken weir (M6). Stages: dry (the pool and the creek bed stone), spring (both run).
+function wendhead(v) {
   nextId = 1;
-  const m = makeMap(12, 16, T.grass);
+  const m = makeMap(24, 28, T.grass);
+  const { h, rect } = m;
   border(m, T.fence);
-  m.rect(0, 13, 1, 1, T.path);
-  write('wendhead', m, [door('to_farm', 0, 13, 'farm', 28, 3, 'left')]);
+  rect(5, 14, 1, 1, T.bush); // ferns over the spring's mouth
+  rect(7, 14, 1, 1, T.bush);
+  const wet = v === 'spring' ? T.water : T.stone;
+  rect(7, 16, 5, 3, wet); // the pool
+  rect(10, 19, 2, h - 19, wet); // the creek head, out of the map toward the farm
+  rect(10, 22, 2, 1, T.path); // a plank bridge (the same in every stage)
+  rect(0, 25, 1, 1, T.path); // the gate from the farm
+  rect(1, 25, 5, 1, T.path);
+  rect(5, 15, 1, 10, T.path); // up to the spring: the site is east of its top
+  rect(6, 22, 4, 1, T.path); // east over the bridge, toward the gorge (the weir, M6)
+  rect(12, 22, 4, 1, T.path);
+  for (const [x, y] of [
+    [2, 5],
+    [12, 4],
+    [3, 12],
+    [13, 15],
+    [2, 19],
+    [8, 9],
+    [14, 25],
+    [19, 6],
+    [21, 17],
+    [17, 11],
+  ])
+    rect(x, y, 1, 1, T.bush);
+  scatter(m, T.flower, 18, 9, (x, y) => !inDelta('wendhead', x, y));
+  write(
+    'wendhead',
+    m,
+    [door('to_farm', 0, 25, 'farm', 28, 3, 'left'), ...deltaObjects('wendhead')],
+    v,
+  );
 }
+for (const v of VARIANTS('wendhead')) wendhead(v);
 
 // ---- House 10x9 ----
 {
@@ -460,7 +493,7 @@ for (const v of VARIANTS('farm')) farm(v);
     [13, 4],
     [6, 9],
     [15, 10],
-    [3, 13],
+    [3, 12],
     [14, 18],
     [16, 24],
     [12, 26],

@@ -1,8 +1,9 @@
-import { game, items, projects } from '../data';
+import { game, items, projects, valley } from '../data';
 import type { ProjectDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
-import { addStat } from './goals';
+import { addStat, checkGoals } from './goals';
+import { markFunded, siteSprite } from './valley';
 import { countItem, removeItem } from './inventory';
 
 /**
@@ -45,6 +46,8 @@ export const isProjectDone = (state: GameState, id: string): boolean =>
 export function isProjectOpen(state: GameState, id: string): boolean {
   const p = projects[id];
   if (!p || (isProjectDone(state, id) && !p.repeat)) return false;
+  // a site upgrade (the warm pool) opens once its place is restored
+  if (p.site !== undefined && (state.stats[`place.${p.site}`] ?? 0) < 3) return false;
   return p.after === undefined || isProjectDone(state, p.after);
 }
 
@@ -76,15 +79,21 @@ export function projectProgress(state: GameState, id: string): number {
   return (goldGiven(state, id) / priceOf(state, id) + items) / parts;
 }
 
+/** A place's fund or a site upgrade: never on the board (it is opened from the site, systems/valley.ts). */
+export const offBoard = (id: string): boolean => !!projects[id]?.place || !!projects[id]?.site;
+
 /** Projects the player can see on the board: finished ones and open ones, in data order. */
 export const visibleProjects = (state: GameState): string[] =>
-  projectIds().filter((id) => isProjectDone(state, id) || isProjectOpen(state, id));
+  projectIds().filter(
+    (id) => !offBoard(id) && (isProjectDone(state, id) || isProjectOpen(state, id)),
+  );
 
 /** The project that a locked one waits for, so the board can say "after the Library". */
 export const nextLocked = (state: GameState): { id: string; after: string } | null => {
   for (const id of projectIds()) {
     const after = projects[id]?.after;
-    if (after && !isProjectDone(state, id) && !isProjectOpen(state, id)) return { id, after };
+    if (after && !offBoard(id) && !isProjectDone(state, id) && !isProjectOpen(state, id))
+      return { id, after };
   }
   return null;
 };
@@ -111,11 +120,16 @@ function tryFinish(state: GameState, id: string): boolean {
     for (const n of p.items ?? []) delete state.stats[itemKey(id, n.item)];
     addStat(state, 'projectLevels');
     toast(`${p.name}: level ${level}! ${p.reward}`, 'good');
-  } else toast(`${p.name} is finished! ${p.reward}`, 'good');
+  } else if (p.place) toast(`${p.name}: funded! ${p.reward}`, 'good');
+  else toast(`${p.name} is finished! ${p.reward}`, 'good');
   // A growing landmark (the statue) is redrawn at every level.
   if (p.landmark && (first || p.landmark.levels))
     gameEvents.emit('placedChanged', { map: p.landmark.map });
-  if (!p.repeat) addStat(state, 'projectsDone');
+  // A place's fund is not a project: the place counts once, at its opening (systems/valley.ts openPlaces).
+  if (p.place) {
+    markFunded(state, p.place);
+    checkGoals(state);
+  } else if (!p.repeat) addStat(state, 'projectsDone');
   return true;
 }
 
@@ -180,7 +194,7 @@ export interface Landmark {
   /** What tapping it says. */
   text: string;
   level?: number;
-  kind: 'project' | 'trophy';
+  kind: 'project' | 'trophy' | 'site';
 }
 
 /**
@@ -204,6 +218,21 @@ export function landmarksOn(state: GameState, map: string): Landmark[] {
         : `${p.name}: funded by you! ${p.reward}`,
       ...(level ? { level } : {}),
       kind: 'project',
+    });
+  }
+  // The broken places' sites (systems/valley.ts): one solid tile whose sprite changes with each work day.
+  for (const [id, pl] of Object.entries(valley.places)) {
+    if (pl.map !== map || !pl.site) continue;
+    const sprite = siteSprite(state, id);
+    out.push({
+      id: `site.${id}`,
+      tx: pl.site[0],
+      ty: pl.site[1],
+      sprite,
+      color: pl.color,
+      text: pl.sign,
+      level: Math.max(0, pl.sprites.indexOf(sprite)),
+      kind: 'site',
     });
   }
   for (const t of game.trophies ?? []) {

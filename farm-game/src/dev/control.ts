@@ -212,10 +212,17 @@ export class DevControl {
     const key = mapsData.maps[s.player.map]?.scene;
     const world = this.game.scene.getScenes(true).find((sc) => 'coachWorld' in sc);
     if (key && world) {
-      world.scene.stop();
       // as the sleep fade does: the dry tileset made or released while no world draws with it
-      syncDryTiles(world, s);
-      this.game.scene.start(key);
+      if (world.scene.key === key) {
+        // the same map: restart it (a stop and a start of one scene in one step can leave it shut down)
+        world.scene.stop();
+        syncDryTiles(world, s);
+        world.scene.restart();
+      } else {
+        world.scene.stop();
+        syncDryTiles(world, s);
+        this.game.scene.start(key);
+      }
     }
   }
 }

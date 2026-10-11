@@ -221,6 +221,21 @@ const COMPOSITION = {
     bushes: ['bush_big', 'bush_rose', 'bush_small'],
     blooms: 0.4,
   },
+  // Wendhead (M3): the Old Spring's pool and the creek head share the farm creek's bed (dry before the spring
+  // opens); a plank bridge at y 22
+  wendhead: {
+    props: [],
+    trees: ['oak', 'birch'],
+    bushes: ['fern', 'bush_small', 'fern'],
+    blooms: 0.2,
+    creek: {
+      bridge: [
+        [10, 22],
+        [11, 22],
+      ],
+      stages: { dry: { bed: 'dry' } },
+    },
+  },
   woods: {
     props: [
       ['p_hollowlog', 18, 2],

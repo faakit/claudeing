@@ -1,7 +1,15 @@
 import { valley } from '../data';
 import { registerDayHook } from '../systems/dayHooks';
 import { sendLetter } from '../systems/mail';
-import { checkFarmGreen, ROSA_LETTER_STAT, rosaLetterDue } from '../systems/valley';
+import { absoluteDay } from '../systems/time';
+import {
+  askPlaces,
+  checkFarmGreen,
+  openPlaces,
+  ROSA_LETTER_STAT,
+  rosaLetterDue,
+  stageOf,
+} from '../systems/valley';
 
 // The Dry Year's valley (docs/WORLD-PLAN.md, systems/valley.ts).
 
@@ -30,5 +38,25 @@ registerDayHook({
     const letter = sendLetter(state, { from: l.from, title: l.title, text: `${l.text} ${l.sign}` });
     letter.read = true;
     letter.day = 1;
+  },
+});
+
+// The places (systems/valley.ts): openings first (a place restored overnight; maps change at this morning's load),
+// then the asks. Before the post, so a letter waiting on a place arrives the same morning.
+registerDayHook({
+  id: 'valley:places',
+  phase: 'morning',
+  order: 55,
+  run(state, ctx) {
+    for (const id of openPlaces(state)) ctx.notes.push(valley.places[id]!.opening.note);
+    askPlaces(state);
+    // The morning after the spring opens, an unsigned sack of fertilizer at the gate (Clay, WORLD-PLAN 5.1).
+    const opened = state.stats['place.spring.opened'] ?? 0;
+    if (
+      stageOf(state, 'spring') >= 3 &&
+      absoluteDay(state) > opened &&
+      !state.stats['valley.compost']
+    )
+      state.stats['valley.compost'] = 1;
   },
 });

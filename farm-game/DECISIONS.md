@@ -550,7 +550,7 @@ The critic played `70e861a` (two 32-day pure-farmer games, edge probes, a sensit
 - **F3 a friendly Clay made every season a free win.** At 5 hearts he still ships his crates (he only stops taking
   requests), and he no longer sends the gloating letter.
 - **F4** year two: "Clay takes two at 2:00 PM: no point.", and "wants two of these" only when both score.
-  **F5** the wanted bin line fits with a bin count ("Board 4  bin 2", else "Board 4  x9"); the kept toast splits the
+  **F5** the wanted bin line fits with a bin count ("Board 4 bin 2", else "Board 4 x9"); the kept toast splits the
   special ("Kept 5 Potato for the board and 11 for Rosa."). **F6** a special that ran out is said on the same morning
   a new one is posted. **F7** a finished special keeps its row ("Special done! Thank you!") until the board closes,
   so nothing slides under the thumb. **F8** sim tests have a 60 s timeout. **F9** winter of year one pays year one's
@@ -567,7 +567,7 @@ sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
 - **F1 (major) toasts were drawn under every open sheet**, so "Kept 4 Potato for the board.", "The board wants 4
   Potato.", "Order done!" and "Bought ..." were unseen. While a sheet is open, toasts now sit at the top of the
   screen above the dim (`ui/Hud.ts`, depth only; flagged for the controls agent, who owns the HUD). A wanted bin row
-  also says it in words: "Board 4  have 9".
+  also says it in words: "Board 4 have 9".
 - **F2 the race had become a formality** (a keeper won 15 to 0; Clay's named target was usually a row that could not
   score). Clay now plays to win: on a last day he takes farm goods first, best-paying first, and a fish or wild row
   only when no farm row is due. "Clay's!" marks only a target that would score; otherwise the board says "Clay
@@ -654,6 +654,7 @@ The critic played the frozen round-3 head `6d5e480` (two 29-31 day keepers, a ca
 player who does jobs; edge probes; a sweep; a sensitivity and race sim). No blocker or major. Its first-week
 recommendation (fill days 2-4, do not cut the plot price, make the sim plant its starting seeds) is what the
 section above did.
+
 - **F1 the race was fair but not close** (keepers 12-5 and 13-6, every Clay point a crate, settled by day 13).
   Crates now come 7 days after his last one, every 2 days while you lead by 3, every day while you lead by 5
   (`CATCH_UP` in `systems/rival.ts`), never on day 28. A keeper filling about 0.6 rows a day stays a few points
@@ -1034,41 +1035,40 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   interactable just below it (`tapIntent`, `solidOwner`). Multi-tile things (the bed, a counter) are reached from
   whichever side is open (`pathToFaceAny`): the top half of the bed no longer says "Can't get there".
 - **Review 6 (controls critic) fixes:**
-  - *Shown tiles never flicker or retract.* A painted tile appears at its boundary and goes only when the finger is
+  - _Shown tiles never flicker or retract._ A painted tile appears at its boundary and goes only when the finger is
     back half a step (8 px) along the leg past it, or back near the leg's start; a corner never takes back a shown
     tile (it may only add one the leg had not grown yet), and a leg stops growing while the finger veers off
     sideways. Only backtracking along the path removes tiles. The critic's closed-loop painter (turns when the
     preview shows the leg): σ 1 mm 100% everywhere with ticks equal to tiles; σ 2 mm 89-91% on i13, 81-85% on SE,
     91-94% on the Pro Max (was about 60%). Cost: open loop, a rare first-row overshoot (about 3 in 100 at σ 1 on an
     SE) is no longer trimmed at the corner.
-  - *Front-path taps no longer enter the house.* A tap on the bottom row of a facade (or the bottom edge of any wall)
+  - _Front-path taps no longer enter the house._ A tap on the bottom row of a facade (or the bottom edge of any wall)
     with open ground below walks to that ground (taps land low), except in the upper half of the tiles right
     beside a door; the roof, the upper wall and the door tile itself still lead in. Measured (critic's
     `r6-taps`, σ 1.5 mm): front-path walk taps entered 0/96 (was 6/48); door-art taps entered 48/48; taps aimed at
     the door tile itself 40/48 (the misses land on the path below the door and walk there).
-  - *Ring:* the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
+  - _Ring:_ the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
     taps use the slide rule (nearest item, clearly nearer than the next, within reach).
-
 
 ## Sandbox workflow and dev tools (devtools agent, 2026-10-10)
 
-- *Scenarios are data with two layers.* A raw `state` patch (written at the scenario's `version`, run through
+- _Scenarios are data with two layers._ A raw `state` patch (written at the scenario's `version`, run through
   `migrate` and `sanitize`) for anything unusual, and semantic keys (`at`, `items`, `crops`, `goal`, `letters`...)
   applied through today's rules by name. The semantic keys are what keep fixtures alive across save bumps, so they
   are preferred; the base is always today's new game with a fixed seed (12345).
-- *Dev code is a lazy chunk, not a build flag.* The published build keeps `?debug&scenario=` working (the owner can
+- _Dev code is a lazy chunk, not a build flag._ The published build keeps `?debug&scenario=` working (the owner can
   use the dev menu on the phone), but players never load it: the entry bundle only holds the dynamic import, the
   service worker never precaches the chunk, and `npm run build:store` (VITE_DEVTOOLS=0) removes it entirely.
   `scripts/check-bundle.mjs` proves all three.
-- *The dev menu is HTML, not a Phaser scene.* A scene showed in every `getScenes(true)` check and drew into the perf
+- _The dev menu is HTML, not a Phaser scene._ A scene showed in every `getScenes(true)` check and drew into the perf
   budget; an HTML sheet adds no scene, no draw call and no game touch target. Its tab sits over the read-only HUD and
   only shows with `?scenario=`, `?devmenu` or in `npm run dev`, so older `?debug` suites never see it.
-- *The lab shares the farm's soil.* Soil is one per game (`state.farm.tiles`) and tilling needs an owned plot, so the
+- _The lab shares the farm's soil._ Soil is one per game (`state.farm.tiles`) and tilling needs an owned plot, so the
   lab's beds sit at farm plot coordinates and the lab preset owns every plot. Fine for a sandbox; a real second soil
   map would need per-map soil.
-- *Scenario pages are sandboxes.* From the first scenario on, saves go to memory, so jumping around in the dev menu
+- _Scenario pages are sandboxes._ From the first scenario on, saves go to memory, so jumping around in the dev menu
   can never overwrite a real save.
-- *Fixed waits are ratcheted, not banned outright.* The 389 existing ones (scripts and probes) are allowed per file
+- _Fixed waits are ratcheted, not banned outright._ The 389 existing ones (scripts and probes) are allowed per file
   and may only go down; any new one over 100 ms fails the unit tests.
 
 ## Game feel (feel agent, round 4, branch feel/smooth)
@@ -1160,13 +1160,13 @@ above the HUD and the canvas's bottom (the dock) sits on the bottom safe area on
 every touch target, is unchanged. Dock top y (CSS px from the top of the screen) and the gap left under the dock,
 from `displayFit` with the bench profiles' safe areas:
 
-| phone | scale | dock top before | dock top now | gap under the dock before | now |
-|---|---|---|---|---|---|
-| iPhone 13/14 | fit 5.72 | 596.1 | 596.1 | 0.3 | 0.3 |
-| Pixel 7 | 5x | 637.0 | 701.3 | 64.7 | 0.3 |
-| iPhone SE | fit 3.23 | 485.8 | 485.8 | 0.0 | 0.0 |
-| iPhone 15 Pro Max | 6x | 654.3 | 674.0 | 19.7 | 0.0 |
-| Galaxy Fold cover | 4x | 443.7 | 503.7 | 60.0 | 0.0 |
+| phone             | scale    | dock top before | dock top now | gap under the dock before | now |
+| ----------------- | -------- | --------------- | ------------ | ------------------------- | --- |
+| iPhone 13/14      | fit 5.72 | 596.1           | 596.1        | 0.3                       | 0.3 |
+| Pixel 7           | 5x       | 637.0           | 701.3        | 64.7                      | 0.3 |
+| iPhone SE         | fit 3.23 | 485.8           | 485.8        | 0.0                       | 0.0 |
+| iPhone 15 Pro Max | 6x       | 654.3           | 674.0        | 19.7                      | 0.0 |
+| Galaxy Fold cover | 4x       | 443.7           | 503.7        | 60.0                      | 0.0 |
 
 The iPhone 13 and SE keep the fitted scale, which is height-bound on both, so their docks already sat on the safe
 area. The 0.3 px is device-pixel rounding.
@@ -1198,7 +1198,7 @@ integer multiple with one smooth downscale.
 `valley.json` `farmGreen` (`shipped >= 5`, `minDay 4`) is checked in a `start` day hook, before the calendar moves:
 five goods shipped by the night of day 4 or later wake the farm green the next morning (day 5 at the earliest, never on
 a settling-in morning). `shipped` counts goods put in the bin, so the eve's bin counts. The plan's old-save default
-(`sanitize`: green when `shipped >= 5`) would also green a *new* save reloaded on day 2 with 5 shipped, so new games
+(`sanitize`: green when `shipped >= 5`) would also green a _new_ save reloaded on day 2 with 5 shipped, so new games
 carry `valley.on = 1` from `createInitialState`; `sanitize` applies the default (and marks the moment seen) only to a
 save without it. No version bump.
 
@@ -1272,3 +1272,55 @@ thinned music arrangement is left to the audio lane.
   `place.spring >= 1` for now. M3 sets it to `valley.farmGreen >= 1` and draws the real map.
 - **`dev.goto` to the current map restarts the scene.** A stop and a start of the same scene in one step left it
   shut down every other call, which `dev.stage` and the e2e stages block hit.
+
+## The Dry Year, M1 fixes after the critic's review 2, and M3 (depth lane, valley/m1)
+
+### The first green is a dissolve, and the dry tileset stays loaded that one morning (coordinator ruling)
+
+On the first step-out onto the green farm, the map is drawn once more with the dry tileset over the green one and
+cut away in a circle that grows from the farmer with a dithered edge (`fx/GreenReveal.ts`, 1.2 s, eased; a plain
+crossfade in Calm mode); the overlay is only there for those frames. Its banner has its own two-line slot ("FIRST
+GREEN" / "The farm remembers.") and the ambience keeps the dry bed until the dissolve ends, so the birdsong swells
+back as it glides. **Bent acceptance line:** M1 said the dry texture is not loaded in `valley-farm-green`; it now is
+held from the first-green night until the next sleep (`revealPending`), and released then. Scenario
+`valley-farm-green-reveal`, with a frame strip in e2e.
+
+### Golden straw, not peach
+
+Ground and baked transitions go to parchment with gold flecks and sand shadows (was sand flecks, which read as pale
+peach and blurred the path's hue). Path against straw: luminance 1.48:1, ΔRGB 108 (green: 1.42:1, 114). Crowns stay
+grey-green: no gold or orange there, so fall's dry farm still differs from fall's green one by its ground.
+
+### The dry lines match what is on screen until M6 (coordinator ruling)
+
+The town river still flows until the town's dry stage ships, so Finn's dry lines say the dryness is upstream ("The
+Wend came down from the gorge, once. Town's water is all that's left."; the Heron "high and dry"). The legends letter
+and the fishing goal's hint already match the screen. M6 switches back to the "mud and a trickle" lines, keyed on the
+town's stage.
+
+### Wendhead (M3): small, cheap, and on M2's stage system
+
+Wendhead is 24x28 with two stages, `dry` (the pool and the creek head a stone bed) and `spring` (both run; the
+final file keeps `wendhead.tmj`); M6 adds the gorge's stage. It has no dry palette: its dryness is the bed, so the dry
+tileset is still released after the first green. The pool and creek share the farm creek's baked bed (periodic
+rows), and the map uses no rock walls or tree borders, because every rock and crown cell bakes a tile of its own:
+the map costs 64 tileset slots (512x1088 -> 512x1120). The gorge and the weir are left for M6. Ilse's gate now lands
+at Wendhead's south-west corner (1,25).
+
+### The restoration pattern (M3)
+
+- A place's fund is a `projects.json` row with `place`: off the board, opened from the site as a one-project sheet
+  with a single **Fund it** button (the gold and goods in one tap, enabled when the purse and bag hold them).
+  Funding is not a project: the place counts once in `placesDone` and `projectsDone` at its opening. The project
+  goals' texts now say "projects or restorations" (stats unchanged).
+- A work day is the tap at the site itself (20 energy, once a day, no sheet); the site's sprite changes on the spot,
+  one per work day, and the last (the water following the first cut) is also the restored look.
+- The opening comes the morning after the last work day: the note, the maps' new stages, the villager beside the
+  site until 18:00 with her opening line, and Clay's unsigned sack of fertilizer the morning after (a letter
+  `from: "unsigned"`).
+- The HUD's one line shows a valley step that can be done today and has not waited 3 days (the ask on its day,
+  ready to fund, a work day, the opening morning), else the goal chain; THE VALLEY in Menu > Goal lists every asked
+  place. Valley intros (`valley: true`) show at most one new a morning.
+- The Hot Spring is the spring's site upgrade, the **Warm Pool** (same cost and perk, still after the library), its
+  landmark at Wendhead; it opens once the spring is restored. The year-two sim funds it as the board's others (it
+  restores the spring for that), so the Market Road and the statue still follow.

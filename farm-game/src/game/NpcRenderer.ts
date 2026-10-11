@@ -53,7 +53,7 @@ export class NpcRenderer {
   sync(state: GameState, playerTile?: { tx: number; ty: number }): boolean {
     let moved = false;
     for (const [id, s] of this.shown) {
-      const spot = npcLocation(id, state.time.minutes);
+      const spot = npcLocation(id, state.time.minutes, state);
       const here = spot && spot.map === this.mapId ? spot : null;
       const blocked = here && playerTile && playerTile.tx === here.tx && playerTile.ty === here.ty;
       if (blocked) continue; // never step onto the player; try again next minute

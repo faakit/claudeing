@@ -13,6 +13,8 @@ export const runtime = {
   inGame: false,
   /** A guided-start coach mark is showing: the idle hint and the goal arrow stay quiet. */
   coaching: false,
+  /** The first green's dissolve is playing: the ambience stays dry until the green reaches the edges. */
+  valleyReveal: false,
   get blocked(): boolean {
     return this.modals > 0 || this.busy || this.suspended;
   },

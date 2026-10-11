@@ -1,0 +1,19 @@
+{
+  "title": "The Old Spring, work day 2",
+  "about": "Spring 8, 08:00: one work day done yesterday (the stones are lower, water glints). Tap the site for day 2; tap again and it says enough for today. Day 3 (the spade's first cut, the water following it) comes tomorrow.",
+  "version": 17,
+  "tags": ["wendhead", "valley", "spring"],
+  "valley": { "farmGreen": 1, "spring": 2 },
+  "stats": {
+    "place.spring.since": 7,
+    "project.place_spring": 1,
+    "fund.place_spring": 300,
+    "fund.place_spring.stone": 20,
+    "site.spring.work": 1,
+    "site.spring.last": 7,
+    "shipped": 5
+  },
+  "at": { "map": "wendhead", "tx": 5, "ty": 15, "facing": "right" },
+  "time": { "day": 8, "clock": "08:00" },
+  "letters": []
+}

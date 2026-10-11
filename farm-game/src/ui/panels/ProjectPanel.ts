@@ -19,6 +19,7 @@ import {
   projectProgress,
   type FundResult,
 } from '../../systems/projects';
+import { canFundNow as canFundPlace } from '../../systems/valley';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { fmt } from './format';
@@ -41,6 +42,8 @@ export class ProjectPanel extends Modal {
   private id: string | null = null;
   private page = 0;
   private showFinished = false;
+  /** Opened from a site for one project (a place's fund, a site upgrade): no list behind it. */
+  private only = false;
 
   constructor(scene: Phaser.Scene) {
     super(scene, PROJECT_SHEET_H);
@@ -48,9 +51,18 @@ export class ProjectPanel extends Modal {
 
   override open(): void {
     this.id = null;
+    this.only = false;
     this.page = 0;
     this.showFinished = false;
     super.open();
+  }
+
+  /** One project's page, opened from its site (systems/valley.ts). Back closes the sheet. */
+  openFor(id: string): void {
+    this.open();
+    this.id = id;
+    this.only = true;
+    this.rebuild();
   }
 
   protected build(): void {
@@ -176,6 +188,17 @@ export class ProjectPanel extends Modal {
     }
     // Give buttons sit low, next to the thumb: three gold steps, then goods.
     const by = this.panelH - 82;
+    // A place's fund is small: one tap gives the gold and the goods together when the purse and bag hold it.
+    if (p.place) {
+      const ready = left > 0 || itemNeeds(s, id).some((n) => n.given < n.need);
+      const all = canFundPlace(s, p.place);
+      this.button(8, by, 184, 22, all ? 'Fund it' : 'Not enough yet', () => {
+        const st = getState();
+        donateItems(st, id);
+        this.after(donateGold(st, id, priceOf(st, id) - goldGiven(st, id)));
+      }).setEnabled(ready && all);
+      return;
+    }
     // Each button says what it really gives: near the end, "+10,000g" becomes the amount still needed.
     // Once the gold is all in, the three buttons give way to a plain line (no "+0g" buttons).
     if (left <= 0) this.label(100, by + 6, 'All the gold is in!', C.green, 1, 'center');
@@ -191,7 +214,8 @@ export class ProjectPanel extends Modal {
     this.button(8, by + 26, 90, 22, 'Give goods', () =>
       this.after(donateItems(getState(), id)),
     ).setEnabled(needsItems && canGiveItems(s, id));
-    this.button(102, by + 26, 90, 22, 'Back', () => {
+    this.button(102, by + 26, 90, 22, this.only ? 'Close' : 'Back', () => {
+      if (this.only) return this.close();
       this.id = null;
       this.rebuild();
     });
@@ -202,6 +226,7 @@ export class ProjectPanel extends Modal {
       audio.play(res.finished ? 'level' : 'buy');
       haptic('success');
       // A repeatable project stays open on its page for the next level (critique 7, F9).
+      if (res.finished && this.only) return this.close();
       if (res.finished && !projects[this.id ?? '']?.repeat) this.id = null;
     } else {
       audio.play('error');

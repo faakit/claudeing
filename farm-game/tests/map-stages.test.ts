@@ -60,7 +60,7 @@ describe('valleyStage: which variant a map shows', () => {
   });
 
   it('maps without stages have one look: their own file, no variant', () => {
-    for (const map of ['house', 'town', 'woods', 'mine', 'wendhead'])
+    for (const map of ['house', 'town', 'woods', 'mine'])
       expect(valleyStage(stats({ 'place.spring': 3 }), map)).toEqual({
         map,
         variant: null,
@@ -97,7 +97,9 @@ describe('valleyStage: which variant a map shows', () => {
     const files = allMapLooks().map((l) => l.file);
     expect(new Set(files).size).toBe(files.length);
     expect(files).toContain('assets/maps/farm@dry.tmj');
-    expect(files.length).toBe(Object.keys(mapsData.maps).length + 2);
+    // the farm's dry and waking files, and Wendhead's dry one (M3)
+    expect(files.length).toBe(Object.keys(mapsData.maps).length + 3);
+    expect(files).toContain('assets/maps/wendhead@dry.tmj');
   });
 
   it('pinStage finds the stats that show a stage (the dev menu and __farm.dev.stage)', () => {

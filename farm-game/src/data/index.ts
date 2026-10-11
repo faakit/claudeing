@@ -82,8 +82,10 @@ export interface ValleyData {
   letter: { from: string; title: string; text: string; sign: string; keepDay: number };
   /** The first green: the morning after `min` of `stat`, never before the night of `minDay`. */
   farmGreen: { stat: string; min: number; minDay: number; note: string; banner: string };
-  /** The broken places by id (the stat `place.<id>`: 0 untouched, 1 asked, 2 funded, 3 restored). */
-  places: Record<string, { name: string }>;
+  /** The broken places built so far, by id (the stat `place.<id>`: 0 untouched, 1 asked, 2 funded, 3 restored). */
+  places: Record<string, PlaceDef>;
+  /** Places designed but not built yet (id -> name): lines may already wait on them (`when.place`). */
+  planned: Record<string, string>;
   maps: Record<string, MapStagesDef>;
 }
 
@@ -386,14 +388,53 @@ export interface LetterWhen {
   season?: Season;
   date?: number;
 }
+/** A letter's `from` when nobody signs it (Clay's sack of fertilizer after the spring opens). */
+export const UNSIGNED = 'unsigned';
 export interface LetterDef {
   id: string;
-  /** Villager id who writes it. */
+  /** Villager id who writes it, or "unsigned". */
   from: string;
   title: string;
   text: string;
   when: LetterWhen;
   gift?: { item: string; qty: number };
+}
+/** One work day at a site: a ten-second taste of the place's verb, and what it says. */
+export interface WorkDayDef {
+  /** What the farmer does: a pickaxe swing at the rockfall, the spade's first channel tile... */
+  taste: 'pickaxe' | 'channel';
+  text: string;
+}
+/** A broken place (docs/WORLD-PLAN.md 2): asked by someone, funded, worked, opened. */
+export interface PlaceDef {
+  name: string;
+  /** The site: a map and a tile (set once the place's map exists). */
+  map?: string;
+  site?: [number, number];
+  /** Where the goal arrow points on other maps (the door that leads toward the site). */
+  where?: Record<string, [number, number]>;
+  /** Who lost it, asks for it and waits at the site on the opening morning. */
+  npc: string;
+  /** When it is asked for (`place.<id>` goes 0 -> 1 that morning). */
+  ask: ValleyWhen;
+  /** The `projects.json` row holding the fund (`"place": "<id>"`). */
+  project: string;
+  workDays: number;
+  /** Energy per work day. */
+  energy: number;
+  /** What the site says before it is asked for. */
+  sign: string;
+  /** The HUD's line on the day of the ask. */
+  asked: string;
+  work: WorkDayDef[];
+  /** Site sprite per stage of the work: before, then after each work day (the last is also the restored look). */
+  sprites: string[];
+  /** Placeholder colour of the site sprites until the art lands. */
+  color: string;
+  /** The opening morning: its note, the villager's three lines at the site, and what is handed over. */
+  opening: { note: string; lines: string[]; item?: string };
+  /** What the place does for the valley, said on the year-end and THE VALLEY ("The creek runs."). */
+  phrase: string;
 }
 export interface MailData {
   /** The farm's mailbox: a fixed, solid, one-tile fixture. */
@@ -451,6 +492,10 @@ export interface ProjectDef {
    * last; its perks stack for the first `perkLevels` levels, after which a level is for show.
    */
   repeat?: { growth: number; perkLevels: number };
+  /** The fund of a broken place (valley.json `places`): hidden from the board, opened from the place's site. */
+  place?: string;
+  /** A site upgrade (the warm pool): off the board, on that place's site once it is restored. */
+  site?: string;
 }
 export interface PlotDef {
   name: string;
@@ -600,7 +645,7 @@ export interface TutorialTarget {
   /** With `find`: point at a free tile beside the thing (to stand on and press Action), not the thing. */
   stand?: boolean;
   npc?: string;
-  /** A map object: `bin`, `bed`, `mailbox`, `board`, `shop`. */
+  /** A map object: `bin`, `bed`, `mailbox`, `board`, `shop`, `site` (a broken place's site). */
   object?: string;
   /** The door that leads to this map. */
   door?: string;
@@ -647,6 +692,8 @@ export interface TutorialStep {
   refusals?: Record<string, string>;
   /** Close the open sheet when this step finishes (Ship all: the bin closes, the guide goes on). */
   closeSheet?: boolean;
+  /** A valley intro (WORLD-PLAN 2): at most one new valley intro shows per morning. */
+  valley?: boolean;
   /** Stats set to 1 when the step first shows (e.g. `tip.paint`: the old first-run tip is then not needed). */
   teaches?: string[];
 }
@@ -676,19 +723,46 @@ export function validateValleyWhen(w: ValleyWhen | undefined, file: string, wher
   if (!w || typeof w !== 'object') fail(file, `${where} needs a "when"`);
   if ((w.stat === undefined) === (w.place === undefined))
     fail(file, `${where}: "when" needs exactly one of "stat" or "place"`);
-  if (w.place !== undefined && !valley.places[w.place])
+  if (w.place !== undefined && !valley.places[w.place] && !valley.planned[w.place])
     fail(file, `${where}: unknown place "${w.place}"`);
   if (w.min === undefined && w.max === undefined)
     fail(file, `${where}: "when" needs "min" or "max"`);
 }
 
-function validateValleyContent(): void {
+function validateValleyContent(mapIds: string[]): void {
   const v = valley;
   if (!npcs[v.letter.from]) fail('valley', 'the letter is from an unknown villager');
   if (!v.letter.text || !v.letter.sign || !(v.letter.keepDay >= 2))
     fail('valley', 'the letter needs text, a signature and a keepDay of 2 or more');
   if (!(v.farmGreen.min >= 1) || !(v.farmGreen.minDay >= 1) || !v.farmGreen.note)
     fail('valley', '"farmGreen" needs min, minDay and a note');
+  for (const [id, p] of Object.entries(v.places)) {
+    const at = `place "${id}"`;
+    if (v.planned[id]) fail('valley', `${at} is built and planned`);
+    if (!npcs[p.npc]) fail('valley', `${at} is asked by an unknown villager`);
+    validateValleyWhen(p.ask, 'valley', `${at} ask`);
+    if (projects[p.project]?.place !== id)
+      fail('valley', `${at} needs a projects.json row "${p.project}" with "place": "${id}"`);
+    if (!(p.workDays >= 1) || p.work.length !== p.workDays)
+      fail('valley', `${at} needs one work day entry per work day`);
+    if (p.sprites.length !== p.workDays + 1)
+      fail('valley', `${at} needs a site sprite before the work and one after each work day`);
+    if (!(p.energy > 0) || !p.sign || !p.asked || !p.phrase || p.opening.lines.length !== 3)
+      fail('valley', `${at} needs energy, a sign, an ask line, a phrase and three opening lines`);
+    if ((p.map === undefined) !== (p.site === undefined))
+      fail('valley', `${at} needs both a map and a site tile, or neither`);
+    if (p.map !== undefined && !mapIds.includes(p.map)) fail('valley', `${at} is on unknown map`);
+    for (const m of Object.keys(p.where ?? {}))
+      if (!mapIds.includes(m)) fail('valley', `${at} points the way on unknown map "${m}"`);
+    if (p.opening.item && !items[p.opening.item])
+      fail('valley', `${at} hands over unknown item "${p.opening.item}"`);
+  }
+  for (const [id, r] of Object.entries(projects)) {
+    if (r.place !== undefined && v.places[r.place]?.project !== id)
+      fail('projects', `"${id}" funds place "${r.place}", which does not name it`);
+    if (r.site !== undefined && !v.places[r.site])
+      fail('projects', `"${id}" is an upgrade of unknown place "${r.site}"`);
+  }
 }
 
 function fail(file: string, msg: string): never {
@@ -1025,7 +1099,7 @@ export function validateContent(): void {
     const unlocks =
       Object.values(plots).some((pl) => pl.project === id) ||
       Object.values(shops).some((sh) => sh.stock.some((e) => e.project === id));
-    if (Object.keys(p.perks).length === 0 && !unlocks)
+    if (Object.keys(p.perks).length === 0 && !unlocks && !p.place)
       fail('projects', `"${id}" grants no perk and unlocks nothing`);
     if (p.landmark && !mapIds.includes(p.landmark.map))
       fail('projects', `"${id}" landmark is on unknown map "${p.landmark.map}"`);
@@ -1041,12 +1115,13 @@ export function validateContent(): void {
   if (!npcs[game.rival.npc] || npcs[game.rival.npc]?.role !== 'rival')
     fail('game', '"rival.npc" must be a villager with role "rival"');
   if (!mapIds.includes(mail.mailbox.map)) fail('mail', 'mailbox stands on an unknown map');
-  validateValleyContent();
+  validateValleyContent(mapIds);
   const letterIds = new Set<string>();
   for (const l of mail.letters) {
     if (!l.id || letterIds.has(l.id)) fail('mail', `letter "${l.id}" needs a unique id`);
     letterIds.add(l.id);
-    if (!npcs[l.from]) fail('mail', `"${l.id}" is from unknown villager "${l.from}"`);
+    if (!npcs[l.from] && l.from !== UNSIGNED)
+      fail('mail', `"${l.id}" is from unknown villager "${l.from}"`);
     if (!l.title || !l.text) fail('mail', `"${l.id}" needs a title and text`);
     if (l.gift && (!items[l.gift.item] || l.gift.qty < 1))
       fail('mail', `"${l.id}" encloses unknown item "${l.gift.item}"`);
@@ -1107,7 +1182,7 @@ const TUT_KINDS = [
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
-const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop'];
+const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site'];
 const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot'];
 const TUT_COND_KEYS = new Set([
   'stat',

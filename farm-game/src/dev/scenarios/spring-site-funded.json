@@ -1,0 +1,17 @@
+{
+  "title": "The Old Spring funded: the first work day",
+  "about": "Spring 7, 08:00, facing the rockfall: the fund is in (place.spring 2). The HUD reads \"Work at the Old Spring (1 of 3)\"; one tap at the site is the day's work (a pickaxe swing at the stones, 20 energy) and the site's sprite changes.",
+  "version": 17,
+  "tags": ["wendhead", "valley", "spring"],
+  "valley": { "farmGreen": 1, "spring": 2 },
+  "stats": {
+    "place.spring.since": 6,
+    "project.place_spring": 1,
+    "fund.place_spring": 300,
+    "fund.place_spring.stone": 20,
+    "shipped": 5
+  },
+  "at": { "map": "wendhead", "tx": 5, "ty": 15, "facing": "right" },
+  "time": { "day": 7, "clock": "08:00" },
+  "letters": []
+}

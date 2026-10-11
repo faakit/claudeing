@@ -96,6 +96,7 @@ describe('town projects', () => {
     addXp(s, 'farming', 100);
     expect(xpOf(s, 'farming')).toBe(115);
     const before = maxEnergy(s);
+    s.stats['place.spring'] = 3; // the warm pool opens with the Old Spring
     finish(s, 'bathhouse');
     expect(maxEnergy(s)).toBe(before + 30);
   });
@@ -139,11 +140,13 @@ describe('town projects', () => {
 
   it('every project chain can be finished, and all of them together are a real late sink', () => {
     const s = newState();
+    s.stats['place.spring'] = 3; // the warm pool is the Old Spring's upgrade
     for (let round = 0; round < 10; round++)
       for (const id of Object.keys(projects))
         if (isProjectOpen(s, id) && !isProjectDone(s, id)) finish(s, id);
     expect(Object.keys(projects).every((id) => isProjectDone(s, id))).toBe(true);
-    const once = Object.entries(projects).filter(([, p]) => !p.repeat);
+    // board projects you finish once (a place's fund counts at its opening, systems/valley.ts)
+    const once = Object.entries(projects).filter(([, p]) => !p.repeat && !p.place);
     const total = once.reduce((n, [, p]) => n + p.gold, 0);
     expect(total).toBeGreaterThan(80000);
     // "All projects" means the ones you finish once; the repeatable statue never counts.

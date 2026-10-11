@@ -207,6 +207,20 @@
         "stat": "caught",
         "min": 10
       }
+    },
+    {
+      "id": "spring_compost",
+      "from": "unsigned",
+      "title": "A sack at the gate",
+      "text": "For the field by the creek. Don't make a fuss about it.",
+      "when": {
+        "stat": "valley.compost",
+        "min": 1
+      },
+      "gift": {
+        "item": "fertilizer",
+        "qty": 10
+      }
     }
   ]
 }

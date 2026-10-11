@@ -1,0 +1,11 @@
+{
+  "title": "The first green: stepping out onto the farm",
+  "about": "Spring 6, 07:00, just outside the farmhouse door, the morning after the first green, before the farmer has stepped out: the farm builds green with the straw drawn over it, and as the door wipe opens the straw dissolves into green outward from the farmer (about 1.2 s, a dithered edge; a crossfade in Calm mode), with the FIRST GREEN banner and the birdsong swelling back. The dry tileset is held for this one morning and released at the next sleep.",
+  "version": 17,
+  "tags": ["farm", "valley", "moment"],
+  "valley": { "farmGreen": 1, "spring": 1 },
+  "stats": { "place.spring.since": 6, "shipped": 5, "harvested": 8, "slept": 5 },
+  "at": { "map": "farm", "tx": 14, "ty": 9, "facing": "down" },
+  "time": { "day": 6, "clock": "07:00" },
+  "letters": ["first_green"]
+}

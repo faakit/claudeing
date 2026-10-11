@@ -289,7 +289,11 @@ export async function openScenario(browser, url, scenario, opts = {}) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('console', (m) => {
+    // the dry tileset's safety net (src/art/dryTiles.ts) is a warning in the game and a failure here
+    if (m.type() === 'error' || (m.type() === 'warning' && m.text().includes('safety net')))
+      errors.push(m.text());
+  });
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: p.insets });
   await page.goto(`${url}?debug&scenario=${encodeURIComponent(scenario)}${opts.query ?? ''}`);

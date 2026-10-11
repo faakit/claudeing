@@ -253,7 +253,7 @@
   },
   {
     "id": "project1",
-    "text": "Finish a town project",
+    "text": "Mend a place or fund a project",
     "stat": "projectsDone",
     "target": 1,
     "reward": 300,
@@ -391,7 +391,7 @@
   },
   {
     "id": "project3",
-    "text": "Finish 3 town projects",
+    "text": "Finish 3 projects or restorations",
     "stat": "projectsDone",
     "target": 3,
     "reward": 1500,
@@ -423,7 +423,7 @@
   },
   {
     "id": "projectAll",
-    "text": "Finish all 8 town projects",
+    "text": "Finish 8 projects or restorations",
     "stat": "projectsDone",
     "target": 8,
     "reward": 5000,

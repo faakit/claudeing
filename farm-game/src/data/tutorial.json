@@ -1,6 +1,6 @@
 {
   "speaker": "rosa",
-  "welcome": "You came! I'm Rosa. The farm's yours.",
+  "welcome": "You came! I'm Rosa.\nThe farm's yours.",
   "gift": {
     "map": "farm",
     "crop": "parsnip",
@@ -1138,6 +1138,73 @@
         }
       ],
       "leave": true
+    },
+    {
+      "id": "valleyAsk",
+      "track": "intro",
+      "valley": true,
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "stat": "place.spring",
+            "min": 1
+          },
+          {
+            "stat": "place.spring",
+            "max": 1
+          },
+          {
+            "not": {
+              "map": "wendhead"
+            }
+          }
+        ]
+      },
+      "text": "Up through Ilse's gate: the spring.",
+      "target": {
+        "door": "wendhead",
+        "map": "farm"
+      },
+      "done": [
+        {
+          "map": "wendhead"
+        }
+      ]
+    },
+    {
+      "id": "siteWork",
+      "track": "intro",
+      "valley": true,
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "stat": "place.spring",
+            "min": 2
+          },
+          {
+            "stat": "site.spring.work",
+            "max": 0
+          },
+          {
+            "map": "wendhead"
+          }
+        ]
+      },
+      "text": "Work at the spring: tap it.",
+      "target": {
+        "object": "site",
+        "map": "wendhead"
+      },
+      "done": [
+        {
+          "stat": "site.spring.work",
+          "min": 1
+        }
+      ]
     }
   ],
   "refusals": {

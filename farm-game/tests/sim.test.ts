@@ -538,7 +538,10 @@ describe('balance simulation (two years, funding projects)', () => {
     expect(sunk).toBeGreaterThan(250_000);
     expect(s.money).toBeLessThan(100_000);
     expect(projectLevel(s, 'statue')).toBeGreaterThanOrEqual(3);
-    expect(s.stats['projectsDone']).toBe(Object.values(projects).filter((p) => !p.repeat).length);
+    // board projects only: a place's fund is opened from its site and counts at the opening (systems/valley.ts)
+    expect(s.stats['projectsDone']).toBe(
+      Object.values(projects).filter((p) => !p.repeat && !p.place).length,
+    );
   });
 });
 
@@ -614,7 +617,14 @@ describe('balance simulation: the board race for a pure farmer', () => {
 function fundProjects(s: GameState): number {
   if (Object.entries(plots).some(([id, p]) => !p.project && !ownsPlot(s, id))) return 0;
   let given = 0;
-  for (const id of visibleProjects(s)) {
+  // A farmer this far along has restored the Old Spring (300g and three days): its site upgrade (the warm pool)
+  // is funded like a board project. Restoring places on schedule is the second sim run's job (WORLD-PLAN 9.2).
+  s.stats['place.spring'] = Math.max(3, s.stats['place.spring'] ?? 0);
+  const ids = [
+    ...visibleProjects(s),
+    ...Object.keys(projects).filter((id) => projects[id]?.site && isProjectOpen(s, id)),
+  ];
+  for (const id of ids) {
     if (!isProjectOpen(s, id)) continue; // a repeatable one (the statue) stays open
     for (const n of itemNeeds(s, id)) if (n.given < n.need) addItem(s, n.item, n.need - n.given);
     donateItems(s, id);

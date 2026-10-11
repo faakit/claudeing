@@ -435,6 +435,10 @@ export function advance(
   // No track step to show: one-off introductions, the first that applies.
   for (const st of steps) {
     if (st.track !== 'intro' || stepDone(s, st.id)) continue;
+    // at most one new valley intro a morning: another waits for tomorrow (it is not marked seen meanwhile)
+    const valleyWait =
+      st.valley && !s.stats[`tut.seen.${st.id}`] && s.stats['tut.valleyDay'] === absoluteDay(s);
+    if (valleyWait) continue;
     const ctx = { s, world, facts, step: st };
     const on = !st.when || holds(st.when, ctx);
     if (!on) {
@@ -442,6 +446,7 @@ export function advance(
       continue;
     }
     (ctx as Ctx).justSeen = markSeen(s, st);
+    if (st.valley && (ctx as Ctx).justSeen) s.stats['tut.valleyDay'] = absoluteDay(s);
     if ((st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx))) {
       finish(s, st, completed);
       continue;

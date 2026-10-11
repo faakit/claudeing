@@ -113,8 +113,13 @@ async function run(p, hand, deviant = false) {
     }
   };
 
-  // Title -> New Game, by touch (the only button on a first launch, 150 x 30 at y 200).
-  await t.tap(100, 215, 70);
+  // Title -> New Game, by touch: the only button on a first launch, under Rosa's letter (ui/titleLetter.ts).
+  await page.waitForFunction(() => window.__farm.game.scene.getScene('Title').buttons?.length > 0);
+  const ng = await page.evaluate(() => {
+    const b = window.__farm.game.scene.getScene('Title').buttons[0].getBounds();
+    return { x: b.centerX, y: b.centerY };
+  });
+  await t.tap(ng.x, ng.y, 70);
   await page.waitForFunction(() => window.__farm.game.scene.getScene('UI')?.sys.isActive(), null, {
     timeout: 20000,
   });

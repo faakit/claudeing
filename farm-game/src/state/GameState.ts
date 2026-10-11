@@ -46,6 +46,8 @@ export interface SoilTile {
   crop: CropState | null;
   /** Fertilizer item id applied to this tile; consumed when the crop is harvested. */
   fert?: string;
+  /** A channel dug off the creek (systems/channels.ts): no crop, it carries water to the soil beside it. */
+  channel?: true;
 }
 
 /** Something the player put down in the world (a sprinkler, a jar...). Behaviour comes from the registry. */

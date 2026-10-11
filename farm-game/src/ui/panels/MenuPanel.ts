@@ -9,6 +9,7 @@ import { waterCapacity } from '../../systems/actions';
 import { maxEnergy } from '../../systems/energy';
 import { gameEvents, toast } from '../../systems/events';
 import { asideGoals, goalProgress, recentGoals, stat } from '../../systems/goals';
+import { valleyLines } from './valleyText';
 import { jobLabel, jobProgress, welcomeFactor, welcomeJobsHeader } from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
@@ -328,27 +329,33 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
 function buildGoals(c: MenuTabContext): void {
   const s = getState();
   const prog = goalProgress(s);
-  c.label(8, c.top + 2, 'CURRENT GOAL', C.gold);
-  if (prog) {
-    c.label(8, c.top + 14, prog.goal.text, C.cream, 1, 'left', 184);
-    const g = c.scene.add.graphics();
-    drawBar(g, 8, c.top + 28, 184, 7, prog.value / prog.goal.target, C.gold);
-    c.add(g);
-    c.label(192, c.top + 40, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold, 1, 'right');
-    c.label(8, c.top + 40, `Reward: +${fmt(prog.goal.reward)}g`, C.green);
-    c.label(8, c.top + 52, `Hint: ${prog.goal.hint}`, C.creamDim, 1, 'left', 184);
-  } else {
-    c.label(
-      8,
-      c.top + 14,
-      'Every goal is done. You are a Harvest Legend!',
-      C.green,
-      1,
-      'left',
-      184,
-    );
+  // THE VALLEY: one row per asked place and its next step (systems/valley.ts), above the goals.
+  const rows = valleyLines(s);
+  let top = c.top + 2;
+  if (rows.length > 0) {
+    c.label(8, top, 'THE VALLEY', C.gold);
+    top += 12;
+    for (const r of rows) {
+      c.label(8, top, r, C.cream);
+      top += 11;
+    }
+    top += 6;
   }
-  let y = c.top + 82;
+  c.label(8, top, 'CURRENT GOAL', C.gold);
+  if (prog) {
+    c.label(8, top + 12, prog.goal.text, C.cream, 1, 'left', 184);
+    const g = c.scene.add.graphics();
+    drawBar(g, 8, top + 26, 184, 7, prog.value / prog.goal.target, C.gold);
+    c.add(g);
+    c.label(192, top + 38, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold, 1, 'right');
+    c.label(8, top + 38, `Reward: +${fmt(prog.goal.reward)}g`, C.green);
+    c.label(8, top + 50, `Hint: ${prog.goal.hint}`, C.creamDim, 1, 'left', 184);
+  } else {
+    c.label(8, top + 12, 'Every goal is done. You are a Harvest Legend!', C.green, 1, 'left', 184);
+  }
+  let y = top + 80;
+  // Rows below never run into STATS at the bottom (THE VALLEY can push them down).
+  const floor = c.bottom - 66;
   // Today's jobs: small requests that pay on the spot, whatever the goal chain says.
   const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
   c.label(8, y, welcomeJobsHeader(today.length > 0 ? welcomeFactor(s.jobs.day) : 1), C.gold);
@@ -376,10 +383,11 @@ function buildGoals(c: MenuTabContext): void {
   const done = recentGoals(s, aside.length > 0 ? 1 : 2);
   if (done.length === 0) c.label(8, y, 'Nothing yet. You can do it!', C.creamDim);
   for (const d of done) {
+    if (y + 11 > floor) break;
     const row = c.label(8, y, `+ ${d.text}`, C.creamDim, 1, 'left', 184);
     y += row.textHeight + 3;
   }
-  if (aside.length > 0) {
+  if (aside.length > 0 && y + 26 <= floor) {
     y += 3;
     c.label(8, y, 'ALSO OPEN', C.gold);
     y += 12;

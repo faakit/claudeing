@@ -1083,5 +1083,14 @@
     "sellPrice": 0,
     "stackLimit": 1,
     "description": "Page 1: \"Where the water starts, the farm starts.\" A sketch of a spring, uphill of the farm."
+  },
+  "spade": {
+    "name": "Ilse's Spade",
+    "type": "key",
+    "icon": "item_spade",
+    "color": "#8a6a4a",
+    "sellPrice": 0,
+    "stackLimit": 1,
+    "description": "Dig a channel off the creek: the water runs along it every morning and waters the soil beside it. Action on a channel fills it in."
   }
 }

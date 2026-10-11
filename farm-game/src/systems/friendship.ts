@@ -7,7 +7,7 @@ import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
 import { items } from '../data';
 import { absoluteDay } from './time';
-import { valleyHolds } from './valley';
+import { openingLine, valleyHolds } from './valley';
 import { isWet } from './weather';
 
 export const POINTS_PER_HEART = 50;
@@ -75,6 +75,9 @@ export const linesNow = (state: GameState, group: readonly NpcLine[]): string[] 
 export function lineFor(state: GameState, id: string): string {
   const def = npcs[id] as NpcDef;
   if (isBirthday(state, id)) return 'Today is my birthday! A gift would make it perfect.';
+  // the morning a place of theirs opens, that is all they talk about (systems/valley.ts)
+  const opened = openingLine(state, id);
+  if (opened) return opened;
   const hearts = heartsOf(state, id);
   const tiers: NpcLine[][] = [
     ...(isWet(state.weather) && absoluteDay(state) % 3 === 0 ? [def.lines.rain] : []),

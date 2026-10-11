@@ -18,6 +18,7 @@ import { displayName, iconKey, refOf } from '../systems/itemRef';
 import { runtime } from '../state/runtime';
 import { tickToward } from '../fx/feel';
 import { showBanner } from '../fx/hudBand';
+import { valleyStep } from '../systems/valley';
 
 /** Hotbar slot size: 23 logical px is ~45 CSS px on a typical phone, so taps land first time. */
 export const SLOT = 23;
@@ -79,6 +80,9 @@ export class Hud {
   private toasts: Toast[] = [];
   private readonly savedLabel: Label;
   private readonly banner: Label;
+  /** The valley's own moments (the first green): two lines, a slot apart from goal and heart banners. */
+  private readonly moment: Label;
+  private readonly momentTitle: Label;
   private cleanup: (() => void)[] = [];
 
   constructor(
@@ -191,6 +195,20 @@ export class Hud {
     })
       .setDepth(depth + 5)
       .setAlpha(0);
+    this.momentTitle = new Label(scene, GAME_WIDTH / 2, HUD_H + 34, '', {
+      color: CH.gold,
+      align: 'center',
+      scale: 2,
+    })
+      .setDepth(depth + 5)
+      .setAlpha(0);
+    this.moment = new Label(scene, GAME_WIDTH / 2, HUD_H + 56, '', {
+      color: CH.cream,
+      align: 'center',
+      maxWidth: 190,
+    })
+      .setDepth(depth + 5)
+      .setAlpha(0);
 
     this.fitHotbarHits();
     scene.scale.on('resize', this.fitHotbarHits, this);
@@ -207,7 +225,7 @@ export class Hud {
         ),
       ),
       // The first green: the banner with the special-order fanfare until audio gives it its own jingle.
-      gameEvents.on('valleyMoment', (m) => this.goalBanner(m.text, 'success', 'special')),
+      gameEvents.on('valleyMoment', (m) => this.valleyMoment(m.text)),
       gameEvents.on('levelUp', (e) =>
         this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`, 'medium'),
       ),
@@ -265,12 +283,20 @@ export class Hud {
 
   // ---- goal tracker ----
   private drawGoal(s: GameState): void {
+    // A valley step that can be done today comes first (WORLD-PLAN 2, "On the HUD"), else the goal chain.
+    const step = valleyStep(s);
     const prog = goalProgress(s);
-    const key = prog ? `${prog.goal.id}:${prog.value}` : 'done';
+    const key = step ? `valley:${step.text}` : prog ? `${prog.goal.id}:${prog.value}` : 'done';
     if (key === this.goalKey) return;
     this.goalKey = key;
     this.goalGfx.clear();
     drawPanel(this.goalGfx, 3, 48, 194, 25, undefined, undefined, 'chrome');
+    if (step) {
+      this.goalLabel.setText(step.text).setColor(CH.cream);
+      this.goalCount.setText(step.count ? `${step.count[0]}/${step.count[1]}` : '');
+      if (step.count) drawBar(this.goalGfx, 9, 65, 132, 4, step.count[0] / step.count[1], CH.gold);
+      return;
+    }
     if (!prog) {
       this.goalLabel.setText('All goals complete!').setColor(CH.green);
       this.goalCount.setText('');
@@ -281,6 +307,30 @@ export class Hud {
       `${prog.value.toLocaleString('en-US')}/${prog.goal.target.toLocaleString('en-US')}`,
     );
     drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, CH.gold);
+  }
+
+  /**
+   * The first green: a big gold title and a line under it, in their own slot (never the goal banner's), held about
+   * three seconds while the straw dissolves. The special-order fanfare plays until audio gives it its own jingle.
+   */
+  private valleyMoment(text: string): void {
+    const [title, line] = text.split('\n');
+    audio.play('special');
+    haptic('success');
+    showBanner(3400);
+    const calm = this.getState().settings.reduceMotion;
+    this.momentTitle.setText(title ?? '');
+    this.moment.setText(line ?? '');
+    for (const [l, y] of [
+      [this.momentTitle, HUD_H + 34],
+      [this.moment, HUD_H + 56],
+    ] as const) {
+      this.scene.tweens.killTweensOf(l);
+      l.setAlpha(0).setY(y + (calm ? 0 : 6));
+      const round = () => l.setY(Math.round(l.y));
+      this.scene.tweens.add({ targets: l, alpha: 1, y, duration: 400, onUpdate: round });
+      this.scene.tweens.add({ targets: l, alpha: 0, duration: 500, delay: 2900 });
+    }
   }
 
   /** A level-up is a medium pulse (owner decision 6); goals and hearts keep the success pattern. */

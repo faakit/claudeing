@@ -95,7 +95,9 @@ describe('the projects sheet scales to every project (critique 6, F1)', () => {
     const s = lateGame();
     const { open, finished } = projectLists(s);
     expect(open).toEqual(['statue']); // the statue is first, never off the bottom
-    expect(finished).toHaveLength(Object.keys(projects).length - 1);
+    expect(finished).toHaveLength(
+      Object.values(projects).filter((p) => !p.place && !p.site).length - 1,
+    );
     // Mid-game: everything open fits on the first page or pages cleanly.
     const mid = newState();
     for (const id of ['canopy', 'library', 'fishladder']) mid.stats[`project.${id}`] = 1;

@@ -250,6 +250,10 @@ export class UIScene extends Phaser.Scene {
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
+      gameEvents.on('openProject', ({ id }) => {
+        if (!runtime.blocked)
+          (this.panels.get('projects') as ProjectPanel | undefined)?.openFor(id);
+      }),
       gameEvents.on('levelUp', () => audio.play('level')),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       gameEvents.on('settingsChanged', () => this.buildControls()),
