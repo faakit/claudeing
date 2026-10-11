@@ -78,4 +78,8 @@ if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
     // Read-only use: why the world is frozen (open modal count, a busy flow, the app suspended).
     runtime,
   };
+  // Dev tools (?scenario=, the lab map, clock and frame control, the dev menu: src/dev): a lazy chunk fetched
+  // only here, never part of what a player loads. `npm run build:store` leaves it out of the build entirely.
+  if (import.meta.env.VITE_DEVTOOLS !== '0')
+    void import('./dev/devtools').then((m) => m.installDevTools(game)).catch(() => undefined);
 }

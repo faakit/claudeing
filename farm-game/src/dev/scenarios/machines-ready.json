@@ -1,0 +1,43 @@
+{
+  "title": "Machines ready",
+  "about": "A preserve jar, keg, loom and furnace, all finished, in a row above the player.",
+  "version": 17,
+  "tags": ["farm", "machines"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "placed": [
+    {
+      "type": "preserve_jar",
+      "tx": 17,
+      "ty": 11,
+      "ready": true
+    },
+    {
+      "type": "keg",
+      "tx": 18,
+      "ty": 11,
+      "ready": true
+    },
+    {
+      "type": "loom",
+      "tx": 19,
+      "ty": 11,
+      "ready": true
+    },
+    {
+      "type": "furnace",
+      "tx": 20,
+      "ty": 11,
+      "ready": true
+    }
+  ],
+  "goal": "preserve"
+}

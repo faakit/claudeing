@@ -935,3 +935,24 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   - *Ring:* the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
     taps use the slide rule (nearest item, clearly nearer than the next, within reach).
 
+
+## Sandbox workflow and dev tools (devtools agent, 2026-10-10)
+
+- *Scenarios are data with two layers.* A raw `state` patch (written at the scenario's `version`, run through
+  `migrate` and `sanitize`) for anything unusual, and semantic keys (`at`, `items`, `crops`, `goal`, `letters`...)
+  applied through today's rules by name. The semantic keys are what keep fixtures alive across save bumps, so they
+  are preferred; the base is always today's new game with a fixed seed (12345).
+- *Dev code is a lazy chunk, not a build flag.* The published build keeps `?debug&scenario=` working (the owner can
+  use the dev menu on the phone), but players never load it: the entry bundle only holds the dynamic import, the
+  service worker never precaches the chunk, and `npm run build:store` (VITE_DEVTOOLS=0) removes it entirely.
+  `scripts/check-bundle.mjs` proves all three.
+- *The dev menu is HTML, not a Phaser scene.* A scene showed in every `getScenes(true)` check and drew into the perf
+  budget; an HTML sheet adds no scene, no draw call and no game touch target. Its tab sits over the read-only HUD and
+  only shows with `?scenario=`, `?devmenu` or in `npm run dev`, so older `?debug` suites never see it.
+- *The lab shares the farm's soil.* Soil is one per game (`state.farm.tiles`) and tilling needs an owned plot, so the
+  lab's beds sit at farm plot coordinates and the lab preset owns every plot. Fine for a sandbox; a real second soil
+  map would need per-map soil.
+- *Scenario pages are sandboxes.* From the first scenario on, saves go to memory, so jumping around in the dev menu
+  can never overwrite a real save.
+- *Fixed waits are ratcheted, not banned outright.* The 389 existing ones (scripts and probes) are allowed per file
+  and may only go down; any new one over 100 ms fails the unit tests.

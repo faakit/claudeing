@@ -1,0 +1,31 @@
+{
+  "title": "Left-handed mode on the farm",
+  "about": "The dock mirrored for the left thumb; a tilled, dry patch and seeds to plant, so every control is in play.",
+  "version": 17,
+  "tags": ["farm", "controls", "a11y"],
+  "at": {
+    "map": "farm",
+    "tx": 10,
+    "ty": 15,
+    "facing": "down"
+  },
+  "time": {
+    "day": 3,
+    "clock": "08:00"
+  },
+  "settings": {
+    "leftHanded": true
+  },
+  "soil": [
+    {
+      "rect": [9, 16, 4, 2]
+    }
+  ],
+  "items": [
+    {
+      "item": "parsnip_seed",
+      "qty": 10
+    }
+  ],
+  "select": "parsnip_seed"
+}

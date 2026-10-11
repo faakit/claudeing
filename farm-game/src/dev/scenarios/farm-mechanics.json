@@ -1,0 +1,27 @@
+{
+  "title": "Farm mechanics bench (e2e)",
+  "about": "Spring 1 at 10:00 (villagers are out), a bare game without the guide: a wild leek in front and a daffodil beside, Rosa nearby. The mechanics e2e block (scripts/e2e-scenarios.mjs) starts here.",
+  "version": 17,
+  "tags": ["farm", "e2e"],
+  "at": {
+    "map": "farm",
+    "tx": 13,
+    "ty": 17,
+    "facing": "down"
+  },
+  "time": {
+    "clock": "10:00"
+  },
+  "forage": [
+    {
+      "item": "wild_leek",
+      "tx": 13,
+      "ty": 18
+    },
+    {
+      "item": "daffodil",
+      "tx": 12,
+      "ty": 18
+    }
+  ]
+}

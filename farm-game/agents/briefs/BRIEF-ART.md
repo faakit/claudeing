@@ -52,6 +52,13 @@ cohesive, hand-authored pixel-art look, **without changing game rules**. You do 
 
 ## Workflow
 
+**Sandbox workflow (required, `docs/EXTENDING.md` section 0):** every art batch starts with the
+scenario(s) that stage it (`src/dev/scenarios/<name>.json`; the lab, `?scenario=lab`, shows every crop stage, placeable, node and forage good at once),
+is reviewed by opening it (`?scenario=<name>`; the DEV tab for frames, clock and the frame graph),
+ships checks that load those scenarios with the await helpers (`scripts/lib/farm.mjs`, no new fixed waits), and is
+reviewed by the critic through the same scenario names (each finding cites one). `npm run verify:fast` while iterating.
+Before/after screenshots: `farm.shot(name)` and the frame-exact `farm.strip(name)` on a scenario.
+
 1. Write the manifest of keys and sizes. Commit it.
 2. Order of work (biggest visual change per effort): **tileset and terrain -> player -> crops -> item icons -> UI
    skin -> buildings/placeables -> villagers and animals -> fx -> map decor.**

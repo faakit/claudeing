@@ -1,0 +1,35 @@
+{
+  "title": "The lab: every crop stage, placeable, machine, node and forage good",
+  "about": "The debug-only developer map. West bed: one crop per row, seed to ripe; east bed: more crops, then tilled, watered, fertilized, weeds and bare dirt. Machines and decor line the road, animal houses sit north-west, ore nodes in the quarry (north-east), forage on the west meadow, water along the south shore. The house door teleports to the shore. Villagers stand on the north road.",
+  "version": 17,
+  "tags": ["lab"],
+  "preset": "lab",
+  "at": {
+    "map": "lab",
+    "tx": 13,
+    "ty": 15,
+    "facing": "down"
+  },
+  "time": {
+    "day": 5,
+    "clock": "10:00"
+  },
+  "items": [
+    {
+      "item": "parsnip_seed",
+      "qty": 20
+    },
+    {
+      "item": "sprinkler",
+      "qty": 3
+    },
+    {
+      "item": "chicken_feed",
+      "qty": 10
+    },
+    {
+      "item": "tomato",
+      "qty": 5
+    }
+  ]
+}

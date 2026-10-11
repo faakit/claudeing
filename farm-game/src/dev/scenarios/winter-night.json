@@ -1,0 +1,24 @@
+{
+  "title": "Winter night on the farm",
+  "about": "Winter 10 at 22:30 in front of the house: night tint, lit windows and lamps.",
+  "version": 17,
+  "tags": ["farm", "night", "art"],
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 11,
+    "facing": "down"
+  },
+  "time": {
+    "season": "winter",
+    "day": 10,
+    "clock": "22:30"
+  },
+  "crops": [
+    {
+      "crop": "kale",
+      "stage": 2,
+      "rect": [9, 16, 4, 2]
+    }
+  ]
+}

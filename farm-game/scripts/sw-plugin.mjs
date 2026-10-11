@@ -39,7 +39,9 @@ export function offlineServiceWorker(publicDir = 'public') {
     name: 'tiny-acre-offline-sw',
     apply: 'build',
     generateBundle(_options, bundle) {
-      this.emitFile({ type: 'asset', fileName: 'sw.js', source: serviceWorkerSource(Object.keys(bundle), publicDir) });
+      // The dev tools chunk (src/dev, loaded only with ?debug) is never precached: players do not download it.
+      const built = Object.keys(bundle).filter((f) => !f.split('/').pop().startsWith('devtools-'));
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source: serviceWorkerSource(built, publicDir) });
     },
   };
 }

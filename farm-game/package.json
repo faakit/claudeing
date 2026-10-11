@@ -22,10 +22,16 @@
     "cap:android": "npm run cap:sync && cap open android",
     "cap:ios": "npm run cap:sync && cap open ios",
     "assets": "node scripts/make-icons.mjs && capacitor-assets generate --android --ios --iconBackgroundColor '#2a1f4a' --iconBackgroundColorDark '#2a1f4a' --splashBackgroundColor '#1b1530' --splashBackgroundColorDark '#1b1530'",
-    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run e2e && npm run e2e:mobile && npm run e2e:controls && npm run e2e:onboarding && npm run perf",
+    "verify": "node scripts/verify.mjs",
     "e2e:controls": "node scripts/e2e-controls.mjs",
     "bench:thumb": "node scripts/bench-thumb.mjs",
-    "e2e:onboarding": "node scripts/e2e-onboarding.mjs"
+    "e2e:onboarding": "node scripts/e2e-onboarding.mjs",
+    "verify:serial": "npm run lint && npm run typecheck && npm test && npm run build && npm run check:bundle && npm run e2e:scenarios && npm run e2e && npm run e2e:mobile && npm run e2e:controls && npm run e2e:onboarding && npm run perf",
+    "verify:fast": "node scripts/verify.mjs --fast",
+    "e2e:scenarios": "node scripts/e2e-scenarios.mjs",
+    "gen:lab": "node scripts/generate-lab-map.mjs",
+    "check:bundle": "node scripts/check-bundle.mjs --store",
+    "build:store": "tsc --noEmit && vite build --mode store"
   },
   "dependencies": {
     "@capacitor/app": "8.1.2",

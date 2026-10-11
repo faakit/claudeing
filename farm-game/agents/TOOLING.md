@@ -34,8 +34,22 @@ Prettier, playwright-core (Chromium at `/opt/pw-browsers/chromium`), Capacitor 8
 | Egress blocked hosts                                        | do not fetch; vendor or generate assets locally                                                                                         |
 | Two checkouts run `npm run verify` at once (ports collide)  | set `E2E_PORT`, `E2E_MOBILE_PORT`, `PERF_PORT` to free ports (defaults 4173, 4178, 4174)                                                |
 
+## Sandbox tools (src/dev, scripts/lib)
+
+- **Scenarios** `src/dev/scenarios/*.json`: open with `?scenario=<name>` (dev server) or `?debug&scenario=<name>`
+  (a build). Saves stay in memory once a scenario ran (the page is a sandbox).
+- **The lab**: a debug-only map (`npm run gen:lab` regenerates `src/dev/lab/lab-map.json`), scenario `lab`.
+- **`window.__farm.dev`** (typed in `src/dev/api.ts`): clock, loop stepping, seed, time jumps, goto, await helpers.
+- **DEV tab** (top-left; with `?scenario=` or `?devmenu`, always in `npm run dev`; backquote toggles it).
+- **`scripts/lib/farm.mjs`**: `serve`, `launch`, `openScenario`, then `farm.act/interact/tapTile/tapButton/panel/
+idle/shot/strip`. `URL=http://localhost:5195/` makes it use a running dev server instead of `vite preview`.
+- **Gates**: `npm run verify:fast` (about 2 min), `npm run verify` (parallel; `VERIFY_JOBS`), `npm run verify:serial`
+  (the old chain). `npm run check:bundle` proves players never load the dev code; `npm run build:store` leaves it
+  out entirely.
+
 ## Conventions the tools rely on
 
-- `?debug` exposes `window.__farm = { game, getState, gameEvents, inputHub, audio }`.
+- `?debug` exposes `window.__farm = { game, getState, gameEvents, inputHub, audio, ..., dev }` (`dev` once the
+  lazy dev chunk has loaded: wait for `__farm.dev.readyState === 'ready'`).
 - Keyboard: WASD/arrows move, Space action (hold repeats), E interact, 1-8 hotbar, Esc/M menu, Enter confirms.
 - Hotbar slots 0-3 are tools (hoe, can, scythe, rod); Digit5 is the first free slot.

@@ -1,0 +1,32 @@
+{
+  "title": "At the shipping bin with produce",
+  "about": "Facing the bin with parsnips, silver cauliflower and eggs in the bag; parsnips selected.",
+  "version": 17,
+  "tags": ["farm", "economy"],
+  "at": {
+    "map": "farm",
+    "tx": 12,
+    "ty": 10,
+    "facing": "up"
+  },
+  "time": {
+    "day": 5,
+    "clock": "09:00"
+  },
+  "items": [
+    {
+      "item": "parsnip",
+      "qty": 12
+    },
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 1
+    },
+    {
+      "item": "egg",
+      "qty": 4
+    }
+  ],
+  "select": "parsnip"
+}

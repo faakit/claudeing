@@ -1,0 +1,28 @@
+{
+  "title": "A plot of ripe crops",
+  "about": "Home plot: three rows of ripe parsnips and a row of ripe cauliflower; standing just above it, scythe in hand.",
+  "version": 17,
+  "tags": ["farm", "harvest"],
+  "at": {
+    "map": "farm",
+    "tx": 10,
+    "ty": 15,
+    "facing": "down"
+  },
+  "time": {
+    "clock": "08:00"
+  },
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": "ripe",
+      "rect": [9, 16, 4, 3]
+    },
+    {
+      "crop": "cauliflower",
+      "stage": "ripe",
+      "rect": [9, 19, 4, 1]
+    }
+  ],
+  "select": 2
+}
