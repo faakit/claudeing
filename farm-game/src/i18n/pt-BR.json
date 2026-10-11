@@ -226,8 +226,8 @@
     "notHungry": "Você não está com tanta fome."
   },
   "energy": {
-    "tiredEat": "Cansado demais! Coma algo ou vá dormir.",
-    "tired": "Cansado demais! Vá dormir."
+    "tiredEat": "Sem energia! Coma algo ou vá dormir.",
+    "tired": "Sem energia! Vá dormir."
   },
   "npc": {
     "birthdayLine": "Hoje é meu aniversário! Um presente deixaria o dia perfeito.",
@@ -249,16 +249,16 @@
       "one": "Com {count} coração: {perks}",
       "other": "Com {count} corações: {perks}"
     },
-    "bestFriends": "Melhores amigos! Todas as vantagens liberadas.",
+    "bestFriends": "Amizade de verdade! Todas as vantagens liberadas.",
     "loves": "Adora: {items}",
     "reachHearts": "Chegue a 3 corações para saber os favoritos.",
     "gift": "Presente",
-    "gifted": "Presenteado",
+    "gifted": "Já deu",
     "shop": "Loja",
     "giftFor": "Um presente para {name}?",
     "nothingToGive": "Nada para dar. Colha ou cate algo no mato!",
     "replyLove": "É a coisa que eu mais gosto no mundo!",
-    "replyLike": "Que atencioso, obrigado!",
+    "replyLike": "Que gentileza, valeu!",
     "replyNeutral": "Ah! Que gentileza.",
     "replyDislike": "Hum... valeu, eu acho."
   },
@@ -296,10 +296,10 @@
   },
   "project": {
     "levelToast": "{name}: nível {level}! {reward}",
-    "fundedToast": "{name}: financiado! {reward}",
-    "finishedToast": "{name} está pronto! {reward}",
-    "landmarkLevel": "{name}, nível {level}: financiado por você!",
-    "landmark": "{name}: financiado por você! {reward}",
+    "fundedToast": "{name}: dinheiro reunido! {reward}",
+    "finishedToast": "{name}: obra concluída! {reward}",
+    "landmarkLevel": "{name}, nível {level}: graças a você!",
+    "landmark": "{name}: graças a você! {reward}",
     "couldFinish": "Dá para terminar hoje: {name}. Veja o mural da vila.",
     "doneLine": "Pronto: {line}",
     "doneShort": "Pronto!",
@@ -384,16 +384,16 @@
     "cleared": "O leito do velho córrego foi liberado: {parts}.",
     "workDone": "Já está bom. Vamos ver o que a manhã traz.",
     "workToday": "Chega por hoje. Volte amanhã.",
-    "workTired": "Cansado demais. Um dia de obra gasta {n} de energia.",
+    "workTired": "Sem energia. Um dia de obra gasta {n}.",
     "upgradeAfter": "{phrase} {name}: depois de {after}.",
-    "stepOpen": "{name}: reaberta!",
-    "stepFund": "{name}: pronto para financiar",
+    "stepOpen": "{name} voltou à vida!",
+    "stepFund": "{name}: dá para financiar",
     "stepWork": "Obra: {name} ({n} de {of})",
     "rowFund": "financiar {parts}",
-    "rowOpensTomorrow": "reabre amanhã cedo",
+    "rowOpensTomorrow": "volta amanhã cedo",
     "rowWorkedToday": "obra feita hoje ({n} de {of})",
     "rowWorkDay": "dia de obra {n} de {of}",
-    "rowOpen": "reaberta. {phrase}",
+    "rowOpen": "de volta. {phrase}",
     "spadeLetter": "A pá da Ilse. Suas mãos estavam cheias na nascente, então aqui está. Cave a partir da margem do córrego.",
     "creekTitle": "O CÓRREGO VOLTOU",
     "creekLine": "O córrego da Ilse, cheio de novo.",
@@ -451,7 +451,7 @@
   },
   "decor": {
     "sit": "Você senta um pouco. +{n} de energia.",
-    "rested": "Descansado. Volte amanhã.",
+    "rested": "Já descansou. Volte amanhã.",
     "restedToday": "Já descansou hoje.",
     "sitWhenTired": "Sente quando cansar (+{n})."
   },
@@ -639,7 +639,7 @@
     "doneTitle": "{order} (feito)",
     "rivalTook": "{name} pegou: nenhum ponto.",
     "rivalFilled": "{name} atendeu este.",
-    "thanks": "Obrigado!",
+    "thanks": "Valeu!",
     "gone": "Foi",
     "nothing": "Nada hoje. Volte amanhã!",
     "savedForRequest": "Guardado para um pedido.",
@@ -732,7 +732,7 @@
     "bought": "Comprou {n} {item}",
     "limit": "Você já tem o máximo que dá para pôr.",
     "cantBuyNow": "Não dá para comprar isso agora.",
-    "upgraded": "{name}: melhorado!",
+    "upgraded": "{name}: melhoria feita!",
     "youNeed": "Você precisa de {n} {item}.",
     "moreGoods": "mais produtos",
     "alreadyMaxed": "Já está no máximo."
@@ -748,7 +748,7 @@
   "sleep": {
     "title": "Ir dormir?",
     "itIs": "São {time}.",
-    "explain": "As plantas crescem, a caixa é vendida e você acorda descansado.",
+    "explain": "As plantas crescem, a caixa é vendida e você acorda com a energia cheia.",
     "tomorrow": "Amanhã: {forecast}{extra}",
     "stormExtra": ". Colha as frutas maduras antes!",
     "rainExtra": ". Não precisa regar.",
