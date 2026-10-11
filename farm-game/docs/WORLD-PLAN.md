@@ -17,13 +17,18 @@ boat is the **Heron**; his father built her the year Finn was born.
 | 4 | **The Seed House** | Clay (Bram's half of the seed tin) | Town, building at 14,16 | **Seed library**: borrow a Wend strain, let some go to seed, return more than you took | Y1 fall |
 | 5 | **The Bucket Orchard** | Rosa | The woods' north clearing | **Grafting**: take dormant cuttings and bud them onto dead stumps whose roots shape the tree | Y1 winter |
 | 6 | **The Market Field** | Mara | Town, the south-west field | **Market day**: stock a stall; visitors' wants and repeats set the price | Y2 spring |
-| - | **Lantern Night** (finale, not a mechanic) | everyone | The weir at Wendhead, at dusk | each household's lantern, made from its place; you open the sluice | Y2 fall 27 |
+| - | **Lantern Night** (the first full celebration: a milestone, not an ending; not a mechanic) | everyone | The weir at Wendhead, at dusk | each household's lantern, made from its place; you open the sluice | Y2 fall 27, then every fall |
 
 **The core three.** If only three places ever ship, they are the **Old Spring**, the **Weir** and the **Seed House**:
 water comes back to the farm and the town, families come home (timber), and Clay turns from rival to ally. Without
 the forge, their parts are bought from Orin for gold (the forge only changes how parts are made). Without the
-market, families' goods go on Mara's shelf. The finale requires every place listed in `valley.json`, so it works with
-three.
+market, families' goods go on Mara's shelf. The first full Lantern Night waits for every place listed in
+`valley.json`, so it works with three.
+
+**Committed scope (owner, 2026-10-11): build the core first.** Milestones M1-M4, M6-M8 and M11 (the Old Spring, the
+Weir with towing, the Seed House, and Lantern Night). The forge, the orchard and the market are designed and approved
+but come after. So that the must-have "dead trees bud" holds in the core, the farm creek's dead trees put out new leaves
+by themselves in the farm's `restored` variant (art only); grafting them is the orchard's later addition.
 
 Families come home when their place is mended **and** their house is rebuilt with timber (section 5.2): the Marl
 millers (after the Weir), Dara Holt and her children (after the Seed House), Wren Ashby (after the Orchard), Tobin
@@ -381,13 +386,15 @@ changes.
 - **Scenarios:** `market-empty`, `market-work`, `market-day-stock`, `market-day-buyers`, `market-day-close`,
   `tobin-arrives`.
 
-### 3.7 Lantern Night: the finale (no mechanic, no new map)
+### 3.7 Lantern Night: the valley's first full celebration (a milestone, not an ending; no mechanic, no new map)
 
 Ilse's last journal page (Rosa's 5-heart scene, "Blossom"): "When the harvest is in, every house made a lantern from
 its own work, and we let the weir carry them down to the ones who'd gone, so they'd know the way back." Lantern Night
-is the evening of **fall 27** (after that day's market closes). It becomes the finale on the first fall 27 when every
-place in `valley.json` is restored and every family is home; Rosa's letter on fall 20 says it is coming. If the valley
-is not ready, that letter says what is still missing, warmly, and names next fall.
+is the evening of **fall 27** (after that day's market closes). The first **full** Lantern Night, with every household's
+lantern, is held on the first fall 27 when every place in `valley.json` is restored and every family is home; Rosa's
+letter on fall 20 says it is coming. Before that, fall 27 is a small Lantern Night with the lanterns the valley has (from
+the first fall after the weir opens): a few lights, the households that are home, and Rosa's fall 20 letter naming, warmly,
+who is not back yet. So the celebration grows with the valley rather than arriving once.
 
 **At dusk (6 PM) the valley gathers at the weir in Wendhead**, the place the river came back through. Each household's
 lantern is made of its place: Orin's forged frame, a shade of Wend seed paper from the Seed House (Clay and Dara),
@@ -395,10 +402,20 @@ Marl flour-sack cloth, Wren's beeswax, a husk of bucket-tree blossom (Rosa), a l
 every name (Mara), a lantern hung from the *Heron*'s old oarlock (Finn), and Ilse's, which you bring (that morning the
 forge, or Orin if it is not lit, gives you its frame). One line each from the five who stayed. Then the player's
 action: you **open the sluice gate** (Interact), and the gathered lanterns ride the water through the weir together,
-down the gorge and out of sight toward the valley, while the Lantern Night piece plays. Nobody launches a light alone,
-nothing is counted, no names are read out. A sheet follows, **"The Wend is remembered"**: each restored place's phrase
-("The creek runs. The forge rings. The river is home. ...") and "Keep playing". Lantern Night repeats every fall 27
-after (a festival row with no contest).
+down the gorge and out of sight toward the valley, to a re-voiced arrangement of the existing fall night tune. Nobody
+launches a light alone, nothing is counted, no names are read out.
+
+**It is not an ending.** No credits, no "complete" screen, no summary sheet, no change of game mode. The evening closes
+like any festival: you walk home. The next morning is an ordinary morning with three small new things:
+
+- Rosa's letter: "Same time next year. Bring a bigger lantern."
+- A letter from a name in Mara's ledger who has not come back yet, saying they heard about the lights (the hook for
+  later families, which use the same place, house and timber pattern as data).
+- The town keeps the lanterns' bunting up through winter, and from then on each season dresses the valley a little
+  differently (blossom petals on the river in spring, children at the Derby in summer, lanterns in fall, ice on the weir
+  in winter): small seasonal changes that keep the world moving.
+
+Lantern Night repeats every fall 27 (a festival row with no contest), with a lantern for every household that is home.
 
 ### 3.8 Ideas considered and not chosen
 
@@ -487,7 +504,10 @@ palette; `mapCache.ts` keys by file. The final variant keeps today's file name.
 
 - On a `dry` variant the season's piece plays thinned (its accompaniment reduced to bass and one voice; no new
   compositions) over a dry wind bed instead of birdsong; `waking` brings birdsong; `restored` the full arrangement.
-- Loops: creek, river, anvil (town mornings), market murmur. One new piece: Lantern Night.
+- Loops: creek, river, anvil (town mornings), market murmur. No new composition: Lantern Night re-voices the existing
+  fall night tune, and the first-green morning uses a short jingle in the current piece's key (the existing jingle
+  system). The owner has listened and approved the current music and SFX direction; this plan adds only ambience and
+  these two small moments.
 
 ## 5. Villager arcs
 
@@ -537,7 +557,8 @@ you do:*
 
 1. *Day 7 letter* (new voice, same rules): "I've fed this town alone for seven years. The board's first come, first
    served. Don't take it personally when I win."
-2. *Year 1 board race* (rules and balance unchanged).
+2. *The board race, year 1 and on into year 2* (owner-approved; rules and balance unchanged: two requests a day in year
+   2 until he likes you), until "Partners" ends it.
 3. *The spring opens:* next morning a sack of fertilizer at your gate and a letter with no name (revealed in step 6).
 4. *2 hearts "A friendly bet"* (kept); `rivalLate`.
 5. *The weir opens:* his fields get the river too. "Didn't ask for help." (`rivalLate` turns on here if he is below 2
@@ -583,8 +604,8 @@ half done. v1: lines, loves and a stall; heart events are v2. Each carries a los
 | Y1 winter 28 | Year-end screen: the place phrases so far, a line from Rosa | | |
 | Y2 spring | The orchard blossoms on day 1; Wren home; Market asked and worked; **market day** from about day 15; the first **High Water** notch | | Flower Show, dressed by the families |
 | Y2 summer | Tobin home; Trade Road; Clay's "Partners"; Finn takes Pip and Lu out on the *Heron*; houses finished | | Fishing Derby on the river, Dara's children cheering |
-| Y2 fall | Rosa's fall 20 letter; **Lantern Night finale on fall 27** | | Harvest Fair |
-| Y3 onward | Free play: market weekly, Lantern Night each fall 27, High Water each spring, the Founders' Stone, v2s | | |
+| Y2 fall | Rosa's fall 20 letter; **the first full Lantern Night on fall 27**, a celebration, then an ordinary morning | | Harvest Fair; Lantern Night |
+| Y3 onward | The valley keeps growing: market weekly, Lantern Night each fall, High Water each spring, seasonal dressing, the Founders' Stone, each mechanic's v2, later families from Mara's ledger | | |
 
 - **Festivals come back** by looking different, not by gating: a `dry` town's festival is three tables; each restored
   place and family adds a stall, bunting or crowd sprites. Rules, rivals and prizes unchanged. The Derby's
@@ -592,15 +613,22 @@ half done. v1: lines, loves and a stall; heart events are v2. Each carries a los
 - **Legendary fish:** the glimmer trout and the ice pike need the river; the legends letter says "once the river is
   back". Both are `aside` goals, so nothing waits on them.
 - **A slow player** is never stuck: the forge asks on summer 1 regardless; the weir asks on summer 15 without the forge;
-  the market asks as soon as three places are open; nothing expires; Lantern Night simply waits for a later fall.
+  the market asks as soon as three places are open; nothing expires; the full Lantern Night simply comes in a later
+  fall, and each fall before it is a smaller one.
 - **A fast player** cannot rush people: asks need hearts.
 
-### A player who stops after year 1
+### Chapters, not an ending
 
-Winter 28 of year 1 is a resting point: the year-end screen leads with the place phrases you have earned ("The creek
-runs. The forge rings. The river is home.") and Rosa's line ("Not bad for a first year. The Wend's breathing again."),
-then the existing rows. By then a typical player has mended four places, met one returning family, and seen Clay judge
-their Winter Feast basket kindly: a complete small arc.
+Each year closes a chapter and opens the next; nothing in the game says it is over.
+
+- **Year 1, winter 28: a chapter break.** The year-end screen is headed with the year's chapter ("Year 1: the first
+  green"), leads with the place phrases you have earned ("The creek runs. The forge rings. The river is home.") and
+  Rosa's line ("Not bad for a first year. The Wend's breathing again."), then the existing rows, and closes "See you in
+  spring." By then a typical player has mended four places, met one returning family, and seen Clay judge their Winter
+  Feast basket kindly: a chapter finished, with the next one visibly waiting (a house half built, a letter promised).
+- **Year 2: homecomings,** peaking at the first full Lantern Night: a milestone, followed by an ordinary morning.
+- **Year 3 and on: the valley keeps growing.** The second High Water notch, more lanterns each fall, later families,
+  seasonal dressing, and room for new content in the same patterns (a place, a family, a house, a festival row).
 
 ### High Water (the yearly ritual and the year-3 checkpoint)
 
@@ -656,7 +684,7 @@ The guided start stays as tuned. The letter adds no step and day 3 gets nothing 
 | Rosa's "Harvest thanks", Finn's "A secret spot", Mara's ledger event | **Rewrite** as "Blossom", "The Heron", "The ledger" (rewards kept). |
 | Goal names "Tiny Tycoon", "Master Farmer" | **Rename** to valley titles ("Keeper of the Wend"); stats unchanged. |
 | Year-end screen | **Extend** with the place phrases and Rosa's line; "The river remembers. See you in spring." replaces "A new spring awaits." |
-| Festivals | **Keep** rules; dressed by variant and families; the Derby's venue follows the river; Lantern Night after the finale. |
+| Festivals | **Keep** rules; dressed by variant and families; the Derby's venue follows the river; Lantern Night every fall 27 once the weir is open, full once everyone is home. |
 | Legends letter | **Edit** the town river lines. |
 | Rowing, a Lantern Hill map, a Narrows map, an Orchard map, a Seed House interior (draft 1) | **Cut** in this revision: one new map (Wendhead) instead of five. |
 
@@ -707,7 +735,9 @@ have already greened; every place starts at 0 and asks by the usual conditions.
 - **Characters:** four villager sheets (20x32, four directions, 4-frame idle), the children decor.
 - **Objects:** six site sprites in four stages, four houses with scaffolding stages, stumps and buds, logs, the anvil
   view, stalls and awnings, the river stone with notches, lanterns on water, about 20 item icons.
-- **Audio:** four loops, three cues (anvil, bellows, log landing), the thinned-arrangement flag, one piece.
+- **Audio (small role; direction approved):** ambience beds per map stage, four loops, three cues (anvil, bellows, log
+  landing; existing cues reused where they fit), the thinned-arrangement flag, a first-green jingle and a re-voiced
+  existing tune for Lantern Night. No new compositions.
 
 ## 10. Originality notes
 
@@ -718,17 +748,21 @@ The owner's premise has a famous neighbour, so the execution differs on purpose:
   by one person, paid with a small fund, a part and days of work that preview its verb. The Seed House lends.
 - No villain, corporation or magic helpers; the flood was nobody's fault.
 - No broken bridge, no community centre, no evaluation at a shrine. The yearly ritual is a notch on a river stone on
-  the morning the water runs high: one measurement, no categories. The finale sends lanterns downriver together;
-  nothing is counted.
+  the morning the water runs high: one measurement, no categories. Lantern Night sends lanterns down the weir together;
+  nothing is counted, and it is a yearly celebration, not an ending: no credits, no completion screen.
 - The rival is a farmer who stayed, turned by restorations he benefits from.
 - Names (the Wend, Ilse, Bram, the Heron, the Marls, Wren Ashby, Dara Holt, Tobin Reyes) echo no well-known farm game.
 
-## 11. Open questions (for the owner)
+## 11. Owner decisions (2026-10-11)
 
-1. The finale is fixed on fall 27 of year 2 at the earliest. Should a year-1-only player get more than the winter 28
-   resting point?
-2. Day 1 dry (palette only, geometry and timing unchanged), or green around the house with dryness beyond the fence?
-3. Is a timing mini-game welcome next to fishing (with calibration and "Easy strike")?
-4. Four returning households, one villager each, is the art budget. More as decor-only households?
-5. Towing is the Weir's verb; it makes timber the material of homecoming. Is the owner happy for the *Heron* to stay a
-   boat you see (Finn's scenes), not one you drive?
+1. **Year 1 and year 2 are chapters.** Winter 28 of year 1 is a chapter break; the first full Lantern Night (year 2,
+   fall 27) is a milestone celebration, not an ending (section 3.7, section 6 "Chapters, not an ending").
+2. **Day 1 is straw-coloured:** the whole farm parched, palette only, turning green as planned.
+3. **Yes** to the rhythm forge beside fishing (with calibration and "Easy strike").
+4. **Yes** to four returning households with one villager each.
+5. **Yes** to the *Heron* seen, not driven, and to towing behind the lab-map prototype gate (MILESTONES M7).
+6. **Yes** to the quiet second-notch checkpoint and to Clay's board race running into year 2.
+7. **Committed scope:** M1-M4, M6-M8 and M11 first.
+8. **Audio:** the existing direction is approved; the plan gives audio a small role (section 4.5).
+
+Still open: none from this design. Later families from Mara's ledger are content to plan when the core ships.

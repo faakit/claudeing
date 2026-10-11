@@ -33,9 +33,14 @@ families left with it, and you mend it place by place.
 | M8 | The Seed House: the seed library; Clay's turn from rival to ally | depth, art |
 | M9 | The Bucket Orchard: grafting onto dead stumps | depth, art |
 | M10 | The Market Field: market day, families' stalls, the Trade Road | depth, art, audio |
-| M11 | Lantern Night finale, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio |
+| M11 | Lantern Night (the first full celebration, not an ending), High Water, chapter breaks, the Founders' Stone | depth, onboarding, art, audio |
 
-The minimum complete game is M1-M4, M6, M7, M8 and M11 (the spring, the weir and the Seed House).
+**Committed scope (owner, 2026-10-11): M1-M4, M6-M8 and M11**: the Old Spring, the Weir with towing, the Seed House
+and Lantern Night. Build these first. M5 (forge), M9 (orchard) and M10 (market) are approved and come after the core.
+Lantern Night is a yearly celebration and a milestone, never an ending: the valley keeps growing after it.
+
+Audio: the owner approved the existing music and SFX direction. The milestones give audio a small role only (ambience
+per map stage, the first-green moment, Lantern Night), with no new compositions.
 
 After the first pass, each mechanic's v2 is its own small milestone (listed at the end of MILESTONES.md).
 
@@ -48,8 +53,8 @@ After the first pass, each mechanic's v2 is its own small milestone (listed at t
 - **Open findings and per-area next steps** (onboarding, controls, feel, art, audio, depth): `agents/OPEN-FINDINGS.md`
   and `agents/NEXT-STEPS.md`. They keep their own order; where one touches a Dry Year milestone, it is fixed in that
   milestone.
-- **Needs a human:** play on a real phone one-handed as a first-time player; listen to the audio; decide the open
-  questions in WORLD-PLAN section 11 and in `agents/NEXT-STEPS.md`.
+- **Needs a human:** play on a real phone one-handed as a first-time player; decide the open questions in
+  `agents/NEXT-STEPS.md` (the Dry Year's were answered on 2026-10-11, WORLD-PLAN section 11).
 
 ## Later: production polish
 

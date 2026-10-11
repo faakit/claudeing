@@ -11,6 +11,7 @@ intro steps, HUD line), **audio**, **feel** (motion and juice).
 
 Rules for every milestone:
 
+- **Scope:** the committed core is M1-M4, M6-M8 and M11 (owner, 2026-10-11); see below.
 - **Perf:** no scenario above 12 draws or 3.5 ms JS per frame (target 6 draws); pacing gates unchanged.
 - **The guided start:** `npm run e2e:onboarding` stays 16/16 reaching day 2; the median time to day 2 grows by at most
   5 s against the round-4 baseline; day 3 gains no new beat.
@@ -37,13 +38,23 @@ Rules for every milestone:
 | M10 | The Market Field: market day; Tobin; the Trade Road | depth, art, audio | M7 |
 | M11 | Lantern Night, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio | M3 and every place shipped |
 
-**The minimum complete game** is M1, M2, M3, M4, M6, M7, M8 and M11 (the core three places). Without M5, parts are bought
-from Orin for gold; without M10, families' goods go on Mara's shelf; the finale requires the places that exist in
-`valley.json`.
+**Committed scope (owner, 2026-10-11): M1-M4, M6-M8 and M11**, the core three places (the Old Spring, the Weir with
+towing, the Seed House) and Lantern Night. Build these first, in order. M5 (the forge), M9 (the orchard) and M10 (the
+market) are designed and approved but come after the core. In the core: parts are bought from Orin for gold (no forge);
+families' goods go on Mara's shelf (no market); the farm creek's dead trees bud by themselves in the farm's `restored`
+variant (no grafting yet); the full Lantern Night waits for the places that exist in `valley.json`.
 
-Audio alongside: **A1** the thinned arrangement on `dry` variants and the dry wind bed (with M2), **A2** creek and river
-loops (M3, M6), **A3** anvil and bellows (M5), **A4** market murmur and the log-landing cue (M7, M10), **A5** the Lantern
-Night piece (M11).
+**Audio has a small role** (the owner has listened and approved the existing music and SFX direction; no new
+compositions):
+
+- **A1 (with M1):** the farm's ambience by stage: a dry wind bed and the season's piece thinned while the farm is
+  straw-coloured, birdsong back when it greens; the first-green morning gets a short jingle in the current piece's key
+  (the existing jingle system).
+- **A2 (with M3 and M6):** recovering and restored ambience: the creek loop on the farm and at Wendhead, the river loop in
+  town, the full arrangement back on restored maps.
+- **A3 (with M5, after the core):** anvil and bellows cues.
+- **A4 (with M7 and M10):** the log-landing cue (an existing cue reused if one fits), the market murmur.
+- **A5 (with M11):** Lantern Night re-voices the existing fall night tune over the river bed.
 
 ---
 
@@ -293,28 +304,35 @@ Night piece (M11).
   with wants walk past and buy; draws at most 8 with visitors.
 - **Depends on:** M7 (timber, the Marls' stall). Better with M5, M8 and M9 (more stalls), not required.
 
-## M11. Lantern Night, High Water, the year-end, the Founders' Stone
+## M11. Lantern Night (the first full celebration), High Water, chapter breaks, the Founders' Stone
 
-- **Goal:** the ending, a yearly ritual that measures one thing, and a resting point for year-1 players.
-- **Owner:** depth (finale, High Water, the stone), onboarding (finale flow), art (the households' lanterns, each made
+- **Goal:** the valley's first full celebration as a milestone in a continuing life (never an ending), a yearly ritual
+  that measures one thing, and year-end screens that read as chapter breaks.
+- **Owner:** depth (Lantern Night, High Water, the stone), onboarding (the Lantern Night flow), art (the households' lanterns, each made
   from its place, riding the weir; the river stone and its notches; the toppled and raised Founders' Stone), audio (A5).
-- **Files and data:** `valley.json` `finale` (Rosa's fall 20 letters: ready and not yet) and `highWater` (notch heights
-  from the spring, the weir and the warm pool); the finale at dusk on fall 27 at the Wendhead weir, after the market
-  closes (each household's lantern made from its place; Ilse's frame from the forge that morning; one line per villager
-  who stayed; you open the sluice by Interact and all the lanterns ride the water together; the "The Wend is remembered"
-  sheet with place phrases); `festivals.json` Lantern Night (fall 27 evening, no contest, after the finale); the river
+- **Files and data:** `valley.json` `lanternNight` (Rosa's fall 20 letters: full this year, or who is not back yet; the
+  households and their lanterns) and `highWater` (notch heights from the spring, the weir and the warm pool); Lantern
+  Night at dusk on fall 27 at the Wendhead weir, after the market closes, every fall once the weir is open (small until
+  every family is home, full after: each household's lantern made from its place; Ilse's frame from Orin that morning;
+  one line per villager who stayed; you open the sluice by Interact and the lanterns ride the water together); no
+  summary sheet, no credits: the evening ends with the walk home, and the next morning brings Rosa's "Same time next
+  year" letter, a letter from a name in Mara's ledger (the later-families hook) and the first seasonal dressing;
+  `festivals.json` Lantern Night (fall 27 evening, no contest); the river
   stone and the High Water morning (first spring morning after rain with the weir open; the second notch, whichever
-  year, side by side with the first and Clay's comparing line; no letter); `SummaryPanels.ts` year-end with place phrases and Rosa's
-  line; the Founders' Stone
+  year, side by side with the first and Clay's comparing line; no letter); `SummaryPanels.ts` year-end as a chapter
+  break (the year's chapter title, place phrases, Rosa's line, "See you in spring."); the Founders' Stone
   reframe (text, a toppled-stone object from day 1, carved names per level); goal renames (WORLD-PLAN 8).
-- **Scenarios:** `finale-ready` (fall 26, all restored, all home), `finale-not-yet` (fall 20, one house unfinished),
-  `finale-weir` (fall 27, 6 PM, Wendhead), `after-finale`, `high-water-y2`, `high-water-second` (two notches),
-  `year-end-y1`.
-- **Tests:** the finale only on fall 27 with every place restored and every family home, once; Lantern Night only after;
+- **Scenarios:** `lantern-night-ready` (fall 26, all restored, all home), `lantern-night-small` (fall 27, one house
+  unfinished), `lantern-night-weir` (fall 27, 6 PM, Wendhead), `morning-after-lanterns` (fall 28: the letters, the
+  dressing), `high-water-y2`, `high-water-second` (two notches), `year-end-y1`.
+- **Tests:** Lantern Night every fall 27 once the weir is open; full only with every place restored and every family
+  home; no code path shows credits, a completion screen or changes the game's mode after it (a test over the
+  scenario);
   High Water once a year, only with the weir, the notch never lower than last year's; the fall 27 market and the
   evening gathering never overlap; letters and sheets fit.
-- **Acceptance:** `finale-weir` plays through by taps in under 90 s with at most 8 draws (lanterns are atlas frames); `year-end-y1` reads as a resting point (critic
-  signs off the wording); no screen in the game grades the valley.
+- **Acceptance:** `lantern-night-weir` plays through by taps in under 90 s with at most 8 draws (lanterns are atlas
+  frames); `morning-after-lanterns` is an ordinary playable morning with the new letters and dressing; `year-end-y1`
+  reads as a chapter break (critic signs off the wording); no screen in the game grades the valley or says it is over.
 - **Depends on:** M3 and every place that ships.
 
 ## E. Enrichments from the living-villagers plan (optional, after their base lands)
@@ -329,6 +347,12 @@ Not blocking any milestone above. When the plan's systems exist (`agents/PLAN-NP
   Finn at the river).
 - **E4, with its M5 (ties):** the families' ties and gossip about restorations.
 - Scenarios per enrichment: `memory-worked-spring`, `barks-dry-town`, `barks-river-town`, `gossip-house-done`.
+
+## After the core: the valley keeps growing
+
+M5 (the forge), M9 (the orchard), M10 (the market) first, then each mechanic's v2 and new content in the same patterns:
+later families from Mara's ledger (a place or a house, timber, an arrival), seasonal dressing, more Lantern Night
+lanterns.
 
 ## Later (v2s, each its own small milestone)
 

@@ -37,20 +37,29 @@ it fed. So:
 
 ## The emotional arc
 
-- **Beginning (spring, year 1): a tired place notices you.** Day 1 is the guided start, unchanged in length, on
-  a farm that looks parched. By the end of the first week your fields are the only green in the valley, and one
+The arc is told in **chapters of a life that keeps going**, never acts toward an ending.
+
+- **Chapter one (year 1): a tired place notices you.** Day 1 is the guided start, unchanged in length, on a farm
+  that is straw-coloured from fence to fence (owner's decision: the whole farm parched, palette only). By the end of the first week your fields are the only green in the valley, and one
   morning the whole farm turns from straw to green. Rosa hands you Ilse's seed tin and journal; its first
   page points uphill, at the Old Spring.
-- **Middle (summer, year 1, to spring, year 2): one place at a time, one person at a time.** Each broken place
+  Through summer, fall and winter it is one place at a time, one person at a time. Each broken place
   belongs to someone. Mending it is their wish come true and changes the map you walk on: the creek runs, the
   forge rings, the river comes home and lifts the *Heron*, dead trees bud. Each restoration teaches one new way to
   play. Families start writing that they are thinking of coming back, then they do: a lit window, a new face, a
-  stall. Clay watches all of it from his fence, and slowly stops racing you and starts working beside you.
-- **End (year 2, fall 27): the valley is remembered.** On the first Lantern Night when every place is mended and every
-  family is home, the valley gathers at the weir at dusk, each household with a lantern made from its own mended place.
-  You open the sluice, and the river carries them all down the valley together, "for the ones who'd gone, so they'd
-  know the way back". Then the game carries on: a
-  market every week, Lantern Night every fall, and a notch on the river stone each spring when the water runs high.
+  stall. Clay watches all of it from his fence, and slowly stops racing you and starts working beside you. Winter 28
+  is a pause between chapters, not a conclusion: the year-end screen reads back what came back and says "See you in
+  spring."
+- **Chapter two (year 2): homecomings, and the valley's first full celebration.** Houses fill, Clay's board race runs
+  on into the year until he calls you partner, and on fall 27 the valley holds its first full **Lantern Night** since the
+  flood: each household brings a lantern made from its own mended place, you open the sluice at the weir, and the
+  river carries them down the valley together, "for the ones who'd gone, so they'd know the way back". It is a
+  milestone the valley reaches, not the end of the game: no credits, nothing that says "complete", and the next
+  morning is an ordinary farm morning with something new in the mailbox.
+- **Chapter three and on: the valley keeps growing.** Lantern Night every fall, with more lanterns as more households
+  return (Mara's ledger still has names in it, and each can come home in a later content drop the same way); a notch
+  on the river stone each spring; market days; the seasons dressing a living town; each mechanic's next step. The
+  game is built to keep adding chapters.
 
 **The player fantasy:** *"I brought this place back, and I can see it every time I walk through town."*
 
@@ -75,11 +84,12 @@ it fed. So:
 
 - A first-time player understands why they are here before day 2 and feels the first change by the end of week one.
 - A returning player can name the villager behind each mended place, and can point at what changed.
-- The finale lands as a homecoming, not a score. Nothing in the game grades the valley: the yearly High Water notch
+- The first full Lantern Night lands as a celebration the valley earned, not a finish line and not a score; the player
+  wakes up the next morning wanting to see what the valley does next. Nothing in the game grades the valley: the yearly High Water notch
   records only how high the river came; the year two notches first stand side by side (usually year 3) is how you
   see how far the valley has come.
-- A player who stops after year 1 still gets a whole small arc: four places mended, the first family home, Clay
-  softening at the Winter Feast, and a year-end screen that reads back what they brought back.
+- A player who stops after year 1 has finished a chapter, not abandoned a story: four places mended, the first family
+  home, Clay softening at the Winter Feast, and a year-end screen that reads back what they brought back.
 
 ## What the game is NOT
 
@@ -95,3 +105,17 @@ it fed. So:
 - **Not a longer day 1.** The guided start (one line at a time, about 2-3 minutes to day 2) stays as tuned; the
   letter lives on the title screen.
 - **Not a grind.** Restoration gold stays small next to the town projects; parts and work days are the cost.
+- **Not a game that ends.** No final cutscene, no credits, no "you finished" screen. Milestones are celebrations inside
+  a continuing life, and there is always a next season to see.
+
+## Owner decisions (2026-10-11)
+
+- Day 1 is straw-coloured: the whole farm parched (palette only), turning green as planned.
+- Lantern Night (year 2, fall 27) is the valley's first full celebration, a milestone and not an ending; the valley
+  keeps growing after it, and year 1 and year 2 read as chapters.
+- Approved: the rhythm forge beside fishing; the *Heron* seen, not driven; towing behind the lab-map prototype gate;
+  four returning families with one villager each; the quiet second-notch checkpoint; Clay's board race running into
+  year 2.
+- Build the core first: M1-M4, M6-M8 and M11 are the committed scope (MILESTONES.md).
+- Audio: the existing music and SFX direction is approved as it is. The Dry Year gives audio a small role only:
+  ambience per map stage (dry, recovering, restored), a first-green moment and Lantern Night, with no new heavy work.
