@@ -860,7 +860,8 @@
         "s2n2": "B5:4 | C#6:2 A5:2 | F5:2 D5:2 | E5:4"
       },
       "thin": {
-        "drop": ["bass", "shaker", "ncomp"]
+        "drop": ["bass", "shaker", "ncomp"],
+        "db": -0.5
       }
     },
     "summer": {
@@ -997,7 +998,8 @@
         "u2n2": "D6:4 | B5:2 G5:2 | E5:2 C6:2 | D6:4"
       },
       "thin": {
-        "drop": ["bass", "shaker", "tamb", "nbass"]
+        "drop": ["bass", "shaker", "tamb", "nbass"],
+        "db": -3.5
       }
     },
     "fall": {
@@ -1111,7 +1113,8 @@
         "drop": ["bass"],
         "swap": {
           "comp": "arpTripHalf"
-        }
+        },
+        "db": -0.5
       }
     },
     "winter": {
@@ -1248,7 +1251,8 @@
         "w2n2": "C6:3 | Bb5:3 | Db6:3 | E5:3"
       },
       "thin": {
-        "drop": ["bass", "sleigh", "dpad", "nbass"]
+        "drop": ["bass", "sleigh", "dpad", "nbass"],
+        "db": -0.5
       }
     },
     "title": {

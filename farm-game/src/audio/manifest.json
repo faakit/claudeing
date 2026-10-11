@@ -1200,54 +1200,56 @@
           "file": "sfx/dig-1.mp3",
           "onset": 0.0,
           "dur": 0.37,
-          "tp": -7.14
+          "tp": -7.09
         },
         {
           "file": "sfx/dig-2.mp3",
           "onset": 0.0,
-          "dur": 0.35,
-          "tp": -5.73
+          "dur": 0.36,
+          "tp": -6.5
         },
         {
           "file": "sfx/dig-3.mp3",
           "onset": 0.0,
-          "dur": 0.39,
-          "tp": -7.46
+          "dur": 0.4,
+          "tp": -6.31
         },
         {
           "file": "sfx/dig-4.mp3",
           "onset": 0.0,
-          "dur": 0.37,
-          "tp": -5.07
+          "dur": 0.38,
+          "tp": -6.81
         }
       ],
-      "gain": 1.0,
+      "gain": 1.2162,
       "pitch": 1.0,
       "vol": 1.5,
-      "voices": 2
+      "voices": 2,
+      "repeatDb": -5,
+      "repeatWindow": 0.6
     },
     "logLand": {
       "files": [
         {
           "file": "sfx/logLand-1.mp3",
           "onset": 0.0,
-          "dur": 0.41,
-          "tp": -4.41
+          "dur": 0.47,
+          "tp": -5.43
         },
         {
           "file": "sfx/logLand-2.mp3",
           "onset": 0.0,
-          "dur": 0.57,
-          "tp": -4.2
+          "dur": 0.59,
+          "tp": -4.97
         },
         {
           "file": "sfx/logLand-3.mp3",
           "onset": 0.0,
           "dur": 0.39,
-          "tp": -4.21
+          "tp": -5.16
         }
       ],
-      "gain": 1.0,
+      "gain": 1.122,
       "pitch": 0.8,
       "vol": 1,
       "voices": 1
@@ -1257,23 +1259,23 @@
         {
           "file": "sfx/logKnock-1.mp3",
           "onset": 0.0,
-          "dur": 0.16,
-          "tp": -4.82
+          "dur": 0.15,
+          "tp": -5.67
         },
         {
           "file": "sfx/logKnock-2.mp3",
           "onset": 0.0,
-          "dur": 0.16,
-          "tp": -5.06
+          "dur": 0.15,
+          "tp": -5.73
         },
         {
           "file": "sfx/logKnock-3.mp3",
           "onset": 0.0,
-          "dur": 0.2,
-          "tp": -4.74
+          "dur": 0.17,
+          "tp": -5.39
         }
       ],
-      "gain": 1.0,
+      "gain": 1.122,
       "pitch": 1.0,
       "vol": 1.5,
       "voices": 2
@@ -1539,20 +1541,20 @@
         {
           "file": "amb/creek.mp3",
           "onset": 0,
-          "dur": 3.2875,
-          "loop": [0.63748, 3.18748]
+          "dur": 2.9125,
+          "loop": [0.56249, 2.81249]
         },
         {
           "file": "amb/creek-2.mp3",
           "onset": 0,
-          "dur": 3.9125,
-          "loop": [0.76249, 3.81249]
+          "dur": 3.1,
+          "loop": [0.6, 3.0]
         },
         {
           "file": "amb/creek-3.mp3",
           "onset": 0,
-          "dur": 9.3,
-          "loop": [1.0, 9.2]
+          "dur": 9.0,
+          "loop": [1.0, 8.9]
         }
       ],
       "gain": 1,
@@ -1600,20 +1602,20 @@
         {
           "file": "amb/river.mp3",
           "onset": 0,
-          "dur": 6.9,
-          "loop": [1.0, 6.8]
+          "dur": 6.6,
+          "loop": [1.0, 6.5]
         },
         {
           "file": "amb/river-2.mp3",
           "onset": 0,
-          "dur": 8.3,
-          "loop": [1.0, 8.2]
+          "dur": 8.4,
+          "loop": [1.0, 8.3]
         },
         {
           "file": "amb/river-3.mp3",
           "onset": 0,
-          "dur": 4.35,
-          "loop": [0.85, 4.25]
+          "dur": 3.6,
+          "loop": [0.69998, 3.49998]
         }
       ],
       "gain": 1,

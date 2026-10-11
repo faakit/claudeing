@@ -578,11 +578,13 @@ PIECES["lullaby"] = {
 
 # The Dry Year's thinned arrangements (a dry map stage, src/audio/stages.json): the ground goes out from under
 # the tune. Percussion and the bass drop out (fading on their own strips, then not played), the busiest
-# accompaniment moves to a sparser pattern, and the piece plays THIN_DB softer. The tune stays.
-PIECES["spring"]["thin"] = {"drop": ["bass", "shaker", "ncomp"]}
-PIECES["summer"]["thin"] = {"drop": ["bass", "shaker", "tamb", "nbass"]}
-PIECES["fall"]["thin"] = {"drop": ["bass"], "swap": {"comp": "arpTripHalf"}}
-PIECES["winter"]["thin"] = {"drop": ["bass", "sleigh", "dpad", "nbass"]}
+# accompaniment moves to a sparser pattern, and `db` sets the whole piece about 3 dB under the full one (measured
+# on 60 s renders: the drops alone take 2.3-3.1 dB off spring, fall and winter, almost nothing off summer,
+# whose tune carries it). The tune stays.
+PIECES["spring"]["thin"] = {"drop": ["bass", "shaker", "ncomp"], "db": -0.5}
+PIECES["summer"]["thin"] = {"drop": ["bass", "shaker", "tamb", "nbass"], "db": -3.5}
+PIECES["fall"]["thin"] = {"drop": ["bass"], "swap": {"comp": "arpTripHalf"}, "db": -0.5}
+PIECES["winter"]["thin"] = {"drop": ["bass", "sleigh", "dpad", "nbass"], "db": -0.5}
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))

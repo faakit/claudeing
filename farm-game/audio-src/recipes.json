@@ -888,14 +888,15 @@
     [
      {
       "src": "sfx/kenney-impact/impactSoft_heavy_000",
-      "shift": 14
+      "shift": 14,
+      "gain": -3
      },
      {
       "src": "sfx/oga-shovel",
       "from": 0,
       "to": 0.3,
       "shift": -4,
-      "gain": -2
+      "gain": -3
      },
      {
       "src": "sfx/kenney-impact/footstep_grass_000",
@@ -907,14 +908,15 @@
     [
      {
       "src": "sfx/kenney-impact/impactSoft_heavy_002",
-      "shift": 13
+      "shift": 13,
+      "gain": -3
      },
      {
       "src": "sfx/oga-shovel",
       "from": 0.5,
       "to": 0.8,
       "shift": -3,
-      "gain": 3
+      "gain": 11
      },
      {
       "src": "sfx/kenney-impact/footstep_grass_001",
@@ -926,14 +928,15 @@
     [
      {
       "src": "sfx/kenney-impact/impactSoft_heavy_004",
-      "shift": 15
+      "shift": 15,
+      "gain": -3
      },
      {
       "src": "sfx/oga-shovel",
       "from": 0,
       "to": 0.3,
       "shift": -5,
-      "gain": -2
+      "gain": -3
      },
      {
       "src": "sfx/kenney-impact/footstep_grass_002",
@@ -945,14 +948,15 @@
     [
      {
       "src": "sfx/kenney-impact/impactSoft_heavy_000",
-      "shift": 13
+      "shift": 13,
+      "gain": -3
      },
      {
       "src": "sfx/oga-shovel",
       "from": 0.5,
       "to": 0.8,
       "shift": -4,
-      "gain": 3
+      "gain": 11
      },
      {
       "src": "sfx/kenney-impact/footstep_grass_003",
@@ -962,10 +966,13 @@
      }
     ]
    ],
-   "trim": 0
+   "trim": 1.7,
+   "repeatWindow": 0.6,
+   "repeatDb": -5
   },
   "logLand": {
    "family": "tools",
+   "hp": 150,
    "pitch": 0.8,
    "vol": 1,
    "voices": 1,
@@ -976,8 +983,8 @@
      },
      {
       "src": "sfx/kenney-impact/impactWood_heavy_000",
-      "shift": 12,
-      "gain": -2
+      "shift": 15,
+      "gain": -4
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_09",
@@ -991,8 +998,8 @@
      },
      {
       "src": "sfx/kenney-impact/impactWood_heavy_001",
-      "shift": 11,
-      "gain": -2
+      "shift": 14,
+      "gain": -4
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_02",
@@ -1007,8 +1014,8 @@
      },
      {
       "src": "sfx/kenney-impact/impactWood_heavy_003",
-      "shift": 12,
-      "gain": -2
+      "shift": 15,
+      "gain": -4
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_09",
@@ -1018,7 +1025,7 @@
      }
     ]
    ],
-   "trim": 0
+   "trim": 1.0
   },
   "logKnock": {
    "family": "light",
@@ -1029,7 +1036,7 @@
     [
      {
       "src": "sfx/kenney-impact/impactWood_medium_000",
-      "shift": 3
+      "shift": 6
      },
      {
       "src": "sfx/kenney-impact/impactPlank_medium_001",
@@ -1041,7 +1048,7 @@
     [
      {
       "src": "sfx/kenney-impact/impactWood_medium_001",
-      "shift": 3
+      "shift": 6
      },
      {
       "src": "sfx/kenney-impact/impactPlank_medium_002",
@@ -1053,7 +1060,7 @@
     [
      {
       "src": "sfx/kenney-impact/impactWood_medium_002",
-      "shift": 2
+      "shift": 5
      },
      {
       "src": "sfx/kenney-impact/impactPlank_medium_000",
@@ -1063,7 +1070,8 @@
      }
     ]
    ],
-   "trim": 0
+   "trim": 1.0,
+   "hp": 150
   }
  },
  "ambience": {
@@ -1099,11 +1107,13 @@
    "layers": [
     {
      "from": 6.0,
-     "body": 15.0
+     "body": 15.0,
+     "search": 3.0
     },
     {
      "from": 35.0,
-     "body": 11.0
+     "body": 11.0,
+     "search": 3.0
     }
    ]
   },
@@ -1303,13 +1313,15 @@
     {
      "src": "sfx/oga-rubberduck-water/loop_water_01",
      "from": 0.7,
-     "body": 2.55
+     "body": 2.25,
+     "search": 0.3
     },
     {
      "src": "sfx/oga-rubberduck-water/loop_water_03",
      "shift": -2,
      "from": 0.8,
-     "body": 3.05
+     "body": 2.4,
+     "search": 0.65
     },
     {
      "src": "sfx/oga-rubberduck-water/loop_water_02",
@@ -1317,7 +1329,8 @@
      "lp": 1500,
      "gain": -4,
      "from": 1.0,
-     "body": 8.2
+     "body": 7.9,
+     "search": 0.3
     }
    ]
   },
@@ -1372,13 +1385,15 @@
     {
      "src": "sfx/oga-rubberduck-water/loop_water_02",
      "from": 1.0,
-     "body": 5.8
+     "body": 5.5,
+     "search": 0.3
     },
     {
      "src": "sfx/oga-rubberduck-water/loop_water_02",
-     "shift": -3,
+     "shift": -4,
      "from": 1.0,
-     "body": 7.2
+     "body": 7.3,
+     "search": 0.3
     },
     {
      "src": "sfx/oga-rubberduck-water/loop_water_03",
@@ -1386,7 +1401,8 @@
      "lp": 3000,
      "gain": -4,
      "from": 0.9,
-     "body": 3.4
+     "body": 2.8,
+     "search": 0.6
     }
    ]
   }

@@ -51,8 +51,8 @@ const LEAD_CANDIDATES = ['vibes', 'glock', 'marimba', 'harp'];
 /** A rainy day plays the piece softer (on top of the thinner arrangement). */
 const RAIN_DB = -2.5;
 /**
- * The Dry Year's thinned arrangement plays this much softer (unless the piece says otherwise). With rain as well,
- * the larger of the two offsets applies, never their sum, so a rainy dry day does not sink into silence.
+ * The Dry Year's thinned arrangement plays this much softer (unless the piece says otherwise). In the rain the
+ * rainy arrangement plays instead (it is thin already), never both, so a rainy dry day does not sink into silence.
  */
 export const THIN_DB = -2;
 /** Time constant (s) of the thinned layers' fade: out over about 2 s, back over the reveal's length. */
@@ -244,7 +244,7 @@ export class MusicPlayer {
       this.players.set(slot, player);
     }
     this.active = new ActivePiece(this.ctx, slot, player, this.buses, now);
-    this.active.thinned = this.thin;
+    this.active.thinned = this.thinNow;
     void this.preload(slot);
   }
 
@@ -258,14 +258,24 @@ export class MusicPlayer {
     const thin = m.thin ?? this.thin;
     this.year = m.year ?? this.year;
     if (rain === this.rain && thin === this.thin) return;
-    const tau = thin !== this.thin ? THIN_TAU : 2;
-    if (thin !== this.thin) {
-      this.thin = thin;
-      this.thinFadeUntil = thin && this.active?.started ? now + THIN_FADE_S : 0;
-      this.active?.setThin(thin, now, THIN_TAU);
-    }
+    const was = this.thinNow;
+    this.thin = thin;
     this.rain = rain;
-    if (this.active?.started) this.active.setLevel(this.levelValue(), now, tau);
+    const on = this.thinNow;
+    if (on !== was) {
+      this.thinFadeUntil = on && this.active?.started ? now + THIN_FADE_S : 0;
+      this.active?.setThin(on, now, THIN_TAU);
+    }
+    if (this.active?.started)
+      this.active.setLevel(this.levelValue(), now, on !== was ? THIN_TAU : 2);
+  }
+
+  /**
+   * The thinned arrangement sounding now: a dry stage, but not in the rain, whose own arrangement is already the
+   * thin one (main beats, no percussion, -2.5 dB). Both at once would sink a rainy dry day into near silence.
+   */
+  private get thinNow(): boolean {
+    return this.thin && !this.rain;
   }
 
   /** Each playing layer's strip gain now (tests and the debug hook: thinned-out layers glide to 0). */
@@ -281,11 +291,9 @@ export class MusicPlayer {
   }
 
   private levelValue(): number {
-    const thinDb =
-      this.thin && this.active?.player.piece.thin
-        ? (this.active.player.piece.thin.db ?? THIN_DB)
-        : 0;
-    return Math.pow(10, Math.min(this.rain ? RAIN_DB : 0, thinDb) / 20);
+    const thin = this.active?.player.piece.thin;
+    const db = this.rain ? RAIN_DB : this.thinNow && thin ? (thin.db ?? THIN_DB) : 0;
+    return Math.pow(10, db / 20);
   }
 
   /** Fade everything out (title -> silence, music switched off). */
@@ -337,7 +345,7 @@ export class MusicPlayer {
         percHits: (inst) => sampleHitsCount(inst),
         rain: this.rain,
         year: this.year,
-        thin: this.thin,
+        thin: this.thinNow,
         thinFading: now < this.thinFadeUntil,
       });
       this.stats.bars++;

@@ -231,6 +231,29 @@ describe('the thinned arrangement', () => {
     expect(m.layerGains()['bass']).toBeGreaterThan(0);
   });
 
+  it('a rainy dry day plays the rainy arrangement, not thinned twice', async () => {
+    const ctx = new FakeAudioContext();
+    const g = () => new FakeGain(ctx, 'gain') as unknown as AudioNode;
+    const buses = {
+      dry: { day: g(), night: g(), both: g() },
+      wet: { day: g(), night: g(), both: g() },
+      sfx: g(),
+    };
+    const m = new MusicPlayer(
+      asCtx(ctx),
+      new SampleBank('x/', async () => GOOD_BYTES()),
+      buses,
+      () => undefined,
+    );
+    m.setSlot('spring', false, 0);
+    await m.preload('spring');
+    for (let t = 0; t < 10; t += 0.1) m.tick(t, { enabled: true, day: true, night: false });
+    m.setMood({ thin: true, rain: true }, 10);
+    expect(m.layerGains()['bass'], 'rain keeps its bass').toBeGreaterThan(0);
+    m.setMood({ thin: true, rain: false }, 20);
+    expect(m.layerGains()['bass'], 'the rain stops: thinned').toBe(0);
+  });
+
   it('the first-green jingle is its own cue, 2-4 s, in the jingle system, outranking the event fanfares', () => {
     const j = MUSIC.jingles['green']!;
     expect(j).toBeDefined();

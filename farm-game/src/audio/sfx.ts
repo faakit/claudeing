@@ -76,7 +76,7 @@ export class SfxPlayer {
     // row of watering is a steady pour at the level of one can, not a pile-up.
     const prevAt = this.lastAt.get(cue);
     const repeatDuck =
-      prevAt !== undefined && now - prevAt < REPEAT_WINDOW
+      prevAt !== undefined && now - prevAt < (a.repeatWindow ?? REPEAT_WINDOW)
         ? Math.pow(10, (a.repeatDb ?? -4) / 20)
         : 1;
     this.lastAt.set(cue, now);
