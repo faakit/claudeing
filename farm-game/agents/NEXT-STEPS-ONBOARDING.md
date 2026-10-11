@@ -166,7 +166,18 @@ Round 1 (still in place):
    about 6 real minutes.
 5. **The stick demo draws its hand over the hotbar** (the stick home is just above it). This was cosmetic in
    round 1 and is still the same.
-6. **A real phone pass:** use the critic's owner checklist in `agents/critiques/onboarding-critic/final.md`, plus:
+6. **The critic's final round (5d5e06d)** found no blockers and nothing above minor: 16/16 reach town on day 2,
+   waking to town takes 28-49 s, the late-night walk home takes 26 s, and waterDaily finishes in about 14 s.
+   Three minors are still open:
+   - **Held tips arrive in a burst.** Three of them ("Silver and gold...", "Wild goods grow back...", "New kinds
+     of goods go in Menu > Book...") fire within 3 s of the first purchase on day 2, as soon as the guided days
+     end. They should be released one at a time, at most one per in-game hour (`checkTips` and the
+     `holdTipsWhile` release in `systems/goals.ts`).
+   - **`job1` ("Finish a job a villager posts") has no `where`.** After Buy, day 3 in town ran about 5 min with
+     no arrow. Point it at the board or at the villager who posted the job.
+   - **"Buy 5 items" completed right after one purchase.** Check what the stat counts, or hand it to the goals
+     owner.
+7. **A real phone pass:** use the critic's owner checklist in `agents/critiques/onboarding-critic/final.md`, plus:
    - Does day 2's rain read as a gift, not a skipped lesson?
    - Does day 3's "Sunny! Water your crops" land?
    - Does the bed offer feel optional?
