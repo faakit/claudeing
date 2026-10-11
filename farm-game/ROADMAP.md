@@ -23,26 +23,27 @@ families left with it, and you mend it place by place.
 
 | # | Milestone | Owner areas |
 | - | --------- | ----------- |
-| M1 | The letter and the first green: Rosa's letter on the title screen, a parched farm on day 1, green by the end of week one | onboarding, art, depth |
-| M2 | Talk rules in the valley's voice (on the villagers plan's dialogue database) | depth |
-| M3 | Map variants: maps change shape with the valley's state; the farm's dry creek bed | art, depth |
-| M4 | The restoration pattern and the Old Spring: ask, gather, work days, opening; the creek runs | depth, art, onboarding |
-| M5 | Channels: dig a water network off the creek | depth, feel, onboarding |
-| M6 | Memory and barks that notice the valley | depth |
-| M7 | The Cold Forge: strike in time, and the parts later places need | depth, feel, audio, art |
-| M8 | The Weir: the river returns to town, and rowing the Heron | depth, art, feel, audio |
-| M9 | Grandmother's Orchard: grafting onto dead stumps | depth, art |
-| M10 | The Seed House: seed saving, and Clay's turn from rival to ally | depth, art |
-| M11 | The Market Square: market day, families' stalls | depth, art, audio |
-| M12 | Lantern Hill finale, the yearly Watermark, the year-end screen | depth, onboarding, art, audio |
+| M1 | The letter, the first green, and lines that fit the valley | onboarding, art, depth |
+| M2 | Map variants: maps change shape with the valley; the farm's dry creek bed | art, depth |
+| M3 | The restoration pattern and the Old Spring: ask, gather, work days, opening; the creek runs | depth, art, onboarding |
+| M4 | Channels: dig a water network off the creek (and the plan's one save bump) | depth, feel, onboarding |
+| M5 | The Cold Forge: strike in time, and the parts later places need | depth, feel, audio, art |
+| M6 | The Weir: the river returns; towing timber; the first family comes home | depth, art, feel, audio |
+| M7 | The Seed House: the seed library; Clay's turn from rival to ally | depth, art |
+| M8 | The Bucket Orchard: grafting onto dead stumps | depth, art |
+| M9 | The Market Field: market day, families' stalls, the Trade Road | depth, art, audio |
+| M10 | Lantern Night finale, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio |
+
+The minimum complete game is M1-M4, M6, M7 and M10 (the spring, the weir and the Seed House).
 
 After the first pass, each mechanic's v2 is its own small milestone (listed at the end of MILESTONES.md).
 
 ## Alongside
 
 - **Living villagers** (`agents/PLAN-NPC-LLM.md`, branch `plan/npc-llm`): a rule-based dialogue database, villager
-  memory, barks, reactive requests, ties and gossip, walking schedules, seasonal arcs; no runtime LLM. Its M1 to M3 are
-  folded into The Dry Year's M2 and M6; the rest carries the villager arcs in WORLD-PLAN section 5.
+  memory, barks, reactive requests, ties and gossip, walking schedules, seasonal arcs; no runtime LLM. The Dry Year does not
+  wait for it (its own M1 adds conditional villager lines); the plan's dialogue, memory, barks and ties enrich the
+  arcs later (MILESTONES section E).
 - **Open findings and per-area next steps** (onboarding, controls, feel, art, audio, depth): `agents/OPEN-FINDINGS.md`
   and `agents/NEXT-STEPS.md`. They keep their own order; where one touches a Dry Year milestone, it is fixed in that
   milestone.

@@ -11,8 +11,8 @@ springs it fed went quiet. Orchards died standing. The mill stopped, the forge's
 traders stopped coming, and family by family the valley emptied.
 
 Five people stayed. **Rosa** kept her grandmother's last cherry tree alive with buckets. **Mara** kept the store
-lit "so there's a light on when people come back". **Finn** fishes the woods lake because his boat, the *Heron*,
-sits on the mud where the river used to be. **Orin** mends hinges at a cold forge. **Clay** works his family's
+lit "so there's a light on when people come back". **Finn** fishes the woods lake because the *Heron*, the boat his
+father built, sits on the mud where the river used to be. **Orin** mends hinges at a cold forge. **Clay** works his family's
 fields alone, sells to the few buyers left, and does not believe anyone else will stay.
 
 Rosa writes to you, the grandchild of Ilse, who kept the farm next to hers for forty years:
@@ -46,9 +46,10 @@ it fed. So:
   forge rings, the river comes home and lifts the *Heron*, dead trees bud. Each restoration teaches one new way to
   play. Families start writing that they are thinking of coming back, then they do: a lit window, a new face, a
   stall. Clay watches all of it from his fence, and slowly stops racing you and starts working beside you.
-- **End (year 2): the valley is remembered.** When the six places are mended, everyone climbs Lantern Hill on a
-  late-autumn evening and lights one lantern per household, old and new. The last one is yours. Then the game
-  carries on: a living valley with a market every week and a mark carved on the river stone each spring.
+- **End (year 2, fall 27): the valley is remembered.** On the first Lantern Night when every place is mended and every
+  family is home, the whole valley stands on the riverbank and sets lanterns on the water "for the ones who'd gone,
+  so they'd know the way back". You set Ilse's first; everyone else's follow together. Then the game carries on: a
+  market every week, Lantern Night every fall, and a notch on the river stone each spring when the water runs high.
 
 **The player fantasy:** *"I brought this place back, and I can see it every time I walk through town."*
 
@@ -58,10 +59,12 @@ it fed. So:
    visible changes in the first week, then about every two to four weeks of play. If a feature cannot be seen in
    the world, it is not a restoration.
 2. **Every mended place teaches a new verb.** Six broken places, six mechanics that play differently from each
-   other and from what exists (channels, a rhythm forge, rowing, grafting, seed saving, a market stall). Each
-   ships small first.
+   other and from what exists (channels, a rhythm forge, towing timber, a seed library, grafting, a market
+   stall). Each ships small first. If only three places ship (the spring, the weir, the Seed House), the game is
+   still whole.
 3. **People, not bundles.** A place is asked for by the person who lost it, paid for with a little gold, a part you
-   make, and a few days of help at the site, and opened with that person. Losses are specific and fixable.
+   make, and a few days of help at the site that preview the new verb, and opened with that person. Losses are
+   specific and fixable, and most are fixed by someone coming home.
 4. **One thumb, five-minute sessions.** Every new verb is a tap, Action or the existing paint gesture. A visit to a
    site is one tap a day. Nothing new needs two hands or a long sitting.
 5. **Cozy, never punishing.** Nothing breaks again, nothing is lost by waiting, nobody leaves because you were
@@ -71,9 +74,11 @@ it fed. So:
 
 - A first-time player understands why they are here before day 2 and feels the first change by the end of week one.
 - A returning player can name the villager behind each mended place, and can point at what changed.
-- The finale lands as a homecoming, not a score. The year-3 "Watermark" (a mark carved on the river stone each
-  spring) says how the valley is doing in warm words, whatever the player has done, and is something to come back
-  to every year.
+- The finale lands as a homecoming, not a score. Nothing in the game grades the valley: the yearly High Water notch
+  records only how high the river came, and Rosa's year-3 letter tells you how the valley is doing in her own voice,
+  as people still waiting rather than points missing.
+- A player who stops after year 1 still gets a whole small arc: four places mended, the first family home, Clay
+  softening at the Winter Feast, and a year-end screen that reads back what they brought back.
 
 ## What the game is NOT
 
@@ -84,8 +89,8 @@ it fed. So:
 - **Not bundles or a checklist building.** No "donate one of each" room. Restorations are infrastructure the
   valley lived by (water, iron, seed, trade), asked for by people.
 - **Not a copy of a famous farm game.** No inherited farm from a dying grandparent's letter opened at a desk job,
-  no community-centre bundles, no broken beach bridge, no spirits that fix things, no corporation. See the
-  originality notes in WORLD-PLAN.md.
+  no community-centre bundles, no broken beach bridge, no spirits that fix things, no corporation, no yearly
+  evaluation. See the originality notes in WORLD-PLAN.md.
 - **Not a longer day 1.** The guided start (one line at a time, about 2-3 minutes to day 2) stays as tuned; the
   letter lives on the title screen.
 - **Not a grind.** Restoration gold stays small next to the town projects; parts and work days are the cost.
