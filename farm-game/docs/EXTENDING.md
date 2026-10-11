@@ -340,6 +340,63 @@ Changes that do not move geometry (a sprite by work day, a lit window, a boat af
 not variants. In the dev sandbox, the DEV tab's "Go to map" sheet lists every stage ("farm: restored"), and
 `window.__farm.dev.stage(map, variant)` pins one in place.
 
+## 12. Text and translations (i18n)
+
+The game speaks English (`en`) and Brazilian Portuguese (`pt-BR`). The module is `src/i18n` (no library: a small
+typed `t()`), the glossary of Portuguese words and villager voices is `src/i18n/GLOSSARY.md`.
+
+**Text in code** goes through `t(key, params?)` from `src/i18n`: `t('shop.bought', { n: 3, item: name })`. The key
+lives in both dictionaries, `src/i18n/en.json` and `src/i18n/pt-BR.json` (nested namespaces: `"shop": { "bought":
+"Bought {n} {item}" }`). Keys are checked at compile time (`Key` is every leaf of `en.json`).
+
+- `{name}` params are filled from the object; a missing one stays visible as `{name}`.
+- Plurals: give the key forms, `{ "one": "{count} day", "other": "{count} days" }`, and pass `count` (picked with
+  `Intl.PluralRules`, so Portuguese gets its own rule).
+- Numbers and gold: `fmtNum(n)` ("1,234" / "1.234") and `fmtGold(n)` ("1,234g" / "1.234o"); never `toLocaleString`
+  or a hand-written `g`. Season names: `seasonLabel` (titles), `seasonWord` (inside a sentence), `seasonLower`.
+- A key missing in a language falls back to English (a dev build warns once); it never throws.
+- Text a player never sees (a log detail, an error, a regex over English) is marked `// i18n-ok` on the line or the
+  line above. `tests/i18n.test.ts` fails on any other prose literal in `src/ui`, `scenes`, `systems`, `mechanics`, `fx`,
+  `game`, `input` and `platform` (`tests/i18nScan.ts` decides what reads like prose).
+- Match on text only through English: a translated label goes back with `toEnglish(label)` (the guided start's
+  `button` patterns and refusal hints are written against English labels and work in any language).
+
+**Text in data stays English in `src/data/*.json`.** A locale's overlay, `src/i18n/data/<locale>/<file>.json`,
+maps each English string of that file to its translation (`{ "Turnip": "Nabo" }`), and the fields that hold text are
+listed per file in `TEXT_FIELDS` (`src/i18n/dataText.ts`). On a language change the data is rewritten in place from an
+English snapshot, so every reader of `items[id].name`, a villager's line or a letter needs no change. So:
+
+- **New item, villager line, letter, goal or tutorial step:** edit the data file as before, then add each new English
+  string with its Portuguese to the matching `src/i18n/data/pt-BR/<file>.json`. `npm test` lists every string still
+  missing (`tests/i18n.test.ts`, "every English data string has a Portuguese translation") and every stale one (an
+  English line you edited keeps no old translation by mistake).
+- **A new text field in a data file:** add its name to `TEXT_FIELDS`.
+- Text in the generated maps (a locked door's `lockedText`) goes through `mapText()`; its overlay is `maps.json`.
+- Letters already in a save keep the words they came with; the mailbox shows a data letter in today's language
+  (`relocalize`).
+
+**Fit:** Portuguese runs 20-30% longer. `tests/i18n.test.ts` measures the Portuguese goals (182 px), hints, coach
+lines (184 px), Rosa's letter (10 rows), the valley banners, the Options buttons and the HUD lines; the layout tests
+measure tab labels, control labels and gift lines in every language. The pixel font has á à â ã é ê í ó ô õ ú ç and
+the capitals (Á À Â Ã É Ê Í Ó Ô Õ Ú Ç; the accented capitals are drawn 2 px into the line gap, `TALL_GLYPHS`). A
+character the font lacks fails the glyph test.
+
+**Language choice:** `?lang=pt-BR` wins, then the stored choice (key `lang` in the save store, not the save: no
+version bump), then the device (`pt*` gives pt-BR). An automated browser (`navigator.webdriver`) and a scenario page
+start in English unless the scenario says `"dev": { "lang": "pt-BR" }` or the URL has `?lang=`. The switch is Menu >
+Opts (and a button on the title); it applies at once: the HUD, coach line and dock redraw, the open menu rebuilds, and
+every sheet is built from the dictionaries when it opens. Scenarios: `lang-pt-title`, `lang-pt-farm-hud`,
+`lang-pt-sheets`, `lang-pt-dialogue`, `lang-pt-mail`.
+
+**A new language** (say `es`):
+
+1. Add it to `Locale` and `LOCALES` in `src/i18n/index.ts`, import its dictionary there (`es.json`, every key of
+   `en.json`), and teach `detectLocale` / `parseLocale` its code.
+2. Translate the data: `src/i18n/data/es/<file>.json` for every data file (`npm test` lists what is missing).
+3. Add any letter the font lacks to `GLYPHS` / `TALL_GLYPHS` in `src/ui/fontMetrics.ts`, and the language's own row
+   abbreviations to `SHORTER` there.
+4. Give it a glossary, a `lang-es-*` scenario per area and an e2e block like `lang` in `scripts/e2e-scenarios.mjs`.
+
 ## Checklist for a new mechanic
 
 - [ ] The scenario(s) that stage it, in `src/dev/scenarios/` (lab or real map), cited in the commit and the critique
@@ -347,7 +404,8 @@ not variants. In the dev sandbox, the DEV tab's "Go to map" sheet lists every st
 - [ ] Rules as pure functions in `systems/` with unit tests
 - [ ] One module in `mechanics/` registering into the registries, plus one import line in `mechanics/index.ts`
 - [ ] Data in JSON; validation added if it references other data
-- [ ] UI as a tab or sheet; text proven to fit
+- [ ] UI as a tab or sheet; text proven to fit, in English and Portuguese
+- [ ] Every new player-visible string in both dictionaries, and new data text in `src/i18n/data/pt-BR/` (section 12)
 - [ ] A goal in `goals.json` that introduces it
 - [ ] An `intro` step in `tutorial.json` if it needs showing the first time
 - [ ] e2e checks on those scenarios with the await helpers (`scripts/lib/farm.mjs`), no fixed waits

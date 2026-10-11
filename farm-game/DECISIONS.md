@@ -1391,3 +1391,39 @@ the leg keeps growing one tile per 180 ms with the usual tick, up to the 16-tile
 (tilling, watering, planting, digging). Leaving the band takes the growth back, so a drift never extends a row and
 dragging back to the start still cancels; a drift into another edge does nothing. The controls e2e checks a
 left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone 13 and the SE.
+
+## Languages: English and Brazilian Portuguese (i18n lane, i18n/pt-br)
+
+- **No i18n library.** What the game needs is a key lookup, `{name}` params, plurals and number formatting: about 150
+  lines on top of `Intl.PluralRules` and `Intl.NumberFormat`, which every target browser and WebView has. A library
+  (i18next, FormatJS) would add 30-60 KB for features nobody uses (ICU messages, namespaces over the network,
+  detection plugins). `t()` keys are typed from `en.json`, so a typo fails `tsc`.
+- **Both dictionaries are bundled** (eager JSON imports, about 60 KB together before gzip, next to Phaser's ~1 MB):
+  switching language is synchronous and works offline with the service worker unchanged.
+- **Data stays English; a per-locale overlay keyed by the English text.** Putting keys in the data JSON would make
+  every data edit two edits and turn the other lanes' merges into conflicts on every text field; an overlay keyed by
+  data id (`items.turnip.name`) breaks silently when lines are reordered and keeps a stale translation when the English
+  changes. Keyed by the English string, adding an item is still one data edit plus its translation, and an edited line
+  shows up as untranslated in `npm test`. The overlay rewrites the text fields in place from an English snapshot on a
+  language change, so no reader of `items[id].name` changed. Text fields are listed per file (`TEXT_FIELDS`).
+- **Matching on text goes through English.** The guided start points at sheet buttons by English patterns
+  (`^Read$`) and rewrites English refusals; `toEnglish()` maps any shown string back (a bounded memo of `t()`
+  results plus the overlay), so tutorial.json needs no per-language patterns. Morning-note sorting does the same.
+- **Language is a setting, not game state:** its own key (`lang`) in the save store, so no save-version bump, and the
+  title can show Rosa's letter in the right language before any save loads. Order: `?lang=`, stored choice, device
+  (`pt*` gives pt-BR). Automated browsers (`navigator.webdriver`) and scenario pages default to English so every
+  check reads the same text on a machine set to Portuguese; a scenario picks Portuguese with `dev.lang`.
+- **The switch applies at once.** The HUD, coach line and dock redraw on `onLocaleChange`; the open menu rebuilds;
+  every other sheet is built from the dictionaries when it opens; the title restarts. Recreating the UI scene was
+  not needed. The switch is the first row of Menu > Opts (thumb column) with the autosave note shortened to two
+  lines beside it, so the help card still fits above the rows; a 58 px language button on the title serves a first
+  launch.
+- **Accented capitals draw into the line gap.** The 5x7 font has 9 rows; accented capitals get 2 more above the cap
+  line (`TALL_GLYPHS`, a -2 px glyph offset), so line height and every layout stay as they are. Lowercase accents fit
+  the rows above the x-height, the cedilla the descender rows.
+- **Portuguese copy rules** (GLOSSARY.md): never gender the player; no article before a festival or place name
+  whose gender varies; gold as "o" (ouro) because "50g" reads as grams next to produce (owner may overrule); 24-hour
+  clock; seasons lower case in sentences. Some English strings changed slightly for plurals ("1 hour", "+2 board
+  requests") and the Options autosave note is now two short lines.
+- **Built blind.** The owner stopped all test runs during this round: the code was written by reading and editing
+  only. Nothing was compiled or run; see NEXT-STEPS for the checks that must pass before a merge.

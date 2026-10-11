@@ -45,6 +45,8 @@ export class TitleScene extends Phaser.Scene {
   private dried = false;
   /** No save: Rosa's letter is on the title, with New Game beneath it. */
   private firstLaunch = false;
+  /** Counts the title's builds (create), so a stale save lookup never draws on a newer one. */
+  private gen = 0;
 
   constructor() {
     super('Title');
@@ -153,7 +155,10 @@ export class TitleScene extends Phaser.Scene {
       maxWidth: 180,
     });
 
+    // A language change restarts the title: a look for the save from before the restart draws nothing.
+    const gen = ++this.gen;
     void loadGame(saveStore).then(async (res) => {
+      if (gen !== this.gen) return;
       this.loaded = res?.state ?? null;
       if (!this.loaded && (await hasNewerSave(saveStore))) {
         // Never silently overwrite progress we cannot read: say so and make New Game ask first.

@@ -27,7 +27,7 @@ import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
 import { giftNote, giftSub } from './giftText';
-import { t } from '../../i18n';
+import { fmtNum, t } from '../../i18n';
 
 const ROWS = 5;
 
@@ -125,7 +125,7 @@ export class NpcPanel extends Modal {
         this.reply = ev.id.startsWith('opening.')
           ? ''
           : res.gold > 0
-            ? t('npc.takeGold', { n: fmt(res.gold) })
+            ? t('npc.takeGold', { n: fmtNum(res.gold) })
             : t('npc.hopeYouLike');
         this.rebuild();
       },

@@ -33,6 +33,44 @@ At the end of a round, rewrite your area's section below. Don't add a new file f
 
 ## Areas
 
+### Languages: English and Brazilian Portuguese (i18n lane, branch `i18n/pt-br`)
+
+**Now:** the whole game reads in English or Brazilian Portuguese (`src/i18n`, no library). Code text goes through
+`t(key, params)` with `{name}` params, `Intl` plurals and `fmtNum` / `fmtGold`; the dictionaries are
+`src/i18n/en.json` and `pt-BR.json` (about 650 keys each). Data text stays English in `src/data/*.json` and a
+per-locale overlay keyed by the English text (`src/i18n/data/pt-BR/<file>.json`) is laid over it on a language
+change (`src/i18n/dataText.ts`). The font draws á à â ã é ê í ó ô õ ú ç and the accented capitals. The language comes
+from `?lang=`, then the stored choice (save-store key `lang`, no save change), then the device; it is switched in
+Menu > Opts ("Language: EN") or on the title, and applies at once. Glossary and voices: `src/i18n/GLOSSARY.md`.
+Scenarios: `lang-pt-title`, `lang-pt-farm-hud`, `lang-pt-sheets`, `lang-pt-dialogue`, `lang-pt-mail` (e2e block
+`lang` in `e2e-scenarios.mjs`, on the SE).
+
+**How to add a string:** call `t('area.key', { param })` and add the key to both `en.json` and `pt-BR.json` (`npm
+test` fails on a key in one and not the other, on a hard-coded prose literal in game code, and on a character the
+font lacks). For data (a new item, line, letter, goal, tutorial step) edit `src/data` as always, then add the English
+string with its Portuguese to `src/i18n/data/pt-BR/<file>.json`; `npm test` lists every missing and stale one.
+Details: `docs/EXTENDING.md` section 12.
+
+**How to add a language:** `Locale`, `LOCALES` and the dictionary import in `src/i18n/index.ts`, a full
+`<locale>.json`, overlays in `src/i18n/data/<locale>/`, any missing glyphs in `ui/fontMetrics.ts`, a glossary and
+`lang-<code>-*` scenarios (EXTENDING section 12 has the steps).
+
+**Open:**
+
+- Built and committed while the owner had stopped every test run: **nothing here has been compiled, unit-tested or
+  run in a browser yet.** Before merging: `npm run verify` (typecheck and lint first; the new suites are
+  `tests/i18n.test.ts` and the `lang` e2e block), then open the five `lang-pt-*` scenarios on the iPhone 13 and SE.
+- Letters written by code (festival notices, birthday hints) keep the language they arrived in; data letters show in
+  today's language.
+- Owner choices in the glossary: gold as "o" (ouro), the Heron as "a Garça", the Weir as "Açude", "aprisco" for the
+  sheep shed.
+
+**Next:**
+
+1. Merge the next integration branch (M6 Weir, art, audio, feel) and translate its new strings (`npm test` lists
+   the data ones; the scanner lists code ones).
+2. A Brazilian player's read of the villagers' lines and Rosa's letter on a real phone.
+
 ### Dev sandbox and tooling
 
 **Now:** there are 18 named scenarios (`src/dev/scenarios/`), the debug-only lab map, `window.__farm.dev` (clock,
@@ -249,3 +287,4 @@ How to rebuild: `python -I audio-src/tools/build.py <raw-dir>` (the raw sources 
 - **Decide:** Clay's catch-up crates, goals that step aside after 3 quiet days, the paint step, and bigger building
   footprints.
 - **Licensing before any store release:** check Google's terms for the Flow images again (see `ASSETS.md`).
+- **Portuguese naming choices** in `src/i18n/GLOSSARY.md` (gold as "o", the Heron, the Weir, the sheep shed).
