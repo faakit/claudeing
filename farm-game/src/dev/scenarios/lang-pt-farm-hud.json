@@ -1,0 +1,41 @@
+{
+  "title": "Portuguese: the farm HUD on the ask morning",
+  "about": "pt-BR, Primavera 6, 07:00 on the farm: the date line (Primavera 6  A1), the 24-hour clock, gold as 600, the weather word and the one goal line (\"Rosa pediu: a Nascente Velha\") must fit their boxes. Hotbar names, toasts and the morning hint read in Portuguese. Menu > Opts has the language switch (Idioma: PT).",
+  "version": 18,
+  "tags": ["farm", "hud", "i18n", "valley"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 1
+  },
+  "stats": {
+    "place.spring.since": 6,
+    "shipped": 5,
+    "harvested": 8,
+    "slept": 5,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 24,
+    "ty": 6,
+    "facing": "right"
+  },
+  "time": {
+    "day": 6,
+    "clock": "07:00"
+  },
+  "money": 600,
+  "items": [
+    {
+      "item": "stone",
+      "qty": 20
+    },
+    {
+      "item": "parsnip_seed",
+      "qty": 12
+    }
+  ],
+  "letters": [],
+  "goal": "ship",
+  "dev": { "lang": "pt-BR" }
+}

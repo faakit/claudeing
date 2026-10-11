@@ -170,7 +170,7 @@ export class TitleScene extends Phaser.Scene {
     });
     // The language, one tap away (top right, clear of the letter and the buttons): the title redraws in it.
     new Button(this, GAME_WIDTH - 62, 4, 58, 22, t('lang.name'), () => {
-      if (!this.starting) chooseLanguage(nextLanguage());
+      if (!this.starting) void chooseLanguage(nextLanguage());
     });
     const offLocale = onLocaleChange(() => {
       if (!this.starting) this.scene.restart();

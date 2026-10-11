@@ -1,0 +1,25 @@
+{
+  "title": "Portuguese: Mara at the counter, and the mailbox",
+  "about": "pt-BR, Spring 4 at noon facing Mara: talk to her (her dry-valley lines in Portuguese, her warm shopkeeper voice), open the gift list and the heart line. Dialogue must wrap inside the sheet on the SE. The letters (welcome, first harvest) are in the farm mailbox: the scenario lang-pt-mail opens them.",
+  "version": 18,
+  "tags": ["town", "villagers", "i18n"],
+  "at": {
+    "map": "town",
+    "tx": 8,
+    "ty": 11,
+    "facing": "up"
+  },
+  "time": {
+    "day": 4,
+    "clock": "12:00"
+  },
+  "stats": {
+    "harvested": 6,
+    "planted": 8,
+    "shipped": 4,
+    "slept": 3
+  },
+  "friends": { "mara": 2 },
+  "goal": "harvest",
+  "dev": { "lang": "pt-BR" }
+}

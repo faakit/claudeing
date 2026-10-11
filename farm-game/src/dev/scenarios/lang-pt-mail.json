@@ -1,0 +1,21 @@
+{
+  "title": "Portuguese: the mailbox with letters",
+  "about": "pt-BR, Spring 2 facing the mailbox: Mara's welcome (with seeds) and Rosa's first-harvest letter wait unread. Letter text wraps in the sheet; the gift line reads \"Vai junto: ...\".",
+  "version": 18,
+  "tags": ["farm", "mail", "i18n"],
+  "at": {
+    "map": "farm",
+    "tx": 13,
+    "ty": 10,
+    "facing": "up"
+  },
+  "time": {
+    "day": 2,
+    "clock": "07:00"
+  },
+  "stats": {
+    "harvested": 3
+  },
+  "letters": ["welcome", "first_harvest"],
+  "dev": { "lang": "pt-BR" }
+}

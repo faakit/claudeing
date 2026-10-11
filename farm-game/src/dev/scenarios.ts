@@ -156,6 +156,11 @@ export interface ScenarioDef {
      * and New Game). The scenario's state is not started.
      */
     title?: 'first-launch';
+    /**
+     * The language the scenario shows ("en" or "pt-BR"). Without it a scenario page uses `?lang=` if the URL has one,
+     * else English: the sandbox never follows the device, so a check reads the same text on every machine.
+     */
+    lang?: 'en' | 'pt-BR';
   };
 }
 
@@ -395,6 +400,8 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
     p.push('dev.clock must be "paused" or "running"');
   if (d.dev?.title !== undefined && d.dev.title !== 'first-launch')
     p.push('dev.title must be "first-launch"');
+  if (d.dev?.lang !== undefined && !['en', 'pt-BR'].includes(d.dev.lang))
+    p.push('dev.lang must be "en" or "pt-BR"');
   return p;
 }
 
@@ -565,12 +572,14 @@ export function scenarioRuntime(def: ScenarioDef): {
   clock: 'paused' | 'running';
   clockScale: number;
   title: 'first-launch' | null;
+  lang: 'en' | 'pt-BR' | null;
 } {
   return {
     seed: (def.dev?.seed ?? DEFAULT_SEED) >>> 0,
     clock: def.dev?.clock ?? 'running',
     clockScale: def.dev?.clockScale ?? 1,
     title: def.dev?.title ?? null,
+    lang: def.dev?.lang ?? null,
   };
 }
 

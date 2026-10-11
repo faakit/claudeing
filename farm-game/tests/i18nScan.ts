@@ -3,7 +3,7 @@
  * template counts when it reads like prose: two words, a capitalised word, a SHOUTED word or a sentence. Ids,
  * texture keys, event names, paths and colours do not.
  *
- * Not counted: imports, type positions, object keys, the arguments of `t()` / `tn()` (they are keys), errors and
+ * Not counted: imports, type positions, object keys, the arguments of `t()` / `tEn()` (they are keys), errors and
  * console output, and any line marked `// i18n-ok` (or the line under such a comment) for text a player never
  * sees. Pure TypeScript compiler API, no Phaser.
  */
@@ -18,6 +18,7 @@ export interface Finding {
 const QUIET_CALLS = new Set([
   't',
   'tn',
+  'tEn',
   'has',
   'Error',
   'TypeError',

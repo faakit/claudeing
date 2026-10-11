@@ -1,0 +1,7 @@
+{
+  "title": "Portuguese: the title screen at a first launch",
+  "about": "pt-BR. No save: Rosa's letter in Portuguese on the parchment, New Game (Novo jogo) under it and the language button top right. On an SE the letter must fit in 10 rows and New Game stay in thumb reach; check the accents (ã, á, é, ç) draw crisp. Tap the language button: the title redraws in English and back.",
+  "version": 18,
+  "tags": ["title", "i18n", "valley"],
+  "dev": { "title": "first-launch", "lang": "pt-BR" }
+}

@@ -1023,10 +1023,231 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- languages (src/i18n)
+
+/**
+ * Every visible text of a scene (the UI scene or the title) that leaves the 200 px canvas, or shows an unfilled
+ * `{param}` or a raw dictionary key. Empty when the layout holds.
+ */
+function overflowIn(sceneKey) {
+  return (farm) =>
+    farm.eval((key) => {
+      const scene = window.__farm.game.scene.getScene(key);
+      const bad = [];
+      const walk = (n, shown) => {
+        const on = shown && n.visible !== false && n.alpha !== 0;
+        if (on && n.type === 'BitmapText' && n.text) {
+          const b = n.getBounds();
+          if (b.left < -0.5 || b.right > 200.5) bad.push(`${n.text} [${b.left | 0}..${b.right | 0}]`);
+          if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text)) bad.push(`raw: ${n.text}`);
+        }
+        (n.list ?? []).forEach((c) => walk(c, on));
+      };
+      scene.children.list.forEach((c) => walk(c, true));
+      return [...new Set(bad)];
+    }, sceneKey);
+}
+const uiOverflow = overflowIn('UI');
+const titleOverflow = overflowIn('Title');
+/** Every text a scene shows (Label texts, read from their main glyphs). */
+const textsOf = (farm, sceneKey) =>
+  farm.eval((key) => {
+    const out = [];
+    const walk = (n) => {
+      if (n.main?.text) out.push(n.main.text);
+      (n.list ?? []).forEach(walk);
+    };
+    window.__farm.game.scene.getScene(key).children.list.forEach(walk);
+    return out;
+  }, sceneKey);
+/** Open a sheet by its panel type (as Interact or a button would) and wait until it has settled. */
+const openSheet = (farm, type) =>
+  farm.during('panelOpen', [], () =>
+    farm.eval((t) => window.__farm.gameEvents.emit('openPanel', { type: t }), type),
+  );
+/** Close whatever sheet is open and wait for it. */
+const closeSheet = (farm) =>
+  farm.during('panelClosed', [], () =>
+    farm.eval(() => {
+      const ui = window.__farm.game.scene.getScene('UI');
+      ui.allModals().find((m) => m.isOpen)?.close();
+    }),
+  );
+
+async function lang() {
+  // The title in Portuguese at a first launch, on the smallest phone.
+  let farm = await openScenario(browser, url, 'lang-pt-title', { profile: 'se' });
+  let texts = await textsOf(farm, 'Title');
+  check(
+    "lang-pt-title: Rosa's letter, New Game and the language button are in Portuguese",
+    texts.some((x) => x.startsWith('Você não vai lembrar de mim.')) &&
+      texts.includes('Novo jogo') &&
+      texts.includes('Português') &&
+      (await farm.eval(() => window.__farm.i18n.getLocale())) === 'pt-BR',
+    JSON.stringify(texts),
+  );
+  const fit = await titleOverflow(farm);
+  check('lang-pt-title (SE): every title text stays on the canvas', fit.length === 0, fit.join(' | '));
+  // One tap on the language button: the title redraws in English.
+  const langBtn = await farm.eval(() => {
+    const t = window.__farm.game.scene.getScene('Title');
+    const r = window.__farm.game.canvas.getBoundingClientRect();
+    const k = r.width / 200;
+    let found = null;
+    const walk = (n) => {
+      if (!found && n.list?.some?.((c) => c.main?.text === 'Português')) {
+        const b = n.getBounds();
+        found = { x: r.left + b.centerX * k, y: r.top + b.centerY * k };
+      }
+      (n.list ?? []).forEach(walk);
+    };
+    t.children.list.forEach(walk);
+    return found;
+  });
+  if (langBtn) await farm.page.touchscreen.tap(langBtn.x, langBtn.y);
+  await farm.eval(() =>
+    window.__farm.dev.wait.until(() => {
+      const t = window.__farm.game.scene.getScene('Title');
+      return (
+        window.__farm.i18n.getLocale() === 'en' &&
+        window.__farm.game.scene.isActive('Title') &&
+        (t.buttons?.length ?? 0) > 0
+      );
+    }, 'the title in English'),
+  );
+  texts = await textsOf(farm, 'Title');
+  check(
+    'lang-pt-title: the language button switches the title to English',
+    !!langBtn &&
+      texts.includes('New Game') &&
+      texts.some((x) => x.startsWith("You won't remember me.")),
+    JSON.stringify(texts),
+  );
+  await farm.close();
+
+  // The farm HUD in Portuguese: date, clock, gold, weather, the goal line.
+  farm = await openScenario(browser, url, 'lang-pt-farm-hud', { profile: 'se' });
+  await farm.idle();
+  const hud = await farm.eval(() => {
+    const h = window.__farm.game.scene.getScene('UI').hud;
+    return {
+      date: h.dateLabel.text,
+      time: h.timeLabel.text,
+      weather: h.weatherLabel.text,
+      goal: h.goalLabel.text,
+      goalW: h.goalLabel.textWidth,
+    };
+  });
+  check(
+    'lang-pt-farm-hud: the HUD reads in Portuguese (date, 24-hour clock, weather, goal line)',
+    hud.date.startsWith('Primavera 6') &&
+      /^7:\d\d$/.test(hud.time) &&
+      ['Sol', 'Chuva', 'Tempestade'].includes(hud.weather) &&
+      hud.goal === 'Rosa pediu: a Nascente Velha' &&
+      hud.goalW <= 182,
+    JSON.stringify(hud),
+  );
+  let over = await uiOverflow(farm);
+  check('lang-pt-farm-hud (SE): no HUD text leaves the canvas', over.length === 0, over.join(' | '));
+  // Menu > Opts: the language switch, one tap, applies at once and the open menu redraws.
+  await openSheet(farm, 'menu');
+  await farm.eval(() => window.__farm.game.scene.getScene('UI').menu.openTab('opts'));
+  await farm.frames(2);
+  over = await uiOverflow(farm);
+  check('lang-pt-farm-hud (SE): Menu > Opç. fits', over.length === 0, over.join(' | '));
+  const switched = await tapSheetButton(farm, /^Idioma: PT$/);
+  await farm.eval(() =>
+    window.__farm.dev.wait.until(
+      () => window.__farm.i18n.getLocale() === 'en',
+      'the language to switch',
+    ),
+  );
+  await farm.frames(2);
+  const date = await farm.eval(() => window.__farm.game.scene.getScene('UI').hud.dateLabel.text);
+  const labels = await textsOf(farm, 'UI');
+  check(
+    'lang-pt-farm-hud: the switch applies at once (the HUD and the open Options are English)',
+    switched && date.startsWith('Spring 6') && labels.includes('Language: EN'),
+    JSON.stringify({ date, labels }),
+  );
+  check('lang-pt-farm-hud: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  // Sheets in Portuguese on the SE: shop, board, bin and every menu tab.
+  farm = await openScenario(browser, url, 'lang-pt-sheets', { profile: 'se' });
+  const sheets = [];
+  for (const type of ['shop', 'board', 'bin']) {
+    await openSheet(farm, type);
+    sheets.push([type, await uiOverflow(farm)]);
+    await closeSheet(farm);
+  }
+  await openSheet(farm, 'menu');
+  for (const tab of ['bag', 'goals', 'craft', 'skills', 'book', 'opts']) {
+    await farm.eval((id) => window.__farm.game.scene.getScene('UI').menu.openTab(id), tab);
+    await farm.frames(2);
+    sheets.push([`menu.${tab}`, await uiOverflow(farm)]);
+  }
+  await closeSheet(farm);
+  for (const [name, bad] of sheets)
+    check(`lang-pt-sheets (SE): ${name} fits in Portuguese`, bad.length === 0, bad.join(' | '));
+  check('lang-pt-sheets: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  // Dialogue: Mara in Portuguese, wrapped inside the sheet.
+  farm = await openScenario(browser, url, 'lang-pt-dialogue', { profile: 'se' });
+  await farm.during('panelOpen', ['npc'], () => farm.press('KeyE'));
+  over = await uiOverflow(farm);
+  const said = (await textsOf(farm, 'UI')).join(' | ');
+  check(
+    'lang-pt-dialogue (SE): Mara talks in Portuguese, inside the sheet',
+    over.length === 0 && /Presente|Loja|Fechar/.test(said) && !/\bGift\b|\bShop\b/.test(said),
+    `${over.join(' | ')} :: ${said}`,
+  );
+  await farm.close();
+
+  // The mailbox: a letter in Portuguese.
+  farm = await openScenario(browser, url, 'lang-pt-mail', { profile: 'se' });
+  await farm.during('panelOpen', ['mail'], () => farm.press('KeyE'));
+  const read = await tapSheetButton(farm, /^Ler$/);
+  await farm.frames(3);
+  over = await uiOverflow(farm);
+  check(
+    'lang-pt-mail (SE): a letter opens in Portuguese and fits the sheet',
+    read && over.length === 0,
+    over.join(' | '),
+  );
+  await farm.close();
+
+  // The choice is remembered (outside the sandbox): pick Portuguese, reload, the title comes back in it.
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const page = await ctx.newPage();
+  await page.goto(`${url}?debug`);
+  await page.waitForFunction(() => window.__farm?.game?.scene.isActive('Title'), null, {
+    timeout: 30000,
+  });
+  check(
+    'lang: an automated browser starts in English',
+    (await page.evaluate(() => window.__farm.i18n.getLocale())) === 'en',
+  );
+  await page.evaluate(() => window.__farm.i18n.choose('pt-BR')); // resolves once the choice is stored
+  await page.reload();
+  const kept = await page
+    .waitForFunction(
+      () =>
+        window.__farm?.i18n?.getLocale() === 'pt-BR' && window.__farm.game.scene.isActive('Title'),
+      null,
+      { timeout: 30000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  check('lang: the chosen language survives a reload', kept);
+  await ctx.close();
+}
+
 try {
   const blocks = SMOKE
     ? [smoke]
-    : [smoke, everyScenario, mechanics, stages, ambient, actions, valley, spring, channels];
+    : [smoke, everyScenario, mechanics, stages, ambient, actions, valley, spring, channels, lang];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

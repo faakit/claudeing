@@ -1,0 +1,32 @@
+{
+  "title": "Portuguese: sheets at the store counter",
+  "about": "pt-BR, town at noon by Mara's counter, with gold, goods and seeds in the bag: open the shop (tabs Sementes / Roça / Casa / Melhorias), the bag, Menu > Meta (THE VALLEY, jobs, stats), Menu > Opç. and the board. Rows, tabs and buttons must not overflow on the SE; long item names shorten with the Portuguese abbreviations.",
+  "version": 18,
+  "tags": ["town", "sheets", "i18n"],
+  "at": {
+    "map": "town",
+    "tx": 8,
+    "ty": 11,
+    "facing": "up"
+  },
+  "time": {
+    "day": 9,
+    "clock": "12:00"
+  },
+  "money": 12500,
+  "items": [
+    { "item": "cauliflower", "qty": 6, "q": 2 },
+    { "item": "strawberry_seed", "qty": 5 },
+    { "item": "cherry_sapling", "qty": 1 },
+    { "item": "baked_potato", "qty": 2 },
+    { "item": "copper_bar", "qty": 5 }
+  ],
+  "stats": {
+    "harvested": 30,
+    "planted": 40,
+    "shipped": 25,
+    "slept": 8
+  },
+  "goal": "harvest",
+  "dev": { "lang": "pt-BR" }
+}

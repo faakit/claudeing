@@ -467,7 +467,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   // The language heads the rows: one tap steps to the next and every text redraws (the open menu right now).
   // The autosave note sits beside it, two short lines in the far column.
   c.button(thumbX, y, half, 22, t('opts.language', { lang: t('lang.short') }), () => {
-    chooseLanguage(nextLanguage());
+    void chooseLanguage(nextLanguage());
     c.rebuild();
   });
   c.label(farX, y + 1, t('opts.autosave1'), C.creamDim);

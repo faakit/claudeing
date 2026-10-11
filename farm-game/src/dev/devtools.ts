@@ -23,6 +23,7 @@ import { LAB_MAP, labMap } from './labDef';
 import { SCENARIOS } from './scenarioIndex';
 import { buildScenarioState, mapInfoFromTiled, scenarioRuntime, type MapInfoFn } from './scenarios';
 import { DevWaits } from './waits';
+import { parseLocale, setLocale } from '../i18n';
 
 type Loose = Record<string, unknown>;
 
@@ -123,6 +124,8 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
     const opts = scenarioRuntime(def);
     sandbox();
     current = name;
+    // The scenario's language, else ?lang=, else English (never the device: checks read the same text everywhere).
+    setLocale(opts.lang ?? parseLocale(new URLSearchParams(location.search).get('lang')) ?? 'en');
     if (opts.title === 'first-launch') {
       // A first launch: an empty sandbox (no save), then the title rebuilt from scratch so it looks for none.
       mem = new MemoryStore();

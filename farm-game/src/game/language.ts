@@ -42,10 +42,11 @@ export function initLanguage(): Promise<void> {
     .catch(() => undefined);
 }
 
-/** The player picked a language (Menu > Opts, or the title): switch now and remember it. */
-export function chooseLanguage(l: Locale): void {
+/** The player picked a language (Menu > Opts, or the title): switch now and remember it (resolves once stored). */
+export function chooseLanguage(l: Locale): Promise<void> {
   setLocale(l);
-  if (!sandbox()) void saveStore.write(LANG_KEY, l).catch(() => undefined);
+  if (sandbox()) return Promise.resolve();
+  return saveStore.write(LANG_KEY, l).catch(() => undefined);
 }
 
 /** The next language in the switch's cycle (two today: English and Portuguese). */
