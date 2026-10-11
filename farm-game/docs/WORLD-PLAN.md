@@ -17,7 +17,7 @@ boat is the **Heron**; his father built her the year Finn was born.
 | 4 | **The Seed House** | Clay (Bram's half of the seed tin) | Town, building at 14,16 | **Seed library**: borrow a Wend strain, let some go to seed, return more than you took | Y1 fall |
 | 5 | **The Bucket Orchard** | Rosa | The woods' north clearing | **Grafting**: take dormant cuttings and bud them onto dead stumps whose roots shape the tree | Y1 winter |
 | 6 | **The Market Field** | Mara | Town, the south-west field | **Market day**: stock a stall; visitors' wants and repeats set the price | Y2 spring |
-| - | **Lantern Night** (finale, not a mechanic) | everyone | The town river | lanterns set on the water | Y2 fall 27 |
+| - | **Lantern Night** (finale, not a mechanic) | everyone | The weir at Wendhead, at dusk | each household's lantern, made from its place; you open the sluice | Y2 fall 27 |
 
 **The core three.** If only three places ever ship, they are the **Old Spring**, the **Weir** and the **Seed House**:
 water comes back to the farm and the town, families come home (timber), and Clay turns from rival to ally. Without
@@ -58,7 +58,9 @@ farm, town and woods variants. Every existing door stays where it is.
 The river comes out of Wendhead's gorge, runs down the valley's east side beyond the farm fence (off-map) and into
 town's east side, where today's pond is the river's visible reach. The farm creek comes from the spring.
 
-- **Wendhead** (new, 24x28; door at the farm's north-east fence, 29,3, arriving at its south-west corner). West half:
+- **Wendhead** (new, 24x28; door at the farm's north-east fence, 29,3, arriving at its south-west corner). Until the
+  first green the door is Ilse's locked gate: the door object has `when: valley.farmGreen >= 1` and refuses with "Ilse's
+  old gate. Locked." No geometry changes; the first-green letter carries the key. West half:
   the Old Spring under a rockfall, its pool, the head of the farm creek, ferns. East half: the dry gorge, the broken
   weir, stones. Open from the first-green morning (Rosa's letter points the way). One map for two places keeps the
   map budget to one.
@@ -230,22 +232,40 @@ changes.
   - *Verbs:* hook, tow, tug free, land. Nothing else in the game moves a thing on water.
   - *One thumb:* with the timber hook selected, Action at the water's edge beside a log hooks it (a rope is drawn). Then
     walk as usual (stick or tap a bank tile); the log follows on the water, pulled toward you along a rope of up to 3
-    tiles and pushed by the current. If the rope would cross a bank corner the log snags; Action tugs it free (or walk
-    back a step). Action at the slip lands it: one **timber**.
-  - *Arrivals:* each morning after the opening, 1 to 3 logs enter at the river's north edge (y 22) and drift south
-    about one tile every 4 seconds; uncollected logs rest against the mill wheel at the south end, at most 3 waiting,
-    so nothing is lost by a day away.
-  - *What timber is for:* rebuilding the families' houses (the Marls' house 12, the Holt farm's east wing 10, Wren's
-    cottage 10, Tobin's rooms 8), the Seed House roof and the market's awnings. A house shows scaffolding as timber is
-    delivered (Interact at the house gives what you carry); a family arrives the morning after its house is finished
-    and its place is restored. Timber can be sold, cheaply (it is mostly for building).
-  - *The loop:* two or three tows a visit, about 15 seconds each, and a house filling up toward someone coming home.
+    tiles and pushed by the current. If the rope would cross a rock, a reed bed or a bank corner the log snags; Action
+    tugs it free (or walk back a step). Action at the slip lands it.
+  - *Logs:* a **short log** is 1 timber and swings free after one tug; a **long log** is 3 timber, swings wider on the
+    rope and needs two tugs at a snag. 1 or 2 logs arrive each morning (at most 3 waiting, resting against the mill
+    wheel, so nothing is lost by a day away); about one in three is long. The river runs all year: in winter ice
+    rims the banks, logs drift at half speed and one arrives a day.
+  - *Lanes, so tows differ:* the `river` variant puts two rock spurs and a reed bed on water tiles (solid to walking in
+    every variant, so walkability is unchanged) that split the current into three lanes. Each log enters in one lane,
+    chosen by a day hash, never the same lane twice in a row:
+
+    ```
+    x 16 17 18 19 20 21 22      W: west lane, near the bank, snags at the reed bed (R)
+    y22 .  W  .  M  .  E  ~     M: middle lane, snags at the rock spur (r1)
+    y24 .  W  R  M  .  E  ~     E: east lane, out of reach (the bank is x 16, the rope 3),
+    y26 .  W  .  r1 .  E  ~        until the spur r2 at y 27 turns it west into reach
+    y27 .  ~  ~  M  E< r2 ~
+    y29 .  W  .  ME .  .  W W   (W W: the mill wheel)
+    y31 .  .  .  .  .  .  W W
+    y32 .  .  .  S  .  .  .     S: the slip on the south bank
+    ```
+
+    So a tow is a short walk down the west bank, a different snag to tug free each time, and the turn onto the south
+    bank to the slip.
+  - *What timber is for:* rebuilding the families' houses (the Marls' house 6, the Holt farm's east wing 5, Wren's
+    cottage 5, Tobin's rooms 4), the Seed House roof (5) and the market's awnings (5): 30 timber in all, about 12 to 15
+    visits over two seasons. A house shows scaffolding as timber is delivered (Interact at the house gives what you
+    carry); a family arrives the morning after its house is finished and its place is restored. Timber sells for 5g.
+  - *The loop:* one or two tows a visit, 15 to 25 seconds each, and a house filling up toward someone coming home.
   - *Data:* drift logs are runtime objects spawned from a daily count (stat `drift.<day>`), positions not saved (a save
     while towing returns the log to the water at the north edge); `valley.json` `weir.drift` (per day, speed, max
     waiting), `houses` (timber per house, family, place); house progress in stats (`house.<id>`). Registries: a tool
     action `hook`, an action handler for the slip and houses, a `morning` hook spawning drift, a small towing
-    controller in the scene (rope, follow, snag), rules in `systems/towing.ts` (rope length, snag test against the
-    water mask; pure).
+    controller in the scene (rope, follow, snag), rules in `systems/towing.ts` (rope length, lanes, snag test against the
+    water and obstacle mask; pure; a test runs ten consecutive days and checks no two in a row share a lane and snag).
   - *Fishing:* fish rows gain an optional `"place": "weir"`: trout, salmon, the glimmer trout and the ice pike bite in
     town only with the river back.
   - *v1:* one river, one slip, logs and houses. *v2:* tow from Wendhead's gorge down the restored river.
@@ -255,7 +275,7 @@ changes.
   palette turns green, the river loop replaces the dry wind, the mill wheel turns once the Marls are home. Wendhead
   `spring` to `restored`: the gorge runs.
 - **Scenarios:** `weir-broken`, `weir-work`, `weir-opened-town`, `tow-first-log`, `tow-snag`, `tow-house-marls`
-  (house at 11 of 12 timber), `marls-arrive`, `derby-lake` (summer 22, weir broken), `derby-river`.
+  (house at 5 of 6 timber), `marls-arrive`, `derby-lake` (summer 22, weir broken), `derby-river`.
 
 ### 3.4 The Seed House: the seed library
 
@@ -264,11 +284,11 @@ changes.
   its own ground. The roof fell in the year after the flood. Ilse kept three strains in her tin; Bram's three went to
   Clay, who has told no one.
 - **Restore.** Ask: Clay's new scene **"The other half"** (3 hearts and two places restored, or 2 hearts and a board
-  season won): his tin beside yours. Gather: 3,000g, 10 timber, 3 iron bars. Work: 3 days **with Clay**, the first time
+  season won): his tin beside yours. Gather: 3,000g, 5 timber, 3 iron bars. Work: 3 days **with Clay**, the first time
   he works beside you. *Taste:* each day you tag one of Clay's plants for seed and he grumbles about how you tie the
   ribbon. Expected: fall 1-15, year 1.
 - **Opens.** Six drawers (Ilse's spring strains: parsnip, potato, cauliflower; Bram's summer and fall strains: corn,
-  pumpkin, yam), the seed tag, Wend strains.
+  pumpkin, yam; in fall, pumpkin and yam are usable at once), the seed tag, Wend strains.
 - **Mechanic: the seed library.** Borrow, grow, save, return more.
   - *Verbs:* borrow, tag, collect seed, return.
   - *One thumb:* at the Seed House (Interact at its door) a sheet lists the drawers: **Borrow** takes 5 Wend seeds of a
@@ -276,9 +296,12 @@ changes.
     tie a ribbon; smart targeting never harvests a tagged crop ("Tagged for seed: 2 more days."). Three days after ripe
     it bolts (a seed-head stage); Action collects 2 to 4 Wend seeds and the tag comes back. **Return** gives seeds back
     to the drawer.
-  - *Returning more:* a loan returned at 2x or more (10 for 5) raises the strain's **generation**: generation 1 is
-    hardy (survives the first 3 days of the next season), 2 adds a 25% chance of one better quality step, 3 a chance of
-    a double harvest. The drawer shows its generation and who borrowed from it last.
+  - *Returning more:* a loan returned at 2x or more (10 for 5) raises the strain's **generation**. Wend strains were
+    bred for a dry valley, so generations grow along one axis only, **thirst**: generation 1 *deep roots* (a watered
+    Wend crop stays watered the next day too: water every other day), 2 *rain keeper* (a rain day keeps it watered for
+    three days), 3 *dry-sown* (its first watering lasts until harvest). Quality and yield are never touched: those are
+    the orchard's roots (3.5). Wend strains make the fields the channels cannot reach (the meadows, the lowland) worth
+    planting. The drawer shows its generation and who borrowed from it last.
   - *Neighbours borrow too:* once a drawer holds 10 or more, Rosa, Clay and later Dara borrow from it each season (a
     few seeds go out) and their gardens, Clay's stall and the town planters grow that strain, visibly; they return
     more the next season. The library is a shared stock, not a checklist: drawers rise and fall.
@@ -294,7 +317,7 @@ changes.
     House's shelf once it opens, and the cart keeps selling them).
 - **Reshaping.** Town: the Seed House roof mended, its lamp lit; planters by the board and Clay's stall grow the
   borrowed strains in their season; Clay stands at the Seed House in the mornings instead of the board. When the Holt
-  east wing is rebuilt (10 timber), **Dara** comes home with Pip and Lu.
+  east wing is rebuilt (5 timber), **Dara** comes home with Pip and Lu.
 - **Scenarios:** `seedhouse-ruin`, `clay-other-half`, `seedhouse-work`, `seed-borrow`, `seed-tag-first`,
   `seed-bolted`, `seed-return-gen`, `neighbours-borrow` (Rosa's garden growing a strain), `dara-arrives`.
 
@@ -313,7 +336,7 @@ changes.
     any season: dormant wood works; a stack with `of: "cherry"` like jam). With a cutting selected, Action on a stump
     grafts it. Interact on a stump reads its roots ("Old pear roots. Sweet ground.").
   - *Roots are the choice:* each stump has a rootstock (Tiled property) adding one trait to what you graft: **sweet**
-    (a better quality step more often), **hardy** (fruits one extra season), **heavy** (two fruit some mornings),
+    (a better quality step more often), **long** (fruits one extra season), **heavy** (two fruit some mornings),
     **early** (fruits from the season's first day). Eight stumps, four fruits, four roots.
   - *Growth:* a grafted stump shows buds for 7 days and then is a mature tree of that fruit (the `fruitTree` behaviour:
     a placeable created on the stump's tile with `data.roots`, never movable). Grafted in winter, it blossoms on spring 1.
@@ -323,7 +346,7 @@ changes.
     graft action handler (priority 55). Placed trees already save per map: no new state beyond stats.
   - *v1:* cuttings, eleven stumps, four roots. *v2:* a second graft for a two-fruit tree.
 - **Reshaping.** Woods `waking` to `blossom` after 4 grafts: stumps bud one by one at once, then the clearing turns
-  green with petals in spring. On spring 1 of year 2, if her cottage is rebuilt (10 timber), **Wren Ashby** (Rosa's
+  green with petals in spring. On spring 1 of year 2, if her cottage is rebuilt (5 timber), **Wren Ashby** (Rosa's
   niece, a beekeeper) moves in: blossom feeds her bees (bee houses within 6 tiles of a grafted tree yield a day sooner).
 - **Scenarios:** `orchard-dead`, `orchard-work`, `graft-first`, `graft-roots`, `orchard-blossom` (Y2 spring 1),
   `farm-creek-stumps`, `wren-arrives`.
@@ -333,12 +356,13 @@ changes.
 - **Story.** Saturday market on the field by the west road was the valley's heartbeat. When the traders stopped coming
   Mara kept the store lit; her ledger still lists every family that left, none crossed out.
 - **Restore.** Ask: Mara, once three places are open (by year 2 spring 1 at the latest, if three are open). Gather:
-  4,000g, 10 timber, three stall frames. Work: 3 days raising awnings. *Taste:* on the last day you stock one slot and
+  4,000g, 5 timber, three stall frames. Work: 3 days raising awnings. *Taste:* on the last day you stock one slot and
   Mara buys it ("First sale in six years. I'm framing the coin."). Expected: year 2 spring 5-20.
 - **Mechanic: market day.** Once a week you stock a stall; visitors buy what they want, and what they want changes with
   the season and with what has already sold.
   - *Verbs:* stock, chat to a buyer, collect.
-  - *One thumb:* on market days (6, 13, 20, 27; no festival falls on them), Interact at your stall opens a 6-slot sheet:
+  - *One thumb:* on market days (6, 13, 20, 27; no contest festival falls on them; Lantern Night on fall 27 is an evening gathering
+    after the market closes), Interact at your stall opens a 6-slot sheet:
     tap a bag item, then a slot ("Fill" puts the six best-wanted goods in). From 9 AM to 3 PM visitors walk past with a
     want bubble (fruit, fish, flowers, sweet, eggs) and buy from your stall if it has what they want. Tapping a visitor
     at your stall chats (a heart point, that sale 10% better). At 3 PM leftovers go back to the bag or are paid at bin
@@ -352,23 +376,29 @@ changes.
     (`applyMarket` when the stall or field is next seen, exact in tests); `ui/panels/StallPanel.ts`.
   - *v1:* one stall, six slots, demand, villagers and families. *v2:* a second row (Tobin), market fairs twice a year.
 - **Reshaping.** Town `river` to `market`: awnings, bunting and stalls on the field (one more per family home), a crowd
-  murmur and the town piece's market-day variation. Seven days after it opens, and once his rooms are rebuilt (8
+  murmur and the town piece's market-day variation. Seven days after it opens, and once his rooms are rebuilt (4
   timber), **Tobin Reyes** arrives by the south road; the Market Road project becomes his **Trade Road**.
 - **Scenarios:** `market-empty`, `market-work`, `market-day-stock`, `market-day-buyers`, `market-day-close`,
   `tobin-arrives`.
 
 ### 3.7 Lantern Night: the finale (no mechanic, no new map)
 
-Ilse's last journal page (Rosa's 5-heart scene, "Blossom"): "When the harvest is in, we used to send lanterns down the
-river for the ones who'd gone, so they'd know the way back." Lantern Night is **fall 27**. It becomes the finale on the
-first fall 27 when every place in `valley.json` is restored and every family is home; Rosa's letter on fall 20 says it
-is coming. If the valley is not ready, Rosa's fall 20 letter says what is still missing, warmly, and names next fall.
+Ilse's last journal page (Rosa's 5-heart scene, "Blossom"): "When the harvest is in, every house made a lantern from
+its own work, and we let the weir carry them down to the ones who'd gone, so they'd know the way back." Lantern Night
+is the evening of **fall 27** (after that day's market closes). It becomes the finale on the first fall 27 when every
+place in `valley.json` is restored and every family is home; Rosa's letter on fall 20 says it is coming. If the valley
+is not ready, that letter says what is still missing, warmly, and names next fall.
 
-At 7 PM the whole valley is on the town riverbank. One line each from Rosa, Mara, Finn, Orin and Clay. You set Ilse's
-lantern on the water from the dock (Interact); then everyone's lanterns go in together and drift south past the town,
-the mill and the Heron, while the Lantern Night piece plays. No count, no names read out. A sheet follows, **"The Wend
-is remembered"**: each restored place's phrase ("The creek runs. The forge rings. The river is home. ...") and "Keep
-playing". Lantern Night repeats every fall 27 after (a festival row with no contest).
+**At dusk (6 PM) the valley gathers at the weir in Wendhead**, the place the river came back through. Each household's
+lantern is made of its place: Orin's forged frame, a shade of Wend seed paper from the Seed House (Clay and Dara),
+Marl flour-sack cloth, Wren's beeswax, a husk of bucket-tree blossom (Rosa), a ledger page with "back" written beside
+every name (Mara), a lantern hung from the *Heron*'s old oarlock (Finn), and Ilse's, which you bring (that morning the
+forge, or Orin if it is not lit, gives you its frame). One line each from the five who stayed. Then the player's
+action: you **open the sluice gate** (Interact), and the gathered lanterns ride the water through the weir together,
+down the gorge and out of sight toward the valley, while the Lantern Night piece plays. Nobody launches a light alone,
+nothing is counted, no names are read out. A sheet follows, **"The Wend is remembered"**: each restored place's phrase
+("The creek runs. The forge rings. The river is home. ...") and "Keep playing". Lantern Night repeats every fall 27
+after (a festival row with no contest).
 
 ### 3.8 Ideas considered and not chosen
 
@@ -439,8 +469,10 @@ palette; `mapCache.ts` keys by file. The final variant keeps today's file name.
 - New tiles: cracked mud and its edges, a dry creek bed, a dead crown, a budding stump, the rockfall, the weir in two
   states, stalls and awnings, house scaffolding. Season swaps come from `seasons.py` automatically.
 - **The dry palette** is a palette swap like the seasons (`seasons.py` gains a `dry` remap: grass and foliage ramps to
-  straw and grey-green; water, paths and roofs untouched), producing `tiles_dry.png` and `tiles_<season>_dry.png`,
-  loaded lazily only while the current outdoor map asks for `palette: "dry"`. `tilesetFor()` takes the palette.
+  straw and grey-green; water, paths and roofs untouched), producing `tiles_dry.png` and `tiles_<season>_dry.png`.
+  The current season's dry tileset is **resident while any outdoor map's variant is dry** (loaded in the morning, before
+  the player leaves the house, never at a door) and released the first morning no outdoor map is dry, so doors stay
+  under the feel bar of 0.3 s. `tilesetFor()` takes the palette.
 
 ### 4.4 NPCs per stage
 
@@ -516,19 +548,25 @@ you do:*
 9. *4 hearts "Clay's secret"* (kept, Speed-Gro); `rivalPolite`.
 10. *Dara comes home* (the Holt wing rebuilt with your timber): "She's back. ...Thanks."
 11. *5 hearts "Partners"* (kept, now also needs the Seed House): `rivalOff`; his crates become a market stall.
-12. *Lantern Night:* he and Dara set the Holt lantern on the water right after yours.
+12. *Lantern Night:* the Holt lantern's shade is Wend seed paper from the library he helped reopen.
 
 ### 5.2 Families who come home
 
 Each is one `npcs.json` villager (one sheet) and a house rebuilt with timber; an arrival letter comes when the house is
-half done. v1: lines, loves and a stall; heart events are v2.
+half done. v1: lines, loves and a stall; heart events are v2. Each carries a loss of their own that coming home mends:
+
+- **Senna Marl:** the mill her family ran for three generations, its wheel rusting in a dry race. Home, she hears it turn.
+- **Dara Holt:** her children growing up with no ground of their own, and the brother she left. Home, Pip and Lu get the
+  Holt fields, and Dara gets Clay back.
+- **Wren Ashby:** her hives, sold when there was no blossom left to feed them. Home, the orchard lets her keep bees again.
+- **Tobin Reyes:** the forge he trained at and the master he walked out on. Home, he works beside Orin again.
 
 | Family | Needs | Who you meet | House (timber) | Stall | Ties |
 | ------ | ----- | ------------ | -------------- | ----- | ---- |
-| The Marls (millers) | Weir | Senna Marl (Ivo is at the mill) | North-east house, 14,3 (12) | Flour and bread (flour, a new cooking good) | Mara's sister |
-| Dara Holt, Pip and Lu | Seed House | Dara (the children: a two-frame decor sprite) | The Holt farm's east wing, off-map (10) | Eggs and cheese | Clay's sister |
-| Wren Ashby (beekeeper) | Orchard, spring 1 after | Wren | The orchard cottage, woods (10) | Honey; buys flowers | Rosa's niece |
-| Tobin Reyes (cartwright) | Market + 7 days | Tobin | Rooms above the forge (8) | Tool repairs; cheaper bars | Orin's apprentice |
+| The Marls (millers) | Weir | Senna Marl (Ivo is at the mill) | North-east house, 14,3 (6) | Flour and bread (flour, a new cooking good) | Mara's sister |
+| Dara Holt, Pip and Lu | Seed House | Dara (the children: a two-frame decor sprite) | The Holt farm's east wing, off-map (5) | Eggs and cheese | Clay's sister |
+| Wren Ashby (beekeeper) | Orchard, spring 1 after | Wren | The orchard cottage, woods (5) | Honey; buys flowers | Rosa's niece |
+| Tobin Reyes (cartwright) | Market + 7 days | Tobin | Rooms above the forge (4) | Tool repairs; cheaper bars | Orin's apprentice |
 
 ## 6. Pacing
 
@@ -536,11 +574,11 @@ half done. v1: lines, loves and a stall; heart events are v2.
 | ---- | ------ | ------------------ | -------- |
 | Y1 spring 1-2 | Guided start on a dry farm; day 2 rain (unchanged) | gift ... sleep, buy | |
 | Y1 spring 3 | Unchanged (waterDaily, settling-in jobs) | job1, harvest | |
-| Y1 spring 4-7 | **First green** the morning after 5 shipped (day 4 at the earliest): the farm turns green, Rosa's letter with the tin and journal, the spring's ask | ship, fish, craft | |
+| Y1 spring 5-7 | **First green** the morning after 5 shipped (day 5 at the earliest, after the settling-in days): the farm turns green, Rosa's letter with the tin and journal, the spring's ask | ship, fish, craft | |
 | Y1 spring 8-20 | Old Spring funded and worked; **channels** | place, preserve, order; Clay from day 8 | Flower Show (14): three tables, Rosa's idea |
 | Y1 summer 1-12 | Forge; **strike in time**; deadwood and charcoal | quality, chicken, eggs | |
 | Y1 summer 13-fall 5 | Weir; the river returns; **towing** | tree, friend, earn1k, upgrade | Fishing Derby (22): at the woods lake if the weir is not done ("Finn's lake derby"), else on the river |
-| Y1 fall | Marls' house rebuilt, the Marls home; "The other half"; Seed House; **seed library** (pumpkin, yam and corn strains usable at once) | bag, earn5k, land | Harvest Fair (16) |
+| Y1 fall | Marls' house rebuilt, the Marls home; "The other half"; Seed House; **seed library** (pumpkin and yam strains usable at once) | bag, earn5k, land | Harvest Fair (16) |
 | Y1 winter | Orchard asked, worked; **grafting** (dormant wood); Holt wing rebuilt, Dara home (winter or Y2 spring 1) | project1 ... | Winter Feast (24): Clay judges your basket |
 | Y1 winter 28 | Year-end screen: the place phrases so far, a line from Rosa | | |
 | Y2 spring | The orchard blossoms on day 1; Wren home; Market asked and worked; **market day** from about day 15; the first **High Water** notch | | Flower Show, dressed by the families |
@@ -572,10 +610,11 @@ cut a notch at the line the water reached (Interact). It records one thing: **ho
 spring, the weir and the warm pool's v2), shown as the notch's height on the stone's sprite. No sheet, no categories, no
 score. Finn says one line about the river; Clay says one about last year.
 
-**The year-3 checkpoint** is the first High Water of year 3 (or, if the weir is not open, a spring letter from Rosa):
-after the notch, Rosa's letter "Two years" reads the place phrases you have earned, then what is still waiting,
-phrased as people ("The Marls' house still has no roof. Senna asks after it in every letter."). It tells you how the
-valley is doing in its own voice and points at the next thing, without grading.
+**The year-3 checkpoint** (the owner's ask) is the first High Water of year 3: the first time two notches stand side by
+side on the stone, so you see at a glance how far the river, and with it the valley, has come since last spring. Clay's
+line compares them ("Higher. Don't get smug."). There is no letter and no list of what is done or missing: Rosa's
+fall 20 letter already says each year what Lantern Night still waits for. If the weir is not open by year 3, the stone
+stays dry and Finn says "One day."
 
 ## 7. The opening
 
@@ -590,7 +629,8 @@ The guided start stays as tuned. The letter adds no step and day 3 gets nothing 
 - **Day 2 is unchanged:** the rain (Rosa's rainy line becomes "Rain! The valley drinks it all by noon."), the mail
   step (Mara's welcome letter reworded, seeds unchanged), the jobs, the walk to town.
 - **Day 3 is unchanged.**
-- **First green** (the morning after 5 shipped, day 4 at the earliest; usually day 5-7): the farm wakes; the morning note
+- **First green** (the morning after 5 shipped, day 5 at the earliest so it never shares a morning with the settling-in
+  jobs of days 3-4; usually day 5-7): the farm wakes; the morning note
   "The farm looks greener this morning."; Rosa's letter "First green this valley's seen in years. Ilse said the soil
   remembers. She left this for whoever came." brings **Ilse's seed tin** (narrative: it opens at the Seed House) and
   **the journal** (it opens Menu > Goal's THE VALLEY section at page 1: the spring). One beat gives the green its cause
@@ -628,7 +668,7 @@ The guided start stays as tuned. The letter adds no step and day 3 gets nothing 
 | ------ | ----- | ------- |
 | Places, work days, first green, houses, families, drift, drawers, High Water | stats only | none |
 | Letters, journal pages | mail and stats | none |
-| Channels, seed tags, strike offset | `SoilTile.channel?`, `CropState.tag?`, `CropState.ripeFor?`, `settings.strikeOffset?` | **one bump** (18, or 19 if the villagers plan's memory lands first), added together in M5 even though tags and the offset are used later |
+| Channels, seed tags, strike offset | `SoilTile.channel?`, `CropState.tag?`, `CropState.ripeFor?`, `settings.strikeOffset?` | **one bump** (18, or 19 if the villagers plan's memory lands first), added together in M4 even though tags and the offset are used later |
 | Market stall stock | `data` of a placed, unmovable stall object | none |
 | Grafted trees | placed `fruitTree` objects with `data.roots` | none |
 | Goals | none inserted (THE VALLEY is its own section); texts edited, stats unchanged | none |
@@ -643,10 +683,13 @@ have already greened; every place starts at 0 and asks by the usual conditions.
 - Channels: watered tiles at most 2 x `flow` (48, then 128); a test keeps a channel field under the value of the same
   tiles under quality sprinklers.
 - Forge parts are not sellable; quality only shortens work or nudges a cap.
-- Towing: at most 3 logs a day; timber's sale value bounded under 20g a day.
-- Seed library: generation traits bounded (hardy only 3 days into the next season; quality +1 step at 25%; double harvest
-  at 10%); per tile-day income of a generation-3 strain under the best crop of its season.
-- Grafting: root traits keep per tile-day fruit income under melon and pumpkin; hardy adds one season at most.
+- Towing: at most 2 logs a day (one in winter), 30 timber needed in all; timber's sale value bounded under 20g a day.
+- Seed library: generations change only watering (never price, quality or yield), so income per tile-day is the plain
+  crop's; a test checks a generation-3 field earns the same as a watered plain field.
+- Grafting: root traits keep per tile-day fruit income under melon and pumpkin; long adds one season at most.
+- Project re-gates (the Greenhouse after the canopy, earlier than today; the Schoolhouse's `xpBonus` after Dara, later;
+  the rare seeds at the Seed House, later; the Fish Ladder and Hot Spring on site sheets) are part of the
+  restore-on-schedule sim run, which must stay within +15% of the median and reports the Greenhouse's first harvest day.
 - Market: at most 1.5x bin per item, demand -15% per repeat, six slots; one market day earns at most twice the average
   daily shipping (a sim bot that stocks the stall).
 - The pinned sim median does not restore places; a second sim run restores them on schedule and stays within +15%.

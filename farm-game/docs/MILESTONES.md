@@ -30,19 +30,20 @@ Rules for every milestone:
 | M3 | The restoration pattern and the Old Spring | depth, art, onboarding, audio | M2 |
 | M4 | Channels (and the plan's one save bump) | depth, feel, onboarding | M3 |
 | M5 | The Cold Forge: strike in time | depth, feel, audio, art | M3 |
-| M6 | The Weir: the river returns; towing timber; the Marls come home | depth, art, feel, audio | M3 (M5 optional) |
-| M7 | The Seed House: the seed library; Clay's turn; Dara comes home | depth, art | M3, M4 (tag field), M6 (timber) |
-| M8 | The Bucket Orchard: grafting; Wren comes home | depth, art | M3, M6 (timber) |
-| M9 | The Market Field: market day; Tobin; the Trade Road | depth, art, audio | M6 |
-| M10 | Lantern Night, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio | M3 and every place shipped |
+| M6 | The Weir: the river returns | depth, art, audio | M3 (M5 optional) |
+| M7 | Towing and the first homecoming | depth, art, feel, audio | M6 |
+| M8 | The Seed House: the seed library; Clay's turn; Dara comes home | depth, art | M3, M4 (tag field), M7 (timber) |
+| M9 | The Bucket Orchard: grafting; Wren comes home | depth, art | M3, M7 (timber) |
+| M10 | The Market Field: market day; Tobin; the Trade Road | depth, art, audio | M7 |
+| M11 | Lantern Night, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio | M3 and every place shipped |
 
-**The minimum complete game** is M1, M2, M3, M4, M6, M7 and M10 (the core three places). Without M5, parts are bought
-from Orin for gold; without M9, families' goods go on Mara's shelf; the finale requires the places that exist in
+**The minimum complete game** is M1, M2, M3, M4, M6, M7, M8 and M11 (the core three places). Without M5, parts are bought
+from Orin for gold; without M10, families' goods go on Mara's shelf; the finale requires the places that exist in
 `valley.json`.
 
 Audio alongside: **A1** the thinned arrangement on `dry` variants and the dry wind bed (with M2), **A2** creek and river
-loops (M3, M6), **A3** anvil and bellows (M5), **A4** market murmur and the log-landing cue (M6, M9), **A5** the Lantern
-Night piece (M10).
+loops (M3, M6), **A3** anvil and bellows (M5), **A4** market murmur and the log-landing cue (M7, M10), **A5** the Lantern
+Night piece (M11).
 
 ---
 
@@ -70,14 +71,15 @@ Night piece (M10).
   - Old saves: `sanitize` sets `valley.farmGreen` = 1 when `shipped` is at least 5 (a default, no version bump).
 - **Scenarios:** `title-first-launch`, `valley-farm-dry` (day 1, guided start running), `valley-farm-green-eve` (day 5
   evening, 5 shipped), `valley-farm-green` (day 6 morning: green, note, letter), `talk-dry-mara` (town, day 4).
-- **Tests:** `mapLook` picks the palette; the trigger fires once, never before day 4 or without 5 shipped; the title
+- **Tests:** `mapLook` picks the palette; the trigger fires once, never before day 5 or without 5 shipped; the title
   letter, strip line, letter and new lines fit (`measureText`); `when` filtering on lines and events (a group with no
   matching line falls back to the tier); a banned-phrase test (no "booming", "whole valley is talking" reachable while
   its place is unrestored); save round trip; old-save default; e2e: each scenario, the tileset key in use, the note,
   the letter and its two items.
 - **Acceptance:** onboarding e2e 16/16 to day 2 and median time to day 2 within +5 s; draws in `valley-farm-dry` equal
-  `day1-fresh`; the dry texture not loaded in `valley-farm-green`; the critic and owner agree the dry farm reads as dry,
-  not as autumn (shots of both palettes in all four seasons in `agents/out/`).
+  `day1-fresh`; the dry texture not loaded in `valley-farm-green` once no outdoor map is dry; door transitions on the
+  farm still under 0.3 s (the feel bar; `e2e:feel`'s door timing) with the dry tileset resident; the critic and owner
+  agree the dry farm reads as dry, not as autumn (shots of both palettes in all four seasons in `agents/out/`).
 - **Depends on:** nothing.
 
 ## M2. Map variants
@@ -102,8 +104,9 @@ Night piece (M10).
   no zone tile and no scenario tile in a delta rect unless allowed (WORLD-PLAN 4.2.2, 4.2.6); doors identical across
   variants; placement refusal; `tests/dev-scenarios.test.ts` loads each scenario in its pinned variant; baked tiles
   present for every variant.
-- **Acceptance:** `npm run verify` green; draws unchanged per variant; a scenario load standing in the creek bed of a
-  `restored` farm moves the player to the nearest door spawn.
+- **Acceptance:** `npm run verify` green; draws unchanged per variant; door transitions under 0.3 s between variant
+  files (a variant swap never loads at a door; it is chosen at the morning or the map load); a scenario load standing
+  in the creek bed of a `restored` farm moves the player to the nearest door spawn.
 - **Depends on:** M1.
 
 ## M3. The restoration pattern and the Old Spring
@@ -142,7 +145,7 @@ Night piece (M10).
 - **Owner:** depth (rules, save), feel (dig and water-arrival juice), onboarding (intro), art (channel tiles, spade).
 - **Files and data:**
   - **Save version bump** (18, or the next free number): `SoilTile.channel?`, `CropState.tag?`, `CropState.ripeFor?`,
-    `settings.strikeOffset?` all accepted by `sanitize` now (tags and the offset are used by M7 and M5); migration is a
+    `settings.strikeOffset?` all accepted by `sanitize` now (tags and the offset are used by M8 and M5); migration is a
     no-op.
   - `systems/channels.ts` (flow walk, watering; pure); `mechanics/channels.ts` (action handler `dig-channel` priority 45,
     `registerToolAction('dig')`, `pre-growth` day hook); the spade (handed over at the spring's opening);
@@ -178,59 +181,74 @@ Night piece (M10).
   σ 40 ms; draws in `forge-first-strike` at most 6; the anvil cue at its target level.
 - **Depends on:** M3. Independent of M4.
 
-## M6. The Weir: the river returns; towing timber; the Marls come home
+## M6. The Weir: the river returns
 
-- **Goal:** the biggest reshape (the town river comes back, the Heron floats) and a verb only water has: tow drift
-  timber that rebuilds the houses families come home to.
-- **Owner:** depth (place, towing rules, houses, fish gating), art (town `dry` and `river` variants, Wendhead
-  `restored`, logs, rope, house scaffolding, the Heron, the mill wheel), feel (log follow, drift and snag feel), audio
-  (A2 river loop; A4 log landing).
-- **Files and data:**
-  - `valley.json` `places.weir` (ask: spring open, forge lit or summer 15, Finn 2 hearts; fund 2,500g, 60 stone, a sluice
-    gate; 4 work days; taste: hook the first log into the weir's gap), `weir.drift` (1-3 a day, speed, max 3 waiting),
-    `houses` (timber per house, family, place).
-  - Town variants `dry` (D1 mud, palette dry, the north-east house boarded) and `river` (today's water, reeds, the mill
-    wheel); Wendhead `restored`; the log slip on the south bank; the Marls' house scaffolding stages.
-  - `systems/towing.ts` (rope length, follow, snag test against the water mask; pure); a towing controller in the scene;
-    the timber hook (`registerToolAction('hook')`); action handlers for the slip and houses; a `morning` hook spawning
-    drift (positions not saved; a save while towing returns the log to the north edge).
-  - `fish.json` optional `place` (trout, salmon, glimmer trout, ice pike); `festivals.json` Derby `dryMaps: ["woods"]`;
-    the legends letter edited; Finn's "The Heron" event and dock schedule `when`; Senna (`arrives: { place: "weir",
-    house: "marls" }`); the Fish Ladder row gets `"site": "weir"`; intro `towing`.
-- **Scenarios:** `weir-broken`, `weir-work`, `weir-opened-town`, `tow-first-log`, `tow-snag`, `tow-house-marls` (11 of 12
-  timber), `marls-arrive`, `derby-lake`, `derby-river`.
-- **Tests:** per-variant map tests for town and Wendhead; town `river` matches today's walkability outside D2; towing
-  (the log never leaves water; a snag at a bank corner; tug frees it; landing gives one timber); at most 3 logs waiting;
-  save while towing; trout, salmon and the two legends only with the weir; the Derby venue; Senna not drawn or counted
-  before her house is done; timber income bound.
-- **Acceptance:** `weir-opened-town` shows a full river, the Heron afloat and Finn at the dock; in `tow-first-log` a log is
-  hooked, towed and landed by taps only in under 20 s; draws at most 7 while towing; the critic's real-phone checklist
-  gains a towing-feel row.
+- **Goal:** the biggest reshape, cheaply: the town river comes back, the Heron floats, Finn's loss is mended, and the
+  river's fish and the Derby follow the water.
+- **Owner:** depth (place, fish gating, festival venue), art (town `dry` and `river` variants, Wendhead `restored`, reeds,
+  the Heron afloat), audio (A2 river loop; the town piece's thinned and full arrangement).
+- **Files and data:** `valley.json` `places.weir` (ask: spring open, forge lit or summer 15, Finn 2 hearts; fund 2,500g,
+  60 stone, a sluice gate; 4 work days; the last day's taste is scripted until M7: the water comes through and lifts a
+  beam into the gap); town variants `dry` (D1 mud, palette dry, the north-east house boarded) and `river` (today's
+  water, reeds, rocks and the reed bed on water tiles, the mill wheel); Wendhead `restored`; `fish.json` optional
+  `place` (trout, salmon, glimmer trout, ice pike); `festivals.json` Derby `dryMaps: ["woods"]`; the legends letter
+  edited; Finn's "The Heron" event and the dock schedule `when`; Clay's weir line; the Fish Ladder row gets
+  `"site": "weir"`.
+- **Scenarios:** `weir-broken`, `weir-work`, `weir-opened-town`, `derby-lake`, `derby-river`.
+- **Tests:** per-variant map tests for town and Wendhead; town `river` matches today's walkability outside D2; trout,
+  salmon and the two legends only with the weir; the Derby venue; the fisher sim inside its bound.
+- **Acceptance:** `weir-opened-town` shows a full river, the Heron afloat and Finn at the dock; draws unchanged against
+  today's town; doors between farm and town under 0.3 s while the town is still `dry` and the farm is green (the dry
+  tileset resident, not loaded at the door).
 - **Depends on:** M3. M5 optional (the sluice gate is bought without it).
 
-## M7. The Seed House: the seed library; Clay's turn; Dara comes home
+## M7. Towing and the first homecoming
+
+- **Goal:** a verb only water has (tow drift timber along the bank to the slip) and the first family home in a house
+  you rebuilt.
+- **Owner:** depth (towing rules, houses, arrivals), art (logs short and long, the rope, the slip, house scaffolding,
+  Senna), feel (log follow, swing, snag and tug), audio (A4 log landing).
+- **Files and data:** `valley.json` `weir.drift` (1-2 logs a day, one in winter; one in three long; speed; max 3
+  waiting; three lanes chosen by day hash, never the same twice in a row) and `houses` (Marls 6, Holt wing 5, Wren 5,
+  Tobin 4; family; place); `systems/towing.ts` (rope length 3, follow, lanes, snag test against water and obstacles;
+  pure); a towing controller in the scene; the timber hook (`registerToolAction('hook')`; a forge part, bought from Orin
+  until M5); action handlers for the slip and houses; a `morning` hook spawning drift (positions not saved; a save while
+  towing returns the log to the north edge); timber (sells at 5g); Senna (`arrives: { place: "weir", house: "marls" }`),
+  the Marls' house scaffolding and lit window, the mill wheel turning; intro `towing`.
+- **Scenarios:** `tow-first-log`, `tow-long-log` (two tugs), `tow-east-lane` (a log turned west by the spur),
+  `tow-winter` (ice rims, half speed), `tow-house-marls` (5 of 6 timber), `marls-arrive`.
+- **Tests:** the log never leaves water; snags at rocks, the reed bed and bank corners; one tug frees a short log, two a
+  long one; landing gives 1 or 3 timber; at most 3 waiting; ten consecutive days never repeat a lane and snag; save
+  while towing; Senna not drawn or counted before her house is done; timber income bound.
+- **Acceptance:** in `tow-first-log` a log is hooked, towed and landed by taps only in under 20 s, and in
+  `tow-east-lane` under 30 s; draws at most 7 while towing; the critic's real-phone checklist gains a towing-feel row.
+- **Depends on:** M6.
+
+## M8. The Seed House: the seed library; Clay's turn; Dara comes home
 
 - **Goal:** the rival becomes an ally through the library his family founded; you learn to borrow, grow and give back.
 - **Owner:** depth (rules, Clay's arc), art (Seed House roof stages, seed-head stage, tag ribbon, strain icons, planters,
   Dara, the children decor).
-- **Files and data:** `valley.json` `places.seedhouse` (ask: "The other half"; fund 3,000g, 10 timber, 3 iron bars;
+- **Files and data:** `valley.json` `places.seedhouse` (ask: "The other half"; fund 3,000g, 5 timber, 3 iron bars;
   3 work days with Clay, each tagging one of his plants) and `seedhouse.strains` (six founding strains); drawer stats
   (`seeds.<strain>.stock`, `.gen`, `.loan`); `ui/panels/SeedHousePanel.ts` (Borrow, Return, generation, last borrower);
   the seed tag (action handler priority 60; harvest skips tagged crops with a refusal); a `growth` hook for bolting;
   a `morning` hook for neighbours' loans and planters; Clay's "The other half" event, Winter Feast beat and re-gated
-  perks (`rivalOff` also needs the Seed House); the Holt wing as a house (10 timber); Dara (`arrives`); the Seed
+  perks (`rivalOff` also needs the Seed House); the Holt wing as a house (5 timber); Dara (`arrives`); the Seed
   Exchange row retired (`"retired": true`) and its rare seeds on the Seed House shelf; intro `seedLibrary`.
 - **Scenarios:** `seedhouse-ruin`, `clay-other-half`, `seedhouse-work`, `seed-borrow`, `seed-tag-first`, `seed-bolted`,
   `seed-return-gen`, `neighbours-borrow`, `dara-arrives`.
 - **Tests:** one loan per strain; smart targeting never harvests a tagged crop; bolt after 3 ripe days; yield 2-4; a
-  2x return raises the generation; generation traits bounded (WORLD-PLAN 9.2); neighbours borrow only from drawers at
+  2x return raises the generation; generations change only watering (deep roots, rain keeper, dry-sown) and a
+  generation-3 field earns the same per tile-day as a watered plain field (WORLD-PLAN 9.2); neighbours borrow only from
+  drawers at
   10 or more and return more; the board-race sim unchanged until `rivalOff`; retired-project saves keep their perk.
 - **Acceptance:** in `seed-borrow` to `seed-return-gen`, a strain goes from borrowed to generation 1 in one season by taps
   only; in `neighbours-borrow` Rosa's garden visibly grows the strain; the critic agrees Clay's turn reads as earned (all
   twelve beats reachable in a scripted year).
-- **Depends on:** M3, M4 (the tag field), M6 (timber for the roof and the Holt wing).
+- **Depends on:** M3, M4 (the tag field), M7 (timber for the roof and the Holt wing).
 
-## M8. The Bucket Orchard: grafting; Wren comes home
+## M9. The Bucket Orchard: grafting; Wren comes home
 
 - **Goal:** dead trees bud: dormant cuttings grafted onto old stumps whose roots shape the tree.
 - **Owner:** depth (rules, trees), art (woods `waking` and `blossom` variants, stumps, buds, the cottage, Wren, knife and
@@ -240,7 +258,7 @@ Night piece (M10).
   `blossom` (after 4 grafts), the `clearing` forage zone trimmed; `stump` Tiled objects with `roots` (eight in the
   woods, three on the restored farm creek); the knife (`registerToolAction('cut')`); a graft handler (priority 55)
   creating an unmovable `fruitTree` placeable with `data.roots`; `trees.json` root modifiers; Rosa's 4- and 5-heart
-  scenes ("Grandmother's orchard", "Blossom", Ilse's last page); Wren's cottage (10 timber) and `arrives`; the bee-house
+  scenes ("Grandmother's orchard", "Blossom", Ilse's last page); Wren's cottage (5 timber) and `arrives`; the bee-house
   bonus near grafted trees; intro `graft`.
 - **Scenarios:** `orchard-dead`, `orchard-work`, `graft-first`, `graft-roots`, `orchard-blossom` (Y2 spring 1),
   `farm-creek-stumps`, `wren-arrives`.
@@ -249,18 +267,18 @@ Night piece (M10).
   geometry.
 - **Acceptance:** in `graft-first` one Action takes a cutting and one grafts it, and the stump buds at once;
   `orchard-blossom` shows the changed variant; sim in band.
-- **Depends on:** M3, M6 (timber for Wren's cottage). M5 optional (the knife is bought without it).
+- **Depends on:** M3, M7 (timber for Wren's cottage). M5 optional (the knife is bought without it).
 
-## M9. The Market Field: market day; Tobin; the Trade Road
+## M10. The Market Field: market day; Tobin; the Trade Road
 
 - **Goal:** empty stalls fill; a weekly market where what you stock meets what visitors want.
 - **Owner:** depth (rules, buyers, balance, project re-gates), art (the town `market` variant, stalls, awnings, bunting,
   visitors, Tobin), audio (A4 murmur, the market-day variation).
-- **Files and data:** `valley.json` `places.market` (ask: Mara with three places open; fund 4,000g, 10 timber, three stall
+- **Files and data:** `valley.json` `places.market` (ask: Mara with three places open; fund 4,000g, 5 timber, three stall
   frames; 3 work days, the last a first sale to Mara); town variant `market` (stalls in D2 only); `market.json`; the
   stall as a placed, unmovable object whose `data` holds the stock; `systems/market.ts` (demand, lazy `applyMarket`;
   pure); `ui/panels/StallPanel.ts`; family stalls as stat-keyed objects; Mara's market-bell opening and her post-market
-  lines; Tobin (rooms above the forge, 8 timber; `arrives`); Market Road renamed Trade Road and gated on Tobin; Fair
+  lines; Tobin (rooms above the forge, 4 timber; `arrives`); Market Road renamed Trade Road and gated on Tobin; Fair
   Hall gated on the market; the Library renamed Schoolhouse and gated on Dara; Greenhouse `after: canopy`; intro
   `market`.
 - **Scenarios:** `market-empty`, `market-work`, `market-day-stock`, `market-day-buyers`, `market-day-close`,
@@ -270,25 +288,29 @@ Night piece (M10).
   StallPanel fits; project re-gates keep old saves' finished projects.
 - **Acceptance:** stocking six goods takes under 20 s in `market-day-stock`; in `market-day-buyers` at least three visitors
   with wants walk past and buy; draws at most 8 with visitors.
-- **Depends on:** M6 (timber, the Marls' stall). Better with M5, M7 and M8 (more stalls), not required.
+- **Depends on:** M7 (timber, the Marls' stall). Better with M5, M8 and M9 (more stalls), not required.
 
-## M10. Lantern Night, High Water, the year-end, the Founders' Stone
+## M11. Lantern Night, High Water, the year-end, the Founders' Stone
 
 - **Goal:** the ending, a yearly ritual that measures one thing, and a resting point for year-1 players.
-- **Owner:** depth (finale, High Water, the stone), onboarding (finale flow), art (lanterns on water, the river stone and
-  its notches, the toppled and raised Founders' Stone), audio (A5).
+- **Owner:** depth (finale, High Water, the stone), onboarding (finale flow), art (the households' lanterns, each made
+  from its place, riding the weir; the river stone and its notches; the toppled and raised Founders' Stone), audio (A5).
 - **Files and data:** `valley.json` `finale` (Rosa's fall 20 letters: ready and not yet) and `highWater` (notch heights
-  from the spring, the weir and the warm pool); the finale on fall 27 at the town river (one line per villager, your
-  lantern at the dock by Interact, everyone's lanterns together, the "The Wend is remembered" sheet with place
-  phrases); `festivals.json` Lantern Night (fall 27, no contest, after the finale); the river stone and the High Water
-  morning (first spring morning after rain with the weir open); Rosa's year-3 "Two years" letter (place phrases, then
-  what is still waiting, as people); `SummaryPanels.ts` year-end with place phrases and Rosa's line; the Founders' Stone
+  from the spring, the weir and the warm pool); the finale at dusk on fall 27 at the Wendhead weir, after the market
+  closes (each household's lantern made from its place; Ilse's frame from the forge that morning; one line per villager
+  who stayed; you open the sluice by Interact and all the lanterns ride the water together; the "The Wend is remembered"
+  sheet with place phrases); `festivals.json` Lantern Night (fall 27 evening, no contest, after the finale); the river
+  stone and the High Water morning (first spring morning after rain with the weir open; in year 3 the first two
+  notches side by side, Clay's comparing line; no letter); `SummaryPanels.ts` year-end with place phrases and Rosa's
+  line; the Founders' Stone
   reframe (text, a toppled-stone object from day 1, carved names per level); goal renames (WORLD-PLAN 8).
 - **Scenarios:** `finale-ready` (fall 26, all restored, all home), `finale-not-yet` (fall 20, one house unfinished),
-  `finale-river` (fall 27, 7 PM), `after-finale`, `high-water-y2`, `high-water-y3-letter`, `year-end-y1`.
+  `finale-weir` (fall 27, 6 PM, Wendhead), `after-finale`, `high-water-y2`, `high-water-y3` (two notches),
+  `year-end-y1`.
 - **Tests:** the finale only on fall 27 with every place restored and every family home, once; Lantern Night only after;
-  High Water once a year, only with the weir, the notch never lower than last year's; letters and sheets fit.
-- **Acceptance:** `finale-river` plays through by taps in under 90 s; `year-end-y1` reads as a resting point (critic
+  High Water once a year, only with the weir, the notch never lower than last year's; the fall 27 market and the
+  evening gathering never overlap; letters and sheets fit.
+- **Acceptance:** `finale-weir` plays through by taps in under 90 s; `year-end-y1` reads as a resting point (critic
   signs off the wording); no screen in the game grades the valley.
 - **Depends on:** M3 and every place that ships.
 

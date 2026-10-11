@@ -38,8 +38,8 @@ it fed. So:
 ## The emotional arc
 
 - **Beginning (spring, year 1): a tired place notices you.** Day 1 is the guided start, unchanged in length, on
-  a farm that looks parched. By the end of the first week your fields are the only green in the valley, and the
-  farm map itself turns from straw to green around them. Rosa hands you Ilse's seed tin and journal; its first
+  a farm that looks parched. By the end of the first week your fields are the only green in the valley, and one
+  morning the whole farm turns from straw to green. Rosa hands you Ilse's seed tin and journal; its first
   page points uphill, at the Old Spring.
 - **Middle (summer, year 1, to spring, year 2): one place at a time, one person at a time.** Each broken place
   belongs to someone. Mending it is their wish come true and changes the map you walk on: the creek runs, the
@@ -47,8 +47,9 @@ it fed. So:
   play. Families start writing that they are thinking of coming back, then they do: a lit window, a new face, a
   stall. Clay watches all of it from his fence, and slowly stops racing you and starts working beside you.
 - **End (year 2, fall 27): the valley is remembered.** On the first Lantern Night when every place is mended and every
-  family is home, the whole valley stands on the riverbank and sets lanterns on the water "for the ones who'd gone,
-  so they'd know the way back". You set Ilse's first; everyone else's follow together. Then the game carries on: a
+  family is home, the valley gathers at the weir at dusk, each household with a lantern made from its own mended place.
+  You open the sluice, and the river carries them all down the valley together, "for the ones who'd gone, so they'd
+  know the way back". Then the game carries on: a
   market every week, Lantern Night every fall, and a notch on the river stone each spring when the water runs high.
 
 **The player fantasy:** *"I brought this place back, and I can see it every time I walk through town."*
@@ -75,8 +76,8 @@ it fed. So:
 - A first-time player understands why they are here before day 2 and feels the first change by the end of week one.
 - A returning player can name the villager behind each mended place, and can point at what changed.
 - The finale lands as a homecoming, not a score. Nothing in the game grades the valley: the yearly High Water notch
-  records only how high the river came, and Rosa's year-3 letter tells you how the valley is doing in her own voice,
-  as people still waiting rather than points missing.
+  records only how high the river came; in year 3 two notches stand side by side for the first time, and that is how
+  you see how far the valley has come.
 - A player who stops after year 1 still gets a whole small arc: four places mended, the first family home, Clay
   softening at the Winter Feast, and a year-end screen that reads back what they brought back.
 

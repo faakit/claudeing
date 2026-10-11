@@ -28,13 +28,14 @@ families left with it, and you mend it place by place.
 | M3 | The restoration pattern and the Old Spring: ask, gather, work days, opening; the creek runs | depth, art, onboarding |
 | M4 | Channels: dig a water network off the creek (and the plan's one save bump) | depth, feel, onboarding |
 | M5 | The Cold Forge: strike in time, and the parts later places need | depth, feel, audio, art |
-| M6 | The Weir: the river returns; towing timber; the first family comes home | depth, art, feel, audio |
-| M7 | The Seed House: the seed library; Clay's turn from rival to ally | depth, art |
-| M8 | The Bucket Orchard: grafting onto dead stumps | depth, art |
-| M9 | The Market Field: market day, families' stalls, the Trade Road | depth, art, audio |
-| M10 | Lantern Night finale, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio |
+| M6 | The Weir: the river returns to town, the Heron floats | depth, art, audio |
+| M7 | Towing timber, and the first family home in a house you rebuilt | depth, art, feel, audio |
+| M8 | The Seed House: the seed library; Clay's turn from rival to ally | depth, art |
+| M9 | The Bucket Orchard: grafting onto dead stumps | depth, art |
+| M10 | The Market Field: market day, families' stalls, the Trade Road | depth, art, audio |
+| M11 | Lantern Night finale, High Water, the year-end, the Founders' Stone | depth, onboarding, art, audio |
 
-The minimum complete game is M1-M4, M6, M7 and M10 (the spring, the weir and the Seed House).
+The minimum complete game is M1-M4, M6, M7, M8 and M11 (the spring, the weir and the Seed House).
 
 After the first pass, each mechanic's v2 is its own small milestone (listed at the end of MILESTONES.md).
 
