@@ -72,6 +72,9 @@ export const DRY_REMAP: Record<DryCategory, Record<string, string>> = {
     grass: 'taupe',
     'leaf mid': 'teal shade',
     'leaf dark': 'teal shade',
+    // fall's crowns (orange and gold in the fall tileset) go dusty brown too, so a dry fall never reads as autumn
+    orange: 'taupe',
+    gold: 'sand',
   },
   evergreen: { 'new leaf': 'sand', grass: 'leaf mid' },
 };
