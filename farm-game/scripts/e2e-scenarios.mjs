@@ -695,10 +695,76 @@ async function spring() {
   await farm.close();
 }
 
+// Channels (M4): one paint drag from the creek's bank digs a channel the water follows; the next morning the soil
+// beside it is watered without the can; the flow stops at 24 tiles; nothing fills while a row is worked.
+async function channels() {
+  const farm = await openScenario(browser, url, 'channels-first-dig', { profile: PROFILE });
+  const action = (await liveTargets(farm.page)).find((t) => t.text === 'ACTION');
+  await farm.frames(10);
+  await farm.thumb.down(action.cx, action.cy);
+  await farm.until((_s, w) => w.game.scene.getScene('UI').actionPress?.armed, null, 'paint to arm');
+  for (let i = 1; i <= 10; i++) {
+    await farm.thumb.move(action.cx - i * 14, action.cy);
+    await farm.frames(3);
+  }
+  await farm.thumb.up();
+  await farm.until(
+    (_s, w) => {
+      const sc = w.game.scene.getScene('Farm');
+      return sc.work === null && sc.route === null && sc.painting === null;
+    },
+    null,
+    'the painted row to be dug',
+    20000,
+  );
+  let s = await farm.state();
+  const dug = Object.entries(s.farm.tiles)
+    .filter(([, t]) => t.channel)
+    .map(([k]) => k);
+  if (process.env.SHOTS) await farm.shot('channels-first-dig', process.env.SHOTS);
+  check(
+    'channels-first-dig: one paint drag digs a channel of 6 or more tiles from the bank',
+    dug.length >= 6 && dug.includes('25,10'),
+    JSON.stringify(dug),
+  );
+  await farm.during('sceneReady', [], () =>
+    farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
+  );
+  s = await farm.state();
+  // the parsnips under every dug tile (x 19-24 on row 11) are watered by the channel
+  const beside = dug
+    .map((k) => Number(k.split(',')[0]))
+    .filter((x) => x >= 19 && x <= 24)
+    .map((x) => s.farm.tiles[`${x},11`]?.watered);
+  check(
+    'the next morning the crops beside the channel are watered without the can',
+    beside.length >= 5 && beside.every(Boolean),
+    JSON.stringify({
+      beside,
+      weather: s.weather,
+      dug: Object.keys(s.farm.tiles).filter((k) => s.farm.tiles[k].channel),
+    }),
+  );
+  await farm.load('channels-flow-cap');
+  const look = await farm.eval(() => {
+    const f = window.__farm.game.scene.getScene('Farm').farm;
+    const tint = (k) => f.cells.get(k)?.channel ?? null;
+    return { first: tint('2,10'), past: tint('20,14') };
+  });
+  if (process.env.SHOTS) await farm.shot('channels-flow-cap', process.env.SHOTS);
+  check(
+    'channels-flow-cap: the water reaches the first 24 tiles; past them the channel shows dry',
+    look.first === 'wet' && look.past === 'dry',
+    JSON.stringify(look),
+  );
+  check('channels: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 try {
   const blocks = SMOKE
     ? [smoke]
-    : [smoke, everyScenario, mechanics, stages, ambient, valley, spring];
+    : [smoke, everyScenario, mechanics, stages, ambient, valley, spring, channels];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

@@ -30,3 +30,4 @@ import './tutorial';
 import './goalStall';
 import './valley';
 import './mapStages';
+import './channels';

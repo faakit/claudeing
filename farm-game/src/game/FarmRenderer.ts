@@ -5,13 +5,23 @@ import type { GameState } from '../state/GameState';
 import { parseKey } from '../systems/farming';
 import { popWhole } from '../fx/pop';
 import { getState } from '../state/store';
+import { flowReach } from '../systems/channels';
+import { channelFlow, creekSource } from '../systems/valley';
 
 interface Cell {
   soil: Phaser.GameObjects.Image;
   crop?: Phaser.GameObjects.Image;
   cropKey?: string;
   watered: boolean;
+  /** A channel's look: '' (soil), 'dry' (the water does not reach it) or 'wet'. */
+  channel: string;
 }
+
+/**
+ * Channels (systems/channels.ts) until the art lands: the soil sprites tinted, a dug ditch dark and dusty where the
+ * water does not reach, blue where it runs (the same textures, so no extra draw call).
+ */
+const CHANNEL_TINT = { dry: 0x9a8a7a, wet: 0x6aa0e8 } as const;
 
 /** Draws farm state (soil, crops, weeds) as sprites. Reads state, never edits it. */
 export class FarmRenderer {
@@ -20,24 +30,42 @@ export class FarmRenderer {
   /** Crops leaning from a brush right now. */
   private leaning = new Set<Phaser.GameObjects.Image>();
 
-  constructor(private readonly scene: Phaser.Scene) {}
+  constructor(
+    private readonly scene: Phaser.Scene,
+    /** Draws a channel into the map itself (WorldScene); false when it cannot, and the soil sprite is tinted. */
+    private readonly paintChannel?: (tx: number, ty: number, look: 'wet' | 'dry' | null) => boolean,
+  ) {}
 
   sync(state: GameState, animate: boolean): void {
     const live = new Set<string>();
+    const source = creekSource(state);
+    const reached = new Set(source.running ? flowReach(state, source.at, channelFlow(state)) : []);
     for (const [key, soil] of Object.entries(state.farm.tiles)) {
       live.add(key);
       const [tx, ty] = parseKey(key);
       const cx = tx * TILE_SIZE + TILE_SIZE / 2;
       let cell = this.cells.get(key);
-      const texture = soil.watered ? SOIL_TEXTURE.watered : SOIL_TEXTURE.tilled;
+      const channel = soil.channel ? (reached.has(key) ? 'wet' : 'dry') : '';
+      const wet = channel ? channel === 'wet' : soil.watered;
+      const texture = wet ? SOIL_TEXTURE.watered : SOIL_TEXTURE.tilled;
       if (!cell) {
         const img = this.scene.add.image(cx, ty * TILE_SIZE + TILE_SIZE / 2, texture).setDepth(0.5);
         if (animate) this.pop(img);
-        cell = { soil: img, watered: soil.watered };
+        cell = { soil: img, watered: wet, channel: '' };
         this.cells.set(key, cell);
-      } else if (cell.watered !== soil.watered) {
+      } else if (cell.watered !== wet) {
         cell.soil.setTexture(texture);
-        cell.watered = soil.watered;
+        cell.watered = wet;
+      }
+      if (cell.channel !== channel) {
+        const was = cell.channel;
+        cell.channel = channel;
+        let drawn = false;
+        if (channel) drawn = this.paintChannel?.(tx, ty, channel as 'dry' | 'wet') ?? false;
+        else if (was) this.paintChannel?.(tx, ty, null);
+        cell.soil.setVisible(!drawn);
+        if (channel && !drawn) cell.soil.setTint(CHANNEL_TINT[channel as 'dry' | 'wet']);
+        else cell.soil.clearTint();
       }
 
       const want = soil.crop ? cropFrame(soil.crop.cropId, soil.crop.stage) : undefined;
@@ -61,6 +89,10 @@ export class FarmRenderer {
     }
     for (const [key, cell] of this.cells) {
       if (live.has(key)) continue;
+      if (cell.channel) {
+        const [tx, ty] = parseKey(key);
+        this.paintChannel?.(tx, ty, null); // filled in: the map's own tile comes back
+      }
       cell.soil.destroy();
       cell.crop?.destroy();
       this.cells.delete(key);

@@ -34,6 +34,20 @@ export function playActionFx(
       fx.splash(x, y);
       audio.play('water');
       break;
+    case 'dig':
+      // a cut in the ground; where it meets running water, the water follows it at once
+      fx.dust(x, y);
+      audio.play('till');
+      if (res['wet']) {
+        fx.splash(x, y);
+        fx.ripple(x, y + 3);
+        audio.play('water');
+      }
+      break;
+    case 'fill':
+      fx.dust(x, y);
+      audio.play('till');
+      break;
     case 'refill':
       fx.splash(x, y);
       fx.floatText(player.x, above, 'Refilled!', 0x6fa3e0);

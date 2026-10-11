@@ -3,11 +3,33 @@
   "about": "Spring 6, 08:00, the first-green morning: Rosa has asked for the spring (place.spring 1, asked today, so the HUD reads \"Rosa asked: the Old Spring\"). 600g and 20 stone in the bag: Interact at the rockfall opens its fund sheet, and Fund it takes the gold and the stone in one tap.",
   "version": 17,
   "tags": ["wendhead", "valley", "spring"],
-  "valley": { "farmGreen": 1, "spring": 1 },
-  "stats": { "place.spring.since": 6, "shipped": 5, "harvested": 8, "slept": 5 },
-  "at": { "map": "wendhead", "tx": 5, "ty": 15, "facing": "right" },
-  "time": { "day": 6, "clock": "08:00" },
+  "valley": {
+    "farmGreen": 1,
+    "spring": 1
+  },
+  "stats": {
+    "place.spring.since": 6,
+    "shipped": 5,
+    "harvested": 8,
+    "slept": 5,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "wendhead",
+    "tx": 5,
+    "ty": 15,
+    "facing": "right"
+  },
+  "time": {
+    "day": 6,
+    "clock": "08:00"
+  },
   "money": 600,
-  "items": [{ "item": "stone", "qty": 20 }],
+  "items": [
+    {
+      "item": "stone",
+      "qty": 20
+    }
+  ],
   "letters": []
 }

@@ -1,0 +1,366 @@
+{
+  "title": "64 channel tiles, water for twenty-four",
+  "about": "Summer 3, 10:00: a long serpentine of 64 channel tiles off the creek at (25,10). The spring's flow reaches 24 of them (the first row, blue water); past it they are dug earth, dry (digging there says \"The water runs out before here.\"). The weir raises the flow to 64 (M6).",
+  "version": 18,
+  "tags": ["farm", "valley", "channels"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "tut.channels": 1,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 24,
+    "ty": 9,
+    "facing": "down"
+  },
+  "time": {
+    "season": "summer",
+    "day": 3,
+    "clock": "10:00"
+  },
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ],
+  "select": "spade",
+  "state": {
+    "farm": {
+      "tiles": {
+        "2,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "3,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "4,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "5,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "6,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "7,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "8,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "9,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "11,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "12,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "13,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "14,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "15,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "16,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "17,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "18,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "19,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "21,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "22,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "23,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "25,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "2,11": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "2,12": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "2,13": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "2,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "3,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "4,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "5,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "6,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "7,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "8,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "9,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "11,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "12,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "13,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "14,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "15,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "16,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "17,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "18,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "19,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "21,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "22,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "23,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,14": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,15": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "12,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "13,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "14,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "15,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "16,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "17,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "18,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "19,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "21,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "22,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "23,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        }
+      }
+    }
+  },
+  "plots": "all"
+}

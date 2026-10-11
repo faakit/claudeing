@@ -42,7 +42,8 @@
         },
         {
           "taste": "channel",
-          "text": "Rosa hands you Ilse's spade. One cut, and the water follows it."
+          "text": "Rosa hands you Ilse's spade. One cut, and the water follows it.",
+          "gives": "spade"
         }
       ],
       "sprites": [
@@ -58,9 +59,11 @@
           "I'd forgotten that sound.",
           "Ilse dug that first channel the spring I was born.",
           "Go on. The farm's been waiting for it."
-        ]
+        ],
+        "item": "spade"
       },
-      "phrase": "The creek runs."
+      "phrase": "The creek runs.",
+      "flow": [24, 64]
     }
   },
   "planned": {

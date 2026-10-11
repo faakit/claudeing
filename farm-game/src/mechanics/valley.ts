@@ -1,4 +1,4 @@
-import { valley } from '../data';
+import { items, valley } from '../data';
 import { registerDayHook } from '../systems/dayHooks';
 import { sendLetter } from '../systems/mail';
 import { absoluteDay } from '../systems/time';
@@ -6,6 +6,7 @@ import {
   askPlaces,
   checkFarmGreen,
   openPlaces,
+  owns,
   ROSA_LETTER_STAT,
   rosaLetterDue,
   stageOf,
@@ -48,7 +49,19 @@ registerDayHook({
   phase: 'morning',
   order: 55,
   run(state, ctx) {
-    for (const id of openPlaces(state)) ctx.notes.push(valley.places[id]!.opening.note);
+    for (const id of openPlaces(state)) {
+      const p = valley.places[id]!;
+      ctx.notes.push(p.opening.note);
+      // the tool the place opens comes with the opening, by letter, if the work day could not hand it over
+      const item = p.opening.item;
+      if (item && !owns(state, item))
+        sendLetter(state, {
+          from: p.npc,
+          title: items[item]?.name ?? item,
+          text: "Ilse's spade. Your hands were full at the spring, so here it is. Dig from the creek's bank.",
+          gift: { item, qty: 1 },
+        });
+    }
     askPlaces(state);
     // The morning after the spring opens, an unsigned sack of fertilizer at the gate (Clay, WORLD-PLAN 5.1).
     const opened = state.stats['place.spring.opened'] ?? 0;

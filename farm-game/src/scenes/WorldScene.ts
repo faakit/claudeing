@@ -114,6 +114,9 @@ import type { CoachScreenWorld } from '../ui/CoachMarks';
 import { npcLocation } from '../systems/npcs';
 import { npcs as npcData } from '../data';
 
+/** The tiles a channel shows in the detail layer until the art lands: plain water, and dug earth (tile gids). */
+const CHANNEL_GID = { wet: 5, dry: 2 } as const;
+
 /** Tool-use poses by tool item (chars atlas, from the Flow sheet npcs4). */
 const TOOL_POSES: Record<string, string> = {
   hoe: 'player_use_hoe',
@@ -159,6 +162,9 @@ export abstract class WorldScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Image;
   private highlight!: TileHighlight;
   private ground!: Phaser.Tilemaps.TilemapLayer;
+  private tilemap!: Phaser.Tilemaps.Tilemap;
+  /** Detail-layer tiles a channel drew over, to put back when it is filled in. */
+  private channelUnder = new Map<string, number>();
   private farm: FarmRenderer | null = null;
   private mapArt: MapArt | null = null;
   private ambient: Ambient | null = null;
@@ -294,6 +300,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
+    this.tilemap = map;
+    this.channelUnder = new Map();
     publishGlow(
       this.mapId,
       outdoor,
@@ -331,7 +339,7 @@ export abstract class WorldScene extends Phaser.Scene {
       parseBlooms(raw as unknown as Parameters<typeof parseBlooms>[0]),
     );
     if (this.mapId === 'farm') {
-      this.farm = new FarmRenderer(this);
+      this.farm = new FarmRenderer(this, (tx, ty, look) => this.paintChannel(tx, ty, look));
       this.farm.sync(state, false);
     }
     // The first green (systems/valley.ts): the first time the farmer stands on the green farm, the straw gives way
@@ -451,6 +459,7 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    runtime.paintWork = this.work !== null; // a painted row digs on, never fills (mechanics/channels.ts)
     if (this.reveal) {
       this.reveal.update(delta);
       if (this.reveal.done) {
@@ -897,6 +906,29 @@ export abstract class WorldScene extends Phaser.Scene {
         if (o.type === 'door' && o.props['targetMap'] === this.mapId) out.push(doorTarget(o));
     }
     return out;
+  }
+
+  /**
+   * A channel (systems/channels.ts) drawn in the map's detail layer, so it costs no draw call: water where the flow
+   * reaches it, a dug earth ditch where it does not, and the old tile back when it is filled in. Purely visual: the
+   * ground layer (what the rules read) is untouched. False when the map has no detail layer (placeholder tiles).
+   */
+  private paintChannel(tx: number, ty: number, look: 'wet' | 'dry' | null): boolean {
+    const layer = this.tilemap?.getLayer('detail')?.tilemapLayer;
+    if (!layer) return false;
+    const key = `${tx},${ty}`;
+    if (look === null) {
+      const under = this.channelUnder.get(key);
+      this.channelUnder.delete(key);
+      if (under === undefined) return true;
+      if (under > 0) layer.putTileAt(under, tx, ty);
+      else layer.removeTileAt(tx, ty);
+      return true;
+    }
+    if (!this.channelUnder.has(key))
+      this.channelUnder.set(key, layer.getTileAt(tx, ty)?.index ?? -1);
+    layer.putTileAt(look === 'wet' ? CHANNEL_GID.wet : CHANNEL_GID.dry, tx, ty);
+    return true;
   }
 
   /** Placed objects block movement when solid, so the collision grid is the map plus those. */

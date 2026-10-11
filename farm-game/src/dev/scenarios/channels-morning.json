@@ -1,0 +1,93 @@
+{
+  "title": "The morning after the first channel: waking in the house",
+  "about": "Spring 13, 06:00 in the house: the channel dug yesterday (x 19-25, y 10) watered the parsnip rows beside it overnight. Step out: blue water in the channel, dark watered soil either side, the can still full.",
+  "version": 18,
+  "tags": ["farm", "valley", "channels"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "tut.channels": 1,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "house",
+    "tx": 3,
+    "ty": 3,
+    "facing": "down"
+  },
+  "time": {
+    "day": 13,
+    "clock": "06:00"
+  },
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ],
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": 1,
+      "rect": [19, 9, 6, 1],
+      "watered": true
+    },
+    {
+      "crop": "parsnip",
+      "stage": 1,
+      "rect": [19, 11, 6, 1],
+      "watered": true
+    }
+  ],
+  "state": {
+    "farm": {
+      "tiles": {
+        "19,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "21,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "22,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "23,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "25,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        }
+      }
+    }
+  },
+  "plots": "all"
+}

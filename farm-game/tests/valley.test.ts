@@ -44,6 +44,7 @@ import { arrangeNotes } from '../src/ui/panels/summaryNotes';
 import { letterLayout, LETTER_CARD, TITLE_BUTTON_H } from '../src/ui/titleLetter';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
+import { STATE_VERSION } from '../src/state/GameState';
 
 const sleep = (s: GameState) => endDay(s, { passedOut: false, weedCandidates: [] });
 const onDay = (day: number, shipped: number): GameState => {
@@ -262,12 +263,12 @@ describe('saves', () => {
     expect(back.stats['valley.on']).toBe(1);
   });
 
-  it('an old save that shipped 5 is green (no moment); one that did not is dry; no version bump', () => {
+  it('an old save that shipped 5 is green (no moment); one that did not is dry', () => {
     const old = JSON.parse(JSON.stringify(newState()));
     delete old.stats['valley.on'];
     old.stats.shipped = 40;
     const a = migrate(old);
-    expect(a.version).toBe(17);
+    expect(a.version).toBe(STATE_VERSION); // the valley's defaults need no bump of their own
     expect(a.stats[FARM_GREEN]).toBe(1);
     expect(a.stats[GREEN_SEEN]).toBe(1);
     const young = JSON.parse(JSON.stringify(newState()));

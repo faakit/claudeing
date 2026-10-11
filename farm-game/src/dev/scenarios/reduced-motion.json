@@ -26,6 +26,7 @@
     }
   ],
   "stats": {
-    "valley.farmGreen": 1
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1
   }
 }

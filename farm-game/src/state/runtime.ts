@@ -15,6 +15,8 @@ export const runtime = {
   coaching: false,
   /** The first green's dissolve is playing: the ambience stays dry until the green reaches the edges. */
   valleyReveal: false,
+  /** A painted row is being worked: Action on a channel digs on, it never fills one in (mechanics/channels.ts). */
+  paintWork: false,
   get blocked(): boolean {
     return this.modals > 0 || this.busy || this.suspended;
   },

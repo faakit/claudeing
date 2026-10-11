@@ -130,7 +130,8 @@
     "shipped": 1200,
     "caught": 60,
     "mined": 140,
-    "valley.farmGreen": 1
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1
   },
   "goal": "earn100k"
 }

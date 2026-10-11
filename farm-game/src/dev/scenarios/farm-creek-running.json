@@ -3,7 +3,10 @@
   "about": "Spring 10, 07:00, on the creek's west bank: the farm's restored stage (farm.tmj), water from Ilse's gate down to the pond, the creek trees in leaf. The morning note said so; Clay's unsigned sack of fertilizer comes tomorrow.",
   "version": 17,
   "tags": ["farm", "valley", "spring"],
-  "valley": { "farmGreen": 1, "spring": 3 },
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
   "stats": {
     "place.spring.since": 10,
     "place.spring.opened": 10,
@@ -11,9 +14,18 @@
     "site.spring.last": 9,
     "placesDone": 1,
     "projectsDone": 1,
-    "shipped": 5
+    "shipped": 5,
+    "valley.greenSeen": 1
   },
-  "at": { "map": "farm", "tx": 25, "ty": 12, "facing": "right" },
-  "time": { "day": 10, "clock": "07:00" },
+  "at": {
+    "map": "farm",
+    "tx": 25,
+    "ty": 12,
+    "facing": "right"
+  },
+  "time": {
+    "day": 10,
+    "clock": "07:00"
+  },
   "letters": []
 }

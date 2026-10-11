@@ -1324,3 +1324,24 @@ at Wendhead's south-west corner (1,25).
 - The Hot Spring is the spring's site upgrade, the **Warm Pool** (same cost and perk, still after the library), its
   landmark at Wendhead; it opens once the spring is restored. The year-two sim funds it as the board's others (it
   restores the spring for that), so the Market Road and the statue still follow.
+
+## The Dry Year, M4: channels and the plan's one save bump (depth lane, valley/m1)
+
+- **Save version 18** (the one bump in the plan): `SoilTile.channel`, `CropState.tag`, `CropState.ripeFor` and
+  `settings.strikeOffset` are accepted by `sanitize` (a channel holds no crop; the offset is clamped to 0-150); the
+  migration from 17 is a no-op. The tag, ripe days and offset are unused until M8 and M5.
+- **Ilse's spade is a key item, not a tool.** Every `tool` item is owned from day 1 in a fixed hotbar slot, so a new
+  tool would have shifted the guided start's slots. The spade is a deliberate choice like the rod (an action handler on
+  the item in hand, priority 45): the auto tool never picks it. It is handed over on the spring's third work day, or
+  by Rosa's letter on the opening morning if the bag was full.
+- **Digging from the bank.** A paint row starts from the tile in front of the farmer, so a drag from the creek's bank
+  could never begin next to the water; a dig next to a farmer standing on the bank cuts the bank tile too (both cost
+  energy). One drag from the bank digs a channel the water follows at once.
+- **A painted row digs on and never fills in** (it would otherwise fill the channel it just cut on the tile's next
+  use); Action on a channel outside a painted row fills it in.
+- **Watering in the morning, as rain does**, not in `pre-growth`: the soil beside a reached channel shows watered on
+  stepping out and that night's growth counts it. The balance is the same (one watering a day), bounded at 2 x flow
+  tiles (48, what six quality sprinklers cover).
+- **Channels are drawn in the map's detail layer** (water where the flow reaches, dug earth past it), so they add no
+  draw call; the rules still read the ground layer. With the placeholder tileset the soil sprites are tinted instead.
+- The flow cap says so where it bites: a cut past the flow says "The water runs out before here." once a day.

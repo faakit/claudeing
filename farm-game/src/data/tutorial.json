@@ -1205,6 +1205,54 @@
           "min": 1
         }
       ]
+    },
+    {
+      "id": "channels",
+      "track": "intro",
+      "valley": true,
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "stat": "place.spring",
+            "min": 3
+          },
+          {
+            "has": "spade"
+          },
+          {
+            "map": "farm"
+          },
+          {
+            "stat": "channelsDug",
+            "max": 0
+          }
+        ]
+      },
+      "text": "Ilse's spade: dig off the creek.",
+      "target": {
+        "ui": "spadeSlot"
+      },
+      "done": [
+        {
+          "stat": "channelsDug",
+          "min": 1
+        }
+      ],
+      "alt": [
+        {
+          "when": {
+            "selected": "spade"
+          },
+          "text": "Hold Action, drag: dig a channel.",
+          "target": {
+            "gesture": "paint",
+            "map": "farm",
+            "work": ["dig"]
+          }
+        }
+      ]
     }
   ],
   "refusals": {

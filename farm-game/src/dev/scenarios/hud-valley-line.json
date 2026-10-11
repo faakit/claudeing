@@ -3,11 +3,33 @@
   "about": "Spring 6, 07:00 on the farm: the spring was asked today and the purse and bag hold its fund, while the goal chain has a goal of its own. The line reads the ask first (\"Rosa asked: the Old Spring\"); tomorrow it would read \"Old Spring: ready to fund\"; with no valley step the goal shows. Menu > Goal lists THE VALLEY above the goals; the goal arrow points at Ilse's gate.",
   "version": 17,
   "tags": ["farm", "valley", "hud"],
-  "valley": { "farmGreen": 1, "spring": 1 },
-  "stats": { "place.spring.since": 6, "shipped": 5, "harvested": 8, "slept": 5 },
-  "at": { "map": "farm", "tx": 24, "ty": 6, "facing": "right" },
-  "time": { "day": 6, "clock": "07:00" },
+  "valley": {
+    "farmGreen": 1,
+    "spring": 1
+  },
+  "stats": {
+    "place.spring.since": 6,
+    "shipped": 5,
+    "harvested": 8,
+    "slept": 5,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 24,
+    "ty": 6,
+    "facing": "right"
+  },
+  "time": {
+    "day": 6,
+    "clock": "07:00"
+  },
   "money": 600,
-  "items": [{ "item": "stone", "qty": 20 }],
+  "items": [
+    {
+      "item": "stone",
+      "qty": 20
+    }
+  ],
   "letters": []
 }

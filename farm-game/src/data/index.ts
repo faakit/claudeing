@@ -404,6 +404,8 @@ export interface WorkDayDef {
   /** What the farmer does: a pickaxe swing at the rockfall, the spade's first channel tile... */
   taste: 'pickaxe' | 'channel';
   text: string;
+  /** Handed over that day (Ilse's spade on the spring's last work day). */
+  gives?: string;
 }
 /** A broken place (docs/WORLD-PLAN.md 2): asked by someone, funded, worked, opened. */
 export interface PlaceDef {
@@ -435,6 +437,8 @@ export interface PlaceDef {
   opening: { note: string; lines: string[]; item?: string };
   /** What the place does for the valley, said on the year-end and THE VALLEY ("The creek runs."). */
   phrase: string;
+  /** The spring's channels: tiles the water reaches each morning, before and after the weir. */
+  flow?: [number, number];
 }
 export interface MailData {
   /** The farm's mailbox: a fixed, solid, one-tile fixture. */
@@ -651,7 +655,7 @@ export interface TutorialTarget {
   door?: string;
   /** A long walk to the door that leads to this map: shows a stick drag, then the door once it is near. */
   steer?: string;
-  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot';
+  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot' | 'spadeSlot';
   gesture?: 'paint' | 'ring';
   /** With `gesture: "paint"`: the Action kinds a row may do (default till, plant, water). */
   work?: string[];
@@ -1180,10 +1184,10 @@ const TUT_KINDS = [
   'placeable',
 ];
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
-const WORK_KINDS = ['till', 'plant', 'water'];
+const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site'];
-const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot'];
+const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot', 'spadeSlot'];
 const TUT_COND_KEYS = new Set([
   'stat',
   'touched',
@@ -1282,7 +1286,7 @@ export function validateTutorial(t: TutorialData): void {
       g.work !== undefined &&
       (g.gesture !== 'paint' || g.work.some((k) => !WORK_KINDS.includes(k)))
     )
-      bad(`${where}: "work" goes with a paint gesture and lists till, plant or water`);
+      bad(`${where}: "work" goes with a paint gesture and lists till, plant, water or dig`);
     if (g.action !== undefined && (!g.else || g.action.length === 0))
       bad(`${where}: action needs kinds and an else`);
     if (g.else) target(g.else, where);

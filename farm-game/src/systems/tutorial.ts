@@ -730,6 +730,10 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     const i = slotOf(s, (it) => items[it]?.type === 'seed');
     return i === null ? null : { kind: 'slot', slot: i };
   }
+  if (g.ui === 'spadeSlot') {
+    const i = slotOf(s, (it) => it === 'spade');
+    return i === null ? null : { kind: 'slot', slot: i };
+  }
   if (g.ui === 'placeSlot') {
     const i = slotOf(s, (it) => items[it]?.placeable === true);
     return i === null ? null : { kind: 'slot', slot: i };

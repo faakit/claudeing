@@ -39,6 +39,10 @@ export interface CropState {
   daysInStage: number;
   /** True after a regrowing crop was harvested; uses regrowDays as the stage length. */
   regrow: boolean;
+  /** Tied with a seed tag: harvest skips it until it goes to seed (the Seed House, M8). */
+  tag?: true;
+  /** Days it has stood ripe (a tagged crop bolts after a few; M8). */
+  ripeFor?: number;
 }
 
 export interface SoilTile {
@@ -151,6 +155,8 @@ export interface Settings {
   leftHanded: boolean;
   /** Calmer visuals: no shaking, bobbing or wandering animation. */
   reduceMotion: boolean;
+  /** The forge's strike timing offset in ms (0-150), from "Tune your strike" (M5). */
+  strikeOffset?: number;
   /** One-thumb control options (Options > Controls). */
   controls: ControlSettings;
 }
@@ -221,7 +227,7 @@ export interface GameState {
   rng: number;
 }
 
-export const STATE_VERSION = 17;
+export const STATE_VERSION = 18;
 
 /** Owner defaults: tap-to-move, auto tool and painting on; medium stick; one speed. */
 export const defaultControlSettings = (): ControlSettings => ({

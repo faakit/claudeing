@@ -1,0 +1,52 @@
+{
+  "title": "Ilse's spade on the creek's bank, a field waiting beside it",
+  "about": "Spring 12, 09:00, on the running creek's west bank (25,10) facing west, the spade selected: two tilled rows of parsnips (y 9 and 11, x 19-24) sit dry. Hold Action and drag west: one drag digs a channel from the bank (the bank tile too) and the water follows the cut. Tomorrow morning the rows beside it are watered without the can.",
+  "version": 18,
+  "tags": ["farm", "valley", "channels"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "tut.channels": 1,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 25,
+    "ty": 10,
+    "facing": "left"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ],
+  "select": "spade",
+  "energy": "max",
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": "seed",
+      "rect": [19, 9, 6, 1]
+    },
+    {
+      "crop": "parsnip",
+      "stage": "seed",
+      "rect": [19, 11, 6, 1]
+    }
+  ],
+  "plots": "all"
+}

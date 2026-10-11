@@ -184,7 +184,7 @@ export function refusalFor(state: GameState, candidates: TileInfo[]): string {
   const first = candidates[0]!;
   const emptySoil = candidates.some((t) => {
     const soil = t.farmland ? state.farm.tiles[`${t.tx},${t.ty}`] : undefined;
-    return !!soil && !soil.crop;
+    return !!soil && !soil.crop && !soil.channel;
   });
   if (emptySoil && autoMode(state) && seedSlot(state) === null) return NO_SEED_HINT;
   const planned = planAction(state, first);

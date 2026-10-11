@@ -310,6 +310,15 @@ function migrateV16(raw: Raw): Raw {
   return { ...remapGoalIndex(raw, GOALS_V16, ids), version: 17 };
 }
 
+/**
+ * v17 -> v18 (the Dry Year's one save bump, M4): soil may be a channel (`channel: true`), crops may carry a seed tag
+ * and their ripe days (`tag`, `ripeFor`, used by the Seed House), settings a strike offset (`strikeOffset`, the
+ * forge). All optional and accepted by `sanitize`; nothing to transform.
+ */
+function migrateV17(raw: Raw): Raw {
+  return { ...raw, version: 18 };
+}
+
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   1: migrateV1,
   2: migrateV2,
@@ -327,6 +336,7 @@ const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   14: migrateV14,
   15: migrateV15,
   16: migrateV16,
+  17: migrateV17,
 };
 
 /** Bring any saved shape up to the current version, then validate it. */
@@ -435,12 +445,21 @@ export function sanitize(raw: Raw): GameState {
         stage: int(c['stage'], 0, 0, days),
         daysInStage: int(c['daysInStage'], 0, 0, 99),
         regrow: c['regrow'] === true,
+        ...(c['tag'] === true ? { tag: true as const } : {}),
+        ...(isFiniteNum(c['ripeFor']) && c['ripeFor'] > 0
+          ? { ripeFor: int(c['ripeFor'], 0, 0, 99) }
+          : {}),
       };
     }
     const fert =
       typeof soil['fert'] === 'string' && items[soil['fert']]?.type === 'fertilizer'
         ? soil['fert']
         : undefined;
+    // a channel (systems/channels.ts) holds no crop and no fertilizer
+    if (soil['channel'] === true) {
+      tiles[key] = { watered: false, crop: null, channel: true };
+      continue;
+    }
     tiles[key] = { watered: soil['watered'] === true, crop, ...(fert ? { fert } : {}) };
   }
   const weeds: GameState['farm']['weeds'] = {};
@@ -478,6 +497,7 @@ export function sanitize(raw: Raw): GameState {
     vibrate: st['vibrate'] !== false, // default on, including for saves that predate the setting
     leftHanded: st['leftHanded'] === true,
     reduceMotion: st['reduceMotion'] === true,
+    ...(isFiniteNum(st['strikeOffset']) ? { strikeOffset: clamp(st['strikeOffset'], 0, 150) } : {}),
     controls: sanitizeControlSettings(st['controls']),
   };
 

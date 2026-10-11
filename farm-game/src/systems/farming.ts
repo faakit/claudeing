@@ -13,8 +13,11 @@ export const parseKey = (key: string): [number, number] => {
   return [x ?? 0, y ?? 0];
 };
 
-export const getSoil = (state: GameState, tx: number, ty: number): SoilTile | undefined =>
-  state.farm.tiles[tileKey(tx, ty)];
+/** The soil on a tile, if it is tilled (a channel, systems/channels.ts, is not soil: nothing grows in it). */
+export const getSoil = (state: GameState, tx: number, ty: number): SoilTile | undefined => {
+  const t = state.farm.tiles[tileKey(tx, ty)];
+  return t && !t.channel ? t : undefined;
+};
 
 export function cropDef(crop: CropState): CropDef {
   const def = crops[crop.cropId];

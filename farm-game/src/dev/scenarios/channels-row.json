@@ -1,0 +1,94 @@
+{
+  "title": "A channel row running, crops either side",
+  "about": "Spring 13, 08:00: yesterday's channel (x 19-25, y 10) runs blue from the creek; the parsnip rows beside it were watered by it this morning. Action on a channel fills it in; a painted row never does.",
+  "version": 18,
+  "tags": ["farm", "valley", "channels"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "tut.channels": 1,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 22,
+    "ty": 14,
+    "facing": "up"
+  },
+  "time": {
+    "day": 13,
+    "clock": "08:00"
+  },
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ],
+  "select": "spade",
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": 1,
+      "rect": [19, 9, 6, 1],
+      "watered": true
+    },
+    {
+      "crop": "parsnip",
+      "stage": 1,
+      "rect": [19, 11, 6, 1],
+      "watered": true
+    }
+  ],
+  "state": {
+    "farm": {
+      "tiles": {
+        "19,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "21,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "22,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "23,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "25,10": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        }
+      }
+    }
+  },
+  "plots": "all"
+}

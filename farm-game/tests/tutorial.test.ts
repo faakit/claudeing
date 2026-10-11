@@ -29,6 +29,7 @@ import { addStat, checkTips, currentGoal } from '../src/systems/goals';
 import { gameEvents } from '../src/systems/events';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
+import { STATE_VERSION } from '../src/state/GameState';
 
 const NO_SHEET: CoachFacts = { panel: null, tab: null };
 
@@ -381,7 +382,7 @@ describe('save v17: the guided start goals', () => {
     const s = migrate(raw);
     expect(goals[s.goalIndex]?.id).toBe(to);
     expect(s.money).toBe(777);
-    expect(s.version).toBe(17);
+    expect(s.version).toBe(STATE_VERSION);
     expect(tutorialOn(s)).toBe(false); // old saves never get the guide unless they replay it
   });
 

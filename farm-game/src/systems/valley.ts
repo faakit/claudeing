@@ -380,7 +380,11 @@ export function workAt(
   s.stats[`site.${id}.work`] = day;
   s.stats[`site.${id}.last`] = absoluteDay(s);
   s.stats[`place.${id}.since`] = absoluteDay(s);
-  return { ok: true, day, work: p.work[day - 1] ?? p.work[p.work.length - 1]! };
+  const work = p.work[day - 1] ?? p.work[p.work.length - 1]!;
+  // what is handed over that day goes in the bag if it fits; else the opening's letter brings it
+  if (work.gives && !owns(s, work.gives) && roomFor(s, work.gives, 1) >= 1)
+    addItem(s, work.gives, 1);
+  return { ok: true, day, work };
 }
 
 /**
@@ -580,3 +584,30 @@ export function openingLine(s: GameState, npc: string): string | null {
  */
 export const revealPending = (s: StatsOnly): boolean =>
   (s.stats[FARM_GREEN] ?? 0) >= 1 && !s.stats[GREEN_SEEN];
+
+/**
+ * The farm creek as the channels see it (systems/channels.ts): it runs in the farm's final stage (the spring
+ * restored), and its water is the creek bed, the farm's delta rects.
+ */
+export function creekSource(s: StatsOnly): {
+  running: boolean;
+  at: (x: number, y: number) => boolean;
+  inDelta: (x: number, y: number) => boolean;
+} {
+  const running = valleyStage(s, 'farm').final;
+  return {
+    running,
+    at: (x, y) => running && inDelta('farm', x, y),
+    inDelta: (x, y) => inDelta('farm', x, y),
+  };
+}
+
+/** Channel tiles the water reaches each morning: the spring's flow, the higher once the weir is restored. */
+export function channelFlow(s: StatsOnly): number {
+  const [low, high] = (valley.places['spring'] as PlaceDef | undefined)?.flow ?? [24, 64];
+  return (s.stats[placeStat('weir')] ?? 0) >= 3 ? high : low;
+}
+
+/** Does the bag hold this item? */
+export const owns = (s: GameState, item: string): boolean =>
+  s.inventory.slots.some((x) => x?.item === item);

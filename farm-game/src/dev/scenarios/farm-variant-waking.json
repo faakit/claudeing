@@ -3,7 +3,21 @@
   "about": "Map stages (M2). After the first green, the Old Spring not yet restored (farmGreen 1, spring 0): farm@waking.tmj. The bed is moist, its cracks closing, the first shoots in it, green at the lip; the creek trees are still bare.",
   "version": 17,
   "tags": ["farm", "valley", "stages"],
-  "valley": { "farmGreen": 1, "spring": 0 },
-  "at": { "map": "farm", "tx": 25, "ty": 12, "facing": "right" },
-  "time": { "day": 9, "clock": "10:00" }
+  "valley": {
+    "farmGreen": 1,
+    "spring": 0
+  },
+  "at": {
+    "map": "farm",
+    "tx": 25,
+    "ty": 12,
+    "facing": "right"
+  },
+  "time": {
+    "day": 9,
+    "clock": "10:00"
+  },
+  "stats": {
+    "valley.greenSeen": 1
+  }
 }
