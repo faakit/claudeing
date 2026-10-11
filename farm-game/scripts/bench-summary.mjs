@@ -1,7 +1,7 @@
 // Before/after table for the one-thumb benchmark: one row per task, profile, hand, stop mode and reaction
 // time, with gestures, thumb travel, corrections, tool changes and seconds side by side.
 //
-//   node scripts/bench-summary.mjs agents/out/controls/bench.json agents/out/controls/bench-m1.json
+//   node scripts/bench-summary.mjs agents/out/controls/bench-r3-final.json agents/out/controls/bench-latest.json
 //
 // Rows are matched on (profile, hand, stop, reactionMs, task); a file from the old tool (no `stop`) counts as
 // 'tile' unless its name says "human" (that run used STOP=center).
