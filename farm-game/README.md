@@ -1,96 +1,108 @@
 # Tiny Acre
 
-A cozy 2D top-down farming game for the browser (Phaser 3 + TypeScript + Vite).
-One complete loop: wake up, farm, ship, shop, sleep, save. Four seasons of 28 days.
+A cozy pixel-art farming game for phones: portrait and played with one thumb (Phaser 3, TypeScript, Vite). It runs
+in the browser, installs as an offline PWA, and wraps into Android and iOS apps with Capacitor.
 
-## Play
+**Play it:** https://faakit.github.io/claudeing/farm/
 
-```
-npm install
-npm run dev        # http://localhost:5173
-npm run build      # static site in dist/
-```
+## Direction: The Dry Year
+
+The valley is fading: the river shifted and the springs dried. Rosa writes to the grandchild of the farm's last
+keeper, and the player comes to restore broken places across the valley. Each restored place opens with a new
+mechanic, the valley visibly reshapes as it heals, and Clay goes from rival to ally.
+
+The details are in [docs/VISION.md](docs/VISION.md), [docs/WORLD-PLAN.md](docs/WORLD-PLAN.md) and
+[docs/MILESTONES.md](docs/MILESTONES.md). The game below is the base it builds on.
+
+## What is in the game
+
+- **Farming:** till, plant, water, grow and harvest across four seasons of 28 days. Crops come in silver and gold
+  quality, improved by fertilizer. Sprinklers, scarecrows, fruit trees, a greenhouse where any crop grows in any
+  season, and rare crops in year two.
+- **Gathering:** wild goods each morning, a fishing minigame with legendary fish, and a mine with ore nodes.
+- **Making:** crafting, preserve jars, kegs, a loom, a furnace, bee houses and a kitchen. Recipes unlock as the
+  farming, foraging and fishing skills level up.
+- **Animals:** coops and barns with chickens, cows, sheep and pigs, plus a feed silo. Animals that are fed get
+  happier and give better goods.
+- **People:** Mara (shop), Finn (woods), Rosa (farm), Orin (smith) and Clay, a rival farmer. They have hearts,
+  gifts, heart events, birthdays, perks and letters in the mailbox. Clay races you for the town board's requests.
+- **A reason to come back each day:** the town board's requests and seasonal special orders, daily jobs from
+  villagers, town projects that add buildings, a Founder's Statue, a festival each season, home decorations and
+  trophies. A goal tracker introduces each mechanic, and the first year ends with a results screen.
+- **A guided start:** a coach that points at one thing at a time on days 1 and 2, then short introductions.
+- **Feel:** a pixel-locked camera, an 8-frame walk, weighted tool swings, dither wipes between maps, haptics,
+  composed music on CC0 instruments, recorded sound effects, and Calm mode (reduced motion).
 
 ## Controls (portrait, one hand)
 
-The game is portrait-only and built for one thumb. The world fills the middle, the HUD (read-only) sits on top,
-and every control lives in the bottom dock where a resting thumb lands. Left-handed mode mirrors it (Menu > Opts).
+The world fills the middle, the HUD at the top is read-only, and every control sits in the bottom dock where a
+resting thumb lands. Left-handed mode mirrors it (Menu > Opts > Controls).
 
-| Action                                  | Keyboard               | Touch                                                |
-| --------------------------------------- | ---------------------- | ---------------------------------------------------- |
-| Move                                    | WASD / arrows          | floating joystick: drag anywhere in the lower screen |
-| Use the equipped item (smart targeting) | Space (hold to repeat) | big Action button, or tap an adjacent tile           |
-| Interact (bed, bin, shop, board, jars)  | E                      | round button above Action (appears when in reach)    |
-| Pick hotbar slot                        | 1-8, Tab, wheel        | tap a slot                                           |
-| Menu (bag, goals, craft, skills, opts)  | Esc / M                | menu button (far corner, away from Action)           |
+| Action                                     | Touch                                                      | Keyboard               |
+| ------------------------------------------ | ---------------------------------------------------------- | ---------------------- |
+| Walk                                       | tap a tile (walks there and acts), or drag anywhere low    | WASD / arrows          |
+| Use the equipped item (smart targeting)    | press the big Action button                                | Space (hold to repeat) |
+| Work a whole row or plot                   | hold Action until it ticks, then drag the path             |                        |
+| Change tools                               | swipe Action up or down, or flick it sideways for the ring | 1-8, Tab, wheel        |
+| Interact (bed, bin, shop, board, villager) | the round button above Action, lit when something is near  | E                      |
+| Menu (bag, goals, crafting, skills, opts)  | the menu button, in the far corner from Action             | Esc / M                |
 
-Smart targeting: Action looks at the tile in front **and the two beside it** and does the most valuable thing
-available (pick up or harvest beats planting beats tilling), so you never have to line up exactly.
+Smart targeting: Action looks at the tile in front and the two beside it, and does the most valuable thing there
+(picking up or harvesting beats planting, which beats tilling), so you never have to line up exactly.
 
-## How to play
+## Run, test, deploy
 
-1. **Till** soil with the hoe, **plant** seeds, **water** with the can (refill at the pond). **Sleep** to grow crops.
-2. **Harvest** crops (quality is random: silver and gold sell for more; fertilizer improves the odds), **ship** them in the bin.
-3. **Forage**: wild goods appear on the ground each morning, on the farm, in town and in the woods. Just walk up and press Action.
-4. **Fish**: equip the rod, cast at water, tap when the bobber dips, then hold to lift the bar and keep the fish in the green.
-5. **Craft** (Menu > Craft): fertilizer, bait, sprinklers, preserve jars. Recipes unlock as your skills level up.
-6. **Preserve**: put fruit in a jar for jam or vegetables for pickles; collect after a few mornings. Worth far more than raw.
-7. **Orders**: the town board posts three requests every morning that pay well above the shipping bin. Once a season it also posts a special order: a big request with a deadline at the season's end, paid well and in friendship.
-8. **Animals**: craft a coop (and later a barn), buy chickens and feed in town. One tap on the coop moves animals in, collects eggs and feeds them. Fed animals get happier and lay better-quality eggs; hungry ones sulk. Pigs dig up truffles on dry days. A feed silo (Menu > Make) stores feed and feeds every house overnight.
-9. **Villagers**: Mara (shop), Finn (woods), Rosa (farm) and Orin (smith) greet you with a "!" each day. Chat once a day and give gifts to grow hearts; hearts unlock discounts, daily presents and perks. Clay, a rival farmer, takes one board request each afternoon from day 8; befriend him to change that.
-10. **Skills**: farming, foraging and fishing level up with use and grant perks (quality, energy, double finds, wider fishing zone).
-11. **Daily jobs**: from day 2, villagers post three small jobs each morning (catch fish, break rocks, fill a request...). They pay on the spot and build friendship. See them in the morning news and Menu > Goal.
-12. **Town projects**: the town board's "Town projects" button lists projects the whole town funds. Give gold and goods a little at a time; each finished one helps for good (more requests, faster skills, more energy, better prices) and adds a building to town. The Greenhouse project builds a glass house on your farm where any crop grows in any season. The Seed Exchange stocks four rare crops that keep giving all season.
-13. **Home**: the shop's Home tab sells a Bigger Bag (more slots) and decorations (fences, paths, pots, lamps, a fountain). Place them like a sprinkler; tap twice with Interact to pick one up. Buildings move the same way: pick up a coop and its hens come along to wherever you place the next one.
-14. **Mail**: the mailbox beside the shipping bin gets letters in the morning (a star shows when one waits): tips, thank-yous with gifts, festival notices and birthday hints.
-15. **Festivals**: one a season, entered at the town board: the Flower Show takes your best flower, the Harvest Fair and Winter Feast a basket of three different goods, and the Fishing Derby counts your three best catches of the day.
-16. Follow the goal tracker at the top; each goal introduces a new mechanic. The first year ends on Winter 28 with a results screen.
-
-## Project layout
-
-- `src/systems/` pure game rules (no Phaser): time, farming, inventory, economy, day rollover, goals, save. Unit tested.
-- `src/data/*.json` all content: items, crops, shops, tools, goals, maps, balance.
-- `src/scenes/`, `src/ui/`, `src/input/`, `src/fx/` rendering and input only.
-- `public/assets/maps/*.tmj` Tiled maps (regenerate the placeholders with `npm run gen:maps`).
-- `src/mechanics/` each gameplay mechanic registers itself (actions, day hooks, placeable behaviors). See [docs/EXTENDING.md](docs/EXTENDING.md) for how to add one.
-- `ROADMAP.md` what we build next, in priority order.
-- `DECISIONS.md` every judgment call. `GOAL.md` the MVP definition.
-
-Art is currently generated in code (placeholders). Audio is real: CC0 recorded sound effects and ambience, and
-composed music played on CC0 sampled instruments (`src/audio/`, built from `audio-src/`; credits in `ASSETS.md`),
-with the original synthesized sounds as the fallback.
-
-## Phones and stores
-
-The same code runs as a website, an installable PWA (fullscreen portrait, works offline once visited), and
-Capacitor apps for Android and iOS (`android/`, `ios/`). `npm run cap:android` / `npm run cap:ios` build the web app,
-sync it, and open the native IDE. See [docs/MOBILE.md](docs/MOBILE.md) for build steps, the store checklist, what is
-verified automatically, and the manual device checklist.
-
-## Architecture in one minute
-
-Dependencies only point downward. Scenes never edit state directly; they call system functions.
-
-```
-scenes / ui / input / fx   render + input only (Phaser)         <- covered by `npm run e2e`
-        |  call
-systems/*                  pure rules, no Phaser, emit events   <- unit tested (~95% lines)
-        |  read/write
-state/GameState + data/*.json   one serializable state object + validated content
+```sh
+cd farm-game
+npm ci
+npm run dev              # http://localhost:5173 (add ?scenario=lab for the developer map)
+npm run build            # static site in dist/
+npm run verify:fast      # lint, types, unit tests, build, smoke e2e (about 30 s)
+npm run verify           # every suite: e2e, phones, controls, feel, onboarding, perf (about 6 min)
 ```
 
-Saves are one versioned JSON blob. `systems/save.ts` migrates old versions and _sanitises_ every load
-(unknown items dropped, numbers clamped, missing fields defaulted), so a damaged or outdated save cannot
-crash the game; a corrupt main save falls back to the backup.
+The browser suites need a Chromium: on Windows, set `CHROMIUM_PATH` (see
+[agents/TOOLING.md](agents/TOOLING.md)). Append `?debug` to the game URL to expose `window.__farm` for poking at
+state.
 
-## Checks
+**Deploy:** fast-forward the branch `claude/repo-code-github-pages-3ukz7j` to the latest integration branch. The
+Pages workflow builds the game and serves it at `/farm/` (see [agents/PUBLISHING.md](agents/PUBLISHING.md)).
 
-Hosted build: deployed by `.github/workflows/pages.yml` to `/farm/` on GitHub Pages.
+**Native apps:** `npm run cap:android` or `npm run cap:ios` (see [docs/MOBILE.md](docs/MOBILE.md)).
 
-`npm test` (Vitest), `npm run coverage`, `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build`.
+## How the code is laid out
 
-`npm run verify` runs everything below in one go. `npm run e2e:mobile` checks phone profiles (notch insets, 44px touch targets, portrait overlay), `npm run perf` enforces render budgets (GL draw calls and JS time per frame).
+Dependencies only point down. Scenes never edit state; they call system functions.
 
-`npm run e2e` plays the core loop (new game, till, plant, water, sleep, reload, continue) in headless Chromium
-against the production build (`npm run build` first; set `CHROMIUM_PATH` if Chromium is not at the default
-Playwright cache path). Append `?debug` to the game URL to expose `window.__farm` for poking at state.
+```
+scenes / ui / input / fx        render and input only (Phaser)        <- covered by the e2e suites
+systems/*                       pure rules, no Phaser, emit events     <- unit tested
+state/GameState + data/*.json   one serializable state object and validated content
+mechanics/*                     each mechanic registers itself into the registries
+```
+
+- `src/data/*.json`: all content (items, crops, villagers, goals, maps, balance), validated at load.
+- `src/dev/`: the dev sandbox (named scenarios, the lab map, the DEV tab). It never ships to players.
+- `public/assets/`: sprites, tilesets, Tiled maps and audio. Their sources and tools are in `art-src/` and
+  `audio-src/`.
+- `scripts/`: the e2e suites, the benchmark, perf, verify, and the map generators.
+
+Saves are one versioned JSON blob. `systems/save.ts` migrates old versions and sanitises every load, so a damaged
+or outdated save cannot crash the game, and a corrupt main save falls back to the backup.
+
+## Docs
+
+| Doc                                      | What it is                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| [docs/VISION.md](docs/VISION.md)         | The direction: The Dry Year (design lane)                                 |
+| [docs/WORLD-PLAN.md](docs/WORLD-PLAN.md) | The valley and its broken places (design lane)                            |
+| [docs/MILESTONES.md](docs/MILESTONES.md) | The build order (design lane)                                             |
+| [ROADMAP.md](ROADMAP.md)                 | What is done and what comes next (design lane)                            |
+| [DECISIONS.md](DECISIONS.md)             | Every judgment call, by round, with an index by area                      |
+| [docs/EXTENDING.md](docs/EXTENDING.md)   | How to add a mechanic, content, sounds or tutorial steps (the registries) |
+| [docs/MOBILE.md](docs/MOBILE.md)         | PWA and native builds, the store checklist, the device checklist          |
+| [ASSETS.md](ASSETS.md)                   | Where every sprite and sound comes from, and its licence                  |
+| [agents/README.md](agents/README.md)     | For agents: rules, loop, tooling, publishing, next steps, open findings   |
+
+The art prompts are in `art-src/flow/prompts.md` and `edits.md`, and the audio sources in `audio-src/SOURCES.md`
+and `prep-report.md`.
