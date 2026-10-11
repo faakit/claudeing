@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 // Year-long sims take seconds each; never fail on vitest's 5 s default under load (critique 11, F8).
 vi.setConfig({ testTimeout: 60_000 });
-import { crops, items, jobs as jobDefs, plots, projects, shops } from '../src/data';
-import { JOBS_PER_DAY, jobReward } from '../src/systems/jobs';
+import { crops, game, items, jobs as jobDefs, plots, projects, shops } from '../src/data';
+import { JOBS_PER_DAY, jobProgress, jobReward, openJobs, welcomeFactor } from '../src/systems/jobs';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { craft } from '../src/systems/crafting';
 import { collect, feed, moveIn } from '../src/systems/animals';
@@ -12,7 +12,7 @@ import { endDay } from '../src/systems/day';
 import { buyItem, buyUpgrade, shipStack, stockFor, upgradeLevel } from '../src/systems/economy';
 import { maxEnergy } from '../src/systems/energy';
 import { getSoil, isMature } from '../src/systems/farming';
-import { goalProgress } from '../src/systems/goals';
+import { addStat, goalProgress } from '../src/systems/goals';
 import { addItem, countItem, countStack } from '../src/systems/inventory';
 import {
   donateGold,
@@ -144,6 +144,9 @@ function fishEvening(s: GameState): void {
   off();
 }
 
+/** Job stats the sim credits for a bot that does its jobs (`playDay`'s `jobs` option). */
+const ERRANDS = new Set(['caught', 'mined', 'foraged', 'talked', 'likedGifts', 'cleared']);
+
 /** Where the gold came from, for the log and the bounds. */
 interface Ledger {
   shipped: number;
@@ -163,9 +166,17 @@ function playDay(
   s: GameState,
   ledger: Ledger,
   budget = Infinity,
-  opts: { keepForBoard?: boolean; fish?: boolean } = {},
+  opts: { keepForBoard?: boolean; fish?: boolean; jobs?: boolean } = {},
 ): void {
   actions.left = budget;
+  // A player who does the day's errands (fish, rocks, wild goods, a chat, a gift, weeds): credited, at ten
+  // presses each. Shipping, harvest and board jobs happen through the farm work itself.
+  if (opts.jobs)
+    for (const job of openJobs(s))
+      if (ERRANDS.has(job.stat) && actions.left >= 10) {
+        addStat(s, job.stat, job.n - jobProgress(s, job));
+        actions.left -= 10;
+      }
   const FIELD = field(s);
   const refill = () => {
     equipItem(s, 'watering_can');
@@ -266,28 +277,50 @@ function playDay(
   }
   // 8. buy and plant the best in-season seed with spare energy
   if (opts.fish && s.energy < 40) return void fishEvening(s);
-  const best = stockFor(STORE, s.time.season, s)
+  // Calibrated against play (round 4, critique 11 F1): the starting seeds go in first, and while gold cannot
+  // fill the free tiles with the best crop per tile, the bot buys what pays back fastest per gold (parsnips
+  // in early spring), as a person does. Before, it bought six cauliflower seeds on day 1 and kept its
+  // parsnips: no income until day 11, 1.5k earned by day 14 where a played farmer had 3.6k.
+  const free = FIELD.filter(([x, y]) => !getSoil(s, x, y)?.crop).length;
+  const scored = stockFor(STORE, s.time.season, s)
     .filter((id) => items[id]?.type === 'seed')
-    .map((id) => ({ id, sc: score(s, id) }))
-    .filter((e) => e.sc > 0)
-    .sort((a, b) => b.sc - a.sc)[0];
-  if (!best) return;
+    .map((id) => ({ id, sc: score(s, id), roi: score(s, id) / items[id]!.buyPrice! }))
+    .filter((e) => e.sc > 0);
+  let best = [...scored].sort((a, b) => b.sc - a.sc)[0];
+  if (best && s.money < free * items[best.id]!.buyPrice!)
+    best = [...scored].sort((a, b) => b.roi - a.roi)[0];
+  const inBag = s.inventory.slots
+    .filter(
+      (st): st is NonNullable<typeof st> =>
+        !!st && items[st.item]?.type === 'seed' && score(s, st.item) > -1,
+    )
+    .map((st) => st.item);
+  if (!best && inBag.length === 0) return;
   for (const [x, y] of FIELD) {
     if (s.energy < 3) break;
     const soil = getSoil(s, x, y);
     if (soil?.crop) continue;
-    if (
-      countItem(s, best.id) === 0 &&
-      buyItem(s, STORE, best.id, Math.min(20, Math.floor(s.money / items[best.id]!.buyPrice!))) !==
-        'ok' &&
-      buyItem(s, STORE, best.id, 1) !== 'ok'
-    )
-      break;
+    let seed = inBag.find((id) => countItem(s, id) > 0);
+    if (!seed) {
+      if (!best) break;
+      if (
+        countItem(s, best.id) === 0 &&
+        buyItem(
+          s,
+          STORE,
+          best.id,
+          Math.min(20, Math.floor(s.money / items[best.id]!.buyPrice!)),
+        ) !== 'ok' &&
+        buyItem(s, STORE, best.id, 1) !== 'ok'
+      )
+        break;
+      seed = best.id;
+    }
     if (!soil) {
       equipItem(s, 'hoe');
       if (!act(s, tile(s, x, y)).ok) continue;
     }
-    equipItem(s, best.id);
+    equipItem(s, seed);
     if (!act(s, tile(s, x, y)).ok) continue;
     refill();
     equipItem(s, 'watering_can');
@@ -298,15 +331,15 @@ function playDay(
 }
 
 /**
- * The bot's median full year over five seeds when the band was last set (depth round 2: multi-day requests,
- * animal goods on the board, crows and scarecrows, smaller jobs, crop requests only for crops you grow, and
- * a coop of three hens, Clay on last days only, crop requests sized to the field; depth round 3: crop requests
- * at three quarters of the field; Clay scores farm goods only, takes them first and ships a weekly crate, so
- * this bot, which ships everything, wins almost no board prize). Seed 42 alone: 228,569. Year one is very
- * sensitive to early gold: one 300g prize in spring moved a seed by 60k (critique 10, F7). A balance change that moves the median by a fifth down or a quarter up fails the five-seed
- * test and needs a DECISIONS.md note.
+ * The bot's median full year over five seeds when the band was last set. Depth round 4: the bot plants its
+ * starting seeds and, while gold is short, the seed that pays back fastest per gold (it had bought six
+ * cauliflower seeds on day 1 and earned nothing until day 11): calibrated against a played farmer (3.6k
+ * earned by day 14; the bot now 3.3k, was 1.5k). Seeds 238,200 / 263,596 / 261,631 / 272,894 / 226,522
+ * (round 3: 175k to 252k, median 213,730). Year one was very sensitive to early gold (critique 10, F7);
+ * with the calibrated start it is far less so (see 'balance: the first week'). A balance change that moves
+ * the median by a fifth down or a quarter up fails the five-seed test and needs a DECISIONS.md note.
  */
-const SIM_EARNED = 213_730;
+const SIM_EARNED = 261_631;
 
 describe('balance simulation (decent player, full year)', () => {
   it('a competent farmer earns a satisfying amount from crops, orders and jars, without a runaway', () => {
@@ -414,11 +447,66 @@ describe('balance: early jobs against early farming', () => {
     const weight = early.reduce((n, j) => n + j.weight, 0);
     const mean =
       early.reduce((n, j) => n + j.weight * jobReward(j, (j.qty[0] + j.qty[1]) / 2, 1), 0) / weight;
-    const jobsGold = 13 * JOBS_PER_DAY * mean;
+    let jobsGold = 0;
+    for (let day = 2; day <= 14; day++) jobsGold += JOBS_PER_DAY * mean * welcomeFactor(day);
     console.log(`farm by day 14 (median): ${farm}; jobs days 2-14: ${Math.round(jobsGold)}`);
     expect(jobsGold).toBeLessThan(farm * 0.75);
     // ...but still worth doing: a day of jobs buys a row of seeds.
     expect(JOBS_PER_DAY * mean).toBeGreaterThan(60);
+  });
+});
+
+/**
+ * The first week (owner, round 4): the human-paced bot, doing its jobs. Nothing ripens before day 5, so the
+ * settling-in pay on days 3 and 4 is the only income then; it must stay small, and early gold must not swing
+ * the year (the round-3 "+18% to +76% for 500g on day 7" came from a bot that kept its starting seeds and
+ * waited for cauliflower: no income until day 11).
+ */
+describe('balance: the first week', () => {
+  const run = (seed: number, opts: { welcome: boolean; lump?: number }) => {
+    const saved = game.welcomeJobs;
+    if (!opts.welcome) game.welcomeJobs = undefined;
+    try {
+      const s = createInitialState();
+      s.rng = seed;
+      const ledger: Ledger = { shipped: 0, orders: 0, jarsLoaded: 0, eggs: 0 };
+      const earned: number[] = [0];
+      let firstPlot = 0;
+      for (let day = 1; day <= 112; day++) {
+        if (day === 7) s.money += opts.lump ?? 0;
+        playDay(s, ledger, 150, { jobs: true });
+        endDay(s, { passedOut: false, weedCandidates: [] });
+        earned.push(s.stats['earned'] ?? 0);
+        if (!firstPlot && s.plots.length > 1) firstPlot = day;
+      }
+      return { earned, firstPlot };
+    } finally {
+      game.welcomeJobs = saved;
+    }
+  };
+  it('days 3 and 4 earn a little, the week earns more, and a 500g lump on day 7 barely moves the year', () => {
+    const log: string[] = [];
+    const lifts: number[] = [];
+    for (const seed of [42, 7, 99, 1234, 2026]) {
+      const before = run(seed, { welcome: false });
+      const after = run(seed, { welcome: true });
+      const lump = run(seed, { welcome: true, lump: 500 });
+      const days34 = (r: typeof after) => r.earned[4]! - r.earned[2]!;
+      const lift = lump.earned[112]! / after.earned[112]! - 1;
+      lifts.push(lift);
+      log.push(
+        `seed ${seed}: days 3-4 ${days34(before)} -> ${days34(after)}, day 7 ${before.earned[7]} -> ${after.earned[7]}, ` +
+          `day 14 ${before.earned[14]} -> ${after.earned[14]}, first plot day ${before.firstPlot} -> ${after.firstPlot}, ` +
+          `year ${before.earned[112]} -> ${after.earned[112]} (+500g on day 7: ${(lift * 100).toFixed(0)}%)`,
+      );
+      expect(days34(after)).toBeGreaterThan(days34(before));
+      expect(days34(after) - days34(before)).toBeLessThan(400); // a nudge, not a living
+      expect(after.earned[4]!).toBeLessThan(after.earned[7]! / 2); // the harvest still makes the week
+    }
+    console.log(log.join(String.fromCharCode(10)));
+    const median = [...lifts].sort((a, b) => a - b)[2]!;
+    console.log(`+500g on day 7, median lift ${(median * 100).toFixed(1)}%`);
+    expect(Math.abs(median)).toBeLessThan(0.15);
   });
 });
 
@@ -490,6 +578,9 @@ describe('balance simulation: the board race for a pure farmer', () => {
     console.log(log.join(String.fromCharCode(10)));
     // Of 24 seasons. Critique 9: 0 of 72. Round 3 first fix: keep 23, ship 13 (a formality, critique 10 F2).
     // Now Clay takes farm rows first and ships crates (weekly, every 3rd day while you lead by 4): keep 19, ship 1.
+    // Round 4, with the calibrated start (more spring crop rows filled, as in play): keep 21, ship 4; then
+    // crates counted from the last one and daily while you lead by 5 (critique 12, F1): keep 20 (margins of 1
+    // to 6, mostly 2 to 4), ship 3.
     expect(keepWins).toBeGreaterThanOrEqual(12);
     expect(keepWins).toBeLessThanOrEqual(22); // a race, not a walkover
     expect(shipWins).toBeLessThan(keepWins / 2); // keeping goods for the board is what wins it

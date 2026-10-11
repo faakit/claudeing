@@ -186,6 +186,11 @@ Goals are a list and the save keeps an index into it. If you **insert** goals an
 `STATE_VERSION` and migrate with `remapGoalIndex(raw, OLD_IDS)` (the goal ids of the previous release), so
 saved players stay on the same goal. Appending at the end needs nothing.
 
+A goal with `"aside": true` (the legendary fish) never holds up the chain: the next goal shows while it stays
+open, and it is listed under "Also open" in Menu > Goal. Any shown goal whose stat has not moved for
+`STALL_DAYS` days waits the same way (`systems/goals.ts noteGoalDay`). Goals beyond the current one never
+complete early. Jobs posted on the days in `game.json welcomeJobs` pay `factor` times (settling-in pay).
+
 ## 9. Sounds and music
 
 Game code only calls `audio.play('<cue>')` with an id from the `Sfx` union in `src/platform/audio.ts`.

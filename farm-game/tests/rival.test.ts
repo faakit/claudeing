@@ -54,7 +54,7 @@ describe('the rival farmer', () => {
     expect(took).toMatchObject({ done: true, rival: true });
     expect(applyRival(s)).toBeNull();
     expect(s.orders.list.filter((o) => o.rival)).toHaveLength(1);
-    expect(rivalNotice(s)).toBe('Clay took one today.');
+    expect(rivalNotice(s)).toMatch(/^Clay took one today: (no point|a point)\.$/);
   });
 
   it('a request you filled first is safe; the rival still comes for his', () => {
@@ -141,6 +141,7 @@ describe('the rival in year two (handover goal 3)', () => {
     const s = boardDay();
     s.time.year = 2;
     s.orders.day = absoluteDay(s);
+    s.stats['rival.crate'] = absoluteDay(s) - 1; // no crate due tonight
     expect(rivalTakes(s)).toBe(2);
     expect(rivalNotice(s)).toMatch(
       /(wants two of these|wants this one|takes one|takes two) at 2:00 PM/,
@@ -152,7 +153,7 @@ describe('the rival in year two (handover goal 3)', () => {
     applyRival(s);
     const gone = s.orders.list.filter((o) => o.rival).map((o) => o.id);
     expect(gone).toEqual(sorted.slice(0, 2).map((o) => o.id));
-    expect(rivalNotice(s)).toBe('Clay took two today.');
+    expect(rivalNotice(s)).toMatch(/^Clay took two today: (no point|a point|two points)\.$/);
     expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
     // With one request left open he leaves it to you.
     const t = boardDay();

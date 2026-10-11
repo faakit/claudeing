@@ -490,7 +490,8 @@
     "stat": "legends",
     "target": 1,
     "reward": 1500,
-    "hint": "Finn knows where the four legends of the valley hide."
+    "hint": "Finn knows where the four legends of the valley hide.",
+    "aside": true
   },
   {
     "id": "board1",
@@ -530,6 +531,7 @@
     "stat": "legends",
     "target": 4,
     "reward": 5000,
-    "hint": "One a season. Finn knows where each one hides."
+    "hint": "One a season. Finn knows where each one hides.",
+    "aside": true
   }
 ]

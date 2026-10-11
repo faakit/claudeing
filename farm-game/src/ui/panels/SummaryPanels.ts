@@ -5,7 +5,7 @@ import { haptic } from '../../platform/haptics';
 import type { DaySummary } from '../../state/GameState';
 import { getState } from '../../state/store';
 import { rankTitle } from '../../systems/day';
-import { stat } from '../../systems/goals';
+import { goalsDone, stat } from '../../systems/goals';
 import { displayName, parseKey } from '../../systems/itemRef';
 import { seasonLabel } from '../../systems/time';
 import { C } from '../theme';
@@ -44,6 +44,9 @@ abstract class WaitModal extends Modal {
 
 /** Tallest the morning sheet may be (Modal caps sheets 60px below the top). */
 const MAX_SUMMARY_H = 340;
+/** Sales lines on the morning sheet, and on a crowded one. */
+const SALES_LINES = 6;
+const SALES_LINES_BUSY = 2;
 
 export class SummaryPanel extends WaitModal {
   private summary: DaySummary | null = null;
@@ -72,18 +75,21 @@ export class SummaryPanel extends WaitModal {
     // rather than run under the Wake up button. Weather and the forecast come before the notes, so
     // they are never the part that is cut.
     // The first guided morning stays short (the guide shows the rest one thing at a time).
+    // Then the sales list shrinks to two lines (critique 12, F3: the season result was cut for the 7th sale).
     let withTip = !guidedMorning(getState());
     let maxNotes = this.notes(this.summary).length;
-    let end = this.draw(this.summary, withTip, maxNotes);
+    let maxSales = SALES_LINES;
+    let end = this.draw(this.summary, withTip, maxNotes, maxSales);
     while (end + 40 > MAX_SUMMARY_H && (withTip || maxNotes > 0)) {
       if (withTip) withTip = false;
+      else if (maxSales > SALES_LINES_BUSY) maxSales = SALES_LINES_BUSY;
       else maxNotes -= 1;
       this.content.removeAll(true);
-      end = this.draw(this.summary, withTip, maxNotes);
+      end = this.draw(this.summary, withTip, maxNotes, maxSales);
     }
     this.content.removeAll(true);
     this.setHeight(end + 40);
-    this.draw(this.summary, withTip, maxNotes);
+    this.draw(this.summary, withTip, maxNotes, maxSales);
     this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Wake up', () => this.finish(), {
       textColor: C.green,
       rim: C.green,
@@ -97,9 +103,14 @@ export class SummaryPanel extends WaitModal {
   }
 
   /** Draw the summary top to bottom; returns the y just below the last line. */
-  private draw(sum: DaySummary, withTip = true, maxNotes = Infinity): number {
+  private draw(
+    sum: DaySummary,
+    withTip = true,
+    maxNotes = Infinity,
+    maxSales = SALES_LINES,
+  ): number {
     const s = getState();
-    const lines = sum.shipped.slice(0, 6);
+    const lines = sum.shipped.slice(0, maxSales);
     const extra = sum.shipped.length - lines.length;
     this.panel();
     let y = 8;
@@ -202,7 +213,7 @@ export class YearEndPanel extends WaitModal {
       ['Gold earned', `${fmt(earned)}g`],
       ['Crops harvested', fmt(stat(s, 'harvested'))],
       ['Seeds planted', fmt(stat(s, 'planted'))],
-      ['Goals completed', `${s.goalIndex}/${goals.length}`],
+      ['Goals completed', `${goalsDone(s)}/${goals.length}`],
     ];
     rows.forEach(([k, v], i) => {
       this.label(10, 50 + i * 13, k);

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { game, goals, items } from '../../data';
+import { game, items } from '../../data';
 import { saveNow } from '../../game/persistence';
 import { audio } from '../../platform/audio';
 import { fullscreenSupported, isIosSafari, toggleFullscreen } from '../../platform/display';
@@ -8,8 +8,8 @@ import { getState } from '../../state/store';
 import { waterCapacity } from '../../systems/actions';
 import { maxEnergy } from '../../systems/energy';
 import { gameEvents, toast } from '../../systems/events';
-import { goalProgress, stat } from '../../systems/goals';
-import { jobLabel, jobProgress } from '../../systems/jobs';
+import { asideGoals, goalProgress, recentGoals, stat } from '../../systems/goals';
+import { jobLabel, jobProgress, welcomeFactor, welcomeJobsHeader } from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
@@ -305,7 +305,16 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     C.creamDim,
   );
   c.label(8, ly + 12, `Gold ${fmt(s.money)}`, C.gold);
-  c.label(8, ly + 24, 'Tip: hold Action, then drag, to work a whole plot.', C.creamDim);
+  // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
+  c.label(
+    8,
+    ly + 24,
+    'Tip: hold Action, then drag, to work a whole plot.',
+    C.creamDim,
+    1,
+    'left',
+    184,
+  );
 }
 
 function buildGoals(c: MenuTabContext): void {
@@ -333,9 +342,9 @@ function buildGoals(c: MenuTabContext): void {
   }
   let y = c.top + 82;
   // Today's jobs: small requests that pay on the spot, whatever the goal chain says.
-  c.label(8, y, "TODAY'S JOBS", C.gold);
-  y += 12;
   const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
+  c.label(8, y, welcomeJobsHeader(today.length > 0 ? welcomeFactor(s.jobs.day) : 1), C.gold);
+  y += 12;
   if (today.length === 0) {
     c.label(8, y, 'New jobs every morning.', C.creamDim);
     y += 11;
@@ -352,13 +361,30 @@ function buildGoals(c: MenuTabContext): void {
     y += 11;
   }
   y += 6;
+  // A goal the chain does not wait for (a legendary fish) stays in view here while the next one is current.
+  const aside = asideGoals(s);
   c.label(8, y, 'COMPLETED', C.gold);
   y += 12;
-  const done = goals.slice(Math.max(0, s.goalIndex - 2), s.goalIndex);
+  const done = recentGoals(s, aside.length > 0 ? 1 : 2);
   if (done.length === 0) c.label(8, y, 'Nothing yet. You can do it!', C.creamDim);
   for (const d of done) {
     const row = c.label(8, y, `+ ${d.text}`, C.creamDim, 1, 'left', 184);
     y += row.textHeight + 3;
+  }
+  if (aside.length > 0) {
+    y += 3;
+    c.label(8, y, 'ALSO OPEN', C.gold);
+    y += 12;
+    // Two rows at most: the oldest open goal, then either the next or a count of the rest.
+    const shown = aside.length > 2 ? aside.slice(0, 1) : aside;
+    for (const g of shown) {
+      const right = `${fmt(Math.min(g.target, stat(s, g.stat)))}/${fmt(g.target)}`;
+      c.label(192, y, right, C.gold, 1, 'right');
+      c.label(8, y, fitRow(g.text, 184 - measureText(right) - 6), C.cream);
+      y += 11;
+    }
+    if (aside.length > shown.length)
+      c.label(8, y, `and ${aside.length - shown.length} more open goals`, C.creamDim);
   }
   y = c.bottom - 62;
   c.label(8, y, 'STATS', C.gold);
