@@ -63,7 +63,9 @@ def sequences() -> dict[str, list[str]]:
     return seq
 
 
-def strip(frames: list[Image.Image], scale: int = 6) -> Image.Image:
+def strip(frames: list[Image.Image], scale: int = 6, below: int = 0) -> Image.Image:
+    """`below`: rows of art under the feet (the 32 x 36 hoe and pickaxe frames: 4); the baseline guide goes under
+    the feet, not under the canvas."""
     cw = max(f.width for f in frames) + 4
     ch = max(f.height for f in frames) + 4
     W, H = cw * len(frames), ch * 2 + 2
@@ -77,7 +79,10 @@ def strip(frames: list[Image.Image], scale: int = 6) -> Image.Image:
             cell.alpha_composite(f, ((cw - f.width) // 2, ch - 2 - f.height))
             px = cell.load()
             for x in range(cw):  # guides: baseline under the feet, crown at the tallest frame's top
-                if px[x, ch - 1][3]:
+                if below:
+                    if x % 2 == 1:
+                        px[x, ch - 2 - below] = GOLD + (255,)
+                elif px[x, ch - 1][3]:
                     px[x, ch - 1] = GOLD + (255,)
                 if x % 2 == 0:
                     yy = ch - 2 - top - 1
@@ -149,7 +154,8 @@ def main() -> None:
         frames = [f for f in frames if f is not None]
         if not frames:
             continue
-        strip(frames).save(os.path.join(out, f"{name}_strip.png"))
+        below = frames[0].height - 32 if name.startswith("tool_") else 0
+        strip(frames, below=below).save(os.path.join(out, f"{name}_strip.png"))
         if len(frames) > 1:
             onion(frames).save(os.path.join(out, f"{name}_onion.png"))
             gif(name, frames, os.path.join(out, f"{name}_1x.gif"), 1)
