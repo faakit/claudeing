@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CH } from '../ui/theme';
 import { GESTURE } from './gesture';
 import { bakeGraphics } from '../fx/bake';
+import { getState } from '../state/store';
 
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
 
@@ -180,7 +181,7 @@ export class TouchButton {
     if (!enabled) this.pressed = false;
     // Shows and hides with a fade and a 2 px rise in whole pixels (no scale pop on drawn art).
     this.scene.tweens.killTweensOf(this.view);
-    if (enabled) this.view.y = this.opts.y + 2;
+    if (enabled && !getState().settings.reduceMotion) this.view.y = this.opts.y + 2;
     this.scene.tweens.add({
       targets: this.view,
       alpha: enabled ? 1 : 0,

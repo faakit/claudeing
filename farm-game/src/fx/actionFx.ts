@@ -23,6 +23,8 @@ export function playActionFx(
     audio.play('swing');
   }
   const above = player.y - 30;
+  // Where a gathered item rests: just above the farmer's hair, never over his face.
+  const head = { x: player.x, y: player.y - 42 };
   switch (res.kind) {
     case 'till':
       fx.dust(x, y);
@@ -50,8 +52,8 @@ export function playActionFx(
       const good = items[res.item ?? ''];
       if (good) {
         fx.sparkle(x, y - 4, parseInt(good.color.slice(1), 16));
-        fx.itemPop(x, y - 8, good.icon);
-        fx.floatText(player.x, above, `+${res.qty ?? 1} ${good.name}`, 0xf4ead2);
+        fx.itemPop(x, y - 8, good.icon, head);
+        fx.floatText(player.x, above - 22, `+${res.qty ?? 1} ${good.name}`, 0xf4ead2);
       }
       audio.play('harvest');
       break;
@@ -65,15 +67,15 @@ export function playActionFx(
       const crop = items[res.item ?? ''];
       fx.sparkle(x, y - 4, parseInt((crop?.color ?? '#ffffff').slice(1), 16));
       if (crop) {
-        fx.itemPop(x, y - 8, crop.icon);
-        fx.floatText(player.x, above, `+${res.qty ?? 1} ${crop.name}`, 0xf4ead2);
+        fx.itemPop(x, y - 8, crop.icon, head);
+        fx.floatText(player.x, above - 22, `+${res.qty ?? 1} ${crop.name}`, 0xf4ead2);
       }
       if ((res.q ?? 0) > 0) {
         const gold = (res.q ?? 0) >= 2;
         fx.sparkle(x, y - 6, gold ? 0xf4d35e : 0xc9d3e4);
         fx.floatText(
           player.x,
-          above - 10,
+          above - 32,
           gold ? 'Gold quality!' : 'Silver quality!',
           gold ? 0xf4d35e : 0xc9d3e4,
         );

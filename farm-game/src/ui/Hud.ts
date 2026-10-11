@@ -17,6 +17,7 @@ import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
 import { runtime } from '../state/runtime';
 import { tickToward } from '../fx/feel';
+import { showBanner } from '../fx/hudBand';
 
 /** Hotbar slot size: 23 logical px is ~45 CSS px on a typical phone, so taps land first time. */
 export const SLOT = 23;
@@ -285,6 +286,7 @@ export class Hud {
   private goalBanner(text: string, pulse: 'success' | 'medium' = 'success'): void {
     audio.play('goal');
     haptic(pulse);
+    showBanner(2100); // world pickup lines keep clear of it (fx/hudBand.ts)
     // Rises in and out in whole pixels; Calm mode only fades it.
     const calm = this.getState().settings.reduceMotion;
     this.banner

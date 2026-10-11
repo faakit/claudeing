@@ -54,10 +54,12 @@ export class PixelCamera {
 
   /** Let go of the camera (debug probes move it by hand). */
   paused = false;
+  /** Hold the view where it is this frame (a finger is down and the farmer is still). */
+  hold = false;
 
   /** Each frame, after the player moved. */
   update(px: number, py: number, dtMs: number, now: number): void {
-    if (this.paused) return;
+    if (this.paused || this.hold) return;
     const fx = Math.floor(px);
     const fy = Math.floor(py);
     const lx = stepFollowAxis(this.ax, px, dtMs, CAMERA_LERP);

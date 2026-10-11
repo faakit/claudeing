@@ -137,9 +137,9 @@ export const wipeLevel = (t: number): number => Math.round(smoothstep(t) * DITHE
 
 /** Map-change timing: the wipe closes, holds while the next map is built, then opens. */
 export const WIPE_CLOSE_MS = 130;
-export const WIPE_OPEN_MS = 150;
+export const WIPE_OPEN_MS = 140;
 /** Frames the wipe stays closed after the new map's first frame, so its build hitch is never seen. */
-export const WIPE_HOLD_FRAMES = 2;
+export const WIPE_HOLD_FRAMES = 1;
 /** The longest frame step the wipe takes, so a hitch cannot make it skip (ms). */
 export const WIPE_MAX_STEP_MS = 1000 / 30;
 
@@ -167,17 +167,6 @@ export function nudgeOffset(t: number, px: number, ms = 140): number {
   if (t < 0 || t >= ms) return 0;
   const k = t / ms;
   return Math.round(px * (1 - k) * Math.cos(k * Math.PI * 1.5));
-}
-
-/**
- * Squash and stretch in whole pixels: the display height (and width, inverted) of a `h` x `w` sprite at time
- * `t` ms into a pop. A pop lands squashed (1 px shorter, 1 px wider), stretches (1 px taller), then settles.
- */
-export function popSize(t: number, w: number, h: number): { w: number; h: number } {
-  if (t < 0 || t >= 160) return { w, h };
-  if (t < 50) return { w: w + 2, h: h - 2 };
-  if (t < 110) return { w: w - 2, h: h + 2 };
-  return { w, h };
 }
 
 /** Hit-stop: frames of held time on an impact (a harvest), as ms. Two 60 Hz frames. */

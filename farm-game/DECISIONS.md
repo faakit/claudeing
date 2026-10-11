@@ -960,7 +960,7 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
 - **Walk cycle by distance:** one frame per 8 px (4 frames) or 4 px (8 frames, when the art lands), footsteps on
   the contact frames, so half speed, the settle glide and slow frames never slide the feet.
 - **Map changes: a 4x4 ordered-dither wipe** in the palette ink over the world view only (HUD and dock stay):
-  130 ms close (smoothstep), held 2 frames after the new map's first frame (its build hitch and the save happen
+  130 ms close (smoothstep), held 1 frame after the new map's first frame (its build hitch and the save happen
   under cover), 150 ms open. Its clock takes at most a 30 Hz step, so a long frame cannot make it skip. The same
   wipe closes over the title and the game opens out of it (no hard cut). Taps during the close are dropped on
   purpose (they aim at the map that is leaving); the new map takes input from the first frame of the open.
@@ -975,8 +975,8 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
 - **Press-down states:** the dock buttons sink 1 px and light on the touch's own frame (no tween); the Action icon
   sinks with them. Action still acts on a still press's lift (round 3 ruling); the press-in is the touch-down cue.
 - **Pixel integrity:** no fractional scales or free rotation on pixel art: the Action icon is 2x (was 1.9),
-  the HUD bolt and drop 1x (were 0.8), particles 1-2 px squares, pops are whole-pixel squash and stretch
-  (`popSize`), the tile marker's pulse is a flash, the tap ring is redrawn by radius, the tool ring fades in.
+  the HUD bolt and drop 1x (were 0.8), particles 1-2 px squares, pops are a 1 px hop (or the art's pop frames;
+  a whole-pixel squash still doubled or dropped columns, feel critic), the tile marker's pulse is a flash, the tap ring is redrawn by radius, the tool ring fades in.
   Remaining: static 0.8 / 0.62 scales of some placed objects and the coach marks' pulsing ring (onboarding's).
 - **Calm mode** now covers sheet slides, particles, item hops, floating text, crop and object pops, swings, the
   hotbar rise, toast rise and hit-stop; fades stay (short).

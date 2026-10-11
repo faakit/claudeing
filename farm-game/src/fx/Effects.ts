@@ -3,7 +3,10 @@ import { PX_TEXTURE } from '../art/gameArt';
 import { ATLAS_FILES } from '../art/manifest';
 import { getState } from '../state/store';
 import { Label } from '../ui/font';
-import { popSize } from './feel';
+import { bannerShowing } from './hudBand';
+
+/** World-view px from its top that the HUD's goal and level banner covers (it sits at HUD_H + 8..22). */
+const BANNER_BAND_PX = 30;
 
 /** Calm mode (reduced motion): no particles, hops or swings; things appear and fade in place. */
 const calm = (): boolean => getState().settings.reduceMotion;
@@ -207,6 +210,10 @@ export class Effects {
 
   /** Rising, fading number or word above a point. */
   floatText(x: number, y: number, text: string, color = 0xf4ead2): void {
+    // While a goal or level banner shows at the top of the world view, a line that would rise into it goes below
+    // the farmer instead (coordinator, onboarding finding: "+1 Wild Leek" drew over "GOAL COMPLETE").
+    const cam = this.scene.cameras.main;
+    if (bannerShowing() && y - 16 - cam.scrollY < BANNER_BAND_PX) y += 44;
     const label = new Label(this.scene, Math.round(x), Math.round(y), text, {
       color,
       align: 'center',
@@ -225,62 +232,63 @@ export class Effects {
   }
 
   /**
-   * An item icon hops up from a point and fades, like it was just picked up. Its size steps from half to full
-   * (never an in-between scale that drops pixel rows) and it moves on whole pixels (review 8).
+   * An item just gathered: it leaves the tile and arcs up to rest above the farmer's head (`head`, so it never
+   * covers his face), holds a moment, then fades as it rises 4 px. Moves on whole pixels; the art's pop frames
+   * (stretch, squash, then the icon) play as it leaves when they exist. Without a head point (a machine's goods)
+   * it hops up from where it came out. Calm: the icon simply shows above the head for 300 ms and fades.
    */
-  itemPop(x: number, y: number, iconKey: string): void {
-    const img = this.scene.add.image(Math.round(x), Math.round(y), iconKey).setDepth(9400);
-    if (calm()) {
-      // Calm: the item shows where it was gathered and fades, no hop.
+  itemPop(x: number, y: number, iconKey: string, head?: { x: number; y: number }): void {
+    const end = head ?? { x, y: y - 18 };
+    const drawn =
+      this.scene.textures.exists(`${iconKey}_pop_0`) &&
+      this.scene.textures.exists(`${iconKey}_pop_1`);
+    // Positions below are of the icon's bottom line (the pop frames share it), so the anchor is the bottom.
+    const img = this.scene.add
+      .image(Math.round(x), Math.round(y + 8), iconKey)
+      .setOrigin(0.5, 1)
+      .setDepth(9400);
+    const fade = (delay: number) =>
       this.scene.tweens.add({
         targets: img,
         alpha: 0,
-        duration: 300,
-        delay: 450,
+        y: Math.round(end.y + 8) - 4,
+        duration: 240,
+        delay,
+        onUpdate: () => img.setY(Math.round(img.y)),
+        onComplete: () => img.destroy(),
+      });
+    if (calm()) {
+      img.setPosition(Math.round(end.x), Math.round(end.y + 8));
+      this.scene.tweens.add({
+        targets: img,
+        alpha: 0,
+        duration: 200,
+        delay: 300,
         onComplete: () => img.destroy(),
       });
       return;
     }
-    const drawn =
-      this.scene.textures.exists(`${iconKey}_pop_0`) &&
-      this.scene.textures.exists(`${iconKey}_pop_1`);
     if (drawn) {
-      // The art's pop frames (round 4): stretch as it leaves, squash at the top of the hop, then the icon. They
-      // share the icon's bottom line, so the image is anchored at its bottom.
-      img
-        .setOrigin(0.5, 1)
-        .setY(img.y + 8)
-        .setTexture(`${iconKey}_pop_0`);
+      img.setTexture(`${iconKey}_pop_0`);
       this.scene.time.delayedCall(60, () => img.active && img.setTexture(`${iconKey}_pop_1`));
       this.scene.time.delayedCall(120, () => img.active && img.setTexture(iconKey));
-      y += 8;
-    } else {
-      // Squash on the launch, stretch on the way up, then its true size: whole-pixel display sizes.
-      const w = img.width;
-      const h = img.height;
-      const born = this.scene.time.now;
-      const squash = () => {
-        if (!img.active) return;
-        const s = popSize(this.scene.time.now - born, w, h);
-        img.setDisplaySize(s.w, s.h);
-        if (s.w !== w || s.h !== h) this.scene.time.delayedCall(16, squash);
-      };
-      squash();
     }
+    const from = { x: img.x, y: img.y };
+    const arc = { t: 0 };
     this.scene.tweens.add({
-      targets: img,
-      y: y - 18,
-      duration: 260,
-      ease: 'Back.easeOut',
-      onUpdate: () => img.setY(Math.round(img.y)),
-    });
-    this.scene.tweens.add({
-      targets: img,
-      alpha: 0,
-      y: y - 28,
-      duration: 260,
-      delay: 380,
-      onComplete: () => img.destroy(),
+      targets: arc,
+      t: 1,
+      duration: 280,
+      ease: 'Cubic.easeOut',
+      onUpdate: () => {
+        // A little higher than the end point mid-flight, settling onto it (a hop, not a slide).
+        const lift = Math.sin(arc.t * Math.PI) * 6;
+        img.setPosition(
+          Math.round(from.x + (end.x - from.x) * arc.t),
+          Math.round(from.y + (end.y + 8 - from.y) * arc.t - lift),
+        );
+      },
+      onComplete: () => fade(220),
     });
   }
 

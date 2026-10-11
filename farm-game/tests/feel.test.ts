@@ -9,7 +9,6 @@ import {
   frameRate,
   isContactFrame,
   nudgeOffset,
-  popSize,
   smoothstep,
   softClamp,
   stepFollowAxis,
@@ -204,8 +203,8 @@ describe('dither wipe', () => {
     }
     expect(smoothstep(0.5)).toBeCloseTo(0.5);
   });
-  it('a map change stays under 300 ms of wipe (plus two held frames)', () => {
-    expect(WIPE_CLOSE_MS + WIPE_OPEN_MS + 2 * (1000 / 60)).toBeLessThan(320);
+  it('a map change stays under 300 ms of wipe (plus one held frame)', () => {
+    expect(WIPE_CLOSE_MS + WIPE_OPEN_MS + 1000 / 60).toBeLessThan(300);
     expect(WIPE_CLOSE_MS + WIPE_OPEN_MS).toBeLessThan(300);
   });
 });
@@ -230,14 +229,5 @@ describe('number tickers, nudges and pops', () => {
     expect(nudgeOffset(0, 2)).toBe(2);
     expect(nudgeOffset(140, 2)).toBe(0);
     expect(nudgeOffset(-1, 2)).toBe(0);
-  });
-  it('squash and stretch change whole pixels and settle to the true size', () => {
-    for (let t = 0; t < 200; t += 10) {
-      const s = popSize(t, 16, 16);
-      expect(Number.isInteger(s.w) && Number.isInteger(s.h)).toBe(true);
-    }
-    expect(popSize(20, 16, 16).h).toBeLessThan(16);
-    expect(popSize(80, 16, 16).h).toBeGreaterThan(16);
-    expect(popSize(200, 16, 16)).toEqual({ w: 16, h: 16 });
   });
 });

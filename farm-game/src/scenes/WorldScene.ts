@@ -119,6 +119,8 @@ const TOOL_KINDS: Record<string, string[]> = {
 /** Doors with a leaf that opens (frames-wanted.md): the farmhouse door outside, the house door inside. */
 const doorStyle = (map: string, to: string): string | null =>
   map === 'farm' && to === 'house' ? 'farmhouse' : null;
+/** The first-use warm-up of the effects ran this session. */
+let fxWarmed = false;
 /** Swing timing (ms): the wind-up shows at once, the impact (fx, sound, haptic) lands on the strike frame. */
 const SWING = { windup: 50 } as const;
 /** After a swing the stick may walk again this soon, even while the next use still waits for the lock. */
@@ -237,6 +239,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.work = null;
     this.painting = null;
     this.water = null;
+    this.tweens.timeScale = 1; // a hit-stop cut short by leaving the map never carries over
     this.impactAt = 0;
     this.farmDirty = false;
     this.fresh = true;
@@ -282,6 +285,19 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.fx = new Effects(this);
+    // Once a session, run the effects a first tool use needs, off screen, a moment after the map is up: their
+    // first run is several times slower (feel critic: the first Action at 6x spent 67 ms in one frame).
+    if (!fxWarmed) {
+      fxWarmed = true;
+      this.time.delayedCall(1200, () => {
+        const off = -400;
+        this.fx.dust(off, off);
+        this.fx.sparkle(off, off, 0xffffff);
+        this.fx.floatText(off, off, '+1');
+        this.fx.itemPop(off, off, 'ui_coin', { x: off, y: off });
+        this.fx.swing(off, off, 'ui_coin', 'down');
+      });
+    }
     this.ambient = new Ambient(
       this,
       this.mapId,
@@ -398,6 +414,10 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     this.tick(time, delta);
     const p = getState().player;
+    // While a finger rests on the screen and the farmer stands still, the camera does not finish centring: a tap
+    // is read through the camera at its lift, so it must not drift under the finger (feel critic, review 1).
+    const touching = this.input.manager.pointers.some((ptr) => ptr.isDown);
+    this.pcam.hold = touching && p.x === this.lastPos.x && p.y === this.lastPos.y;
     this.pcam.update(p.x, p.y, delta, time);
   }
 
@@ -756,9 +776,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private hitStop(): void {
     if (getState().settings.reduceMotion) return;
     this.tweens.timeScale = 0;
-    window.setTimeout(() => {
-      if (this.sys.isActive()) this.tweens.timeScale = 1;
-    }, HIT_STOP_MS);
+    this.time.delayedCall(HIT_STOP_MS, () => (this.tweens.timeScale = 1));
   }
 
   private footstep(): void {
