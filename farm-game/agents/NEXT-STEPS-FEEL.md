@@ -4,7 +4,8 @@ Branch `feel/smooth` (worktree `controls`), from `integration/round3-2026-10-10`
 headless Chromium (software GL, a 144 Hz rAF on this host) with CDP CPU throttling, on a machine shared with
 other agents (often 80% CPU busy). **No real phone was used**, and headless GL is software-rendered, so absolute
 frame times say little about a phone: judge by the relative change against the same harness on the round-3 tree.
-`npm run verify` is green at the last commit (it now also runs `e2e:feel`, and `perf` enforces frame-time budgets).
+`npm run verify` is green at the last commit (the feel critic accepted `cbcc60d` as final: 0 blockers, 0 majors;
+`C:/Users/andre/dev/tiny-acre/feel-critique/final.md`) (it now also runs `e2e:feel`, and `perf` enforces frame-time budgets).
 
 Decisions and the measurements behind them: `DECISIONS.md`, "Game feel (feel agent, round 4)" and "Whole-pixel
 canvas scale". Frame strips (every rendered frame of a moment, `scripts/frame-strip.mjs`):
@@ -60,8 +61,8 @@ a new game <= 100 at 1x, <= 200 at 4x.
 
 ## One-thumb numbers
 
-`bench:thumb` on five phones and both hands: 89/90 rows ok at M1 (the feel critic re-ran it on the art merge:
-OK, identical gestures) (the miss, SE right fish 17 gestures, is the reel
+`bench:thumb` on five phones and both hands: 89/90 rows ok at M1 (after the art merge the feel critic re-ran
+i13 only, 18 rows with both hands: OK, identical gestures) (the miss, SE right fish 17 gestures, is the reel
 minigame's random fish; re-runs gave 10 and 12). Gestures are identical to round 3 in every task. Time is up
 0.4-0.7 s on plot3x3 (i13) because the bench waits for the camera to stop before each tap and the camera now
 finishes centring (see DECISIONS.md); the game itself works a painted row in the same 1710 ms. `e2e:controls` is
