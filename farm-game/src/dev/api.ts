@@ -90,6 +90,11 @@ export interface FarmDevApi {
     /** Live through n nights (full rollover, no sleep screens). The player wakes in bed unless wake is false. */
     skipDays(n?: number, opts?: { wake?: boolean }): void;
   };
+  /**
+   * Show a map in one of its stages (map stages, M2): sets the valley stats that pick that variant (keeping the rest
+   * of the game) and restarts the scene where the player stands. Rejects for a map or variant that does not exist.
+   */
+  stage(map: string, variant: string): Promise<void>;
   /** Move the player to a map (default: where that map's doors drop you) and restart the scene there. */
   goto(
     map: string,

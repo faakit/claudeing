@@ -41,6 +41,7 @@ import { POINTS_PER_HEART } from '../systems/friendship';
 import { addItem, bagSize } from '../systems/inventory';
 import { letterDue } from '../systems/mail';
 import { migrate } from '../systems/save';
+import { inDelta, valleyKeys, valleyStage, valleyStatKey } from '../systems/valley';
 import { applyLabPreset, LAB_MAP, readyPlacedData, registerLabMapDef } from './labDef';
 
 export const DEFAULT_SEED = 12345;
@@ -109,6 +110,13 @@ export interface ScenarioDef {
   /** Merged into the lifetime stats. */
   stats?: Record<string, number>;
   /**
+   * The valley's state, which pins every map's stage (systems/valley.ts): `farmGreen` (the first green, 0 or 1) and
+   * places by id (0 untouched, 1 asked, 2 funded, 3 restored), e.g. `{ "farmGreen": 1, "spring": 3 }` for the
+   * restored farm. Set as the stats `valley.farmGreen` and `place.<id>`. A scenario that names a tile inside a
+   * delta rect (where tiles change between stages) must pin it.
+   */
+  valley?: Record<string, number>;
+  /**
    * The guided start. "off" (default): skipped. "fresh": decided by the game as on a new game (the guide runs
    * unless the URL says `?tutorial=0`). "on": the guide runs from its first undone step. "day2": day 1 is done.
    */
@@ -156,7 +164,8 @@ export interface MapInfo {
   h: number;
   blocked(tx: number, ty: number): boolean;
 }
-export type MapInfoFn = (map: string) => MapInfo | null;
+/** Bounds and walkability of a map in one stage (`variant`: null for the map's own file; systems/valley.ts). */
+export type MapInfoFn = (map: string, variant?: string | null) => MapInfo | null;
 
 export class ScenarioError extends Error {
   constructor(
@@ -193,6 +202,7 @@ const KEYS = new Set([
   'friends',
   'goal',
   'stats',
+  'valley',
   'tutorial',
   'hints',
   'settings',
@@ -239,6 +249,21 @@ const usesLab = (d: ScenarioDef): boolean =>
   d.at?.map === LAB_MAP ||
   [...(d.placed ?? []), ...(d.forage ?? []), ...(d.nodes ?? [])].some((x) => x.map === LAB_MAP);
 
+/** The stats a scenario sets (raw patch, then `stats`, then `valley`): they pick each map's stage. */
+function scenarioStats(d: ScenarioDef): Record<string, number> {
+  const raw =
+    isObj(d.state) && isObj(d.state['stats']) ? (d.state['stats'] as Record<string, number>) : {};
+  const out: Record<string, number> = { ...raw, ...(d.stats ?? {}) };
+  for (const [k, v] of Object.entries(d.valley ?? {})) out[valleyStatKey(k)] = v;
+  return out;
+}
+
+/** The stage file a scenario shows a map in (null: the map's own file). */
+export function scenarioVariant(d: ScenarioDef, map: string): string | null {
+  const look = valleyStage({ stats: scenarioStats(d) }, map);
+  return look.final ? null : look.variant;
+}
+
 /** Every problem with a scenario (empty when it is valid). `mapInfo` adds bounds and walkability checks. */
 export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] {
   const p: string[] = [];
@@ -266,7 +291,11 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
       p.push(`${what}: tile must be integers`);
       return;
     }
-    const info = mapInfo?.(map);
+    if (d.valley === undefined && inDelta(map, tx, ty))
+      p.push(
+        `${what}: tile ${tx},${ty} on "${map}" changes with the valley's stage: pin it with "valley"`,
+      );
+    const info = mapInfo?.(map, scenarioVariant(d, map));
     if (!info) return;
     if (tx < 0 || ty < 0 || tx >= info.w || ty >= info.h)
       p.push(`${what}: tile ${tx},${ty} is outside map "${map}" (${info.w}x${info.h})`);
@@ -351,6 +380,17 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
     if (l.gift) itemOk(l.gift.item, 'mail gift');
   }
   for (const s of d.shipping ?? []) itemOk(s.item, 'shipping');
+  if (d.valley !== undefined) {
+    if (!isObj(d.valley)) p.push('"valley" must be an object');
+    else {
+      const known = valleyKeys();
+      for (const [k, v] of Object.entries(d.valley)) {
+        if (!known.includes(k)) p.push(`valley: unknown key "${k}" (one of ${known.join(', ')})`);
+        const max = k === 'farmGreen' ? 1 : 3;
+        if (!Number.isInteger(v) || v < 0 || v > max) p.push(`valley: ${k} must be 0-${max}`);
+      }
+    }
+  }
   if (d.dev?.clock !== undefined && !['paused', 'running'].includes(d.dev.clock))
     p.push('dev.clock must be "paused" or "running"');
   if (d.dev?.title !== undefined && d.dev.title !== 'first-launch')
@@ -423,6 +463,7 @@ export function buildScenarioState(def: ScenarioDef, mapInfo?: MapInfoFn): GameS
   }
   if (def.goal !== undefined) s.goalIndex = goals.findIndex((g) => g.id === def.goal);
   if (def.stats) Object.assign(s.stats, def.stats);
+  for (const [k, v] of Object.entries(def.valley ?? {})) s.stats[valleyStatKey(k)] = v;
   const today = ((s.time.year - 1) * 4 + SEASONS.indexOf(s.time.season)) * 28 + s.time.day; // absolute day
   for (const [id, hearts] of Object.entries(def.friends ?? {}))
     s.friends[id] = { points: Math.round(hearts * POINTS_PER_HEART), talkedDay: 0, giftedDay: 0 };

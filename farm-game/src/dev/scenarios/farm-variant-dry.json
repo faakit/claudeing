@@ -1,0 +1,9 @@
+{
+  "title": "The farm, dry stage: the empty creek bed",
+  "about": "Map stages (M2). Spring 3, before the first green (farmGreen 0): farm@dry.tmj. The creek bed (x 26-27, y 3-30) is dry cracked mud with straw at its lip, the footbridge crosses at y 6, the two creek trees stand bare. The farmer stands on the west bank looking at the bed.",
+  "version": 17,
+  "tags": ["farm", "valley", "stages"],
+  "valley": { "farmGreen": 0 },
+  "at": { "map": "farm", "tx": 25, "ty": 12, "facing": "right" },
+  "time": { "day": 3, "clock": "10:00" }
+}

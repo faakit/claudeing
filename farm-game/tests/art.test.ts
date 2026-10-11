@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('phaser', () => ({ default: {} }));
 
 import { PLACEHOLDER_TILES, TILESET_KEY } from '../src/config';
-import { animals, crops, items, mapsData, nodes, npcs, placeables, tools } from '../src/data';
+import { animals, crops, items, nodes, npcs, placeables, tools } from '../src/data';
+import { allMapLooks } from '../src/systems/valley';
 import index from '../src/art/atlases.json';
 import { atlasFrames, planArt, type AtlasFrame } from '../src/art/artPlan';
 import {
@@ -139,10 +140,11 @@ describe('map art layers', () => {
     layers: Layer[];
     tilesets: { tilecount: number; columns: number; imagewidth: number; imageheight: number }[];
   };
+  // every stage's file (map stages, M2): farm@dry, farm@waking and farm are each checked
   const maps = Object.fromEntries(
-    Object.entries(mapsData.maps).map(([id, d]) => [
-      id,
-      JSON.parse(readFileSync(`public/${d.file}`, 'utf8')) as Tmj,
+    allMapLooks().map((l) => [
+      l.final ? l.map : `${l.map}@${l.variant}`,
+      JSON.parse(readFileSync(`public/${l.file}`, 'utf8')) as Tmj,
     ]),
   );
 

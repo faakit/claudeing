@@ -3,12 +3,21 @@ import { generateGameArt } from '../art/gameArt';
 import { generateFont } from '../ui/font';
 import { generatePlaceholderTextures, PLAYER_TEXTURE, playerWalkFrames } from '../art/placeholders';
 import { WALK_FPS } from '../config';
-import { mapsData, npcs } from '../data';
+import { npcs } from '../data';
 import { applyArt, queueArtLoads } from '../art/atlasLoader';
 import { NPC_IDLE_SEQUENCE, npcFrame, npcTexture, PLAYER_WALK_FRAMES } from '../art/manifest';
 import { DIRECTIONS } from '../systems/direction';
+import { allMapLooks, type MapLook } from '../systems/valley';
 
-export const mapCacheKey = (mapId: string) => `map_${mapId}`;
+/**
+ * Tilemap cache key of a map file: `map_<id>` for a map's own file (its final stage, or its only look),
+ * `map_<id>@<variant>` for an earlier stage's file (systems/valley.ts).
+ */
+export const mapCacheKey = (mapId: string, variant: string | null = null) =>
+  variant ? `map_${mapId}@${variant}` : `map_${mapId}`;
+/** The cache key of one stage's file. */
+export const lookCacheKey = (look: MapLook): string =>
+  mapCacheKey(look.map, look.final ? null : look.variant);
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -17,9 +26,8 @@ export class PreloadScene extends Phaser.Scene {
 
   preload(): void {
     queueArtLoads(this);
-    for (const [id, def] of Object.entries(mapsData.maps)) {
-      this.load.tilemapTiledJSON(mapCacheKey(id), def.file);
-    }
+    // every stage of every map is loaded up front (each 9-90 KB), so a stage change never fetches at a door
+    for (const look of allMapLooks()) this.load.tilemapTiledJSON(lookCacheKey(look), look.file);
   }
 
   create(): void {

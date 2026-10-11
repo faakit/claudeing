@@ -34,15 +34,32 @@
     }
   },
   "maps": {
-    "farm": [
-      {
-        "palette": "dry",
-        "when": {
-          "stat": "valley.farmGreen",
-          "max": 0
+    "farm": {
+      "variants": [
+        {
+          "variant": "dry",
+          "palette": "dry",
+          "when": {
+            "stat": "valley.farmGreen",
+            "max": 0
+          }
+        },
+        {
+          "variant": "waking",
+          "when": {
+            "place": "spring",
+            "max": 2
+          }
+        },
+        {
+          "variant": "restored"
         }
-      },
-      {}
-    ]
+      ],
+      "delta": [
+        [26, 3, 2, 3],
+        [26, 7, 2, 25]
+      ],
+      "deltaText": "The old creek bed. Best left clear."
+    }
   }
 }

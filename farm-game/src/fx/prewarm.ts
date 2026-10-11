@@ -5,7 +5,7 @@ import { bakeButton } from '../input/TouchButton';
 import { dockLayout } from '../ui/layout';
 import { ensureTexture as ensureGlowTexture } from './NightGlow';
 import { ensureDitherTextures } from './Wipe';
-import { mapCacheKey } from '../scenes/PreloadScene';
+import { activeMapKey } from '../scenes/mapCache';
 
 /**
  * Work the first game frame would otherwise do, done ahead on the title screen while the player reads it, one
@@ -27,8 +27,9 @@ export function prewarmTasks(scene: Phaser.Scene, firstMap: string): (() => void
 
 /** Parse a map and build its layers once, then throw it away (warms the parser and the layer code). */
 function warmMap(scene: Phaser.Scene, id: string): void {
-  if (!scene.cache.tilemap.exists(mapCacheKey(id))) return;
-  const map = scene.make.tilemap({ key: mapCacheKey(id) });
+  const key = activeMapKey(id);
+  if (!scene.cache.tilemap.exists(key)) return;
+  const map = scene.make.tilemap({ key });
   const ts = map.addTilesetImage('placeholder', TILESET_KEY, 16, 16, 0, 0);
   if (ts) for (const l of map.layers) map.createLayer(l.name, ts)?.setVisible(false);
   map.destroy();

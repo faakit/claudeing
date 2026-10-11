@@ -29,3 +29,4 @@ import './specials';
 import './tutorial';
 import './goalStall';
 import './valley';
+import './mapStages';

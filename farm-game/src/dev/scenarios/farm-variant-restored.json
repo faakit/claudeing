@@ -1,0 +1,9 @@
+{
+  "title": "The farm, restored stage: the creek runs",
+  "about": "Map stages (M2). The Old Spring restored (spring 3): farm.tmj. The creek runs from the north grove into the pond's east bank, water under the footbridge, the creek trees in leaf. Only reachable from a scenario until M3. The water is solid; the can refills from it and the rod casts into it.",
+  "version": 17,
+  "tags": ["farm", "valley", "stages"],
+  "valley": { "farmGreen": 1, "spring": 3 },
+  "at": { "map": "farm", "tx": 25, "ty": 12, "facing": "right" },
+  "time": { "season": "summer", "day": 2, "clock": "10:00" }
+}

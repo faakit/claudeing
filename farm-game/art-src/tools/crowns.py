@@ -10,7 +10,7 @@ mode   `f<nb9>` a forest tile (solid): forest floor in the gaps, every crown tha
                 the cast shadows of every listed crown
        `o`      the overhead layer of an open tile: the crowns of trees south of it (you walk behind them; the
                 overhead layer fades near the player)
-entries `~`-joined `<kind><draw>_<cx>_<cy>_<r>_<base>_<flags>`: kind o (oak) / b (birch) / p (pine), draw 1 or 0
+entries `~`-joined `<kind><draw>_<cx>_<cy>_<r>_<base>_<flags>`: kind o (oak) / b (birch) / p (pine) / d (dead), draw 1 or 0
        (0 = shadow only), crown centre and radius and trunk foot in world px, flags: t = trunk shows, k = back row
        (one step darker), s = small tree, g = gnarled old trunk.
 
@@ -61,6 +61,34 @@ def lumps(c: dict) -> list[tuple[float, float, float]]:
     return out
 
 
+def _segment(dx, dy, a, b, width: float) -> np.ndarray:
+    """Pixels within `width` of the segment a-b (offsets from the crown centre)."""
+    (ax, ay), (bx, by) = a, b
+    vx, vy = bx - ax, by - ay
+    t = np.clip(((dx - ax) * vx + (dy - ay) * vy) / max(vx * vx + vy * vy, 1e-6), 0.0, 1.0)
+    return np.hypot(dx - (ax + t * vx), dy - (ay + t * vy)) <= width
+
+
+def dead_limbs(c: dict, dx: np.ndarray, dy: np.ndarray):
+    """A dead crown: six limbs from the trunk top, each with a twig, jittered by the tree's world position. Lit
+    from the top left like the leafy crowns (shade 1 on the light side, 2 on the dark)."""
+    r = c["r"]
+    h = int(hash2(int(c["cx"]), int(c["cy"]), 911))
+    root = (0.0, 0.35 * r)
+    m = np.zeros(dx.shape, dtype=bool)
+    limbs = ((-0.85, -0.5), (0.8, -0.6), (-0.3, -1.05), (0.35, -1.0), (-0.95, 0.05), (0.9, 0.0))
+    for k, (ex, ey) in enumerate(limbs):
+        jx = ((h >> (2 * k)) % 3 - 1) * 0.12
+        jy = ((h >> (2 * k + 12)) % 3 - 1) * 0.1
+        end = ((ex + jx) * r, (ey + jy) * r)
+        mid = (root[0] * 0.4 + end[0] * 0.6, root[1] * 0.3 + end[1] * 0.7 + 0.08 * r)
+        m |= _segment(dx, dy, root, mid, 1.2) | _segment(dx, dy, mid, end, 0.7)
+        twig = (end[0] + (0.22 if ex >= 0 else -0.22) * r, end[1] - 0.22 * r)
+        m |= _segment(dx, dy, mid, twig, 0.5)
+    shade = np.where(dx + dy * 0.5 < 0, 1, 2).astype(np.int32)
+    return m, shade, np.zeros(dx.shape, dtype=bool)
+
+
 def shape(c: dict, X: np.ndarray, Y: np.ndarray, wob: np.ndarray):
     """Mask of one crown, its shade index per pixel (0 light .. 3 deepest) and a seam mask between lumps."""
     dx, dy = X - c["cx"], Y - c["cy"]
@@ -81,6 +109,8 @@ def shape(c: dict, X: np.ndarray, Y: np.ndarray, wob: np.ndarray):
             shade = np.where(inside, local, shade)
             m |= inside
         return m, shade, seam
+    if c["kind"] == "d":  # a dead tree (map stages, M2): bare limbs forking up and out, no leaves
+        return dead_limbs(c, dx, dy)
     if c["kind"] == "b":  # birch: slender
         dx = dx / 0.78
     m = np.zeros(X.shape, dtype=bool)
@@ -186,6 +216,8 @@ def paint(P, X, Y, crowns: list[dict], seed: int, forest=None, shadows=False, fr
         if c["back"]:
             shade = np.minimum(shade + 1, 3)
         ramp = np.array([glint, hi, mid, dark]) if c["kind"] == "b" else np.array([hi, mid, dark, deep])
+        if c["kind"] == "d":  # bare wood: bleached on the lit side, bark in the shade
+            ramp = np.array([P.name("sand"), wood, bark, earth])
         if c.get("blossom"):  # cherry: rose blossom in the light
             ramp = np.array([P.name("rose"), hi, mid, dark])
         col = ramp[shade]

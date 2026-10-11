@@ -1,0 +1,9 @@
+{
+  "title": "Standing in the creek when it runs: moved to the nearest door spawn",
+  "about": "Map stages (M2, WORLD-PLAN 4.2.4). A raw position at 26,12, in the creek bed, on the restored farm, where that tile is water. The scene moves the farmer to the nearest open door spawn (28,3, beside Ilse's gate) instead of leaving them in the water.",
+  "version": 17,
+  "tags": ["farm", "valley", "stages", "robustness"],
+  "valley": { "farmGreen": 1, "spring": 3 },
+  "state": { "player": { "map": "farm", "x": 424, "y": 203, "facing": "down" } },
+  "time": { "season": "summer", "day": 2, "clock": "10:00" }
+}

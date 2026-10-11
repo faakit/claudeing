@@ -271,7 +271,7 @@ export class TitleScene extends Phaser.Scene {
         syncDryTiles(this, this.coveredFor);
       } else if (!this.parsed) {
         this.parsed = true;
-        preparseMap(this, this.coveredFor.player.map);
+        preparseMap(this, this.coveredFor.player.map, this.coveredFor);
       } else {
         const state = this.coveredFor;
         this.coveredFor = null;

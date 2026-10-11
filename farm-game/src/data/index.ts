@@ -53,6 +53,40 @@ export interface MapsData {
   maps: Record<string, MapDef>;
 }
 
+/** A stat condition (`stat`, or `place` as shorthand for the stat `place.<id>`), true when min <= value <= max. */
+export interface StageWhen {
+  stat?: string;
+  place?: string;
+  min?: number;
+  max?: number;
+}
+/** One stage of a map: its variant file (`<map>@<variant>.tmj`; the last stage keeps the map's own file). */
+export interface MapStageDef {
+  variant: string;
+  /** Tileset palette for this stage (e.g. "dry"); the season's normal tiles when absent. */
+  palette?: string;
+  /** Holds while the valley is at this stage. The first stage whose `when` holds is used; the last has none. */
+  when?: StageWhen;
+}
+/** A map that changes with the valley (WORLD-PLAN section 4). */
+export interface MapStagesDef {
+  /** First to last; the last is the final look and uses the map's own file. */
+  variants: MapStageDef[];
+  /** [x, y, w, h] tile rectangles where tiles may differ between stages. Nothing fixed sits in them. */
+  delta: [number, number, number, number][];
+  /** The refusal when placing or tilling in a delta rectangle. */
+  deltaText: string;
+}
+export interface ValleyData {
+  /** Rosa's letter, shown on the title screen at a first launch and kept in the mailbox. */
+  letter: { from: string; title: string; text: string; sign: string; keepDay: number };
+  /** The first green: the morning after `min` of `stat`, never before the night of `minDay`. */
+  farmGreen: { stat: string; min: number; minDay: number; note: string; banner: string };
+  /** The broken places by id (the stat `place.<id>`: 0 untouched, 1 asked, 2 funded, 3 restored). */
+  places: Record<string, { name: string }>;
+  maps: Record<string, MapStagesDef>;
+}
+
 export type ItemType =
   | 'tool'
   | 'seed'
@@ -221,12 +255,8 @@ export interface AnimalDef {
   outdoor?: boolean;
 }
 /** A condition on the valley's state (lifetime stats). `place` is shorthand for the stat `place.<id>`. */
-export interface ValleyWhen {
-  stat?: string;
-  place?: string;
-  min?: number;
-  max?: number;
-}
+/** A condition on the valley's state (lifetime stats): the same shape as a map stage's `when`. */
+export type ValleyWhen = StageWhen;
 /** A villager line: plain text, or text that is only said while `when` holds. */
 export type NpcLine = string | { text: string; when: ValleyWhen };
 export interface NpcEvent {
@@ -364,23 +394,6 @@ export interface LetterDef {
   text: string;
   when: LetterWhen;
   gift?: { item: string; qty: number };
-}
-/** How a map looks for the valley's state: the first row whose `when` holds (the last row is the default). */
-export interface MapLookRow {
-  /** A variant file (`<map>@<variant>.tmj`; map variants arrive with M2). */
-  variant?: string;
-  /** A palette swap of the tileset (the straw-coloured dry tiles). */
-  palette?: 'dry';
-  when?: ValleyWhen;
-}
-export interface ValleyData {
-  /** Rosa's letter, shown on the title screen at a first launch and kept in the mailbox. */
-  letter: { from: string; title: string; text: string; sign: string; keepDay: number };
-  /** The first green: the morning after `min` of `stat`, never before the night of `minDay`. */
-  farmGreen: { stat: string; min: number; minDay: number; note: string; banner: string };
-  /** The broken places by id (the stat `place.<id>`: 0 untouched, 1 asked, 2 funded, 3 restored). */
-  places: Record<string, { name: string }>;
-  maps: Record<string, MapLookRow[]>;
 }
 export interface MailData {
   /** The farm's mailbox: a fixed, solid, one-tile fixture. */
@@ -669,23 +682,13 @@ export function validateValleyWhen(w: ValleyWhen | undefined, file: string, wher
     fail(file, `${where}: "when" needs "min" or "max"`);
 }
 
-function validateValley(mapIds: string[]): void {
+function validateValleyContent(): void {
   const v = valley;
   if (!npcs[v.letter.from]) fail('valley', 'the letter is from an unknown villager');
   if (!v.letter.text || !v.letter.sign || !(v.letter.keepDay >= 2))
     fail('valley', 'the letter needs text, a signature and a keepDay of 2 or more');
   if (!(v.farmGreen.min >= 1) || !(v.farmGreen.minDay >= 1) || !v.farmGreen.note)
     fail('valley', '"farmGreen" needs min, minDay and a note');
-  for (const [map, rows] of Object.entries(v.maps)) {
-    if (!mapIds.includes(map)) fail('valley', `looks for unknown map "${map}"`);
-    if (rows.length === 0 || rows[rows.length - 1]?.when)
-      fail('valley', `"${map}" needs a last row with no "when" (the default)`);
-    for (const r of rows) {
-      if (r.when) validateValleyWhen(r.when, 'valley', `map "${map}"`);
-      if (r.palette !== undefined && r.palette !== 'dry')
-        fail('valley', `"${map}" has an unknown palette "${r.palette}"`);
-    }
-  }
 }
 
 function fail(file: string, msg: string): never {
@@ -711,6 +714,52 @@ function validateMaps(data: unknown): MapsData {
 }
 
 export const mapsData: MapsData = validateMaps(mapsRaw);
+
+/** Map stages (valley.json `maps`): checked at load so a typo in a stage table fails loudly. */
+export function validateValley(data: unknown, maps: Record<string, MapDef>): ValleyData {
+  const d = data as ValleyData;
+  const bad = (msg: string): never => fail('valley', msg);
+  if (!d || typeof d !== 'object' || !d.maps || typeof d.maps !== 'object') bad('missing "maps"');
+  for (const [id, m] of Object.entries(d.maps)) {
+    if (!maps[id]) bad(`maps.${id}: unknown map`);
+    if (!Array.isArray(m.variants) || m.variants.length < 2 || m.variants.length > 4)
+      bad(`maps.${id}: 2-4 variants`);
+    const names = new Set<string>();
+    m.variants.forEach((v, i) => {
+      if (!/^[a-z][a-z0-9]*$/.test(v.variant ?? '')) bad(`maps.${id}: variant name "${v.variant}"`);
+      if (names.has(v.variant)) bad(`maps.${id}: variant "${v.variant}" twice`);
+      names.add(v.variant);
+      const last = i === m.variants.length - 1;
+      if (last && v.when)
+        bad(`maps.${id}: the last variant ("${v.variant}") is the default, no "when"`);
+      if (!last && !v.when) bad(`maps.${id}: variant "${v.variant}" needs a "when"`);
+      if (v.when) {
+        const w = v.when;
+        if (!!w.stat === !!w.place) bad(`maps.${id}.${v.variant}: "when" needs a stat or a place`);
+        if (w.min === undefined && w.max === undefined)
+          bad(`maps.${id}.${v.variant}: "when" needs min or max`);
+        for (const n of [w.min, w.max])
+          if (n !== undefined && !Number.isInteger(n))
+            bad(`maps.${id}.${v.variant}: integer min/max`);
+      }
+      if (v.palette !== undefined && !/^[a-z]+$/.test(v.palette))
+        bad(`maps.${id}.${v.variant}: palette "${v.palette}"`);
+    });
+    if (!Array.isArray(m.delta) || m.delta.length === 0) bad(`maps.${id}: needs "delta" rects`);
+    for (const r of m.delta)
+      if (
+        !Array.isArray(r) ||
+        r.length !== 4 ||
+        r.some((n) => !Number.isInteger(n)) ||
+        r[2]! < 1 ||
+        r[3]! < 1
+      )
+        bad(`maps.${id}: a delta rect is [x, y, w, h] with w, h >= 1`);
+    if (!m.deltaText) bad(`maps.${id}: needs "deltaText"`);
+  }
+  return d;
+}
+export const valley: ValleyData = validateValley(valleyRaw, mapsData.maps);
 export const items = itemsRaw as unknown as Record<string, ItemDef>;
 export const crops = cropsRaw as unknown as Record<string, CropDef>;
 export const tools = toolsRaw as unknown as Record<string, ToolDef>;
@@ -747,7 +796,6 @@ export const specials = specialsRaw as unknown as SpecialDef[];
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 export const tutorial = tutorialRaw as unknown as TutorialData;
-export const valley = valleyRaw as unknown as ValleyData;
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
@@ -993,7 +1041,7 @@ export function validateContent(): void {
   if (!npcs[game.rival.npc] || npcs[game.rival.npc]?.role !== 'rival')
     fail('game', '"rival.npc" must be a villager with role "rival"');
   if (!mapIds.includes(mail.mailbox.map)) fail('mail', 'mailbox stands on an unknown map');
-  validateValley(mapIds);
+  validateValleyContent();
   const letterIds = new Set<string>();
   for (const l of mail.letters) {
     if (!l.id || letterIds.has(l.id)) fail('mail', `letter "${l.id}" needs a unique id`);

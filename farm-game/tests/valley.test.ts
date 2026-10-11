@@ -32,6 +32,7 @@ import {
   FARM_GREEN,
   GREEN_SEEN,
   mapLook,
+  paletteOf,
   takeFirstGreenMoment,
   valleyHolds,
 } from '../src/systems/valley';
@@ -53,16 +54,18 @@ const onDay = (day: number, shipped: number): GameState => {
 describe('the valley: how maps look', () => {
   it('the farm is on the dry palette until the first green, then as it always was', () => {
     const s = newState();
-    expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm.tmj', palette: 'dry' });
+    expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@dry.tmj', palette: 'dry' });
+    expect(paletteOf(s, 'farm')).toBe('dry');
     expect(dryMaps(s)).toEqual(['farm']);
     s.stats[FARM_GREEN] = 1;
-    expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm.tmj', palette: null });
+    expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@waking.tmj' });
+    expect(paletteOf(s, 'farm')).toBeNull();
     expect(dryMaps(s)).toEqual([]);
   });
 
   it('maps with no rows look as they always have', () => {
     const s = newState();
-    for (const m of ['town', 'woods', 'mine', 'house']) expect(mapLook(s, m).palette, m).toBeNull();
+    for (const m of ['town', 'woods', 'mine', 'house']) expect(paletteOf(s, m), m).toBeNull();
   });
 
   it('conditions read stats and places, with min and max', () => {
@@ -169,7 +172,7 @@ describe('the first green', () => {
     const sum = sleep(s);
     expect(s.time.day).toBe(6);
     expect(s.stats[FARM_GREEN]).toBe(1);
-    expect(mapLook(s, 'farm').palette).toBeNull();
+    expect(paletteOf(s, 'farm')).toBeNull();
     expect(arrangeNotes(sum.notes ?? [])[0]).toBe(valley.farmGreen.note);
     const letter = s.mail.list.find((l) => l.title === 'First green');
     expect(letter?.from).toBe('rosa');

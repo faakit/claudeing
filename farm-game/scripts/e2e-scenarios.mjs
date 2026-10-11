@@ -313,6 +313,69 @@ async function mechanics() {
 
 // Moved from e2e.mjs block 6b (ambient): instead of waiting 5 s for petals and 600 ms around the camera move, the
 // engine is stepped frame by frame (deterministic, and faster than real time).
+/** What the farm scene shows at a tile: the ground kind and the art detail tile (map stages, M2). */
+function farmTile(farm, tx, ty) {
+  return farm.eval(
+    ([x, y]) => {
+      const scene = window.__farm.game.scene.getScene('Farm');
+      const layers = scene.children.list.filter((o) => o.type === 'TilemapLayer');
+      const at = (name) => layers.find((l) => l.layer.name === name)?.getTileAt(x, y)?.index ?? 0;
+      return { ground: at('ground'), detail: at('detail') };
+    },
+    [tx, ty],
+  );
+}
+
+// Map stages (M2): each farm-variant scenario builds the farm from its own stage file; the creek bed refuses
+// placing; a load standing in the running creek moves to a door spawn; Ilse's gate stays shut.
+async function stages() {
+  const farm = await openScenario(browser, url, 'farm-variant-dry', { profile: PROFILE });
+  const want = { dry: 20, waking: 20, restored: 5 }; // stone (the bed), stone, water
+  for (const v of ['dry', 'waking', 'restored']) {
+    if (v !== 'dry') await farm.load(`farm-variant-${v}`);
+    await farm.ready('Farm');
+    const t = await farmTile(farm, 26, 12);
+    check(
+      `farm-variant-${v}: the creek bed shows its ${v} look (ground and baked art)`,
+      t.ground === want[v] && t.detail > 0,
+      JSON.stringify(t),
+    );
+  }
+  await farm.load('farm-creek-rescue');
+  await farm.ready('Farm');
+  let s = await farm.state();
+  const tile = [Math.floor(s.player.x / 16), Math.floor((s.player.y - 3) / 16)];
+  check(
+    'farm-creek-rescue: a load standing in the running creek moves to the nearest door spawn',
+    tile[0] === 28 && tile[1] === 3,
+    JSON.stringify(tile),
+  );
+  await farm.load('farm-creek-place');
+  await farm.ready('Farm');
+  const said = await farm.event('toast', () => farm.press('Space'));
+  s = await farm.state();
+  check(
+    'farm-creek-place: placing in the old creek bed is refused with its line',
+    said?.text === 'The old creek bed. Best left clear.' && !(s.placed.farm ?? []).length,
+    JSON.stringify(said),
+  );
+  await farm.eval(() => window.__farm.dev.goto('farm', 28, 3, 'right')); // resolves once the scene is up
+  await farm.frames(3); // a fresh scene ignores input until a frame with nothing held
+  const gate = await farm.event('toast', () => farm.press('KeyE'));
+  await farm.page.keyboard.down('ArrowRight');
+  await farm.frames(30); // half a second of walking into the shut gate
+  await farm.page.keyboard.up('ArrowRight');
+  await farm.frames(3);
+  s = await farm.state();
+  check(
+    "Ilse's gate: Interact reads that it is locked, and walking into it stays on the farm",
+    gate?.text === "Ilse's old gate. Locked." && s.player.map === 'farm',
+    JSON.stringify(gate),
+  );
+  check('stages: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 async function ambient() {
   const farm = await openScenario(browser, url, 'spring-meadow', { profile: PROFILE });
   const anchor = () =>
@@ -511,7 +574,7 @@ async function valley() {
 }
 
 try {
-  const blocks = SMOKE ? [smoke] : [smoke, everyScenario, mechanics, ambient, valley];
+  const blocks = SMOKE ? [smoke] : [smoke, everyScenario, mechanics, stages, ambient, valley];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

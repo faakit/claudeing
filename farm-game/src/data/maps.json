@@ -30,6 +30,11 @@
     "mine": {
       "scene": "Mine",
       "file": "assets/maps/mine.tmj"
+    },
+    "wendhead": {
+      "scene": "Wendhead",
+      "file": "assets/maps/wendhead.tmj",
+      "outdoor": true
     }
   },
   "wake": {

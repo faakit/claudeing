@@ -71,7 +71,7 @@ That puts e2e on 4400, controls, onboarding, feel and scenarios on 4410-4430, mo
 Use it to build, tune, test and review features against named game states. The rules are in
 [AGENTS.md](AGENTS.md), and the format is in `docs/EXTENDING.md` section 0.
 
-- **Scenarios** (`src/dev/scenarios/<name>.json`, 18 so far): open one with `npm run dev`, then
+- **Scenarios** (`src/dev/scenarios/<name>.json`, 24 so far): open one with `npm run dev`, then
   `http://localhost:5173/?scenario=coop-hens`. A build needs `?debug&scenario=<name>`. A scenario page is a
   sandbox: saves stay in memory, and the real save is never touched. The format is `ScenarioDef` in
   `src/dev/scenarios.ts`.

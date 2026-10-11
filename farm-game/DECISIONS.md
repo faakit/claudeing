@@ -1239,3 +1239,36 @@ keys (`tiles_placeholder[_<season>]_dry`).
 Stepping onto the green farm the first time shows the HUD banner "FIRST GREEN" with the `special` fanfare (a jingle
 of its own is an audio-lane request). A dry outdoor map gets a thin wind bed and a fraction of the birdsong; the
 thinned music arrangement is left to the audio lane.
+
+## Map stages (M2, valley/m2-maps, 2026-10-11)
+
+- **Stage tables live in `valley.json` `maps.<map>` as `{ variants, delta, deltaText }`**, not the plain variant list
+  sketched in WORLD-PLAN 4.1: the delta rects and their refusal line sit beside the stages they belong to, and the
+  generator, the rules and the tests all read the one file. `systems/valley.ts valleyStage(state, map)` returns
+  the variant, stage index, file and palette; `mapLook` is the plan's narrower name for the same thing. M1 owns the
+  rest of `valley.json` and `valley.ts` (the letter, the first-green rule) and adds to them.
+- **The dry creek bed is `stone` ground** (gid 20: walkable, not tillable on the farm, no ore outside the mine)
+  inside the delta rects, with its own baked art. That avoids a 22nd placeholder tile, which would have renumbered the
+  whole tileset. Restored, it is `water`, so fishing and the can's refill work there with no new code.
+- **The footbridge (y 6) is outside the delta rects** and is `path` in every stage. Without it the restored creek
+  would wall off the east strip and Ilse's gate for 28 rows. It reads as planks over a dry bed before the water comes.
+- **One extra mouth tile (26,31).** The plan's x 26-27, y 3-30 touches the pond along one tile, and the shore bake's
+  corner rounding (an opening of radius 14 px) closes any neck narrower than about 28 px, so the creek visibly
+  stopped short of the pond. The second rect is [26,7,2,25].
+- **Old saves: the delta rects are cleared every night**, not only when a stage changes. Nothing new can be put
+  there (placing and tilling are refused), so in practice it runs once per old save that had something at x 26-27:
+  soil and weeds go, a crop gives back its seed (its harvest when ripe), a placed object moves with its state to the
+  nearest free owned tile, or into the bag. A morning line says so. Before that first night the bed is walkable
+  and nothing breaks.
+- **Every stage file is preloaded at boot and precached** (+2 files of about 90 KB now). WORLD-PLAN 9.3 says
+  "cached at runtime, not precached", but a stage can change while the phone is offline, and a missing file at a
+  door would break the 0.3 s door bar. Revisit if the eleven planned files grow the boot noticeably.
+- **The creek bed tiles repeat every six rows** (periodic noise over 96 px): 24 bed tiles per style instead of 56.
+  With the dead crowns, the restored shore and the bridge, the farm's stages took +112 tileset slots
+  (512x1024 -> 512x1088) of the plan's 480. The waking bed has no rain pools, because any feature that big repeats
+  visibly every six rows.
+- **Wendhead is a 12x16 fenced placeholder behind Ilse's gate.** The gate is a door with `lockStat`/`lockMin`/
+  `lockedText` (`world.ts doorLocked`): its tile blocks, and Interact reads "Ilse's old gate. Locked." It opens at
+  `place.spring >= 1` for now. M3 sets it to `valley.farmGreen >= 1` and draws the real map.
+- **`dev.goto` to the current map restarts the scene.** A stop and a start of the same scene in one step left it
+  shut down every other call, which `dev.stage` and the e2e stages block hit.

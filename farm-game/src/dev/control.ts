@@ -13,7 +13,7 @@ import { syncDryTiles } from '../art/dryTiles';
 import { gameEvents } from '../systems/events';
 import { tickTime } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
-import { mapCacheKey } from '../scenes/PreloadScene';
+import { activeMapKey } from '../scenes/mapCache';
 import { parseClock } from './scenarios';
 
 /** mulberry32: the same generator the game's rules use (systems/rng.ts), for Math.random in dev runs. */
@@ -189,11 +189,11 @@ export class DevControl {
   skipDays(n = 1, opts: { wake?: boolean } = {}): void {
     const s = getState();
     const cache = this.game.cache.tilemap;
-    const farm = cache.get(mapCacheKey('farm'))?.data as TiledMapLike | undefined;
+    const farm = cache.get(activeMapKey('farm'))?.data as TiledMapLike | undefined;
     const forageSpots: Record<string, [number, number][]> = {};
     const oreSpots: Record<string, [number, number][]> = {};
     for (const id of Object.keys(mapsData.maps)) {
-      const raw = cache.get(mapCacheKey(id))?.data as TiledMapLike | undefined;
+      const raw = cache.get(activeMapKey(id))?.data as TiledMapLike | undefined;
       if (raw) {
         forageSpots[id] = forageCandidates(raw);
         oreSpots[id] = oreCandidates(raw);
