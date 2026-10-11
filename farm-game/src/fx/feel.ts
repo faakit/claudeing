@@ -41,6 +41,8 @@ export const createFollowAxis = (): FollowAxis => ({ lag: 0, shown: 0, last: nul
 
 /** A jump this large in one frame is a teleport (a door, a respawn): the camera cuts instead of easing. */
 export const FOLLOW_CUT_PX = 48;
+/** The lag's catch-up rate (per 60 Hz frame) while the followed point stands still. */
+export const FOLLOW_STILL_RATE = 0.2;
 /** How far the smoothed lag may drift from the shown pixel before the shown pixel moves. */
 export const FOLLOW_HYSTERESIS = 0.75;
 
@@ -52,10 +54,18 @@ export function stepFollowAxis(a: FollowAxis, pos: number, dtMs: number, rate: n
     a.last = pos;
     return 0;
   }
+  const moved = pos !== a.last;
   a.lag += pos - a.last;
   a.last = pos;
-  a.lag *= 1 - frameRate(rate, Math.min(dtMs, 50));
-  if (Math.abs(a.lag - a.shown) > FOLLOW_HYSTERESIS) a.shown = Math.round(a.lag) || 0; // never -0
+  // Standing still, the camera catches up faster (and without the hysteresis, a pixel a frame at most), so it
+  // finishes centring in about a fifth of a second instead of creeping the last pixels for half a second.
+  a.lag *= 1 - frameRate(moved ? rate : FOLLOW_STILL_RATE, Math.min(dtMs, 50));
+  if (moved) {
+    if (Math.abs(a.lag - a.shown) > FOLLOW_HYSTERESIS) a.shown = Math.round(a.lag) || 0; // never -0
+  } else {
+    const want = Math.round(a.lag) || 0;
+    if (want !== a.shown) a.shown += Math.sign(want - a.shown);
+  }
   return a.shown;
 }
 

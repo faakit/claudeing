@@ -351,7 +351,24 @@ export class ObjectsRenderer {
             .setScale(art ? 1 : 0.62)
             .setDepth(10 + y + 4);
           const idle2 = animalIdleKey(species.sprite);
-          if (!calm() && hasArt(idle2))
+          const breath = `${species.sprite}_2`;
+          const dip = `${species.sprite}_3`;
+          if (
+            !calm() &&
+            hasArt(idle2) &&
+            this.scene.textures.exists(breath) &&
+            this.scene.textures.exists(dip)
+          )
+            // Art round 4: rest, breathe, rest, graze or peck, rest, a head dip (staggered per animal).
+            this.loopFrames(critter, [
+              [species.sprite, 1200 + i * 170],
+              [breath, 400],
+              [species.sprite, 900],
+              [idle2, 600],
+              [species.sprite, 800],
+              [dip, 300],
+            ]);
+          else if (!calm() && hasArt(idle2))
             this.scene.tweens.add({
               targets: critter,
               alpha: 1,
@@ -410,6 +427,19 @@ export class ObjectsRenderer {
       });
       this.placed.delete(id);
     }
+  }
+
+  /** Step an image through (texture, ms) pairs forever, until it is destroyed. */
+  private loopFrames(img: Phaser.GameObjects.Image, seq: [string, number][]): void {
+    let k = 0;
+    const next = () => {
+      if (!img.active) return;
+      const [key, ms] = seq[k % seq.length]!;
+      img.setTexture(key);
+      k++;
+      this.scene.time.delayedCall(ms, next);
+    };
+    next();
   }
 
   destroy(): void {

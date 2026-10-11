@@ -102,6 +102,10 @@ async function runPacing(rate) {
     await page.keyboard.up(key);
   };
 
+  // 0. Standing still on the farm (the breathing idle, ambient life, the clock).
+  await place(8, 19, 'down');
+  await rec('idle: standing on the farm', () => page.waitForTimeout(2500));
+
   // 1. Walking: a loop with the keys (the stick's path through the same code), turns and stops included.
   await place(8, 19, 'right');
   await page.waitForTimeout(300);
@@ -557,12 +561,12 @@ if (runBudget)
 
 // Frame-time budgets (ms between frames, headless software GL; set against the round-3 baseline with the feel
 // critic, so a regression fails rather than hides under a loose bar):
-//  - steady play (walk, tap-walk, a painted row): p95 <= 8 at 1x, p99 <= 14 at 4x, no frame over 100 at 6x;
+//  - steady play (idle, walk, tap-walk, a painted row): p95 <= 8 at 1x, p99 <= 14 at 4x, no frame over 100 at 6x;
 //  - other steady scenes (sheets, festival, coach marks): p95 <= 8 at 1x;
 //  - a map change: worst frame <= 34 at 1x and 4x, <= 50 at 6x (the build runs while the wipe covers the world);
 //  - sleep and the morning summary: no frame over 50 at 1x, 100 at 4x;
 //  - a new game: no frame over 100 at 1x, 200 at 4x (the build runs under the title's wipe).
-const STEADY = ['walk', 'tap-walk', 'paint'];
+const STEADY = ['idle', 'walk', 'tap-walk', 'paint'];
 const CALM = ['sheets', 'festival', 'guided start'];
 const pacingBad = [];
 for (const r of pacingRaw) {

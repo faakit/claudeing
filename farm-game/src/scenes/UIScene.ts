@@ -612,14 +612,15 @@ export class UIScene extends Phaser.Scene {
     }
     const label = new Label(this, 0, -44, 'Drag to walk', { align: 'center', color: 0xf4ead2 });
     this.dragHint = this.add.container(cx, cy, [ring, label]).setDepth(60);
-    this.tweens.add({
-      targets: this.dragHint,
-      alpha: { from: 1, to: 0.45 },
-      duration: 900,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    if (!getState().settings.reduceMotion)
+      this.tweens.add({
+        targets: this.dragHint,
+        alpha: { from: 1, to: 0.45 },
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
   }
 
   private setInteractTarget(type: string | null): void {

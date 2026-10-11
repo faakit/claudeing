@@ -671,8 +671,12 @@ export abstract class WorldScene extends Phaser.Scene {
       let cur: FrameRef | null = null;
       for (const step of this.poseSeq) if (now >= step.at) cur = step.f;
       if (posing && cur) {
-        if (this.pose.texture.key !== cur.texture || this.pose.frame.name !== cur.frame)
+        if (this.pose.texture.key !== cur.texture || this.pose.frame.name !== cur.frame) {
           this.pose.setTexture(cur.texture, cur.frame);
+          // Feet sit on row 31 of every tool frame; frames whose blade reaches below the feet are taller (the
+          // hoe and pickaxe facing down are 36 px), so the origin comes from the frame's own height.
+          this.pose.setOrigin(0.5, 32 / this.pose.frame.height);
+        }
         this.pose.setFlipX(cur.flipX);
       }
     }

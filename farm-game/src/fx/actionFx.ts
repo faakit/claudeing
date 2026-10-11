@@ -58,6 +58,7 @@ export function playActionFx(
     }
     case 'cast':
       fx.splash(x, y);
+      fx.ripple(x, y + 4);
       audio.play('water');
       break;
     case 'harvest': {

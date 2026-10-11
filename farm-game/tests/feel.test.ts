@@ -102,6 +102,16 @@ describe('pixel-locked camera follow', () => {
       expect(lag).toBe(0);
     }
   });
+  it('finishes centring within a quarter second of a stop, at 60 and 144 Hz', () => {
+    for (const hz of [60, 144]) {
+      const a = createFollowAxis();
+      let x = 50;
+      for (let i = 0; i < hz * 2; i++) stepFollowAxis(a, (x += 64 / hz), 1000 / hz, 0.12);
+      let frames = 0;
+      while (stepFollowAxis(a, x, 1000 / hz, 0.12) !== 0 && frames < 1000) frames++;
+      expect((frames * 1000) / hz).toBeLessThan(250);
+    }
+  });
   it('cuts on a teleport instead of sliding across the map', () => {
     const a = createFollowAxis();
     stepFollowAxis(a, 10, 16, 0.12);

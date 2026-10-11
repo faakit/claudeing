@@ -72,23 +72,38 @@ export class Effects {
    * A short hand-drawn flipbook (fx_<name>_0..3 in the ui atlas: sparkle, dust, splash), played once in steps.
    * Returns false when the art is missing, so the caller keeps its pixel burst.
    */
-  private flipbook(x: number, y: number, name: string, fps = 14, depth = 9000): boolean {
+  private flipbook(
+    x: number,
+    y: number,
+    name: string,
+    fps: number | readonly number[] = 14,
+    depth = 9000,
+    origin: [number, number] = [0.5, 1],
+  ): boolean {
     const atlas = ATLAS_FILES.ui.key;
     if (!this.scene.textures.exists(atlas) || !this.scene.textures.get(atlas).has(`fx_${name}_0`))
       return false;
+    // Frame times: one rate for all, or per frame (the art's splash: 70, 70, 90, 90 ms).
+    const times = typeof fps === 'number' ? [1, 2, 3, 4].map(() => 1000 / fps) : fps;
     const img = this.scene.add.image(Math.round(x), Math.round(y), atlas, `fx_${name}_0`);
-    img.setDepth(depth).setOrigin(0.5, 1);
-    let f = 0;
-    this.scene.time.addEvent({
-      delay: 1000 / fps,
-      repeat: 3,
-      callback: () => {
-        f += 1;
-        if (f > 3) img.destroy();
-        else img.setFrame(`fx_${name}_${f}`);
-      },
+    img.setDepth(depth).setOrigin(origin[0], origin[1]);
+    let at = 0;
+    times.forEach((ms, f) => {
+      at += ms;
+      this.scene.time.delayedCall(at, () => {
+        if (!img.active) return;
+        const next = `fx_${name}_${f + 1}`;
+        if (f + 1 < times.length && this.scene.textures.get(atlas).has(next)) img.setFrame(next);
+        else img.destroy();
+      });
     });
     return true;
+  }
+
+  /** Rings on water where a line lands (art round 4, `fx_ripple_0..2`, 120 ms each); nothing until drawn. */
+  ripple(x: number, y: number): void {
+    if (calm()) return;
+    this.flipbook(x, y, 'ripple', [120, 120, 120], 8900, [0.5, 0.5]);
   }
 
   dust(x: number, y: number): void {
@@ -104,7 +119,7 @@ export class Effects {
     });
   }
   splash(x: number, y: number): void {
-    const drawn = this.flipbook(x, y + 6, 'splash');
+    const drawn = this.flipbook(x, y + 6, 'splash', [70, 70, 90, 90]);
     this.burst(x, y, {
       count: drawn ? 5 : 11,
       color: [0x6fa3e0, 0xb8d8f8, 0x3b78c4],

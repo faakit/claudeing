@@ -285,24 +285,29 @@ export class Hud {
   private goalBanner(text: string, pulse: 'success' | 'medium' = 'success'): void {
     audio.play('goal');
     haptic(pulse);
+    // Rises in and out in whole pixels; Calm mode only fades it.
+    const calm = this.getState().settings.reduceMotion;
     this.banner
       .setText(text)
       .setAlpha(0)
-      .setY(HUD_H + 22);
+      .setY(HUD_H + (calm ? 14 : 22));
     this.scene.tweens.killTweensOf(this.banner);
+    const round = () => this.banner.setY(Math.round(this.banner.y));
     this.scene.tweens.add({
       targets: this.banner,
       alpha: 1,
       y: HUD_H + 14,
       duration: 220,
       ease: 'Back.easeOut',
+      onUpdate: round,
     });
     this.scene.tweens.add({
       targets: this.banner,
       alpha: 0,
-      y: HUD_H + 8,
+      y: HUD_H + (calm ? 14 : 8),
       duration: 400,
       delay: 1700,
+      onUpdate: round,
     });
   }
 
