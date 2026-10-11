@@ -126,6 +126,12 @@ export const TOOL_ANIMS: Record<string, { tool: string; dirs: readonly string[] 
 /** The feel agent's 3-frame swing names: anticipation, impact (= contact frame 2), follow-through. */
 export const swingKey = (tool: string, dir: string, i: number): string =>
   `player_swing_${tool}_${dir}_${i}`;
+/**
+ * Frame height of a tool sequence: 36 for the hoe and pickaxe facing down (the blade bites 3-4 px below the feet,
+ * review 14), else 32. The feet are on row 31 in every frame, so the origin is (0.5, 32 / height).
+ */
+export const toolFrameHeight = (tool: string, dir: string): number =>
+  dir === 'down' && (tool === 'hoe' || tool === 'pick') ? 36 : 32;
 export const toolAnimKey = (tool: string, dir: string, i: number): string =>
   `player_tool_${tool}_${dir}_${i}`;
 /** The frame keys of one tool-use sequence (by tool item id), or [] when that facing has none. */
@@ -411,7 +417,7 @@ export function artManifest(): ArtEntry[] {
         add({
           texture,
           w: 32,
-          h: 32,
+          h: toolFrameHeight(TOOL_ANIMS[item]!.tool, d),
           group: 'chars',
           kind: `player tool use ${item} ${d}`,
           from: 'art round 4 (toolanim.py)',
@@ -426,7 +432,7 @@ export function artManifest(): ArtEntry[] {
         add({
           texture: swingKey(tool, d, i),
           w: 32,
-          h: 32,
+          h: toolFrameHeight(tool, d),
           group: 'chars',
           kind: `player swing ${tool} ${d} (alias)`,
           from: 'art round 4 (alias of player_tool_*)',

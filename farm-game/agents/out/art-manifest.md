@@ -515,10 +515,10 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `player_use_hoe` |  | 32x32 | yes | player tool pose | WorldScene | art (atlas_chars 32x32) |
 | `player_use_can` |  | 32x32 | yes | player tool pose | WorldScene | art (atlas_chars 32x32) |
 | `player_use_rod` |  | 32x32 | yes | player tool pose | WorldScene | art (atlas_chars 32x32) |
-| `player_tool_hoe_down_0` |  | 32x32 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_hoe_down_1` |  | 32x32 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_hoe_down_2` |  | 32x32 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_hoe_down_3` |  | 32x32 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
+| `player_tool_hoe_down_0` |  | 32x36 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
+| `player_tool_hoe_down_1` |  | 32x36 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
+| `player_tool_hoe_down_2` |  | 32x36 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
+| `player_tool_hoe_down_3` |  | 32x36 | yes | player tool use hoe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
 | `player_tool_hoe_up_0` |  | 32x32 | yes | player tool use hoe up | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_hoe_up_1` |  | 32x32 | yes | player tool use hoe up | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_hoe_up_2` |  | 32x32 | yes | player tool use hoe up | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
@@ -531,10 +531,10 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `player_tool_hoe_left_1` |  | 32x32 | yes | player tool use hoe left | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_hoe_left_2` |  | 32x32 | yes | player tool use hoe left | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_hoe_left_3` |  | 32x32 | yes | player tool use hoe left | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_pick_down_0` |  | 32x32 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_pick_down_1` |  | 32x32 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_pick_down_2` |  | 32x32 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_tool_pick_down_3` |  | 32x32 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
+| `player_tool_pick_down_0` |  | 32x36 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
+| `player_tool_pick_down_1` |  | 32x36 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
+| `player_tool_pick_down_2` |  | 32x36 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
+| `player_tool_pick_down_3` |  | 32x36 | yes | player tool use pickaxe down | art round 4 (toolanim.py) | art (atlas_chars 32x36) |
 | `player_tool_pick_up_0` |  | 32x32 | yes | player tool use pickaxe up | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_pick_up_1` |  | 32x32 | yes | player tool use pickaxe up | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_pick_up_2` |  | 32x32 | yes | player tool use pickaxe up | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
@@ -583,9 +583,9 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `player_tool_rod_left_1` |  | 32x32 | yes | player tool use fishing_rod left | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_rod_left_2` |  | 32x32 | yes | player tool use fishing_rod left | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
 | `player_tool_rod_left_3` |  | 32x32 | yes | player tool use fishing_rod left | art round 4 (toolanim.py) | art (atlas_chars 32x32) |
-| `player_swing_hoe_down_0` |  | 32x32 | yes | player swing hoe down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
-| `player_swing_hoe_down_1` |  | 32x32 | yes | player swing hoe down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
-| `player_swing_hoe_down_2` |  | 32x32 | yes | player swing hoe down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
+| `player_swing_hoe_down_0` |  | 32x36 | yes | player swing hoe down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x36) |
+| `player_swing_hoe_down_1` |  | 32x36 | yes | player swing hoe down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x36) |
+| `player_swing_hoe_down_2` |  | 32x36 | yes | player swing hoe down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x36) |
 | `player_swing_hoe_up_0` |  | 32x32 | yes | player swing hoe up (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
 | `player_swing_hoe_up_1` |  | 32x32 | yes | player swing hoe up (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
 | `player_swing_hoe_up_2` |  | 32x32 | yes | player swing hoe up (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
@@ -613,9 +613,9 @@ Single-image keys are atlas frames named by the key; frames of multi-frame textu
 | `player_swing_scythe_right_0` |  | 32x32 | yes | player swing scythe right (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
 | `player_swing_scythe_right_1` |  | 32x32 | yes | player swing scythe right (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
 | `player_swing_scythe_right_2` |  | 32x32 | yes | player swing scythe right (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
-| `player_swing_pick_down_0` |  | 32x32 | yes | player swing pick down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
-| `player_swing_pick_down_1` |  | 32x32 | yes | player swing pick down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
-| `player_swing_pick_down_2` |  | 32x32 | yes | player swing pick down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
+| `player_swing_pick_down_0` |  | 32x36 | yes | player swing pick down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x36) |
+| `player_swing_pick_down_1` |  | 32x36 | yes | player swing pick down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x36) |
+| `player_swing_pick_down_2` |  | 32x36 | yes | player swing pick down (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x36) |
 | `player_swing_pick_up_0` |  | 32x32 | yes | player swing pick up (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
 | `player_swing_pick_up_1` |  | 32x32 | yes | player swing pick up (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |
 | `player_swing_pick_up_2` |  | 32x32 | yes | player swing pick up (alias) | art round 4 (alias of player_tool_*) | art (atlas_chars 32x32) |

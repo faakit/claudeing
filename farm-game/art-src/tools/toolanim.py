@@ -1,4 +1,4 @@
-"""Tool-use frames (art round 4): 32 x 32, the player's idle body centred at x 8..23 (as the round-3 poses).
+"""Tool-use frames (art round 4): 32 x 32 (32 x 36 for the hoe and pickaxe facing down), the player's idle body centred at x 8..23 (as the round-3 poses).
 
 Each frame: the idle body with its arms taken off, then back to front: far arm, the tool if it is behind the body,
 torso and head (pixel-identical to the walking sprite), the tool if it is in front, the near arm. Arms are 2 px
@@ -17,6 +17,10 @@ import numpy as np
 from anim import SIDE_TOP, _n, blank, fix_edges, grid, layer, line_pts, stroke
 
 TOOLS = ("hoe", "can", "scythe", "pick", "rod")
+# Facing down, the hoe and pickaxe bite into the tile in front of the feet (review 14, R14-1): those sequences are
+# 32 x 36, the feet still on row 31, the blade reaching 3-4 px below the baseline. Origin: (0.5, 32 / height).
+TALL = {("hoe", "down"), ("pick", "down")}
+CANVAS_H = 36
 CONTACT_FRAME = 2
 # The round-3 single pose keys, kept: each is now its tool's contact frame.
 LEGACY_POSES = {
@@ -79,15 +83,15 @@ POSES[("hoe", "down")] = [
     _p(hands=((7, 9), (22, 9)), tool=[((3, 9), (28, 9))], head=("hoe_left", (3, 9)), front=False),
     _p(hands=((14, 18), (16, 18)), tool=[((16, 19), (16, 21))], head=("hoe_down", (16, 22)), front=True,
        smear=_arc(16, 11, 10, 150, 30)),
-    _p(hands=((14, 21), (16, 21)), tool=[((16, 22), (16, 27))], head=("hoe_down", (16, 28)), front=True),
-    _p(hands=((14, 22), (16, 22)), tool=[((16, 23), (16, 27))], head=("hoe_down", (16, 28)), front=True),
+    _p(hands=((14, 21), (16, 21)), tool=[((16, 22), (16, 30))], head=("hoe_down", (16, 31)), front=True),
+    _p(hands=((14, 22), (16, 22)), tool=[((16, 23), (16, 29))], head=("hoe_down", (16, 30)), front=True),
 ]
 POSES[("pick", "down")] = [
     _p(hands=((7, 9), (22, 9)), tool=[((4, 9), (27, 9))], head=("pick_left", (3, 9)), front=False),
     _p(hands=((14, 18), (16, 18)), tool=[((16, 19), (16, 21))], head=("pick_down", (16, 23)), front=True,
        smear=_arc(16, 11, 10, 150, 30)),
-    _p(hands=((14, 21), (16, 21)), tool=[((16, 22), (16, 27))], head=("pick_down", (16, 29)), front=True),
-    _p(hands=((14, 22), (16, 22)), tool=[((16, 23), (16, 27))], head=("pick_down", (16, 29)), front=True),
+    _p(hands=((14, 21), (16, 21)), tool=[((16, 22), (16, 30))], head=("pick_down", (16, 32)), front=True),
+    _p(hands=((14, 22), (16, 22)), tool=[((16, 23), (16, 29))], head=("pick_down", (16, 31)), front=True),
 ]
 POSES[("hoe", "right")] = [
     _p(hands=((10, 16), (11, 17)), tool=[((11, 17), (5, 3))], head=("hoe_up_back", (5, 2)), front=False),
@@ -129,9 +133,9 @@ CAN_FRONT_TIP = ["...zz..", "..z..z.", ".xzzzzZ", "xxzzzzZ", "zxzzzZ.", "z.ZZZ..
 
 def _drops(names, canvas, pts, col="S") -> None:
     """Water: 1 px drops or a 1 px stream on the sky tone, each with its own ink ring."""
-    p = blank(32, 32)
+    p = blank(32, CANVAS_H)
     for x, y in pts:
-        if 0 <= y < 32 and 0 <= x < 32:
+        if 0 <= y < CANVAS_H and 0 <= x < 32:
             p[y, x] = _n(names, col)
     layer(canvas, p)
 
@@ -198,10 +202,10 @@ def _put(names, p: np.ndarray, rows: list[str], x0: int, y0: int) -> None:
 
 
 def _tool_part(names, pose: dict) -> np.ndarray:
-    t = blank(32, 32)
+    t = blank(32, CANVAS_H)
     for a, b in pose["tool"]:
         for x, y in line_pts(*a, *b):
-            if 0 <= y < 32 and 0 <= x < 32:
+            if 0 <= y < CANVAS_H and 0 <= x < 32:
                 t[y, x] = _n(names, "w")
     if pose.get("head"):
         name, (ax, ay) = pose["head"]
@@ -215,9 +219,9 @@ def _tool_part(names, pose: dict) -> np.ndarray:
 
 def _smear(names, canvas, pts) -> None:
     """A swing smear: a 1 px arc of pale steel along the head's path, with its own ink ring."""
-    p = blank(32, 32)
+    p = blank(32, CANVAS_H)
     for i, (x, y) in enumerate(pts):
-        if 0 <= y < 32 and 0 <= x < 32:
+        if 0 <= y < CANVAS_H and 0 <= x < 32:
             p[y, x] = _n(names, "I" if i % 3 else "x")
     layer(canvas, p)
 
@@ -258,7 +262,7 @@ def lean_body(body: np.ndarray, how: str | None, side: bool) -> tuple[np.ndarray
 
 
 def draw_pose(names, body: np.ndarray, pose: dict, side: bool, lean: str | None = None) -> np.ndarray:
-    c = blank(32, 32)
+    c = blank(32, CANVAS_H)
     far_h, near_h = pose["hands"]
     body, ox, oy = lean_body(body, lean, side)
     sf, sn = (SS_F[0] + ox, SS_F[1] + oy), (SS_N[0] + ox, SS_N[1] + oy)
@@ -272,7 +276,7 @@ def draw_pose(names, body: np.ndarray, pose: dict, side: bool, lean: str | None 
     if not pose["front"]:
         layer(c, tool)
     bm = body >= 0
-    c[:, 8:24][bm] = body[bm]
+    c[:32, 8:24][bm] = body[bm]
     if pose.get("smear"):
         _smear(names, c, pose["smear"])
     if pose["front"]:
@@ -280,7 +284,7 @@ def draw_pose(names, body: np.ndarray, pose: dict, side: bool, lean: str | None 
     if pose.get("water"):
         _drops(names, c, pose["water"])
     for x, y in pose.get("line", []):
-        if 0 <= y < 32 and 0 <= x < 32:
+        if 0 <= y < CANVAS_H and 0 <= x < 32:
             c[y, x] = 0
     if side:
         _arm(names, c, sn, near_h)
@@ -302,6 +306,7 @@ def tool_frames(names: list[str], idle: dict[str, np.ndarray]) -> dict[str, np.n
     for (tool, d), poses in POSES.items():
         for i, pose in enumerate(poses):
             f = draw_pose(names, bodies[d], pose, d == "right", pose.get("lean", LEAN.get(i)))
+            f = f[: CANVAS_H if (tool, d) in TALL else 32].copy()
             out[f"player_tool_{tool}_{d}_{i}"] = f
             if d == "right":
                 out[f"player_tool_{tool}_left_{i}"] = f[:, ::-1].copy()

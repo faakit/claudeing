@@ -19,7 +19,7 @@ single-image texture key):
 |---|---|---|
 | `player_walk_{dir}_{0..7}` | real frames | contacts on 0 and 4, passing on 2 and 6 (see 1 for the bob) |
 | `player_idle_{dir}_1` | real frames | exhale: one torso row goes, the head and shoulders sink 1 px, feet fixed |
-| `player_swing_{tool}_{down,left,right}_{0,1,2}` | aliases of `player_tool_{tool}_{dir}_{0,2,3}` | 0 anticipation, 1 impact (my contact frame), 2 follow-through; hoe and pick also have `up` |
+| `player_swing_{tool}_{down,left,right}_{0,1,2}` | aliases of `player_tool_{tool}_{dir}_{0,2,3}` | 0 anticipation, 1 impact (my contact frame), 2 follow-through; hoe and pick also have `up`; hoe and pick facing down are 32 x 36 (origin y = 32 / 36, see section 2) |
 | `obj_door_farmhouse_{0,1,2}` | aliases of `obj_door_open_{0,1,3}` | 16 x 32 over the farmhouse's two door tiles (14,6 and 14,7): bottom-centre on the door tile (14,7) |
 | `obj_door_house_{0,1,2}` | real frames | 16 x 16, the house's `door` tile (5,8): 0 is the tile itself, pixel for pixel |
 
@@ -65,8 +65,13 @@ single-image texture key):
 - The body moves with the swing (review 13): on the wind-up (frame 0) head and torso lean 1 px back (side) or
   rise 1 px (front and back views); on the contact (frame 2) they sink 1 px; legs stay planted. Raised arms are
   at most about 11 px; the tool handle carries the height.
-- Placement: the same as the round-3 pose, `origin(0.5, 1)` at the player's feet; the body sits at x 8..23 of the
-  32 px canvas, the head pixel-identical to the idle frame. Left: use the `_left_` keys (already mirrored).
+- Placement: the body sits at x 8..23 of the 32 px wide canvas, the feet on **row 31 in every frame**, the head
+  pixel-identical to the idle frame. Left: use the `_left_` keys (already mirrored).
+- **Frame height (review 14, R14-1):** facing down, the hoe and pickaxe sequences are **32 x 36** (all 4 frames,
+  and their `player_swing_*` aliases): the blade bites 3 px below the feet, over the tile in front. Every other
+  tool frame is 32 x 32. So set the origin to `(0.5, 32 / frame.height)` (= 1 for 32 px frames, 0.889 for 36 px
+  ones) and keep positioning at the feet. `toolFrameHeight(tool, dir)` in the manifest gives the height. The
+  round-3 `player_use_*` keys stay 32 x 32 (origin `(0.5, 1)`, as WorldScene uses them).
 - Suggested timing (total about 300-340 ms, inside `ACTION_LOCK_MS.ok + 60`):
   - hoe, pick: 0 = 90, 1 = 50, 2 = 110, 3 = 80
   - scythe: 0 = 70, 1 = 40, 2 = 90, 3 = 90

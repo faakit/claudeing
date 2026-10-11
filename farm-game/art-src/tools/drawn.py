@@ -594,7 +594,7 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
             add("chars", key, idx)
         # the round-3 single poses (still shown by WorldScene.toolPose) are now the contact frames
         for key, src in toolanim.LEGACY_POSES.items():
-            add("chars", key, tools[src])
+            add("chars", key, tools[src][:32].copy())  # the legacy keys stay 32 x 32 (origin at the bottom)
     if chars:  # doors, crop leans, ripples and splash, harvest pops, villager and animal idles (motion.py)
         import motion
 

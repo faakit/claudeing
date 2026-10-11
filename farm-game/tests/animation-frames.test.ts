@@ -9,6 +9,7 @@ import {
   TOOL_ANIMS,
   TOOL_ANIM_FRAMES,
   toolAnimFrames,
+  toolFrameHeight,
 } from '../src/art/manifest';
 
 /** Decode an 8-bit RGBA or palette PNG (non-interlaced), enough for the packed atlases. */
@@ -127,7 +128,10 @@ describe('animation frames (art round 4)', () => {
         expect(keys).toHaveLength(TOOL_ANIM_FRAMES);
         for (const k of keys) {
           const f = frame(k);
-          expect([f[0]!.length, f.length], k).toEqual([32, 32]);
+          expect([f[0]!.length, f.length], k).toEqual([
+            32,
+            toolFrameHeight(TOOL_ANIMS[item]!.tool, d),
+          ]);
           n++;
         }
       }
