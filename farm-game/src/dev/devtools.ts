@@ -233,6 +233,9 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
         game.scene.start(key);
       }
       await waits.sceneReady(key);
+      // the last map's stop lands a step later: wait for it, so a goto straight after never finds it half shut
+      if (world && world.scene.key !== key)
+        await waits.until(() => !world.sys.isActive(), `the ${world.scene.key} scene to stop`);
     },
     wait: {
       until: (pred, what, o) => waits.until(pred, what, o),
