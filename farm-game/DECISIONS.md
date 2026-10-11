@@ -1391,3 +1391,15 @@ the leg keeps growing one tile per 180 ms with the usual tick, up to the 16-tile
 (tilling, watering, planting, digging). Leaving the band takes the growth back, so a drift never extends a row and
 dragging back to the start still cancels; a drift into another edge does nothing. The controls e2e checks a
 left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone 13 and the SE.
+
+## Channel tiles drawn in code, appended last, looked up by name (art lane, Dry Year, 2026-10-11)
+
+- Channel tiles are a 16-mask autotile plus culverts and creek mouths, drawn in `art-src/tools/channeltiles.py`
+  rather than from Flow: exact seams and the 2 px rule matter more than painterly texture (the creek was done the
+  same way).
+- They go at the end of the tileset and the game reads them by name from `tiles.json`, so adding them moved no
+  map gid; the `.tmj` files changed only in their tileset header. WorldScene indexes gids past a map's own tile
+  count, so a taller tileset never breaks `putTileAt`.
+- A channel hides flowers and tufts on its cell and restores them when filled in (the art critic's ruling); crowns
+  stay. Water tiles are static, like the map's other water; the feel lane draws the moving front.
+- The chars atlas split moved only the action frames (they are single-image textures, so any atlas works).
