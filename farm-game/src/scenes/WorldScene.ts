@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { MapArt, tilesetFor } from '../art/mapLayers';
 import { DRY_SAFETY_NET, dryTilesetKey, ensureDryTileset } from '../art/dryTiles';
 import { GreenReveal } from '../fx/GreenReveal';
+import { ChannelFx } from '../fx/ChannelFx';
 import {
   interactSite,
   paletteOf,
@@ -190,6 +191,8 @@ export abstract class WorldScene extends Phaser.Scene {
   /** Detail-layer tiles a channel drew over, to put back when it is filled in. */
   private channelUnder = new Map<string, number>();
   private farm: FarmRenderer | null = null;
+  /** The channels' juice: the spade's cut, the water running into it, the morning's run (fx/ChannelFx.ts). */
+  private channels: ChannelFx | null = null;
   private mapArt: MapArt | null = null;
   private ambient: Ambient | null = null;
   /** The pixel-art see-through hole over crowns and tall objects in front of the player (review 9). */
@@ -380,6 +383,22 @@ export abstract class WorldScene extends Phaser.Scene {
     if (this.mapId === 'farm') {
       this.farm = new FarmRenderer(this, (tx, ty, look) => this.paintChannel(tx, ty, look));
       this.farm.sync(state, false);
+      const detail = !!map.getLayer('detail');
+      this.channels = new ChannelFx(
+        this,
+        this.farm,
+        {
+          texture: detail ? look.key : null,
+          src: (tx, ty, l) =>
+            detail && tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) !== 'path' // a culvert shows nothing
+              ? (tileset.getTileTextureCoordinates(CHANNEL_GID[l]) as {
+                  x: number;
+                  y: number;
+                } | null)
+              : null,
+        },
+        () => getState().settings.reduceMotion,
+      );
     }
     // The first green (systems/valley.ts): the first time the farmer stands on the green farm, the straw gives way
     // to green outward from them (the dry tileset is held for this one morning), with its banner and jingle.
@@ -399,6 +418,9 @@ export abstract class WorldScene extends Phaser.Scene {
         this.reveal?.start();
         gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner });
       });
+    } else if (this.mapId === 'farm' && !creekMomentDue(state)) {
+      // the morning's water runs down the channels the first time they come into view today
+      this.channels?.planMorning(state);
     } else if (this.mapId === 'farm' && creekMomentDue(state)) {
       // The creek's first morning: the dry bed drawn over the running one and cut away from Ilse's gate down, once
       // the creek comes into view (update starts it; until then the overlay is hidden and costs nothing).
@@ -497,6 +519,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.cleanup.forEach((off) => off());
       this.cleanup = [];
+      this.channels?.destroy();
+      this.channels = null;
       this.farm?.destroy();
       this.farm = null;
       this.things?.destroy();
@@ -537,6 +561,7 @@ export abstract class WorldScene extends Phaser.Scene {
         runtime.valleyReveal = false;
       }
     }
+    this.channels?.update(delta, this.cameras.main.worldView);
     if (this.farmDirty && this.time.now >= this.impactAt) {
       this.farmDirty = false;
       this.farm?.sync(getState(), true);
@@ -1192,6 +1217,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     // what the farmer holds before the action (placing the last one empties the slot): `place` shows it in his hands
     const heldBefore = state.inventory.slots[state.inventory.selected]?.item;
+    this.channels?.beforeAct(state, heldBefore);
     const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
@@ -1218,6 +1244,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.highlight.pulse();
     if (res.ok) {
       if (this.work && res.kind === 'dig') this.work.dug = (this.work.dug ?? 0) + 1;
+      // the cut's new tiles the water reaches are held dry until it runs into them on the impact
+      const fresh = res.kind === 'dig' ? (this.channels?.afterDig(state) ?? []) : [];
       this.actionLock = ACTION_LOCK_MS.ok;
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
@@ -1234,15 +1262,30 @@ export abstract class WorldScene extends Phaser.Scene {
       const def = stack?.item ? items[stack.item] : undefined;
       if (!swing.shown && def?.type === 'tool' && TOOL_KINDS[stack!.item]?.includes(res.kind))
         this.fx.swing(at.x, at.y, def.icon, at.facing);
+      // Ilse's spade (a key item, so no tool pose): its icon swings, and the cut lands after the wind-up
+      if (!swing.shown && def && (res.kind === 'dig' || res.kind === 'fill')) {
+        this.fx.swing(at.x, at.y, def.icon, at.facing);
+        swing.delay = SWING.windup;
+      }
       const repeat = inputHub.actionHeld && this.holdUses > 0;
       // Hit-stop only on a single harvest or the first of a hold or a painted row: a freeze per tile is a stutter.
       const firstUse = !repeat && (!this.work || (this.work.done <= 1 && this.work.tileUses === 0));
       // The impact: particles, sound and the haptic all land on the strike frame together.
       const impact = () => {
         if (!this.sys.isActive()) return;
-        playActionFx(this.fx, res, at, stack?.item, true);
+        // a dig's water is ChannelFx's (it runs into the cut from upstream), not a splash on the spot
+        playActionFx(
+          this.fx,
+          res.kind === 'dig' && this.channels ? { ...res, wet: false } : res,
+          at,
+          stack?.item,
+          true,
+        );
+        if (res.kind === 'dig') this.channels?.dig(res.tx, res.ty, at.facing, fresh);
         // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
-        if (quietHaptic) {
+        if (res.kind === 'dig') haptic('tick');
+        // a cut is felt tile by tile, even along a painted row (the 120 ms tick gap spaces them)
+        else if (quietHaptic) {
           /* a painted row: no buzz per use */
         } else if (res.kind === 'harvest') haptic('medium');
         else haptic('tick', { repeat });
