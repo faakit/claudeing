@@ -1,20 +1,23 @@
+import { t } from '../../i18n';
+import { rivalName } from '../../systems/rival';
 /** Player-facing text for perks, shared by the Skills tab and villager panels. */
 /** What each perk key means to a player, for the "next reward" line. Unknown keys fall back to the key. */
+const pct = (v: number): number => Math.round(v * 100);
 export const PERK_TEXT: Record<string, (v: number) => string> = {
-  qualityBonus: (v) => `+${Math.round(v * 100)}% better quality`,
-  maxEnergy: (v) => `+${v} max energy`,
-  sellBonus: (v) => `+${Math.round(v * 100)}% sell price`,
-  forageDouble: (v) => `+${Math.round(v * 100)}% double finds`,
-  forageQuality: (v) => `+${Math.round(v * 100)}% forage quality`,
-  upgradeDiscount: (v) => `${Math.round(v * 100)}% off tool upgrades`,
-  shopDiscount: (v) => `${Math.round(v * 100)}% off shop prices`,
-  fishWindow: (v) => `+${Math.round(v * 100)}% catch zone`,
-  orderSlots: (v) => `+${v} board request a day`,
-  xpBonus: (v) => `+${Math.round(v * 100)}% skill XP`,
-  rivalLate: (v) => `Clay comes ${Math.round(v / 60)} hours later`,
-  rivalPolite: () => 'Clay spares your farm goods',
-  rivalOff: () => 'Clay stops taking requests',
-  festivalPrize: (v) => `+${Math.round(v * 100)}% festival prizes`,
+  qualityBonus: (v) => t('perk.qualityBonus', { n: pct(v) }),
+  maxEnergy: (v) => t('perk.maxEnergy', { n: v }),
+  sellBonus: (v) => t('perk.sellBonus', { n: pct(v) }),
+  forageDouble: (v) => t('perk.forageDouble', { n: pct(v) }),
+  forageQuality: (v) => t('perk.forageQuality', { n: pct(v) }),
+  upgradeDiscount: (v) => t('perk.upgradeDiscount', { n: pct(v) }),
+  shopDiscount: (v) => t('perk.shopDiscount', { n: pct(v) }),
+  fishWindow: (v) => t('perk.fishWindow', { n: pct(v) }),
+  orderSlots: (v) => t('perk.orderSlots', { count: v }),
+  xpBonus: (v) => t('perk.xpBonus', { n: pct(v) }),
+  rivalLate: (v) => t('perk.rivalLate', { name: rivalName(), count: Math.round(v / 60) }),
+  rivalPolite: () => t('perk.rivalPolite', { name: rivalName() }),
+  rivalOff: () => t('perk.rivalOff', { name: rivalName() }),
+  festivalPrize: (v) => t('perk.festivalPrize', { n: pct(v) }),
 };
 
 export const perkLine = (perks: Record<string, number>): string =>

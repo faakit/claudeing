@@ -11,7 +11,7 @@
  * silently keeping the old translation.
  */
 import * as data from '../data';
-import { getLocale, onLocaleChange, rememberEnglish, type Locale } from './index';
+import { getLocale, LOCALES, onLocaleChange, rememberEnglish, type Locale } from './index';
 
 /** Per data file: the keys whose string values (or arrays of strings) are player-visible text. */
 export const TEXT_FIELDS: Record<string, readonly string[]> = {
@@ -136,6 +136,41 @@ export function mapText(englishText: string): string {
   const out = overlayFor(getLocale(), 'maps')[englishText] ?? englishText;
   rememberEnglish(out, englishText);
   return out;
+}
+
+/** Every overlay of a locale merged (English -> translation), and the way back, built on first use. */
+const merged = new Map<Locale, { to: Map<string, string>; back: Map<string, string> }>();
+function mergedFor(locale: Locale): { to: Map<string, string>; back: Map<string, string> } {
+  let m = merged.get(locale);
+  if (!m) {
+    m = { to: new Map(), back: new Map() };
+    for (const [path, mod] of Object.entries(overlayFiles))
+      if (path.startsWith(`./data/${locale}/`))
+        for (const [en, tr] of Object.entries(mod.default)) {
+          m.to.set(en, tr);
+          m.back.set(tr, en);
+        }
+    merged.set(locale, m);
+  }
+  return m;
+}
+
+/**
+ * A data string kept in the save (a letter's title or text, written in the language of the day it came) in the
+ * current language: whichever language it was stored in, a known data string is shown in today's.
+ */
+export function relocalize(text: string): string {
+  let en = text;
+  for (const l of LOCALES) {
+    if (l === 'en') continue;
+    const back = mergedFor(l).back.get(text);
+    if (back !== undefined) {
+      en = back;
+      break;
+    }
+  }
+  const now = getLocale();
+  return now === 'en' ? en : (mergedFor(now).to.get(en) ?? en);
 }
 
 let english: Record<string, unknown> | null = null;

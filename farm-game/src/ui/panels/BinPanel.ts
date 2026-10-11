@@ -23,10 +23,10 @@ import {
 } from '../../systems/itemRef';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
-import { fmt } from './format';
 import { boardWants, requestWants, wantedByBoard } from '../../systems/orders';
 import { npcs } from '../../data';
 import { binWantedSub, boardWantsLine, keptLine } from './binText';
+import { fmtGold, t } from '../../i18n';
 
 const ROWS = 6;
 
@@ -40,8 +40,8 @@ export class BinPanel extends Modal {
   protected build(): void {
     const s = getState();
     this.panel();
-    this.label(8, 8, 'Shipping Bin', C.gold);
-    this.label(8, 20, 'Sold tomorrow morning at full price.', C.creamDim);
+    this.label(8, 8, t('bin.title'), C.gold);
+    this.label(8, 20, t('bin.intro'), C.creamDim);
 
     // Every distinct stack the player holds or has already put in the bin.
     const refs = new Map<string, ItemRef>();
@@ -56,7 +56,7 @@ export class BinPanel extends Modal {
       this.label(
         8,
         50,
-        'Nothing to ship yet. Harvest some crops first!',
+        t('bin.empty'),
         C.creamDim,
         1,
         'left',
@@ -74,11 +74,11 @@ export class BinPanel extends Modal {
         title: displayName(ref),
         sub: wanted
           ? binWantedSub(want, have, inBin)
-          : `${fmt(sellValue(ref))}g  have ${have}  bin ${inBin}`,
+          : t('bin.row', { gold: fmtGold(sellValue(ref)), have, inBin }),
         subColor: wanted ? C.warn : inBin ? C.gold : C.creamDim,
         buttons: [
           {
-            label: 'All',
+            label: t('common.all'),
             width: 28,
             onClick: () => this.move(ref, have),
             color: have ? C.gold : C.creamDim,
@@ -120,10 +120,17 @@ export class BinPanel extends Modal {
         () => ((this.page = (this.page + 1) % pages), this.rebuild()),
       );
     }
-    this.label(this.panelW - 8, 8, `In bin: ${fmt(shippingValue(s))}g`, C.gold, 1, 'right');
+    this.label(
+      this.panelW - 8,
+      8,
+      t('bin.inBin', { gold: fmtGold(shippingValue(s)) }),
+      C.gold,
+      1,
+      'right',
+    );
     // One tap ships every crop, fish, wild good and product (one-thumb: low in the sheet, by the thumb).
     const produce = list.some((r) => countStack(s, r) > 0 && isProduce(r.item));
-    this.button(left ? 8 : this.panelW - 8 - 92, footerY, 92, 20, 'Ship all produce', () => {
+    this.button(left ? 8 : this.panelW - 8 - 92, footerY, 92, 20, t('bin.shipAll'), () => {
       // Goods the open requests want stay in the bag (critique 9, F2); the row's "All" still ships them.
       const res = shipAllProduce(getState(), boardWants(getState()));
       if (res.count === 0) audio.play('error');
@@ -149,7 +156,7 @@ export class BinPanel extends Modal {
       if (kept) toast(kept, 'warn');
       this.rebuild();
     }).setEnabled(produce);
-    this.closeButton('Done');
+    this.closeButton(t('common.done'));
   }
 
   private move(ref: ItemRef, delta: number): void {
@@ -161,7 +168,7 @@ export class BinPanel extends Modal {
       haptic('tick');
       // A legend is once a game: say it can still come back out tonight (critique 7, F7).
       if (delta > 0 && fish.some((f) => f.legend && f.item === ref.item))
-        toast('A legend in the bin! Take it back out before bed to keep it.', 'warn');
+        toast(t('bin.legend'), 'warn');
       // Shipping what an open request wants: say so, once the bag holds fewer than it asks for.
       else if (delta > 0) {
         const want = wantedByBoard(s, ref);

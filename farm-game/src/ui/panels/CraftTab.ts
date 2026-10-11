@@ -9,6 +9,7 @@ import { C } from '../theme';
 import { ROW_H } from '../widgets';
 import { fmt } from './format';
 import type { MenuTabContext } from './MenuPanel';
+import { t } from '../../i18n';
 
 const PER_PAGE = 8;
 
@@ -24,8 +25,8 @@ export function buildCraft(c: MenuTabContext): void {
   });
   const pages = Math.max(1, Math.ceil(ids.length / PER_PAGE));
   page = Math.min(page, pages - 1);
-  c.label(8, c.top + 1, 'WORKBENCH', C.gold);
-  c.label(192, c.top + 1, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
+  c.label(8, c.top + 1, t('craft.title'), C.gold);
+  c.label(192, c.top + 1, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
   let y = c.top + 14;
   for (const id of ids.slice(page * PER_PAGE, (page + 1) * PER_PAGE)) {
     const r = recipes[id]!;
@@ -45,7 +46,7 @@ export function buildCraft(c: MenuTabContext): void {
       buttons: [
         // Make is always the outermost button, on every row (critique 10: the same column means the same thing).
         {
-          label: 'Make',
+          label: t('craft.make'),
           width: 38,
           enabled: block === null,
           color: block === null ? C.green : C.creamDim,
@@ -90,7 +91,7 @@ export function buildCraft(c: MenuTabContext): void {
     c.label(
       8,
       c.bottom - 22,
-      `You carry ${countItem(s, 'fiber')} fiber. Cut weeds with the scythe.`,
+      t('craft.fiber', { n: countItem(s, 'fiber') }),
       C.creamDim,
       1,
       'left',

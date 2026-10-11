@@ -1,7 +1,6 @@
-import { fmt } from './format';
-
+import { fmtGold, t } from '../../i18n';
 /** The line under the cart's title. */
-export const CART_INTRO = 'Here today only. Five of each.';
+export const cartIntro = (): string => t('cart.intro');
 
 /**
  * A cart row's second line: "900g  Market Road" (what it is for, before you pay: critique 9, F7), or
@@ -9,11 +8,11 @@ export const CART_INTRO = 'Here today only. Five of each.';
  */
 export const cartSub = (price: number, left: number, tag?: string, limit = 5): string =>
   left <= 0
-    ? 'Sold out'
+    ? t('cart.soldOut')
     : tag && left >= limit
-      ? `${fmt(price)}g  ${tag}`
-      : `${fmt(price)}g  ${left} left`; // once you bought some, how many remain matters more
+      ? `${fmtGold(price)}  ${tag}`
+      : t('cart.left', { gold: fmtGold(price), n: left }); // once you bought some, how many remain matters more
 
 /** The toast after a buy: what it was, and what it is for. */
 export const cartBought = (name: string, use?: string): string =>
-  use ? `Bought ${name}. ${use}` : `Bought ${name}.`;
+  use ? t('cart.boughtFor', { item: name, use }) : t('cart.bought', { item: name });

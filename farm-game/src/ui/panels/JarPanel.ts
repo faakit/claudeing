@@ -34,11 +34,12 @@ export class JarPanel extends Modal {
     const s = getState();
     this.panel();
     const found = findPlaced(s, this.id);
-    this.label(8, 8, found ? (placeables[found.obj.type]?.name ?? 'Machine') : 'Machine', C.gold);
+    const machine = t('jar.machine');
+    this.label(8, 8, found ? (placeables[found.obj.type]?.name ?? machine) : machine, C.gold);
     this.label(
       8,
       20,
-      found ? `Ready ${jarDays(found.obj)} mornings after loading.` : 'Gone?',
+      found ? t('jar.ready', { count: jarDays(found.obj) }) : t('jar.gone'),
       C.creamDim,
     );
     const kinds = new Map<string, ItemRef>();
@@ -51,7 +52,7 @@ export class JarPanel extends Modal {
       this.label(
         8,
         50,
-        'Bring fruit for jam, or vegetables for pickles.',
+        t('jar.bring'),
         C.creamDim,
         1,
         'left',
@@ -65,10 +66,10 @@ export class JarPanel extends Modal {
       y = this.row(y, {
         icon: iconKey(ref),
         title: displayName(ref),
-        sub: `Makes ${displayName(out)} (have ${countStack(s, ref)})`,
+        sub: t('jar.makes', { item: displayName(out), n: countStack(s, ref) }),
         buttons: [
           {
-            label: 'Load',
+            label: t('jar.load'),
             width: 38,
             color: C.green,
             onClick: () => {
@@ -84,7 +85,7 @@ export class JarPanel extends Modal {
           ...(idle > 1 && countStack(s, ref) > 1
             ? [
                 {
-                  label: 'All',
+                  label: t('common.all'),
                   width: 26,
                   color: C.gold,
                   onClick: () => {
@@ -95,7 +96,7 @@ export class JarPanel extends Modal {
                       addStat(st, 'jarsLoaded', n);
                       gameEvents.emit('placedChanged', { map: found.map });
                       audio.play('plant');
-                      toast(`Loaded ${n} machines.`, 'good');
+                      toast(t('jar.loaded', { count: n }), 'good');
                       this.close();
                     } else audio.play('error');
                   },
@@ -117,7 +118,7 @@ export class JarPanel extends Modal {
       });
     }
     if (found && canPickUp(found.obj))
-      this.button(60, this.panelH - 52, 80, 20, 'Pick up', () => {
+      this.button(60, this.panelH - 52, 80, 20, t('jar.pickUp'), () => {
         const st = getState();
         if (pickUpPlaced(st, found.map, found.obj) === 'full')
           return void toast(t('common.inventoryFull'), 'warn');

@@ -1,15 +1,20 @@
 import { displayName, parseKey, type ItemRef } from '../../systems/itemRef';
+import { t } from '../../i18n';
 
 /**
  * A wanted bin row's second line: "Board 4  have 9" (said in words, not only a colour: critique 10, F1), with
  * "bin 2" only once some are in the bin.
  */
 export const binWantedSub = (want: number, have: number, inBin: number): string =>
-  inBin ? `Board ${want}  bin ${inBin}` : `Board ${want}  x${have}`; // fits the row, three buttons (critique 11, F5)
+  // fits the row, three buttons (critique 11, F5)
+  inBin ? t('bin.wantedInBin', { want, inBin }) : t('bin.wanted', { want, have });
 
 /** "The board wants 4 Potato.": the bin's warning when you ship what an open request asks for. */
 export const boardWantsLine = (want: number, ref: ItemRef): string =>
-  `The board wants ${want} ${displayName({ item: ref.item, ...(ref.of ? { of: ref.of } : {}) })}.`;
+  t('bin.boardWants', {
+    n: want,
+    item: displayName({ item: ref.item, ...(ref.of ? { of: ref.of } : {}) }),
+  });
 
 /**
  * "Kept 4 Potato for the board.": what "Ship all produce" left in the bag for open requests, by "item|of".
@@ -28,14 +33,14 @@ export function keptLine(
     const name = displayName(parseKey(`${item}|0|${of}`));
     const forSpecial = sp - special.requests;
     return special.requests > 0
-      ? `Kept ${special.requests} ${name} for the board and ${forSpecial} for ${special.giver}.`
-      : `Kept ${forSpecial} ${name} for ${special.giver}.`;
+      ? t('bin.keptBoth', { n: special.requests, item: name, m: forSpecial, giver: special.giver })
+      : t('bin.keptSpecial', { n: forSpecial, item: name, giver: special.giver });
   }
   const named = parts.map(([k, n]) => {
     const [item = '', of = ''] = k.split('|');
     return `${n} ${displayName(parseKey(`${item}|0|${of}`))}`;
   });
   // Three kinds or more: name two and count the rest (critique 10, F6).
-  if (named.length > 2) return `Kept ${named.slice(0, 2).join(', ')} and more for the board.`;
-  return `Kept ${named.join(' and ')} for the board.`;
+  if (named.length > 2) return t('bin.keptMore', { items: named.slice(0, 2).join(', ') });
+  return t('bin.kept', { items: named.join(t('common.and')) });
 }

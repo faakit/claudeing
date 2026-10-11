@@ -8,6 +8,7 @@ import { rowLayout } from './layout';
 import { getState } from '../state/store';
 import { C, CH, SKIN, SEAM } from './theme';
 import { sheetTexture } from './sheetSkin';
+import { t } from '../i18n';
 
 /**
  * Notched pixel-art panel drawn at (x, y). Plum skin: ink outline, cream rim, soft shadow. Walnut skin: a
@@ -514,7 +515,7 @@ export abstract class Modal {
   }
 
   /** Full-width Close button pinned to the bottom of the sheet (thumb-friendly). */
-  protected closeButton(label = 'Close'): void {
+  protected closeButton(label = t('common.close')): void {
     this.button(8, this.panelH - 28, this.panelW - 16, 22, label, () => this.close(), {
       textColor: C.warn,
     });

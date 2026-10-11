@@ -8,6 +8,8 @@ import { letterDate, readLetter, takeGift, unreadCount } from '../../systems/mai
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { giftLine, giftWhat, letterSub, letterTitle } from './mailText';
+import { t } from '../../i18n';
+import { relocalize } from '../../i18n/dataText';
 
 const ROWS = 5;
 
@@ -37,14 +39,21 @@ export class MailPanel extends Modal {
   private buildList(): void {
     const s = getState();
     const waiting = unreadCount(s);
-    this.label(8, 8, 'Mailbox', C.gold);
-    this.label(192, 8, waiting > 0 ? `${waiting} waiting` : 'All read', C.creamDim, 1, 'right');
+    this.label(8, 8, t('mail.title'), C.gold);
+    this.label(
+      192,
+      8,
+      waiting > 0 ? t('mail.waiting', { n: waiting }) : t('mail.allRead'),
+      C.creamDim,
+      1,
+      'right',
+    );
     const list = [...s.mail.list].reverse();
     if (list.length === 0)
       this.label(
         8,
         30,
-        'No letters yet. The post comes in the morning.',
+        t('mail.none'),
         C.creamDim,
         1,
         'left',
@@ -66,7 +75,7 @@ export class MailPanel extends Modal {
         subColor: !l.read || (l.gift && !l.taken) ? C.gold : C.creamDim,
         buttons: [
           {
-            label: 'Read',
+            label: t('mail.read'),
             width: 38,
             color: l.read ? C.cream : C.gold,
             onClick: () => {
@@ -97,7 +106,8 @@ export class MailPanel extends Modal {
     const l = s.mail.list.find((x) => x.id === id)!;
     this.label(8, 8, letterTitle(l), C.gold, 1, 'left', 184);
     this.label(192, 22, letterDate(l.day, game.seasonLength), C.creamDim, 1, 'right');
-    const body = this.label(8, 36, l.text, C.cream, 1, 'left', 184);
+    // kept in the language it came in; a data letter is shown in today's language
+    const body = this.label(8, 36, relocalize(l.text), C.cream, 1, 'left', 184);
     if (l.gift)
       this.label(
         8,
@@ -115,22 +125,22 @@ export class MailPanel extends Modal {
         by,
         90,
         22,
-        'Take gift',
+        t('mail.takeGift'),
         () => {
           const res = takeGift(getState(), id);
           if (res === 'ok') {
             audio.play('buy');
             haptic('success');
-            toast(`Got ${giftWhat(l.gift!)}`, 'good');
+            toast(t('jar.got', { item: giftWhat(l.gift!) }), 'good');
           } else {
             audio.play('error');
-            if (res === 'full') toast('Make room in your bag first.', 'warn');
+            if (res === 'full') toast(t('common.makeRoom'), 'warn');
           }
           this.rebuild();
         },
         { textColor: C.green, rim: C.green },
       );
-    this.button(102, by, 90, 22, 'Back', () => {
+    this.button(102, by, 90, 22, t('common.back'), () => {
       this.id = null;
       this.rebuild();
     });

@@ -48,6 +48,7 @@ import { HOTBAR_X, HOTBAR_Y, SLOT } from './Hud';
 import type { DockLayout } from './layout';
 import { C, CH, SKIN } from './theme';
 import { Button, drawPanel, type Modal } from './widgets';
+import { t, toEnglish, type Key } from '../i18n';
 
 export const COACH_RING = 'ui_coach_ring';
 export const COACH_RING_WIDE = 'ui_coach_ring_wide';
@@ -73,7 +74,8 @@ const GLYPH_HIT = 26;
 const MENU_MS = 4000;
 /** An info line counts touches only after it has been up this long (so a quick tap cannot skip reading it). */
 const INFO_MIN_MS = 1200;
-export const SKIPPED_TOAST = 'Guide off. Replay it: Menu > Opts > Controls.';
+/** The toast when the guide is skipped. */
+export const skippedToast = (): string => t('coach.skipped');
 const WELCOME_H = 60;
 
 /** World view as the coach sees it, plus a tile -> screen mapping. */
@@ -91,19 +93,19 @@ export interface CoachHost {
 }
 
 /** HUD element boxes (logical px), matching Hud.ts. */
-const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number; label: string }> =
+const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number; label: Key }> =
   {
-    clock: { x: 3, y: 2, w: 104, h: 32, label: 'Clock' },
-    gold: { x: 110, y: 2, w: 87, h: 17, label: 'Gold' },
-    energy: { x: 4, y: 34, w: 95, h: 13, label: 'Energy' },
-    water: { x: 101, y: 34, w: 95, h: 13, label: 'Water' },
-    goal: { x: 3, y: 48, w: 194, h: 25, label: 'Goal' },
+    clock: { x: 3, y: 2, w: 104, h: 32, label: 'coach.tagClock' },
+    gold: { x: 110, y: 2, w: 87, h: 17, label: 'coach.tagGold' },
+    energy: { x: 4, y: 34, w: 95, h: 13, label: 'coach.tagEnergy' },
+    water: { x: 101, y: 34, w: 95, h: 13, label: 'coach.tagWater' },
+    goal: { x: 3, y: 48, w: 194, h: 25, label: 'coach.tagGoal' },
     hotbar: {
       x: HOTBAR_X - 1,
       y: HOTBAR_Y - 3,
       w: 8 * (SLOT + 1) + 1,
       h: SLOT + 5,
-      label: 'Hotbar',
+      label: 'coach.tagHotbar',
     },
   };
 
@@ -346,7 +348,7 @@ export class CoachMarks {
     if (v?.pointer?.kind === 'button' && facts.panel && !this.findButton(v.pointer.pattern))
       this.view = {
         ...v,
-        text: 'Close this to carry on.',
+        text: t('tutorial.closeToCarryOn'),
         pointer: { kind: 'button', pattern: CLOSE_BUTTON },
       };
     // Progress (a count moving, the target changing) restarts the stall clock that escalates the marks.
@@ -407,7 +409,7 @@ export class CoachMarks {
       m.lineStyle(2, CH.gold, a).strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
       if (view.tag !== 'hotbar') {
         this.tagLabel
-          .setText(`^ ${b.label}`)
+          .setText(`^ ${t(b.label)}`)
           .setPosition(Math.min(b.x + 4, 160), y)
           .setVisible(true);
         y += 11;
@@ -709,7 +711,8 @@ export class CoachMarks {
       const walk = (o: Phaser.GameObjects.GameObject): void => {
         if (found) return;
         if (o instanceof Button) {
-          if (o.visible && re.test(o.text)) found = o;
+          // patterns name English labels (tutorial.json): a translated label is matched by its English
+          if (o.visible && (re.test(o.text) || re.test(toEnglish(o.text)))) found = o;
           return;
         }
         if (o instanceof Phaser.GameObjects.Container) o.list.forEach(walk);
@@ -771,7 +774,7 @@ export class CoachMarks {
     this.root.setVisible(false);
     this.barZone.disableInteractive();
     runtime.coaching = false;
-    gameEvents.emit('toast', { text: SKIPPED_TOAST, kind: 'info' });
+    gameEvents.emit('toast', { text: skippedToast(), kind: 'info' });
   }
 
   private buildMenu(): void {
@@ -784,28 +787,28 @@ export class CoachMarks {
     type Spec = [string, (b: Button) => void, number];
     const specs: Spec[] = [
       [
-        'Skip guide',
+        t('coach.skip'),
         (b) => {
           // Two taps: the first asks, the second (within 3 s) skips.
           const now = this.scene.time.now;
           this.menuAt = now;
           if (now < armed) return this.skipped();
           armed = now + 3000;
-          b.setLabel('Sure? Skip');
+          b.setLabel(t('coach.skipSure'));
         },
         CH.warn,
       ],
     ];
     if (nextable)
       specs.push([
-        'Next',
+        t('common.next'),
         () => {
           if (this.view) skipStep(getState(), this.view.step.id);
           this.closeMenu();
         },
         CH.cream,
       ]);
-    specs.push(['Back', () => this.closeMenu(), CH.cream]);
+    specs.push([t('common.back'), () => this.closeMenu(), CH.cream]);
     const w = Math.floor((190 - (specs.length - 1) * 4) / specs.length);
     // Back (the safe choice) sits nearest the thumb; Skip farthest from it.
     const order = left ? [...specs].reverse() : specs;
@@ -846,7 +849,7 @@ export class CoachMarks {
       0,
       78,
       20,
-      s.settings.leftHanded ? 'Left hand: ON' : 'Left hand',
+      s.settings.leftHanded ? t('opts.leftHand', { state: t('common.on') }) : t('coach.leftHand'),
       () => {
         toggleLeftHanded(getState());
         gameEvents.emit('settingsChanged', undefined);
@@ -859,14 +862,14 @@ export class CoachMarks {
       0,
       78,
       20,
-      'Skip guide',
+      t('coach.skip'),
       () => {
         const now = this.scene.time.now;
         if (now < this.skipArmedUntil) return this.skipped();
         this.skipArmedUntil = now + 3000;
-        this.welcomeSkip?.setLabel('Sure? Skip');
+        this.welcomeSkip?.setLabel(t('coach.skipSure'));
         this.scene.time.delayedCall(3000, () => {
-          if (this.welcomeSkip?.active) this.welcomeSkip.setLabel('Skip guide');
+          if (this.welcomeSkip?.active) this.welcomeSkip.setLabel(t('coach.skip'));
         });
       },
       { textColor: CH.warn },
@@ -877,6 +880,12 @@ export class CoachMarks {
   }
 
   private welcomeLeftHand = false;
+
+  /** After a language change: the welcome strip and the line's menu are rebuilt (the line itself follows). */
+  relocalize(): void {
+    if (this.menuOpen) this.closeMenu();
+    if (this.welcomeParts.length) this.buildWelcome();
+  }
 
   private placeWelcome(y: number): void {
     const [portrait, name, text] = this.welcomeParts as [Phaser.GameObjects.Image, Label, Label];

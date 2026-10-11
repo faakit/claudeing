@@ -27,6 +27,7 @@ import {
   rivalNotice,
   rivalTargets,
 } from '../../systems/rival';
+import { t } from '../../i18n';
 
 /** The town's request board: three orders a day, paid well above the shipping bin. */
 export class BoardPanel extends Modal {
@@ -68,8 +69,8 @@ export class BoardPanel extends Modal {
         34,
     );
     this.panel();
-    this.label(8, 8, 'Requests', C.gold);
-    this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
+    this.label(8, 8, t('board.title'), C.gold);
+    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
     if (score) this.label(8, 19, score, C.cream);
     this.label(8, score ? 30 : 20, rivalNotice(s), C.creamDim);
     let y = top;
@@ -83,13 +84,13 @@ export class BoardPanel extends Modal {
       const ready = !o.done && have >= o.qty;
       y = this.row(y, {
         icon: iconKey(parseKey(o.item)),
-        title: o.done && !o.rival ? `${orderLabel(o)} (done)` : orderLabel(o),
+        title: o.done && !o.rival ? t('board.doneTitle', { order: orderLabel(o) }) : orderLabel(o),
         sub: o.rival
           ? o.noPoint
-            ? `${rivalName()} took it: no point.`
-            : `${rivalName()} filled this one.`
+            ? t('board.rivalTook', { name: rivalName() })
+            : t('board.rivalFilled', { name: rivalName() })
           : o.done
-            ? 'Thank you!'
+            ? t('board.thanks')
             : orderSub(s, o, have, eyed.has(o.id)),
         subColor:
           o.rival || (eyed.has(o.id) && !ready)
@@ -101,7 +102,7 @@ export class BoardPanel extends Modal {
                 : C.creamDim,
         buttons: [
           {
-            label: o.rival ? 'Gone' : o.done ? 'Done' : 'Give',
+            label: o.rival ? t('board.gone') : o.done ? t('common.done') : t('common.give'),
             width: 36,
             enabled: ready,
             color: ready ? C.green : C.creamDim,
@@ -117,7 +118,7 @@ export class BoardPanel extends Modal {
       });
     }
     if (s.orders.list.length === 0) {
-      this.label(8, y + 6, 'Nothing today. Check back tomorrow!', C.creamDim, 1, 'left', 184);
+      this.label(8, y + 6, t('board.nothing'), C.creamDim, 1, 'left', 184);
       y += 26;
     }
     if (sp) {
@@ -131,12 +132,12 @@ export class BoardPanel extends Modal {
         // When every one you carry is spoken for by a request, say so instead of offering them.
         sub:
           give === 0 && keep > 0 && countItem(s, sp.item) > 0
-            ? 'Saved for a request.'
+            ? t('board.savedForRequest')
             : specialSub(sp),
         subColor: C.gold,
         buttons: [
           {
-            label: give > 0 ? `Give ${give}` : 'Give',
+            label: give > 0 ? t('board.giveN', { n: give }) : t('common.give'),
             width: 40, // "Give 15" needs the room; the request rows keep 36 for their longer lines
             enabled: give > 0,
             color: give > 0 ? C.green : C.creamDim,
@@ -157,10 +158,16 @@ export class BoardPanel extends Modal {
     if (!sp && this.doneSpecial)
       y = this.row(y, {
         title: this.doneSpecial,
-        sub: 'Special done! Thanks!',
+        sub: t('board.specialDone'),
         subColor: C.green,
         buttons: [
-          { label: 'Done', width: 40, enabled: false, color: C.creamDim, onClick: () => {} },
+          {
+            label: t('common.done'),
+            width: 40,
+            enabled: false,
+            color: C.creamDim,
+            onClick: () => {},
+          },
         ],
       });
     if (fest && festOpen) {
@@ -169,7 +176,7 @@ export class BoardPanel extends Modal {
         y + 2,
         this.panelW - 16,
         22,
-        `Enter the ${fest.def.name}!`,
+        t('board.enterFestival', { festival: fest.def.name }),
         () => {
           this.close();
           gameEvents.emit('openPanel', { type: 'festival' });
@@ -184,7 +191,7 @@ export class BoardPanel extends Modal {
         y + 2,
         this.panelW - 16,
         22,
-        'The traveling cart is here!',
+        t('board.cartHere'),
         () => {
           this.close();
           gameEvents.emit('openPanel', { type: 'cart' });
@@ -193,7 +200,7 @@ export class BoardPanel extends Modal {
       );
       y += 26;
     }
-    this.button(8, y + 2, this.panelW - 16, 22, 'Town projects', () => {
+    this.button(8, y + 2, this.panelW - 16, 22, t('board.projects'), () => {
       this.close();
       gameEvents.emit('openPanel', { type: 'projects' });
     });

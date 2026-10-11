@@ -20,6 +20,7 @@ import { random } from '../../systems/rng';
 import type { Label } from '../font';
 import { C } from '../theme';
 import { drawBar, drawPanel, Modal } from '../widgets';
+import { t } from '../../i18n';
 
 type Phase = 'wait' | 'bite' | 'reel' | 'done';
 
@@ -68,11 +69,11 @@ export class FishingPanel extends Modal {
 
   protected build(): void {
     this.panel();
-    this.label(8, 8, 'Fishing', C.gold);
+    this.label(8, 8, t('fishing.title'), C.gold);
     this.label(
       192,
       8,
-      this.bait ? 'Bait on!' : 'No bait',
+      this.bait ? t('fishing.baitOn') : t('fishing.noBait'),
       this.bait ? C.green : C.creamDim,
       1,
       'right',
@@ -104,7 +105,7 @@ export class FishingPanel extends Modal {
       this.panelH - 28,
       this.panelW - 16,
       22,
-      'Reel in & leave',
+      t('fishing.leave'),
       () => this.finish(false),
       {
         textColor: C.warn,
@@ -155,7 +156,7 @@ export class FishingPanel extends Modal {
     if (this.phase === 'wait' || this.phase === 'bite') {
       // Left early or missed the bite: nothing was hooked.
       this.phase = 'done';
-      if (out.caught === false && this.clock > 0) toast('Too slow!', 'warn');
+      if (out.caught === false && this.clock > 0) toast(t('fishing.tooSlow'), 'warn');
       this.close();
       return;
     }
@@ -166,10 +167,10 @@ export class FishingPanel extends Modal {
       audio.play('harvest');
       haptic('success');
       gameEvents.emit('fishCaught', undefined);
-      this.resultText = `${displayName({ item: this.fishId, q: res.q })}${out.perfect ? ' (perfect!)' : ''}`;
+      this.resultText = `${displayName({ item: this.fishId, q: res.q })}${out.perfect ? t('fishing.perfect') : ''}`;
     } else {
       audio.play('error');
-      this.resultText = 'It got away...';
+      this.resultText = t('fishing.gotAway');
     }
   }
 
@@ -194,9 +195,9 @@ export class FishingPanel extends Modal {
       g.fillStyle(0xe0574a, 1).fillRect(cx - 2, cy - 4 + dip, 4, 4);
       g.fillStyle(0xf4ead2, 1).fillRect(cx - 2, cy + dip, 4, 3);
       this.fishIcon.setVisible(false);
-      this.status.setText(this.phase === 'wait' ? 'Waiting for a bite...' : '! TAP NOW !');
+      this.status.setText(this.phase === 'wait' ? t('fishing.waiting') : t('fishing.tapNow'));
       this.status.setColor(this.phase === 'bite' ? C.gold : C.cream);
-      this.hint.setText('Any tap on the sheet hooks it.');
+      this.hint.setText(t('fishing.anyTap'));
     } else if (this.phase === 'reel') {
       const r = this.reel;
       const barTop = y + h - (r.bar + r.size) * h;
@@ -204,14 +205,14 @@ export class FishingPanel extends Modal {
       g.lineStyle(1, 0x9be37f, 1).strokeRect(x + 1.5, barTop + 0.5, w - 3, r.size * h - 1);
       this.fishIcon.setVisible(true).setPosition(x + w / 2, y + h - r.fish * h);
       drawBar(g, x + w + 14, y, 8, h, r.progress, C.gold, true);
-      this.status.setText('Keep the fish in the green!');
+      this.status.setText(t('fishing.keepGreen'));
       this.status.setColor(C.cream);
-      this.hint.setText('Hold to lift, let go to sink.');
+      this.hint.setText(t('fishing.holdLift'));
     } else {
       this.fishIcon.setVisible(false);
       this.status.setText(this.resultText);
-      this.status.setColor(this.resultText.startsWith('It got') ? C.warn : C.green);
-      this.hint.setText('Tap to continue.');
+      this.status.setColor(this.resultText === t('fishing.gotAway') ? C.warn : C.green);
+      this.hint.setText(t('fishing.tapToContinue'));
     }
   }
 }

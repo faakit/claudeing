@@ -31,6 +31,7 @@ import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
 import { placeText } from './festivalText';
+import { fmtGold, t } from '../../i18n';
 
 const ROWS = 4;
 
@@ -56,11 +57,11 @@ export class FestivalPanel extends Modal {
     const today = festivalToday(s);
     this.panel();
     if (!today) {
-      this.label(8, 8, 'No festival today', C.gold);
+      this.label(8, 8, t('festival.noneToday'), C.gold);
       this.label(
         8,
         24,
-        'Festivals are held once a season. Check the calendar!',
+        t('festival.onceASeason'),
         C.creamDim,
         1,
         'left',
@@ -77,7 +78,11 @@ export class FestivalPanel extends Modal {
     this.label(
       8,
       32,
-      `Rivals: ${rivalName()} ${fmt(sorted[0] ?? 0)}, ${sorted.slice(1).map(fmt).join(', ')}`,
+      t('festival.rivals', {
+        name: rivalName(),
+        top: fmt(sorted[0] ?? 0),
+        rest: sorted.slice(1).map(fmt).join(', '),
+      }),
       C.warn,
       1,
       'left',
@@ -87,7 +92,7 @@ export class FestivalPanel extends Modal {
       this.label(
         8,
         60,
-        this.result || 'You have already entered. Good luck next season!',
+        this.result || t('festival.alreadyEntered'),
         C.green,
         1,
         'left',
@@ -104,23 +109,28 @@ export class FestivalPanel extends Modal {
     const today = festivalToday(s)!;
     const best = derbyBest(s);
     const slots = slotsOf(today.def);
-    this.label(8, 50, 'Best catches so far:', C.cream);
+    this.label(8, 50, t('festival.bestSoFar'), C.cream);
     for (let i = 0; i < slots; i++) {
       const c = best[i];
       this.label(
         8,
         64 + i * 12,
-        `${i + 1}. ${c ? `${c.ref ? `${displayName(c.ref)} ` : ''}${fmt(c.value)} points` : '-'}`,
+        `${i + 1}. ${c ? `${c.ref ? `${displayName(c.ref)} ` : ''}${t('festival.points', { n: fmt(c.value) })}` : '-'}`,
         C.creamDim,
       );
     }
     const score = derbyScore(s);
     const place = placeFor(s, today.def, score);
-    this.label(8, 64 + slots * 12 + 6, `Score ${fmt(score)}  ${placeText(place)}`, C.gold);
+    this.label(
+      8,
+      64 + slots * 12 + 6,
+      t('festival.score', { n: fmt(score), place: placeText(place) }),
+      C.gold,
+    );
     this.label(
       8,
       64 + slots * 12 + 20,
-      `${derbyHint(today.def)} Hand in before bed.`,
+      t('festival.handInBeforeBed', { hint: derbyHint(today.def) }),
       C.creamDim,
       1,
       'left',
@@ -133,12 +143,12 @@ export class FestivalPanel extends Modal {
       this.panelH - 56,
       this.panelW - 16,
       24,
-      this.sure ? 'Sure? Tap to hand in' : 'Hand in my catches',
+      this.sure ? t('festival.sureHandIn') : t('festival.handIn'),
       () => {
         if (early) {
           this.sure = true;
           toast(
-            `Handing in ends your derby. Fish until ${formatClock(DERBY_SURE_BEFORE)}?`,
+            t('festival.handInEarly', { time: formatClock(DERBY_SURE_BEFORE) }),
             'info',
           );
           audio.play('select');
@@ -168,7 +178,7 @@ export class FestivalPanel extends Modal {
       this.label(
         8,
         60,
-        'You have nothing to enter. Come back with the right goods next time.',
+        t('festival.nothingToEnter'),
         C.creamDim,
         1,
         'left',
@@ -182,7 +192,13 @@ export class FestivalPanel extends Modal {
       this.label(
         8,
         y,
-        `Basket ${picked.length}/${slots}  ${fmt(score)}${bonus ? ` +${bonus}%` : ''}  ${picked.length ? placeText(placeFor(s, def, score)) : ''}`,
+        t('festival.basket', {
+          n: picked.length,
+          of: slots,
+          score: fmt(score),
+          bonus: bonus ? ` +${bonus}%` : '',
+          place: picked.length ? placeText(placeFor(s, def, score)) : '',
+        }),
         C.gold,
       );
       y += 12;
@@ -198,13 +214,13 @@ export class FestivalPanel extends Modal {
         title: displayName(ref),
         // The row names the good's kind, so "mix it up" is something you can see.
         sub: basketMode
-          ? `${kindOf(def, ref)}  ${fmt(score)}${inBasket ? '  in basket' : ''}`
-          : `Score ${fmt(score)}  ${placeText(placeFor(s, def, score))}`,
+          ? `${kindOf(def, ref)}  ${fmt(score)}${inBasket ? t('festival.inBasket') : ''}`
+          : t('festival.score', { n: fmt(score), place: placeText(placeFor(s, def, score)) }),
         subColor: inBasket ? C.green : C.creamDim,
         buttons: [
           basketMode
             ? {
-                label: inBasket ? 'Out' : 'Add',
+                label: inBasket ? t('festival.out') : t('festival.add'),
                 width: 40,
                 color: inBasket ? C.warn : C.green,
                 enabled: inBasket || (this.basket.length < slots && !sameGood),
@@ -217,7 +233,7 @@ export class FestivalPanel extends Modal {
                 },
               }
             : {
-                label: 'Enter',
+                label: t('festival.enter'),
                 width: 40,
                 color: C.green,
                 onClick: () => this.after(enterBasket(getState(), [ref])),
@@ -237,7 +253,7 @@ export class FestivalPanel extends Modal {
       });
     }
     if (basketMode)
-      this.button(8, by, this.panelW - 16, 24, 'Present the basket', () =>
+      this.button(8, by, this.panelW - 16, 24, t('festival.present'), () =>
         this.after(
           enterBasket(
             getState(),
@@ -256,8 +272,12 @@ export class FestivalPanel extends Modal {
     haptic('success');
     this.result =
       res.place <= 3
-        ? `Place ${res.place} with ${fmt(res.score)} points! You won ${fmt(res.gold)}g.`
-        : `Thanks for joining! ${fmt(res.gold)}g for taking part.`;
+        ? t('festival.resultPlace', {
+            place: res.place,
+            n: fmt(res.score),
+            gold: fmtGold(res.gold),
+          })
+        : t('festival.resultJoin', { gold: fmtGold(res.gold) });
     this.basket = [];
     this.rebuild();
   }

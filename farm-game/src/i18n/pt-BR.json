@@ -86,7 +86,16 @@
   "cart": {
     "greenhouse": "Estufa",
     "seasonCrop": "Safra de {season}",
-    "morningNote": "A carroça ambulante está na vila hoje."
+    "morningNote": "A carroça ambulante está na vila hoje.",
+    "intro": "Só hoje. Cinco de cada.",
+    "soldOut": "Esgotado",
+    "left": "{gold}  restam {n}",
+    "boughtFor": "Comprou {item}. {use}",
+    "bought": "Comprou {item}.",
+    "title": "Carroça ambulante",
+    "gone": "A carroça já foi embora.",
+    "soldOutToast": "Esgotado.",
+    "backToBoard": "Voltar ao mural"
   },
   "channels": {
     "creekBed": "O leito do velho córrego. Melhor deixar livre.",
@@ -113,7 +122,15 @@
   "move": {
     "tapAgainMove": "Toque de novo para mudar de lugar.",
     "tapAgainPickUp": "Toque de novo para recolher.",
-    "busy": "Está trabalhando. Espere terminar."
+    "busy": "Está trabalhando. Espere terminar.",
+    "withOccupants": "Vai para a mochila com: {occupants}. Ponha de novo e tudo volta.",
+    "toBag": "Vai para a mochila. Ponha de novo em qualquer lugar da sua terra.",
+    "building": "Construção",
+    "title": "Mudar de lugar: {name}?",
+    "gone": "Não está mais aqui.",
+    "moveIt": "Mudar de lugar",
+    "leaveIt": "Deixar assim",
+    "inBag": "Na mochila. Ponha onde quiser na sua terra."
   },
   "seasonWord": {
     "spring": "primavera",
@@ -130,7 +147,15 @@
     "done": "Pronto",
     "on": "SIM",
     "off": "NÃO",
-    "back": "Voltar"
+    "back": "Voltar",
+    "next": "Próximo",
+    "all": "Tudo",
+    "give": "Dar",
+    "buy": "Comprar",
+    "notEnoughGold": "Ouro insuficiente.",
+    "makeRoom": "Abra espaço na mochila primeiro.",
+    "notNow": "Agora não",
+    "cantBuy": "Não dá para comprar isso."
   },
   "mapName": {
     "farm": "fazenda",
@@ -147,7 +172,29 @@
     "joinToast": "{festival}: obrigado por participar! +{gold}",
     "castAnywhere": "Pesque onde quiser: lago, rio ou lagoa.",
     "stocked": "Hoje tem {fish} no rio ({maps})!",
-    "todayNote": "Hoje tem {festival}! Passe no mural da vila."
+    "todayNote": "Hoje tem {festival}! Passe no mural da vila.",
+    "place": "lugar {place}",
+    "noPodium": "sem pódio",
+    "noneToday": "Nenhum festival hoje",
+    "onceASeason": "Tem festa uma vez por estação. Fique de olho no calendário!",
+    "rivals": "Rivais: {name} {top}, {rest}",
+    "alreadyEntered": "Você já participou. Boa sorte na próxima estação!",
+    "bestSoFar": "Melhores pescas até agora:",
+    "points": "{n} pontos",
+    "score": "Pontos {n}  {place}",
+    "handInBeforeBed": "{hint} Entregue antes de dormir.",
+    "sureHandIn": "Certeza? Toque e entregue",
+    "handIn": "Entregar minhas pescas",
+    "handInEarly": "Entregar encerra seu torneio. Pescar até as {time}?",
+    "nothingToEnter": "Você não tem nada para inscrever. Volte com as coisas certas da próxima vez.",
+    "basket": "Cesta {n}/{of}  {score}{bonus}  {place}",
+    "inBasket": "  na cesta",
+    "out": "Tirar",
+    "add": "Pôr",
+    "enter": "Inscrever",
+    "present": "Apresentar a cesta",
+    "resultPlace": "Lugar {place} com {n} pontos! Você ganhou {gold}.",
+    "resultJoin": "Obrigado por participar! {gold} pela participação."
   },
   "fishing": {
     "gotAway": "Escapou...",
@@ -155,7 +202,19 @@
     "derbyBest": "Recorde no torneio! {fish}. Pontos: {score}.",
     "legend": "Uma lenda! Você pescou o {fish}!",
     "castAtWater": "Jogue a linha na água.",
-    "nothingBites": "Nada está mordendo aqui agora."
+    "nothingBites": "Nada está mordendo aqui agora.",
+    "title": "Pescaria",
+    "baitOn": "Com isca!",
+    "noBait": "Sem isca",
+    "leave": "Recolher e sair",
+    "tooSlow": "Devagar demais!",
+    "perfect": " (perfeito!)",
+    "waiting": "Esperando beliscar...",
+    "tapNow": "! TOQUE JÁ !",
+    "anyTap": "Qualquer toque na janela fisga o peixe.",
+    "keepGreen": "Mantenha o peixe no verde!",
+    "holdLift": "Segure para subir, solte para descer.",
+    "tapToContinue": "Toque para continuar."
   },
   "food": {
     "restoresNow": "Agora recupera {n}: prato {nth} de hoje.",
@@ -178,7 +237,28 @@
     "reactLike": "{item}, que gentil!",
     "reactNeutral": "Ah. Que gentileza.",
     "reactDislike": "Hum... valeu, eu acho.",
-    "birthdayNote": "Hoje é aniversário de {name}!"
+    "birthdayNote": "Hoje é aniversário de {name}!",
+    "birthdayToday": "Aniversário hoje!",
+    "accept": "Aceitar",
+    "takeGold": "Fique com isto: {n} de ouro.",
+    "hopeYouLike": "Espero que goste!",
+    "friendship": "+{n} de amizade",
+    "atHearts": {
+      "one": "Com {count} coração: {perks}",
+      "other": "Com {count} corações: {perks}"
+    },
+    "bestFriends": "Melhores amigos! Todas as vantagens liberadas.",
+    "loves": "Adora: {items}",
+    "reachHearts": "Chegue a 3 corações para saber os favoritos.",
+    "gift": "Presente",
+    "gifted": "Presenteado",
+    "shop": "Loja",
+    "giftFor": "Um presente para {name}?",
+    "nothingToGive": "Nada para dar. Colha ou cate algo no mato!",
+    "replyLove": "É a coisa que eu mais gosto no mundo!",
+    "replyLike": "Que atencioso, obrigado!",
+    "replyNeutral": "Ah! Que gentileza.",
+    "replyDislike": "Hum... valeu, eu acho."
   },
   "jobs": {
     "headerDouble": "BICOS DE HOJE: PAGA EM DOBRO",
@@ -199,7 +279,18 @@
     "newLetters": {
       "one": "Uma carta nova na caixa de correio.",
       "other": "{count} cartas novas na caixa de correio."
-    }
+    },
+    "new": "Nova",
+    "giftFlag": "Presente!",
+    "noName": "Sem nome",
+    "wasEnclosed": "Veio junto: {what}",
+    "enclosed": "Vai junto: {what}",
+    "title": "Caixa de correio",
+    "waiting": "{n} esperando",
+    "allRead": "Tudo lido",
+    "none": "Nenhuma carta ainda. O correio passa de manhã.",
+    "read": "Ler",
+    "takeGift": "Pegar presente"
   },
   "project": {
     "levelToast": "{name}: nível {level}! {reward}",
@@ -207,7 +298,26 @@
     "finishedToast": "{name} está pronto! {reward}",
     "landmarkLevel": "{name}, nível {level}: financiado por você!",
     "landmark": "{name}: financiado por você! {reward}",
-    "couldFinish": "Dá para terminar hoje: {name}. Veja o mural da vila."
+    "couldFinish": "Dá para terminar hoje: {name}. Veja o mural da vila.",
+    "doneLine": "Pronto: {line}",
+    "doneShort": "Pronto!",
+    "levelSub": "Nível {level}  {given}/{price}",
+    "glory": "Agora cada nível é só pela glória.",
+    "intro": "Cada obra pronta ajuda para sempre.",
+    "title": "Obras da vila",
+    "open": "Abrir",
+    "moreAfter": "Mais depois de: {name}.",
+    "nextOne": "a próxima",
+    "openOnes": "Abertas ({n})",
+    "finished": "Prontas ({n})",
+    "nextLevel": "Próximo nível: {reward} Agora {now}.",
+    "whenDone": "Quando pronta: {reward}",
+    "levelPrefix": "Nível {level}  ",
+    "goldOf": "Ouro {given}/{price}",
+    "fund": "Financiar",
+    "notEnough": "Ainda não dá",
+    "allGold": "Todo o ouro está aqui!",
+    "giveGoods": "Dar produtos"
   },
   "silo": {
     "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}.",
@@ -366,7 +476,21 @@
       "other": "{item}: faltam {count} dias."
     },
     "nothingYet": "Nada ainda.",
-    "got": "Pegou: {item}"
+    "got": "Pegou: {item}",
+    "machine": "Máquina",
+    "ready": {
+      "one": "Fica pronto {count} manhã depois de carregar.",
+      "other": "Fica pronto {count} manhãs depois de carregar."
+    },
+    "gone": "Sumiu?",
+    "bring": "Traga frutas para geleia, ou legumes para conserva.",
+    "makes": "Faz {item} (tem {n})",
+    "load": "Carregar",
+    "loaded": {
+      "one": "{count} máquina carregada.",
+      "other": "{count} máquinas carregadas."
+    },
+    "pickUp": "Recolher"
   },
   "mining": {
     "nothing": "Nada para minerar aqui.",
@@ -471,5 +595,100 @@
     "stick2": "direção",
     "ring1": "Deslize Ação:",
     "ring2": "ferramentas"
+  },
+  "coach": {
+    "skipped": "Guia desligado. Para rever: Menu > Opç. > Controles.",
+    "tagClock": "Relógio",
+    "tagGold": "Ouro",
+    "tagEnergy": "Energia",
+    "tagWater": "Água",
+    "tagGoal": "Meta",
+    "tagHotbar": "Barra",
+    "skip": "Pular guia",
+    "skipSure": "Certeza?",
+    "leftHand": "Canhoto"
+  },
+  "bin": {
+    "wantedInBin": "Mural {want}  caixa {inBin}",
+    "wanted": "Mural {want}  x{have}",
+    "boardWants": "O mural pede {n} {item}.",
+    "keptBoth": "Guardou {n} {item} para o mural e {m} para {giver}.",
+    "keptSpecial": "Guardou {n} {item} para {giver}.",
+    "keptMore": "Guardou {items} e mais para o mural.",
+    "kept": "Guardou {items} para o mural.",
+    "title": "Caixa de envio",
+    "intro": "Vendido amanhã cedo pelo preço cheio.",
+    "empty": "Nada para enviar ainda. Colha alguma coisa primeiro!",
+    "row": "{gold}  tem {have}  caixa {inBin}",
+    "inBin": "Na caixa: {gold}",
+    "shipAll": "Enviar a colheita",
+    "legend": "Uma lenda na caixa! Tire antes de dormir se quiser ficar com ela."
+  },
+  "board": {
+    "lastDay": "último dia",
+    "days": "{n} dias",
+    "eyed": "do {name}!",
+    "have": "Tem {tail}",
+    "title": "Pedidos",
+    "doneTitle": "{order} (feito)",
+    "rivalTook": "{name} pegou: nenhum ponto.",
+    "rivalFilled": "{name} atendeu este.",
+    "thanks": "Obrigado!",
+    "gone": "Foi",
+    "nothing": "Nada hoje. Volte amanhã!",
+    "savedForRequest": "Guardado para um pedido.",
+    "giveN": "Dar {n}",
+    "specialDone": "Especial entregue! Valeu!",
+    "enterFestival": "Participe: {festival}!",
+    "cartHere": "A carroça ambulante chegou!",
+    "projects": "Obras da vila"
+  },
+  "craft": {
+    "needsKitchen": "Precisa de cozinha",
+    "locked": "Bloqueado",
+    "needsLevel": "{skill} nv {level} (você: {have})",
+    "title": "BANCADA",
+    "make": "Fazer",
+    "fiber": "Você tem {n} de fibra. Corte o mato com a foice."
+  },
+  "gift": {
+    "loves": "Adora!",
+    "likes": "Gosta",
+    "neutral": "Tanto faz",
+    "dislikes": "Não gosta",
+    "sub": "Tem {n}  {known}",
+    "notTried": "Ainda não testou",
+    "oneADayShort": "1 por dia.",
+    "oneADay": "1 presente por dia.",
+    "tomorrow": "Amanhã."
+  },
+  "perk": {
+    "qualityBonus": "+{n}% de qualidade",
+    "maxEnergy": "+{n} de energia máxima",
+    "sellBonus": "+{n}% no preço de venda",
+    "forageDouble": "+{n}% de achado em dobro",
+    "forageQuality": "+{n}% de qualidade no mato",
+    "upgradeDiscount": "{n}% de desconto em melhorias",
+    "shopDiscount": "{n}% de desconto na loja",
+    "fishWindow": "+{n}% de área de fisgada",
+    "orderSlots": {
+      "one": "+{count} pedido no mural por dia",
+      "other": "+{count} pedidos no mural por dia"
+    },
+    "xpBonus": "+{n}% de experiência",
+    "rivalLate": {
+      "one": "{name} chega {count} hora mais tarde",
+      "other": "{name} chega {count} horas mais tarde"
+    },
+    "rivalPolite": "{name} poupa seus produtos da roça",
+    "rivalOff": "{name} para de pegar pedidos",
+    "festivalPrize": "+{n}% nos prêmios de festa"
+  },
+  "plot": {
+    "size": "{n} espaços de terra boa.",
+    "more": "Mais terra é mais colheita, mas você precisa de energia para trabalhar.",
+    "price": "Preço {price}   Você tem {have}",
+    "buy": "Comprar por {gold}",
+    "yours": "{name} agora é sua!"
   }
 }

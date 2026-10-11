@@ -22,7 +22,7 @@ import {
 import { addXp, perk, xpOf } from '../src/systems/skills';
 import { migrate } from '../src/systems/save';
 import { measureText } from '../src/ui/fontMetrics';
-import { PROJECTS_INTRO, projectSub } from '../src/ui/panels/projectText';
+import { projectsIntro, projectSub } from '../src/ui/panels/projectText';
 import { newState } from './helpers';
 import type { GameState } from '../src/state/GameState';
 
@@ -127,7 +127,7 @@ describe('town projects', () => {
   });
 
   it('project text fits the sheet', () => {
-    expect(measureText(PROJECTS_INTRO)).toBeLessThanOrEqual(184);
+    expect(measureText(projectsIntro())).toBeLessThanOrEqual(184);
     for (const p of Object.values(projects)) {
       expect(measureText(p.name), p.name).toBeLessThanOrEqual(120);
       expect(measureText(`When done: ${p.reward}`), p.name).toBeLessThanOrEqual(184 * 2);

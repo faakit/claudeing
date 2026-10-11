@@ -7,7 +7,7 @@ import { toast } from '../../systems/events';
 import { buyPlot, plotSize } from '../../systems/plots';
 import { C } from '../theme';
 import { Modal } from '../widgets';
-import { fmt } from './format';
+import { fmtGold, t } from '../../i18n';
 
 /** A land sign: what the plot is, what it costs, and a big Buy button. */
 export class PlotPanel extends Modal {
@@ -28,11 +28,11 @@ export class PlotPanel extends Modal {
     const p = plots[this.id]!;
     this.panel();
     this.label(8, 8, p.name, C.gold);
-    this.label(8, 22, `${plotSize(this.id)} tiles of workable land.`, C.cream);
+    this.label(8, 22, t('plot.size', { n: plotSize(this.id) }), C.cream);
     this.label(
       8,
       36,
-      'More land means more crops, but you need the energy to work it.',
+      t('plot.more'),
       C.creamDim,
       1,
       'left',
@@ -41,7 +41,7 @@ export class PlotPanel extends Modal {
     this.label(
       8,
       66,
-      `Price ${fmt(p.price)}g   You have ${fmt(s.money)}g`,
+      t('plot.price', { price: fmtGold(p.price), have: fmtGold(s.money) }),
       s.money >= p.price ? C.green : C.red,
     );
     this.button(
@@ -49,14 +49,14 @@ export class PlotPanel extends Modal {
       this.panelH - 62,
       this.panelW - 16,
       24,
-      `Buy for ${fmt(p.price)}g`,
+      t('plot.buy', { gold: fmtGold(p.price) }),
       () => this.buy(),
       {
         textColor: s.money >= p.price ? C.green : C.creamDim,
         rim: s.money >= p.price ? C.green : C.creamDim,
       },
     ).setEnabled(s.money >= p.price);
-    this.closeButton('Not now');
+    this.closeButton(t('common.notNow'));
   }
 
   private buy(): void {
@@ -64,11 +64,11 @@ export class PlotPanel extends Modal {
     if (res === 'ok') {
       audio.play('buy');
       haptic('success');
-      toast(`${plots[this.id]!.name} is yours!`, 'good');
+      toast(t('plot.yours', { name: plots[this.id]!.name }), 'good');
       this.close();
     } else {
       audio.play('error');
-      toast(res === 'no_money' ? 'Not enough gold.' : "Can't buy that.", 'warn');
+      toast(res === 'no_money' ? t('common.notEnoughGold') : t('common.cantBuy'), 'warn');
     }
   }
 }

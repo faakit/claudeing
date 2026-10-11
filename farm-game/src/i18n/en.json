@@ -86,7 +86,16 @@
   "cart": {
     "greenhouse": "Greenhouse",
     "seasonCrop": "{season} crop",
-    "morningNote": "The traveling cart is in town today."
+    "morningNote": "The traveling cart is in town today.",
+    "intro": "Here today only. Five of each.",
+    "soldOut": "Sold out",
+    "left": "{gold}  {n} left",
+    "boughtFor": "Bought {item}. {use}",
+    "bought": "Bought {item}.",
+    "title": "Traveling Cart",
+    "gone": "The cart has moved on.",
+    "soldOutToast": "Sold out.",
+    "backToBoard": "Back to the board"
   },
   "channels": {
     "creekBed": "The old creek bed. Best left clear.",
@@ -113,7 +122,15 @@
   "move": {
     "tapAgainMove": "Tap again to move it.",
     "tapAgainPickUp": "Tap again to pick up.",
-    "busy": "It's busy. Wait until it's done."
+    "busy": "It's busy. Wait until it's done.",
+    "withOccupants": "It goes into your bag with {occupants}. Place it again and everything comes back.",
+    "toBag": "It goes into your bag. Place it again anywhere on your land.",
+    "building": "Building",
+    "title": "Move the {name}?",
+    "gone": "It is gone.",
+    "moveIt": "Move it",
+    "leaveIt": "Leave it",
+    "inBag": "In your bag. Place it anywhere on your land."
   },
   "seasonWord": {
     "spring": "Spring",
@@ -130,7 +147,15 @@
     "done": "Done",
     "on": "ON",
     "off": "OFF",
-    "back": "Back"
+    "back": "Back",
+    "next": "Next",
+    "all": "All",
+    "give": "Give",
+    "buy": "Buy",
+    "notEnoughGold": "Not enough gold.",
+    "makeRoom": "Make room in your bag first.",
+    "notNow": "Not now",
+    "cantBuy": "Can't buy that."
   },
   "mapName": {
     "farm": "farm",
@@ -147,7 +172,29 @@
     "joinToast": "{festival}: thanks for joining! +{gold}",
     "castAnywhere": "Cast anywhere: pond, river or lake.",
     "stocked": "{fish} stocked in the {maps} river today!",
-    "todayNote": "{festival} today! Visit the town board."
+    "todayNote": "{festival} today! Visit the town board.",
+    "place": "place {place}",
+    "noPodium": "no podium",
+    "noneToday": "No festival today",
+    "onceASeason": "Festivals are held once a season. Check the calendar!",
+    "rivals": "Rivals: {name} {top}, {rest}",
+    "alreadyEntered": "You have already entered. Good luck next season!",
+    "bestSoFar": "Best catches so far:",
+    "points": "{n} points",
+    "score": "Score {n}  {place}",
+    "handInBeforeBed": "{hint} Hand in before bed.",
+    "sureHandIn": "Sure? Tap to hand in",
+    "handIn": "Hand in my catches",
+    "handInEarly": "Handing in ends your derby. Fish until {time}?",
+    "nothingToEnter": "You have nothing to enter. Come back with the right goods next time.",
+    "basket": "Basket {n}/{of}  {score}{bonus}  {place}",
+    "inBasket": "  in basket",
+    "out": "Out",
+    "add": "Add",
+    "enter": "Enter",
+    "present": "Present the basket",
+    "resultPlace": "Place {place} with {n} points! You won {gold}.",
+    "resultJoin": "Thanks for joining! {gold} for taking part."
   },
   "fishing": {
     "gotAway": "It got away...",
@@ -155,7 +202,19 @@
     "derbyBest": "Derby best! {fish}. Score {score}.",
     "legend": "A legend! You caught the {fish}!",
     "castAtWater": "Cast at the water.",
-    "nothingBites": "Nothing bites here right now."
+    "nothingBites": "Nothing bites here right now.",
+    "title": "Fishing",
+    "baitOn": "Bait on!",
+    "noBait": "No bait",
+    "leave": "Reel in & leave",
+    "tooSlow": "Too slow!",
+    "perfect": " (perfect!)",
+    "waiting": "Waiting for a bite...",
+    "tapNow": "! TAP NOW !",
+    "anyTap": "Any tap on the sheet hooks it.",
+    "keepGreen": "Keep the fish in the green!",
+    "holdLift": "Hold to lift, let go to sink.",
+    "tapToContinue": "Tap to continue."
   },
   "food": {
     "restoresNow": "Restores {n} now: dish {nth} today.",
@@ -178,7 +237,28 @@
     "reactLike": "{item}, how nice!",
     "reactNeutral": "Oh. Thank you.",
     "reactDislike": "Um... thanks, I guess.",
-    "birthdayNote": "It's {name}'s birthday today!"
+    "birthdayNote": "It's {name}'s birthday today!",
+    "birthdayToday": "Birthday today!",
+    "accept": "Accept",
+    "takeGold": "Take this: {n} gold.",
+    "hopeYouLike": "I hope you like it!",
+    "friendship": "+{n} friendship",
+    "atHearts": {
+      "one": "At {count} heart: {perks}",
+      "other": "At {count} hearts: {perks}"
+    },
+    "bestFriends": "Best friends! All perks unlocked.",
+    "loves": "Loves: {items}",
+    "reachHearts": "Reach 3 hearts to learn their favourites.",
+    "gift": "Gift",
+    "gifted": "Gifted",
+    "shop": "Shop",
+    "giftFor": "A gift for {name}?",
+    "nothingToGive": "Nothing to give. Forage or harvest something!",
+    "replyLove": "This is my favourite thing ever!",
+    "replyLike": "How thoughtful, thank you!",
+    "replyNeutral": "Oh! Thank you.",
+    "replyDislike": "Um... thanks, I suppose."
   },
   "jobs": {
     "headerDouble": "TODAY'S JOBS: DOUBLE PAY",
@@ -199,7 +279,18 @@
     "newLetters": {
       "one": "A new letter in the mailbox.",
       "other": "{count} new letters in the mailbox."
-    }
+    },
+    "new": "New",
+    "giftFlag": "Gift!",
+    "noName": "No name",
+    "wasEnclosed": "Was enclosed: {what}",
+    "enclosed": "Enclosed: {what}",
+    "title": "Mailbox",
+    "waiting": "{n} waiting",
+    "allRead": "All read",
+    "none": "No letters yet. The post comes in the morning.",
+    "read": "Read",
+    "takeGift": "Take gift"
   },
   "project": {
     "levelToast": "{name}: level {level}! {reward}",
@@ -207,7 +298,26 @@
     "finishedToast": "{name} is finished! {reward}",
     "landmarkLevel": "{name}, level {level}: funded by you!",
     "landmark": "{name}: funded by you! {reward}",
-    "couldFinish": "You could finish the {name} today. See the town board."
+    "couldFinish": "You could finish the {name} today. See the town board.",
+    "doneLine": "Done: {line}",
+    "doneShort": "Done!",
+    "levelSub": "Level {level}  {given}/{price}",
+    "glory": "Each level now is just for glory.",
+    "intro": "Every finished one helps for good.",
+    "title": "Town Projects",
+    "open": "Open",
+    "moreAfter": "More after the {name}.",
+    "nextOne": "next one",
+    "openOnes": "Open ones ({n})",
+    "finished": "Finished ({n})",
+    "nextLevel": "Next level: {reward} Now {now}.",
+    "whenDone": "When done: {reward}",
+    "levelPrefix": "Level {level}  ",
+    "goldOf": "Gold {given}/{price}",
+    "fund": "Fund it",
+    "notEnough": "Not enough yet",
+    "allGold": "All the gold is in!",
+    "giveGoods": "Give goods"
   },
   "silo": {
     "hungry": "The {house} went hungry: the silo needs {n} {feed}.",
@@ -366,7 +476,21 @@
       "other": "{item}: {count} more days."
     },
     "nothingYet": "Nothing yet.",
-    "got": "Got {item}"
+    "got": "Got {item}",
+    "machine": "Machine",
+    "ready": {
+      "one": "Ready {count} morning after loading.",
+      "other": "Ready {count} mornings after loading."
+    },
+    "gone": "Gone?",
+    "bring": "Bring fruit for jam, or vegetables for pickles.",
+    "makes": "Makes {item} (have {n})",
+    "load": "Load",
+    "loaded": {
+      "one": "Loaded {count} machine.",
+      "other": "Loaded {count} machines."
+    },
+    "pickUp": "Pick up"
   },
   "mining": {
     "nothing": "Nothing to mine here.",
@@ -471,5 +595,100 @@
     "stick2": "steer",
     "ring1": "Flick Action:",
     "ring2": "tool ring"
+  },
+  "coach": {
+    "skipped": "Guide off. Replay it: Menu > Opts > Controls.",
+    "tagClock": "Clock",
+    "tagGold": "Gold",
+    "tagEnergy": "Energy",
+    "tagWater": "Water",
+    "tagGoal": "Goal",
+    "tagHotbar": "Hotbar",
+    "skip": "Skip guide",
+    "skipSure": "Sure? Skip",
+    "leftHand": "Left hand"
+  },
+  "bin": {
+    "wantedInBin": "Board {want}  bin {inBin}",
+    "wanted": "Board {want}  x{have}",
+    "boardWants": "The board wants {n} {item}.",
+    "keptBoth": "Kept {n} {item} for the board and {m} for {giver}.",
+    "keptSpecial": "Kept {n} {item} for {giver}.",
+    "keptMore": "Kept {items} and more for the board.",
+    "kept": "Kept {items} for the board.",
+    "title": "Shipping Bin",
+    "intro": "Sold tomorrow morning at full price.",
+    "empty": "Nothing to ship yet. Harvest some crops first!",
+    "row": "{gold}  have {have}  bin {inBin}",
+    "inBin": "In bin: {gold}",
+    "shipAll": "Ship all produce",
+    "legend": "A legend in the bin! Take it back out before bed to keep it."
+  },
+  "board": {
+    "lastDay": "last day",
+    "days": "{n} days",
+    "eyed": "{name}'s!",
+    "have": "Have {tail}",
+    "title": "Requests",
+    "doneTitle": "{order} (done)",
+    "rivalTook": "{name} took it: no point.",
+    "rivalFilled": "{name} filled this one.",
+    "thanks": "Thank you!",
+    "gone": "Gone",
+    "nothing": "Nothing today. Check back tomorrow!",
+    "savedForRequest": "Saved for a request.",
+    "giveN": "Give {n}",
+    "specialDone": "Special done! Thanks!",
+    "enterFestival": "Enter the {festival}!",
+    "cartHere": "The traveling cart is here!",
+    "projects": "Town projects"
+  },
+  "craft": {
+    "needsKitchen": "Needs a kitchen",
+    "locked": "Locked",
+    "needsLevel": "{skill} Lv {level} (you: {have})",
+    "title": "WORKBENCH",
+    "make": "Make",
+    "fiber": "You carry {n} fiber. Cut weeds with the scythe."
+  },
+  "gift": {
+    "loves": "Loves it!",
+    "likes": "Likes it",
+    "neutral": "Not fussed",
+    "dislikes": "Dislikes it",
+    "sub": "Have {n}  {known}",
+    "notTried": "Not tried yet",
+    "oneADayShort": "1 a day.",
+    "oneADay": "1 gift a day.",
+    "tomorrow": "Tomorrow."
+  },
+  "perk": {
+    "qualityBonus": "+{n}% better quality",
+    "maxEnergy": "+{n} max energy",
+    "sellBonus": "+{n}% sell price",
+    "forageDouble": "+{n}% double finds",
+    "forageQuality": "+{n}% forage quality",
+    "upgradeDiscount": "{n}% off tool upgrades",
+    "shopDiscount": "{n}% off shop prices",
+    "fishWindow": "+{n}% catch zone",
+    "orderSlots": {
+      "one": "+{count} board request a day",
+      "other": "+{count} board requests a day"
+    },
+    "xpBonus": "+{n}% skill XP",
+    "rivalLate": {
+      "one": "{name} comes {count} hour later",
+      "other": "{name} comes {count} hours later"
+    },
+    "rivalPolite": "{name} spares your farm goods",
+    "rivalOff": "{name} stops taking requests",
+    "festivalPrize": "+{n}% festival prizes"
+  },
+  "plot": {
+    "size": "{n} tiles of workable land.",
+    "more": "More land means more crops, but you need the energy to work it.",
+    "price": "Price {price}   You have {have}",
+    "buy": "Buy for {gold}",
+    "yours": "{name} is yours!"
   }
 }

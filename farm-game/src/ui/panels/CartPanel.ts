@@ -8,7 +8,7 @@ import { toast } from '../../systems/events';
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
-import { cartBought, cartSub, CART_INTRO } from './cartText';
+import { cartBought, cartIntro, cartSub } from './cartText';
 import { t } from '../../i18n';
 
 /** The traveling cart's sheet: a few rows, one Buy button each, low on the screen. */
@@ -20,12 +20,12 @@ export class CartPanel extends Modal {
   protected build(): void {
     const s = getState();
     this.panel();
-    this.label(8, 8, 'Traveling Cart', C.gold);
-    this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
-    this.label(8, 20, CART_INTRO, C.creamDim);
+    this.label(8, 8, t('cart.title'), C.gold);
+    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(8, 20, cartIntro(), C.creamDim);
     let y = 34;
     const stock = cartStock(s);
-    if (stock.length === 0) this.label(8, 40, 'The cart has moved on.', C.creamDim);
+    if (stock.length === 0) this.label(8, 40, t('cart.gone'), C.creamDim);
     for (const id of stock) {
       const price = cartPrice(id);
       const left = cartLeft(s, id);
@@ -36,7 +36,7 @@ export class CartPanel extends Modal {
         subColor: left > 0 ? C.creamDim : C.warn,
         buttons: [
           {
-            label: 'Buy',
+            label: t('common.buy'),
             width: 40,
             enabled: left > 0,
             color: s.money >= price && left > 0 ? C.gold : C.red,
@@ -49,10 +49,10 @@ export class CartPanel extends Modal {
                 audio.play('error');
                 toast(
                   res === 'no_money'
-                    ? 'Not enough gold.'
+                    ? t('common.notEnoughGold')
                     : res === 'full'
                       ? t('common.inventoryFull')
-                      : 'Sold out.',
+                      : t('cart.soldOutToast'),
                   'warn',
                 );
               }
@@ -68,7 +68,7 @@ export class CartPanel extends Modal {
       this.panelH - 28,
       this.panelW - 16,
       22,
-      'Back to the board',
+      t('cart.backToBoard'),
       () => {
         this.close();
         gameEvents.emit('openPanel', { type: 'board' });

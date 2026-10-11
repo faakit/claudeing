@@ -15,7 +15,7 @@ import {
 } from '../src/systems/projects';
 import { perk } from '../src/systems/skills';
 import { measureText } from '../src/ui/fontMetrics';
-import { GLORY_LINE, repeatSub } from '../src/ui/panels/projectText';
+import { gloryLine, repeatSub } from '../src/ui/panels/projectText';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
 
@@ -78,7 +78,7 @@ describe("the Founder's Statue: a repeatable late-game sink", () => {
     expect(measureText(repeatSub(12, 999_999, 9_999_999))).toBeLessThanOrEqual(
       200 - 8 - 28 - 43 - 2,
     );
-    expect(measureText(GLORY_LINE)).toBeLessThanOrEqual(184);
+    expect(measureText(gloryLine())).toBeLessThanOrEqual(184);
   });
 });
 

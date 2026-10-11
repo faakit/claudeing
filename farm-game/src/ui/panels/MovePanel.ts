@@ -28,22 +28,23 @@ export class MovePanel extends Modal {
   protected build(): void {
     const found = findPlaced(getState(), this.id);
     this.panel();
-    const name = found ? (placeables[found.obj.type]?.name ?? 'Building') : 'Building';
-    this.label(8, 8, `Move the ${name}?`, C.gold);
+    const building = t('move.building');
+    const name = found ? (placeables[found.obj.type]?.name ?? building) : building;
+    this.label(8, 8, t('move.title', { name }), C.gold);
     this.label(
       8,
       22,
-      found ? moveText(occupantsOf(found.obj)) : 'It is gone.',
+      found ? moveText(occupantsOf(found.obj)) : t('move.gone'),
       C.creamDim,
       1,
       'left',
       184,
     );
-    this.button(8, this.panelH - 56, this.panelW - 16, 24, 'Move it', () => this.move(), {
+    this.button(8, this.panelH - 56, this.panelW - 16, 24, t('move.moveIt'), () => this.move(), {
       textColor: C.green,
       rim: C.green,
     }).setEnabled(!!found);
-    this.closeButton('Leave it');
+    this.closeButton(t('move.leaveIt'));
   }
 
   /** The Move button only: Enter (the sheet's confirm key) must not do the risky thing (critique 6, F8). */
@@ -58,10 +59,10 @@ export class MovePanel extends Modal {
     }
     if (res === 'busy') {
       audio.play('error');
-      return void toast("It's busy. Wait until it's done.", 'warn');
+      return void toast(t('move.busy'), 'warn');
     }
     gameEvents.emit('placedChanged', { map: found.map });
-    toast('In your bag. Place it anywhere on your land.', 'good');
+    toast(t('move.inBag'), 'good');
     this.close();
   }
 }

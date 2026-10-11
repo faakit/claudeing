@@ -5,7 +5,7 @@ import { buyFromCart, cartHere, cartLeft, cartPrice, cartStock } from '../src/sy
 import { endDay } from '../src/systems/day';
 import { countItem } from '../src/systems/inventory';
 import { measureText } from '../src/ui/fontMetrics';
-import { CART_INTRO, cartSub } from '../src/ui/panels/cartText';
+import { cartIntro, cartSub } from '../src/ui/panels/cartText';
 import { newState } from './helpers';
 
 describe('the traveling cart', () => {
@@ -59,7 +59,7 @@ describe('the traveling cart', () => {
   });
 
   it('its lines fit', () => {
-    expect(measureText(CART_INTRO)).toBeLessThanOrEqual(184);
+    expect(measureText(cartIntro())).toBeLessThanOrEqual(184);
     expect(measureText(cartSub(9999, 5))).toBeLessThanOrEqual(200 - 8 - 28 - 43 - 2);
     expect(measureText('The traveling cart is here!')).toBeLessThanOrEqual(176);
   });

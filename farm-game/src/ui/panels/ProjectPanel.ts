@@ -25,17 +25,18 @@ import { drawBar, Modal } from '../widgets';
 import { fmt } from './format';
 import {
   GIVE_STEPS,
-  GLORY_LINE,
+  gloryLine,
   repeatNow,
   LIST_NAV_FROM_BOTTOM,
   LIST_ROWS,
   LIST_TOP,
   PROJECT_SHEET_H,
-  PROJECTS_INTRO,
+  projectsIntro,
   projectLists,
   projectSub,
   repeatSub,
 } from './projectText';
+import { fmtGold, t } from '../../i18n';
 
 /** The town fund: a list of projects, and a page per project to give gold and goods to. */
 export class ProjectPanel extends Modal {
@@ -79,9 +80,9 @@ export class ProjectPanel extends Modal {
 
   private buildList(): void {
     const s = getState();
-    this.label(8, 8, 'Town Projects', C.gold);
-    this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
-    this.label(8, 20, PROJECTS_INTRO, C.creamDim);
+    this.label(8, 8, t('project.title'), C.gold);
+    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(8, 20, projectsIntro(), C.creamDim);
     // Open projects first; finished ones on their own pages, so nine projects never push a row under
     // Close or off the screen (critique 6, F1).
     const { open, finished } = projectLists(s);
@@ -103,7 +104,7 @@ export class ProjectPanel extends Modal {
           ? []
           : [
               {
-                label: 'Open',
+                label: t('project.open'),
                 width: 40,
                 color: C.gold,
                 onClick: () => {
@@ -119,7 +120,7 @@ export class ProjectPanel extends Modal {
       this.label(
         8,
         y + 4,
-        `More after the ${projects[locked.after]?.name ?? 'next one'}.`,
+        t('project.moreAfter', { name: projects[locked.after]?.name ?? t('project.nextOne') }),
         C.creamDim,
       );
     const by = this.panelH - LIST_NAV_FROM_BOTTOM;
@@ -139,7 +140,9 @@ export class ProjectPanel extends Modal {
         by,
         116,
         20,
-        this.showFinished ? `Open ones (${open.length})` : `Finished (${finished.length})`,
+        this.showFinished
+          ? t('project.openOnes', { n: open.length })
+          : t('project.finished', { n: finished.length }),
         () => {
           this.showFinished = !this.showFinished;
           this.page = 0;
@@ -153,7 +156,7 @@ export class ProjectPanel extends Modal {
     const p = projects[id]!;
     this.icon(15, 15, this.landmarkIcon(id));
     this.label(28, 8, p.name, C.gold);
-    this.label(192, 8, `Gold ${fmt(s.money)}`, C.gold, 1, 'right');
+    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
     const blurb = this.label(8, 26, p.blurb, C.cream, 1, 'left', 184);
     let y = 26 + blurb.textHeight + 4;
     const glory = !!p.repeat && projectLevel(s, id) >= p.repeat.perkLevels;
@@ -161,8 +164,13 @@ export class ProjectPanel extends Modal {
       8,
       y,
       glory
-        ? GLORY_LINE
-        : `${p.repeat && projectLevel(s, id) > 0 ? 'Next level' : 'When done'}: ${p.reward}${p.repeat && projectLevel(s, id) > 0 ? ` Now ${repeatNow(p, projectLevel(s, id))}.` : ''}`,
+        ? gloryLine()
+        : p.repeat && projectLevel(s, id) > 0
+          ? t('project.nextLevel', {
+              reward: p.reward,
+              now: repeatNow(p, projectLevel(s, id)),
+            })
+          : t('project.whenDone', { reward: p.reward }),
       C.green,
       1,
       'left',
@@ -178,7 +186,7 @@ export class ProjectPanel extends Modal {
     this.label(
       8,
       y,
-      `${p.repeat ? `Level ${projectLevel(s, id) + 1}  ` : ''}Gold ${fmt(goldGiven(s, id))}/${fmt(price)}`,
+      `${p.repeat ? t('project.levelPrefix', { level: projectLevel(s, id) + 1 }) : ''}${t('project.goldOf', { given: fmt(goldGiven(s, id)), price: fmt(price) })}`,
       left > 0 ? C.cream : C.green,
     );
     y += 12;
@@ -192,7 +200,7 @@ export class ProjectPanel extends Modal {
     if (p.place) {
       const ready = left > 0 || itemNeeds(s, id).some((n) => n.given < n.need);
       const all = canFundPlace(s, p.place);
-      this.button(8, by, 184, 22, all ? 'Fund it' : 'Not enough yet', () => {
+      this.button(8, by, 184, 22, all ? t('project.fund') : t('project.notEnough'), () => {
         const st = getState();
         donateItems(st, id);
         this.after(donateGold(st, id, priceOf(st, id) - goldGiven(st, id)));
@@ -201,20 +209,20 @@ export class ProjectPanel extends Modal {
     }
     // Each button says what it really gives: near the end, "+10,000g" becomes the amount still needed.
     // Once the gold is all in, the three buttons give way to a plain line (no "+0g" buttons).
-    if (left <= 0) this.label(100, by + 6, 'All the gold is in!', C.green, 1, 'center');
+    if (left <= 0) this.label(100, by + 6, t('project.allGold'), C.green, 1, 'center');
     else
       GIVE_STEPS.forEach((step, i) => {
         const amount = Math.min(step, left);
         const repeat = i > 0 && Math.min(GIVE_STEPS[i - 1]!, left) === amount;
-        this.button(8 + i * 62, by, 58, 22, `+${fmt(amount)}g`, () =>
+        this.button(8 + i * 62, by, 58, 22, `+${fmtGold(amount)}`, () =>
           this.after(donateGold(getState(), id, step)),
         ).setEnabled(amount > 0 && !repeat && s.money >= amount);
       });
     const needsItems = itemNeeds(s, id).some((n) => n.given < n.need);
-    this.button(8, by + 26, 90, 22, 'Give goods', () =>
+    this.button(8, by + 26, 90, 22, t('project.giveGoods'), () =>
       this.after(donateItems(getState(), id)),
     ).setEnabled(needsItems && canGiveItems(s, id));
-    this.button(102, by + 26, 90, 22, this.only ? 'Close' : 'Back', () => {
+    this.button(102, by + 26, 90, 22, this.only ? t('common.close') : t('common.back'), () => {
       if (this.only) return this.close();
       this.id = null;
       this.rebuild();
@@ -231,7 +239,7 @@ export class ProjectPanel extends Modal {
     } else {
       audio.play('error');
       haptic('error');
-      if (res.reason === 'no_money') toast('Not enough gold.', 'warn');
+      if (res.reason === 'no_money') toast(t('common.notEnoughGold'), 'warn');
     }
     this.rebuild();
   }

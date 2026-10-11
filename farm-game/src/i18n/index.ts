@@ -145,7 +145,9 @@ export const missingKeys = (): string[] => [...missing];
 export const fmtNum = (n: number): string => numbers.format(n);
 
 /** An amount of gold: "1,234g" (en), "1.234o" (pt-BR, for ouro). */
-export const fmtGold = (n: number): string => t('fmt.gold', { n: fmtNum(n) });
+export const fmtGold = (n: number): string => goldText(fmtNum(n));
+/** A number already written ("12k") with the gold mark. */
+export const goldText = (amount: string): string => t('fmt.gold', { n: amount });
 
 // ---------------------------------------------------------------- back to English
 

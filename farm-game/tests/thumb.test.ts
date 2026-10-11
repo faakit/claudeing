@@ -8,7 +8,8 @@ import { addItem, countItem } from '../src/systems/inventory';
 import { placeObject } from '../src/systems/placeables';
 import { idleMachines, jarContents, loadAll } from '../src/systems/preserves';
 import { measureText } from '../src/ui/fontMetrics';
-import { giftSub, KNOWN_TEXT } from '../src/ui/panels/giftText';
+import { giftSub } from '../src/ui/panels/giftText';
+import { LOCALES, setLocale } from '../src/i18n';
 import { SUMMARY_TIPS, summaryTip } from '../src/ui/panels/summaryTips';
 import { equip, grass, newState } from './helpers';
 
@@ -39,8 +40,13 @@ describe('gifts are never blind twice', () => {
   });
 
   it('the hint fits the gift row next to its Give button', () => {
-    for (const r of [...Object.keys(KNOWN_TEXT), null] as (keyof typeof KNOWN_TEXT | null)[])
-      expect(measureText(giftSub(99, r)), String(r)).toBeLessThanOrEqual(121);
+    const reactions = ['love', 'like', 'neutral', 'dislike', null] as const;
+    for (const locale of LOCALES) {
+      setLocale(locale);
+      for (const r of reactions)
+        expect(measureText(giftSub(99, r)), `${locale} ${r}`).toBeLessThanOrEqual(121);
+    }
+    setLocale('en');
   });
 });
 

@@ -27,6 +27,7 @@ import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
 import { giftNote, giftSub } from './giftText';
+import { t } from '../../i18n';
 
 const ROWS = 5;
 
@@ -70,7 +71,7 @@ export class NpcPanel extends Modal {
     this.label(
       8,
       20,
-      isBirthday(s, this.id) ? 'Birthday today!' : fitText(def.blurb, 150),
+      isBirthday(s, this.id) ? t('npc.birthdayToday') : fitText(def.blurb, 150),
       isBirthday(s, this.id) ? C.gold : C.creamDim,
     );
     const hearts = heartsOf(s, this.id);
@@ -105,7 +106,7 @@ export class NpcPanel extends Modal {
       this.panelW - 16,
       24,
       // an opening scene (a place restored) gives nothing but the moment
-      last ? (ev.id.startsWith('opening.') ? 'Close' : 'Accept') : 'Next',
+      last ? (ev.id.startsWith('opening.') ? t('common.close') : t('npc.accept')) : t('common.next'),
       () => {
         if (!last) {
           this.evLine += 1;
@@ -114,7 +115,7 @@ export class NpcPanel extends Modal {
         const res = completeEvent(getState(), this.id);
         if (!res.ok) {
           audio.play('error');
-          toast('Make room in your bag first.', 'warn');
+          toast(t('common.makeRoom'), 'warn');
           return;
         }
         audio.play('level');
@@ -124,8 +125,8 @@ export class NpcPanel extends Modal {
         this.reply = ev.id.startsWith('opening.')
           ? ''
           : res.gold > 0
-            ? `Take this: ${res.gold} gold.`
-            : 'I hope you like it!';
+            ? t('npc.takeGold', { n: fmt(res.gold) })
+            : t('npc.hopeYouLike');
         this.rebuild();
       },
       { textColor: C.green, rim: C.green },
@@ -136,14 +137,14 @@ export class NpcPanel extends Modal {
     const s = getState();
     const def = npcs[this.id]!;
     this.label(8, 42, `"${this.reply || this.line}"`, C.cream, 1, 'left', 184);
-    if (this.gained > 0) this.label(8, 88, `+${this.gained} friendship`, C.green);
+    if (this.gained > 0) this.label(8, 88, t('npc.friendship', { n: this.gained }), C.green);
     const next = nextPerk(s, this.id);
     this.label(
       8,
       104,
       next
-        ? `At ${next.hearts} hearts: ${perkLine(next.perks)}`
-        : 'Best friends! All perks unlocked.',
+        ? t('npc.atHearts', { count: next.hearts, perks: perkLine(next.perks) })
+        : t('npc.bestFriends'),
       next ? C.creamDim : C.green,
       1,
       'left',
@@ -151,23 +152,23 @@ export class NpcPanel extends Modal {
     );
     if (hearts >= 3) {
       const loves = def.loves.map((i) => items[i]?.name ?? i).join(', ');
-      this.label(8, 128, `Loves: ${loves}`, C.warn, 1, 'left', 184);
+      this.label(8, 128, t('npc.loves', { items: loves }), C.warn, 1, 'left', 184);
     } else
-      this.label(8, 128, 'Reach 3 hearts to learn their favourites.', C.creamDim, 1, 'left', 184);
+      this.label(8, 128, t('npc.reachHearts'), C.creamDim, 1, 'left', 184);
     const y = this.panelH - 62;
     this.button(
       8,
       y,
       def.role === 'shop' ? 58 : 90,
       24,
-      canGift(s, this.id) ? 'Gift' : 'Gifted',
+      canGift(s, this.id) ? t('npc.gift') : t('npc.gifted'),
       () => {
         this.mode = 'gift';
         this.rebuild();
       },
     ).setEnabled(canGift(s, this.id));
     if (def.role === 'shop')
-      this.button(72, y, 58, 24, 'Shop', () => {
+      this.button(72, y, 58, 24, t('npc.shop'), () => {
         this.close();
         gameEvents.emit('openPanel', { type: 'shop' });
       });
@@ -186,7 +187,7 @@ export class NpcPanel extends Modal {
 
   private buildGift(): void {
     const s = getState();
-    this.label(8, 36, `A gift for ${npcs[this.id]!.name}?`, C.cream);
+    this.label(8, 36, t('npc.giftFor', { name: npcs[this.id]!.name }), C.cream);
     const kinds = new Map<string, ItemRef>();
     for (const st of s.inventory.slots) if (st && isGiftable(st)) kinds.set(keyOf(st), refOf(st));
     // Known favourites first, unknown next, known dislikes last: the list remembers past gifts.
@@ -204,7 +205,7 @@ export class NpcPanel extends Modal {
       this.label(
         8,
         56,
-        'Nothing to give. Forage or harvest something!',
+        t('npc.nothingToGive'),
         C.creamDim,
         1,
         'left',
@@ -220,7 +221,7 @@ export class NpcPanel extends Modal {
         subColor: known ? KNOWN_COLOR[known] : C.creamDim,
         buttons: [
           {
-            label: 'Give',
+            label: t('common.give'),
             width: 38,
             color: C.green,
             onClick: () => {
@@ -230,7 +231,7 @@ export class NpcPanel extends Modal {
               haptic(res.reaction === 'dislike' ? 'error' : 'success');
               this.mode = 'talk';
               this.gained = Math.max(0, res.points);
-              this.reply = REPLIES[res.reaction];
+              this.reply = t(REPLIES[res.reaction]);
               this.rebuild();
             },
           },
@@ -256,9 +257,10 @@ const GIFT_ORDER = ['love', 'like', 'neutral', 'dislike'] as const;
 const EVERYDAY = new Set(['seed', 'material', 'fertilizer', 'bait', 'feed']);
 const KNOWN_COLOR = { love: C.gold, like: C.green, neutral: C.creamDim, dislike: C.red } as const;
 
+/** A villager's reply to a gift (dictionary keys). */
 const REPLIES = {
-  love: 'This is my favourite thing ever!',
-  like: 'How thoughtful, thank you!',
-  neutral: 'Oh! Thank you.',
-  dislike: 'Um... thanks, I suppose.',
+  love: 'npc.replyLove',
+  like: 'npc.replyLike',
+  neutral: 'npc.replyNeutral',
+  dislike: 'npc.replyDislike',
 } as const;
