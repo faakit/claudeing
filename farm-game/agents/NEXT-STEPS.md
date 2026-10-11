@@ -24,13 +24,15 @@ builds on.
 ## Pending merge: integration/dry-year-2 (written while the owner had all tests stopped)
 
 `integration/dry-year-2` = dry-year-core + `valley/m6` + `audio/dry-year` + `feel/dry-year` + the Weir beam's
-`logLand` cue. **Nothing on it has been run.** Still to do, in this order, on a quiet machine:
+`logLand` cue + `fix/owner-bugs` + `ui/float-controls` (the wooden dock removed) + `i18n/pt-br` (English and pt-BR).
+**Nothing on it has been run** (about 80 files changed by i18n without a compiler): start with `npm run typecheck`,
+`npm run lint` and `npm test`. Still to do, in this order, on a quiet machine:
 
 1. Merge `art/dry-year` (4feb4fe). Its generated files conflict with M6's (`art-src/sprites/tiles.png`, the tilesets,
    `tiles.json`, every `.tmj` header): take either side, then `npm run art:maps` (deterministic) and commit the result.
    Keep art's `paintChannel` in `WorldScene`; point feel's `ChannelFx` tile source at art's `channelGid(tx, ty, look)`
-   and clip its foam to `CHANNEL_WATER_BAND` (see NEXT-STEPS-FEEL.md). Merge `fix/owner-bugs` (tree see-through,
-   tap-retarget smoothness, dry beds blocked like water) and `i18n/pt-br` when they hand over.
+   and clip its foam to `CHANNEL_WATER_BAND` (see NEXT-STEPS-FEEL.md). `scripts/generate-maps.mjs` now copies
+   the final stage's collision into earlier stages (dry beds block like water), so regenerating keeps that fix.
 2. Audio D3: creek layer 2 `body` 2.47 in `audio-src/recipes.json`, rebuild (`python -I audio-src/tools/build.py
    <raw-dir>`), re-render `dy-creek-long`.
 3. Small code items: saves that saw "A secret spot" mark "The Heron" seen (no second catfish reward); old saves'
@@ -40,7 +42,8 @@ builds on.
    (`valley-critique/tools/onb/run14.mjs`, median <= 173 s), the farm-to-town door on `river-first-morning` at 1x
    and 4x (<= 0.3 s, worst frame <= 34 ms at 4x; else build the overlay under the sleep fade), `e2e:controls` with
    `E2E_CONTROLS_PARALLEL=1` (SE rows), perf against a baseline rerun alone, and listening to
-   `audio-renders/dry-year/LISTEN.md`.
+   `audio-renders/dry-year/LISTEN.md`. Screenshots on the iPhone 13 and SE, both hands: `ui-float-controls*`,
+   `walk-behind-tree`, `tap-retarget-walk`, `lang-pt-*` (perf is the floating controls' main risk: a 52% taller view).
 5. Then deploy (fast-forward `claude/repo-code-github-pages-3ukz7j`).
 
 Next round: the towing go/no-go needs feel's T1 fixed first (tapping the slip while the farmer walks to hook stalls
