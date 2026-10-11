@@ -5,7 +5,7 @@ tests, e2e, mobile e2e, controls e2e, onboarding e2e, and perf at 2-5 draws and 
 frame across runs (budget: 12 draws, 3.5 ms). Atlases: world 512x256, ui 512x128, chars 512x512 (the limit is
 1024). Everything was judged from **headless renders only**; nobody has watched these animations on a phone.
 Reviews: `C:/Users/andre/dev/tiny-acre/art-critique/review-13.md` (6 findings, all fixed) and `review-14.md`
-(accepted; its one minor, R14-1, is fixed in the last commit).
+(accepted; its one minor, R14-1, is fixed), then `review-15.md`: round 4 closed, nothing open.
 
 The frame list for the feel agent, with timings and hooks, is `agents/out/art-feel-frames.md` (start there).
 
