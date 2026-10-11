@@ -165,6 +165,16 @@ Add the sfx bus gain at default settings (-2.9 dB) for the in-game level.
 | confirm | 1 | 75 | 0.0 | -27.0 | -24.0 | -27 | -6.8 |
 | confirm | 2 | 75 | 0.0 | -27.2 | -24.4 | -27 | -8.0 |
 | confirm | 3 | 75 | 0.0 | -27.5 | -24.5 | -27 | -6.4 |
+| dig | 1 | 370 | 0.0 | -20.0 | -19.9 | -20 | -7.1 |
+| dig | 2 | 350 | 0.0 | -20.0 | -19.6 | -20 | -5.7 |
+| dig | 3 | 390 | 0.0 | -20.0 | -20.4 | -20 | -7.5 |
+| dig | 4 | 370 | 0.0 | -20.0 | -19.8 | -20 | -5.1 |
+| logLand | 1 | 410 | 0.0 | -20.0 | -16.8 | -20 | -4.4 |
+| logLand | 2 | 570 | 0.0 | -20.0 | -20.0 | -20 | -4.2 |
+| logLand | 3 | 390 | 0.0 | -20.0 | -18.4 | -20 | -4.2 |
+| logKnock | 1 | 160 | 0.0 | -22.0 | -19.2 | -22 | -4.8 |
+| logKnock | 2 | 160 | 0.0 | -22.0 | -19.2 | -22 | -5.1 |
+| logKnock | 3 | 200 | 0.0 | -22.0 | -20.0 | -22 | -4.7 |
 
 ## Ambience
 Beds are matched on RMS over the loop, one-shots on active-region RMS (target column).
@@ -174,7 +184,8 @@ Beds are matched on RMS over the loop, one-shots on active-region RMS (target co
 | rain | loop 1 (12.0 s) | 13100 | - | -25.7 | -32.0 | -32 | -14.1 | jump/RMS 0.299 (body p95 1.029), step +0.34 dB (body p95 1.88) |
 | crickets | loop 1 (9.0 s) | 10100 | - | -31.9 | -39.0 | -39 | -23.8 | jump/RMS 0.290 (body p95 1.172), step -0.48 dB (body p95 4.50) |
 | crickets | loop 2 (7.333333333333333 s) | 8433 | - | -31.8 | -39.0 | -39 | -24.1 | jump/RMS 0.041 (body p95 1.175), step -0.90 dB (body p95 4.42) |
-| wind | loop 1 (15.0 s) | 16100 | - | -27.5 | -33.0 | -33 | -16.2 | jump/RMS 0.025 (body p95 0.235), step +0.76 dB (body p95 3.08) |
+| wind | loop 1 (15.0 s) | 16100 | - | -30.5 | -36.0 | -36 | -19.2 | jump/RMS 0.025 (body p95 0.235), step +0.76 dB (body p95 3.08) |
+| wind | loop 2 (11.0 s) | 12100 | - | -30.4 | -36.0 | -36 | -20.6 | jump/RMS 0.049 (body p95 0.243), step -2.04 dB (body p95 2.88) |
 | cave | loop 1 (16.0 s) | 17100 | - | -25.8 | -31.0 | -31 | -9.9 | jump/RMS 0.010 (body p95 0.070), step +1.61 dB (body p95 5.89) |
 | birds | 1 | 960 | 2.0 | -19.2 | -28.0 | -28 | -11.2 | - |
 | birds | 2 | 450 | 2.0 | -23.6 | -28.0 | -28 | -12.0 | - |
@@ -205,4 +216,16 @@ Beds are matched on RMS over the loop, one-shots on active-region RMS (target co
 | shop | 4 | 650 | 2.0 | -31.5 | -36.0 | -36 | -9.4 | - |
 | shop | 5 | 380 | 2.0 | -30.8 | -36.0 | -36 | -9.1 | - |
 | shop | 6 | 210 | 2.0 | -35.8 | -36.0 | -36 | -14.2 | - |
+| creek | loop 1 (2.55 s) | 3287 | - | -34.1 | -41.8 | -42 | -22.4 | jump/RMS 0.010 (body p95 0.941), step +1.08 dB (body p95 12.09) |
+| creek | loop 2 (3.05 s) | 3912 | - | -33.6 | -41.8 | -42 | -17.4 | jump/RMS 1.486 (body p95 0.904), step +2.67 dB (body p95 8.63) |
+| creek | loop 3 (8.2 s) | 9300 | - | -40.9 | -45.8 | -46 | -30.1 | jump/RMS 0.105 (body p95 0.213), step +0.64 dB (body p95 3.72) |
+| burble | 1 | 470 | 0.5 | -38.9 | -40.0 | -40 | -24.7 | - |
+| burble | 2 | 290 | 2.0 | -41.9 | -40.0 | -40 | -25.6 | - |
+| burble | 3 | 310 | 0.7 | -40.4 | -40.0 | -40 | -27.1 | - |
+| burble | 4 | 570 | 0.8 | -38.4 | -40.0 | -40 | -26.7 | - |
+| burble | 5 | 220 | 0.5 | -40.8 | -40.0 | -40 | -26.9 | - |
+| burble | 6 | 320 | 2.0 | -39.5 | -40.0 | -40 | -27.1 | - |
+| river | loop 1 (5.8 s) | 6900 | - | -33.7 | -38.8 | -39 | -23.5 | jump/RMS 0.956 (body p95 0.953), step -0.04 dB (body p95 2.50) |
+| river | loop 2 (7.2 s) | 8300 | - | -33.6 | -38.8 | -39 | -23.8 | jump/RMS 0.249 (body p95 0.762), step +1.95 dB (body p95 2.71) |
+| river | loop 3 (3.4 s) | 4350 | - | -34.1 | -42.8 | -43 | -18.4 | jump/RMS 0.274 (body p95 0.462), step +2.68 dB (body p95 9.98) |
 

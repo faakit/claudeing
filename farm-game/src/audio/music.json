@@ -315,6 +315,27 @@
           "gain": 0.7
         }
       ]
+    },
+    "green": {
+      "bpm": 92,
+      "volume": 0.85,
+      "priority": 3,
+      "parts": [
+        {
+          "inst": "vibes",
+          "notes": "r:.5 D5:1.5 E5:.5 G5:.5 C6:2"
+        },
+        {
+          "inst": "harp",
+          "notes": "C4:.25 G4:.25 D5:1.5 C4:.25 E4:.25 G4:.25 C5:.25 E5:2",
+          "gain": 0.7
+        },
+        {
+          "inst": "glock",
+          "notes": "r:3 E6:2",
+          "gain": 0.5
+        }
+      ]
     }
   },
   "stings": {
@@ -837,6 +858,9 @@
         "s2a2b": "E6:2 D6:1 B5:1 | A5:1 E5:1 G5:1 C#6:1 | D6:1 A5:1 G5:1 F5:1 | E5:4",
         "s2n1": "E5:4 | G5:2 B5:2 | A5:4 | C6:2 B5:2",
         "s2n2": "B5:4 | C#6:2 A5:2 | F5:2 D5:2 | E5:4"
+      },
+      "thin": {
+        "drop": ["bass", "shaker", "ncomp"]
       }
     },
     "summer": {
@@ -971,6 +995,9 @@
         "u2a2b": "F#5:1.5 A5:.5 B5:1 D6:1 | G5:1 B5:.5 E6:1.5 D6:1 | E6:1 C6:1 G5:1.5 E5:.5 | F#5:1 A5:1 D6:2",
         "u2n1": "F#5:4 | G#5:2 E5:2 | B5:4 | A5:4",
         "u2n2": "D6:4 | B5:2 G5:2 | E5:2 C6:2 | D6:4"
+      },
+      "thin": {
+        "drop": ["bass", "shaker", "tamb", "nbass"]
       }
     },
     "fall": {
@@ -1079,6 +1106,12 @@
         "f2a2b": "G4:2 B4:2 | A4:3 D5:1 | C5:2 B4:2 | A4:1 F#4:1 D#4:2",
         "f2n1": "E3:4 | E3:2 G3:2 | A3:2 C4:2 | B3:4",
         "f2n2": "B3:4 | A3:2 F#3:2 | G3:2 E3:2 | D#3:4"
+      },
+      "thin": {
+        "drop": ["bass"],
+        "swap": {
+          "comp": "arpTripHalf"
+        }
       }
     },
     "winter": {
@@ -1213,6 +1246,9 @@
         "w2a2b": "F6:2 E6:1 | D6:3 | Db6:1.5 Bb5:1.5 | A5:3",
         "w2n1": "A5:3 | G5:3 | F5:3 | D5:3",
         "w2n2": "C6:3 | Bb5:3 | Db6:3 | E5:3"
+      },
+      "thin": {
+        "drop": ["bass", "sleigh", "dpad", "nbass"]
       }
     },
     "title": {

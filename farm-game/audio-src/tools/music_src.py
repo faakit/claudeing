@@ -85,6 +85,13 @@ JINGLES = {
         {"inst": "vibes", "notes": "C5:.25 E5:.25 G5:.25 C6:.5 G5:.25 C6:.25 E6:1.5"},
         {"inst": "harp", "notes": "C4:.5 G4:.5 C5:.5 E5:1.5", "gain": 0.7},
         {"inst": "glock", "notes": "r:1.5 C6:.5 G6:1.5", "gain": 0.7}]},
+    # The Dry Year: the valley comes back (the first green; a place's first morning). An open fifth with the
+    # ninth held (the straw), then the third arrives and the chord blooms major: slow, not a fanfare.
+    # Priority 3: a level, goal, heart, order or special landing within a second of it gives way.
+    "green": {"bpm": 92, "volume": 0.85, "priority": 3, "parts": [
+        {"inst": "vibes", "notes": "r:.5 D5:1.5 E5:.5 G5:.5 C6:2"},
+        {"inst": "harp", "notes": "C4:.25 G4:.25 D5:1.5 C4:.25 E4:.25 G4:.25 C5:.25 E5:2", "gain": 0.7},
+        {"inst": "glock", "notes": "r:3 E6:2", "gain": 0.5}]},
 }
 
 # Musical moments the engine plays itself (audio.sting / audio.motif), also written in C. Instruments
@@ -568,6 +575,14 @@ PIECES["lullaby"] = {
         "la2b": "E5:3 | E5:1 C5:2 | Bb4:1.5 C5:1.5 | A4:3",
     },
 }
+
+# The Dry Year's thinned arrangements (a dry map stage, src/audio/stages.json): the ground goes out from under
+# the tune. Percussion and the bass drop out (fading on their own strips, then not played), the busiest
+# accompaniment moves to a sparser pattern, and the piece plays THIN_DB softer. The tune stays.
+PIECES["spring"]["thin"] = {"drop": ["bass", "shaker", "ncomp"]}
+PIECES["summer"]["thin"] = {"drop": ["bass", "shaker", "tamb", "nbass"]}
+PIECES["fall"]["thin"] = {"drop": ["bass"], "swap": {"comp": "arpTripHalf"}}
+PIECES["winter"]["thin"] = {"drop": ["bass", "sleigh", "dpad", "nbass"]}
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))

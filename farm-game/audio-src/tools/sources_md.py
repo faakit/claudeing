@@ -35,7 +35,9 @@ def main() -> None:
                 use(p["src"], f"sfx/{cue}-{i + 1}.mp3")
     for name, r in recipes["ambience"].items():
         if r["mode"] == "loop":
-            use(r["src"], f"amb/{name}.mp3")
+            layers = r.get("layers") or [{}]
+            for i, lay in enumerate(layers):
+                use(lay.get("src", r.get("src")), f"amb/{name}.mp3" if i == 0 else f"amb/{name}-{i + 1}.mp3")
         else:
             for i, p in enumerate(r["shots"]):
                 use(p["src"], f"amb/{name}-{i + 1}.mp3")

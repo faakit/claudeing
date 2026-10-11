@@ -1314,7 +1314,7 @@ export abstract class WorldScene extends Phaser.Scene {
           if (!live()) return;
           if (channel) this.fx.dust((tile.tx + 0.5) * TILE_SIZE, (tile.ty + 1.5) * TILE_SIZE);
           else this.fx.dust(rockX - 6 + k * 6, rockY + 4 - k * 3);
-          audio.play(channel ? 'till' : 'swing');
+          audio.play(channel ? 'dig' : 'swing');
           haptic('tick');
         });
       }),

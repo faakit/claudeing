@@ -316,11 +316,11 @@ export class Hud {
 
   /**
    * The first green: a big gold title and a line under it, in their own slot (never the goal banner's), held about
-   * three seconds while the straw dissolves. The special-order fanfare plays until audio gives it its own jingle.
+   * three seconds while the straw dissolves. Every valley moment plays the same jingle: the valley coming back.
    */
   private valleyMoment(text: string): void {
     const [title, line] = text.split('\n');
-    audio.play('special');
+    audio.play('green');
     haptic('success');
     showBanner(3400);
     const calm = this.getState().settings.reduceMotion;

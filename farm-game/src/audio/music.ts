@@ -50,10 +50,21 @@ const LEAD_CANDIDATES = ['vibes', 'glock', 'marimba', 'harp'];
 
 /** A rainy day plays the piece softer (on top of the thinner arrangement). */
 const RAIN_DB = -2.5;
+/**
+ * The Dry Year's thinned arrangement plays this much softer (unless the piece says otherwise). With rain as well,
+ * the larger of the two offsets applies, never their sum, so a rainy dry day does not sink into silence.
+ */
+export const THIN_DB = -2;
+/** Time constant (s) of the thinned layers' fade: out over about 2 s, back over the reveal's length. */
+export const THIN_TAU = 0.7;
+/** Dropped layers keep playing this long while they fade out, then are not generated at all. */
+export const THIN_FADE_S = 2.4;
 
 interface Strip {
   gain: GainNode;
   nodes: AudioNode[];
+  /** The layer's mix gain (the strip's level when it is not thinned out). */
+  base: number;
 }
 
 interface Scheduled {
@@ -73,6 +84,8 @@ class ActivePiece {
   nextBar = 0;
   started = false;
   stopAt = Infinity;
+  /** The thinned arrangement is on (its dropped layers' strips are faded out). */
+  thinned = false;
   readonly createdAt: number;
 
   constructor(
@@ -112,7 +125,7 @@ class ActivePiece {
     if (s) return s;
     const mix = MUSIC.instruments[inst] ?? { gain: 0.5 };
     const gain = this.ctx.createGain();
-    gain.gain.value = mix.gain;
+    gain.gain.value = this.thinned && this.dropped(layer) ? 0 : mix.gain;
     const nodes: AudioNode[] = [gain];
     let tail: AudioNode = gain;
     if (mix.pan && typeof this.ctx.createStereoPanner === 'function') {
@@ -129,9 +142,24 @@ class ActivePiece {
       tail.connect(send).connect(this.out[time].wet);
       nodes.push(send);
     }
-    s = { gain, nodes };
+    s = { gain, nodes, base: mix.gain };
     this.strips.set(layer, s);
     return s;
+  }
+
+  dropped(layer: string): boolean {
+    return !!this.player.piece.thin?.drop.includes(layer);
+  }
+
+  /** Fade the thinned arrangement's dropped layers out (on) or back in (off), on the same clock. */
+  setThin(on: boolean, now: number, tau: number): void {
+    // A piece that started thinned has no strips for its dropped layers yet: make them (silent) so they swell in.
+    if (!on && this.thinned)
+      for (const l of this.player.piece.layers)
+        if (this.dropped(l.id)) this.strip(l.id, l.inst, l.time);
+    this.thinned = on;
+    for (const [layer, s] of this.strips)
+      if (this.dropped(layer)) glide(s.gain.gain, on ? 0 : s.base, now, tau);
   }
 
   dispose(): void {
@@ -158,6 +186,9 @@ export class MusicPlayer {
   private fading: ActivePiece[] = [];
   private indoor = false;
   private rain = false;
+  private thin = false;
+  /** Until then the dropped layers still play (fading out) after the thinned arrangement began. */
+  private thinFadeUntil = 0;
   private year = 1;
   private rng = makeRng(0x7a11ac3e);
   private voices: Voice[] = [];
@@ -213,23 +244,48 @@ export class MusicPlayer {
       this.players.set(slot, player);
     }
     this.active = new ActivePiece(this.ctx, slot, player, this.buses, now);
+    this.active.thinned = this.thin;
     void this.preload(slot);
   }
 
   /**
-   * Weather and year: rain thins the arrangement (no percussion, main beats only, more rests) and plays
-   * it 2.5 dB softer; from year two pieces with variation sections play their second form.
+   * Weather, year and map stage: rain thins the arrangement (no percussion, main beats only, more rests) and
+   * plays it 2.5 dB softer; from year two pieces with variation sections play their second form; `thin` (a dry
+   * map stage) fades the piece's thinned-out layers away and back on the same bar clock, never restarting it.
    */
-  setMood(m: { rain?: boolean; year?: number }, now: number): void {
+  setMood(m: { rain?: boolean; year?: number; thin?: boolean }, now: number): void {
     const rain = !!m.rain;
+    const thin = m.thin ?? this.thin;
     this.year = m.year ?? this.year;
-    if (rain === this.rain) return;
+    if (rain === this.rain && thin === this.thin) return;
+    const tau = thin !== this.thin ? THIN_TAU : 2;
+    if (thin !== this.thin) {
+      this.thin = thin;
+      this.thinFadeUntil = thin && this.active?.started ? now + THIN_FADE_S : 0;
+      this.active?.setThin(thin, now, THIN_TAU);
+    }
     this.rain = rain;
-    if (this.active?.started) this.active.setLevel(this.levelValue(), now, 2);
+    if (this.active?.started) this.active.setLevel(this.levelValue(), now, tau);
+  }
+
+  /** Each playing layer's strip gain now (tests and the debug hook: thinned-out layers glide to 0). */
+  layerGains(): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const [layer, s] of this.active?.strips ?? []) out[layer] = s.gain.gain.value;
+    return out;
+  }
+
+  /** The thinned arrangement is on (for tests and the debug hook). */
+  get thinned(): boolean {
+    return this.thin;
   }
 
   private levelValue(): number {
-    return this.rain ? Math.pow(10, RAIN_DB / 20) : 1;
+    const thinDb =
+      this.thin && this.active?.player.piece.thin
+        ? (this.active.player.piece.thin.db ?? THIN_DB)
+        : 0;
+    return Math.pow(10, Math.min(this.rain ? RAIN_DB : 0, thinDb) / 20);
   }
 
   /** Fade everything out (title -> silence, music switched off). */
@@ -281,6 +337,8 @@ export class MusicPlayer {
         percHits: (inst) => sampleHitsCount(inst),
         rain: this.rain,
         year: this.year,
+        thin: this.thin,
+        thinFading: now < this.thinFadeUntil,
       });
       this.stats.bars++;
       a.history.push({ t0: a.nextBar, section: bar.section, bar: bar.bar });

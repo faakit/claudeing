@@ -369,13 +369,17 @@ def build_ambience(raw: str, recipes: dict) -> dict:
     report.append("|---|---|---|---|---|---|---|---|---|")
     for name, r in recipes["ambience"].items():
         if r["mode"] == "loop":
-            x = dsp.highpass(load_src(raw, r["src"]), r["hp"])
             # Several layers of different lengths play together, so the combined pattern repeats
-            # only after their least common multiple (each layer alone is a seamless loop).
+            # only after their least common multiple (each layer alone is a seamless loop). A layer may
+            # take its own source, a pitch shift (tape speed: lower and longer), a gain and a low-pass.
             layers = r["layers"] if "layers" in r else [{"from": r["from"], "body": r["body"]}]
-            level = r["level"] - 10 * np.log10(len(layers))
             files = []
             for li, lay in enumerate(layers):
+                x = dsp.highpass(load_src(raw, lay.get("src", r.get("src"))), r["hp"])
+                x = resample_shift(x, lay.get("shift", 0))
+                if lay.get("lp", r.get("lp")):
+                    x = dsp.lowpass(x, lay.get("lp", r.get("lp")))
+                level = r["level"] - 10 * np.log10(len(layers)) + lay.get("gain", 0)
                 body = int(round(lay["body"] * SR))
                 assert abs(lay["body"] * 300 - round(lay["body"] * 300)) < 1e-6, "loop body must be a multiple of 1/300 s"
                 xfade = int(min(1.0, lay["body"] / 4) * SR)

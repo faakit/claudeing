@@ -129,6 +129,11 @@ export interface Piece {
   /** The form from year two on (variation sections), so the second year does not repeat the first. */
   form2?: string[];
   layers: Layer[];
+  /**
+   * The Dry Year's thinned arrangement (a dry map stage): `drop` layers fade out and then stop being played,
+   * `swap` gives accompaniment layers a sparser pattern, `db` is the level offset (default THIN_DB).
+   */
+  thin?: { drop: string[]; swap?: Record<string, string>; db?: number };
   /** Melody phrases in note:beats tokens, bars separated by '|'. */
   phrases: Record<string, string>;
 }

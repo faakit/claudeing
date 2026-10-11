@@ -309,7 +309,7 @@ describe('director', () => {
   const base: Scene = { inGame: true, map: 'farm', outdoor: true, season: 'summer', night: 0, weather: 'sunny', festival: false };
   it('picks title, season (indoors or out), mine and festival music', () => {
     expect(chooseMusic({ ...base, inGame: false }).slot).toBe('title');
-    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false, rain: false, year: 1 });
+    expect(chooseMusic(base)).toEqual({ slot: 'summer', indoor: false, rain: false, year: 1, thin: false });
     expect(chooseMusic({ ...base, map: 'house', outdoor: false })).toMatchObject({ slot: 'summer', indoor: true });
     expect(chooseMusic({ ...base, map: 'mine', outdoor: false }).slot).toBe('mine');
     expect(chooseMusic({ ...base, map: 'town', festival: true }).slot).toBe('festival');
