@@ -453,6 +453,10 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
     bed.has(y * w + x) || (bridge.has(y * w + x) && underBridge(x, y) === 'bed');
   const isBridgeWater = (x, y) => bridge.has(y * w + x) && underBridge(x, y) === 'water';
   const deadTrees = new Set((stage.dead ?? []).map(([x, y]) => y * w + x));
+  /** A door that stays shut until a stat (Ilse's gate): drawn shut; its shut and open tiles go on the door. */
+  const gateDoors = objects.filter(
+    (o) => o.type === 'door' && (o.properties ?? []).some((q) => q.name === 'lockStat'),
+  );
 
   // --- additions: small groves of trees and rock bays, only on open ground outside every zone and reserved
   // spot (the same rule as props); they are solid, so they go into `solid` like props ---
@@ -614,15 +618,11 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
         if (bridge.has(i)) plank();
         continue;
       }
-      if (isBridgeWater(x, y)) {
+      if (isBridgeWater(x, y) || (k === 'water' && C.creek && inDelta(x, y))) {
+        // the running creek: the bank field it shares with its empty bed (valleytiles.py), so the stages match
         const wa = nb(x, y, 3, waterish, true);
-        set(
-          'detail',
-          x,
-          y,
-          wa.includes('0') ? bake('shore', seed, x, y, wa) : bake('water', seed, x, y),
-        );
-        plank();
+        set('detail', x, y, bake('creekwater', seed, x, y % 6, wa));
+        if (bridge.has(i)) plank();
         continue;
       }
       if (k === 'path') {
@@ -1293,5 +1293,18 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
       n: c.n,
     }));
   const rows = Math.ceil((Math.max(...Object.values(tiles)) + 1) / columns);
+  // Ilse's gate: the props layer shows it shut; the scene swaps in the open tile once its stat holds
+  // (WorldScene, `gateShut` / `gateOpen` door properties)
+  for (const o of gateDoors) {
+    const gx = Math.floor(o.x / 16);
+    const gy = Math.floor(o.y / 16);
+    set('props', gx, gy, bake('gate', 'shut'));
+    const props = (o.properties ?? []).filter(
+      (q) => q.name !== 'gateShut' && q.name !== 'gateOpen',
+    );
+    props.push({ name: 'gateShut', type: 'int', value: gid(bake('gate', 'shut')) });
+    props.push({ name: 'gateOpen', type: 'int', value: gid(bake('gate', 'open')) });
+    o.properties = props;
+  }
   return { layers: L, solid, lights, blooms, tilecount: rows * columns, columns, rows };
 }

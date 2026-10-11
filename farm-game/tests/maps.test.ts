@@ -348,6 +348,11 @@ describe('map stages: variants differ only inside their delta rects (WORLD-PLAN 
       )!;
       expect(doorTarget(gate).map, v).toBe('wendhead');
       expect(gate.props['lockedText'], v).toBe("Ilse's old gate. Locked.");
+      // shut until the first green (WORLD-PLAN section 1); the art carries its shut and open tiles
+      expect(gate.props['lockStat'], v).toBe('valley.farmGreen');
+      expect(gate.props['gateShut'], v).toBeGreaterThan(0);
+      expect(gate.props['gateOpen'], v).toBeGreaterThan(0);
+      expect(gate.props['gateOpen'], v).not.toBe(gate.props['gateShut']);
     }
   });
 });

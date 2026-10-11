@@ -2,21 +2,26 @@
 
 scripts/map-art.mjs asks for them by recipe name, like the other baked tiles:
 
-    creekbed:<style>:<seed>:<x>:<p>:<nb9>:<wet9>   the farm creek's empty bed. style dry (the dry stage: cracked
-                                                   grey mud, straw at the lip) or damp (waking: moist mud, closing
-                                                   cracks, the first shoots, green at the lip); p = y mod 6: the
-                                                   bed repeats every six rows (its noise is periodic over 96 px),
-                                                   so a long creek costs two dozen tiles, not one per cell; nb9 = 3x3
-                                                   bed (or water) membership, wet9 = 3x3 water, where it is wet
+    creekwater:<seed>:<x>:<p>:<nb9>                the farm creek running (restored): bank, wet rim, foam and water,
+                                                   as bake.py `shore` draws them, on the creek's own bank field
+    creekbed:<style>:<seed>:<x>:<p>:<nb9>:<wet9>   the creek's empty bed on the same banks, so the opening morning
+                                                   fills the bed instead of changing its shape. style dry (the dry
+                                                   stage: warm sand, pebbles and stranded stones, dead reeds, a dark
+                                                   cut lip, straw at the top) or damp (waking: brown moist mud,
+                                                   closing cracks, the first shoots, green at the top); wet9 = 3x3
+                                                   water: the pond laps into the mouth over a silt fan
     bridge:<l|r>                                   the footbridge's west or east half (planks across the creek)
+    gate:<shut|open>                               Ilse's gate in the farm's east fence
 
+p = y mod 6: the creek repeats every six rows (its noise is periodic over 96 px down the creek), so a long creek
+costs about two dozen tiles per stage, not one per cell. nb9 = 3x3 creek membership (bed, water, the footbridge).
 Everything is a function of world pixels (y taken modulo 96) and the seed, so tiles join across seams.
 """
 from __future__ import annotations
 
 import numpy as np
 
-from bake import T, blur, centre, grid, hash2, normal_up, sdf, window_mask
+from bake import T, blur, centre, grid, hash2, normal_up, sdf, water_px, window_mask
 
 PHASES = 6  # the bed repeats every six rows (map-art.mjs asks for y % 6)
 PERIOD = PHASES * T  # its noise is periodic over 96 px down the creek
@@ -64,70 +69,158 @@ def _voronoi(X, Y, cell: int, seed: int):
     return d1, d2, ox, oy
 
 
+def creek_field(nb: str, x: int, p: int, seed: int):
+    """The creek's bank, shared by its running water and its empty bed: bake.py `shore`'s geometry (convex corners
+    opened to a 14 px radius, a bank that meanders 0-5 px into the creek tile) with periodic noise. Returns the
+    signed distance into the creek for the centre tile, and its world pixel coordinates (Y modulo PERIOD)."""
+    inside = window_mask(nb, 3)
+    R = 14.0
+    sd = sdf(inside)
+    core = sd > R
+    if core.any():
+        d = np.minimum(sd, R - (-sdf(core) - 0.5))
+    else:
+        d = sd
+    d = blur(d, 1.6)
+    X, Y = grid(3, x - 1, p - 1)
+    Y = Y % PERIOD
+    meander = (pnoise(X, Y, 24, seed + 9) - 0.5) * 5.6 + (pnoise(X, Y, 6, seed + 3) - 0.5) * 1.2
+    return centre(d - 2.8 - meander, 3), centre(X, 3), centre(Y, 3)
+
+
+def creekwater(P, recipe: list[str], grass: np.ndarray) -> np.ndarray:
+    seed, x, p, nb = int(recipe[1]), int(recipe[2]), int(recipe[3]), recipe[4]
+    d, X, Y = creek_field(nb, x, p, seed)
+    up = normal_up(nb)
+    t = water_px(P, X, Y, seed)
+    gx, gy = X.astype(int) % T, Y.astype(int) % T
+    foam_n = pnoise(X, Y, 2, seed + 7)
+    for j in range(T):
+        for i in range(T):
+            v = d[j, i]
+            bank = 2.2 if up[j, i] else 0.0
+            if v < 1.0 - bank - 0.8:
+                t[j, i] = grass[gy[j, i], gx[j, i]]
+                if v > -bank - 0.8:
+                    t[j, i] = P.name("leaf dark")
+            elif v < 1.0:  # the earth bank face, where land is north of the water
+                t[j, i] = P.name("soil") if v < 0.0 else P.name("earth dark")
+            elif v < 2.0:
+                t[j, i] = P.name("earth dark") if up[j, i] else P.name("teal shade")
+            elif v < 3.0:
+                if foam_n[j, i] > 0.3:
+                    t[j, i] = P.name("ice white")
+            elif v < 5.0 and (i + j) % 2 == 0:
+                t[j, i] = P.name("dusk blue") if up[j, i] else P.name("sky") if v < 4 else t[j, i]
+    return t
+
+
+def _stones(X, Y, d, seed: int):
+    """Stones left stranded in the bed: one candidate per 16x24 px cell, an ellipse about 8x5 px, only well inside
+    the bed. Returns (fill, lit, shade, outline) masks."""
+    xi, yi = X.astype(int), Y.astype(int)
+    fill = np.zeros(X.shape, dtype=bool)
+    lit = np.zeros(X.shape, dtype=bool)
+    shade = np.zeros(X.shape, dtype=bool)
+    for j in (-1, 0, 1):
+        for i in (-1, 0, 1):
+            cx, cy = xi // 16 + i, yi // 24 + j
+            h = hash2(cx, cy % (PERIOD // 24), seed + 61)
+            on = (h % 3) == 0
+            sx = cx * 16 + 4 + (h >> 3) % 8
+            sy = cy * 24 + 6 + (h >> 7) % 12
+            ex, ey = (X - sx) / 3.8, (Y - sy) / 2.6
+            m = on & (ex * ex + ey * ey <= 1.0)
+            fill |= m
+            lit |= m & (ex + ey < -0.6)
+            shade |= m & (ex + ey > 0.7)
+    fill &= d > 5.0  # off the banks: only where the bed is deep
+    lit &= fill
+    shade &= fill
+    fp = np.pad(fill, 1)
+    edge = fill & ~(fp[:-2, 1:-1] & fp[2:, 1:-1] & fp[1:-1, :-2] & fp[1:-1, 2:])
+    return fill, lit, shade, edge
+
+
 def creekbed(P, recipe: list[str], grass: np.ndarray) -> np.ndarray:
-    style, seed, x, y, nb, wet = recipe[1], int(recipe[2]), int(recipe[3]), int(recipe[4]), recipe[5], recipe[6]
+    style, seed, x, p, nb, wet = recipe[1], int(recipe[2]), int(recipe[3]), int(recipe[4]), recipe[5], recipe[6]
     dry = style == "dry"
-    # the bank: a rounded edge (blurred distance field) that meanders with periodic noise (y is the phase)
-    Xw, Yw = grid(3, x - 1, y - 1)
-    Yw = Yw % PERIOD
-    d = blur(sdf(window_mask(nb, 3)), 2.4)
-    d = d + (pnoise(Xw, Yw, 8, seed + 13) - 0.5) * 3.6 + (pnoise(Xw, Yw, 4, seed + 14) - 0.5) * 1.1
-    d, X, Y = centre(d, 3) - 1.5, centre(Xw, 3), centre(Yw, 3)  # the bank sits 1-3 px into the bed
-    up = normal_up(nb)  # land to the north: a taller earth face shows
+    d, X, Y = creek_field(nb, x, p, seed)
+    up = normal_up(nb)  # land to the north: the taller earth face of the cut
+    g = blur(sdf(window_mask(nb, 3)), 1.8)
+    from_nw = centre(np.gradient(g, axis=0) + np.gradient(g, axis=1), 3) > 0.25  # the bank is north or west
     gx, gy = X.astype(int) % T, Y.astype(int) % T
     xi, yi = X.astype(int), Y.astype(int)
-    if "1" in wet:  # distance (px) to the water: the mud darkens toward it
-        wd = -centre(blur(sdf(window_mask(wet, 3)), 2.0), 3)
-    else:
-        wd = np.full(X.shape, 99.0)
+    ink = P.outline
+    sand, wood, soil, earth, parch = (P.name(n) for n in ("sand", "wood", "soil", "earth dark", "parchment"))
     taupe, sdark, stone, slt = (P.name(n) for n in ("taupe", "stone dark", "stone", "stone lt"))
-    soil, earth, sand, wood = (P.name(n) for n in ("soil", "earth dark", "sand", "wood"))
-    bedc = np.full(X.shape, taupe, dtype=np.int32)
-    # silt: grey patches where the last water stood longest; damp mud: dark wet patches instead
-    silt = pnoise(X, Y, 12, seed + 23)
-    if dry:
-        bedc[silt < 0.32] = stone
-    else:
-        bedc[silt > 0.62] = soil
-    # cracks: a broken network of thin lines between big clay plates (wide and many when dry, few when damp)
-    d1, d2, _, _ = _voronoi(X, Y, 12, seed + 47)
-    broken = pnoise(X, Y, 8, seed + 29)
-    crack = (d2 - d1 < 0.75) & (broken > (0.3 if dry else 0.62))
-    bedc[crack] = earth
-    # dust specks on the dry clay, catching the light
-    if dry:
-        bedc[(hash2(xi, yi, seed + 3) % 29 == 0) & ~crack] = slt
-    # stones washed into the bed: 2x1 pebbles with a dark underside, one candidate per 6x4 px cell
+    if dry:  # warm sand, ochre where the last water stood, bleached patches, grit
+        bedc = np.full(X.shape, sand, dtype=np.int32)
+        bedc[pnoise(X, Y, 12, seed + 23) > 0.62] = wood
+        bedc[hash2(xi, yi, seed + 3) % 23 == 0] = taupe
+    else:  # brown moist mud, its cracks closing
+        bedc = np.full(X.shape, taupe, dtype=np.int32)
+        bedc[pnoise(X, Y, 12, seed + 23) > 0.62] = soil
+        d1, d2, _, _ = _voronoi(X, Y, 12, seed + 47)
+        bedc[(d2 - d1 < 0.55) & (pnoise(X, Y, 8, seed + 29) > 0.62)] = earth
+    # pebbles: 2x1 with a dark underside, one candidate per 6x4 px cell
     cx, cy = xi // 6, yi // 4
     h = hash2(cx, cy, seed + 7)
-    on = (h % 11) < 2
+    on = (h % 11) < 3
     lx, ly = xi - cx * 6 - (h >> 4) % 4, yi - cy * 4 - (h >> 6) % 2
     bedc[on & (ly == 0) & (lx >= 0) & (lx < 2)] = slt if dry else stone
     bedc[on & (ly == 1) & (lx >= 0) & (lx < 2)] = sdark
-    if not dry:  # waking: the first shoots in the moist bed (no pools: they would repeat every six rows)
-        bedc[(hash2(xi // 2, yi // 3, seed + 37) % 37 == 0) & ~crack] = P.name("leaf mid")
-    # wet mud near standing water
-    bedc[wd < 4.0] = soil
-    bedc[wd < 2.0] = earth
+    # stranded stones, each outlined, its shadow falling down-right onto the bed
+    fill, lit, shade, edge = _stones(X, Y, d, seed)
+    drop = np.zeros(X.shape, dtype=bool)
+    drop[1:, 1:] = fill[:-1, :-1]
+    bedc[drop & ~fill] = wood if dry else earth
+    bedc[fill] = stone
+    bedc[lit] = slt
+    bedc[shade] = sdark
+    bedc[edge] = ink
+    # near the bank: dead reeds standing in the dry bed, the first green shoots in the damp one
+    rx, ry = xi // 5, yi // 8
+    hr = hash2(rx, ry, seed + 71)
+    top = 3 + (hr >> 6) % 3
+    stalk = ((hr % 4) == 0) & (xi - rx * 5 == 1 + (hr >> 4) % 3) & (yi - ry * 8 >= top)
+    stalk &= (d > 2.6) & (d < 6.5) & ~fill
+    if dry:
+        bedc[stalk] = soil
+        bedc[stalk & (yi - ry * 8 == top)] = parch  # bleached tips
+    else:
+        bedc[stalk] = P.name("leaf mid")
+    # the pond laps into the mouth, over a fan of silt
+    if "1" in wet:
+        wd = -centre(blur(sdf(window_mask(wet, 3)), 2.0), 3) + (pnoise(X, Y, 8, seed + 51) - 0.5) * 6.0
+        lap = wd < 1.2
+        bedc[(wd < 13.0) & (pnoise(X, Y, 6, seed + 53) > 0.34 + wd * 0.02)] = parch if dry else taupe
+        bedc[wd < 3.6] = soil
+        bedc[wd < 2.2] = earth
+        bedc[lap] = water_px(P, X, Y, seed)[lap]
+        bedc[lap & (wd > 0.4) & ((xi + yi) % 2 == 0)] = P.name("teal shade")
+    # the bank, as on the running creek: the lip, the dark cut, the bed in the shadow of a north or west bank
+    floor = (sand, taupe, parch, wood, soil)
     t = grass[gy, gx].copy()
     for j in range(T):
         for i in range(T):
             v = d[j, i]
-            if v < -2.0:
-                continue
-            if v < 0.0:  # the lip of the bank: straw tufts on a dry farm, green ones once it wakes
-                if (i + j + (1 if v < -1.0 else 0)) % 2 == 0:
-                    t[j, i] = (sand if (i * 3 + j) % 5 else wood) if dry else P.name("leaf dark")
-            elif v < (3.0 if up[j, i] else 1.4):  # the bank's earth face (taller where the land is north)
-                t[j, i] = earth if v < 1.0 else soil
-            elif v < 3.4 and (i + j) % 2 == 0 and bedc[j, i] == taupe:
-                t[j, i] = stone  # gravel along the foot of the bank
+            bank = 2.2 if up[j, i] else 0.0
+            if v < 1.0 - bank - 0.8:
+                if v > -bank - 0.8:  # the lip: straw on a dry farm, green once it wakes
+                    t[j, i] = (sand if (i + j) % 2 else wood) if dry else P.name("leaf dark")
+            elif v < 1.0:
+                t[j, i] = soil if v < 0.0 else earth
+            elif v < 2.0:
+                t[j, i] = earth if up[j, i] else soil
+            elif v < 4.5 and from_nw[j, i] and (i + j) % 2 == 0 and bedc[j, i] in floor:
+                t[j, i] = soil if (not dry or bedc[j, i] == wood) else wood
             else:
                 t[j, i] = bedc[j, i]
     return t
 
 
-def bridge(P, recipe: list[str]) -> np.ndarray:
+def bridge(P, recipe: list[str], _grass=None) -> np.ndarray:
     """Half of a plank footbridge crossing a creek west to east: planks laid north-south, a rail on each long side,
     posts at the outer end. Rows 0-1 and 14-15 stay clear so the bed or the water shows above and below."""
     side = recipe[1]
@@ -148,4 +241,38 @@ def bridge(P, recipe: list[str]) -> np.ndarray:
     for xx in post:
         t[0:15, xx] = wood if xx in (1, T - 2) else ink
     t[0, post[0] : post[1] + 1] = ink
+    return t
+
+
+def gate(P, recipe: list[str], _grass=None) -> np.ndarray:
+    """Ilse's gate in a north-south fence (the farm's east fence), seen from above, matching maptiles.fence: shut,
+    a plank gate across the gap from post to post; open, swung inward (west) off its hinge at the north end."""
+    state = recipe[1]
+    ink, sand, wood, soil = P.outline, P.name("sand"), P.name("wood"), P.name("soil")
+    t = np.full((T, T), -1, dtype=np.int32)
+    if state == "shut":
+        t[0:T, 5] = ink
+        t[0:T, 10] = ink
+        t[0:T, 6:10] = wood
+        t[0:T, 6] = sand  # the lit edge of the planks
+        t[0:T, 9] = soil
+        for y in (3, 12):  # cross rails
+            t[y - 1, 5:11] = ink
+            t[y, 6:10] = sand
+            t[y + 1, 5:11] = ink
+        for k in range(8):  # the diagonal brace between them
+            t[4 + k, 6 + (k * 3) // 8] = soil
+    else:
+        t[0:4, 5] = ink  # the hinge post stays
+        t[0:4, 10] = ink
+        t[0:4, 6:10] = wood
+        t[0, 5:11] = ink
+        t[4, 5:11] = ink
+        for y in (6, 10):  # the gate lies open along the inside of the fence, rails westward
+            t[y - 1, 0:9] = ink
+            t[y, 0:8] = sand
+            t[y + 1, 0:8] = wood
+            t[y + 2, 0:9] = ink
+        t[5:13, 0] = ink
+        t[5:13, 1] = wood
     return t

@@ -319,7 +319,16 @@ function farmTile(farm, tx, ty) {
       const scene = window.__farm.game.scene.getScene('Farm');
       const layers = scene.children.list.filter((o) => o.type === 'TilemapLayer');
       const at = (name) => layers.find((l) => l.layer.name === name)?.getTileAt(x, y)?.index ?? 0;
-      return { ground: at('ground'), detail: at('detail') };
+      const gate = scene.objects.find((o) => o.props?.gateOpen);
+      return {
+        ground: at('ground'),
+        detail: at('detail'),
+        gate: gate
+          ? layers.find((l) => l.layer.name === 'props')?.getTileAt(gate.tx, gate.ty)?.index
+          : 0,
+        gateOpen: gate?.props.gateOpen,
+        gateShut: gate?.props.gateShut,
+      };
     },
     [tx, ty],
   );
@@ -337,6 +346,11 @@ async function stages() {
     check(
       `farm-variant-${v}: the creek bed shows its ${v} look (ground and baked art)`,
       t.ground === want[v] && t.detail > 0,
+      JSON.stringify(t),
+    );
+    check(
+      `farm-variant-${v}: Ilse's gate is drawn ${v === 'dry' ? 'shut' : 'open'}`,
+      t.gate === (v === 'dry' ? t.gateShut : t.gateOpen) && t.gate > 0,
       JSON.stringify(t),
     );
   }
@@ -358,18 +372,30 @@ async function stages() {
     said?.text === 'The old creek bed. Best left clear.' && !(s.placed.farm ?? []).length,
     JSON.stringify(said),
   );
+  await farm.select(0); // the hoe: the bed's own line, not the land-for-sale one (critic review 1, #2)
+  await farm.idle(); // the refusal's action lock runs out first
+  const tilled = await farm.event('toast', () => farm.press('Space'));
+  check(
+    'farm-creek-place: the hoe facing the old creek bed gets the same line',
+    tilled?.text === 'The old creek bed. Best left clear.',
+    JSON.stringify(tilled),
+  );
   await farm.eval(() => window.__farm.dev.goto('farm', 28, 3, 'right')); // resolves once the scene is up
   await farm.frames(3); // a fresh scene ignores input until a frame with nothing held
   const gate = await farm.event('toast', () => farm.press('KeyE'));
+  await farm.select(0); // the hoe in hand: Action facing the gate still reads the gate, not the hoe
+  const gateAct = await farm.event('toast', () => farm.press('Space'));
   await farm.page.keyboard.down('ArrowRight');
   await farm.frames(30); // half a second of walking into the shut gate
   await farm.page.keyboard.up('ArrowRight');
   await farm.frames(3);
   s = await farm.state();
   check(
-    "Ilse's gate: Interact reads that it is locked, and walking into it stays on the farm",
-    gate?.text === "Ilse's old gate. Locked." && s.player.map === 'farm',
-    JSON.stringify(gate),
+    "Ilse's gate: Interact and Action read that it is locked, and walking into it stays on the farm",
+    gate?.text === "Ilse's old gate. Locked." &&
+      gateAct?.text === gate?.text &&
+      s.player.map === 'farm',
+    JSON.stringify([gate, gateAct]),
   );
   check('stages: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();

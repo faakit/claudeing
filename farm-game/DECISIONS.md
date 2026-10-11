@@ -1214,12 +1214,18 @@ integer multiple with one smooth downscale.
 - **Every stage file is preloaded at boot and precached** (+2 files of about 90 KB now). WORLD-PLAN 9.3 says
   "cached at runtime, not precached", but a stage can change while the phone is offline, and a missing file at a
   door would break the 0.3 s door bar. Revisit if the eleven planned files grow the boot noticeably.
-- **The creek bed tiles repeat every six rows** (periodic noise over 96 px): 24 bed tiles per style instead of 56.
-  With the dead crowns, the restored shore and the bridge, the farm's stages took +112 tileset slots
-  (512x1024 -> 512x1088) of the plan's 480. The waking bed has no rain pools, because any feature that big repeats
+- **The creek repeats every six rows, in every stage, on one bank field** (`valleytiles.py creek_field`: the shore
+  bake's geometry with noise periodic over 96 px). The dry bed (warm sand, pebbles, stranded stones, dead reeds, a dark
+  cut lip), the damp bed (brown moist mud) and the running water (`creekwater`, the shore bake's look) share it, so
+  the opening morning fills the bed instead of changing its outline (critic review 1: the first bed had straight
+  edges and its own width, and read as a flagstone path). The pond laps into the mouth over a silt fan. About two
+  dozen tiles per stage instead of 56: the farm's stages, the gate and the bridge took +73 tileset slots
+  (512x1024 -> 512x1072) of the plan's 480. The waking bed has no rain pools, because any feature that big repeats
   visibly every six rows.
 - **Wendhead is a 12x16 fenced placeholder behind Ilse's gate.** The gate is a door with `lockStat`/`lockMin`/
-  `lockedText` (`world.ts doorLocked`): its tile blocks, and Interact reads "Ilse's old gate. Locked." It opens at
-  `place.spring >= 1` for now. M3 sets it to `valley.farmGreen >= 1` and draws the real map.
+  `lockedText` (`world.ts doorLocked`): its tile blocks, and Interact or Action reads "Ilse's old gate. Locked." It
+  opens at `valley.farmGreen >= 1`, as WORLD-PLAN section 1 says (critic review 1: the first-green letter points
+  at it). The map art draws it shut; the scene draws it open (`gateOpen`, a tile id the generator writes on the
+  door) once the stat holds. Until M3 replaces it, the first green opens the gate onto the placeholder.
 - **`dev.goto` to the current map restarts the scene.** A stop and a start of the same scene in one step left it
   shut down every other call, which `dev.stage` and the e2e stages block hit.

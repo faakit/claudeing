@@ -948,10 +948,10 @@
    "name": "placeholder",
    "image": "../tilesets/tiles.png",
    "imagewidth": 512,
-   "imageheight": 1088,
+   "imageheight": 1072,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 2176,
+   "tilecount": 2144,
    "columns": 32,
    "margin": 0,
    "spacing": 0

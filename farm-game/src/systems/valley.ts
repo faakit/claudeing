@@ -135,7 +135,7 @@ export interface DeltaClearing {
   moved: number;
   /** Placed objects that found no free ground and went into the bag. */
   returned: number;
-  /** Crops lifted: their seeds (or the harvest, when ripe) went into the bag. */
+  /** Crops lifted whose seeds (or harvest, when ripe) went into the bag (one that did not fit is lost). */
   crops: number;
   /** One line for the morning summary, or null when nothing was there. */
   note: string | null;
@@ -171,8 +171,10 @@ export function clearDeltaRegions(
         const seed = Object.entries(items).find(([, it]) => it.plants === soil.crop!.cropId)?.[0];
         const back = ripe ? def.harvestItem : seed;
         const qty = ripe ? def.harvestQuantity : 1;
-        if (back && roomFor(state, back, qty) >= qty) addItem(state, back, qty);
-        res.crops++;
+        if (back && roomFor(state, back, qty) >= qty) {
+          addItem(state, back, qty);
+          res.crops++;
+        }
       }
       delete state.farm.tiles[key];
     }

@@ -297,6 +297,12 @@ export abstract class WorldScene extends Phaser.Scene {
       this.cameras.main,
     );
     this.mapArt = new MapArt(map, tileset, look.tinted ? SEASON_TINT[state.time.season] : 0xffffff);
+    // Ilse's gate stands shut in the map art; once its stat holds it is drawn open (it changes only overnight)
+    for (const o of this.objects) {
+      const open = o.props['gateOpen'];
+      if (o.type === 'door' && typeof open === 'number' && !doorLocked(state, o))
+        this.mapArt.setTile('props', o.tx, o.ty, open);
+    }
 
     if (look.tinted && SEASON_TINT[state.time.season] !== 0xffffff) {
       this.add
@@ -1028,6 +1034,22 @@ export abstract class WorldScene extends Phaser.Scene {
     // A held Action repeats only the kind of step it started with, and simply stops (no buzz) when there
     // is no more of it in reach: a hold that starts by tilling only tills.
     const repeating = !only && inputHub.actionHeld && this.holdUses > 0 && this.holdKind !== null;
+    // Facing a shut door (Ilse's gate) with nothing to do: its own line, not the tool's refusal
+    const front = only ?? facingTile(state.player);
+    const shut = !repeating ? objectAt(this.objects, front.tx, front.ty, 'door') : undefined;
+    const shutText = shut ? doorLocked(state, shut) : null;
+    if (
+      shutText &&
+      !chooseAction(
+        state,
+        tiles.map((t) => this.tileInfo(t)),
+      )
+    ) {
+      toast(shutText, 'info');
+      this.actionLock = ACTION_LOCK_MS.fail;
+      this.heldFailed = true;
+      return;
+    }
     // what the farmer holds before the action (placing the last one empties the slot): `place` shows it in his hands
     const heldBefore = state.inventory.slots[state.inventory.selected]?.item;
     const res = actOn(

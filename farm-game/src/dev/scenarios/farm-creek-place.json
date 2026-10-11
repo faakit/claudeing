@@ -1,6 +1,6 @@
 {
   "title": "Placing in the old creek bed is refused",
-  "about": "Map stages (M2, WORLD-PLAN 4.2.2). Dry farm, on the bed's west bank facing it, sprinklers in the bag and selected. Action (or a tap on the bed) answers \"The old creek bed. Best left clear.\" and nothing is placed; the hoe gets the same answer. Placing on the bank (x 25) still works.",
+  "about": "Map stages (M2, WORLD-PLAN 4.2.2). Dry farm, on the bed's west bank facing it, sprinklers in the bag and selected. Action answers \"The old creek bed. Best left clear.\" and nothing is placed; the hoe gets the same answer. Placing on the bank (x 25) still works.",
   "version": 17,
   "tags": ["farm", "valley", "stages", "placeables"],
   "valley": { "farmGreen": 0 },
