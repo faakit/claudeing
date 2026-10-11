@@ -1531,7 +1531,7 @@ export abstract class WorldScene extends Phaser.Scene {
         ease: 'Back.easeOut',
         onComplete: () => {
           if (!live()) return;
-          audio.play('till');
+          audio.play('logLand');
           haptic('medium');
           this.fx.dust(gapX - TILE_SIZE, y + 4);
         },
