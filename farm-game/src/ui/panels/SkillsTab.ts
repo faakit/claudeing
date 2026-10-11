@@ -6,6 +6,7 @@ import { drawBar } from '../widgets';
 import { fmt } from './format';
 import { perkLine } from './perkText';
 import type { MenuTabContext } from './MenuPanel';
+import { t } from '../../i18n';
 
 /** Menu tab: every skill with its level, XP bar and the next perk waiting at the next level. */
 export function buildSkills(c: MenuTabContext): void {
@@ -15,7 +16,14 @@ export function buildSkills(c: MenuTabContext): void {
     const lvl = levelOf(s, id);
     const prog = levelProgress(s, id);
     c.label(8, y, def.name.toUpperCase(), C.gold);
-    c.label(192, y, `Lv ${lvl}${lvl >= maxLevel(id) ? ' MAX' : ''}`, C.cream, 1, 'right');
+    c.label(
+      192,
+      y,
+      `${t('skills.level', { n: lvl })}${lvl >= maxLevel(id) ? t('skills.max') : ''}`,
+      C.cream,
+      1,
+      'right',
+    );
     const g = c.scene.add.graphics();
     drawBar(g, 8, y + 12, 184, 6, prog ? prog.have / prog.need : 1, C.green);
     c.add(g);
@@ -27,7 +35,9 @@ export function buildSkills(c: MenuTabContext): void {
     c.label(
       8,
       y + 33,
-      next ? `Lv ${next[0]}: ${perkLine(next[1])}` : 'All perks unlocked!',
+      next
+        ? t('skills.nextPerk', { level: t('skills.level', { n: next[0] }), perks: perkLine(next[1]) })
+        : t('skills.allPerks'),
       next ? C.green : C.creamDim,
       1,
       'left',
@@ -39,7 +49,7 @@ export function buildSkills(c: MenuTabContext): void {
   c.label(
     8,
     c.bottom - 22,
-    `Skills give you ${bonus} extra energy so far.`,
+    t('skills.energyBonus', { n: bonus }),
     C.creamDim,
     1,
     'left',

@@ -81,7 +81,8 @@
     }
   },
   "almanac": {
-    "pageDone": "Almanac page done: {page}! +{gold}"
+    "pageDone": "Almanac page done: {page}! +{gold}",
+    "complete": "Complete!"
   },
   "cart": {
     "greenhouse": "Greenhouse",
@@ -690,5 +691,111 @@
     "price": "Price {price}   You have {have}",
     "buy": "Buy for {gold}",
     "yours": "{name} is yours!"
+  },
+  "shop": {
+    "again": ", again {n}d",
+    "tooLateNow": "Too late now",
+    "glassOnly": "Glass only {days}d {sell}{again}",
+    "seedFacts": "{days} days  {sell}{again}",
+    "glass": "Glass {days}d {sell}{again}",
+    "glassDays": "Glass {days}d",
+    "seedShort": "{days}d {sell}{again}",
+    "tooLate": "Too late",
+    "needsHome": "Needs a home",
+    "saplingFruit": "{season} fruit",
+    "dailyFood": "Daily food",
+    "growsFast": "Grows fast",
+    "finerCrops": "Finer crops",
+    "fasterBites": "Faster bites",
+    "forCrafting": "For crafting",
+    "decor": "Decor {n}/{max}",
+    "ownLong": "{base} (own {n})",
+    "ownShort": "{short}, own {n}",
+    "own": "Own {n}",
+    "tab": {
+      "seeds": "Seeds",
+      "farm": "Farm",
+      "home": "Home",
+      "upgrades": "Upgrades"
+    },
+    "winter": "Nothing grows in winter. Rest up!",
+    "friendDiscount": "Friendship discount: {n}% off goods",
+    "maxed": "Fully upgraded!",
+    "needs": "Needs {n} {item} (have {have})",
+    "bought": "Bought {n} {item}",
+    "limit": "You have as many as you can place.",
+    "cantBuyNow": "Can't buy that now.",
+    "upgraded": "{name} upgraded!",
+    "youNeed": "You need {n} {item}.",
+    "moreGoods": "more goods",
+    "alreadyMaxed": "Already maxed."
+  },
+  "skills": {
+    "level": "Lv {n}",
+    "max": " MAX",
+    "nextPerk": "{level}: {perks}",
+    "allPerks": "All perks unlocked!",
+    "energyBonus": "Skills give you {n} extra energy so far."
+  },
+  "sleep": {
+    "title": "Go to bed?",
+    "itIs": "It is {time}.",
+    "explain": "Crops grow, the bin is sold, and you wake up fully rested.",
+    "tomorrow": "Tomorrow: {forecast}{extra}",
+    "stormExtra": ". Pick ripe fruit first!",
+    "rainExtra": ". No watering needed.",
+    "sleep": "Sleep",
+    "notYet": "Not yet"
+  },
+  "summary": {
+    "wakeUp": "Wake up",
+    "dayComplete": "{season} {day} complete",
+    "passedOut": "You passed out from exhaustion...",
+    "slept": "You slept soundly.",
+    "sold": "SOLD THIS MORNING",
+    "nothingShipped": "Nothing shipped. Use the bin by the house!",
+    "andMore": "...and {n} more",
+    "total": "Total",
+    "withered": {
+      "one": "{count} crop withered with the new season.",
+      "other": "{count} crops withered with the new season."
+    },
+    "now": "Now: {season} {day}. Gold: {gold}",
+    "storm": "A storm! Crops are watered.",
+    "rain": "It is raining. Crops are watered!",
+    "sun": "The sun is out today.",
+    "tip": "Tip: {tip}"
+  },
+  "yearEnd": {
+    "title": "END OF YEAR",
+    "results": "Year {year} results",
+    "goals": "Goals completed",
+    "rank": "Your rank",
+    "newSpring": "A new spring awaits. Keep farming!",
+    "keepPlaying": "Keep playing"
+  },
+  "forecast": {
+    "storm": "a storm is coming",
+    "rain": "rain",
+    "sunny": "sunny"
+  },
+  "notes": {
+    "wild": "wild goods",
+    "ore": "ore",
+    "requests": "requests",
+    "fresh": "Fresh {list} today."
+  },
+  "summaryTips": {
+    "water": "Water your crops every day. Unwatered crops do not grow.",
+    "season": "Seeds only grow in their season. Plan your next planting.",
+    "corn": "Corn regrows after harvest. Great value in summer.",
+    "kale": "Winter has no wild crops, but kale grows in the cold. Plan ahead!",
+    "paint": "Hold Action, then drag, to work a whole row of tiles.",
+    "can": "Upgrade the watering can to spend less time at the pond.",
+    "passOut": "Passing out at 2 AM only restores half your energy. Sleep earlier!",
+    "weeds": "Weeds sprout in the field. Cut them with the scythe for fiber.",
+    "wither": "Crops left in the field when the season changes will wither.",
+    "bin": "The shipping bin pays the next morning, so ship before bed.",
+    "jobs": "Villagers post small jobs each morning. They pay on the spot."
   }
 }

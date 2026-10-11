@@ -8,7 +8,8 @@ import { addItem, bagSize, countItem } from '../src/systems/inventory';
 import { interactWith, placedAt } from '../src/systems/placeables';
 import { migrate } from '../src/systems/save';
 import { measureText } from '../src/ui/fontMetrics';
-import { SHOP_TABS, shopFacts, shopTabOf } from '../src/ui/panels/shopFacts';
+import { shopFacts, shopTabOf, shopTabs } from '../src/ui/panels/shopFacts';
+import { LOCALES, setLocale } from '../src/i18n';
 import { equip, grass, newState } from './helpers';
 
 const bag = shops['town_general_store']!.upgrades.find((u) => u.id === 'bag')!;
@@ -121,12 +122,16 @@ describe('decorations', () => {
 
 describe('shop rows', () => {
   it('the four tab labels fit their buttons, and the buttons fit the sheet', () => {
-    let w = 0;
-    for (const [id, label, width] of SHOP_TABS) {
-      expect(measureText(label), id).toBeLessThanOrEqual(width - 6);
-      w += width + 2;
+    for (const locale of LOCALES) {
+      setLocale(locale);
+      let w = 0;
+      for (const [id, label, width] of shopTabs()) {
+        expect(measureText(label), `${locale} ${id}`).toBeLessThanOrEqual(width - 6);
+        w += width + 2;
+      }
+      expect(w - 2, locale).toBeLessThanOrEqual(184);
     }
-    expect(w - 2).toBeLessThanOrEqual(184);
+    setLocale('en');
   });
 
   it('decoration facts fit the sub-line', () => {

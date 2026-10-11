@@ -19,9 +19,9 @@ import { ownsGreenhouse } from '../../systems/plots';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
-import { SHOP_TABS, shopFacts, shopFactsRoom, shopTabOf, tooLate, type ShopTab } from './shopFacts';
+import { shopFacts, shopFactsRoom, shopTabOf, shopTabs, tooLate, type ShopTab } from './shopFacts';
 import Phaser from 'phaser';
-import { t } from '../../i18n';
+import { fmtGold, t } from '../../i18n';
 
 const ROWS = 5;
 
@@ -41,7 +41,7 @@ export class ShopPanel extends Modal {
     this.icon(this.panelW - 12, 12, 'ui_coin');
     this.label(this.panelW - 20, 8, fmt(s.money), C.gold, 1, 'right');
     let tx = 8;
-    SHOP_TABS.forEach(([id, text, w]) => {
+    shopTabs().forEach(([id, text, w]) => {
       const x = tx;
       tx += w + 2;
       this.button(
@@ -75,7 +75,7 @@ export class ShopPanel extends Modal {
       }
       const stock = stockFor(SHOP_ID, s.time.season, s).filter((id) => shopTabOf(id) === this.tab);
       if (stock.length === 0) {
-        this.label(8, y + 6, 'Nothing grows in winter. Rest up!', C.creamDim);
+        this.label(8, y + 6, t('shop.winter'), C.creamDim);
         y += ROW_H;
       }
       const pages = Math.max(1, Math.ceil(stock.length / rows));
@@ -114,7 +114,7 @@ export class ShopPanel extends Modal {
       subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {
-          label: `${fmt(price)}g`,
+          label: fmtGold(price),
           width: 44,
           onClick: () => this.buy(id, 1),
           color: s.money >= price ? C.gold : C.red,
@@ -144,7 +144,7 @@ export class ShopPanel extends Modal {
       this.label(
         8,
         y + 6,
-        `Friendship discount: ${Math.round(perkDiscount(s) * 100)}% off goods`,
+        t('shop.friendDiscount', { n: Math.round(perkDiscount(s) * 100) }),
         C.green,
       );
   }
@@ -166,12 +166,12 @@ export class ShopPanel extends Modal {
               ? 'ui_bolt'
               : items[up.id === 'hoe' ? 'hoe' : 'fishing_rod']!.icon),
         title: `${up.name} ${lvl}/${up.levels.length}`,
-        sub: next ? next.label : 'Fully upgraded!',
+        sub: next ? next.label : t('shop.maxed'),
         subColor: next ? C.creamDim : C.green,
         buttons: next
           ? [
               {
-                label: `${fmt(next.price)}g`,
+                label: fmtGold(next.price),
                 width: 58,
                 onClick: () => this.buyUp(up.id),
                 color: s.money >= next.price && !missing ? C.gold : C.red,
@@ -184,7 +184,11 @@ export class ShopPanel extends Modal {
         this.label(
           28,
           y - 1,
-          `Needs ${next.needs.qty} ${items[next.needs.item]?.name} (have ${have})`,
+          t('shop.needs', {
+            n: next.needs.qty,
+            item: items[next.needs.item]?.name ?? next.needs.item,
+            have,
+          }),
           missing ? C.red : C.green,
         );
         y += 10;
@@ -199,18 +203,18 @@ export class ShopPanel extends Modal {
     if (res === 'ok') {
       audio.play('buy');
       haptic('success');
-      toast(`Bought ${qty} ${name}`, 'good');
+      toast(t('shop.bought', { n: qty, item: name }), 'good');
     } else {
       audio.play('error');
       haptic('error');
       toast(
         res === 'no_money'
-          ? 'Not enough gold.'
+          ? t('common.notEnoughGold')
           : res === 'full'
             ? t('common.inventoryFull')
             : res === 'limit'
-              ? 'You have as many as you can place.'
-              : "Can't buy that now.",
+              ? t('shop.limit')
+              : t('shop.cantBuyNow'),
         'warn',
       );
     }
@@ -223,15 +227,20 @@ export class ShopPanel extends Modal {
     if (res === 'ok') {
       audio.play('buy');
       haptic('success');
-      toast(`${up.name} upgraded!`, 'good');
+      toast(t('shop.upgraded', { name: up.name }), 'good');
     } else {
       audio.play('error');
       toast(
         res === 'no_money'
-          ? 'Not enough gold.'
+          ? t('common.notEnoughGold')
           : res === 'no_items'
-            ? `You need ${nextUpgrade(getState(), up)?.needs?.qty ?? ''} ${items[nextUpgrade(getState(), up)?.needs?.item ?? '']?.name ?? 'more goods'}.`
-            : 'Already maxed.',
+            ? t('shop.youNeed', {
+                n: nextUpgrade(getState(), up)?.needs?.qty ?? '',
+                item:
+                  items[nextUpgrade(getState(), up)?.needs?.item ?? '']?.name ??
+                  t('shop.moreGoods'),
+              })
+            : t('shop.alreadyMaxed'),
         'warn',
       );
     }

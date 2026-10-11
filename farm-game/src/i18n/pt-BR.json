@@ -81,7 +81,8 @@
     }
   },
   "almanac": {
-    "pageDone": "Página do almanaque completa: {page}! +{gold}"
+    "pageDone": "Página do almanaque completa: {page}! +{gold}",
+    "complete": "Completo!"
   },
   "cart": {
     "greenhouse": "Estufa",
@@ -690,5 +691,111 @@
     "price": "Preço {price}   Você tem {have}",
     "buy": "Comprar por {gold}",
     "yours": "{name} agora é sua!"
+  },
+  "shop": {
+    "again": ", rebrota {n}d",
+    "tooLateNow": "Tarde demais agora",
+    "glassOnly": "Só estufa {days}d {sell}{again}",
+    "seedFacts": "{days} dias  {sell}{again}",
+    "glass": "Estufa {days}d {sell}{again}",
+    "glassDays": "Estufa {days}d",
+    "seedShort": "{days}d {sell}{again}",
+    "tooLate": "Tarde demais",
+    "needsHome": "Precisa de abrigo",
+    "saplingFruit": "Fruta de {season}",
+    "dailyFood": "Comida diária",
+    "growsFast": "Cresce rápido",
+    "finerCrops": "Colheita melhor",
+    "fasterBites": "Fisga mais rápido",
+    "forCrafting": "Para fabricar",
+    "decor": "Enfeite {n}/{max}",
+    "ownLong": "{base} (tem {n})",
+    "ownShort": "{short}, tem {n}",
+    "own": "Tem {n}",
+    "tab": {
+      "seeds": "Sementes",
+      "farm": "Roça",
+      "home": "Casa",
+      "upgrades": "Melhorias"
+    },
+    "winter": "Nada cresce no inverno. Descanse!",
+    "friendDiscount": "Desconto de amizade: {n}% nos produtos",
+    "maxed": "Tudo melhorado!",
+    "needs": "Precisa de {n} {item} (tem {have})",
+    "bought": "Comprou {n} {item}",
+    "limit": "Você já tem o máximo que dá para pôr.",
+    "cantBuyNow": "Não dá para comprar isso agora.",
+    "upgraded": "{name}: melhorado!",
+    "youNeed": "Você precisa de {n} {item}.",
+    "moreGoods": "mais produtos",
+    "alreadyMaxed": "Já está no máximo."
+  },
+  "skills": {
+    "level": "Nv {n}",
+    "max": " MÁX",
+    "nextPerk": "{level}: {perks}",
+    "allPerks": "Todas as vantagens liberadas!",
+    "energyBonus": "Seus níveis já dão {n} de energia extra."
+  },
+  "sleep": {
+    "title": "Ir dormir?",
+    "itIs": "São {time}.",
+    "explain": "As plantas crescem, a caixa é vendida e você acorda descansado.",
+    "tomorrow": "Amanhã: {forecast}{extra}",
+    "stormExtra": ". Colha as frutas maduras antes!",
+    "rainExtra": ". Não precisa regar.",
+    "sleep": "Dormir",
+    "notYet": "Ainda não"
+  },
+  "summary": {
+    "wakeUp": "Acordar",
+    "dayComplete": "{season} {day}: dia encerrado",
+    "passedOut": "Você desmaiou de cansaço...",
+    "slept": "Você dormiu feito pedra.",
+    "sold": "VENDIDO HOJE CEDO",
+    "nothingShipped": "Nada enviado. Use a caixa perto da casa!",
+    "andMore": "...e mais {n}",
+    "total": "Total",
+    "withered": {
+      "one": "{count} planta murchou com a nova estação.",
+      "other": "{count} plantas murcharam com a nova estação."
+    },
+    "now": "Agora: {season} {day}. Ouro: {gold}",
+    "storm": "Tempestade! As plantas estão regadas.",
+    "rain": "Está chovendo. As plantas estão regadas!",
+    "sun": "Hoje tem sol.",
+    "tip": "Dica: {tip}"
+  },
+  "yearEnd": {
+    "title": "FIM DO ANO",
+    "results": "Resultados do ano {year}",
+    "goals": "Metas cumpridas",
+    "rank": "Seu título",
+    "newSpring": "Uma nova primavera espera. Continue plantando!",
+    "keepPlaying": "Continuar jogando"
+  },
+  "forecast": {
+    "storm": "vem tempestade",
+    "rain": "chuva",
+    "sunny": "sol"
+  },
+  "notes": {
+    "wild": "coisas do mato",
+    "ore": "minério",
+    "requests": "pedidos",
+    "fresh": "Novidades hoje: {list}."
+  },
+  "summaryTips": {
+    "water": "Regue suas plantas todo dia. Planta sem água não cresce.",
+    "season": "Semente só cresce na estação certa. Planeje o próximo plantio.",
+    "corn": "O milho rebrota depois da colheita. Vale muito no verão.",
+    "kale": "No inverno não tem nada no mato, mas a couve cresce no frio. Planeje!",
+    "paint": "Segure Ação e arraste para trabalhar uma fileira inteira.",
+    "can": "Melhore o regador para passar menos tempo no lago.",
+    "passOut": "Desmaiar às 2h só recupera metade da energia. Durma mais cedo!",
+    "weeds": "O mato brota na roça. Corte com a foice e ganhe fibra.",
+    "wither": "O que ficar na roça quando a estação muda vai murchar.",
+    "bin": "A caixa de envio paga na manhã seguinte: envie antes de dormir.",
+    "jobs": "Os vizinhos postam bicos toda manhã. Pagam na hora."
   }
 }

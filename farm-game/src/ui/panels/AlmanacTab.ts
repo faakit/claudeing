@@ -2,9 +2,9 @@ import { collections, items } from '../../data';
 import { getState } from '../../state/store';
 import { discovered, pageDone, pageProgress } from '../../systems/almanac';
 import { C } from '../theme';
-import { fmt } from './format';
 import { legendsLine } from './bookText';
 import type { MenuTabContext } from './MenuPanel';
+import { fmtGold, t } from '../../i18n';
 
 /** Menu tab: every good you have found, page by page. Unfound items show as dark shapes. */
 /** Book pages shown per screen; more pages get < and > buttons. */
@@ -36,7 +36,7 @@ export function buildAlmanac(c: MenuTabContext): void {
     c.label(
       192,
       y,
-      done ? 'Complete!' : `${have}/${total}  +${fmt(page.reward)}g`,
+      done ? t('almanac.complete') : `${have}/${total}  +${fmtGold(page.reward)}`,
       done ? C.green : C.creamDim,
       1,
       'right',

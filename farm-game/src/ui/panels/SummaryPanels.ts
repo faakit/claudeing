@@ -15,6 +15,7 @@ import { fmt } from './format';
 import { summaryTip } from './summaryTips';
 import { arrangeNotes } from './summaryNotes';
 import { guidedMorning, guidedNotes } from '../../systems/tutorial';
+import { fmtGold, t } from '../../i18n';
 
 /** A modal the player must acknowledge: no tap-outside dismiss. */
 abstract class WaitModal extends Modal {
@@ -93,7 +94,7 @@ export class SummaryPanel extends WaitModal {
     this.content.removeAll(true);
     this.setHeight(end + 40);
     this.draw(this.summary, withTip, maxNotes, maxSales);
-    this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Wake up', () => this.finish(), {
+    this.button(8, this.panelH - 30, this.panelW - 16, 24, t('summary.wakeUp'), () => this.finish(), {
       textColor: C.green,
       rim: C.green,
     });
@@ -118,11 +119,11 @@ export class SummaryPanel extends WaitModal {
     this.panel();
     let y = 8;
     const text = (
-      t: string,
+      str: string,
       color: number,
       opts: { x?: number; align?: 'left' | 'center' | 'right'; wrap?: number; gap?: number } = {},
     ): number => {
-      const l = this.label(opts.x ?? 8, y, t, color, 1, opts.align ?? 'left', opts.wrap);
+      const l = this.label(opts.x ?? 8, y, str, color, 1, opts.align ?? 'left', opts.wrap);
       return l.textHeight + (opts.gap ?? 3);
     };
     const mid = this.panelW / 2;
@@ -130,49 +131,50 @@ export class SummaryPanel extends WaitModal {
       this.label(
         mid,
         y,
-        `${seasonLabel(sum.endedSeason)} ${sum.endedDay} complete`,
+        t('summary.dayComplete', { season: seasonLabel(sum.endedSeason), day: sum.endedDay }),
         C.gold,
         1,
         'center',
       ).textHeight + 3;
     y += text(
-      sum.passedOut ? 'You passed out from exhaustion...' : 'You slept soundly.',
+      sum.passedOut ? t('summary.passedOut') : t('summary.slept'),
       sum.passedOut ? C.warn : C.green,
       { x: mid, align: 'center', gap: 9 },
     );
-    y += text('SOLD THIS MORNING', C.gold, { gap: 4 });
-    if (lines.length === 0)
-      y += text('Nothing shipped. Use the bin by the house!', C.creamDim, { wrap: 184, gap: 4 });
+    y += text(t('summary.sold'), C.gold, { gap: 4 });
+    if (lines.length === 0) y += text(t('summary.nothingShipped'), C.creamDim, { wrap: 184, gap: 4 });
     for (const l of lines) {
-      this.label(192, y, `${fmt(l.gold)}g`, C.gold, 1, 'right');
+      this.label(192, y, fmtGold(l.gold), C.gold, 1, 'right');
       y += text(`${displayName(parseKey(l.item))} x${l.qty}`, C.cream, { wrap: 130 });
     }
-    if (extra > 0) y += text(`...and ${extra} more`, C.creamDim);
+    if (extra > 0) y += text(t('summary.andMore', { n: extra }), C.creamDim);
     y += 3;
-    this.label(192, y, `+${fmt(sum.total)}g`, C.green, 1, 'right');
-    y += text('Total', C.cream, { gap: 8 });
+    this.label(192, y, `+${fmtGold(sum.total)}`, C.green, 1, 'right');
+    y += text(t('summary.total'), C.cream, { gap: 8 });
     if (sum.withered > 0)
-      y += text(
-        `${sum.withered} crop${sum.withered > 1 ? 's' : ''} withered with the new season.`,
-        C.warn,
-        { wrap: 184, gap: 4 },
-      );
-    y += text(`Now: ${seasonLabel(s.time.season)} ${s.time.day}. Gold: ${fmt(s.money)}`, C.cream, {
-      wrap: 184,
-    });
+      y += text(t('summary.withered', { count: sum.withered }), C.warn, { wrap: 184, gap: 4 });
+    y += text(
+      t('summary.now', {
+        season: seasonLabel(s.time.season),
+        day: s.time.day,
+        gold: fmt(s.money),
+      }),
+      C.cream,
+      { wrap: 184 },
+    );
     y += text(
       sum.weather === 'storm'
-        ? 'A storm! Crops are watered.'
+        ? t('summary.storm')
         : sum.weather === 'rain'
-          ? 'It is raining. Crops are watered!'
-          : 'The sun is out today.',
+          ? t('summary.rain')
+          : t('summary.sun'),
       sum.weather === 'sunny' ? C.creamDim : C.blue,
       { gap: 8 },
     );
     const guided = guidedMorning(s);
     if (!guided)
       y += text(
-        `Tomorrow: ${forecastText(s.forecast)}`,
+        t('sleep.tomorrow', { forecast: forecastText(s.forecast), extra: '' }),
         s.forecast === 'sunny' ? C.creamDim : C.blue,
         {
           gap: 8,
@@ -181,9 +183,9 @@ export class SummaryPanel extends WaitModal {
     const notes = this.notes(sum);
     for (const note of notes.slice(0, maxNotes)) y += text(note, C.cream, { wrap: 184, gap: 4 });
     if (notes.length > maxNotes)
-      y += text(`...and ${notes.length - maxNotes} more`, C.creamDim, { gap: 4 });
+      y += text(t('summary.andMore', { n: notes.length - maxNotes }), C.creamDim, { gap: 4 });
     if (withTip && !guided)
-      y += text(`Tip: ${summaryTip(s.time.season, s.time.day, s.time.year)}`, C.creamDim, {
+      y += text(t('summary.tip', { tip: summaryTip(s.time.season, s.time.day, s.time.year) }), C.creamDim, {
         wrap: 184,
       });
     return y;
@@ -203,29 +205,29 @@ export class YearEndPanel extends WaitModal {
     const s = getState();
     const earned = stat(s, 'earned');
     this.panel();
-    this.label(this.panelW / 2, 10, 'END OF YEAR', C.gold, 2, 'center');
+    this.label(this.panelW / 2, 10, t('yearEnd.title'), C.gold, 2, 'center');
     this.label(
       this.panelW / 2,
       30,
-      `Year ${Math.max(1, s.time.year - 1)} results`,
+      t('yearEnd.results', { year: Math.max(1, s.time.year - 1) }),
       C.creamDim,
       1,
       'center',
     );
     const rows: [string, string][] = [
-      ['Gold earned', `${fmt(earned)}g`],
-      ['Crops harvested', fmt(stat(s, 'harvested'))],
-      ['Seeds planted', fmt(stat(s, 'planted'))],
-      ['Goals completed', `${goalsDone(s)}/${goals.length}`],
+      [t('stats.earned'), fmtGold(earned)],
+      [t('stats.harvested'), fmt(stat(s, 'harvested'))],
+      [t('stats.planted'), fmt(stat(s, 'planted'))],
+      [t('yearEnd.goals'), `${goalsDone(s)}/${goals.length}`],
     ];
     rows.forEach(([k, v], i) => {
       this.label(10, 50 + i * 13, k);
       this.label(190, 50 + i * 13, v, C.gold, 1, 'right');
     });
-    this.label(this.panelW / 2, 112, 'Your rank', C.creamDim, 1, 'center');
+    this.label(this.panelW / 2, 112, t('yearEnd.rank'), C.creamDim, 1, 'center');
     this.label(this.panelW / 2, 124, rankTitle(earned).toUpperCase(), C.green, 2, 'center');
-    this.label(this.panelW / 2, 150, 'A new spring awaits. Keep farming!', C.cream, 1, 'center');
-    this.button(8, this.panelH - 30, this.panelW - 16, 24, 'Keep playing', () => this.finish(), {
+    this.label(this.panelW / 2, 150, t('yearEnd.newSpring'), C.cream, 1, 'center');
+    this.button(8, this.panelH - 30, this.panelW - 16, 24, t('yearEnd.keepPlaying'), () => this.finish(), {
       textColor: C.green,
       rim: C.green,
     });
@@ -233,4 +235,4 @@ export class YearEndPanel extends WaitModal {
 }
 
 export const forecastText = (w: string): string =>
-  w === 'storm' ? 'a storm is coming' : w === 'rain' ? 'rain' : 'sunny';
+  t(w === 'storm' ? 'forecast.storm' : w === 'rain' ? 'forecast.rain' : 'forecast.sunny');

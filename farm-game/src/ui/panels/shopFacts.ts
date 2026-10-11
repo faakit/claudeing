@@ -1,5 +1,7 @@
 import { crops, game, items, placeables, trees } from '../../data';
 import { measureText } from '../fontMetrics';
+import { fmtGold, t } from '../../i18n';
+import { seasonWord } from '../../systems/time';
 
 /** True when a seed could not ripen before the season ends (so buying it now is a mistake). */
 export function tooLate(itemId: string, day: number): boolean {
@@ -38,49 +40,67 @@ export function shopFacts(
     const late = !greenhouse && tooLate(itemId, day);
     // With a greenhouse every season's seeds are sold; say which ones only grow under glass.
     const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
-    const again = crop.regrowDays ? `, again ${crop.regrowDays}d` : '';
+    const again = crop.regrowDays ? t('shop.again', { n: crop.regrowDays }) : '';
+    const f = { days, sell: fmtGold(sell), again };
     base = late
-      ? 'Too late now'
+      ? t('shop.tooLateNow')
       : glass
-        ? `Glass only ${days}d ${sell}g${again}`
-        : `${days} days  ${sell}g${again}`;
+        ? t('shop.glassOnly', f)
+        : t('shop.seedFacts', f);
     alts = late
       ? []
       : glass
         ? [
-            `Glass only ${days}d ${sell}g`,
-            `Glass ${days}d ${sell}g${again}`,
-            `Glass ${days}d ${sell}g`,
-            `Glass ${days}d`,
+            t('shop.glassOnly', { ...f, again: '' }),
+            t('shop.glass', f),
+            t('shop.glass', { ...f, again: '' }),
+            t('shop.glassDays', f),
           ]
-        : [`${days}d ${sell}g${again}`, `${days}d ${sell}g`];
-    short = late ? 'Too late' : glass ? `Glass ${days}d` : `${days}d ${sell}g`;
-  } else if (def.type === 'animal') base = 'Needs a home';
-  else if (def.type === 'sapling') base = `${seasonName(trees[itemId]?.season ?? '')} fruit`;
-  else if (def.type === 'feed') base = 'Daily food';
+        : [t('shop.seedShort', f), t('shop.seedShort', { ...f, again: '' })];
+    short = late
+      ? t('shop.tooLate')
+      : glass
+        ? t('shop.glassDays', f)
+        : t('shop.seedShort', { ...f, again: '' });
+  } else if (def.type === 'animal') base = t('shop.needsHome');
+  else if (def.type === 'sapling') {
+    const season = trees[itemId]?.season;
+    base = t('shop.saplingFruit', { season: season ? seasonWord(season) : '' });
+  } else if (def.type === 'feed') base = t('shop.dailyFood');
   else if (def.type === 'fertilizer')
-    base = (def.fertilizer?.growth ?? 0) > 0 ? 'Grows fast' : 'Finer crops';
-  else if (def.type === 'bait') base = 'Faster bites';
-  else if (def.type === 'material') base = 'For crafting';
+    base = (def.fertilizer?.growth ?? 0) > 0 ? t('shop.growsFast') : t('shop.finerCrops');
+  else if (def.type === 'bait') base = t('shop.fasterBites');
+  else if (def.type === 'material') base = t('shop.forCrafting');
   else if (placeables[itemId]?.behavior === 'decor')
     // For decorations `own` counts placed ones too, against the cap: "Decor 1/1".
-    return `Decor ${own}/${String(placeables[itemId]?.params['max'] ?? 1)}`;
+    return t('shop.decor', { n: own, max: String(placeables[itemId]?.params['max'] ?? 1) });
   else base = def.description;
   if (own <= 0) return [base, ...alts].find((l) => measureText(l) <= room) ?? base;
-  for (const line of [`${base} (own ${own})`, short && `${short}, own ${own}`])
+  for (const line of [
+    t('shop.ownLong', { base, n: own }),
+    short && t('shop.ownShort', { short, n: own }),
+  ])
     if (line && measureText(line) <= room) return line;
-  return `Own ${own}`;
+  return t('shop.own', { n: own });
 }
 
 export type ShopTab = 'seeds' | 'farm' | 'home' | 'upgrades';
 
-/** Tabs with their button widths (184 px in all, 2 px apart). */
-export const SHOP_TABS: [ShopTab, string, number][] = [
-  ['seeds', 'Seeds', 42],
-  ['farm', 'Farm', 40],
-  ['home', 'Home', 40],
-  ['upgrades', 'Upgrades', 56],
-];
+const TAB_IDS: ShopTab[] = ['seeds', 'farm', 'home', 'upgrades'];
+/** The English widths; a language whose labels do not fit them gets widths sized to its labels. */
+const TAB_WIDTHS = [42, 40, 40, 56];
+const TABS_W = 184;
+
+/** Tabs with their labels and button widths (184 px in all, 2 px apart), in the current language. */
+export function shopTabs(): [ShopTab, string, number][] {
+  const labels = TAB_IDS.map((id) => t(`shop.tab.${id}`));
+  if (labels.every((l, i) => measureText(l) <= TAB_WIDTHS[i]! - 6))
+    return TAB_IDS.map((id, i) => [id, labels[i]!, TAB_WIDTHS[i]!]);
+  const need = labels.map((l) => measureText(l) + 6);
+  const spare = Math.max(0, TABS_W - 2 * (TAB_IDS.length - 1) - need.reduce((a, b) => a + b, 0));
+  const each = Math.floor(spare / TAB_IDS.length);
+  return TAB_IDS.map((id, i) => [id, labels[i]!, need[i]! + each]);
+}
 
 /** Which tab sells an item: animals, feed and saplings on Farm, decorations on Home, the rest on Seeds. */
 export function shopTabOf(id: string): ShopTab {
@@ -90,4 +110,4 @@ export function shopTabOf(id: string): ShopTab {
   return 'seeds';
 }
 
-const seasonName = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+
