@@ -81,10 +81,17 @@ renders at the iPhone 13 and SE sizes; nobody has looked at it on a real phone.
 
 ## Next steps (the rest of the Dry Year list, by priority)
 
-1. **The critic's follow-ups on channels**, if any arrive after this handover. Options already weighed:
-   - a grassy rim: tried as 2 px leaf-dark tufts, removed because they read as weeds over the field's dirt;
-   - wider culvert walls on the 2-wide path;
-   - a whole-frame glint swap: the tiles are static today, like the map's water.
+1. **The critic's channel findings.** The critic accepted channels at 0dd9a35 with no blockers, by reading the
+   code and the tilesets only, since tests were stopped. The findings are recorded in
+   `C:/Users/andre/dev/tiny-acre/art-critique/`.
+   - **R21-1 (minor):** crops next to the wood lip have about 1.2:1 fill contrast and read only by their ink
+     outline. If a seedling melts in the game, put one soil-dark row before the wood.
+   - **R21-2 (minor):** winter wet channels have no ice-white edge. They only get the shore remap.
+   - **R21-3 (nit):** the culvert headwalls are thin on the 2-wide path.
+   - **R21-4:** nobody has seen the culvert, the creek mouth or the flower hiding in the game yet. Open
+     `channels-serpentine`.
+   - **Rulings:** D21-1 keeps the crisp cut with no tufts. D21-2 keeps the glint static; if it is ever animated,
+     use whole-frame swaps.
 2. **The Old Spring site in four stages**, `obj_site_spring_0..3`.
    - 32x32: a 2x2 rockfall at the pool's mouth. Build it from `site_spring-b` with the pixelize pipeline (crop,
      `sprites.json`, `build.py --sprites`).
@@ -115,10 +122,19 @@ letter uses none. One reference upload. No quota message.
 ## Verified and not verified
 
 - **Verified:**
-  - `verify:fast` was green at 128ef5d and at 0dd9a35. The full `verify` result is in the summary to the
-    coordinator.
+  - `verify:fast` was green at 128ef5d and 0dd9a35.
+  - The full `verify` at 0dd9a35 is partial. Its unit phase failed only on 5 s timeouts while other lanes loaded
+    the machine. The same tests passed in `verify:fast`.
+  - `e2e:scenarios` passed when rerun alone, including `channels-serpentine`.
+  - The run was then stopped on the owner's request, before mobile, onboarding, controls, feel and perf.
   - Headless shots of `channels-row`, `channels-flow-cap` and `channels-serpentine` at the iPhone 13 and SE sizes.
-- **Not verified:**
-  - a real phone and the native builds;
-  - the channels' winter, summer and fall looks, which were never shot in-game. They come from `seasons.py`
-    automatically.
+- **Untested:**
+  - The handover commits.
+  - The full `verify` phases 2-4 (controls, feel, perf at 1x/4x/6x) with the 512x1136 tileset and the `chars2`
+    atlas.
+  - A real phone.
+  - The channels in winter, summer and fall in the game.
+- **Run before merge:**
+  - `npm run verify` on a quiet machine, in particular `perf` (draws must stay at 2-5 with the second chars atlas)
+    and `e2e:scenarios`.
+  - After merging the M6 builder's maps, `npm run art:maps`, then `verify` again.
