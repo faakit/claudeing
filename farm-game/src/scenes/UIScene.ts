@@ -630,7 +630,11 @@ export class UIScene extends Phaser.Scene {
     if (this.npc.isOpen) panel = 'npc';
     if (this.plot.isOpen) panel = 'plot';
     if (this.summary.isOpen || this.yearEnd.isOpen) panel = 'summary';
-    return { panel, tab: this.menu.isOpen ? this.menu.currentTab : null };
+    return {
+      panel,
+      tab: this.menu.isOpen ? this.menu.currentTab : null,
+      interact: this.interactType,
+    };
   }
 
   private allModals(): Modal[] {

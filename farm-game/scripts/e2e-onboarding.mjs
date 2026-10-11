@@ -32,8 +32,12 @@ const { url, stop } = await startPreview(PORT);
 const browser = await launch();
 const results = [];
 
+// `deviant`: false (follows every mark), true (wanders, opens the Menu mid-step) or 'never' (never paints a row:
+// presses Action where the row tip shows, as a player who ignores the tip would).
 async function run(p, hand, deviant = false) {
-  const tag = `${p.id} ${hand}${deviant ? ' wanderer' : ''}`;
+  const never = deviant === 'never';
+  if (never) deviant = false;
+  const tag = `${p.id} ${hand}${deviant ? ' wanderer' : never ? ' never-paint' : ''}`;
   const ctx = await browser.newContext({
     viewport: { width: p.w, height: p.h },
     deviceScaleFactor: p.dpr,
@@ -57,7 +61,11 @@ async function run(p, hand, deviant = false) {
   await sleep(600);
   const geo = await geometry(page);
   const t = new Thumb(cdp, geo, p, hand);
-  const shotDir = SHOTS ? `${SHOTS}/${p.id}-${hand}${deviant ? '-wanderer' : ''}` : '';
+  const shotDir = SHOTS
+    ? `${SHOTS}/${p.id}-${hand}${deviant ? '-wanderer' : never ? '-never' : ''}`
+    : '';
+  let tipYieldOk = true;
+  let lastText = '';
   if (shotDir) mkdirSync(shotDir, { recursive: true });
   const shot = async (name) => shotDir && page.screenshot({ path: `${shotDir}/${name}.png` });
 
@@ -178,6 +186,13 @@ async function run(p, hand, deviant = false) {
       continue;
     }
     const k = c.coach;
+    // ONB_TRACE=1 prints every new coach line (debugging a run)
+    if (process.env.ONB_TRACE && k?.text && k.text !== lastText) {
+      lastText = k.text;
+      console.log(
+        `      ${tag} @${Math.round((Date.now() - t0) / 100) / 10}s [${k.step}] ${k.text} (${k.aim?.kind ?? '-'}, refused ${k.refusedRun})`,
+      );
+    }
     if (k?.step !== step) {
       if (step) timeline.push({ step, s: Math.round((Date.now() - stepSince) / 100) / 10 });
       if (step === 'harvest' && firstHarvestS === null) firstHarvestS = (Date.now() - t0) / 1000;
@@ -307,6 +322,12 @@ async function run(p, hand, deviant = false) {
       continue;
     }
     const a = k.aim;
+    // Never a loop on a refusal: after two refusals in a row the row tip gives way (round-5 blocker).
+    if (k.refusedRun >= 2 && a.kind === 'paint') {
+      await sleep(150); // the marks follow a refusal on the next frame
+      const k3 = (await coach()).coach;
+      if (k3?.refusedRun >= 2 && k3.aim?.kind === 'paint') tipYieldOk = false;
+    }
     if (a.x < 0 || a.x > 200 || a.y < 0 || a.y > 400)
       check(`${tag}: the hand points on screen`, false, JSON.stringify(a));
     await sleep(250); // a moment to read
@@ -314,6 +335,11 @@ async function run(p, hand, deviant = false) {
       await t.tap(a.x, a.y, 70);
       await sleep(250);
       await settle();
+    } else if (a.kind === 'paint' && never) {
+      paintSeen = true;
+      const L = await page.evaluate(() => window.__farm.game.scene.getScene('UI').layout.action);
+      await t.tap(L.x, L.y, 70);
+      await sleep(500);
     } else if (a.kind === 'paint') {
       paintSeen = true;
       const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[a.dir];
@@ -391,6 +417,7 @@ async function run(p, hand, deviant = false) {
   );
   check(`${tag}: day-1 free play followed the goals' own arrows`, freeTaps > 0, `${freeTaps}`);
   await shot('20-town');
+  check(`${tag}: the row tip yields after two refusals in a row`, tipYieldOk, '');
   check(`${tag}: no console errors`, errors.length === 0, errors.join(' | '));
   const r = {
     profile: p.id,
@@ -410,6 +437,9 @@ async function run(p, hand, deviant = false) {
 const combos = [];
 for (const p of PROFILES.filter((x) => which.includes(x.id)))
   for (const hand of hands) combos.push([p, hand, false]);
+// One player who never paints a row (presses Action under the tip).
+if (which.includes('se') && hands.includes('left'))
+  combos.push([PROFILES.find((x) => x.id === 'se'), 'left', 'never']);
 // One player who wanders off and opens the Menu mid-step (recovery).
 if (which.includes('i13') && hands.includes('right')) combos.push([PROFILES[0], 'right', true]);
 const PARALLEL = Number(process.env.E2E_ONBOARDING_PARALLEL ?? 3);

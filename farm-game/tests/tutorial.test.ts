@@ -338,12 +338,24 @@ describe('guided start: the step machine', () => {
     expect(seen.some((t) => t.includes('Wild goods'))).toBe(true);
   });
 
-  it('paints toward the longest straight strip of work', () => {
+  it('the row tip runs straight ahead from the faced tile, unbroken, and never flips', () => {
     const s = freshGuided();
-    const p = bestPaint(world(s, { tile: { tx: 13, ty: 18 } }));
+    // facing left from the plot's edge: the 4 plot tiles in a row
+    const p = bestPaint(world(s, { tile: { tx: 13, ty: 18 }, facing: 'left' }));
     expect(p?.dir).toBe('left');
     expect(p?.tiles.length).toBe(4);
+    // facing away from the plot: the row the other way (two refusals there and the tip gives way)
+    expect(bestPaint(world(s, { tile: { tx: 13, ty: 18 }, facing: 'right' }))?.dir).toBe('left');
     expect(bestPaint(world(s, { tile: { tx: 20, ty: 30 } }))).toBeNull();
+    // a watered crop right beside breaks the row at once (a row starts where Action works)
+    s.farm.tiles['12,18'] = {
+      watered: true,
+      crop: { cropId: 'parsnip', stage: 0, daysInStage: 0, regrow: false },
+    };
+    expect(bestPaint(world(s, { tile: { tx: 13, ty: 18 }, facing: 'left' }))).toBeNull();
+    // ahead wins over a longer row elsewhere
+    const mid = bestPaint(world(s, { tile: { tx: 10, ty: 20 }, facing: 'right' }));
+    expect(mid).toMatchObject({ dir: 'right' });
   });
 });
 
@@ -555,5 +567,270 @@ describe('guided start: final-round fixes', () => {
     expect(rewriteRefusal('Pick seeds on the hotbar first.', 'grow')).toBe(
       'Tap the seed packet on the hotbar.',
     );
+  });
+});
+
+describe('guided start: onboarding round 2', () => {
+  const crop = (watered: boolean) => ({
+    watered,
+    crop: { cropId: 'parsnip', stage: 1, daysInStage: 0, regrow: false },
+  });
+  const dayOneDone = (s: GameState, except: string[] = []): void => {
+    for (const st of tutorial.steps)
+      if (st.track === 'day1' && !except.includes(st.id)) s.stats[`tut.${st.id}`] = 1;
+  };
+
+  it('a guided game rains on day 2 (no chore), a bare one keeps its sunny start', () => {
+    expect(freshGuided().forecast).toBe('rain');
+    const bare = newState();
+    startTutorial(bare, { on: false, gift: false });
+    expect(bare.forecast).toBe('sunny');
+  });
+
+  it('on the rain morning the day-2 track starts at the letter, and the can fills quietly', async () => {
+    const { guidedMorningCan } = await import('../src/systems/tutorial');
+    const s = freshGuided();
+    dayOneDone(s);
+    s.stats['tut.forage'] = 1;
+    s.farm.tiles['10,16'] = crop(true);
+    s.time.day = 2;
+    s.weather = 'rain';
+    s.water = 2;
+    expect(guidedMorningCan(s, 20)).toBe(false); // filled, but no note
+    expect(s.water).toBe(20);
+    s.mail.list.push({ id: 1, from: 'rosa', day: 2, text: 'Hi', read: false } as never);
+    expect(step(s)).toBe('mail');
+    expect(stepDone(s, 'water2')).toBe(true);
+  });
+
+  it('while watering, the row tip is a row of dry crops, never grass to till', () => {
+    const s = freshGuided();
+    dayOneDone(s);
+    s.stats['tut.forage'] = 1;
+    s.time.day = 2;
+    for (const k of Object.keys(s.farm.tiles)) delete s.farm.tiles[k];
+    s.farm.tiles['10,17'] = crop(false);
+    s.farm.tiles['10,18'] = crop(false);
+    s.farm.tiles['10,19'] = crop(false);
+    s.stats['watered'] = 0;
+    const w = world(s, { tile: { tx: 10, ty: 16 }, facing: 'down' });
+    expect(step(s, w)).toBe('water2');
+    s.stats['watered'] = 2; // two watered one at a time: the tip is offered
+    const v = coachView(
+      s,
+      w,
+      NO_SHEET,
+      tutorial.steps.find((x) => x.id === 'water2')!,
+    );
+    expect(v.pointer).toMatchObject({ kind: 'paint', dir: 'down' });
+    expect((v.pointer as { tiles: unknown[] }).tiles).toHaveLength(3);
+    // facing the plot's grass: never a tilling row; the dry crops' row is offered
+    const w2 = tutorial.steps.find((x) => x.id === 'water2')!;
+    const side = world(s, { tile: { tx: 10, ty: 16 }, facing: 'right' });
+    expect(coachView(s, side, NO_SHEET, w2).pointer).toMatchObject({ kind: 'paint', dir: 'down' });
+    // no row of dry crops from here: the ring goes back on a dry crop
+    const off = world(s, { tile: { tx: 12, ty: 16 }, facing: 'left' });
+    const v3 = coachView(s, off, NO_SHEET, w2);
+    expect(v3.pointer?.kind).toBe('tile');
+    expect(v3.text).toMatch(/^Water every dry crop/);
+  });
+
+  it('once the errands are done, the bed is offered; exploring on lets it go until 6 PM', () => {
+    const s = freshGuided();
+    dayOneDone(s, ['bedOffer', 'sleep']);
+    s.stats['tut.forage'] = 1;
+    s.time.minutes = 10 * 60;
+    s.goalIndex = goals.findIndex((g) => g.id === 'talk');
+    expect(step(s)).not.toBe('bedOffer'); // errands still open
+    s.goalIndex = goals.findIndex((g) => g.id === 'sleep');
+    const cur = advance(s, world(s), NO_SHEET).current!;
+    expect(cur.id).toBe('bedOffer');
+    const v = coachView(s, world(s), NO_SHEET, cur);
+    expect(v.text).toBe('All done! Sleep, or keep exploring.');
+    expect(v.pointer).toMatchObject({ kind: 'tile', tx: 14, ty: 7 }); // the house door
+    // inside, the bed
+    const house = world(s, {
+      map: 'house',
+      tile: { tx: 5, ty: 8 },
+      objects: [{ type: 'bed', tx: 2, ty: 3, w: 1, h: 2 }],
+      blocked: () => false,
+    });
+    expect(coachView(s, house, NO_SHEET, cur).text).toBe('Tap the bed to sleep, or explore.');
+    // keeps exploring on the farm: after 40 game minutes the offer goes
+    s.time.minutes += 41;
+    expect(step(s)).not.toBe('bedOffer');
+    expect(stepDone(s, 'bedOffer') && !stepDone(s, 'sleep')).toBe(true);
+    // the evening still nudges
+    s.time.minutes = 18 * 60;
+    expect(step(s)).toBe('sleep');
+  });
+
+  it('errands finished in town: the offer shows there (home or explore), and goes after a while', () => {
+    const s = freshGuided();
+    dayOneDone(s, ['bedOffer', 'sleep']);
+    s.stats['tut.forage'] = 1;
+    s.time.minutes = 9 * 60;
+    s.goalIndex = goals.findIndex((g) => g.id === 'sleep');
+    const town = world(s, {
+      map: 'town',
+      objects: [{ type: 'door', tx: 14, ty: 0, w: 1, h: 1, to: 'farm' }],
+    });
+    const cur = advance(s, town, NO_SHEET).current!;
+    expect(cur.id).toBe('bedOffer');
+    const v = coachView(s, town, NO_SHEET, cur);
+    expect(v.text).toBe('All done! Sleep at home, or explore.');
+    expect(v.pointer).toMatchObject({ kind: 'tile', tx: 14, ty: 0 });
+    s.time.minutes += 41;
+    step(s, town);
+    expect(stepDone(s, 'bedOffer')).toBe(true);
+  });
+
+  it('a letter left with its gift points at Read again, and reading one then closing ends the step', () => {
+    const s = freshGuided();
+    dayOneDone(s);
+    s.stats['tut.forage'] = 1;
+    s.time.day = 2;
+    s.weather = 'rain';
+    s.mail.list.push(
+      {
+        id: 1,
+        from: 'rosa',
+        day: 2,
+        text: 'Hi',
+        read: true,
+        gift: { item: 'parsnip_seed', qty: 5 },
+      } as never,
+      { id: 2, from: 'mara', day: 2, text: 'Hello', read: false } as never,
+    );
+    const mailOpen: CoachFacts = { panel: 'mail', tab: null };
+    const cur = advance(s, world(s), mailOpen).current!;
+    expect(cur.id).toBe('mail');
+    const v = coachView(s, world(s), mailOpen, cur);
+    expect(v.pointer).toEqual({ kind: 'button', pattern: '^Take gift$||^Read$' });
+    // closed without taking it: done, never a loop back to the mailbox
+    expect(step(s)).not.toBe('mail');
+    expect(stepDone(s, 'mail')).toBe(true);
+  });
+
+  it('the first dry morning after the guided days teaches daily watering, with a row of dry crops', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    s.stats['tut.forage'] = 1;
+    s.stats['foraged'] = 3;
+    for (const k of Object.keys(s.farm.tiles)) delete s.farm.tiles[k];
+    s.farm.tiles['10,17'] = crop(false);
+    s.farm.tiles['10,18'] = crop(false);
+    s.time.day = 2;
+    expect(step(s)).not.toBe('waterDaily');
+    s.time.day = 3;
+    s.weather = 'sunny';
+    const w = world(s, { tile: { tx: 10, ty: 16 }, facing: 'down' });
+    const cur = advance(s, w, NO_SHEET).current!;
+    expect(cur.id).toBe('waterDaily');
+    expect(coachView(s, w, NO_SHEET, cur).text).toBe('Sunny! Water your crops: 2 left.');
+    s.stats['watered'] = (s.stats['watered'] ?? 0) + 1;
+    s.farm.tiles['10,17']!.watered = true;
+    s.farm.tiles['10,19'] = crop(false);
+    const v = coachView(s, world(s, { tile: { tx: 10, ty: 17 }, facing: 'down' }), NO_SHEET, cur);
+    expect(v.pointer).toMatchObject({ kind: 'paint', dir: 'down' });
+    // leaving the farm with crops still dry: the intro is over (it never nags in town)
+    step(s, world(s, { map: 'town', objects: [] }));
+    expect(stepDone(s, 'waterDaily')).toBe(true);
+  });
+});
+
+describe('guided start: the walk to town follows the real way', () => {
+  const onTownStep = (): GameState => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track === 'day1') s.stats[`tut.${st.id}`] = 1;
+    for (const id of ['water2', 'mail', 'menu', 'jobs', 'forage']) s.stats[`tut.${id}`] = 1;
+    s.time.day = 2;
+    return s;
+  };
+  const line = (from: [number, number], to: [number, number]) => {
+    const out = [];
+    let [x, y] = from;
+    out.push({ tx: x, ty: y });
+    while (x !== to[0] || y !== to[1]) {
+      if (x !== to[0]) x += Math.sign(to[0] - x);
+      else y += Math.sign(to[1] - y);
+      out.push({ tx: x, ty: y });
+    }
+    return out;
+  };
+
+  it('the stick shows the way the walk really goes; a walk that turns soon gets the arrow instead', async () => {
+    const { steerDir } = await import('../src/systems/tutorial');
+    const s = onTownStep();
+    // the walk heads right first (round the woodpile), then down: the stick drags right
+    const right = world(s, {
+      route: () => [...line([14, 11], [20, 11]), ...line([20, 12], [14, 43])],
+    });
+    expect(steerDir(right, { tx: 14, ty: 43 })).toBe('right');
+    const cur = advance(s, right, NO_SHEET).current!;
+    expect(cur.id).toBe('town');
+    expect(coachView(s, right, NO_SHEET, cur).pointer).toEqual({ kind: 'stick', dir: 'right' });
+    // it turns after 2 tiles: no stick, the gate (its arrow walks the route)
+    const turns = world(s, {
+      route: () => [...line([14, 11], [16, 11]), ...line([16, 12], [14, 43])],
+    });
+    expect(coachView(s, turns, NO_SHEET, cur).pointer).toMatchObject({
+      kind: 'tile',
+      tx: 14,
+      ty: 43,
+    });
+  });
+
+  it("an off-screen target's arrow sits on the farthest walk tile in view, never on soil or water", async () => {
+    const { routeWaypoint } = await import('../src/systems/tutorial');
+    const s = onTownStep();
+    const w = world(s, {
+      tile: { tx: 14, ty: 20 },
+      route: () => [...line([14, 20], [11, 20]), ...line([11, 21], [11, 30])],
+    });
+    // in view: rows up to 24; tiles 9-12 x 16-23 are plot (actKind), so the last plain tile is (11, 24)
+    const way = routeWaypoint(w, { tx: 11, ty: 30 }, (t) => t.ty <= 24);
+    expect(way).toEqual({ tx: 11, ty: 24 });
+  });
+});
+
+describe('guided start: round-5 critic findings', () => {
+  it('after two refusals in a row the row tip gives way to the one-tile pointer', () => {
+    const s = freshGuided();
+    for (const id of ['harvest', 'seeds', 'plant', 'water']) s.stats[`tut.${id}`] = 1;
+    s.inventory.selected = s.inventory.slots.findIndex((x) => x?.item === 'parsnip_seed');
+    const w = world(s, { tile: { tx: 13, ty: 18 }, facing: 'left' });
+    const cur = advance(s, w, NO_SHEET).current!;
+    expect(cur.id).toBe('grow');
+    s.stats['tilled'] = (s.stats['tilled'] ?? 0) + 2; // two tiles worked one at a time: the tip is offered
+    expect(coachView(s, w, NO_SHEET, cur).pointer?.kind).toBe('paint');
+    const v = coachView(s, w, { ...NO_SHEET, refused: 2 }, cur);
+    expect(v.pointer?.kind).not.toBe('paint');
+    expect(v.text).not.toMatch(/^Tip:/);
+  });
+
+  it('while planting, "already growing" says to tap an empty spot', async () => {
+    const { rewriteRefusal } = await import('../src/systems/tutorial');
+    expect(rewriteRefusal('Something is already growing here.', 'grow')).toBe(
+      'Tap an empty spot, then Action.',
+    );
+  });
+
+  it('next to the mailbox with Interact lit for it, the coach points at the lit button too', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track === 'day1') s.stats[`tut.${st.id}`] = 1;
+    s.stats['tut.forage'] = 1;
+    s.time.day = 2;
+    s.weather = 'rain';
+    s.mail.list.push({ id: 1, from: 'rosa', day: 2, text: 'Hi', read: false } as never);
+    const w = world(s, { tile: { tx: 14, ty: 9 }, facing: 'left' });
+    const cur = advance(s, w, NO_SHEET).current!;
+    expect(cur.id).toBe('mail');
+    expect(coachView(s, w, NO_SHEET, cur).pointer).toMatchObject({ kind: 'tile', tx: 13, ty: 9 });
+    const v = coachView(s, w, { ...NO_SHEET, interact: 'mailbox' }, cur);
+    expect(v.pointer).toEqual({ kind: 'ui', id: 'interact', tile: { tx: 13, ty: 9 } });
+    expect(v.text).toBe('Tap the lit button to open it.');
+    // lit for something else: the mailbox itself stays the target
+    expect(coachView(s, w, { ...NO_SHEET, interact: 'bin' }, cur).pointer?.kind).toBe('tile');
   });
 });

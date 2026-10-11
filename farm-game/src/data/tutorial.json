@@ -26,6 +26,7 @@
       }
     ]
   },
+  "day2Weather": "rain",
   "steps": [
     {
       "id": "harvest",
@@ -110,7 +111,10 @@
             "ui": "seedSlot"
           }
         }
-      ]
+      ],
+      "refusals": {
+        "Something is already growing here.": "Tap an empty spot, then Action."
+      }
     },
     {
       "id": "water",
@@ -157,7 +161,8 @@
         "Pick seeds on the hotbar first.": "Tap a dry crop to water it.",
         "Something is already growing here.": "Tap a dry crop to water it.",
         "Till the soil first.": "Tap a dry crop to water it.",
-        "Nothing to water here.": "Tap a dry crop to water it."
+        "Nothing to water here.": "Tap a dry crop to water it.",
+        "Nothing equipped.": "Tap a dry crop to water it."
       }
     },
     {
@@ -196,8 +201,16 @@
           "when": {
             "all": [
               {
-                "fresh": "tilled",
-                "min": 2
+                "any": [
+                  {
+                    "fresh": "tilled",
+                    "min": 2
+                  },
+                  {
+                    "fresh": "planted",
+                    "min": 2
+                  }
+                ]
               },
               {
                 "fresh": "painted",
@@ -225,7 +238,10 @@
         "stat": "planted",
         "of": 5
       },
-      "teaches": ["tip.paint"]
+      "teaches": ["tip.paint"],
+      "refusals": {
+        "Something is already growing here.": "Tap an empty spot, then Action."
+      }
     },
     {
       "id": "ship",
@@ -296,6 +312,95 @@
           "touched": 1
         }
       ]
+    },
+    {
+      "id": "bedOffer",
+      "track": "day1",
+      "optional": true,
+      "when": {
+        "any": [
+          {
+            "goal": "sleep"
+          },
+          {
+            "minute": 1080
+          },
+          {
+            "energyBelow": 0.25
+          }
+        ]
+      },
+      "text": "Tap the bed to sleep, or explore.",
+      "target": {
+        "object": "bed",
+        "map": "house"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "sleep"
+          },
+          "text": "Tap Sleep. The bin pays at dawn.",
+          "target": {
+            "button": "^Sleep"
+          }
+        },
+        {
+          "when": {
+            "map": "farm"
+          },
+          "text": "All done! Sleep, or keep exploring.",
+          "target": {
+            "door": "house"
+          }
+        },
+        {
+          "when": {
+            "not": {
+              "any": [
+                {
+                  "map": "farm"
+                },
+                {
+                  "map": "house"
+                }
+              ]
+            }
+          },
+          "text": "All done! Sleep at home, or explore.",
+          "target": {
+            "door": "farm"
+          }
+        }
+      ],
+      "done": [
+        {
+          "stat": "daysSlept",
+          "min": 1
+        }
+      ],
+      "skip": {
+        "any": [
+          {
+            "minute": 1080
+          },
+          {
+            "energyBelow": 0.25
+          },
+          {
+            "all": [
+              {
+                "after": 40
+              },
+              {
+                "not": {
+                  "map": "house"
+                }
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "sleep",
@@ -386,7 +491,8 @@
           "text": "Tip: hold Action, drag {dir}: a row.",
           "target": {
             "gesture": "paint",
-            "map": "farm"
+            "map": "farm",
+            "work": ["water"]
           }
         }
       ],
@@ -394,7 +500,8 @@
         "Pick seeds on the hotbar first.": "Tap a dry crop to water it.",
         "Something is already growing here.": "Tap a dry crop to water it.",
         "Till the soil first.": "Tap a dry crop to water it.",
-        "Nothing to water here.": "Tap a dry crop to water it."
+        "Nothing to water here.": "Tap a dry crop to water it.",
+        "Nothing equipped.": "Tap a dry crop to water it."
       }
     },
     {
@@ -420,9 +527,9 @@
               }
             ]
           },
-          "text": "A gift inside! Tap Take gift.",
+          "text": "A gift came! Open it and take it.",
           "target": {
-            "button": "^Take gift$"
+            "button": "^Take gift$||^Read$"
           }
         },
         {
@@ -448,6 +555,18 @@
         },
         {
           "none": "unread"
+        },
+        {
+          "all": [
+            {
+              "some": "readLetter"
+            },
+            {
+              "not": {
+                "panel": "mail"
+              }
+            }
+          ]
         }
       ],
       "optional": true,
@@ -506,7 +625,7 @@
       "when": {
         "day": 2
       },
-      "text": "Seeds are in town: walk south.",
+      "text": "Seeds are in town: drag to walk.",
       "target": {
         "steer": "town"
       },
@@ -565,6 +684,74 @@
       ],
       "leave": true,
       "optional": true
+    },
+    {
+      "id": "waterDaily",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "day": 3
+          },
+          {
+            "map": "farm"
+          },
+          {
+            "some": "dry"
+          }
+        ]
+      },
+      "text": "Sunny! Water your crops: {dry} left.",
+      "target": {
+        "find": "dry",
+        "map": "farm"
+      },
+      "alt": [
+        {
+          "when": {
+            "some": "explicitHand"
+          },
+          "text": "Tap the can on the hotbar first.",
+          "target": {
+            "ui": "canSlot"
+          }
+        },
+        {
+          "when": {
+            "some": "emptyCan"
+          },
+          "text": "Your can is empty: tap the pond.",
+          "target": {
+            "find": "water"
+          }
+        },
+        {
+          "when": {
+            "fresh": "watered",
+            "min": 1
+          },
+          "text": "Tip: hold Action, drag {dir}: a row.",
+          "target": {
+            "gesture": "paint",
+            "map": "farm",
+            "work": ["water"]
+          }
+        }
+      ],
+      "done": [
+        {
+          "none": "dry"
+        }
+      ],
+      "refusals": {
+        "Pick seeds on the hotbar first.": "Tap a dry crop to water it.",
+        "Something is already growing here.": "Tap a dry crop to water it.",
+        "Till the soil first.": "Tap a dry crop to water it.",
+        "Nothing to water here.": "Tap a dry crop to water it.",
+        "Nothing equipped.": "Tap a dry crop to water it."
+      }
     },
     {
       "id": "forage",
@@ -879,6 +1066,6 @@
   "refusals": {
     "Not your land yet. Buy it at a sign.": "Not your land yet. Follow the ring.",
     "Pick seeds on the hotbar first.": "Tap the seed packet on the hotbar.",
-    "Can't get there.": "Tap the ringed tile."
+    "Can't get there.": "Can't get there. Follow the ring."
   }
 }
