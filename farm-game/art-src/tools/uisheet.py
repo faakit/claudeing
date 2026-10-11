@@ -3,7 +3,9 @@
 Source: Google Flow `ui1` variant b (art-src/flow/crops/ui1b/sheet.png, native 98 x 76 px on its own grid). Its
 frame is 7 px thick, too thick for the sheets' 4-8 px content insets, so the frame is rebuilt from the source's own
 rows and columns on the native grid (no resampling): the outline, the darker grain, the light bevel and the
-ink line where the wood meets the paper, plus a 1 px sand shadow inside the top and left edges.
+ink line where the wood meets the paper, plus a 1 px sand shadow inside the top and left edges. The ink at the
+paper is 2 px on every side and the top bevel 2 px (review 16), so a fractional display scale changes them
+proportionally less.
 
 Pieces (ui atlas, all on the palette):
   ui_sheet_tl  ui_sheet_t  ui_sheet_tr      corners 7 x 7 (left) / 5 x 7 (right); top edge 16 x 7, tiles across
@@ -19,9 +21,9 @@ import numpy as np
 
 SRC = "ui1b/sheet"
 # native rows/columns kept from the source frame (see the module docstring)
-TOP_ROWS = [1, 3, 4, 5, 6, 7]  # outline, dark grain, wood, light bevel, dark grain, ink
-LEFT_COLS = [0, 2, 3, 4, 6]  # outline, wood, dark grain, light bevel, ink
-RIGHT_COLS = [-7, -5, -4, -3, -1]  # ink, bevel, grain, wood, outline (mirrors the left)
+TOP_ROWS = [1, 3, 5, 5, 7, 7]  # outline, dark grain, light bevel x2, ink x2 (review 16: inner lines 2 px)
+LEFT_COLS = [0, 3, 4, 6, 6]  # outline, dark grain, light bevel, ink x2
+RIGHT_COLS = [-7, -7, -5, -3, -1]  # ink x2, bevel, dark grain, outline (mirrors the left)
 BOTTOM_ROWS = [-8, -6, -5, -3, -1]  # ink, wood, grain, dark, outline
 CAP = ["KKKKK", "KLYOK", "KYYOK", "KOOOK", "KKKKK"]  # a brass cap over each top corner, lit top-left
 
@@ -86,9 +88,9 @@ def build(names: list[str], native_idx: np.ndarray) -> dict[str, np.ndarray]:
     for v in (tr, right, br):
         v[:, -1][v[:, -1] == plum] = ink
     # the ink line where the wood meets the paper is solid ink down both sides (the source mixes in plum)
-    left[:, len(LEFT_COLS) - 1] = ink
-    right[:, 0] = ink
-    tr[len(TOP_ROWS):, 0] = ink
+    left[:, 3:5] = ink
+    right[:, 0:2] = ink
+    tr[len(TOP_ROWS):, 0:2] = ink
     centre = np.full((16, 16), paper)
     out = {
         "ui_sheet_tl": tl, "ui_sheet_t": t, "ui_sheet_tr": tr,

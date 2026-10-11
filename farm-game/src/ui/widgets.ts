@@ -6,7 +6,7 @@ import { runtime } from '../state/runtime';
 import { fitRow, Label } from './font';
 import { rowLayout } from './layout';
 import { getState } from '../state/store';
-import { C, CH, SKIN } from './theme';
+import { C, CH, SKIN, SEAM } from './theme';
 import { sheetTexture } from './sheetSkin';
 
 /**
@@ -40,7 +40,7 @@ export function drawPanel(
     g.fillStyle(0xffffff, 0.07).fillRect(x + 3, y + 3, w - 6, 1);
     return;
   }
-  g.fillStyle(t.ink, 0.35).fillRect(x + 2, y + 2, w, h);
+  // no see-through drop shadow (critic review 16: the last semi-alpha pixels in the UI); buttons get a solid lip
   notch(t.ink, 1, x, y, w, h);
   if (kind === 'chrome') {
     // flat walnut behind text (critic R1-1): no grain, just a lit top edge
@@ -48,10 +48,10 @@ export function drawPanel(
     g.fillStyle(r, 1).fillRect(x + 2, y + 1, w - 4, 1);
     return;
   }
-  notch(r, 1, x + 1, y + 1, w - 2, h - 2); // 2 px wood frame
-  g.fillStyle(C.panelLight, 1).fillRect(x + 2, y + 1, w - 4, 1); // frame highlight
-  notch(t.ink, 1, x + 3, y + 3, w - 6, h - 6);
-  notch(f, 1, x + 4, y + 4, w - 8, h - 8);
+  // 1 px ink outline, a 2 px wood frame, then the fill: no 1 px stripes inside (on the fractional display scales of
+  // the iPhone 13 and SE a 1 px line renders 1 or 2 device px wider at random; art round 5, review 16)
+  notch(r, 1, x + 1, y + 1, w - 2, h - 2);
+  notch(f, 1, x + 3, y + 3, w - 6, h - 6);
 }
 
 export function drawSlot(
@@ -143,8 +143,14 @@ export interface ButtonStyle {
   scale?: number;
 }
 
+/** The button lip's colour (palette soil). */
+const SOIL = SEAM.lit;
+
 /** Pressable pixel button. Hit area is padded so thumbs never miss. */
 export class Button extends Phaser.GameObjects.Container {
+  /** Walnut skin: a solid 2 px soil lip under the face, inside the footprint; the face sinks onto it when pressed. */
+  static readonly LIP = SKIN === 'plum' ? 0 : 2;
+  private readonly lip: Phaser.GameObjects.Graphics;
   private readonly bg: Phaser.GameObjects.Graphics;
   private readonly label: Label;
   private readonly zone: Phaser.GameObjects.Zone;
@@ -162,6 +168,7 @@ export class Button extends Phaser.GameObjects.Container {
     private readonly style: ButtonStyle = {},
   ) {
     super(scene, x, y);
+    this.lip = scene.add.graphics();
     this.bg = scene.add.graphics();
     // walnut: ink text gets no drop shadow (a light shadow under dark glyphs reads as doubled)
     const dark =
@@ -181,7 +188,7 @@ export class Button extends Phaser.GameObjects.Container {
       .zone(-padX, -padY, bw + padX * 2, bh + padY * 2)
       .setOrigin(0, 0)
       .setInteractive({ useHandCursor: true });
-    this.add([this.bg, this.label, this.zone]);
+    this.add([this.lip, this.bg, this.label, this.zone]);
     this.draw();
     this.zone.on('pointerdown', () => {
       if (!this.enabled) return;
@@ -209,8 +216,20 @@ export class Button extends Phaser.GameObjects.Container {
     this.bg.clear();
     const fill = this.enabled ? (style.fill ?? C.panelLight) : SKIN === 'plum' ? 0x241d33 : C.slot;
     const rim = this.enabled ? (style.rim ?? C.rim) : C.creamDim;
-    drawPanel(this.bg, 0, this.down ? 1 : 0, w, h, this.down ? C.ink : fill, rim);
-    this.label.setY(Math.round((h - 7 * (style.scale ?? 1)) / 2) + (this.down ? 1 : 0));
+    const lip = Button.LIP;
+    const dy = this.down ? lip || 1 : 0;
+    this.lip.clear();
+    if (lip) {
+      // the lip: ink outline, soil inside; only its bottom `lip` rows show below the face
+      this.lip
+        .fillStyle(C.ink, 1)
+        .fillRect(1, lip, w - 2, h - lip)
+        .fillRect(0, lip + 1, w, h - lip - 2);
+      this.lip.fillStyle(SOIL, 1).fillRect(1, h - lip - 1, w - 2, lip);
+      this.lip.fillStyle(C.ink, 1).fillRect(1, h - 1, w - 2, 1);
+    }
+    drawPanel(this.bg, 0, dy, w, h - lip, this.down ? C.ink : fill, rim);
+    this.label.setY(Math.round((h - lip - 7 * (style.scale ?? 1)) / 2) + dy);
     this.label.setAlpha(this.enabled ? 1 : 0.5);
     if (SKIN !== 'plum') {
       // walnut (critic R1-4): an enabled button always reads in full ink (or the colour asked for, never the
@@ -220,12 +239,13 @@ export class Button extends Phaser.GameObjects.Container {
       this.label.setColor(this.enabled ? (dim ? C.cream : asked) : C.creamDim);
       this.label.setAlpha(1);
       if (!this.enabled && !this.down)
-        // hatch only a 3 px band inside the frame, so the glyphs stay clean
-        for (let yy = 4; yy < h - 4; yy++)
-          for (let xx = 4; xx < w - 4; xx++) {
-            const band = xx < 7 || xx >= w - 7 || yy < 7 || yy >= h - 7;
-            if (band && (xx + yy) % 3 === 0)
-              this.bg.fillStyle(C.slotRim, 0.5).fillRect(xx, yy, 1, 1);
+        // hatch only a band inside the frame, so the glyphs stay clean: solid 2 px blocks on a diagonal (no
+        // semi-alpha, no 1 px checker that a fractional display scale breaks up)
+        for (let yy = 3; yy < h - lip - 4; yy += 2)
+          for (let xx = 3; xx < w - 4; xx += 2) {
+            const band = xx < 7 || xx >= w - 7 || yy < 7 || yy >= h - lip - 7;
+            if (band && ((xx >> 1) + (yy >> 1)) % 3 === 0)
+              this.bg.fillStyle(C.slotRim, 1).fillRect(xx, yy, 2, 2);
           }
     }
   }
