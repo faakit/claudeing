@@ -922,6 +922,46 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
 - **Data and state:** steps are `src/data/tutorial.json` (validated at load; step ids may not reuse the flag names), rules are pure in `systems/tutorial.ts`, drawing in `ui/CoachMarks.ts`, a stat watcher in `mechanics/tutorial.ts`. Progress is stats (`tut.*`), so no new state. The new early goals (pick the parsnips, plant 5, sell in the bin, pick up 3 wild goods, say hello, sleep when ready) replace "till 6, plant 5, water 5, sleep, forage" and need save v17 to keep old saves on their goal ("till" moves to "plant", "water" and "sleep" to "pick up wild goods"). New games start two tiles further south (14,11) so the plot is on screen. `?tutorial=0` starts a bare new game for automated checks.
 - **Retired:** the two welcome toasts (one taught the old "hold Action"), the "Drag to walk" ring while the guide runs, the swipe tip on the 2nd till (now on day 4), the paint and ring first-run tips once the guide has shown them, the summary tip "Hold the Action button..." (now "hold Action, then drag"), and the idle hint and goal arrow while a coach mark shows (they return in free play).
 
+### Guided start, round 2 (onboarding agent, 2026-10-10)
+
+- **Owner decisions (via the coordinator):** Rosa stays the greeter; tap-to-walk stays the default and the stick
+  is still taught on day 2's walk to town; **the bed is offered once the day-1 errands are done** (`bedOffer`: a
+  ring on the door, then the bed, "All done! Sleep, or keep exploring.", or "Sleep at home, or explore." where
+  the errands end in town). It is an offer, not an order: it goes after 40 game minutes (20 s) outside the house,
+  and the 6 PM / low-energy bed step still nudges a player who kept playing.
+- **Day 2 is a rain morning** for a guided new game (`day2Weather` in `tutorial.json`, set as the forecast when
+  the guide starts). Of the three ideas (fewer crops, the row paint, rain) it is the only one that removes the
+  chore for every player, painters and never-painters alike, and it teaches weather where it pays: the sleep
+  sheet says "Tomorrow: Rain. No watering needed." and the morning says the crops are watered. Day 2 is then the
+  letter, the Menu's jobs and the walk to town. Daily watering moves to a one-off intro on the first dry morning
+  (`waterDaily`, day 3 on the farm: "Sunny! Water your crops: N left.", the can, the pond and a row tip of dry
+  crops; it ends when none are dry or the player leaves the farm, so it never nags). `water2` stays for saves
+  whose day 2 is sunny (an older day-1 save, a replay).
+- **The row tip** is now an unbroken row straight ahead from the faced tile (never another direction, never past
+  a gap), limited to the step's work (`work: ["water"]` while watering: it used to preview a row of grass to
+  till), and it **gives way after two refusals in a row** (round-5 blocker: a never-painter facing a planted tile
+  pressed Action 376 times under the tip). "Something is already growing here." reads "Tap an empty spot, then
+  Action." while planting.
+- **Off-screen arrows follow the walk:** the scene gives the coach a `route` (the tap-to-walk path search), the
+  arrow sits on the farthest walk tile in view (so a tap on it walks the way round the pond or the woodpile), and
+  the stick is only shown when the next 4 tiles of the walk run straight ("Seeds are in town: drag to walk.").
+- **Next to the target, the lit Interact button is pointed at too** ("Tap the lit button to open it."), since
+  a tap a few px off a one-tile mailbox lands on the farmer's own tile. The mail step ends once a letter was read
+  and the sheet closed (a gift left in a letter never loops back to the mailbox); with a gift waiting it points
+  at Take gift, else Read.
+- **Coach marks wear the art agent's sprites:** the line sits on `ui_coach_bubble` (ink text on parchment, walnut
+  skin) with `ui_coach_bubble_tail` toward the target; the ring is `ui_coach_ring` at whole-pixel scales with a
+  stepped pulse to `ui_coach_ring_wide`; the hand's fingertip is the art's (4.5, 0). While a sheet is open the
+  HUD tag and the welcome strip are not drawn (depth's top toasts sit there; the line itself starts at y 76,
+  below three two-line toasts).
+- **Day 2's town before 8 AM (review 6, coordinator ruling):** the shop counter sells at any hour (only Mara stands
+  there from 8), so the guide points at the counter ("Tap the counter to buy seeds.") instead of "opens at 8".
+  No shop hours moved (`npcs.json` and `shops.json` unchanged; noted for the depth agent).
+- **Never silent indoors:** the early goals (`gift` to `buy`) have a goal-arrow `where` for the house (its door) and
+  for town (the farm gate). Gesture tips (ring, paint) wait for the guided days like `tips.json` (`tipsHeldNow`).
+- **Settling-in jobs (depth round 4):** a one-off `welcomeJobs` intro on `game.welcomeJobs` days while a job is open
+  (Menu, then Goal); it never shows without that data.
+
 ### Round 3 owner decisions (2026-10-09, controls round 3)
 
 - **A press-and-lift on Action acts once, however long it was held** (`ActionPress.up`). A still press that

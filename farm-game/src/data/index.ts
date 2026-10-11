@@ -537,9 +537,13 @@ export interface TutorialCond {
   /** The current goal's id. */
   goal?: string;
   /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
-  fact?: 'npcNew' | 'forageInView';
+  fact?: 'npcNew' | 'forageInView' | 'welcomeJobs';
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
   touched?: number;
+  /** At least this many game minutes have passed since the step first showed. */
+  after?: number;
+  /** Rain or storm today (true) or a dry day (false). */
+  wet?: boolean;
   any?: TutorialCond[];
   all?: TutorialCond[];
   not?: TutorialCond;
@@ -558,6 +562,8 @@ export interface TutorialTarget {
   steer?: string;
   ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot';
   gesture?: 'paint' | 'ring';
+  /** With `gesture: "paint"`: the Action kinds a row may do (default till, plant, water). */
+  work?: string[];
   /** A button in the open sheet whose label matches this regular expression. */
   button?: string;
   hud?: TutorialHud;
@@ -609,6 +615,8 @@ export interface TutorialData {
     tiles: [number, number][];
     forage: { item: string; tile: [number, number]; map?: string }[];
   };
+  /** A guided new game's second morning has this weather (day 2 is the town walk, not a chore). */
+  day2Weather?: 'sunny' | 'rain';
   steps: TutorialStep[];
   /** Refusals the coach line rewords while the guide runs (game text -> guide text). */
   refusals?: Record<string, string>;
@@ -968,6 +976,7 @@ const TUT_KINDS = [
   'placeable',
 ];
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
+const WORK_KINDS = ['till', 'plant', 'water'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop'];
 const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot'];
@@ -991,6 +1000,8 @@ const TUT_COND_KEYS = new Set([
   'npc',
   'goal',
   'fact',
+  'after',
+  'wet',
   'any',
   'all',
   'not',
@@ -1002,6 +1013,8 @@ export function validateTutorial(t: TutorialData): void {
   const mapIds = Object.keys(mapsData.maps);
   if (!npcs[t.speaker]) bad(`speaker "${t.speaker}" is not a villager`);
   if (!t.welcome) bad('needs a welcome line');
+  if (t.day2Weather !== undefined && !['sunny', 'rain'].includes(t.day2Weather))
+    bad('day2Weather is sunny or rain');
   if (!mapIds.includes(t.gift.map) || !crops[t.gift.crop]) bad('gift needs a map and a crop');
   const home = Object.values(plots).find((p) => p.price === 0 && !p.project);
   for (const [x, y] of t.gift.tiles) {
@@ -1061,6 +1074,11 @@ export function validateTutorial(t: TutorialData): void {
         bad(`${where}: bad button pattern`);
       }
     }
+    if (
+      g.work !== undefined &&
+      (g.gesture !== 'paint' || g.work.some((k) => !WORK_KINDS.includes(k)))
+    )
+      bad(`${where}: "work" goes with a paint gesture and lists till, plant or water`);
     if (g.action !== undefined && (!g.else || g.action.length === 0))
       bad(`${where}: action needs kinds and an else`);
     if (g.else) target(g.else, where);

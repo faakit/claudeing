@@ -24,7 +24,7 @@ import { Ambient, parseBlooms } from '../fx/Ambient';
 import { SeeThrough } from '../fx/SeeThrough';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
-import { findPath, pathToFace, pathToFaceAny } from '../systems/pathfind';
+import { findPath, pathToFace, pathToFaceAny, standTiles } from '../systems/pathfind';
 import { createWork, nextWork, type WorkQueue } from '../systems/workQueue';
 import { compensateTouch, tapIntent, type TapIntent, type TapWorld } from '../systems/tapIntent';
 import { cssPerLogical } from '../ui/hit';
@@ -49,7 +49,7 @@ import { mail } from '../data';
 import { type TileInfo } from '../systems/actions';
 import { actOn, chooseAction } from '../systems/autoTool';
 import { gameEvents, toast } from '../systems/events';
-import { currentGoal } from '../systems/goals';
+import { currentGoal, tipsHeldNow } from '../systems/goals';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
 import {
   createMoveState,
@@ -484,6 +484,7 @@ export abstract class WorldScene extends Phaser.Scene {
       blocked: (tx, ty) => !this.inMap({ tx, ty }) || isTileBlocked(this.grid, tx, ty),
       actKind: (tx, ty) => (this.inMap({ tx, ty }) ? this.actKindAt({ tx, ty }) : null),
       water: this.waterTiles(),
+      route: (tx, ty) => this.coachRoute(here, { tx, ty }),
       inView: (tx, ty) => {
         const p = screen(tx, ty);
         return (
@@ -492,6 +493,17 @@ export abstract class WorldScene extends Phaser.Scene {
       },
       screen,
     };
+  }
+
+  /** The walk to a tile (or beside it, when it is solid) for the coach's off-screen arrows; cached per tile. */
+  private coachRouteCache: { key: string; path: TileCoord[] | null } | null = null;
+  private coachRoute(here: TileCoord, to: TileCoord): TileCoord[] | null {
+    const key = `${this.mapId}:${here.tx},${here.ty}>${to.tx},${to.ty}`;
+    if (this.coachRouteCache?.key === key) return this.coachRouteCache.path;
+    const goals = isTileBlocked(this.grid, to.tx, to.ty) ? standTiles(to) : [to];
+    const path = findPath(this.grid, here, goals, { avoid: (tx, ty) => this.isDoor(tx, ty) });
+    this.coachRouteCache = { key, path };
+    return path;
   }
 
   /** Water tiles a farmer can stand beside (the coach points at the nearest to refill the can). Cached per visit. */
@@ -753,7 +765,8 @@ export abstract class WorldScene extends Phaser.Scene {
         !only &&
         res.kind === 'till' &&
         state.settings.controls.paint &&
-        !state.stats['tip.paint']
+        !state.stats['tip.paint'] &&
+        !tipsHeldNow(state)
       ) {
         state.stats['tip.tills'] = (state.stats['tip.tills'] ?? 0) + 1;
         if (state.stats['tip.tills'] >= 3) {

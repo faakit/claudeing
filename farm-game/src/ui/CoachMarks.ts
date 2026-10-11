@@ -6,7 +6,10 @@
  * HUD tag. Nothing here is modal and nothing blocks input: the only touch targets are the line itself (tap it
  * for Skip / Next) and the welcome strip's two buttons. Left-handed mirrors the hand; Calm stills every mark.
  *
- * Texture keys (code-drawn placeholders until the art agent supplies them): `ui_coach_ring`, `ui_coach_hand`.
+ * Texture keys (art in the ui atlas, round 3; code-drawn stand-ins of the same size if the atlas is missing):
+ * `ui_coach_ring` (16x16) and `ui_coach_ring_wide` (22x22) alternate for a stepped pulse, `ui_coach_hand` (13x17,
+ * finger up, fingertip at 4.5,0), and the line sits on `ui_coach_bubble` (a 12x12 nine-slice, 4 px corners) with
+ * `ui_coach_bubble_tail` (7x4) under it, toward what the line is about.
  */
 import Phaser from 'phaser';
 import { GAME_WIDTH, HUD_H, WORLD_VIEW } from '../config';
@@ -24,6 +27,7 @@ import {
   CLOSE_BUTTON,
   COACH_LINE_PX,
   rewriteRefusal,
+  routeWaypoint,
   coachView,
   setCoachContext,
   skipStep,
@@ -42,11 +46,20 @@ import { edgePoint } from './coachGeometry';
 import { fitText, Label } from './font';
 import { HOTBAR_X, HOTBAR_Y, SLOT } from './Hud';
 import type { DockLayout } from './layout';
-import { CH } from './theme';
+import { C, CH, SKIN } from './theme';
 import { Button, drawPanel, type Modal } from './widgets';
 
 export const COACH_RING = 'ui_coach_ring';
+export const COACH_RING_WIDE = 'ui_coach_ring_wide';
 export const COACH_HAND = 'ui_coach_hand';
+export const COACH_BUBBLE = 'ui_coach_bubble';
+export const COACH_TAIL = 'ui_coach_bubble_tail';
+/** The ring's drawn radius at scale 1 (16 px art: an 8 px ring with its ink rim). */
+const RING_R = 7.5;
+/** The hand's fingertip in its 13 x 17 art. */
+const HAND_TIP = { x: 4.5, y: 0 };
+/** The stepped pulse: ring, then the wider ring, this long each (faster once the marks escalate). */
+const PULSE_MS = 340;
 
 /** After this long on one step without finishing it, the marks escalate (a travelling hand, a bigger ring). */
 export const ESCALATE_MS = 15_000;
@@ -96,27 +109,45 @@ const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number;
 
 const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] } as const;
 
-/** Draw the placeholder ring and hand once (the art agent can replace them by key). */
+/** Stand-ins of the art's sizes, drawn only when the ui atlas did not supply the key. */
 export function ensureCoachTextures(scene: Phaser.Scene): void {
-  if (!scene.textures.exists(COACH_RING)) {
+  const ink = 0x2a1a24;
+  const gold = 0xf4cc3c;
+  const draw = (
+    key: string,
+    w: number,
+    h: number,
+    paint: (g: Phaser.GameObjects.Graphics) => void,
+  ): void => {
+    if (scene.textures.exists(key)) return;
     const g = scene.make.graphics({}, false);
-    g.lineStyle(3, 0x2a1a24, 0.6).strokeCircle(16, 16, 13);
-    g.lineStyle(2, 0xf4cc3c, 1).strokeCircle(16, 16, 13);
-    g.lineStyle(1, 0xfff1b0, 0.8).strokeCircle(16, 16, 10);
-    g.generateTexture(COACH_RING, 32, 32);
+    paint(g);
+    g.generateTexture(key, w, h);
     g.destroy();
-  }
-  if (!scene.textures.exists(COACH_HAND)) {
-    const g = scene.make.graphics({}, false);
-    // a pointing glove: the fingertip is at (4, 1), the palm below and to the right
-    const ink = 0x2a1a24;
-    const glove = 0xf4e4bc;
-    g.fillStyle(ink, 1).fillRect(2, 0, 5, 9).fillRect(2, 6, 11, 10).fillRect(1, 8, 13, 7);
-    g.fillStyle(glove, 1).fillRect(3, 1, 3, 8).fillRect(3, 7, 9, 8).fillRect(2, 9, 11, 5);
-    g.fillStyle(0xdcb47c, 1).fillRect(7, 8, 1, 3).fillRect(9, 8, 1, 3);
-    g.generateTexture(COACH_HAND, 15, 17);
-    g.destroy();
-  }
+  };
+  draw(COACH_RING, 16, 16, (g) => {
+    g.lineStyle(3, ink, 1).strokeCircle(8, 8, 6.5);
+    g.lineStyle(1, gold, 1).strokeCircle(8, 8, 6.5);
+  });
+  draw(COACH_RING_WIDE, 22, 22, (g) => {
+    g.lineStyle(2, ink, 1).strokeCircle(11, 11, 10);
+    g.lineStyle(1, 0xfff1b0, 1).strokeCircle(11, 11, 10);
+  });
+  draw(COACH_HAND, 13, 17, (g) => {
+    // a pointing hand, finger up: fingertip at (4.5, 0)
+    g.fillStyle(ink, 1).fillRect(3, 0, 3, 8).fillRect(0, 6, 13, 11);
+    g.fillStyle(0xf4e4bc, 1).fillRect(4, 1, 1, 7).fillRect(1, 7, 11, 6);
+    g.fillStyle(0x3a64a8, 1).fillRect(3, 14, 8, 2);
+  });
+  draw(COACH_BUBBLE, 12, 12, (g) => {
+    g.fillStyle(ink, 1).fillRoundedRect(0, 0, 12, 12, 3);
+    g.fillStyle(0xf4e4bc, 1).fillRect(1, 1, 10, 8);
+    g.fillStyle(0xdcb47c, 1).fillRect(1, 9, 10, 1);
+  });
+  draw(COACH_TAIL, 7, 4, (g) => {
+    g.fillStyle(ink, 1).fillTriangle(0, 0, 7, 0, 3.5, 4);
+    g.fillStyle(0xdcb47c, 1).fillTriangle(1, 0, 6, 0, 3.5, 3);
+  });
 }
 
 export class CoachMarks {
@@ -130,6 +161,9 @@ export class CoachMarks {
   private readonly tagLabel: Label;
   private readonly ring: Phaser.GameObjects.Image;
   private readonly hand: Phaser.GameObjects.Image;
+  /** The parchment speech bubble under the line (walnut skin), and its tail toward the target. */
+  private readonly bubble: Phaser.GameObjects.NineSlice | null;
+  private readonly tail: Phaser.GameObjects.Image;
   private readonly barZone: Phaser.GameObjects.Zone;
   private readonly menuButtons: Button[] = [];
   private welcomeParts: Phaser.GameObjects.GameObject[] = [];
@@ -146,6 +180,10 @@ export class CoachMarks {
   private aim: { x: number; y: number; kind: string; dir?: string } | null = null;
   private stillMs = 0;
   private refusals = 0;
+  /** Refusals in a row on this step since its count last moved (the row tip yields after two). */
+  private refusedRun = 0;
+  private refusedAt = 0;
+  private refusedCount: string | null = null;
   private progressKey = '';
   private touches = 0;
   private shownAt = 0;
@@ -161,15 +199,21 @@ export class CoachMarks {
     this.root = scene.add.container(0, 0).setDepth(DEPTH);
     this.plates = scene.add.graphics();
     this.marks = scene.add.graphics();
-    this.line = new Label(scene, GAME_WIDTH / 2, 0, '', { align: 'center', color: CH.cream });
+    // Walnut: the guide's words sit on the parchment bubble the art agent drew (ink text); plum keeps its strip.
+    this.bubble =
+      SKIN === 'walnut'
+        ? scene.add.nineslice(3, 0, COACH_BUBBLE, undefined, 194, BAR_H, 4, 4, 4, 4).setOrigin(0, 0)
+        : null;
+    this.tail = scene.add.image(0, 0, COACH_TAIL).setOrigin(0.5, 0).setVisible(false);
+    this.line = new Label(scene, GAME_WIDTH / 2, 0, '', { align: 'center', color: this.ink.text });
     this.count = new Label(scene, GAME_WIDTH - 6, 0, '', { align: 'right', color: CH.gold });
     this.glyph = new Label(scene, GAME_WIDTH - 7, 0, '?', {
       align: 'center',
-      color: CH.creamDim,
+      color: this.ink.dim,
     });
     this.tagLabel = new Label(scene, 0, 0, '', { color: CH.gold });
     this.ring = scene.add.image(0, 0, COACH_RING).setVisible(false);
-    this.hand = scene.add.image(0, 0, COACH_HAND).setOrigin(0.27, 0.06).setVisible(false);
+    this.hand = scene.add.image(0, 0, COACH_HAND).setVisible(false);
     // Only the "..." at the end of the line is a button (Skip guide / Back): the rest of the line lets touches
     // through to the world, so a tap aimed at something near the top is never swallowed.
     this.barZone = scene.add.zone(0, 0, GLYPH_HIT, GLYPH_HIT).setOrigin(0.5, 0.5).setInteractive();
@@ -179,6 +223,8 @@ export class CoachMarks {
     scene.input.on('pointerdown', this.onAnyTouch, this);
     this.root.add([
       this.plates,
+      ...(this.bubble ? [this.bubble] : []),
+      this.tail,
       this.marks,
       this.ring,
       this.line,
@@ -196,6 +242,13 @@ export class CoachMarks {
         if (this.menuOpen) this.buildMenu();
       }),
     );
+  }
+
+  /** Text colours for the line: ink on the parchment bubble, parchment on the plum strip. */
+  private get ink(): { text: number; dim: number; flash: number } {
+    return SKIN === 'walnut'
+      ? { text: C.cream, dim: C.creamDim, flash: C.red }
+      : { text: CH.cream, dim: CH.creamDim, flash: CH.gold };
   }
 
   destroy(): void {
@@ -217,6 +270,8 @@ export class CoachMarks {
       until: this.scene.time.now + 2400,
     };
     this.refusals++;
+    this.refusedRun++;
+    this.refusedAt = this.scene.time.now;
     return true;
   }
 
@@ -233,6 +288,7 @@ export class CoachMarks {
       welcome: this.welcomeParts.length > 0 && this.welcomeVisible(),
       stepMs: Math.round(this.stepMs),
       refusals: this.refusals,
+      refusedRun: this.refusedRun,
     };
   }
 
@@ -250,10 +306,13 @@ export class CoachMarks {
       }
       return;
     }
+    // A run of refusals ends with progress (the step or its count moves) or after 20 s without one.
+    if (this.refusedRun && time - this.refusedAt > 20_000) this.refusedRun = 0;
     const facts: CoachFacts = {
       ...this.host.facts(),
       touches: this.touches,
       touchStep: this.stepId,
+      refused: this.refusedRun,
     };
     // The stat watcher may advance between frames: it must never see this frame's touches (they belong to the
     // step showing now, not to one that a stat change shows next).
@@ -272,11 +331,16 @@ export class CoachMarks {
       this.shownAt = this.scene.time.now;
       this.touches = 0;
       this.flash = null;
+      this.refusedRun = 0;
       this.closeMenu();
     } else if (!current) this.stepId = null;
     if (this.menuOpen && time - this.menuAt > MENU_MS) this.closeMenu();
     if (!runtime.blocked) this.stepMs += delta;
     this.view = current ? coachView(s, world, facts, current) : null;
+    if (this.view && this.view.count !== this.refusedCount) {
+      this.refusedCount = this.view.count;
+      this.refusedRun = 0;
+    }
     // The button a step points at is not in the open sheet (another page of it): lead out of the sheet instead.
     const v = this.view;
     if (v?.pointer?.kind === 'button' && facts.panel && !this.findButton(v.pointer.pattern))
@@ -330,8 +394,11 @@ export class CoachMarks {
     g.clear();
     m.clear();
     let y = HUD_H + 2;
+    // While a sheet is open the toasts sit over the HUD (depth's results at the top of the screen): no HUD tag
+    // and no welcome strip then, so nothing of the coach is drawn over them or over the sheet's own top.
+    const sheet = !!this.host.facts().panel;
     // HUD tag row: an outline on the element, its name just below the HUD.
-    if (view.tag) {
+    if (view.tag && !sheet) {
       const b = HUD_BOX[view.tag];
       const a = calm ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(time / 260));
       m.lineStyle(2, CH.gold, a).strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
@@ -353,7 +420,7 @@ export class CoachMarks {
         sc.y < WORLD_VIEW.y + WORLD_VIEW.h &&
         sc.x > 0 &&
         sc.x < GAME_WIDTH);
-    const welcomeOn = this.welcomeVisible() && clear;
+    const welcomeOn = this.welcomeVisible() && clear && !sheet;
     if (welcomeOn && !this.welcomeParts.length) this.buildWelcome();
     if (!welcomeOn && this.welcomeParts.length) this.dropWelcome();
     if (welcomeOn) {
@@ -369,6 +436,8 @@ export class CoachMarks {
     } else this.barLow = false;
     if (this.barLow) y = WORLD_VIEW.y + WORLD_VIEW.h - BAR_H - 4;
     if (this.menuOpen) {
+      this.bubble?.setVisible(false);
+      this.tail.setVisible(false);
       drawPanel(g, 3, y, 194, BAR_H + 10, undefined, undefined, 'chrome');
       this.placeMenu(y + 3);
       this.line.setVisible(false);
@@ -380,11 +449,12 @@ export class CoachMarks {
       this.aim = null; // nothing is pointed at while the menu shows
       return;
     }
-    drawPanel(g, 3, y, 194, BAR_H, undefined, undefined, 'chrome');
+    if (this.bubble) this.bubble.setPosition(3, y).setVisible(true);
+    else drawPanel(g, 3, y, 194, BAR_H, undefined, undefined, 'chrome');
     const flashing = !!this.flash && this.flash.until > this.scene.time.now;
     this.line
       .setText(fitText(this.lineText(), COACH_LINE_PX))
-      .setColor(flashing ? CH.gold : CH.cream)
+      .setColor(flashing ? this.ink.flash : this.ink.text)
       .setPosition(left ? 106 : 94, y + 5)
       .setVisible(true);
     const nextable = !!view.step.optional && this.stepMs >= NEXT_MS;
@@ -404,6 +474,23 @@ export class CoachMarks {
       this.barLow ? top : y + BAR_H + 4,
       this.barLow ? y - 4 : WORLD_VIEW.y + WORLD_VIEW.h - 8,
     );
+    this.placeTail(y);
+  }
+
+  /** The bubble's tail points toward what the line is about: down under the line, or up over it when low. */
+  private placeTail(y: number): void {
+    const a = this.aim;
+    if (!this.bubble || !a || (a.y > y - 2 && a.y < y + BAR_H + 2)) {
+      this.tail.setVisible(false);
+      return;
+    }
+    const below = a.y >= y + BAR_H;
+    const x = Math.round(Math.max(14, Math.min(GAME_WIDTH - 22, a.x)));
+    this.tail
+      .setVisible(true)
+      .setFlipY(!below)
+      .setOrigin(0.5, below ? 0 : 1)
+      .setPosition(x, below ? y + BAR_H - 1 : y + 1);
   }
 
   private drawPointer(
@@ -417,7 +504,8 @@ export class CoachMarks {
   ): void {
     const m = this.marks;
     const escalated = this.stepMs >= ESCALATE_MS;
-    const pulse = calm ? 1.1 : 1 + (escalated ? 0.45 : 0.25) * (0.5 + 0.5 * Math.sin(time / 170));
+    // A stepped pulse between the two ring frames (no soft scaling); escalated, it steps faster.
+    const wide = !calm && Math.floor(time / (escalated ? PULSE_MS * 0.6 : PULSE_MS)) % 2 === 1;
     this.aim = null;
     if (!p) {
       this.ring.setVisible(false);
@@ -435,8 +523,15 @@ export class CoachMarks {
       if (sc.x < 6 || sc.x > GAME_WIDTH - 6 || sc.y < minY || sc.y > maxY) {
         // Off screen (or under the coach's own strip): an arrow where the way to it leaves the visible world,
         // so tapping the arrow always walks the farmer toward the target.
+        const box = { x0: 10, x1: GAME_WIDTH - 10, y0: minY + 4, y1: maxY - 2 };
+        // On the real walk where it can be (a tap there walks the way round obstacles), else where the
+        // straight line leaves the view.
+        const way = routeWaypoint(world, p, (t) => {
+          const q = world.screen(t.tx, t.ty);
+          return q.x >= box.x0 && q.x <= box.x1 && q.y >= box.y0 && q.y <= box.y1;
+        });
         const me = world.screen(world.tile.tx, world.tile.ty);
-        const e = edgePoint(me, sc, { x0: 10, x1: GAME_WIDTH - 10, y0: minY + 4, y1: maxY - 2 });
+        const e = way ? world.screen(way.tx, way.ty) : edgePoint(me, sc, box);
         edge = { x: e.x, y: e.y, ang: Math.atan2(sc.y - e.y, sc.x - e.x) };
         at = { x: e.x, y: e.y };
       } else at = sc;
@@ -538,10 +633,7 @@ export class CoachMarks {
           )
           .strokePath();
       this.placeHand(at.x + dir[0] * (r + len) * slide, at.y + dir[1] * (r + len) * slide, left);
-      this.ring
-        .setVisible(true)
-        .setPosition(at.x, at.y)
-        .setScale((r / 13) * (calm ? 1 : 1 + 0.1 * Math.sin(time / 170)));
+      this.showRing(at.x, at.y, r, wide);
       this.aim = {
         x: at.x,
         y: at.y,
@@ -568,10 +660,7 @@ export class CoachMarks {
         y + Math.sin(ang - 2.5) * 6,
       );
     }
-    this.ring
-      .setVisible(true)
-      .setPosition(at.x, at.y)
-      .setScale((r / 13) * pulse);
+    this.showRing(at.x, at.y, r, wide);
     if (escalated && !calm) {
       // the hand travels from the thumb's resting place to the target, again and again
       const f = (time % 1400) / 1400;
@@ -584,12 +673,25 @@ export class CoachMarks {
     }
   }
 
+  /** The ring around a target of radius `r`, at a whole-pixel scale so the pixel art stays crisp. */
+  private showRing(x: number, y: number, r: number, wide: boolean): void {
+    const k = Math.max(1, Math.round(r / (RING_R + 1)));
+    this.ring
+      .setTexture(wide ? COACH_RING_WIDE : COACH_RING)
+      .setVisible(true)
+      .setPosition(Math.round(x), Math.round(y))
+      .setScale(k);
+  }
+
   /** The fingertip goes at (x, y); the hand sits toward the holding thumb's side. */
   private placeHand(x: number, y: number, left: boolean): void {
+    const w = this.hand.width || 13;
+    const h = this.hand.height || 17;
+    const ox = HAND_TIP.x / w;
     this.hand
       .setVisible(true)
       .setFlipX(left)
-      .setOrigin(left ? 0.73 : 0.27, 0.06)
+      .setOrigin(left ? 1 - ox : ox, HAND_TIP.y / h)
       .setPosition(Math.round(x), Math.round(y + 2));
   }
 

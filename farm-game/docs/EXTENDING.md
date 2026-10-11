@@ -280,13 +280,18 @@ one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.
 - **Conditions** read the state and what the screen shows: `stat`/`fresh` with `min`/`max` (counted from the
   guide's start or the step's first showing), `map`, `day`, `panel`, `tab`, `selected`, `has`, `none`/`some`
   (ripe, dry, crops, wetCrop, emptySoil, seeds, shippable, forage, unread, readLetter, placeable), `energyBelow`,
-  `minute`, `job`, `npc`, `fact` (npcNew, forageInView), and `any`/`all`/`not`.
+  `minute`, `job`, `npc`, `goal`, `fact` (npcNew, forageInView), `touched` (screen touches since it showed),
+  `after` (game minutes since it first showed), `wet` (rain or storm today), and `any`/`all`/`not`.
 - **Targets:** `find` (nearest ripe, dry, emptySoil, workable, forage, node, npcNew; `stand` points at a free
   tile beside it), `npc`, `object` (bin, bed, mailbox, board, shop), `door` (the door to a map), `ui` (action,
-  menu, interact, seedSlot, placeSlot), `gesture` (paint, ring), `button` (a regular expression for a button in
+  menu, interact, seedSlot, placeSlot), `gesture` (paint, ring; a paint tip is an unbroken row straight ahead of
+  the farmer, and `work` limits its kinds, e.g. `["water"]` while watering), `button` (a regular expression for a button in
   the open sheet; `a||b` lists them by priority), `hud`, and `action` + `else` (Action when it would do one of
   these kinds right now, else the `else` target). A target with a `map` the player is not on points at the door
-  that leads there; with a sheet open and a world target, the coach points at the sheet's close button.
+  that leads there; with a sheet open and a world target, the coach points at the sheet's close button. An
+  off-screen target's arrow sits on the walk to it (the scene's `route`), so tapping the arrow walks the way.
+- **`day2Weather`** (top level): a guided new game's second morning (`rain`: day 2 is the letter and the town,
+  not a watering chore; daily watering is the `waterDaily` intro on the first dry morning).
 - **A new feature's introduction** is one `intro` step: a `when` for the moment it matters, a target, a `done`
   for the action it teaches, and `leave: true`. No code.
 - **State:** progress is stats only (`tut.<id>`, `tut.on`, `tut.off`, `tut.seen.<id>`, `tut.at.<id>.<stat>`,

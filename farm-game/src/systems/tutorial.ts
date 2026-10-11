@@ -11,7 +11,7 @@
  * The scene supplies a `CoachWorld` (what the world looks like right now) and `CoachFacts` (which sheet is
  * open); `advance` marks steps done and returns the current one, `coachView` says what to show for it.
  */
-import { crops, items, jobs as jobDefs, npcs, plots, tools, tutorial } from '../data';
+import { crops, game, items, jobs as jobDefs, npcs, plots, tools, tutorial } from '../data';
 import type {
   TutorialCond,
   TutorialData,
@@ -28,6 +28,7 @@ import { gameEvents } from './events';
 import { isMature, tileKey } from './farming';
 import { addStat, currentGoal, stat } from './goals';
 import { absoluteDay } from './time';
+import { isWet } from './weather';
 
 export interface Tile {
   tx: number;
@@ -59,6 +60,8 @@ export interface CoachWorld {
   inView(tx: number, ty: number): boolean;
   /** Water tiles of this map (to refill the can). */
   water?: readonly Tile[];
+  /** The walk from the farmer to a tile (or beside it when solid), both ends included; null if none. */
+  route?(tx: number, ty: number): readonly Tile[] | null;
 }
 
 /** UI facts the scene knows: the open sheet and the menu tab. */
@@ -68,7 +71,14 @@ export interface CoachFacts {
   /** Touches on the screen since `touchStep` showed on screen (an info line goes on the next touch). */
   touches?: number;
   touchStep?: string | null;
+  /** Refusals in a row on this step without progress (the row tip yields after two). */
+  refused?: number;
+  /** What the lit Interact button would open now (`mailbox`, `bed`, `npc:mara`...), if anything. */
+  interact?: string | null;
 }
+
+/** After this many refusals in a row, the row tip gives way to the one-tile pointer. */
+export const TIP_YIELD_REFUSALS = 2;
 
 export type Pointer =
   /** A world tile; `face` is the way to face from it (a standing spot for Action). */
@@ -168,6 +178,9 @@ export function startTutorial(s: GameState, opts: { on: boolean; gift: boolean }
   if (opts.on) s.stats['tut.on'] = 1;
   else s.stats['tut.off'] = 1;
   if (opts.gift) layGift(s);
+  // Day 2 is the letter and the walk to town: a rain morning waters day 1's crops (the sleep sheet says
+  // "Tomorrow: Rain. No watering needed."), and daily watering is taught on the first dry morning instead.
+  if (opts.on && data().day2Weather) s.forecast = data().day2Weather!;
 }
 
 /** Skip the whole guide (saved; Options can replay it). */
@@ -239,6 +252,8 @@ const relStat = (s: GameState, name: string): number =>
   stat(s, name) - (s.stats[`tut.base.${name}`] ?? 0);
 const freshStat = (s: GameState, id: string, name: string): number =>
   stat(s, name) - (s.stats[`tut.at.${id}.${name}`] ?? stat(s, name));
+/** The game clock as one number (minutes since the first morning), for "minutes since this step showed". */
+const clockNow = (s: GameState): number => absoluteDay(s) * 1440 + s.time.minutes;
 
 function selectedIs(s: GameState, what: string): boolean {
   const st = s.inventory.slots[s.inventory.selected];
@@ -304,6 +319,17 @@ export function newNpcInView(s: GameState, world: CoachWorld): (Tile & { id: str
   return best;
 }
 
+/**
+ * The settling-in days (depth round 4, `game.welcomeJobs`): today's jobs pay extra and one is still open. False
+ * when the data has no such days, so the intro simply never shows.
+ */
+export function welcomeJobsToday(s: GameState): boolean {
+  const w = (game as { welcomeJobs?: { from: number; to: number; factor: number } }).welcomeJobs;
+  const day = absoluteDay(s);
+  if (!w || w.factor <= 1 || day < w.from || day > w.to) return false;
+  return s.jobs.day === day && s.jobs.list.some((j) => !j.done);
+}
+
 function forageInView(s: GameState, world: CoachWorld): boolean {
   return Object.keys(s.forage[world.map] ?? {}).some((k) => {
     const [x, y] = k.split(',').map(Number) as [number, number];
@@ -341,6 +367,12 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   )
     return false;
   if (c.fact === 'forageInView' && !forageInView(s, world)) return false;
+  if (c.fact === 'welcomeJobs' && !welcomeJobsToday(s)) return false;
+  if (c.wet !== undefined && isWet(s.weather) !== c.wet) return false;
+  if (c.after !== undefined) {
+    const at = s.stats[`tut.at.${step.id}.clock`];
+    if (at === undefined || clockNow(s) - at < c.after) return false;
+  }
   if (c.any && !c.any.some((x) => holds(x, ctx))) return false;
   if (c.all && !c.all.every((x) => holds(x, ctx))) return false;
   if (c.not && holds(c.not, ctx)) return false;
@@ -366,6 +398,7 @@ function markSeen(s: GameState, st: TutorialStep): boolean {
   walk(st.skip);
   st.alt?.forEach((a) => walk(a.when));
   for (const name of fresh) s.stats[`tut.at.${st.id}.${name}`] = stat(s, name);
+  s.stats[`tut.at.${st.id}.clock`] = clockNow(s);
   return true;
 }
 
@@ -446,7 +479,8 @@ export function guidedMorningCan(s: GameState, capacity: number): boolean {
   s.stats['tut.can'] = 1;
   if (s.water >= capacity) return false;
   s.water = capacity;
-  return true;
+  // On a rain morning the can is filled quietly: the note would only be noise next to "crops are watered".
+  return !isWet(s.weather);
 }
 
 // ---------------------------------------------------------------- what to show
@@ -544,27 +578,90 @@ function objectTile(world: CoachWorld, o: CoachObject): Tile {
   return nearest(world.tile, tiles) ?? { tx: o.tx, ty: o.ty };
 }
 
-/** Straight lines of workable tiles from the farmer: the best direction to paint a row. */
-export function bestPaint(world: CoachWorld, max = 4): { dir: Direction; tiles: Tile[] } | null {
-  let best: { dir: Direction; tiles: Tile[] } | null = null;
-  let facing: { dir: Direction; tiles: Tile[] } | null = null;
-  for (const d of DIRS) {
+/**
+ * The row tip: an unbroken line of at least two tiles of work starting right beside the farmer. Straight ahead
+ * (from the faced tile) wins, so a player who ignores the tip and presses Action still works the row's first
+ * tile and the direction does not flip while the farmer stands still (round-4 critic: 2-4 directions in one
+ * step); else the longest such row another way (a press there may be refused: two refusals and the tip gives
+ * way, see TIP_YIELD_REFUSALS). Only `kinds` count: while watering, a row is dry crops, never grass to till (it
+ * used to preview a tilling row).
+ */
+export function bestPaint(
+  world: CoachWorld,
+  max = 5,
+  kinds: readonly string[] = WORK,
+): { dir: Direction; tiles: Tile[] } | null {
+  const row = (d: Direction): Tile[] => {
     const tiles: Tile[] = [];
-    let workable = 0;
     for (let i = 1; i <= max; i++) {
       const t = { tx: world.tile.tx + VEC[d].tx * i, ty: world.tile.ty + VEC[d].ty * i };
-      if (WORK.includes(world.actKind(t.tx, t.ty) ?? '')) workable++;
-      else if (world.blocked(t.tx, t.ty) && workable > 0) break;
+      if (!kinds.includes(world.actKind(t.tx, t.ty) ?? '')) break;
       tiles.push(t);
     }
-    // trim tiles past the last workable one
-    while (tiles.length && !WORK.includes(world.actKind(tiles.at(-1)!.tx, tiles.at(-1)!.ty) ?? ''))
-      tiles.pop();
-    if (workable >= 2 && (!best || workable > best.tiles.length)) best = { dir: d, tiles };
-    if (workable >= 2 && d === world.facing) facing = { dir: d, tiles };
+    return tiles;
+  };
+  const ahead = row(world.facing);
+  if (ahead.length >= 2) return { dir: world.facing, tiles: ahead };
+  let best: { dir: Direction; tiles: Tile[] } | null = null;
+  for (const d of DIRS) {
+    if (d === world.facing) continue;
+    const tiles = row(d);
+    if (tiles.length >= 2 && (!best || tiles.length > best.tiles.length)) best = { dir: d, tiles };
   }
-  // The way the farmer faces wins when it has a row too, so the tip does not flip as counts change.
-  return facing ?? best;
+  return best;
+}
+
+/**
+ * The way to drag the stick toward a far door: the direction the real walk takes for its next 4 tiles. When the
+ * walk turns sooner (a woodpile, a stump, the pond in the way: round-4 critic, a 115 s stall), null: the tap and
+ * its arrow, which follow the walk around obstacles, lead on instead. Without a route, the straight way must be
+ * open for 4 tiles.
+ */
+export function steerDir(world: CoachWorld, to: Tile): Direction | null {
+  const STRAIGHT = 4;
+  const path = world.route?.(to.tx, to.ty);
+  if (path) {
+    if (path.length <= STRAIGHT) return null;
+    let dir: Direction | null = null;
+    for (let i = 1; i <= STRAIGHT; i++) {
+      const a = path[i - 1]!;
+      const b = path[i]!;
+      const d = DIRS.find((k) => VEC[k].tx === b.tx - a.tx && VEC[k].ty === b.ty - a.ty) ?? null;
+      if (!d || (dir && d !== dir)) return null;
+      dir = d;
+    }
+    return dir;
+  }
+  const dx = to.tx - world.tile.tx;
+  const dy = to.ty - world.tile.ty;
+  const dir: Direction =
+    Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+  const clear = [1, 2, 3, 4].every(
+    (i) => !world.blocked(world.tile.tx + VEC[dir].tx * i, world.tile.ty + VEC[dir].ty * i),
+  );
+  return clear ? dir : null;
+}
+
+/**
+ * Where an off-screen target's arrow goes: the farthest tile of the walk to it that is still in view, so a tap
+ * on the arrow walks the real way (round 2: an arrow on the straight line landed on the pond and did nothing).
+ * Null without a route (the caller falls back to where the straight line leaves the view).
+ */
+export function routeWaypoint(
+  world: CoachWorld,
+  to: Tile,
+  visible: (t: Tile) => boolean,
+): Tile | null {
+  const path = world.route?.(to.tx, to.ty);
+  if (!path || path.length < 2) return null;
+  let best: Tile | null = null;
+  for (let i = 1; i < path.length; i++) {
+    const t = path[i]!;
+    if (!visible(t)) break;
+    // a plain walk tile: a tap there walks, it never works soil or picks something up on the way
+    if (!world.actKind(t.tx, t.ty)) best = t;
+  }
+  return best;
 }
 
 function slotOf(s: GameState, pred: (item: string) => boolean): number | null {
@@ -617,16 +714,8 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     if (!d) return null;
     if (world.inView(d.tx, d.ty) && dist(world.tile, d) <= 6)
       return { kind: 'tile', tx: d.tx, ty: d.ty };
-    const dx = d.tx - world.tile.tx;
-    const dy = d.ty - world.tile.ty;
-    const dir: Direction =
-      Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
-    // Only teach the stick when the straight way is open for a few tiles; else the tap and its edge arrow
-    // (which walk around obstacles) lead on.
-    const clear = [1, 2, 3, 4].every(
-      (i) => !world.blocked(world.tile.tx + VEC[dir].tx * i, world.tile.ty + VEC[dir].ty * i),
-    );
-    return clear ? { kind: 'stick', dir } : { kind: 'tile', tx: d.tx, ty: d.ty };
+    const dir = steerDir(world, d);
+    return dir ? { kind: 'stick', dir } : { kind: 'tile', tx: d.tx, ty: d.ty };
   }
   if (g.ui === 'canSlot') {
     const i = slotOf(s, (it) => tools[items[it]?.tool ?? '']?.action === 'water');
@@ -643,7 +732,7 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
   if (g.ui) return { kind: 'ui', id: g.ui };
   if (g.gesture === 'ring') return { kind: 'ring' };
   if (g.gesture === 'paint') {
-    const p = bestPaint(world);
+    const p = bestPaint(world, 5, g.work ?? WORK);
     return p ? { kind: 'paint', dir: p.dir, tiles: p.tiles } : null;
   }
   if (g.button) return { kind: 'button', pattern: g.button };
@@ -690,13 +779,17 @@ export function coachView(
   let text = st.text;
   let target = st.target;
   let fromAlt = false;
-  for (const a of st.alt ?? [])
+  for (const a of st.alt ?? []) {
+    // Never leave a player looping on a refusal: once Action was refused twice, no row tip (round 5 blocker:
+    // a never-painter facing a planted tile pressed Action 376 times under the tip).
+    if (a.target?.gesture === 'paint' && (facts.refused ?? 0) >= TIP_YIELD_REFUSALS) continue;
     if (holds(a.when, ctx)) {
       text = a.text;
       target = a.target;
       fromAlt = true;
       break;
     }
+  }
   let pointer: Pointer | null = null;
   let away = false;
   // A target on another map (and not in an open sheet): point at the door that leads there.
@@ -719,6 +812,19 @@ export function coachView(
       pointer = st.target ? resolveTarget(s, world, st.target) : null;
       if (st.target?.action && pointer?.kind !== 'ui' && st.elseText) text = st.elseText;
     }
+  }
+  // Right by the thing (the Interact button lit for it): point at that button too, since a tap that lands a few
+  // pixels off the one-tile mailbox hits the farmer's own tile and does nothing (round 5: 300 s on mail).
+  const lit = facts.interact ?? null;
+  if (
+    pointer?.kind === 'tile' &&
+    lit &&
+    !away &&
+    ((target?.object && lit === target.object) ||
+      (target?.npc && (lit === `npc:${target.npc}` || lit === 'npc')))
+  ) {
+    pointer = { kind: 'ui', id: 'interact', tile: { tx: pointer.tx, ty: pointer.ty } };
+    text = target?.npc ? 'Tap the lit button to talk.' : 'Tap the lit button to open it.';
   }
   // A sheet is open but the step wants the world: say how to get back to it.
   if (
@@ -770,7 +876,11 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
   const dirs = ['up', 'down', 'left', 'right'];
   out.push(...Object.values(data().refusals ?? {}));
   for (const st of steps) out.push(...Object.values(st.refusals ?? {}));
-  out.push('Read your jobs, then tap Close.');
+  out.push(
+    'Read your jobs, then tap Close.',
+    'Tap the lit button to open it.',
+    'Tap the lit button to talk.',
+  );
   const names = Object.values(npcs).map((n) => n.name);
   return out
     .map((t) => t.replace('{dry}', '12'))

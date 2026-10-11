@@ -7,7 +7,9 @@
     "reward": 20,
     "hint": "Rosa left ripe parsnips in your plot. Tap one to pick it.",
     "where": {
-      "farm": [11, 16]
+      "farm": [11, 16],
+      "house": [5, 8],
+      "town": [11, 0]
     }
   },
   {
@@ -18,7 +20,9 @@
     "reward": 40,
     "hint": "Pick seeds on the hotbar, then Action beside tilled soil.",
     "where": {
-      "farm": [10, 17]
+      "farm": [10, 17],
+      "house": [5, 8],
+      "town": [11, 0]
     }
   },
   {
@@ -29,7 +33,9 @@
     "reward": 20,
     "hint": "Tap the bin by the house, then Ship all produce.",
     "where": {
-      "farm": [12, 9]
+      "farm": [12, 9],
+      "house": [5, 8],
+      "town": [11, 0]
     }
   },
   {
@@ -41,7 +47,8 @@
     "hint": "Tap sparkling goods on the ground. Town has some too.",
     "where": {
       "farm": [14, 43],
-      "town": [12, 3]
+      "town": [12, 3],
+      "house": [5, 8]
     }
   },
   {
@@ -53,7 +60,8 @@
     "hint": "Tap someone with a ! over their head.",
     "where": {
       "farm": [16, 12],
-      "town": [8, 11]
+      "town": [8, 11],
+      "house": [5, 8]
     }
   },
   {
@@ -78,7 +86,8 @@
     "hint": "Walk south through the gate to town for more seeds.",
     "where": {
       "farm": [14, 42],
-      "town": [5, 10]
+      "town": [5, 10],
+      "house": [5, 8]
     }
   },
   {
