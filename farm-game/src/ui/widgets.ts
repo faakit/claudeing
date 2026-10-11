@@ -251,6 +251,15 @@ export class Button extends Phaser.GameObjects.Container {
   }
 }
 
+/** Turn touch on or off for everything interactive inside a container (a sheet sliding away takes none). */
+function setInputEnabled(c: Phaser.GameObjects.Container, on: boolean): void {
+  for (const o of c.list) {
+    const io = (o as Phaser.GameObjects.GameObject).input;
+    if (io) io.enabled = on;
+    if (o instanceof Phaser.GameObjects.Container) setInputEnabled(o, on);
+  }
+}
+
 /** One list row: icon, title + subtitle on the left, an optional button on the right. */
 export interface RowSpec {
   icon?: string;
@@ -338,31 +347,72 @@ export abstract class Modal {
     return this.opened;
   }
 
+  /**
+   * Slides up from the bottom edge (190 ms, easing out, whole-pixel steps) over a dim that fades in. Calm mode:
+   * the sheet is simply there and only the dim fades. Its buttons work from the first frame.
+   */
   open(): void {
     if (this.opened) return;
     this.opened = true;
     this.dimPressed = false;
     runtime.modals += 1;
+    this.scene.tweens.killTweensOf(this.root);
+    this.scene.tweens.killTweensOf(this.dim);
     this.rebuild();
-    this.dim.setVisible(true).setAlpha(0);
-    this.root.setVisible(true).setAlpha(1).setY(GAME_HEIGHT);
-    this.scene.tweens.add({ targets: this.dim, alpha: 1, duration: 140 });
-    this.scene.tweens.add({
-      targets: this.root,
-      y: GAME_HEIGHT - this.panelH,
-      duration: 190,
-      ease: 'Cubic.easeOut',
+    const calm = getState().settings.reduceMotion;
+    const top = GAME_HEIGHT - this.panelH;
+    this.dim.setVisible(true).setAlpha(0).setInteractive();
+    this.root
+      .setVisible(true)
+      .setAlpha(1)
+      .setY(calm ? top : GAME_HEIGHT);
+    // The slide starts on the next frame: building the sheet's content can make this frame long, and a tween
+    // started now would jump by that long frame on its first step.
+    this.scene.time.delayedCall(0, () => {
+      if (!this.opened) return;
+      this.scene.tweens.add({ targets: this.dim, alpha: 1, duration: calm ? 90 : 140 });
+      if (!calm)
+        this.scene.tweens.add({
+          targets: this.root,
+          y: top,
+          duration: 190,
+          ease: 'Cubic.easeOut',
+          onUpdate: () => this.root.setY(Math.round(this.root.y)),
+        });
     });
     audio.play('select');
   }
 
+  /**
+   * The world takes input again at once (the sheet stops counting as open on this frame and its buttons and dim
+   * stop taking touches), while the sheet slides back down over 150 ms. Calm mode: it is gone at once.
+   */
   close(): void {
     if (!this.opened) return;
     this.opened = false;
     runtime.modals = Math.max(0, runtime.modals - 1);
-    this.dim.setVisible(false);
-    this.root.setVisible(false);
+    this.dimPressed = false;
+    this.dim.disableInteractive();
+    setInputEnabled(this.content, false);
     this.scene.tweens.killTweensOf(this.root);
+    this.scene.tweens.killTweensOf(this.dim);
+    const hide = () => {
+      if (this.opened) return;
+      this.dim.setVisible(false);
+      this.root.setVisible(false);
+    };
+    if (getState().settings.reduceMotion) hide();
+    else {
+      this.scene.tweens.add({ targets: this.dim, alpha: 0, duration: 120 });
+      this.scene.tweens.add({
+        targets: this.root,
+        y: GAME_HEIGHT,
+        duration: 150,
+        ease: 'Cubic.easeIn',
+        onUpdate: () => this.root.setY(Math.round(this.root.y)),
+        onComplete: hide,
+      });
+    }
     audio.play('select');
     this.onClosed?.();
   }

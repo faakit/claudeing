@@ -29,12 +29,19 @@ export class SfxPlayer {
   ) {}
 
   /** Decode every sfx file (they are small). */
-  preload(): Promise<unknown> {
-    return Promise.all(
-      Object.values(MANIFEST.sfx).flatMap((s) =>
-        s.files.map((z) => this.bank.load(this.ctx, z.file, z.onset)),
-      ),
-    );
+  /**
+   * Decode every effect one after another, a frame apart: all at once, the decodes finished in bursts on the main
+   * thread (each with an onset scan) and made the frames after the unlocking tap long, in full view over the
+   * title's wipe (feel round 4). A cue asked for before its file is ready plays the synth, as before.
+   */
+  preload(gapMs = 16): Promise<unknown> {
+    const files = Object.values(MANIFEST.sfx).flatMap((s) => s.files);
+    return (async () => {
+      for (const z of files) {
+        await this.bank.load(this.ctx, z.file, z.onset);
+        if (gapMs > 0) await new Promise((r) => globalThis.setTimeout(r, gapMs));
+      }
+    })();
   }
 
   /** True if the cue played from a file; false means the caller should use the synth. */

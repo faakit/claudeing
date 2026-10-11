@@ -3,7 +3,7 @@ import { PLACEHOLDER_TILES, TILESET_KEY, TILE_SIZE } from '../config';
 import { DIRECTIONS } from '../systems/direction';
 import type { Direction } from '../state/GameState';
 import { npcs } from '../data';
-import { npcFrame, npcTexture } from './manifest';
+import { NPC_IDLE_FRAMES, npcFrame, npcTexture, PLAYER_WALK_FRAMES } from './manifest';
 
 /**
  * Code-generated stand-in art (M0-M6). Texture keys and frame names follow the final
@@ -17,7 +17,8 @@ export const PLAYER_H = 32;
 const idleFrame = (d: Direction) => `player_idle_${d}_0`;
 const walkFrame = (d: Direction, i: number) => `player_walk_${d}_${i}`;
 export const playerIdleFrame = idleFrame;
-export const playerWalkFrames = (d: Direction) => [0, 1, 2, 3].map((i) => walkFrame(d, i));
+export const playerWalkFrames = (d: Direction) =>
+  Array.from({ length: PLAYER_WALK_FRAMES }, (_, i) => walkFrame(d, i));
 
 function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -285,16 +286,17 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
 
   const sheet = scene.textures.createCanvas(
     PLAYER_TEXTURE,
-    PLAYER_W * 5,
+    PLAYER_W * (PLAYER_WALK_FRAMES + 1),
     PLAYER_H * DIRECTIONS.length,
   );
   if (!sheet) throw new Error('Could not create player texture');
   const ctx = sheet.getContext();
   DIRECTIONS.forEach((dir, row) => {
-    for (let col = 0; col < 5; col++) {
+    for (let col = 0; col <= PLAYER_WALK_FRAMES; col++) {
       const ox = col * PLAYER_W;
       const oy = row * PLAYER_H;
-      drawPlayer(ctx, ox, oy, dir, col - 1); // col 0 = idle (-1), cols 1-4 = walk 0-3
+      // col 0 = idle (-1); the stand-in has 4 walk poses, repeated across the 8-frame cycle at half speed
+      drawPlayer(ctx, ox, oy, dir, col === 0 ? -1 : Math.floor((col - 1) / 2) % 4);
       outline(ctx, ox, oy, PLAYER_W, PLAYER_H, BASE_PAL.line);
       const name = col === 0 ? idleFrame(dir) : walkFrame(dir, col - 1);
       sheet.add(name, 0, ox, oy, PLAYER_W, PLAYER_H);
@@ -305,14 +307,18 @@ export function generatePlaceholderTextures(scene: Phaser.Scene): void {
   // Villagers: the player figure in their own shirt colour, 4 directions x 2 idle frames.
   for (const [id, def] of Object.entries(npcs)) {
     const key = npcTexture(id);
-    const tex = scene.textures.createCanvas(key, PLAYER_W * 2, PLAYER_H * DIRECTIONS.length);
+    const tex = scene.textures.createCanvas(
+      key,
+      PLAYER_W * NPC_IDLE_FRAMES,
+      PLAYER_H * DIRECTIONS.length,
+    );
     if (!tex) throw new Error(`Could not create ${key}`);
     const pal = { ...BASE_PAL, shirt: def.tint, shirtDark: def.tint };
     DIRECTIONS.forEach((dir, row) => {
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < NPC_IDLE_FRAMES; i++) {
         const ox = i * PLAYER_W;
         const oy = row * PLAYER_H;
-        drawPlayer(tex.getContext(), ox, oy + i, dir, -1, pal);
+        drawPlayer(tex.getContext(), ox, oy + (i === 1 ? 1 : 0), dir, -1, pal);
         outline(tex.getContext(), ox, oy, PLAYER_W, PLAYER_H, BASE_PAL.line);
         tex.add(npcFrame(id, dir, i), 0, ox, oy, PLAYER_W, PLAYER_H);
       }

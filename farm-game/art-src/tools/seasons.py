@@ -63,6 +63,9 @@ SHORE_WINTER = {"water": "sky", "dusk blue": "water"}
 def category(name: str) -> str | None:
     if name.startswith("tree_pine"):
         return "evergreen"
+    if name.startswith("crown:"):  # baked tree crowns (round 3): pines stay green, oaks and birches turn
+        drawn = [e for e in name.split(":", 5)[5].split("~") if len(e) > 1 and e[1] == "1"]
+        return "evergreen" if drawn and all(e[0] == "p" for e in drawn) else "foliage"
     if name.startswith(FOLIAGE_PREFIX) or name in FOLIAGE_EXACT:
         return "foliage"
     if name.startswith(ROOF_PREFIX):

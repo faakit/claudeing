@@ -54,6 +54,15 @@ const ALL = [
     retryAlone: true,
     env: { E2E_CONTROLS_PARALLEL: process.env.E2E_CONTROLS_PARALLEL ?? '4' },
   },
+  {
+    name: 'e2e:feel',
+    cmd: node('scripts/e2e-feel.mjs'),
+    deps: ['build'],
+    full: true,
+    // Frame-timing and transition checks: like the controls gestures, measured with nothing beside them.
+    quiet: 'feel',
+    retryAlone: true,
+  },
   { name: 'e2e', cmd: node('scripts/e2e.mjs'), deps: ['build'], full: true },
   { name: 'e2e:mobile', cmd: node('scripts/e2e-mobile.mjs'), deps: ['build'], full: true },
   {

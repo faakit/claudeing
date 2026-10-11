@@ -3,6 +3,13 @@ import { PX_TEXTURE } from '../art/gameArt';
 import { ATLAS_FILES } from '../art/manifest';
 import { getState } from '../state/store';
 import { Label } from '../ui/font';
+import { bannerShowing } from './hudBand';
+
+/** World-view px from its top that the HUD's goal and level banner covers (it sits at HUD_H + 8..22). */
+const BANNER_BAND_PX = 30;
+
+/** Calm mode (reduced motion): no particles, hops or swings; things appear and fade in place. */
+const calm = (): boolean => getState().settings.reduceMotion;
 
 interface Burst {
   count: number;
@@ -15,7 +22,11 @@ interface Burst {
   spread?: number;
 }
 
-/** Pooled particles, floating numbers and tool swings. Purely cosmetic. */
+/**
+ * Pooled particles, floating numbers and tool swings. Purely cosmetic. Everything moves and sizes in whole pixels
+ * (particles are 1 or 2 px squares, icons squash by whole pixels, swings turn in quarter turns), and Calm mode
+ * drops the motion.
+ */
 export class Effects {
   private pool: Phaser.GameObjects.Image[] = [];
 
@@ -27,13 +38,15 @@ export class Effects {
   }
 
   private burst(x: number, y: number, b: Burst): void {
+    if (calm()) return;
     const colors = Array.isArray(b.color) ? b.color : [b.color];
     for (let i = 0; i < b.count; i++) {
       const p = this.grab();
       const a = -Math.PI / 2 + (Math.random() - 0.5) * (b.spread ?? Math.PI * 2);
       const v = b.speed * (0.5 + Math.random() * 0.7);
       const life = b.life * (0.7 + Math.random() * 0.6);
-      const size = (b.size ?? 1) * (0.7 + Math.random() * 0.8);
+      // A particle is a 1 or 2 px square that steps down to 1 px as it fades (never a fractional size).
+      const size = Math.max(1, Math.round((b.size ?? 1) * (0.7 + Math.random() * 0.8)));
       p.setPosition(x, y)
         .setTint(colors[i % colors.length]!)
         .setScale(size);
@@ -45,9 +58,11 @@ export class Effects {
         x: x + dx,
         y: y + dy,
         alpha: 0,
-        scale: size * 0.3,
         duration: life,
         ease: 'Quad.easeOut',
+        onUpdate: (tw) => {
+          if (size > 1 && tw.progress > 0.5) p.setScale(1);
+        },
         onComplete: () => {
           p.setVisible(false).setActive(false);
           this.pool.push(p);
@@ -60,23 +75,38 @@ export class Effects {
    * A short hand-drawn flipbook (fx_<name>_0..3 in the ui atlas: sparkle, dust, splash), played once in steps.
    * Returns false when the art is missing, so the caller keeps its pixel burst.
    */
-  private flipbook(x: number, y: number, name: string, fps = 14, depth = 9000): boolean {
+  private flipbook(
+    x: number,
+    y: number,
+    name: string,
+    fps: number | readonly number[] = 14,
+    depth = 9000,
+    origin: [number, number] = [0.5, 1],
+  ): boolean {
     const atlas = ATLAS_FILES.ui.key;
     if (!this.scene.textures.exists(atlas) || !this.scene.textures.get(atlas).has(`fx_${name}_0`))
       return false;
+    // Frame times: one rate for all, or per frame (the art's splash: 70, 70, 90, 90 ms).
+    const times = typeof fps === 'number' ? [1, 2, 3, 4].map(() => 1000 / fps) : fps;
     const img = this.scene.add.image(Math.round(x), Math.round(y), atlas, `fx_${name}_0`);
-    img.setDepth(depth).setOrigin(0.5, 1);
-    let f = 0;
-    this.scene.time.addEvent({
-      delay: 1000 / fps,
-      repeat: 3,
-      callback: () => {
-        f += 1;
-        if (f > 3) img.destroy();
-        else img.setFrame(`fx_${name}_${f}`);
-      },
+    img.setDepth(depth).setOrigin(origin[0], origin[1]);
+    let at = 0;
+    times.forEach((ms, f) => {
+      at += ms;
+      this.scene.time.delayedCall(at, () => {
+        if (!img.active) return;
+        const next = `fx_${name}_${f + 1}`;
+        if (f + 1 < times.length && this.scene.textures.get(atlas).has(next)) img.setFrame(next);
+        else img.destroy();
+      });
     });
     return true;
+  }
+
+  /** Rings on water where a line lands (art round 4, `fx_ripple_0..2`, 120 ms each); nothing until drawn. */
+  ripple(x: number, y: number): void {
+    if (calm()) return;
+    this.flipbook(x, y, 'ripple', [120, 120, 120], 8900, [0.5, 0.5]);
   }
 
   dust(x: number, y: number): void {
@@ -92,7 +122,7 @@ export class Effects {
     });
   }
   splash(x: number, y: number): void {
-    const drawn = this.flipbook(x, y + 6, 'splash');
+    const drawn = this.flipbook(x, y + 6, 'splash', [70, 70, 90, 90]);
     this.burst(x, y, {
       count: drawn ? 5 : 11,
       color: [0x6fa3e0, 0xb8d8f8, 0x3b78c4],
@@ -180,60 +210,142 @@ export class Effects {
 
   /** Rising, fading number or word above a point. */
   floatText(x: number, y: number, text: string, color = 0xf4ead2): void {
-    const label = new Label(this.scene, x, y, text, { color, align: 'center' }).setDepth(9500);
+    // While a goal or level banner shows at the top of the world view, a line that would rise into it goes below
+    // the farmer instead (coordinator, onboarding finding: "+1 Wild Leek" drew over "GOAL COMPLETE").
+    const cam = this.scene.cameras.main;
+    if (bannerShowing() && y - 16 - cam.scrollY < BANNER_BAND_PX) y += 44;
+    const label = new Label(this.scene, Math.round(x), Math.round(y), text, {
+      color,
+      align: 'center',
+    }).setDepth(9500);
+    const still = calm();
     this.scene.tweens.add({
       targets: label,
-      y: y - 16,
+      y: still ? y : y - 16,
       alpha: 0,
       duration: 950,
       ease: 'Sine.easeOut',
-      delay: 120,
+      delay: still ? 500 : 120,
+      onUpdate: () => label.setY(Math.round(label.y)),
       onComplete: () => label.destroy(),
     });
   }
 
   /**
-   * An item icon hops up from a point and fades, like it was just picked up. Its size steps from half to full
-   * (never an in-between scale that drops pixel rows) and it moves on whole pixels (review 8).
+   * An item just gathered: it leaves the tile and arcs up to rest above the farmer's head (`head`, so it never
+   * covers his face), holds a moment, then fades as it rises 4 px. Moves on whole pixels; the art's pop frames
+   * (stretch, squash, then the icon) play as it leaves when they exist. Without a head point (a machine's goods)
+   * it hops up from where it came out. Calm: the icon simply shows above the head for 300 ms and fades.
    */
-  itemPop(x: number, y: number, iconKey: string): void {
-    const img = this.scene.add.image(x, y, iconKey).setDepth(9400).setScale(0.5);
-    this.scene.time.delayedCall(90, () => img.active && img.setScale(1));
+  itemPop(x: number, y: number, iconKey: string, head?: { x: number; y: number }): void {
+    const end = head ?? { x, y: y - 18 };
+    const drawn =
+      this.scene.textures.exists(`${iconKey}_pop_0`) &&
+      this.scene.textures.exists(`${iconKey}_pop_1`);
+    // Positions below are of the icon's bottom line (the pop frames share it), so the anchor is the bottom.
+    const img = this.scene.add
+      .image(Math.round(x), Math.round(y + 8), iconKey)
+      .setOrigin(0.5, 1)
+      .setDepth(9400);
+    const fade = (delay: number) =>
+      this.scene.tweens.add({
+        targets: img,
+        alpha: 0,
+        y: Math.round(end.y + 8) - 4,
+        duration: 240,
+        delay,
+        onUpdate: () => img.setY(Math.round(img.y)),
+        onComplete: () => img.destroy(),
+      });
+    if (calm()) {
+      img.setPosition(Math.round(end.x), Math.round(end.y + 8));
+      this.scene.tweens.add({
+        targets: img,
+        alpha: 0,
+        duration: 200,
+        delay: 300,
+        onComplete: () => img.destroy(),
+      });
+      return;
+    }
+    if (drawn) {
+      img.setTexture(`${iconKey}_pop_0`);
+      this.scene.time.delayedCall(60, () => img.active && img.setTexture(`${iconKey}_pop_1`));
+      this.scene.time.delayedCall(120, () => img.active && img.setTexture(iconKey));
+    }
+    // In flight it passes just behind the farmer (drawn under his sprite), so it never covers his face; it comes
+    // to the front once it rests above his head. (The farmer's depth is 10 + feet y; head.y is feet - 42.)
+    if (head) img.setDepth(10 + head.y + 42 - 0.5);
+    const from = { x: img.x, y: img.y };
+    const arc = { t: 0 };
     this.scene.tweens.add({
-      targets: img,
-      y: y - 18,
-      duration: 260,
-      ease: 'Back.easeOut',
-      onUpdate: () => img.setY(Math.round(img.y)),
-    });
-    this.scene.tweens.add({
-      targets: img,
-      alpha: 0,
-      y: y - 28,
-      duration: 260,
-      delay: 380,
-      onComplete: () => img.destroy(),
+      targets: arc,
+      t: 1,
+      duration: 280,
+      ease: 'Cubic.easeOut',
+      onUpdate: () => {
+        // Up beside the farmer first (never across his face), then in over his head to rest; whole pixels.
+        // Without a head point it is a plain hop up from where it came out.
+        if (!head) {
+          img.setPosition(Math.round(from.x), Math.round(from.y + (end.y + 8 - from.y) * arc.t));
+          return;
+        }
+        const side = x >= end.x ? 1 : -1;
+        const t1 = Math.min(1, arc.t / 0.6);
+        const t2 = Math.max(0, (arc.t - 0.6) / 0.4);
+        const besideX = end.x + side * 18;
+        img.setPosition(
+          Math.round(from.x + (besideX - from.x) * t1 + (end.x - besideX) * t2),
+          Math.round(from.y + (end.y + 8 - from.y) * t1),
+        );
+      },
+      onComplete: () => {
+        img.setDepth(9400);
+        fade(220);
+      },
     });
   }
 
-  /** A tool icon swings in an arc in front of the player. */
+  /**
+   * A tool icon swings in front of the player in three held steps, turning only in quarter turns (pixel-exact):
+   * raised behind (the wind-up, 50 ms), down on the tile (the impact, 100 ms), then a 1 px settle as it fades.
+   * Calm mode shows the impact step alone.
+   */
   swing(x: number, y: number, iconKey: string, dir: 'up' | 'down' | 'left' | 'right'): void {
     const side = dir === 'left' ? -1 : 1;
+    const flank = dir === 'left' || dir === 'right';
     const img = this.scene.add
-      .image(x + (dir === 'left' || dir === 'right' ? side * 8 : 0), y - 12, iconKey)
+      .image(0, 0, iconKey)
       .setDepth(9300)
-      .setOrigin(0.15, 0.9);
-    const start = dir === 'up' ? -50 : dir === 'down' ? -20 : -70 * side;
-    const end = dir === 'up' ? 40 : dir === 'down' ? 80 : 50 * side;
-    img.setAngle(start).setFlipX(dir === 'left');
-    if (dir === 'down') img.y += 8;
-    if (dir === 'up') img.y -= 6;
-    this.scene.tweens.add({ targets: img, angle: end, duration: 150, ease: 'Cubic.easeIn' });
+      .setFlipX(dir === 'left');
+    // [dx, dy, angle] for the wind-up and the impact, by facing.
+    const steps: [number, number, number][] = flank
+      ? [
+          [side * 2, -22, -90 * side],
+          [side * 10, -10, 0],
+        ]
+      : dir === 'down'
+        ? [
+            [6, -22, -90],
+            [2, -6, 0],
+          ]
+        : [
+            [-6, -18, 90],
+            [2, -26, 0],
+          ];
+    const put = ([dx, dy, a]: [number, number, number]) =>
+      img.active && img.setPosition(Math.round(x + dx), Math.round(y + dy)).setAngle(a);
+    if (calm()) put(steps[1]!);
+    else {
+      put(steps[0]!);
+      this.scene.time.delayedCall(50, () => put(steps[1]!));
+    }
+    this.scene.time.delayedCall(150, () => img.active && img.setY(img.y + 1));
     this.scene.tweens.add({
       targets: img,
       alpha: 0,
       duration: 90,
-      delay: 130,
+      delay: 170,
       onComplete: () => img.destroy(),
     });
   }

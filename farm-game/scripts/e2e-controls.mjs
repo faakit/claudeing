@@ -214,6 +214,25 @@ async function runCombo(p, hand) {
       });
       check(`${tag}: a tap with nothing to do shows a ring (never silent)`, ring);
 
+      // --- A tap on your own tile uses what you face: beside the mailbox it opens the mail (coordinator, round 4;
+      // two naive runs stood here tapping their own tile). On bare ground it never tills.
+      await place(page, 13, 10, 'up'); // the mailbox is at 13,9
+      await sleep(1300);
+      const me = await tileScreen(page, 13, 10);
+      await t.tap(me.x + 3, me.y + 2, 70);
+      await sleep(250);
+      const mailOpen = await page.evaluate(
+        () => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen,
+      );
+      check(`${tag}: a tap on your own tile beside the mailbox opens the mail`, mailOpen);
+      await closeSheets(page);
+      await place(page, 9, 19, 'down', 's.inventory.selected = 0;'); // hoe in hand, grass in front
+      await sleep(1300);
+      const me2 = await tileScreen(page, 9, 19);
+      await t.tap(me2.x, me2.y, 70);
+      await sleep(300);
+      check(`${tag}: a tap on your own tile never tills`, (await soil(page)) === 0);
+
       // --- The marker lies on the ground: under characters, animals and walk-behind objects.
       const depths = await page.evaluate(() => {
         const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
@@ -1085,8 +1104,12 @@ async function runCombo(p, hand) {
         await t.up();
         const press = await frames(
           () => {
-            window.__probeOk = () =>
-              window.__farm.game.scene.getScene('UI').controls[0].view.scale < 0.99;
+            // The press-down state: the button sinks 1 px on the touch's own frame (feel round 4).
+            window.__probeOk = () => {
+              const ui = window.__farm.game.scene.getScene('UI');
+              const v = ui.controls[0].view;
+              return v.scale < 0.99 || v.y > ui.layout.action.y;
+            };
           },
           () => t.down(L.action.x, L.action.y),
           async () => {

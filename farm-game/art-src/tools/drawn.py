@@ -3,7 +3,7 @@
 Used where a hand-drawn sprite reads better at 1x than the Flow version (Flow sheet items8 supplies the tulip
 bulbs and bloom, four dishes, fish stew, Old Whiskers and the Ice Pike via sprites.json): the tulip growth, pumpkin
 pie, the Glimmer Trout and Sun Carp, the scarecrow, the Founder's Statue (one frame per level), the onboarding coach
-marks, and the tool-use poses (built on the player's own frames, so the head always matches the walking sprite).
+marks. The walk and tool-use frames (round 4) are in anim.py and toolanim.py.
 
 Every character is one palette slot by name (see CHARS); `.` is transparent. Outlines are drawn explicitly in ink
 (`K`), so thin stems and whiskers survive. `build(P, groups, pal, chars)` adds RGBA sprites to the atlas groups.
@@ -492,122 +492,6 @@ COACH_TAIL = [  # sits under the bubble's bottom edge, overlapping its outline r
 ]
 
 
-# ---------------------------------------------------------------- tool-use poses on the player's own frames
-
-def _pose(
-    base: np.ndarray,
-    names: list[str],
-    edits: list[tuple[int, int, str]],
-    extra: list[str],
-    at: tuple[int, int],
-    front: list[tuple[int, int, str]] = (),
-):
-    """A 32 x 32 pose: the player's 16 x 32 frame centred (x 8..23), pixel edits on it, a drawn tool on top, then
-    `front` edits over the tool (a fist closed around a handle)."""
-    out = np.full((32, 32), -1, dtype=np.int32)
-    out[:, 8:24] = base
-    for x, y, ch in edits:
-        out[y, x + 8] = -1 if ch == "." else names.index(CHARS[ch])
-    ox, oy = at
-    for j, row in enumerate(extra):
-        for i, ch in enumerate(row):
-            if ch != "." and 0 <= oy + j < 32 and 0 <= ox + i < 32:
-                out[oy + j, ox + i] = -2 if ch == "_" else names.index(CHARS[ch])
-    out[out == -2] = -1
-    for x, y, ch in front:
-        out[y, x + 8] = names.index(CHARS[ch])
-    return out
-
-
-def _rows_edit(rows: dict[int, str]) -> list[tuple[int, int, str]]:
-    """Replace whole rows of the 16-wide player frame: {y: 16 chars}, `,` keeps the original pixel."""
-    out = []
-    for y, r in rows.items():
-        for x, ch in enumerate(r):
-            if ch != ",":
-                out.append((x, y, ch))
-    return out
-
-
-def poses(names: list[str], player: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
-    down, right = player["player_idle_down_0"], player["player_idle_right_0"]
-    out = {}
-    # hoe, facing down: both arms up, the hoe held overhead (handle across, blade hanging at the left)
-    hoe_edit = _rows_edit({
-        20: "..KDWWWWWWWDK...",
-        21: "..KDWWWWWWWDK...",
-        22: "..KDWWWWWWWDK...",
-        23: "..KKKKKKKKEEK...",
-        24: "...KNDDDDDNK....",
-        25: "..KEDDNKNDDEK...",
-    })
-    hoe_tool = [
-        "................................",
-        "................................",
-        ".KK.............................",
-        "KxzKKKKKKKKKKKKKKKKKKKKKKKKKKKK.",
-        "KzZKwwkkwwwwwwwwwwwwwwwkkwwwwwK.",
-        "KzZKKKmmKKKKKKKKKKKKKKKmmKKKKKK.",
-        "KZZK.KWWK.............KWWK......",
-        ".KK..KWWK.............KWWK......",
-    ] + [".....KWWK.............KWWK......"] * 8 + [
-        "......KWWK...........KWWK.......",
-        ".......KWWK.........KWWK........",
-    ]
-    out["player_use_hoe"] = _pose(down, names, hoe_edit, hoe_tool, (0, 0))
-    # watering can, facing right: the arm reaches forward and tips the can, spout down
-    can_edit = _rows_edit({
-        19: "....KWWWWWKK,,,,",
-        20: "....KWWWWWWWKK,,",
-        21: "....KWWWWWWWmkK,",
-        22: "....KWWWWWWKKKK,",
-        23: "....KWWWWWWK,,,,",
-        24: "....KDWWWWKK,,,,",
-        25: ".....KDDDDK,,,,,",
-    })
-    can_tool = [
-        "....KKKK.....",
-        "...KK..KK....",
-        ".KKKKKKKKK...",
-        "KkKxxzzzzZK..",
-        "KKKxzzzzzZKK.",
-        "..KzzzzzzZKzK",
-        "..KZzzzzZZKKzK",
-        "...KKKKKKKK.KxK",
-        ".............KK",
-    ]
-    out["player_use_can"] = _pose(right, names, can_edit, can_tool, (20, 17))
-    # fishing rod, facing right: both hands forward on the rod, the rod raised up and out
-    rod_edit = _rows_edit({
-        19: "....KWWWWWKK,,,,",
-        20: "....KWWWWWWWKK,,",
-        21: "....KWWWWWWWmkK,",
-        22: "....KWWWWWWKmkK,",
-        23: "....KWWWWWWKKK,,",
-        24: "....KDWWWWKK,,,,",
-        25: ".....KDDDDK,,,,,",
-    })
-    rod_tool = [
-        "............KK",
-        "...........KwK",
-        "..........KwK.",
-        ".........KwK..",
-        "........KwK...",
-        ".......KwK....",
-        "......KwK.....",
-        ".....KwK......",
-        "....KwK.......",
-        "...KwK........",
-        "..KEK.........",
-        ".KEK..........",
-        "KEK...........",
-        "KK............",
-    ]
-    fist = [(12, 21, "m"), (13, 21, "k"), (12, 22, "m"), (13, 22, "k"), (14, 21, "K"), (14, 22, "K"), (13, 23, "K"), (12, 23, "K")]
-    out["player_use_rod"] = _pose(right, names, rod_edit, rod_tool, (20, 9), fist)
-    return out
-
-
 # ---------------------------------------------------------------- fruit trees in proportion (review 8)
 
 SEEDLING = [  # a fruit tree's first days: 8 x 10
@@ -695,7 +579,61 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
     add("ui", "ui_coach_bubble", grid(names, COACH_BUBBLE))
     add("ui", "ui_coach_bubble_tail", grid(names, COACH_TAIL))
     chars = groups.get("chars", {})
-    if "player_idle_down_0" in chars and "player_idle_right_0" in chars:
-        player = {k: to_idx(chars[k], pal) for k in ("player_idle_down_0", "player_idle_right_0")}
-        for key, idx in poses(names, player).items():
+    if all(f"player_idle_{d}_0" in chars for d in ("down", "up", "right")):
+        # round 4: the walk and the tool-use frames, built on the idle frames (anim.py, toolanim.py)
+        import anim
+        import toolanim
+
+        idle = {d: to_idx(chars[f"player_idle_{d}_0"], pal) for d in ("down", "up", "right")}
+        # left is the exact mirror of right (the Flow crop's flip could land 1 px off after trimming)
+        add("chars", "player_idle_left_0", idle["right"][:, ::-1].copy())
+        for key, idx in anim.walk_frames(names, idle).items():
             add("chars", key, idx)
+        tools = toolanim.tool_frames(names, idle)
+        for key, idx in tools.items():
+            add("chars", key, idx)
+        # the round-3 single poses (still shown by WorldScene.toolPose) are now the contact frames
+        for key, src in toolanim.LEGACY_POSES.items():
+            add("chars", key, tools[src][:32].copy())  # the legacy keys stay 32 x 32 (origin at the bottom)
+    if chars:  # doors, crop leans, ripples and splash, harvest pops, villager and animal idles (motion.py)
+        import motion
+
+        motion.build(names, groups, lambda rgba: to_idx(rgba, pal), lambda idx: px.idx_to_rgba(idx, pal))
+
+
+# ---------------------------------------------------------------- the town well (round 4): 24 x 32, three tiles wide
+
+WELL = [
+    "..........KKKK..........",
+    "........KKwwswKK........",
+    "......KKwwwwwwwwKK......",
+    "....KKwowowowowowowoKK..",
+    "..KKwwwwswwwwwwwswwwwwKK",
+    "KKowowowowowowowowowowoK",
+    "KEEEEEEEEEEEEEEEEEEEEEEK",
+    ".KKKKKKKKKKKKKKKKKKKKKK.",
+    "..KwoK............KwoK..",
+    "..KwoK............KwoK..",
+    "..KwoKKKKKKKKKKKKKKwoKK.",
+    "..KwoEwwwwwwwwwwwwEwoKwK",
+    "..KwoKKKKKKwKKKKKKKwoKwK",
+    "..KwoK....KsK.....KwoKK.",
+    "..KwoK....KsK.....KwoK..",
+    "..KwoK...KKKKKK...KwoK..",
+    "..KwoK...KwEwwK...KwoK..",
+    "..KwoK...KoEooK...KwoK..",
+    "..KwoK....KKKK....KwoK..",
+    "..KwoKKKKKKKKKKKKKKwoK..",
+    "..KxxxxxxxxxxxxxxxxxxK..",
+    ".KxzKKKKKKKKKKKKKKKKzxK.",
+    ".KxKNNNDNNNNNNDNNNNNKxK.",
+    ".KxzKKKKKKKKKKKKKKKKzxK.",
+    ".KxxxxzxxxxxzxxxxxzxxxK.",
+    ".KZzzzZzzzzZzzzzZzzzzZK.",
+    ".KzzZzzzzZzzzzZzzzzZzzK.",
+    ".KZzzxZzzzxZzzzzZxzzzZK.",
+    ".KzzZzzzzZzzzzZzzzzZzzK.",
+    ".KZzzzZzzzzZzzxzZzzzzZK.",
+    "..KZZZZZZZZZZZZZZZZZZK..",
+    "...KKKKKKKKKKKKKKKKKK...",
+]

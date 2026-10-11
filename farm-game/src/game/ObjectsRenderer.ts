@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { popWhole } from '../fx/pop';
 import { TILE_SIZE } from '../config';
 import { items, placeables, plots } from '../data';
 import { Label } from '../ui/font';
@@ -284,10 +285,7 @@ export class ObjectsRenderer {
           repeat: -1,
           delay: (tx * 131 + ty * 71) % 900,
         });
-      if (animate) {
-        sprite.setScale(0.3);
-        this.scene.tweens.add({ targets: sprite, scale, duration: 260, ease: 'Back.easeOut' });
-      }
+      if (animate) popWhole(this.scene, sprite); // whole pixels, never a fractional scale
       this.forage.set(key, { sprite, extra: [shadow, ring, twinkle], sig: item });
     }
     for (const [key, shown] of this.forage) {
@@ -353,7 +351,24 @@ export class ObjectsRenderer {
             .setScale(art ? 1 : 0.62)
             .setDepth(10 + y + 4);
           const idle2 = animalIdleKey(species.sprite);
-          if (!calm() && hasArt(idle2))
+          const breath = `${species.sprite}_2`;
+          const dip = `${species.sprite}_3`;
+          if (
+            !calm() &&
+            hasArt(idle2) &&
+            this.scene.textures.exists(breath) &&
+            this.scene.textures.exists(dip)
+          )
+            // Art round 4: rest, breathe, rest, graze or peck, rest, a head dip (staggered per animal).
+            this.loopFrames(critter, [
+              [species.sprite, 1200 + i * 170],
+              [breath, 400],
+              [species.sprite, 900],
+              [idle2, 600],
+              [species.sprite, 800],
+              [dip, 300],
+            ]);
+          else if (!calm() && hasArt(idle2))
             this.scene.tweens.add({
               targets: critter,
               alpha: 1,
@@ -398,10 +413,7 @@ export class ObjectsRenderer {
           extra.push(bubble);
         }
       }
-      if (animate && !shown) {
-        sprite.setScale(0.5);
-        this.scene.tweens.add({ targets: sprite, scale: 1, duration: 240, ease: 'Back.easeOut' });
-      }
+      if (animate && !shown) popWhole(this.scene, sprite); // whole pixels, never a fractional scale
       this.placed.set(obj.id, { sprite, extra, sig });
     }
     for (const [id, shown] of this.placed) {
@@ -415,6 +427,19 @@ export class ObjectsRenderer {
       });
       this.placed.delete(id);
     }
+  }
+
+  /** Step an image through (texture, ms) pairs forever, until it is destroyed. */
+  private loopFrames(img: Phaser.GameObjects.Image, seq: [string, number][]): void {
+    let k = 0;
+    const next = () => {
+      if (!img.active) return;
+      const [key, ms] = seq[k % seq.length]!;
+      img.setTexture(key);
+      k++;
+      this.scene.time.delayedCall(ms, next);
+    };
+    next();
   }
 
   destroy(): void {

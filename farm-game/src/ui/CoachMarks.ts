@@ -359,6 +359,9 @@ export class CoachMarks {
     const show = !!this.view && !runtime.busy && facts.panel !== 'summary';
     runtime.coaching = show;
     this.root.setVisible(show);
+    // Each new step's line and marks fade in over 160 ms (feel round 4); Calm shows them at once.
+    const age = this.scene.time.now - this.shownAt;
+    this.root.setAlpha(s.settings.reduceMotion ? 1 : Math.min(1, age / 160));
     // Hidden parts must never swallow a touch meant for the world.
     if (show) this.barZone.setInteractive();
     else this.barZone.disableInteractive();

@@ -21,6 +21,7 @@ import { gameEvents } from './systems/events';
 import { inputHub } from './input/InputHub';
 import { setHapticsEnabled } from './platform/haptics';
 import { controlsLog } from './input/controlsLog';
+import { displayFit } from './platform/displayFit';
 
 suppressBrowserGestures();
 audio.installAutoUnlock();
@@ -35,7 +36,8 @@ const game = new Phaser.Game({
   audio: { noAudio: true },
   pixelArt: true,
   roundPixels: true,
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  // Sized by fitCanvas below: whole device pixels per game pixel where that costs <= 10% (platform/displayFit.ts).
+  scale: { mode: Phaser.Scale.NONE, autoCenter: Phaser.Scale.NO_CENTER, zoom: 1 },
   scene: [
     BootScene,
     PreloadScene,
@@ -59,7 +61,38 @@ if (import.meta.env.PROD && !isNative() && 'serviceWorker' in navigator) {
   });
 }
 
-refreshOnRotate(() => game.scale.refresh());
+/**
+ * Size and place the canvas: a whole number of device pixels per game pixel when that gives up at most 10% of the
+ * fitted size, else the fitted size; either way on the device-pixel grid, centred, the margin walnut (index.html).
+ * Input maps through the canvas bounds, so touch stays exact at any size.
+ */
+function fitCanvas(): void {
+  const parent = document.getElementById('game');
+  const canvas = game.canvas as HTMLCanvasElement | undefined;
+  if (!parent || !canvas) return;
+  const box = parent.getBoundingClientRect();
+  if (box.width <= 0 || box.height <= 0) return;
+  const f = displayFit(
+    box.width,
+    box.height,
+    window.devicePixelRatio || 1,
+    GAME_WIDTH,
+    GAME_HEIGHT,
+  );
+  if (Math.abs(game.scale.zoom - f.cssW / GAME_WIDTH) > 1e-9)
+    game.scale.setZoom(f.cssW / GAME_WIDTH);
+  canvas.style.position = 'absolute';
+  canvas.style.left = `${f.cssLeft}px`;
+  canvas.style.top = `${f.cssTop}px`;
+  canvas.style.margin = '0';
+  canvas.dataset['fit'] = `${f.mode} ${f.devScale.toFixed(3)}`;
+  game.scale.updateBounds();
+}
+game.events.once(Phaser.Core.Events.READY, fitCanvas);
+refreshOnRotate(() => {
+  game.scale.refresh();
+  fitCanvas();
+});
 wireLifecycle(game);
 wireAudio(game);
 installWebLifecycle(lifecycle, document, window);

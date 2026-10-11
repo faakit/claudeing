@@ -140,7 +140,7 @@ function spillPixel(shape: Shape, dx: number, dy: number): { color: number; alph
 
 const TEXTURE = 'fx_glow';
 
-function ensureTexture(scene: Phaser.Scene): void {
+export function ensureTexture(scene: Phaser.Scene): void {
   if (scene.textures.exists(TEXTURE)) return;
   const frames = Object.entries(GLOW_SHAPES).map(([k, s]) => {
     if (s.spill) return { k, s, w: SPILL.w, h: SPILL.h };
