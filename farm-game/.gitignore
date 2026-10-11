@@ -3,3 +3,4 @@ dist
 coverage
 .bench-dist
 .bench-*-dist
+__pycache__/

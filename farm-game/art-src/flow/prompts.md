@@ -24,7 +24,11 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **28** prompts.
+## Preamble: tinyacre-ui
+
+> Pixel art game user interface asset for Tiny Acre, a cozy, warm top-down farming game. Drawn with big chunky square pixels on a strict pixel grid, seen straight on (flat, no perspective, no tilt), limited warm palette: walnut and honey wood browns, cream parchment, a little gold, a 1-pixel soft dark plum outline, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no letters, no icons, no drop shadows. Flat solid pure magenta (#FF00FF) background around the asset. The asset contains no magenta or hot pink.
+
+Generations: **41** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -233,3 +237,107 @@ Generations: **28** prompts.
 - raw: town4-a.jpg, town4-b.jpg
 - used: a: the library as a lending-library book cabinet on a post with a bench; b: the fair hall as an open bandstand with bunting (review 11, R11-1)
 - note: round 3, art critic review 11 (R11-1): the library and fair hall drawn as things that honestly fit 32x40 on one tile (a book kiosk, a bandstand) instead of dollhouses; submitted by the art agent, downloaded by the coordinator
+
+## 29. `ui1` (1:1, preamble: tinyacre-ui)
+
+> One single large rectangular menu sheet filling most of the image: a plain sheet of cream parchment paper inside a sturdy wooden picture frame of dark walnut wood about one twentieth of the panel's width thick, with a lighter honey-wood bevel on its inner edge, a thin dark line where the wood meets the paper, and a small square brass cap with one rivet on each of the four corners. The frame's long sides are straight, evenly repeating wood grain, the same on all four sides. The parchment centre is almost flat cream with only a very faint, even paper texture and a slightly darker one-pixel shadow along its inner edge, so text can sit on it.
+
+- raw: ui1-a.jpg, ui1-b.jpg
+- used: b: the menu sheet (9-slice rebuilt on the native grid, art-src/tools/uisheet.py); a: not used (its 9 px frame and big caps do not fit the 8 px content inset)
+- note: round 5, the menu sheet background (owner: the old one looked buggy on a phone); submitted by the art agent, to be downloaded by the coordinator. The preamble says 'assets' in the plural for ui2.
+
+## 30. `ui2` (1:1, preamble: tinyacre-ui)
+
+> A 2x2 grid of four separate small rectangular menu panels with wide even spacing, each a plain cream parchment sheet inside a wooden frame, seen straight on, each frame with evenly repeating straight sides and four matching corners, in this order, left to right, top to bottom: dark walnut frame with small brass corner caps; dark walnut frame with carved leafy sprout corners; warm honey-oak plank frame held by little wooden pegs at the corners; dark walnut frame with a thin gold inner trim line. The parchment centres are almost flat cream with only a very faint, even paper texture.
+
+- raw: ui2-a.jpg, ui2-b.jpg
+- used: not used (the four styles are 24-30 px panels: too small a source for a full-width sheet); kept for reference
+- note: round 5, frame style variants for the menu sheet, submitted in parallel with ui1
+
+## 31. `anim_hoe` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one hoe stroke in five frames: 1 the hoe raised high over the shoulder, 2 swinging down, 3 the blade biting into the soil just in front of the feet, 4 pulling the hoe back up a little, 5 standing at rest holding the hoe. The hoe has a straight wooden handle and a flat grey iron blade.
+
+- raw: anim_hoe-a.jpg, anim_hoe-b.jpg
+- used: not used (review 18: the round-4 code-drawn hoe frames win on consistency and tool identity)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 32. `anim_can` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one watering in five frames: 1 lifting the watering can, 2 tipping it forward, 3 water pouring from the spout onto the ground just in front of the feet, 4 still pouring with a few drops, 5 lowering the can at rest. The watering can is grey metal with a long spout; the water is light blue.
+
+- raw: anim_can-a.jpg, anim_can-b.jpg
+- used: not used (review 18: round-4 frames kept)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane); the first submission failed silently and was resubmitted
+
+## 33. `anim_scythe` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one scythe sweep in five frames: 1 the scythe pulled back to one side, 2 sweeping low across the front, 3 the curved blade cutting grass at ground level just in front of the feet, 4 following through to the other side, 5 standing at rest holding the scythe. The scythe has a long wooden handle and a curved grey blade.
+
+- raw: anim_scythe-a.jpg, anim_scythe-b.jpg
+- used: not used (review 18: the Flow scythe read as a bow)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 34. `anim_pick` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one pickaxe blow in five frames: 1 the pickaxe raised high over the shoulder, 2 swinging down, 3 the iron head striking a small grey rock just in front of the feet, 4 the pickaxe bouncing back up a little, 5 standing at rest holding the pickaxe. The pickaxe has a wooden handle and a grey double-pointed iron head.
+
+- raw: anim_pick-a.jpg, anim_pick-b.jpg
+- used: not used (review 18: round-4 frames kept)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 35. `anim_rodcast` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one fishing cast in five frames: 1 the rod drawn back over the shoulder, 2 whipping the rod forward, 3 the rod pointing forward with the line flying out ahead, 4 the line out and the rod held forward and level, 5 holding the rod still while waiting. The fishing rod is a thin brown wooden rod with a dark line and a small red and white bobber.
+
+- raw: anim_rodcast-a.jpg, anim_rodcast-b.jpg
+- used: not used (review 18: round-4 frames kept)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 36. `anim_rodreel` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one bite and reel in five frames: 1 holding the rod still while waiting, 2 the rod tip dipping down at a bite, 3 pulling the rod up sharply, 4 reeling in with the rod raised high, 5 holding up a small silver fish on the line. The fishing rod is a thin brown wooden rod with a dark line.
+
+- raw: anim_rodreel-a.jpg, anim_rodreel-b.jpg
+- used: not used (review 18: the rod pieces floated; the reel is drawn in code, codeacts.py)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 37. `anim_plant` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is planting seeds in five frames: 1 standing holding a small seed packet, 2 bending down, 3 crouching and pressing seeds into the soil just in front of the feet with one hand, 4 patting the soil, 5 standing up again.
+
+- raw: anim_plant-a.jpg, anim_plant-b.jpg
+- used: b, facing down and up (frames 2-4; standing frames are the idle): composed on the idle head, flowanim.py
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 38. `anim_harvest` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is picking a crop by hand in five frames: 1 standing, 2 bending down and reaching to the ground in front, 3 gripping a leafy vegetable at the ground, 4 pulling it up out of the soil, 5 standing up holding the vegetable up proudly.
+
+- raw: anim_harvest-a.jpg, anim_harvest-b.jpg
+- used: b, facing down and right (frames 2-5; the first is the idle): composed on the idle head, flowanim.py
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 39. `anim_pet` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is petting an animal in five frames: 1 standing, 2 crouching down, 3 reaching out one hand low in front, 4 patting gently with the hand moved a little, 5 standing up again. Draw only the farmer, no animal.
+
+- raw: anim_pet-a.jpg, anim_pet-b.jpg
+- used: not used (review 18: front bodies under side heads; the pat is drawn in code)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 40. `anim_eat` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is eating a snack in five frames: 1 standing holding a red apple at the waist, 2 lifting the apple to the mouth, 3 taking a bite with the apple at the mouth, 4 chewing with the apple lowered a little, 5 standing happily with the apple gone.
+
+- raw: anim_eat-a.jpg, anim_eat-b.jpg
+- used: a, all three facings: composed on the idle head, flowanim.py
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 41. `anim_place` (1:1, preamble: tinyacre-character)
+
+> Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is placing an object in five frames: 1 standing holding a small wooden crate in both hands at the chest, 2 bending forward, 3 setting the crate down on the ground just in front of the feet, 4 letting go with the hands lifting away, 5 standing up again with empty hands.
+
+- raw: anim_place-a.jpg, anim_place-b.jpg
+- used: not used (review 18: no crate survived; the place is drawn in code with the held item's icon)
+- note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)

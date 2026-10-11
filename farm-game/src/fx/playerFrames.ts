@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { ATLAS_FILES } from '../art/manifest';
+import { ACT_FRAMES, ACT_MS, ATLAS_FILES, actKey } from '../art/manifest';
 import { PLAYER_H, PLAYER_TEXTURE, PLAYER_W, playerIdleFrame } from '../art/placeholders';
 import type { Direction } from '../state/GameState';
 import { DIRECTIONS } from '../systems/direction';
@@ -90,6 +90,25 @@ export class PlayerFrames {
       frames.push({ texture: key, frame: '__BASE', flipX: false });
     }
     return { frames, ms: TOOL_TIMING[t.tool]! };
+  }
+
+  /**
+   * An action's frames (art round 5: harvest, plant, eat, pet, reel, place) and their times, or null when that
+   * action and facing are not drawn. Left is right flipped.
+   */
+  act(anim: string, dir: Direction): { frames: FrameRef[]; ms: number[] } | null {
+    const d = dir === 'left' ? 'right' : dir;
+    const n = ACT_FRAMES[anim]?.[d] ?? 0;
+    if (n === 0) return null;
+    const frames: FrameRef[] = [];
+    for (let i = 0; i < n; i++) {
+      const key = actKey(anim, d, i);
+      if (!this.has(key)) return null;
+      frames.push({ texture: key, frame: '__BASE', flipX: dir === 'left' });
+    }
+    // the last frame is the rest: it takes the rest time whatever the count
+    const ms = frames.map((_, i) => (i === n - 1 ? ACT_MS[4] : ACT_MS[Math.min(i, 3)]!));
+    return { frames, ms };
   }
 
   /** A tall facade door opening (0 closed .. 3 open), or null when not drawn. */
