@@ -27,11 +27,13 @@ Android WebView decoding and unlock are untested. The agent's report and NEXT-ST
 ## Open findings, by severity
 
 **Major**
+
 - F20, the seasons share one harmony. Spring, summer, title and festival A sections are all I-vi-IV-V with the same
   ii7-V7-I cadence, and summer is spring a tone up. Fall and winter share i-VI-iv-V. The agent deferred this; it is at the top
   of NEXT-STEPS-AUDIO.md with concrete options. It is the biggest remaining risk to "each season sounds different".
 
 **Minor**
+
 - F24, perf coverage: the "holding Action" scene still plays only 3 sfx, so the perf budget barely covers sound effects.
 - F25, service worker: the cache version is global, so every release re-downloads all 2 MB of audio.
 - F23, crickets: the 9 s repeat is gone (self-correlation 0.999 down to 0.48), but the 9.0 s and 7.2 s loops realign every
@@ -42,6 +44,7 @@ Android WebView decoding and unlock are untested. The agent's report and NEXT-ST
   - Output levels read 1-3 dB under the agent's build targets.
 
 **Nits**
+
 - ui-1 is about 2 dB under its target.
 - The winter-night pads now swell by a median of +3 dB 0.3-0.5 s after each bar line. This replaced the old dip and is
   probably fine musically.

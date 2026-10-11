@@ -9,15 +9,15 @@ scenario(s) that stage the feature (`?scenario=<name>`, or the debug-only lab ma
 e2e checks that load them and wait on game events (`window.__farm.dev`), and cite scenario names in critiques.
 Run `npm run verify:fast` (about 20 s) per commit and `npm run verify` (about 6 min) before merging.
 
-| Area | Handover | Critic notes | Top next step |
-| --- | --- | --- | --- |
-| Dev sandbox (new) | [NEXT-STEPS-DEVTOOLS.md](NEXT-STEPS-DEVTOOLS.md) | none (measured: full verify 893 s to 353 s, fast verify 18 s) | Migrate the remaining scripts and probes to scenarios and await helpers; the fixed-wait baseline may only go down |
-| Game feel (new) | [NEXT-STEPS-FEEL.md](NEXT-STEPS-FEEL.md) | [critiques/feel-critic/](critiques/feel-critic/final.md) (accepted, one nit) | Wire the remaining art frames (villager and animal idles, crop lean, ripples) everywhere they apply; real-phone feel check |
-| Art | [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md) | [critiques/art-critic/](critiques/art-critic/final.md) (round 4 closed) | Up-facing frames for can, scythe and rod; a wider statue; bigger footprints if the owner wants them |
-| Guided start | [NEXT-STEPS-ONBOARDING.md](NEXT-STEPS-ONBOARDING.md) | [critiques/onboarding-critic/](critiques/onboarding-critic/final.md) (16/16 runs reach day 2) | Space out the day-2 tip burst; point at the first job goal |
-| Game depth | [NEXT-STEPS-DEPTH.md](NEXT-STEPS-DEPTH.md) | `critiques/critique-12.md` | Crop requests in the first summer days; "buy 5 items" completes after one purchase |
-| One-thumb controls | [NEXT-STEPS-CONTROLS.md](NEXT-STEPS-CONTROLS.md) | [critiques/controls-critic/](critiques/controls-critic/final.md) | Feel inherited input this round; SE serpentine accuracy is the open minor |
-| Audio | [NEXT-STEPS-AUDIO.md](NEXT-STEPS-AUDIO.md) | [critiques/audio-critic/](critiques/audio-critic/final.md) | Paused until a human has listened |
+| Area               | Handover                                             | Critic notes                                                                                  | Top next step                                                                                                              |
+| ------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Dev sandbox (new)  | [NEXT-STEPS-DEVTOOLS.md](NEXT-STEPS-DEVTOOLS.md)     | none (measured: full verify 893 s to 353 s, fast verify 18 s)                                 | Migrate the remaining scripts and probes to scenarios and await helpers; the fixed-wait baseline may only go down          |
+| Game feel (new)    | [NEXT-STEPS-FEEL.md](NEXT-STEPS-FEEL.md)             | [critiques/feel-critic/](critiques/feel-critic/final.md) (accepted, one nit)                  | Wire the remaining art frames (villager and animal idles, crop lean, ripples) everywhere they apply; real-phone feel check |
+| Art                | [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md)               | [critiques/art-critic/](critiques/art-critic/final.md) (round 4 closed)                       | Up-facing frames for can, scythe and rod; a wider statue; bigger footprints if the owner wants them                        |
+| Guided start       | [NEXT-STEPS-ONBOARDING.md](NEXT-STEPS-ONBOARDING.md) | [critiques/onboarding-critic/](critiques/onboarding-critic/final.md) (16/16 runs reach day 2) | Space out the day-2 tip burst; point at the first job goal                                                                 |
+| Game depth         | [NEXT-STEPS-DEPTH.md](NEXT-STEPS-DEPTH.md)           | `critiques/critique-12.md`                                                                    | Crop requests in the first summer days; "buy 5 items" completes after one purchase                                         |
+| One-thumb controls | [NEXT-STEPS-CONTROLS.md](NEXT-STEPS-CONTROLS.md)     | [critiques/controls-critic/](critiques/controls-critic/final.md)                              | Feel inherited input this round; SE serpentine accuracy is the open minor                                                  |
+| Audio              | [NEXT-STEPS-AUDIO.md](NEXT-STEPS-AUDIO.md)           | [critiques/audio-critic/](critiques/audio-critic/final.md)                                    | Paused until a human has listened                                                                                          |
 
 ## What changed at the merge
 

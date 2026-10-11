@@ -21,18 +21,18 @@ morning). My full test run on the frozen copy is green: 799 unit tests, 338 e2e 
 
 ## Before / after (round 2)
 
-| | round-1 final (fd9dcfc) | merged base (6d5e480) | final (5d5e06d) |
-|---|---|---|---|
-| reach town on day 2 by guidance | 12/12 | 9/12 (never-paint dead end; 2 mail stalls) | **16/16** (incl. 2 house wanders) |
-| never-paint runs | pass, but water2 up to 150 s | 1 dead end (540 s, 376 presses) | 4/4, no refusal loops (clean: 142 s to town) |
-| New Game to waking on day 2 | 108-204 s | 116-191 s | 110-194 s (clean 110-128 s) |
-| waking to town on day 2 | 28-101 s of watering, then the walk | water2 14-76 s, then the walk | 28-49 s |
-| slowest step in a clean run | water2 52 s | water2 62 s | none over 45 s |
-| lost in the house during free time | not tested | 282 s silent (found round 6) | arrow after 5.5 s, out the door |
-| late night (day 2, in town at 11 PM) | n/a | 120-125 s to bed, clock outline only | led home in 4 lines: "Head home" to the gate, then door, bed, Sleep (26 s) |
-| day 3 waking | n/a | about 17 s unpointed in the house | waterDaily points at the door in 3.7 s; 5 crops in about 14 s |
-| bed after the day-1 errands (owner) | bed at 6 PM only | n/a | offered after errands ("All done! Sleep, or keep exploring."), still nudged at 6 PM |
-| skip / line checks (SE, both hands) | pass | pass | pass (mid-line tap walks; "?" menu closes itself by 4.6 s; Skip needs a confirm; replay toast) |
+|                                      | round-1 final (fd9dcfc)             | merged base (6d5e480)                      | final (5d5e06d)                                                                                |
+| ------------------------------------ | ----------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| reach town on day 2 by guidance      | 12/12                               | 9/12 (never-paint dead end; 2 mail stalls) | **16/16** (incl. 2 house wanders)                                                              |
+| never-paint runs                     | pass, but water2 up to 150 s        | 1 dead end (540 s, 376 presses)            | 4/4, no refusal loops (clean: 142 s to town)                                                   |
+| New Game to waking on day 2          | 108-204 s                           | 116-191 s                                  | 110-194 s (clean 110-128 s)                                                                    |
+| waking to town on day 2              | 28-101 s of watering, then the walk | water2 14-76 s, then the walk              | 28-49 s                                                                                        |
+| slowest step in a clean run          | water2 52 s                         | water2 62 s                                | none over 45 s                                                                                 |
+| lost in the house during free time   | not tested                          | 282 s silent (found round 6)               | arrow after 5.5 s, out the door                                                                |
+| late night (day 2, in town at 11 PM) | n/a                                 | 120-125 s to bed, clock outline only       | led home in 4 lines: "Head home" to the gate, then door, bed, Sleep (26 s)                     |
+| day 3 waking                         | n/a                                 | about 17 s unpointed in the house          | waterDaily points at the door in 3.7 s; 5 crops in about 14 s                                  |
+| bed after the day-1 errands (owner)  | bed at 6 PM only                    | n/a                                        | offered after errands ("All done! Sleep, or keep exploring."), still nudged at 6 PM            |
+| skip / line checks (SE, both hands)  | pass                                | pass                                       | pass (mid-line tap walks; "?" menu closes itself by 4.6 s; Skip needs a confirm; replay toast) |
 
 ## Open findings (final, round 2)
 
@@ -55,6 +55,7 @@ Nothing above minor.
 ## Checklist for the owner (round 2 additions)
 
 Do the round-1 checklist below, plus these:
+
 1. **Day-1 errands, then bed:** after the town-gate errand, does "All done! Sleep, or keep exploring." appear, and
    does it leave you alone if you keep exploring?
 2. **Wander into the house during free time:** does an arrow appear within a few seconds and lead you back out?
@@ -92,26 +93,28 @@ still drag for players who never paint a row, and the stick lesson can push you 
 
 ## Before / after
 
-| | before (1dffd97) | after (fd9dcfc) |
-|---|---|---|
-| Literal follower, first 60 s | 0 of 6 tiles tilled; same refusal 9 times ("Not your land yet. Buy it at a sign.") | 3 parsnips picked, seeds planted, watered; first harvest step done in 9-20 s |
-| Reaches day 2 on on-screen guidance alone | no (plot off screen, door and seeds never explained) | **12/12** (i13/SE x R/L; human-ish, never-paint, clean) |
-| New Game to waking on day 2 | 65 s *only if you know the secrets* | 108-146 s clean, 139-204 s human-ish (includes the clock and energy lines, free time, an errand to the town gate) |
-| New Game to town on day 2 | n/a | 156-201 s clean, 216-336 s human-ish |
-| Time with nothing on screen telling you what to do | 41 s stuck before an arrow | 6-7 s per run (the arrow after 3 s in free play) |
-| Instructions longer than one row | toast of 3 lines; morning report of 11 lines | 0 (about 50 distinct coach lines, all one row); morning note 3-4 lines |
-| Conflicting instructions | toast says tap-to-work, ring says drag; 4 tips in 15 s | one line at a time; refusals rewritten into the coach line |
-| Close/reopen mid-tutorial | resumes, no reminder | back on the same step with its line (every reopen run) |
-| Accidental guide loss | n/a | round 2: 4/12 runs (one-tap Skip from the bar). Final: 0/12; Skip needs a confirm tap; toast tells you how to replay |
-| Left hand | never offered; buried in Menu > Opts | offered on the welcome strip; dock, marks, menu and glyph mirrored |
-| Verify | green | green on my frozen copy: 715 unit tests, 300 e2e checks, 0 FAIL; coach-marks perf 1.03-1.43 ms JS, 2 draws per frame |
+|                                                    | before (1dffd97)                                                                   | after (fd9dcfc)                                                                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Literal follower, first 60 s                       | 0 of 6 tiles tilled; same refusal 9 times ("Not your land yet. Buy it at a sign.") | 3 parsnips picked, seeds planted, watered; first harvest step done in 9-20 s                                         |
+| Reaches day 2 on on-screen guidance alone          | no (plot off screen, door and seeds never explained)                               | **12/12** (i13/SE x R/L; human-ish, never-paint, clean)                                                              |
+| New Game to waking on day 2                        | 65 s _only if you know the secrets_                                                | 108-146 s clean, 139-204 s human-ish (includes the clock and energy lines, free time, an errand to the town gate)    |
+| New Game to town on day 2                          | n/a                                                                                | 156-201 s clean, 216-336 s human-ish                                                                                 |
+| Time with nothing on screen telling you what to do | 41 s stuck before an arrow                                                         | 6-7 s per run (the arrow after 3 s in free play)                                                                     |
+| Instructions longer than one row                   | toast of 3 lines; morning report of 11 lines                                       | 0 (about 50 distinct coach lines, all one row); morning note 3-4 lines                                               |
+| Conflicting instructions                           | toast says tap-to-work, ring says drag; 4 tips in 15 s                             | one line at a time; refusals rewritten into the coach line                                                           |
+| Close/reopen mid-tutorial                          | resumes, no reminder                                                               | back on the same step with its line (every reopen run)                                                               |
+| Accidental guide loss                              | n/a                                                                                | round 2: 4/12 runs (one-tap Skip from the bar). Final: 0/12; Skip needs a confirm tap; toast tells you how to replay |
+| Left hand                                          | never offered; buried in Menu > Opts                                               | offered on the welcome strip; dock, marks, menu and glyph mirrored                                                   |
+| Verify                                             | green                                                                              | green on my frozen copy: 715 unit tests, 300 e2e checks, 0 FAIL; coach-marks perf 1.03-1.43 ms JS, 2 draws per frame |
 
 ## Open findings (final round)
 
 ### Blockers
+
 None.
 
 ### Major
+
 1. **Day-2 watering still drags for players who tap Action instead of painting.** In never-paint runs, water2 took
    150 s / 104 taps (i13-left-s3-never) and 39 s (se-right-s13-never). The selected slot is the empty seed slot (all
    seeds were planted on day 1). Action on empty soil then gives the planting refusal, rewritten as "Tap the seed
@@ -126,6 +129,7 @@ None.
    a few tiles, or demo the direction of the next path step; otherwise fall back to the tap and edge arrow.
 
 ### Minor
+
 3. **water2 is still the longest beat for everyone.** 12-101 s (median about 36 s), and over 45 s in 5/12 runs, even
    with Rosa filling the can. The can still ran dry in 3 runs, and the row tip offered 2-4 directions within the one
    step in 9/12 runs. It's acceptable, but it's the one moment that feels like a chore.
@@ -139,6 +143,7 @@ None.
    contradicts the row tip. It's out of this branch's lane but should go before release.
 
 ### Nits
+
 7. The idle-hint wording after a skip is aligned. The old 40 s hint is still the only help for skippers, which is
    fine.
 8. Day 1 under the guide gets you to bed before noon if you follow the goal arrows. That's the owner ruling
@@ -147,6 +152,7 @@ None.
 ## Verified fixed across the rounds (highlights)
 
 Each item is verified in play, not just read in code.
+
 - The plot is on screen at spawn, so "Not your land" never shows to a follower.
 - Harvest first; tap-to-walk taught by doing.
 - Seeds, plant, water and the row tip, which is optional (never-paint completes).

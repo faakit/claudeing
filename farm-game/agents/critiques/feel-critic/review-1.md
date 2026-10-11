@@ -8,30 +8,31 @@ Raw data: `round-2/out/` (`motion-summary.json`, `pacing.json`, strips) and `rou
 
 ## Against the criteria
 
-| | Baseline | M2 | Criterion |
-| --- | --- | --- | --- |
-| A. Steady 4x p95 / p99 / max / > 33 ms | 7.0 / 7.2 / 41.7 / 1 | 7.0 / 7.1 / 7.2 / 0 | met |
-| A. Steady 6x p95 / p99 / max / > 33 ms | 13.9 / 14.0 / 48.6 / 2 | 7.0 / 7.1 / 20.9 / 0 | met |
-| A. Walk JS work per frame, p95 at 4x | 6.5 ms | 2.3 ms | (better) |
-| B. Worst door frame, 4x / 6x | 48.6 / 69.5 | 14.0 / 20.9 | met |
-| B. Sheets at 6x: max / frames > 33 ms | 55.6 / 4 | 27.8 / 0 | met |
-| B. Sleep worst frame at 6x | 97.3 | 55.4 | confirm it lands under full black |
-| C. On-screen reversals in a steady walk (60 / 120 / 30 Hz, all 4 directions) | up to 79/s at 120 Hz | 0 | met |
-| C. Rest spot (x / y) | 100 or 107 / 119 or 126-127 | always 100 / 119 | met |
-| C. Settle after a stop, 30 / 60 / 120 Hz | 300 / 67 / 0 ms | 200 / 200 / 200 ms | met |
-| D. Walk cadence at the half-speed stick (31.5 px/s) | 8 fps | 4 fps | met |
-| D. Planted-foot slide at full speed | about 5 px per frame | about 5 px per frame (fallback art) | not met until the art merges (#3) |
-| E. Something visible on touch-down | 11.7 ms, button fades in over 8 frames | 4.9 ms, button fully lit on the first frame | met |
-| E. Stick moves the farmer after an Action press | 217 ms / 300 ms | 133 ms (83 ms after the strike) | met |
-| E. Impact on a strike frame | lands under the wind-up | wind-up 3 frames, strike plus 1 px dip | met (art: #3) |
-| F. Door, step to clear | 22 frames, 367 ms, linear fade | 19 frames, 317 ms, dither wipe, HUD stays | 17 ms over (#2) |
-| F. Sheet open / close | 12 / 0 frames | 12 / 6 frames; instant in Calm | met |
-| G. Calm: peak live tweens on vs off | not gated | 7 vs 39 | met |
-| H. Visible non-integer scale or rotation | 10 kinds | whole-pixel squash only | partly met (#4) |
-| J. e2e:controls | OK | OK (E2E_CONTROLS_PARALLEL=1) | met |
-| J. bench:thumb, i13 right / left | plot3x3 7 gestures, 250/273 mm, 23.1/24.9 s; fish 9.1/10.4 s; toTown 9.1 s | plot3x3 7 gestures, 257/276 mm, 23.6/25.6 s; fish 7.2/11.4 s; toTown 9.0 s | met: gestures identical, the bot waits for the camera to centre |
+|                                                                              | Baseline                                                                   | M2                                                                         | Criterion                                                       |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| A. Steady 4x p95 / p99 / max / > 33 ms                                       | 7.0 / 7.2 / 41.7 / 1                                                       | 7.0 / 7.1 / 7.2 / 0                                                        | met                                                             |
+| A. Steady 6x p95 / p99 / max / > 33 ms                                       | 13.9 / 14.0 / 48.6 / 2                                                     | 7.0 / 7.1 / 20.9 / 0                                                       | met                                                             |
+| A. Walk JS work per frame, p95 at 4x                                         | 6.5 ms                                                                     | 2.3 ms                                                                     | (better)                                                        |
+| B. Worst door frame, 4x / 6x                                                 | 48.6 / 69.5                                                                | 14.0 / 20.9                                                                | met                                                             |
+| B. Sheets at 6x: max / frames > 33 ms                                        | 55.6 / 4                                                                   | 27.8 / 0                                                                   | met                                                             |
+| B. Sleep worst frame at 6x                                                   | 97.3                                                                       | 55.4                                                                       | confirm it lands under full black                               |
+| C. On-screen reversals in a steady walk (60 / 120 / 30 Hz, all 4 directions) | up to 79/s at 120 Hz                                                       | 0                                                                          | met                                                             |
+| C. Rest spot (x / y)                                                         | 100 or 107 / 119 or 126-127                                                | always 100 / 119                                                           | met                                                             |
+| C. Settle after a stop, 30 / 60 / 120 Hz                                     | 300 / 67 / 0 ms                                                            | 200 / 200 / 200 ms                                                         | met                                                             |
+| D. Walk cadence at the half-speed stick (31.5 px/s)                          | 8 fps                                                                      | 4 fps                                                                      | met                                                             |
+| D. Planted-foot slide at full speed                                          | about 5 px per frame                                                       | about 5 px per frame (fallback art)                                        | not met until the art merges (#3)                               |
+| E. Something visible on touch-down                                           | 11.7 ms, button fades in over 8 frames                                     | 4.9 ms, button fully lit on the first frame                                | met                                                             |
+| E. Stick moves the farmer after an Action press                              | 217 ms / 300 ms                                                            | 133 ms (83 ms after the strike)                                            | met                                                             |
+| E. Impact on a strike frame                                                  | lands under the wind-up                                                    | wind-up 3 frames, strike plus 1 px dip                                     | met (art: #3)                                                   |
+| F. Door, step to clear                                                       | 22 frames, 367 ms, linear fade                                             | 19 frames, 317 ms, dither wipe, HUD stays                                  | 17 ms over (#2)                                                 |
+| F. Sheet open / close                                                        | 12 / 0 frames                                                              | 12 / 6 frames; instant in Calm                                             | met                                                             |
+| G. Calm: peak live tweens on vs off                                          | not gated                                                                  | 7 vs 39                                                                    | met                                                             |
+| H. Visible non-integer scale or rotation                                     | 10 kinds                                                                   | whole-pixel squash only                                                    | partly met (#4)                                                 |
+| J. e2e:controls                                                              | OK                                                                         | OK (E2E_CONTROLS_PARALLEL=1)                                               | met                                                             |
+| J. bench:thumb, i13 right / left                                             | plot3x3 7 gestures, 250/273 mm, 23.1/24.9 s; fish 9.1/10.4 s; toTown 9.1 s | plot3x3 7 gestures, 257/276 mm, 23.6/25.6 s; fish 7.2/11.4 s; toTown 9.0 s | met: gestures identical, the bot waits for the camera to centre |
 
 Strips:
+
 - `round-2/out/door-farm-house-60hz.png` (the wipe; good)
 - `round-2/out/action-press-strip.png` vs `round-0/out/action-press-strip.png`
 - `round-2/out/harvest-60hz-strip.png`

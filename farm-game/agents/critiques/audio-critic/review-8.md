@@ -1,4 +1,5 @@
 # Review 8 (round 2 final: 1127690) - 2026-10-08
+
 Frozen copy round-8/. verify green: 475 tests; sfx perf scene 1.00/0.87/0.94 ms JS, fps 144.6/144.5/141.6 (1x/4x/6x).
 Per-cue worst true peak over 16 hits at default volume: -4.6 (harvest, plant, ringOpen) to -8.9 dBTP; coin -5.1 (was -2.2), buy -4.8.
 16-hit median max momentary: harvest -17.6, buy -17.8, coin -18.0, goal -17.9, order -18.1, heart -19.3, level -19.3, water -19.6,

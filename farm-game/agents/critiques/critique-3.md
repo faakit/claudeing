@@ -7,6 +7,7 @@ Note: `f8e789c` (year label, shorter gift text) landed in the repo after my snap
 ## What I verified by playing, and what I did not
 
 Played with real input (keyboard walk and actions, CDP touch on the Action button and the floating joystick, real taps on shop, bin, sleep and gift buttons):
+
 - New game, day 1 chores, bed, sleep summary, wake-up, 14 in-game days in a scripted "new player" run (about 7 real minutes, 0 page errors).
 - Walking farm to town to woods to mine, general store (all 3 tabs, all pages), bin, orders board, Mara, 4 villager sheets, gift list, plot sheet, Flower Show board and entry.
 - Fishing mini-game (a bot that reads the reel state; 3 of 4 casts caught).
@@ -16,12 +17,14 @@ Played with real input (keyboard walk and actions, CDP touch on the Action butto
 - `npx vitest run`: 322 tests pass on this build.
 
 Caveats on the 14-day run:
+
 - The run is a bot, not a human. It farmed the home plot, bought seeds, shipped, and did the forage and town goals along the way.
 - It never fished, mined or crafted in that run, so it sat on goal 8 ("catch a fish") on day 15.
 - Movement was partly teleported (`goto`) to save wall-clock time. All actions, panels and sleeps were real input.
 - A human would spend more time per day but not more game time.
 
 Verified only by reading code or data:
+
 - Economy numbers and the sink list (from `shops.json`, `placeables.json`, `goals.json`).
 - "New Game asks before erasing a save" (`TitleScene.ts:124`).
 - Audio. I did not listen.
@@ -32,17 +35,18 @@ Not verified at all: real-device frame rate, haptics, audio, native builds, `npm
 
 ## 1. Critique 2 fixes (M1 to M4) re-checked
 
-| Item | Result | How I know |
-| --- | --- | --- |
-| M1 swipe no longer acts | **Mostly fixed, one edge case remains.** A fast flick (down to first move 40 ms, up in 85 ms) changed tool and acted 0 times. A tap acts once on release. A hold of 700 ms to 1 s repeats. **But a swipe that takes more than about 110 ms to cross the 14 logical px (28 CSS px) threshold still fires one use of the old tool.** | Played. Event timeline: down at 32 ms, `held=true` at 183 ms (tilled 1), swipe recognised at 188 ms. My CDP touches arrive 40 to 60 ms apart, so this is a harsh test, but a relaxed thumb is slower than a flick. See finding F5. |
-| M2 second-tap pickup | **Half fixed.** Coop and bee house: second tap picks up ("Empty. Bring a chicken. Tap again to pick up."; "Honey in 4 days. Tap again to pick up."). Sprinkler: one tap. Sapling: refused by design ("Still growing: 10 more days"). **Empty preserve jar, keg, loom and furnace still cannot be picked up at all** (F1). | Played. Placed all of them and tried interact 3 times each. |
-| M3 hotbar rules | **Fixed.** Bought chicken, chicken feed, hay, cow and a sapling: sapling went to the hotbar (slot 6), chicken, feed, hay and cow went to the bag (slots 8 to 11). Produce goes to the bag first. | Played, through the real shop. |
-| M4 sprinkler on empty tilled soil | **Fixed.** Placed a sprinkler on a freshly tilled tile; the soil tile is consumed. | Played. |
-| M5 bag reach | **Fixed.** The grid now sits just above the tab row, about y 548 to 670 of 844. | Screenshot. |
-| m10 action icon | **Fixed.** The Action button shows the equipped item (hoe, can, rod, seed). | Screenshots. |
-| m8 machine help text | **Fixed** for keg, loom and furnace (each says "Ready N mornings after loading" and lists only valid inputs). I did not view an empty-state jar panel with nothing loadable. | Screenshots. |
+| Item                              | Result                                                                                                                                                                                                                                                                                                                             | How I know                                                                                                                                                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1 swipe no longer acts           | **Mostly fixed, one edge case remains.** A fast flick (down to first move 40 ms, up in 85 ms) changed tool and acted 0 times. A tap acts once on release. A hold of 700 ms to 1 s repeats. **But a swipe that takes more than about 110 ms to cross the 14 logical px (28 CSS px) threshold still fires one use of the old tool.** | Played. Event timeline: down at 32 ms, `held=true` at 183 ms (tilled 1), swipe recognised at 188 ms. My CDP touches arrive 40 to 60 ms apart, so this is a harsh test, but a relaxed thumb is slower than a flick. See finding F5. |
+| M2 second-tap pickup              | **Half fixed.** Coop and bee house: second tap picks up ("Empty. Bring a chicken. Tap again to pick up."; "Honey in 4 days. Tap again to pick up."). Sprinkler: one tap. Sapling: refused by design ("Still growing: 10 more days"). **Empty preserve jar, keg, loom and furnace still cannot be picked up at all** (F1).          | Played. Placed all of them and tried interact 3 times each.                                                                                                                                                                        |
+| M3 hotbar rules                   | **Fixed.** Bought chicken, chicken feed, hay, cow and a sapling: sapling went to the hotbar (slot 6), chicken, feed, hay and cow went to the bag (slots 8 to 11). Produce goes to the bag first.                                                                                                                                   | Played, through the real shop.                                                                                                                                                                                                     |
+| M4 sprinkler on empty tilled soil | **Fixed.** Placed a sprinkler on a freshly tilled tile; the soil tile is consumed.                                                                                                                                                                                                                                                 | Played.                                                                                                                                                                                                                            |
+| M5 bag reach                      | **Fixed.** The grid now sits just above the tab row, about y 548 to 670 of 844.                                                                                                                                                                                                                                                    | Screenshot.                                                                                                                                                                                                                        |
+| m10 action icon                   | **Fixed.** The Action button shows the equipped item (hoe, can, rod, seed).                                                                                                                                                                                                                                                        | Screenshots.                                                                                                                                                                                                                       |
+| m8 machine help text              | **Fixed** for keg, loom and furnace (each says "Ready N mornings after loading" and lists only valid inputs). I did not view an empty-state jar panel with nothing loadable.                                                                                                                                                       | Screenshots.                                                                                                                                                                                                                       |
 
 Still open from critique 2 (see section 3):
+
 - m5 truncation.
 - m7 blind gifts.
 - m11 tutorial toast replays on map change.
@@ -80,23 +84,24 @@ Still open from critique 2 (see section 3):
 
 All seen in screenshots at 390x844 (the UI is a fixed 200x400 canvas, so every device scales the same layout).
 
-| Panel | Defect | Shot |
-| --- | --- | --- |
-| Shop, Seeds | `4 days 35g (ow..`, `Cauliflower See..` on day 2. Row 4 reads `Finer crops (ow..` | `03` |
-| Shop, Farm p2 | `Frost Plum Sapl..` | (seen) |
-| Bin | `Silver Melon Wi..`, `Gold Cauliflow..`, `have 4 b..`, `have 14 ..` on every row | `04` |
-| Keg, Furnace, Loom | `Makes Gold Melon Wine ..`, `Makes Copper Bar (hav..`, `Makes Wool Cloth (have..` | `05` |
-| Craft | `2 Sprinkler, 10 Fiber, ..` (Quality Sprinkler) | `08` |
-| Book tab | Hint line "Hold an item once to add it." is **drawn over the Mine row** (icons and title) | `06` |
-| Goals tab | Progress number is clipped at the panel edge: `20,000,` instead of `20,000/20,000`. The new 50,000 and 100,000 goals are longer. | `07` |
-| Villager sheet | Blurb `Fishes the woods lake all..`, `Your neighbour. Knows so..` | (seen) |
-| Villager sheet (old build) | `One gift a d..` (fixed in `f8e789c`, not retested) | n/a |
+| Panel                      | Defect                                                                                                                           | Shot   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Shop, Seeds                | `4 days 35g (ow..`, `Cauliflower See..` on day 2. Row 4 reads `Finer crops (ow..`                                                | `03`   |
+| Shop, Farm p2              | `Frost Plum Sapl..`                                                                                                              | (seen) |
+| Bin                        | `Silver Melon Wi..`, `Gold Cauliflow..`, `have 4 b..`, `have 14 ..` on every row                                                 | `04`   |
+| Keg, Furnace, Loom         | `Makes Gold Melon Wine ..`, `Makes Copper Bar (hav..`, `Makes Wool Cloth (have..`                                                | `05`   |
+| Craft                      | `2 Sprinkler, 10 Fiber, ..` (Quality Sprinkler)                                                                                  | `08`   |
+| Book tab                   | Hint line "Hold an item once to add it." is **drawn over the Mine row** (icons and title)                                        | `06`   |
+| Goals tab                  | Progress number is clipped at the panel edge: `20,000,` instead of `20,000/20,000`. The new 50,000 and 100,000 goals are longer. | `07`   |
+| Villager sheet             | Blurb `Fishes the woods lake all..`, `Your neighbour. Knows so..`                                                                | (seen) |
+| Villager sheet (old build) | `One gift a d..` (fixed in `f8e789c`, not retested)                                                                              | n/a    |
 
 The layout test checks static strings. The runtime ones (quality prefix, derived goods, "owned" suffix, long goal numbers) are what clip.
 
 ### F5 (Medium). Swipe edge case: slow swipes still use the tool once
 
 See table row M1. The 110 ms hold timer races a slow swipe: if the finger needs more than 110 ms to travel 28 CSS px, `actionHeld` goes true first and one tool use fires (tilled 1, then the swipe is recognised and releases). A quick flick is clean.
+
 - Fix: arm the hold timer only after the finger has stayed within about 4 px for 110 ms, or compare travel at fire time.
 
 ### F6 (Medium). Spring 14 Flower Show cannot be won by a spring player
@@ -141,6 +146,7 @@ Verified in the house and in the woods: "Welcome to Tiny Acre!..." and "Drag any
 ## 3. One-thumb reach
 
 Played with CDP touch:
+
 - Joystick anywhere low on the screen: works, about 4.4 tiles/s, farm to town in about 9 s.
 - Action button (bottom right) with swipe, tap and hold: good, apart from F5.
 - Menu button: far left of the dock, away from the Action thumb on purpose. Reachable only with a stretch.
@@ -154,6 +160,7 @@ Played with CDP touch:
 ## 4. Progression and late-game money
 
 Estimates from data only (nothing in the late game was played):
+
 - Sinks in data: plots 8,500; upgrades 36,850 (stamina 23,000, can 3,800, hoe 5,400, rod 4,650); animals and houses about 11,100; trees 4,800 (3 per type at 380g to 400g); crafts and machines about 7,700. Total about 69,000g, unchanged since critique 2.
 - The last commits only add goals ("earn 50k", "earn 100k", "collect 200"). Those are targets, not sinks. The player passes 50k with nothing to buy.
 - 14-day result (bot): 1,024g, so on the pace critique 2 modelled (about 250 to 500 gold per day early), plots and houses open up around day 20 to 35.

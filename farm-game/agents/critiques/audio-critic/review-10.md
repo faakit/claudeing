@@ -1,4 +1,5 @@
 # Review 10 (892183c) - 2026-10-09
+
 Frozen copy round-10/. verify green: 484 tests; sfx perf scene 0.90-1.04 ms JS, 141-145 fps.
 F36: probe re-run: shop -> close -> Menu stays 'spring'; shop held 0.6 s stays 'spring' (dwell), 2.1 s -> 'shop'. Fixed.
 F37: fitToChord moves held (>= 1 beat) notes forming m2/M7 with the sounding chord to the nearest chord tone (<= 3 st), using

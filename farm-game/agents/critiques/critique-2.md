@@ -35,23 +35,23 @@ Screenshots are in `agents/critiques/shots-2/` (12 files, referenced below).
 
 ## 1. Did the "Critique follow-ups" actually work?
 
-| Claim in ROADMAP | Result | Evidence |
-| --- | --- | --- |
-| First-week goal order (forage, buy before harvest) | **Works.** Order is till, plant, water, sleep, forage, buy, harvest, ship, fish, order, craft, place, preserve, quality. The linear chain is still a chain (see 3.1). | `goals.json`; day 1 played |
-| Shop shows days to grow, sell price, "Too late now" | **Works, with leftover truncation.** The facts appear ("4 days 35g"), but the third fragment, "(owned N)", is cut: `35g (ow..`, `Finer crops (ow..`, `Spring fruit (o..`, `Cauliflower See..`. | shot 01 |
-| Shop paging | **Works** (`<` `>` and 1/2). 5 rows per page. | shot 01 |
-| Hotbar rules (produce to bag first) | **Works for produce** (`inventory.ts:60-70`). Made worse by **feed and animal items also claiming hotbar slots** (see M3). | code |
-| Menu tabs at the bottom | **Works.** The tab row and Close sit at y of about 720 to 770 CSS px. But the **Bag grid is still at the top of the sheet**, around y 190 to 320 CSS px, out of one-thumb reach. | shot 07 |
-| Swipe-to-change-tool on Action | **Works** (up is +1, down is -1, 14 logical px per step, a 10 px wiggle does nothing). **But it fires one use of the current tool on touch-down** (see B1/M1). | probe `t7` |
-| Coop and barn pickup | **Works** (an empty coop or barn gave "Empty. Bring a chicken, or tap again to pick this up", then a second tap removed it). Machines, trees and bee houses cannot be picked up at all (see M2). | probe `t12` |
-| Plots and land signs | **Works.** Sign, panel, buy, the dim overlay disappears, tilling is limited to owned land. The refusal text is wrong on land that is not for sale (see m6). | probe `t18`, shot 11 |
-| Tool upgrades | **Works.** Hoe 3 tilled 4 tiles in a line for 2 energy; can 3 waters a line. | probe `t20` |
-| Goal arrow after about 14 s idle | **Works** (`WorldScene.ts:58`, shot 08). It is a small yellow triangle at the bottom edge of the world view and easy to miss. The 40 s toast is separate. | shot 08 |
-| Seeds refused when they cannot ripen | Works (code, `farmingActions.ts:82`). | code |
-| Kale and the Winter 28 year-end | Kale is in the winter shop. The year-end fires on Winter 28 but says **"Year 2 results"** (see m1). | shot 06 |
-| `sellBonus`, bin rejects machines | Works (code). | code |
-| Toast backing, level-up sound | Works. The toast now has a dark backing and reads on grass. | shot 11 |
-| Seasonal music | Tempo, key and chord loop change per season. **The melody does not follow the key** (see m4). | `audio.ts:375,395,406` |
+| Claim in ROADMAP                                    | Result                                                                                                                                                                                           | Evidence                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| First-week goal order (forage, buy before harvest)  | **Works.** Order is till, plant, water, sleep, forage, buy, harvest, ship, fish, order, craft, place, preserve, quality. The linear chain is still a chain (see 3.1).                            | `goals.json`; day 1 played |
+| Shop shows days to grow, sell price, "Too late now" | **Works, with leftover truncation.** The facts appear ("4 days 35g"), but the third fragment, "(owned N)", is cut: `35g (ow..`, `Finer crops (ow..`, `Spring fruit (o..`, `Cauliflower See..`.   | shot 01                    |
+| Shop paging                                         | **Works** (`<` `>` and 1/2). 5 rows per page.                                                                                                                                                    | shot 01                    |
+| Hotbar rules (produce to bag first)                 | **Works for produce** (`inventory.ts:60-70`). Made worse by **feed and animal items also claiming hotbar slots** (see M3).                                                                       | code                       |
+| Menu tabs at the bottom                             | **Works.** The tab row and Close sit at y of about 720 to 770 CSS px. But the **Bag grid is still at the top of the sheet**, around y 190 to 320 CSS px, out of one-thumb reach.                 | shot 07                    |
+| Swipe-to-change-tool on Action                      | **Works** (up is +1, down is -1, 14 logical px per step, a 10 px wiggle does nothing). **But it fires one use of the current tool on touch-down** (see B1/M1).                                   | probe `t7`                 |
+| Coop and barn pickup                                | **Works** (an empty coop or barn gave "Empty. Bring a chicken, or tap again to pick this up", then a second tap removed it). Machines, trees and bee houses cannot be picked up at all (see M2). | probe `t12`                |
+| Plots and land signs                                | **Works.** Sign, panel, buy, the dim overlay disappears, tilling is limited to owned land. The refusal text is wrong on land that is not for sale (see m6).                                      | probe `t18`, shot 11       |
+| Tool upgrades                                       | **Works.** Hoe 3 tilled 4 tiles in a line for 2 energy; can 3 waters a line.                                                                                                                     | probe `t20`                |
+| Goal arrow after about 14 s idle                    | **Works** (`WorldScene.ts:58`, shot 08). It is a small yellow triangle at the bottom edge of the world view and easy to miss. The 40 s toast is separate.                                        | shot 08                    |
+| Seeds refused when they cannot ripen                | Works (code, `farmingActions.ts:82`).                                                                                                                                                            | code                       |
+| Kale and the Winter 28 year-end                     | Kale is in the winter shop. The year-end fires on Winter 28 but says **"Year 2 results"** (see m1).                                                                                              | shot 06                    |
+| `sellBonus`, bin rejects machines                   | Works (code).                                                                                                                                                                                    | code                       |
+| Toast backing, level-up sound                       | Works. The toast now has a dark backing and reads on grass.                                                                                                                                      | shot 11                    |
+| Seasonal music                                      | Tempo, key and chord loop change per season. **The melody does not follow the key** (see m4).                                                                                                    | `audio.ts:375,395,406`     |
 
 Still wrong from critique 1 and not in the ROADMAP's "done" list:
 
@@ -72,29 +72,34 @@ None. I found no crash, no soft-lock and no unwinnable state. The BFS shows ever
 ### Major
 
 **M1. Swipe-to-change-tool also uses the tool (accidental till, water, plant, place).**
+
 - `TouchButton.ts:48-54` calls `onPress()` on pointer-down, so `actionHeld` goes true. The swipe is only recognised after 14 logical px of travel.
 - Repro (390x844, hoe selected, standing at the field, facing soil): press the Action button, drag up 24 px. The tool changes to the can, and the state shows `tilled: 2` and 4 energy spent. A second swipe with the can selected added `watered: 2`.
 - Impact: with seeds equipped it plants; with a sprinkler, keg or coop equipped it places one. This is the exact "accidental placement" worry from critique 1, now caused by the fix.
 - Fix: delay `actionHeld` about 90 ms, or start the action only on release if the finger did not move. Roughly 10 lines.
 
 **M2. Trees, bee houses and machines can never be picked up.**
+
 - Pickup happens only if a behavior's `interact` returns `{ kind: 'pickup' }` (`WorldScene.ts:475`).
 - `fruitTree.ts:15`, `jar.ts:14` (jar, keg and loom) and `beeHouse.ts:41` never do. `canPickUp` in `jar.ts:12` and `beeHouse.ts:59` is dead code.
 - I pressed E three times on a placed jar, loom and sapling: nothing moved. A mis-placed 400g sapling, 180g keg, 300g loom or 250g bee house is permanent. It also permanently takes the tile and blocks walking (all are solid).
 - Combined with the missing placement preview (still open), this is the worst cheap regression in the new content.
 
 **M3. The hotbar has 4 free slots and feed and animals eat them.**
+
 - `HOTBAR_FIRST` (`inventory.ts:10-18`) includes `feed` and `animal`, but both are used by tapping the coop, never by equipping.
 - A player with chickens, cows and sheep carries `chicken_feed`, `hay`, `feed_bale`, so 3 of the 4 slots go to things never equipped. Seeds, fertilizer, sprinklers, jars and saplings spill into the bag, which is reachable only through the Menu (far corner, tall sheet).
 - Swipe-cycling also visits empty slots (8 stops), so going from slot 4 to 0 means 4 swipes.
 - Fix: remove `feed` and `animal` from `HOTBAR_FIRST`. One line.
 
 **M4. Sprinklers can only be placed on untilled ground, and there is no way to un-till.**
+
 - `farmingActions.ts:136` refuses placing on tilled soil. The goal chain makes the player till the home plot first (goal 1) and the sprinkler recipe unlocks at Farming 2.
 - A player who has filled the field has no legal tile for a sprinkler inside it. At the field edge a sprinkler covers 1 field tile. Quality sprinklers (diagonal, 8 tiles) share the same problem.
 - Fix: allow placing on empty tilled soil (and remove the soil), or add an "un-till" action to the scythe.
 
 **M5. The Bag grid is still out of one-thumb reach, and Menu sits in the far corner.**
+
 - Menu button: logical (20, 306), which is the left corner on a right-handed layout. The Bag grid and its move-item flow are at CSS y of about 190 to 320 of 844.
 - Craft (used constantly: fiber to jars and sprinklers) and the Bag live behind both.
 - "One-handed" holds for the field loop (joystick plus Action plus swipe) but not for crafting, equipping overflow items or goal checks on a 6.7 inch phone.
@@ -142,52 +147,52 @@ Method: per-tile season profit from `crops.json`, `items.json` and replant cycle
 
 ### 3.1 Crop profit per tile per season (net of seed)
 
-| Crop | Season | Days | Profit/tile early, mid, late | Per tile-day (mid) |
-| --- | --- | --- | --- | --- |
-| Parsnip | Spring | 4 | 97, 122, 155 | 4.4 |
-| Potato | Spring | 7 | 160, 194, 239 | 6.9 |
-| Cauliflower | Spring | 10 | 316, 360, 427 | 12.8 |
-| Tomato | Summer | 7 | 144, 171, 210 | 6.1 |
-| Melon | Summer | 12 | 442, 499, 588 | 17.8 |
-| Corn | Summer | 13 (+3 regrow) | 294, 330, 387 | 11.8 |
-| Pumpkin | Fall | 12 | 483, 543, 637 | 19.4 |
-| Yam | Fall | 5 | 186, 221, 270 | 7.9 |
-| Kale | Winter | 7 | 205, 231, 272 | 8.3 |
+| Crop        | Season | Days           | Profit/tile early, mid, late | Per tile-day (mid) |
+| ----------- | ------ | -------------- | ---------------------------- | ------------------ |
+| Parsnip     | Spring | 4              | 97, 122, 155                 | 4.4                |
+| Potato      | Spring | 7              | 160, 194, 239                | 6.9                |
+| Cauliflower | Spring | 10             | 316, 360, 427                | 12.8               |
+| Tomato      | Summer | 7              | 144, 171, 210                | 6.1                |
+| Melon       | Summer | 12             | 442, 499, 588                | 17.8               |
+| Corn        | Summer | 13 (+3 regrow) | 294, 330, 387                | 11.8               |
+| Pumpkin     | Fall   | 12             | 483, 543, 637                | 19.4               |
+| Yam         | Fall   | 5              | 186, 221, 270                | 7.9                |
+| Kale        | Winter | 7              | 205, 231, 272                | 8.3                |
 
 Planting costs 0 energy and so does harvesting; tilled soil stays tilled. Only watering costs energy (1 per tap or per line). Energy rarely limits the player, while the can capacity (20) and taps do. Land is the real lever, and land costs 15 to 74 gold per tile.
 
 ### 3.2 Passive sources (per house or machine, steady state)
 
-| Source | Capital | Net per day | Notes |
-| --- | --- | --- | --- |
-| Coop (3 chickens) | 400 + 1,050 | 140 to 154 | Payback 11 days. |
-| Barn (2 cows) | 1,000 + 2,400 | 211 to 231 | Payback 16 days. |
-| Shed (3 sheep) | 700 + 2,100 | 167 to 183 | Plus loom +62 per wool. |
-| Max houses (2 each) | about 11,100 total | about 1,100 | Zero energy, 1 tap per house per day. |
-| Bee house | 250 + 10 fiber | 19 | Max 5. Payback 13 days. |
-| Jar, melon jam | 100 + 10 fiber | +62 over raw | 3 days. Max 6. |
-| Jar, pumpkin pickles | same | +41 | |
-| Jar, wild leek pickles | same | +10 | |
-| Keg, melon wine | 180 + 15 fiber | +58 | 5 days. Max 4. |
-| Keg, peach wine | same | +19 | |
-| Loom | 300 + 20 fiber | +15 | |
-| Fruit tree | 400 | 19 to 28 per day in its season, about 540 to 790 per year | Only one season of four. |
+| Source                 | Capital            | Net per day                                               | Notes                                 |
+| ---------------------- | ------------------ | --------------------------------------------------------- | ------------------------------------- |
+| Coop (3 chickens)      | 400 + 1,050        | 140 to 154                                                | Payback 11 days.                      |
+| Barn (2 cows)          | 1,000 + 2,400      | 211 to 231                                                | Payback 16 days.                      |
+| Shed (3 sheep)         | 700 + 2,100        | 167 to 183                                                | Plus loom +62 per wool.               |
+| Max houses (2 each)    | about 11,100 total | about 1,100                                               | Zero energy, 1 tap per house per day. |
+| Bee house              | 250 + 10 fiber     | 19                                                        | Max 5. Payback 13 days.               |
+| Jar, melon jam         | 100 + 10 fiber     | +62 over raw                                              | 3 days. Max 6.                        |
+| Jar, pumpkin pickles   | same               | +41                                                       |                                       |
+| Jar, wild leek pickles | same               | +10                                                       |                                       |
+| Keg, melon wine        | 180 + 15 fiber     | +58                                                       | 5 days. Max 4.                        |
+| Keg, peach wine        | same               | +19                                                       |                                       |
+| Loom                   | 300 + 20 fiber     | +15                                                       |                                       |
+| Fruit tree             | 400                | 19 to 28 per day in its season, about 540 to 790 per year | Only one season of four.              |
 
 Orders (3 per day, 1.2 to 1.6x bin value, cap 1,200): about 1,050 to 1,500 reward per day if you hold every item, which is only about 100 to 130 above what the same goods would fetch in the bin. The candidate pool is small (14 items in spring, 17 summer, 14 fall, **7 in winter**) and **excludes tree fruit, eggs, milk, wool and honey**. One order (3 Melon Wine at about 1,196) pays less than the bin.
 
 ### 3.3 Income per day by stage (my estimate, gold/day)
 
-| Source | Early (day 10, spring) | Mid (day 60, summer) | Late (year 2) |
-| --- | --- | --- | --- |
-| Crops (capital-limited early) | 100 to 200 | 600 to 1,200 | 2,500 to 4,000 |
-| Animals | 0 | 250 to 450 | about 1,100 |
-| Jars and kegs | 0 | 100 to 250 | 300 to 550 |
-| Trees (in season) | 0 | 20 to 70 | 60 to 200 |
-| Bees | 0 | 20 to 40 | 95 |
-| Orders (premium only) | 40 to 100 | about 100 | about 130 |
-| Forage | 50 to 120 | 100 to 150 | about 150 |
-| Fish | 30 to 80 | 60 to 100 | about 100 |
-| **Total** | **about 250 to 500** | **about 1,300 to 2,400** | **about 4,500 to 6,500** |
+| Source                        | Early (day 10, spring) | Mid (day 60, summer)     | Late (year 2)            |
+| ----------------------------- | ---------------------- | ------------------------ | ------------------------ |
+| Crops (capital-limited early) | 100 to 200             | 600 to 1,200             | 2,500 to 4,000           |
+| Animals                       | 0                      | 250 to 450               | about 1,100              |
+| Jars and kegs                 | 0                      | 100 to 250               | 300 to 550               |
+| Trees (in season)             | 0                      | 20 to 70                 | 60 to 200                |
+| Bees                          | 0                      | 20 to 40                 | 95                       |
+| Orders (premium only)         | 40 to 100              | about 100                | about 130                |
+| Forage                        | 50 to 120              | 100 to 150               | about 150                |
+| Fish                          | 30 to 80               | 60 to 100                | about 100                |
+| **Total**                     | **about 250 to 500**   | **about 1,300 to 2,400** | **about 4,500 to 6,500** |
 
 Total sinks that exist in data: plots 8,500, upgrades 36,850 (stamina alone 23,000), trees 4,800, animals 11,100, crafts about 7,700, so about 69k. At the mid income band that is spent by about day 80 to 100 of year 1 (fall). Stamina Tonics are the only sink left and they buy energy the player never runs out of.
 
@@ -242,6 +247,7 @@ Played with real input.
 ## 5. Visual and audio polish
 
 **Visual.**
+
 - UI panels are consistent and legible: one pixel font, bordered sheets, hearts and stars. The Day Summary and Shop are polished.
 - World art is clearly programmer art.
   - The house is a 10x5 tile brick rectangle with one door (shots 09 and 10); a coop is 1 tile. The town is a flat sand road with one striped awning; the woods are bare green. The interior is a purple box with a red 2x2 bed.
@@ -251,6 +257,7 @@ Played with real input.
 - The "2200g" and "2600g" floating price tags are the first things on screen and advertise things the player cannot afford.
 
 **Audio (code review, `platform/audio.ts`).**
+
 - Everything is synthesized. SFX set: 20 names; coverage of the new content is thin (no animal, honey, wine or tree sounds).
 - Footsteps are a short high-pass hiss per step; there are rain and night beds and a day/night crossfade.
 - Seasonal music (tempo, transpose, melody density, major or minor loop) is a good idea with one bug (m4): chords transpose, the melody does not.

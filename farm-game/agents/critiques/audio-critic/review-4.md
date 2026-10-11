@@ -7,13 +7,13 @@ Whole-mix spectral centroid: spring 3598, summer 3997, fall 669, winter-night 12
 
 Acceptance criteria sent for F20 (seasons sound different):
 A data (music.json): no shared A-section Roman-numeral progression between any two of the 6 pieces; chord-bigram Jaccard <= 0.4
-  per pair (transposition-invariant); >= 4 distinct cadence formulas; melody interval-3-gram overlap <= 25 % per pair;
-  each season differs from every other season by a margin in >= 2 of: notes/beat (+-20 %), median melody pitch (+-3 st),
-  leap share (+-10 pp), range (+-4 st), syncopation share (+-10 pp).
+per pair (transposition-invariant); >= 4 distinct cadence formulas; melody interval-3-gram overlap <= 25 % per pair;
+each season differs from every other season by a margin in >= 2 of: notes/beat (+-20 %), median melody pitch (+-3 st),
+leap share (+-10 pp), range (+-4 st), syncopation share (+-10 pp).
 B renders: every pair <= 0.92 similarity, spring-summer and fall-winter each <= 0.92 and >= 0.03 below baseline; estimated key
-  matches the declared key/mode with r >= 0.85; summer melody median >= spring + 2 st or summer centroid >= spring + 10 % with the
-  same percussion share; fall/winter slower than spring and minor; night notes/beat <= 60 % of day; levels day -25 +-1.5,
-  night -28 +-1.5 LUFS.
+matches the declared key/mode with r >= 0.85; summer melody median >= spring + 2 st or summer centroid >= spring + 10 % with the
+same percussion share; fall/winter slower than spring and minor; night notes/beat <= 60 % of day; levels day -25 +-1.5,
+night -28 +-1.5 LUFS.
 C no regressions: pitch-shift test, verify green, no clipping, render-time ratio >= 25x.
 Control cues: active-region momentary <= ui level (-27 M at output), <= 80 ms, >= 3 takes or pitch jitter, repeat duck, no tonal
-  pitch ladder that climbs on repeated taps beyond one octave; rapid-tap render (10 taps/s for 5 s) <= -28 LUFS integrated.
+pitch ladder that climbs on repeated taps beyond one octave; rapid-tap render (10 taps/s for 5 s) <= -28 LUFS integrated.

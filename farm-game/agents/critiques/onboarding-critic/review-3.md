@@ -10,14 +10,14 @@ Round-2b runs on 9ff96f2 (`round-2b/runs/`) showed the rod-in-hand water2 stall 
 
 ## Numbers
 
-| | round 0 | M1.1 (review 2) | M3 |
-|---|---|---|---|
-| reach day 2 by guidance (12 runs: i13/SE, R/L, wrong taps, wander, reopen, never-paint) | 0 tiles in 60 s | 9/12 | **12/12**, 0 accidental skips |
-| first harvest step | n/a | 9-21 s | 9-19 s |
-| New Game to waking on day 2, clean / human | 65 s (with secrets) | 38-54 s / 61-81 s (no free play) | 157-175 s / 180-221 s (includes the clock and energy lines, errands, town gate) |
-| New Game to town on day 2, clean / human | n/a | 101-124 / 130-147 s | 228-242 / 234-350 s |
-| distinct coach lines, all one row | n/a | 24 | 49, all one row |
-| time with nothing pointed (waiting for the 14 s goal arrow) | 41 s | n/a | 34-38 s in every run |
+|                                                                                         | round 0             | M1.1 (review 2)                  | M3                                                                              |
+| --------------------------------------------------------------------------------------- | ------------------- | -------------------------------- | ------------------------------------------------------------------------------- |
+| reach day 2 by guidance (12 runs: i13/SE, R/L, wrong taps, wander, reopen, never-paint) | 0 tiles in 60 s     | 9/12                             | **12/12**, 0 accidental skips                                                   |
+| first harvest step                                                                      | n/a                 | 9-21 s                           | 9-19 s                                                                          |
+| New Game to waking on day 2, clean / human                                              | 65 s (with secrets) | 38-54 s / 61-81 s (no free play) | 157-175 s / 180-221 s (includes the clock and energy lines, errands, town gate) |
+| New Game to town on day 2, clean / human                                                | n/a                 | 101-124 / 130-147 s              | 228-242 / 234-350 s                                                             |
+| distinct coach lines, all one row                                                       | n/a                 | 24                               | 49, all one row                                                                 |
+| time with nothing pointed (waiting for the 14 s goal arrow)                             | 41 s                | n/a                              | 34-38 s in every run                                                            |
 
 Line checks (r3-skip, SE right and left): a mid-line tap walks the player (11,16) to (11,10), with no menu, and the guide stays. "..." opens
 [Skip guide][Back], mirrored for the left hand, and aim is null while it's open. It closes itself by 4.6 s and the hand comes back. One Skip tap
@@ -45,6 +45,7 @@ All of review-2 #1 (a-g) and #3 are verified.
      day 1;
    - the water-row tip first points at the can when the can isn't in hand (as your rod fix does);
    - keep one row direction per crop group.
+
 3. **minor. Free play still waits 14 s for the goal arrow.** That's 34-38 s per run with nothing pointed, after
    "Free time! Try the errand up top." and again after the forage and villager intros. Ask: while the guided days run,
    show the goal arrow at once (or after 3 s) when no coach step is up, and hide it only while a step shows.

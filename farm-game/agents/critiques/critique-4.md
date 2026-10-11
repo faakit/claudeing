@@ -5,6 +5,7 @@ Reviewer: independent QA lead and game critic, round 4.
 Frozen build: commit `22fc304`, copied to `critique-4/farm-game`. The copy is not a git checkout, so I could not confirm the hash myself. Dev server on port 5177.
 
 Method:
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, DPR 1.
 - The `?debug` hook was used to set up state and read it back.
 - No game file was edited. Probe scripts live in `critique-4/probes/`, screenshots in `shots-4/`.
@@ -41,16 +42,19 @@ Played with real input. I used keyboard walk, Space and E, and real taps and cli
 - `npx vitest run`: 44 files, **363 tests pass**.
 
 Caveats on the 14-day run:
+
 - It is a bot, not a human. It moves between spots by teleport, so its in-game clock is about 1.5 game hours ahead of a walking player. My estimate from tile counts at 2.2 tiles per game minute is 100 game minutes of walking for farm, town, woods, mine and back.
 - All actions and panel taps are real input. When the bot reached town before 8:00, I moved the clock to 8:00 to stand in for the walk and the wait for opening hours. That shortcut also left Mara and Orin "absent" on some days, which is a bot artefact. Because of it, two "greet villagers" failures and two "give a gift" failures (Rosa's sheet showed a heart event with "Next") are the bot's fault, not the game's.
 - The bot ships everything except seeds, materials and cauliflower. It kept cauliflower by accident, and that is the only reason it filled one board order.
 
 Verified only by reading code or data:
+
 - the payback of the project perks;
 - that weeds can spawn under placed objects;
 - that the shop has no per-kind cap.
 
 Not verified at all:
+
 - a real phone, touch feel, haptics, audio, frame rate;
 - `npm run e2e`, `e2e:mobile`, `perf`, the left-handed layout;
 - critique 3's F5 (slow-swipe edge case). I did not re-test it.
@@ -59,18 +63,18 @@ Not verified at all:
 
 ## 1. Critique 3 findings re-checked
 
-| C3 item | Result | How I know |
-| --- | --- | --- |
-| F1 machines cannot be picked up | **Fixed.** Jar, keg, loom and furnace sheets have a "Pick up" button when empty. | Played (shots `45`, `65`). |
-| F2 pacing, days 2 to 14 | **Better, not solved.** See section 3. Jobs give days 2 to 4 a purpose (fish on day 2, mine on day 3). But the bot's chores still end between 8:12 and 9:11 AM every day; a walking player ends around 10 to 11 AM. A third of the jobs posted could not be done (F3 below). | Played, 14 days. |
-| F3 x5 on dear rows | **Fixed.** No x5 on the 450g lamp and up, or on animals. | Played (shot `30`). |
-| F4 text overflow | **Mostly fixed.** The goal tab is clean for all 47 goals, and the project, Home tab, board, NPC and gift sheets have no truncation. Still cut: bin `Cauliflower Pi..`, `Si. Wild Berry ..`, `Au. Wild Sunflo..`; keg `> Gold Melon Wine..`; craft `2 Sprinkler, 10 Fiber, ..`; shop Fiber row `For crafting (o..`. A new overflow: the busy morning summary (F6). | Sweep (`probes/sweep.mjs`), shots `64`, `65`, `67`, `74`. |
-| F6 Flower Show | **Fixed.** Rivals 24, 31, 43. A plain daffodil places 3rd (+200g), a silver one 2nd. | Played (shots `72`, `73`). |
-| F7 welcome toast replays | **Fixed.** 0 replays over 5 map changes. | Played. |
-| F8 forage visibility | **Unchanged.** Still a small icon with no sparkle. The farm gets 1 forage a day, often at the far south edge (day 2: wild leek at 18,39, 30 tiles from the door). | Shot `71`. |
-| F9 land signs on day 1 | **Unchanged.** 2,200g and 2,600g signs still flank the front door on day 1. | Shot `70`. |
-| F10 blind gifts | **Partly fixed.** Reactions are remembered, but the list is led by seeds, stone and fiber (F12). | Played (shots `42`, `43`). |
-| F11 hotbar/bag swapping | **Open and worse.** The Home tab adds 7 decoration kinds that all overflow into the bag (F8). | Played. |
+| C3 item                         | Result                                                                                                                                                                                                                                                                                                                                                            | How I know                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| F1 machines cannot be picked up | **Fixed.** Jar, keg, loom and furnace sheets have a "Pick up" button when empty.                                                                                                                                                                                                                                                                                  | Played (shots `45`, `65`).                                |
+| F2 pacing, days 2 to 14         | **Better, not solved.** See section 3. Jobs give days 2 to 4 a purpose (fish on day 2, mine on day 3). But the bot's chores still end between 8:12 and 9:11 AM every day; a walking player ends around 10 to 11 AM. A third of the jobs posted could not be done (F3 below).                                                                                      | Played, 14 days.                                          |
+| F3 x5 on dear rows              | **Fixed.** No x5 on the 450g lamp and up, or on animals.                                                                                                                                                                                                                                                                                                          | Played (shot `30`).                                       |
+| F4 text overflow                | **Mostly fixed.** The goal tab is clean for all 47 goals, and the project, Home tab, board, NPC and gift sheets have no truncation. Still cut: bin `Cauliflower Pi..`, `Si. Wild Berry ..`, `Au. Wild Sunflo..`; keg `> Gold Melon Wine..`; craft `2 Sprinkler, 10 Fiber, ..`; shop Fiber row `For crafting (o..`. A new overflow: the busy morning summary (F6). | Sweep (`probes/sweep.mjs`), shots `64`, `65`, `67`, `74`. |
+| F6 Flower Show                  | **Fixed.** Rivals 24, 31, 43. A plain daffodil places 3rd (+200g), a silver one 2nd.                                                                                                                                                                                                                                                                              | Played (shots `72`, `73`).                                |
+| F7 welcome toast replays        | **Fixed.** 0 replays over 5 map changes.                                                                                                                                                                                                                                                                                                                          | Played.                                                   |
+| F8 forage visibility            | **Unchanged.** Still a small icon with no sparkle. The farm gets 1 forage a day, often at the far south edge (day 2: wild leek at 18,39, 30 tiles from the door).                                                                                                                                                                                                 | Shot `71`.                                                |
+| F9 land signs on day 1          | **Unchanged.** 2,200g and 2,600g signs still flank the front door on day 1.                                                                                                                                                                                                                                                                                       | Shot `70`.                                                |
+| F10 blind gifts                 | **Partly fixed.** Reactions are remembered, but the list is led by seeds, stone and fiber (F12).                                                                                                                                                                                                                                                                  | Played (shots `42`, `43`).                                |
+| F11 hotbar/bag swapping         | **Open and worse.** The Home tab adds 7 decoration kinds that all overflow into the bag (F8).                                                                                                                                                                                                                                                                     | Played.                                                   |
 
 ---
 
@@ -111,12 +115,12 @@ Not verified at all:
 
 - **Evidence (14-day run):** 39 jobs posted (3 a day from day 2), 24 to 26 finished, 13 left open at bedtime.
 
-| Job | Posted | Failed | Why |
-| --- | --- | --- | --- |
-| "Mara: fill 1 board request" | 6 | 5 | The day-4 intro job and its repeats meet boards that ask for 3 to 6 of one item ("6 Mushroom", "5 Daffodil"), a crop that is days from ripe ("1 Cauliflower" on day 4), or pickles. |
-| "Rosa: cut N weeds" | 3 | 2 | **No weeds existed.** |
-| "ship N goods" | 4 | 3 | A random 6 to 15 regardless of what is ripe. |
-| "harvest N crops" | 1 | 1 | Posted on a day with 3 ripe crops. |
+| Job                          | Posted | Failed | Why                                                                                                                                                                                 |
+| ---------------------------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Mara: fill 1 board request" | 6      | 5      | The day-4 intro job and its repeats meet boards that ask for 3 to 6 of one item ("6 Mushroom", "5 Daffodil"), a crop that is days from ripe ("1 Cauliflower" on day 4), or pickles. |
+| "Rosa: cut N weeds"          | 3      | 2      | **No weeds existed.**                                                                                                                                                               |
+| "ship N goods"               | 4      | 3      | A random 6 to 15 regardless of what is ripe.                                                                                                                                        |
+| "harvest N crops"            | 1      | 1      | Posted on a day with 3 ripe crops.                                                                                                                                                  |
 
 - **Causes:**
   - Weeds only spawn on owned, untilled tiles (`mechanics/dayCore.ts:68-71`). Once the 32-tile home plot is fully tilled (day 5 in my run), the farm has 0 weeds for good: 0 weeds on day 15 and `cleared` stuck at 5. The weeds job has no `requires` (`data/jobs.json`), so it keeps being posted. The morning tip "Weeds sprout in the field. Cut them with the scythe for fiber" is false for the same player.
@@ -143,6 +147,7 @@ All three played:
 3. **Gift job with a stone.** Rosa takes a Stone ("Oh. Thank you."): +35g and +30 friendship (15 neutral gift plus 15 job). The job never needs a real present.
 
 Impact: small numbers (55g a day, 300g once), but they teach the player that the systems are paper. Fixes:
+
 - Pay ship jobs at the morning payout, or claw back on unship.
 - Count `decorPlaced` per object id (first placement only), or count decorations standing at the end of the day.
 - Gift jobs should need a liked item, or say "a gift Rosa likes".
@@ -171,14 +176,14 @@ Impact: small numbers (55g a day, 300g once), but they teach the player that the
 
 - **Perks against price (data):**
 
-| Project | Price | Perk | Payback |
-| --- | --- | --- | --- |
-| Canopy | 1,200g + 20 fiber | +1 board request a day | Excellent; the best deal in the game. |
-| Fish Ladder | 4,000g | +5% catch zone | Hardly noticeable. |
-| Library | 8,000g | +15% XP | Fine. |
-| Hot Spring | 15,000g | +30 energy | Good, but see F1. |
-| Fair Hall | 25,000g + 5 cloth | +50% festival prizes | At most +1,700g a year if you win all four festivals (prizes 600/800/1,000/1,000). About **15 in-game years**. |
-| Market Road | 50,000g + 10 iron bars + a ruby | +5% bin price | About **1,000,000g of shipping**. |
+| Project     | Price                           | Perk                   | Payback                                                                                                        |
+| ----------- | ------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Canopy      | 1,200g + 20 fiber               | +1 board request a day | Excellent; the best deal in the game.                                                                          |
+| Fish Ladder | 4,000g                          | +5% catch zone         | Hardly noticeable.                                                                                             |
+| Library     | 8,000g                          | +15% XP                | Fine.                                                                                                          |
+| Hot Spring  | 15,000g                         | +30 energy             | Good, but see F1.                                                                                              |
+| Fair Hall   | 25,000g + 5 cloth               | +50% festival prizes   | At most +1,700g a year if you win all four festivals (prizes 600/800/1,000/1,000). About **15 in-game years**. |
+| Market Road | 50,000g + 10 iron bars + a ruby | +5% bin price          | About **1,000,000g of shipping**.                                                                              |
 
 - **Visuals (played, shots `25`, `26`, `27`):**
   - Every landmark is the same one-tile placeholder hut in a different colour (`game/fallbackTexture.ts`).
@@ -258,24 +263,25 @@ Impact: small numbers (55g a day, 300g once), but they teach the player that the
 
 Clock is the in-game time when the bot's chores ended. It is about 1.5 hours early compared with walking (see caveats).
 
-| Day | Wake gold | Jobs posted (gold) | Done | Chores end | Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 | 500 | none | - | 9:04 | 21 tiles tilled and planted; spent down to 10g on seeds |
-| 2 | 40 | fish 2 (65), forage 2 (30), gift (35) | 3/3 | 8:49 | First jobs pay on day 2; goals 4 to 6 complete |
-| 3 | 318 | mine 4 (42), weeds 2 (26), forage 3 (40) | 3/3 | 8:53 | First mine trip, pointed at by the job |
-| 4 | 311 | **board request (50)**, forage 2, gift | 1/3 | 8:18 | Board asks 1 cauliflower, 4 daffodils, 3 leeks: impossible |
-| 5 | 589 | mine 3, forage 3, greet 2 | 3/3 | 9:11 | First harvest (13 parsnips) |
-| 6 | 713 | board request, mine 3, fish 2 | 2/3 | 8:22 | Board now asks for pickles; no jar exists |
-| 7 | 891 | board request, forage 2, mine 5 | 2/3 | 8:34 | |
-| 8 | 1,276 | greet 2, fish 1, gift | 2/3 | 8:19 | |
-| 9 | 1,501 | **weeds 2**, ship 13, fish 2 | 1/3 | 8:21 | 0 weeds on the farm |
-| 10 | 1,704 | mine 3, fish 2, ship 15 | 2/3 | 8:24 | |
-| 11 | 1,943 | ship 10, harvest 7, board request | **0/3** | 8:12 | Nothing ripe; all three jobs fail |
-| 12 | 1,728 | **weeds 2**, ship 6, board request | 2/3 | 8:38 | Filled "3 Cauliflower" for 1,055g (kept cauliflower by accident) |
-| 13 | 3,151 | forage 2, greet 3, board request | 1/3 | 8:31 | |
-| 14 | 3,314 | fish 3 (90), mine 3, greet 3 | 2/3 | 8:16 | Flower Show day; end gold 3,438 |
+| Day | Wake gold | Jobs posted (gold)                       | Done    | Chores end | Notes                                                            |
+| --- | --------- | ---------------------------------------- | ------- | ---------- | ---------------------------------------------------------------- |
+| 1   | 500       | none                                     | -       | 9:04       | 21 tiles tilled and planted; spent down to 10g on seeds          |
+| 2   | 40        | fish 2 (65), forage 2 (30), gift (35)    | 3/3     | 8:49       | First jobs pay on day 2; goals 4 to 6 complete                   |
+| 3   | 318       | mine 4 (42), weeds 2 (26), forage 3 (40) | 3/3     | 8:53       | First mine trip, pointed at by the job                           |
+| 4   | 311       | **board request (50)**, forage 2, gift   | 1/3     | 8:18       | Board asks 1 cauliflower, 4 daffodils, 3 leeks: impossible       |
+| 5   | 589       | mine 3, forage 3, greet 2                | 3/3     | 9:11       | First harvest (13 parsnips)                                      |
+| 6   | 713       | board request, mine 3, fish 2            | 2/3     | 8:22       | Board now asks for pickles; no jar exists                        |
+| 7   | 891       | board request, forage 2, mine 5          | 2/3     | 8:34       |                                                                  |
+| 8   | 1,276     | greet 2, fish 1, gift                    | 2/3     | 8:19       |                                                                  |
+| 9   | 1,501     | **weeds 2**, ship 13, fish 2             | 1/3     | 8:21       | 0 weeds on the farm                                              |
+| 10  | 1,704     | mine 3, fish 2, ship 15                  | 2/3     | 8:24       |                                                                  |
+| 11  | 1,943     | ship 10, harvest 7, board request        | **0/3** | 8:12       | Nothing ripe; all three jobs fail                                |
+| 12  | 1,728     | **weeds 2**, ship 6, board request       | 2/3     | 8:38       | Filled "3 Cauliflower" for 1,055g (kept cauliflower by accident) |
+| 13  | 3,151     | forage 2, greet 3, board request         | 1/3     | 8:31       |                                                                  |
+| 14  | 3,314     | fish 3 (90), mine 3, greet 3             | 2/3     | 8:16       | Flower Show day; end gold 3,438                                  |
 
 Totals for days 1 to 14:
+
 - Earned: 6,568g.
   - Bin: 4,611g.
   - Jobs: 1,017g (about 15%).
@@ -291,6 +297,7 @@ What the player has to do each day: water (about 50 game minutes for 32 tiles wi
 ## 4. One-thumb reach
 
 Played with touch taps at 390x844:
+
 - **Project sheet:** the Give buttons sit at y about 655 to 735 CSS px, Back and Give goods at about 725, Close at 780. Good.
 - **"+100g", "+1,000g", "+10,000g"** are 58x22 logical (113x43 CSS), 4 logical px apart. A slipped thumb gives 10x too much, but there is no way to over-give (the amount is capped), and gold given is not refundable. Acceptable.
 - **Home tab:** the same rows as the other shop tabs; no x5 on dear rows. The tabs and the paging buttons are in reach.
@@ -310,6 +317,7 @@ Played with touch taps at 390x844:
   - The 69,000g already counted in critique 3.
 
   That is about 210,000g in all, enough for a first year that passes 100k. C3's "nothing to buy after 50k" is fixed on paper.
+
 - **Value of those sinks:**
   - Decorations do nothing (F11).
   - Two of the last three projects are near-worthless percentages (F7).
@@ -336,6 +344,7 @@ Played with touch taps at 390x844:
 ## 7. Verdict
 
 The new content is stable:
+
 - 0 page errors over a 14-day real-input run and about 15 probe sessions.
 - 363 tests pass.
 - Projects, the Bigger Bag, decorations, gift memory, the seed row and jar "All" all work through the real buttons.
@@ -345,12 +354,12 @@ The two Majors are a save bug that quietly deletes the Hot Spring's reward (F1) 
 
 Screenshots (`agents/critiques/shots-4/`, 43 files):
 
-| Group | Files |
-| --- | --- |
-| 14-day run | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4` |
-| Projects | `20-board-town-projects-button`, `21-projects-list-first`, `22-project-canopy-detail`, `23-project-canopy-gold-in-goods-short`, `24-projects-list-after-canopy`, `25-projects-list-all-done`, `26-town-landmarks`, `27-town-landmarks-after-reload` |
-| Home tab and decor | `30-shop-home-tab`, `31-shop-home-tab-p2`, `32-shop-home-bag-maxed`, `33-menu-bag-40-slots`, `34-farm-decor-placed`, `35-fence-tap-again`, `36-bag-fountain-sells-for`, `37-fountain-second-refused` |
-| Conveniences | `40-finn-in-the-town-pond`, `41-npc-rosa-sheet`, `42-gift-list-before`, `43-gift-list-remembers`, `44-seed-row`, `45-jar-panel-all` |
-| Jobs | `50-bin-ship-job-paid`, `51-menu-goal-jobs` |
-| Sweep | `60-shop-upgrades`, `61-shop-seeds-summer`, `62-board-4-rows-festival`, `63-project-fishladder-detail`, `64-bin-rich`, `65-keg-all-button`, `66-gift-list-orin`, `67-craft-tab`, `68-book-tab` |
-| Re-checks | `70-day1-front-door-signs`, `71-forage-on-farm-day2`, `72-flower-show-entry`, `73-flower-show-result`, `74-busy-morning-summary`, `75-rosa-on-a-fence` |
+| Group              | Files                                                                                                                                                                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 14-day run         | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`                                                                                                                                                                                              |
+| Projects           | `20-board-town-projects-button`, `21-projects-list-first`, `22-project-canopy-detail`, `23-project-canopy-gold-in-goods-short`, `24-projects-list-after-canopy`, `25-projects-list-all-done`, `26-town-landmarks`, `27-town-landmarks-after-reload` |
+| Home tab and decor | `30-shop-home-tab`, `31-shop-home-tab-p2`, `32-shop-home-bag-maxed`, `33-menu-bag-40-slots`, `34-farm-decor-placed`, `35-fence-tap-again`, `36-bag-fountain-sells-for`, `37-fountain-second-refused`                                                |
+| Conveniences       | `40-finn-in-the-town-pond`, `41-npc-rosa-sheet`, `42-gift-list-before`, `43-gift-list-remembers`, `44-seed-row`, `45-jar-panel-all`                                                                                                                 |
+| Jobs               | `50-bin-ship-job-paid`, `51-menu-goal-jobs`                                                                                                                                                                                                         |
+| Sweep              | `60-shop-upgrades`, `61-shop-seeds-summer`, `62-board-4-rows-festival`, `63-project-fishladder-detail`, `64-bin-rich`, `65-keg-all-button`, `66-gift-list-orin`, `67-craft-tab`, `68-book-tab`                                                      |
+| Re-checks          | `70-day1-front-door-signs`, `71-forage-on-farm-day2`, `72-flower-show-entry`, `73-flower-show-result`, `74-busy-morning-summary`, `75-rosa-on-a-fence`                                                                                              |

@@ -13,6 +13,7 @@ embossed wood logo with the carved sprout), R0-3 (toast is a walnut plate with p
 glyphs), R6-4 (one knot).
 
 Open:
+
 - R6-2 minor: title "New Game" still renders parchment glyphs with an ink offset (doubled look) on the sand button
   (f_newgame.png); in-game buttons ("Close") are clean, so it is the TitleScene label style only.
 - R5-5 minor: tool-pose head ~2 px small (logged for the pose redo).

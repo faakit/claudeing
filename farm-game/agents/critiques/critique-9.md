@@ -3,6 +3,7 @@
 Reviewer: independent QA lead and game critic, round 9.
 
 **Status: complete for the scope below.**
+
 - Every critique-8 finding (F1 to F8) was re-checked.
 - The new season scoreboard against Clay was played across a real spring-to-summer boundary with real bed sleeps, in five ways:
   - two 31-day new games with real input;
@@ -15,6 +16,7 @@ Reviewer: independent QA lead and game critic, round 9.
 **Frozen build:** commit `1a7464d` (branch `depth/round2`), in `critique-9/farm-game`. It is a `git archive`, so I could not confirm the hash myself.
 
 **Method:**
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, against `vite` on **port 5194**. I started the server for this session and stopped it at the end; port 5194 is free again.
 - The `?debug` hook was used to set up state and read it back. **No game source file was edited.**
   - `npm run build` wrote `dist/` into the frozen folder so that `scripts/e2e.mjs` could run (on port 5194, after the dev server was stopped).
@@ -33,6 +35,7 @@ Reviewer: independent QA lead and game critic, round 9.
 "Real input" means the keyboard (arrows, Space, E, M, Esc, Enter) and real touch taps on canvas buttons, located from the live UI tree. **Moving between spots was by teleport (`goMap`/`snap`), not by walking.** When the bot reached town, the clock was moved to 8:00. From day 7, a 3 PM board look was modelled by setting the clock.
 
 **Played with real input:**
+
 - **Run R31** (`play3.mjs`, `DAYS=31` → `tmp/play31-race.out`): a new game, spring 1 to summer 3. It fills **every** request it can, then the special. It ships its morning harvest to the bin before going to town (a hurried player).
 - **Run RK31** (`play3.mjs`, `KEEP=1` → `tmp/play31-racekeep.out`): the same racer, but at the bin it **keeps goods the board asks for**. Spring 1 to summer 3, ending on day 31 (see "Not verified").
 - **Run R14 and run K14** (`play3`/`play2`, 14 days): a racer, and a one-tap-per-visit player who keeps goods (K).
@@ -48,6 +51,7 @@ Reviewer: independent QA lead and game critic, round 9.
 - **Clipping sweep:** `sweep.mjs` (42 screens) and `sweep9.mjs` (6 tall boards: special, canopy fourth row, cart, Clay's target, a two-digit tally, at 10 AM and 3 PM).
 
 **Verified only with the real rule functions (vitest) or by reading code:**
+
 - crop-request size against the field (`facts9`, `exact9`, 400 and 500 boards);
 - the board mix by day for a new farmer;
 - season settlement edge cases (tie, 0-0, year-2 prize, the order of the morning notes);
@@ -55,6 +59,7 @@ Reviewer: independent QA lead and game critic, round 9.
 - the longest special labels.
 
 **Not verified at all:**
+
 - Real phone, audio, performance and walking times.
 - Year two with real input. Clay's 2 takes a day and his heart perks were judged from code and the sim only.
 - **Run RK31 stopped on day 31:** after "Inventory full!", the bin and then the bed did not open for the bot.
@@ -65,16 +70,16 @@ Reviewer: independent QA lead and game critic, round 9.
 
 ## 1. Critique 8 findings re-checked
 
-| C8 | Then | Now | How checked |
-| --- | --- | --- | --- |
-| F1 the special's Give emptied a fillable request | "Give 3" took the request's 3 | **Fixed for a request you can fill now.** <ul><li>Hold 3 with "3 Cauliflower, Have 3/3": the special's row reads **"Saved for a request."** and Give is off (shot `72-special-saved`).</li><li>Hold 5: "Give 2", and afterwards "Saved for a request." again.</li><li>In K14, day 11: the special's "Give 2" kept 1 for "1 Cauliflower".</li></ul>**Still open:** a request you are part-way to (Have 2/3) is emptied (F3 below), and the special still takes the first tap (F5). | played |
-| F2 Clay harmless, no race | Clay took only rows nobody would fill | **Fixed, and the race now has a shape.** <ul><li>RK31 (keeps goods for the board): **won spring 25 to 7**, and the summer-1 summary read "You beat Clay on the board last season (25 to 7): +300g."</li><li>R31 (bins first): **lost 14 to 7**. The summary read "Clay won the board last season (14 to 7).", followed by the letter "The board is mine", read with real taps.</li><li>Lose probe: 7 to 0, with the letter. Win probe: 24 to 0, +300g and +20 friendship with Clay.</li></ul>**New problems:** <ul><li>The score is hidden on most mornings of a losing season.</li><li>A farmer who does not fish or forage cannot win (the sim lost 72 of 72 seasons).</li><li>The stakes are never announced. See **F1**.</li></ul> | played + sim |
-| F3 crop requests asked for more than the field gives | 65 to 78% too many | **Fixed.** In 400 boards, 0 requests asked for more than the field grows: 2 potato tiles always give "2 Potato", and 6 parsnips give 3 to 6. In play, "1 Cauliflower 345g" and "2 Cauliflower 715g" matched small plantings. **New side effect:** half of potato requests need *every* potato you grow, so one bin sale makes the request unfillable and gives Clay a point. See **F2**. | vitest + played |
-| F4 cart resold store goods | 15 of 32 slots | **Fixed.** <ul><li>Five sampled days showed no store goods and no seed that cannot ripen. Spring 26 offered no seeds; fall 19 with a greenhouse offered Strawberry Seeds 200g.</li><li>The toast reads "Bought Ruby. For the Market Road." and "Back to the board" returns to the board.</li></ul>The use line appears only *after* you pay (F7). | played |
-| F5 first week has no crops | 0% crops with nothing near ripe | **Fixed for quick crops.** <ul><li>Day 1 in every run: "4 Parsnip 220g 6 days". Day 3: "4 Potato 585g 7 days". Day 4: "3 Cauliflower 850g 9 days".</li><li>Measured: 6 parsnips planted on day 1 give 26% crop rows; parsnips plus potatoes on day 2 give 44%.</li></ul>A cauliflower-only field (ripe in 12 days) still gives 0% until day 5 or later. That is fine. | played + vitest |
-| F6 bag cursor swapped stacks | | **Fixed.** Eat one of 2 pies, then tap the soup: it is selected, with no swap. "Not hungry", then tap the pumpkin: no swap. "Not hungry" is drawn dim (shot `82b`). | played |
-| F7 x5 spent gold ingredients | | **Fixed as specified.** <ul><li>"x3" with 7 plain and 3 gold potatoes makes 3 and keeps the gold.</li><li>The toast says "Made 3 Baked Potato", and "Made 2 Pumpkin Pie" for x2.</li><li>The button is hidden when fewer than 2 can be made.</li></ul>**But** a second tap on the same spot hits Make, which has slid under the thumb, and that uses a gold potato (F4). | played |
-| F8 text | | **Mostly fixed.** <ul><li>The hints say "Menu > Make".</li><li>The pre-Clay line reads "Requests stay a few days."</li><li>Clay's letter matches the rule.</li><li>The statue page reads "Next level: Sales +1% a level, up to +5%. Now +2%."</li></ul>**Still open:** <ul><li>the goal *title* "Craft something at the workbench" (`goals.json:117`);</li><li>Clay's 2-heart line "You keep beating me to the board." (`npcs.json:564`) plays even when he leads 14 to 7;</li><li>the dish and legend art are still flat coloured dots (shot `82b`).</li></ul> | played + read |
+| C8                                                   | Then                                  | Now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | How checked     |
+| ---------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| F1 the special's Give emptied a fillable request     | "Give 3" took the request's 3         | **Fixed for a request you can fill now.** <ul><li>Hold 3 with "3 Cauliflower, Have 3/3": the special's row reads **"Saved for a request."** and Give is off (shot `72-special-saved`).</li><li>Hold 5: "Give 2", and afterwards "Saved for a request." again.</li><li>In K14, day 11: the special's "Give 2" kept 1 for "1 Cauliflower".</li></ul>**Still open:** a request you are part-way to (Have 2/3) is emptied (F3 below), and the special still takes the first tap (F5).                                                                                                                                                                                                                                                      | played          |
+| F2 Clay harmless, no race                            | Clay took only rows nobody would fill | **Fixed, and the race now has a shape.** <ul><li>RK31 (keeps goods for the board): **won spring 25 to 7**, and the summer-1 summary read "You beat Clay on the board last season (25 to 7): +300g."</li><li>R31 (bins first): **lost 14 to 7**. The summary read "Clay won the board last season (14 to 7).", followed by the letter "The board is mine", read with real taps.</li><li>Lose probe: 7 to 0, with the letter. Win probe: 24 to 0, +300g and +20 friendship with Clay.</li></ul>**New problems:** <ul><li>The score is hidden on most mornings of a losing season.</li><li>A farmer who does not fish or forage cannot win (the sim lost 72 of 72 seasons).</li><li>The stakes are never announced. See **F1**.</li></ul> | played + sim    |
+| F3 crop requests asked for more than the field gives | 65 to 78% too many                    | **Fixed.** In 400 boards, 0 requests asked for more than the field grows: 2 potato tiles always give "2 Potato", and 6 parsnips give 3 to 6. In play, "1 Cauliflower 345g" and "2 Cauliflower 715g" matched small plantings. **New side effect:** half of potato requests need _every_ potato you grow, so one bin sale makes the request unfillable and gives Clay a point. See **F2**.                                                                                                                                                                                                                                                                                                                                               | vitest + played |
+| F4 cart resold store goods                           | 15 of 32 slots                        | **Fixed.** <ul><li>Five sampled days showed no store goods and no seed that cannot ripen. Spring 26 offered no seeds; fall 19 with a greenhouse offered Strawberry Seeds 200g.</li><li>The toast reads "Bought Ruby. For the Market Road." and "Back to the board" returns to the board.</li></ul>The use line appears only _after_ you pay (F7).                                                                                                                                                                                                                                                                                                                                                                                      | played          |
+| F5 first week has no crops                           | 0% crops with nothing near ripe       | **Fixed for quick crops.** <ul><li>Day 1 in every run: "4 Parsnip 220g 6 days". Day 3: "4 Potato 585g 7 days". Day 4: "3 Cauliflower 850g 9 days".</li><li>Measured: 6 parsnips planted on day 1 give 26% crop rows; parsnips plus potatoes on day 2 give 44%.</li></ul>A cauliflower-only field (ripe in 12 days) still gives 0% until day 5 or later. That is fine.                                                                                                                                                                                                                                                                                                                                                                  | played + vitest |
+| F6 bag cursor swapped stacks                         |                                       | **Fixed.** Eat one of 2 pies, then tap the soup: it is selected, with no swap. "Not hungry", then tap the pumpkin: no swap. "Not hungry" is drawn dim (shot `82b`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | played          |
+| F7 x5 spent gold ingredients                         |                                       | **Fixed as specified.** <ul><li>"x3" with 7 plain and 3 gold potatoes makes 3 and keeps the gold.</li><li>The toast says "Made 3 Baked Potato", and "Made 2 Pumpkin Pie" for x2.</li><li>The button is hidden when fewer than 2 can be made.</li></ul>**But** a second tap on the same spot hits Make, which has slid under the thumb, and that uses a gold potato (F4).                                                                                                                                                                                                                                                                                                                                                               | played          |
+| F8 text                                              |                                       | **Mostly fixed.** <ul><li>The hints say "Menu > Make".</li><li>The pre-Clay line reads "Requests stay a few days."</li><li>Clay's letter matches the rule.</li><li>The statue page reads "Next level: Sales +1% a level, up to +5%. Now +2%."</li></ul>**Still open:** <ul><li>the goal _title_ "Craft something at the workbench" (`goals.json:117`);</li><li>Clay's 2-heart line "You keep beating me to the board." (`npcs.json:564`) plays even when he leads 14 to 7;</li><li>the dish and legend art are still flat coloured dots (shot `82b`).</li></ul>                                                                                                                                                                        | played + read   |
 
 ---
 
@@ -84,15 +89,15 @@ Reviewer: independent QA lead and game critic, round 9.
 
 - **Played (spring 1 to summer 3, real input, real sleeps):**
 
-  | Run | Spring result | Score visible on the board (mornings from day 8) |
-  | --- | --- | --- |
-  | RK31 (keeps goods for requests, fills all) | **won 25 to 7**, +300g | 14 of 24 |
-  | R31 (ships the harvest first, fills all) | **lost 14 to 7**, letter "The board is mine" | **7 of 24** |
-  | Lose probe (spring 20 to 28) | lost 7 to 0, letter | **2 of 12** |
-  | Win probe | won 24 to 0, +300g | 12 of 12 |
-
+  | Run                                        | Spring result                                | Score visible on the board (mornings from day 8) |
+  | ------------------------------------------ | -------------------------------------------- | ------------------------------------------------ |
+  | RK31 (keeps goods for requests, fills all) | **won 25 to 7**, +300g                       | 14 of 24                                         |
+  | R31 (ships the harvest first, fills all)   | **lost 14 to 7**, letter "The board is mine" | **7 of 24**                                      |
+  | Lose probe (spring 20 to 28)               | lost 7 to 0, letter                          | **2 of 12**                                      |
+  | Win probe                                  | won 24 to 0, +300g                           | 12 of 12                                         |
   - In R31, Clay's 14 points were trout x5, carp, bluegill, catfish, mushroom x2 and daffodil, plus **two potato rows the bot had just sold to the bin** (F2).
-  - The race is readable *when you are winning*. RK31's player saw "you 9, Clay 3" on day 17 and the result the next season.
+  - The race is readable _when you are winning_. RK31's player saw "you 9, Clay 3" on day 17 and the result the next season.
+
 - **The problems:**
   1. **The score is hidden while you lose.**
      - `rivalNotice` shows "This season: you N, Clay M." only when Clay has no target (`src/systems/rival.ts:60`).
@@ -164,7 +169,7 @@ Reviewer: independent QA lead and game critic, round 9.
 
 ### F6 (Minor). The season result is easy to miss
 
-- **Order of the morning notes:** "Clay won the board last season (4 to 3)." comes *before* "Clay filled 4 Trout on the board.", the take that decided it (`src/mechanics/orders.ts:13-21`; `facts9`).
+- **Order of the morning notes:** "Clay won the board last season (4 to 3)." comes _before_ "Clay filled 4 Trout on the board.", the take that decided it (`src/mechanics/orders.ts:13-21`; `facts9`).
 - **Nothing persists:**
   - On summer 1 the board shows "This season: you 0, Clay 0." with no "Last season: you won 25 to 7."
   - A win sends no letter, and `boardWins` is shown nowhere except the final goal.
@@ -208,12 +213,12 @@ Reviewer: independent QA lead and game critic, round 9.
 
 ## 3. The days played
 
-| Run | Day 14 earned | Day 28 earned | Board (spring) | Notes |
-| --- | --- | --- | --- | --- |
-| R14 (racer, bins first) | 7,038 | - | you 3, Clay 6 at day 14 | lost both potato rows to the bin |
-| K14 (one tap, keeps goods) | 5,570 | - | you 4, Clay 5 (3 of the 4 before Clay arrived) | special on top took the 490g row (F5) |
-| R31 | 8,218 | 14,933 | **lost 14 to 7** | summer 1 to 3: fish-only board, 0 fills |
-| RK31 | 6,374 | 14,075 | **won 25 to 7, +300g** | 19 visits with fills; Clay took 9 (all fish or forage) |
+| Run                        | Day 14 earned | Day 28 earned | Board (spring)                                 | Notes                                                  |
+| -------------------------- | ------------- | ------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| R14 (racer, bins first)    | 7,038         | -             | you 3, Clay 6 at day 14                        | lost both potato rows to the bin                       |
+| K14 (one tap, keeps goods) | 5,570         | -             | you 4, Clay 5 (3 of the 4 before Clay arrived) | special on top took the 490g row (F5)                  |
+| R31                        | 8,218         | 14,933        | **lost 14 to 7**                               | summer 1 to 3: fish-only board, 0 fills                |
+| RK31                       | 6,374         | 14,075        | **won 25 to 7, +300g**                         | 19 visits with fills; Clay took 9 (all fish or forage) |
 
 Critique 8's runs earned 5,330 and 4,916 by day 14, so these are slightly richer.
 
@@ -238,6 +243,7 @@ Critique 8's runs earned 5,330 and 4,916 by day 14, so these are slightly richer
 ## 5. Progression and economy
 
 **Sim (`tests/sim.test.ts`, `c9/tmp/sim.out`):**
+
 - **Tireless bot, five seeds:** 228,569 / 189,387 / 252,125 / 208,855 / 213,730 (**median 213,730**, equal to the pin).
 - **Human-paced bot:** **median 184,919** (critique 8: 177,253).
 - **Board income:** 9,856g a year, about 4% of earnings. Clay took 70 of 128 requests.
@@ -246,6 +252,7 @@ Critique 8's runs earned 5,330 and 4,916 by day 14, so these are slightly richer
 **Scoreboard over two years (`boardsim9`):** the bot never wins. Clay scores 13 to 15 in a year-1 spring (from day 8) and 20 to 31 a season after that; the bot scores 3 to 16. Prize gold paid: 0. As an economy item the prize is negligible either way (300 to 600g).
 
 **Runaway or dead:**
+
 - **Runaway:** nothing.
 - **Near dead:**
   - the board prize as a reward (gold);
@@ -265,6 +272,7 @@ Critique 8's runs earned 5,330 and 4,916 by day 14, so these are slightly richer
 ## 7. Verdict
 
 **Stable, and the best board yet, with no blocker.**
+
 - **Tests and errors:** 537 tests, tsc and e2e (58 checks) all pass, with 0 errors in about 120 played days and 48 clean screens.
 - **Critique-8 findings:**
   - F3, F4, F5, F6 and F7 are fixed through real input.
@@ -275,11 +283,11 @@ Critique 8's runs earned 5,330 and 4,916 by day 14, so these are slightly richer
 
 ## Screenshots (`critique-9/shots-9/`)
 
-| Group | Files |
-| --- | --- |
+| Group           | Files                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Season boundary | `s9-win-board-*`, `s9-win-summary-summer1`, `s9-lose-board-*` (spring 21 to 27: Clay's target, no score), `s9-lose-summary-summer1` |
-| Special | `72-special-saved`, `73-special-after-fill`, `74-special-two-of-three` |
-| Kitchen and bag | `80-make-page-batch`, `81-make-after-batch`, `81b-batch-double-tap`, `82-bag-after-eat`, `82b-bag-not-hungry` |
-| Cart | `85-cart-spring-5`, `-summer-12`, `-fall-19`, `-winter-26`, `-spring-26` |
-| Sweep | `s-*` (42 screens), `s-board-tall-*` (6) |
-| New game | `01-day1-farm-planted`, `02`..`04-summary-day*` |
+| Special         | `72-special-saved`, `73-special-after-fill`, `74-special-two-of-three`                                                              |
+| Kitchen and bag | `80-make-page-batch`, `81-make-after-batch`, `81b-batch-double-tap`, `82-bag-after-eat`, `82b-bag-not-hungry`                       |
+| Cart            | `85-cart-spring-5`, `-summer-12`, `-fall-19`, `-winter-26`, `-spring-26`                                                            |
+| Sweep           | `s-*` (42 screens), `s-board-tall-*` (6)                                                                                            |
+| New game        | `01-day1-farm-planted`, `02`..`04-summary-day*`                                                                                     |

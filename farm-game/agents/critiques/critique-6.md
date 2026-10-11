@@ -7,6 +7,7 @@ Reviewer: independent QA lead and game critic, round 6.
 **Frozen build:** commit `5fd9943` (branch `depth/round2`), copied to `critique-6/farm-game` with `git archive`. It is not a git checkout, so I could not confirm the hash myself.
 
 **Method:**
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, against `vite` on **port 5191**. The server was started for this session and stopped at the end (PID killed, port free).
 - The `?debug` hook was used to set up state and read it back.
 - No game file was edited. Probes are in `critique-6/farm-game/agents/out/c6/`; logs are in `c6/tmp/`. Screenshots are in `critique-6/shots-6/`.
@@ -64,9 +65,11 @@ Reviewer: independent QA lead and game critic, round 6.
   - the sleep sheet and the summary.
 
   Each was machine-checked for text overlap and overflow, and screenshotted.
+
 - **Land signs and the forage ring** (`signs.mjs`): screenshots.
 
 **Verified only by reading code or data, or with the real rule functions in vitest:**
+
 - the sizes of animal specials (`makeSpecial`);
 - the statue's price curve;
 - the bug in the sim bot's season choice (an instrumented copy of the sim);
@@ -74,6 +77,7 @@ Reviewer: independent QA lead and game critic, round 6.
 - Clay's schedule against his 2-heart perk.
 
 **Not verified at all:**
+
 - real phone, audio, performance;
 - heart events, the Flower Show entry, mine floors and the year-end screen;
 - truffle digging and the bee house in live play;
@@ -84,17 +88,17 @@ Reviewer: independent QA lead and game critic, round 6.
 
 ## 1. Critique 5 findings re-checked
 
-| C5 | Then | Now | How checked |
-| --- | --- | --- | --- |
-| F1 Clay toothless | board reset daily | **Partly fixed.** Requests last 2 to 3 days and Clay takes the best one at 2 PM. In play he took 7 requests on days 8 to 14, three of them potato requests; on two of those days the bot had just harvested potatoes. But he only acts if you look at the board after 2 PM (new **F2**), and the dearest request never outlives its first afternoon (new **F3**). | played |
-| F2 basket kinds | 3 qualities = 3 goods | **Fixed.** A second pumpkin of another quality is refused (Add disabled). Rows name the kind ("Veg 495"). The basket line shows "+15%" or "+30%". | played (shot `45`/`46`) |
-| F3 chore tap lifts coop | 4th E lifted it | **Fixed.** The 4th E opens "Move the Coop? ... Move it / Leave it". Extra E presses on the sheet do nothing. "Move it" keeps hens and joy through save/reload. A hungry coop and a stocked silo also go to the sheet; an empty silo still goes with a second tap. **Caveat:** Enter confirms "Move it" (keyboard only). | played (shots `51-move-sheet-coop`, `54-move-sheet-silo`) |
-| F4 derby blind | no feedback | **Fixed.** Each improving catch toasts ("Derby best! Catfish. Score 185."). The page names each fish, says "Catfish stocked in the town river today!", and asks "Sure? Tap to hand in" before 6 PM. Three farm-pond bluegill (105) reach 3rd place. In the town river, 2 catfish in 5 casts scored 185 (2nd). | played |
-| F5 perpetual greenhouse corn | regrow forever | **Fixed.** Corn on Summer 26 under glass is refused ("Too late (13 days). Regrowing crops last one season, even here."). At Fall 1 a regrowing corn and an unripe corn under glass died, and a melon survived ("2 crops withered with the new season."). | played |
-| F6 placing on the greenhouse site | allowed | **Fixed.** "The Greenhouse will stand here. Fund it at the town board." On the West Field: "Not your land yet. Buy it at a sign." The yard is still free. | played |
-| F7 silent starving barn | no line | **Fixed.** "The barn went hungry: the silo needs 2 Hay." on both nights. | played |
-| F8 text | `+0g` buttons, shop cut, truffle not in Book | **Fixed.** "All the gold is in!" with Give goods disabled while goods are missing. "Strawberry 8d 80g, own 15". Animal Goods is 0/5 with a truffle silhouette. **New nit:** finished projects without perks read "Done: " with nothing after (F8 below). | played |
-| F9 sim is a tripwire | one seed, no clock | **Partly.** Five seeds are now judged on the median (224k, 149k, 219k, 210k, 178k; median 209,894). There is still no clock. The bot's goal is still "forage" all year. The new two-year sim has a dead year-2 summer (**F5**), so its sink evidence is skewed. | test logs |
+| C5                                | Then                                         | Now                                                                                                                                                                                                                                                                                                                                                               | How checked                                               |
+| --------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| F1 Clay toothless                 | board reset daily                            | **Partly fixed.** Requests last 2 to 3 days and Clay takes the best one at 2 PM. In play he took 7 requests on days 8 to 14, three of them potato requests; on two of those days the bot had just harvested potatoes. But he only acts if you look at the board after 2 PM (new **F2**), and the dearest request never outlives its first afternoon (new **F3**). | played                                                    |
+| F2 basket kinds                   | 3 qualities = 3 goods                        | **Fixed.** A second pumpkin of another quality is refused (Add disabled). Rows name the kind ("Veg 495"). The basket line shows "+15%" or "+30%".                                                                                                                                                                                                                 | played (shot `45`/`46`)                                   |
+| F3 chore tap lifts coop           | 4th E lifted it                              | **Fixed.** The 4th E opens "Move the Coop? ... Move it / Leave it". Extra E presses on the sheet do nothing. "Move it" keeps hens and joy through save/reload. A hungry coop and a stocked silo also go to the sheet; an empty silo still goes with a second tap. **Caveat:** Enter confirms "Move it" (keyboard only).                                           | played (shots `51-move-sheet-coop`, `54-move-sheet-silo`) |
+| F4 derby blind                    | no feedback                                  | **Fixed.** Each improving catch toasts ("Derby best! Catfish. Score 185."). The page names each fish, says "Catfish stocked in the town river today!", and asks "Sure? Tap to hand in" before 6 PM. Three farm-pond bluegill (105) reach 3rd place. In the town river, 2 catfish in 5 casts scored 185 (2nd).                                                     | played                                                    |
+| F5 perpetual greenhouse corn      | regrow forever                               | **Fixed.** Corn on Summer 26 under glass is refused ("Too late (13 days). Regrowing crops last one season, even here."). At Fall 1 a regrowing corn and an unripe corn under glass died, and a melon survived ("2 crops withered with the new season.").                                                                                                          | played                                                    |
+| F6 placing on the greenhouse site | allowed                                      | **Fixed.** "The Greenhouse will stand here. Fund it at the town board." On the West Field: "Not your land yet. Buy it at a sign." The yard is still free.                                                                                                                                                                                                         | played                                                    |
+| F7 silent starving barn           | no line                                      | **Fixed.** "The barn went hungry: the silo needs 2 Hay." on both nights.                                                                                                                                                                                                                                                                                          | played                                                    |
+| F8 text                           | `+0g` buttons, shop cut, truffle not in Book | **Fixed.** "All the gold is in!" with Give goods disabled while goods are missing. "Strawberry 8d 80g, own 15". Animal Goods is 0/5 with a truffle silhouette. **New nit:** finished projects without perks read "Done: " with nothing after (F8 below).                                                                                                          | played                                                    |
+| F9 sim is a tripwire              | one seed, no clock                           | **Partly.** Five seeds are now judged on the median (224k, 149k, 219k, 210k, 178k; median 209,894). There is still no clock. The bot's goal is still "forage" all year. The new two-year sim has a dead year-2 summer (**F5**), so its sink evidence is skewed.                                                                                                   | test logs                                                 |
 
 ---
 
@@ -170,14 +174,14 @@ Reviewer: independent QA lead and game critic, round 6.
 
 - **Measured with the real `makeSpecial` (`c6/facts.test.ts`):**
 
-| Farm | Special | Makes | Days needed (10 to 28 left when posted) |
-| --- | --- | --- | --- |
-| 1 hen, year 1 | 30 Egg (2,250g) | 1/day | **30** |
-| 1 hen, year 2 | 45 Egg (3,400g) | 1/day | **45** |
-| 3 hens, year 2 | 45 Egg | 3/day | 15 |
-| 1 cow, year 1 | 14 Milk | 1/day | 14 |
-| 1 cow, year 2 | 20 Milk | 1/day | 20 |
-| 1 pig, year 2 | 19 Truffle | 1/day at most (dry days only) | 19+ |
+| Farm           | Special         | Makes                         | Days needed (10 to 28 left when posted) |
+| -------------- | --------------- | ----------------------------- | --------------------------------------- |
+| 1 hen, year 1  | 30 Egg (2,250g) | 1/day                         | **30**                                  |
+| 1 hen, year 2  | 45 Egg (3,400g) | 1/day                         | **45**                                  |
+| 3 hens, year 2 | 45 Egg          | 3/day                         | 15                                      |
+| 1 cow, year 1  | 14 Milk         | 1/day                         | 14                                      |
+| 1 cow, year 2  | 20 Milk         | 1/day                         | 20                                      |
+| 1 pig, year 2  | 19 Truffle      | 1/day at most (dry days only) | 19+                                     |
 
 - **Cause:**
   - `src/systems/specials.ts:42`: `qty = max(5, round(value / price))`, from a gold target only.
@@ -236,6 +240,7 @@ Reviewer: independent QA lead and game critic, round 6.
 ### F8 (Minor). Text and clipping (from the sweep, 41 screens)
 
 The machine check found no text overflowing a sheet except these, all confirmed on screenshots:
+
 - **Projects list:**
   - Finished projects with no perks read "**Done: **" with nothing after it: Seed Exchange and Greenhouse (`projectText.ts:14` → `perkLine({})`).
   - "More after the Hot Spring." is cut by Close with 7 rows (shot `s-projects-list`), which is F1's little brother.
@@ -278,22 +283,22 @@ The machine check found no text overflowing a sheet except these, all confirmed 
 
 ## 3. The days played (real input, teleports between spots)
 
-| Day | Wake gold | Jobs done | Mail | Board (morning) / Clay (15:00) |
-| --- | --- | --- | --- | --- |
-| 1 | 500 | none posted | none | parsnip 165, **cauliflower 700 (2 days)**, leek 115: none fillable |
-| 2 | 40 | 3/3 | Welcome (+3 potato seeds) | + special "15 Potato for Rosa 2,250g" |
-| 3 | 99 | 3/3 | Finn (+5 bait), Orin (+2 copper ore) | mushroom 295 |
-| 4 | 515 | 2/3 | none | 3 cauliflower 955 (impossible this early) |
-| 5 | 607 | 3/3 | none | same, last day |
-| 6 | 791 | 2/3 | Rosa, first harvest (+3 fertilizer) | 5 potato 680 (3 days) |
-| 7 | 918 | 3/3 | Clay's challenge; Rosa's crows (+scarecrow) | Clay not active yet |
-| 8 | 1,370 | 2/3 | Mara town fund; Orin (+3 copper bar) | Clay took potato 680 (bot harvested potatoes that day) |
-| 9 | 1,919 | 2/3 | Rosa (+cherry sapling) | crow ate a cauliflower overnight; Clay took trout 250 |
-| 10 | 2,070 | 2/3 | Finn (+15 bait) | Clay took daffodil 225 |
-| 11 | 2,342 | 3/3 | Mara's birthday hint | **filled 4 leek**; scarecrow placed; Clay took parsnip 220 |
-| 12 | 2,562 | 3/3 | none | **filled 5 leek**; Clay took potato 515 (bot shipped 8 potatoes) |
-| 13 | 3,156 | 1/3 | Flower Show notice | Clay took potato 630 (no potatoes harvested that day) |
-| 14 | 3,214 | 2/3 | none | Clay took trout 405 |
+| Day | Wake gold | Jobs done   | Mail                                        | Board (morning) / Clay (15:00)                                     |
+| --- | --------- | ----------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| 1   | 500       | none posted | none                                        | parsnip 165, **cauliflower 700 (2 days)**, leek 115: none fillable |
+| 2   | 40        | 3/3         | Welcome (+3 potato seeds)                   | + special "15 Potato for Rosa 2,250g"                              |
+| 3   | 99        | 3/3         | Finn (+5 bait), Orin (+2 copper ore)        | mushroom 295                                                       |
+| 4   | 515       | 2/3         | none                                        | 3 cauliflower 955 (impossible this early)                          |
+| 5   | 607       | 3/3         | none                                        | same, last day                                                     |
+| 6   | 791       | 2/3         | Rosa, first harvest (+3 fertilizer)         | 5 potato 680 (3 days)                                              |
+| 7   | 918       | 3/3         | Clay's challenge; Rosa's crows (+scarecrow) | Clay not active yet                                                |
+| 8   | 1,370     | 2/3         | Mara town fund; Orin (+3 copper bar)        | Clay took potato 680 (bot harvested potatoes that day)             |
+| 9   | 1,919     | 2/3         | Rosa (+cherry sapling)                      | crow ate a cauliflower overnight; Clay took trout 250              |
+| 10  | 2,070     | 2/3         | Finn (+15 bait)                             | Clay took daffodil 225                                             |
+| 11  | 2,342     | 3/3         | Mara's birthday hint                        | **filled 4 leek**; scarecrow placed; Clay took parsnip 220         |
+| 12  | 2,562     | 3/3         | none                                        | **filled 5 leek**; Clay took potato 515 (bot shipped 8 potatoes)   |
+| 13  | 3,156     | 1/3         | Flower Show notice                          | Clay took potato 630 (no potatoes harvested that day)              |
+| 14  | 3,214     | 2/3         | none                                        | Clay took trout 405                                                |
 
 - **Totals:** 31 jobs done (about 1,400g), 2 orders, 6,396g earned by the end of day 14.
 - **Gaps in the jobs** (chat, gift, ship) are the bot's limits, not the game's: every posted job was doable.
@@ -315,6 +320,7 @@ The machine check found no text overflowing a sheet except these, all confirmed 
 ## 5. Progression and economy
 
 **Early game (days 1 to 14):**
+
 - **My play bot** (crops, forage, fishing, mining, jobs) earned 6,396g:
   - jobs about 22%;
   - board orders about 5% (2 filled);
@@ -325,10 +331,12 @@ The machine check found no text overflowing a sheet except these, all confirmed 
 - **The potato special** (2,250g for 15) is a good first plan.
 
 **Year one (sim, 5 seeds):** median 209,894.
+
 - Fall 15 to Winter 1 earns about 85k in 14 days.
 - The year ends with about 132k in hand (seed 42).
 
 **Year two (sim, funding projects):**
+
 - All 8 projects by year-2 spring; statue level 4; 31k left.
 - But:
   - the year-2 summer is missing (F5);
@@ -338,22 +346,24 @@ The machine check found no text overflowing a sheet except these, all confirmed 
 **Statue curve:**
 
 | Level | Price | Running total |
-| --- | --- | --- |
-| 1 | 30k | 30k |
-| 2 | 45k | 75k |
-| 3 | 67.5k | 142.5k |
-| 4 | 101k | 244k |
-| 5 | 152k | 396k |
+| ----- | ----- | ------------- |
+| 1     | 30k   | 30k           |
+| 2     | 45k   | 75k           |
+| 3     | 67.5k | 142.5k        |
+| 4     | 101k  | 244k          |
+| 5     | 152k  | 396k          |
 
 - That is +5% on sales for 396k, followed by cosmetic levels (228k, 342k, 513k...).
 - As a pure sink this is sensible, and the 1.5× growth means it never runs dry.
 
 **Side income:**
+
 - Animal-good requests are small and fair: 2 eggs for about 140g, 1 honey for about 100g. The specials are not (F4).
 - The garden bench (600g for +15 energy a day) is a fair, small perk.
 - Festivals at 1,000g are background noise after summer (F6).
 
 **Runaway or dead:**
+
 - Nothing runs away in year one.
 - Dead or near dead:
   - the early board (F3);
@@ -375,16 +385,19 @@ The machine check found no text overflowing a sheet except these, all confirmed 
 ## 7. Verdict
 
 **Stable and much improved.**
+
 - 502 tests pass and there were 0 page errors in 14 played days and every probe.
 - Seven of the nine critique-5 findings are fixed through real input, and fixed well:
   - baskets, the Move sheet, the derby, greenhouse regrowth, placement, the silo line, and project/shop text.
 - The new content mostly works: crows, the free scarecrow, the bench, animal requests, Clay in year two, mail with a full bag, and the Seed Exchange.
 
 **One blocker:**
+
 - The Town Projects list cannot show nine projects.
 - So the Market Road is usually untappable, and the Founder's Statue, the late-game gold sink this round was built around, cannot be opened at all.
 
 **One major design hole:**
+
 - Clay acts only when someone looks at the board after 2 PM, so morning players never meet him.
 - When he does act, he always takes the newest dearest request.
 
@@ -392,14 +405,14 @@ Fix F1 and F2 before anything else; F3 to F5 are the next round's depth work.
 
 ## Screenshots (`critique-6/shots-6/`)
 
-| Group | Files |
-| --- | --- |
-| Play run | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`, `20-scarecrow-placed`, `71-play-board-morning-d12`, `72-play-board-afternoon-d8`, `73-play-letter-crows` |
-| Clay | `70-board-d8-morning`, `70-board-d9-morning`, `70-board-d10-morning`, `70-board-d10-afternoon`, `70-board-y2-*` |
-| Projects (F1) | `60-projects-list-statue`, `61-statue-detail-l0`, `63-projects-8-rows`, `63-projects-9-rows`, `64-after-open-8`, `64-after-open-9`, `65-seedx-detail`, `66-seedx-done`, `67-shop-rare-seeds`, `68-project-gold-in` |
-| Festivals | `40-board-derby-day`, `41`/`42`/`43-derby-*`, `44` to `49` (baskets) |
-| Buildings | `51-move-sheet-coop`, `52-coop-picked-up`, `54-move-sheet-silo`, `56-summary-silo-fed` |
-| Greenhouse and placement | `30-place-refused`, `36-greenhouse-summer26`, `37-summary-season-change` |
-| Mail and bench | `80-shop-home-bench`, `81-mail-list-full`, `82-mail-letter-gift-fullbag`, `83-mail-take-fullbag` |
-| Signs and forage | `90-day1-south-field`, `91-west-sign`, `92-east-sign-area`, `93-hilltop-area`, `94-forage-ring` |
-| Sweep | `s-*` (41 screens: every menu tab and page, shop tabs and pages, board, projects, villager and gift list, bin, plot sign, jar, sleep, summary) and contact sheets `cs-1` to `cs-5` |
+| Group                    | Files                                                                                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Play run                 | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`, `20-scarecrow-placed`, `71-play-board-morning-d12`, `72-play-board-afternoon-d8`, `73-play-letter-crows`                                                   |
+| Clay                     | `70-board-d8-morning`, `70-board-d9-morning`, `70-board-d10-morning`, `70-board-d10-afternoon`, `70-board-y2-*`                                                                                                    |
+| Projects (F1)            | `60-projects-list-statue`, `61-statue-detail-l0`, `63-projects-8-rows`, `63-projects-9-rows`, `64-after-open-8`, `64-after-open-9`, `65-seedx-detail`, `66-seedx-done`, `67-shop-rare-seeds`, `68-project-gold-in` |
+| Festivals                | `40-board-derby-day`, `41`/`42`/`43-derby-*`, `44` to `49` (baskets)                                                                                                                                               |
+| Buildings                | `51-move-sheet-coop`, `52-coop-picked-up`, `54-move-sheet-silo`, `56-summary-silo-fed`                                                                                                                             |
+| Greenhouse and placement | `30-place-refused`, `36-greenhouse-summer26`, `37-summary-season-change`                                                                                                                                           |
+| Mail and bench           | `80-shop-home-bench`, `81-mail-list-full`, `82-mail-letter-gift-fullbag`, `83-mail-take-fullbag`                                                                                                                   |
+| Signs and forage         | `90-day1-south-field`, `91-west-sign`, `92-east-sign-area`, `93-hilltop-area`, `94-forage-ring`                                                                                                                    |
+| Sweep                    | `s-*` (41 screens: every menu tab and page, shop tabs and pages, board, projects, villager and gift list, bin, plot sign, jar, sleep, summary) and contact sheets `cs-1` to `cs-5`                                 |

@@ -22,26 +22,28 @@ still drag for players who never paint a row, and the stick lesson can push you 
 
 ## Before / after
 
-| | before (1dffd97) | after (fd9dcfc) |
-|---|---|---|
-| Literal follower, first 60 s | 0 of 6 tiles tilled; same refusal 9 times ("Not your land yet. Buy it at a sign.") | 3 parsnips picked, seeds planted, watered; first harvest step done in 9-20 s |
-| Reaches day 2 on on-screen guidance alone | no (plot off screen, door and seeds never explained) | **12/12** (i13/SE x R/L; human-ish, never-paint, clean) |
-| New Game to waking on day 2 | 65 s *only if you know the secrets* | 108-146 s clean, 139-204 s human-ish (includes the clock and energy lines, free time, an errand to the town gate) |
-| New Game to town on day 2 | n/a | 156-201 s clean, 216-336 s human-ish |
-| Time with nothing on screen telling you what to do | 41 s stuck before an arrow | 6-7 s per run (the arrow after 3 s in free play) |
-| Instructions longer than one row | toast of 3 lines; morning report of 11 lines | 0 (about 50 distinct coach lines, all one row); morning note 3-4 lines |
-| Conflicting instructions | toast says tap-to-work, ring says drag; 4 tips in 15 s | one line at a time; refusals rewritten into the coach line |
-| Close/reopen mid-tutorial | resumes, no reminder | back on the same step with its line (every reopen run) |
-| Accidental guide loss | n/a | round 2: 4/12 runs (one-tap Skip from the bar). Final: 0/12; Skip needs a confirm tap; toast tells you how to replay |
-| Left hand | never offered; buried in Menu > Opts | offered on the welcome strip; dock, marks, menu and glyph mirrored |
-| Verify | green | green on my frozen copy: 715 unit tests, 300 e2e checks, 0 FAIL; coach-marks perf 1.03-1.43 ms JS, 2 draws per frame |
+|                                                    | before (1dffd97)                                                                   | after (fd9dcfc)                                                                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Literal follower, first 60 s                       | 0 of 6 tiles tilled; same refusal 9 times ("Not your land yet. Buy it at a sign.") | 3 parsnips picked, seeds planted, watered; first harvest step done in 9-20 s                                         |
+| Reaches day 2 on on-screen guidance alone          | no (plot off screen, door and seeds never explained)                               | **12/12** (i13/SE x R/L; human-ish, never-paint, clean)                                                              |
+| New Game to waking on day 2                        | 65 s _only if you know the secrets_                                                | 108-146 s clean, 139-204 s human-ish (includes the clock and energy lines, free time, an errand to the town gate)    |
+| New Game to town on day 2                          | n/a                                                                                | 156-201 s clean, 216-336 s human-ish                                                                                 |
+| Time with nothing on screen telling you what to do | 41 s stuck before an arrow                                                         | 6-7 s per run (the arrow after 3 s in free play)                                                                     |
+| Instructions longer than one row                   | toast of 3 lines; morning report of 11 lines                                       | 0 (about 50 distinct coach lines, all one row); morning note 3-4 lines                                               |
+| Conflicting instructions                           | toast says tap-to-work, ring says drag; 4 tips in 15 s                             | one line at a time; refusals rewritten into the coach line                                                           |
+| Close/reopen mid-tutorial                          | resumes, no reminder                                                               | back on the same step with its line (every reopen run)                                                               |
+| Accidental guide loss                              | n/a                                                                                | round 2: 4/12 runs (one-tap Skip from the bar). Final: 0/12; Skip needs a confirm tap; toast tells you how to replay |
+| Left hand                                          | never offered; buried in Menu > Opts                                               | offered on the welcome strip; dock, marks, menu and glyph mirrored                                                   |
+| Verify                                             | green                                                                              | green on my frozen copy: 715 unit tests, 300 e2e checks, 0 FAIL; coach-marks perf 1.03-1.43 ms JS, 2 draws per frame |
 
 ## Open findings (final round)
 
 ### Blockers
+
 None.
 
 ### Major
+
 1. **Day-2 watering still drags for players who tap Action instead of painting.** In never-paint runs, water2 took
    150 s / 104 taps (i13-left-s3-never) and 39 s (se-right-s13-never). The selected slot is the empty seed slot (all
    seeds were planted on day 1). Action on empty soil then gives the planting refusal, rewritten as "Tap the seed
@@ -56,6 +58,7 @@ None.
    a few tiles, or demo the direction of the next path step; otherwise fall back to the tap and edge arrow.
 
 ### Minor
+
 3. **water2 is still the longest beat for everyone.** 12-101 s (median about 36 s), and over 45 s in 5/12 runs, even
    with Rosa filling the can. The can still ran dry in 3 runs, and the row tip offered 2-4 directions within the one
    step in 9/12 runs. It's acceptable, but it's the one moment that feels like a chore.
@@ -69,6 +72,7 @@ None.
    contradicts the row tip. It's out of this branch's lane but should go before release.
 
 ### Nits
+
 7. The idle-hint wording after a skip is aligned. The old 40 s hint is still the only help for skippers, which is
    fine.
 8. Day 1 under the guide gets you to bed before noon if you follow the goal arrows. That's the owner ruling
@@ -77,6 +81,7 @@ None.
 ## Verified fixed across the rounds (highlights)
 
 Each item is verified in play, not just read in code.
+
 - The plot is on screen at spawn, so "Not your land" never shows to a follower.
 - Harvest first; tap-to-walk taught by doing.
 - Seeds, plant, water and the row tip, which is optional (never-paint completes).

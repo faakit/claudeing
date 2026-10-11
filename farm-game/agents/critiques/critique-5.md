@@ -10,6 +10,7 @@ for anything it does not mention.
 Frozen build: commit `64eeb10`, copied to `critique-5/farm-game`. The copy is not a git checkout, so I could not confirm the hash myself.
 
 Method:
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`.
 - The `?debug` hook was used to set up state and read it back.
 - No game file was edited. Probe scripts are in `critique-5/farm-game/agents/out/c5/`, screenshots in `shots-5/`.
@@ -18,6 +19,7 @@ Method:
 ## What I verified by playing, and what I did not
 
 Played with real input (keyboard walk, Space, E, and real taps on canvas buttons):
+
 - **New game, days 1 to 5** (`play.mjs`, the critique-4 bot plus a mailbox reader).
   - Mail on days 2, 3 and 4: Welcome (3 potato seeds), first fish (5 bait), first ore (2 copper ore). Each was read, and its gift taken with the real "Take gift" button.
   - Jobs on days 2 to 5: 12 of 12 done.
@@ -40,12 +42,14 @@ Played with real input (keyboard walk, Space, E, and real taps on canvas buttons
 - 0 page errors in every session.
 
 Verified only by reading code or data:
+
 - the rival's lazy resolution and the daily order reset;
 - greenhouse regrowth economics;
 - the Book pages;
 - that pick-up arming is runtime-only with a 4-second window (`placeables.ts:107-139`).
 
 **Not verified at all** (the stop came first):
+
 - 10+ days of play. Clay taking a request in real play, his heart perks, his letter on day 7.
 - Mail with a full bag. The Seed Exchange, rare seeds, and paging through the Book.
 - Land-sign visibility and the forage ring.
@@ -134,12 +138,14 @@ All played (shots `44` to `49`).
 ### F5 (Medium, balance). Under glass, regrowing crops never die, so corn and the rare crops become the best crops in the game
 
 Math from data:
+
 - **Corn** regrows every 3 days for 80g, which is **26.7g per tile-day with no reseeding**.
 - **Cranberry** gives 25 and **blueberry** 23.3.
 - **Pumpkin**, the best single-harvest crop, nets 19.2 after its 100g seed.
 - Outside, regrowth stops at season's end, which is why DECISIONS can say the rare crops are "variety, not a new best crop". In the greenhouse that claim is false: plant 32 corn or cranberries once and harvest forever.
 
 The guard test does not see this. `tests/greenhouse.test.ts` ("a full greenhouse is a real winter income") computes first-harvest gross value over total stage days. It ignores both regrowth and seed cost, so it reports pumpkin (880 a day) as the ceiling.
+
 - **Fix:** have the test model regrowth and seed cost. Then decide whether perpetual regrowth under glass is intended; if not, regrowing crops in the greenhouse could still end at the season change.
 
 ### F6 (Minor). Things can be placed on the greenhouse site before it exists
@@ -201,13 +207,13 @@ The guard test does not see this. `tests/greenhouse.test.ts` ("a full greenhouse
 
 ## 3. The days played (bot, real input, stopped on day 5)
 
-| Day | Wake gold | Jobs (all done) | Mail | Board |
-| --- | --- | --- | --- | --- |
-| 1 | 500 | none | none | wild leek, mushroom, daffodil: none fillable |
-| 2 | 40 | fish 1, chat 2, weeds 3 | Welcome (+3 potato seeds) | mushroom, carp, bluegill: none |
-| 3 | 79 | mine 3, chat 2, fish 1 | Finn, first fish (+5 bait) | 3 cauliflower 945g on day 3: impossible this early |
-| 4 | 138 | fish 3, forage 2, mine 3 | Orin, first ore (+2 copper ore) | filled 4 daffodils, 160g |
-| 5 | 867 | forage 3, fish 1, chat 2 | none | potato, bluegill, carp: none |
+| Day | Wake gold | Jobs (all done)          | Mail                            | Board                                              |
+| --- | --------- | ------------------------ | ------------------------------- | -------------------------------------------------- |
+| 1   | 500       | none                     | none                            | wild leek, mushroom, daffodil: none fillable       |
+| 2   | 40        | fish 1, chat 2, weeds 3  | Welcome (+3 potato seeds)       | mushroom, carp, bluegill: none                     |
+| 3   | 79        | mine 3, chat 2, fish 1   | Finn, first fish (+5 bait)      | 3 cauliflower 945g on day 3: impossible this early |
+| 4   | 138       | fish 3, forage 2, mine 3 | Orin, first ore (+2 copper ore) | filled 4 daffodils, 160g                           |
+| 5   | 867       | forage 3, fish 1, chat 2 | none                            | potato, bluegill, carp: none                       |
 
 Days 2 to 5: every job posted could be done, and all 12 were. This looks like an improvement on critique-4 F3, but four days is too few to call it fixed.
 
@@ -218,6 +224,7 @@ Days 2 to 5: every job posted could be done, and all 12 were. This looks like an
 Not measured this round (stopped).
 
 From screenshots:
+
 - the basket sheet's Add/Out column and "Present the basket" sit at about 450 to 730 px of 844;
 - the derby's "Hand in my catches" is just above Close.
 
@@ -246,10 +253,12 @@ Both are reachable. The concern is the opposite: hand-in is too easy to hit (F4)
 ## 7. Verdict (partial)
 
 What I played of the new content is stable:
+
 - 0 page errors and 418 tests pass;
 - mail, greenhouse funding and planting, the derby, baskets, building moves with save and reload, and the silo all work through real input.
 
 The problems are design, not crashes:
+
 - the rival cannot really compete, because orders reset every day;
 - baskets reward three qualities of one crop over variety;
 - a chore tap can lift a coop full of hens;
@@ -260,10 +269,10 @@ This report is incomplete. The critique-4 fix re-checks, Clay in live play, the 
 
 Screenshots (`agents/critiques/shots-5/`, 29 files):
 
-| Group | Files |
-| --- | --- |
-| Play run | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4` |
+| Group      | Files                                                                                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Play run   | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`                                                                                                                                                                          |
 | Greenhouse | `30-greenhouse-site-before`, `31-projects-list-greenhouse`, `32-project-greenhouse-detail`, `33-project-greenhouse-done`, `34-shop-winter-with-greenhouse`, `35-shop-winter-p2`, `36-greenhouse-built`, `37-greenhouse-planted` |
-| Derby | `40-board-derby-day`, `41-derby-panel-empty`, `42-derby-panel-catches`, `43-derby-result` |
-| Baskets | `44-fair-basket-empty`, `45-fair-basket-three-pumpkins`, `46-fair-basket-variety`, `47-fair-result`, `48-feast-list`, `49-feast-basket` |
-| Buildings | `50-coop-and-silo`, `51-coop-tap-again`, `52-coop-picked-up`, `53-coop-moved`, `54-silo-message`, `55-summary-silo-night`, `56-summary-silo-fed` |
+| Derby      | `40-board-derby-day`, `41-derby-panel-empty`, `42-derby-panel-catches`, `43-derby-result`                                                                                                                                       |
+| Baskets    | `44-fair-basket-empty`, `45-fair-basket-three-pumpkins`, `46-fair-basket-variety`, `47-fair-result`, `48-feast-list`, `49-feast-basket`                                                                                         |
+| Buildings  | `50-coop-and-silo`, `51-coop-tap-again`, `52-coop-picked-up`, `53-coop-moved`, `54-silo-message`, `55-summary-silo-night`, `56-summary-silo-fed`                                                                                |

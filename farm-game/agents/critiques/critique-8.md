@@ -3,6 +3,7 @@
 Reviewer: independent QA lead and game critic, round 8.
 
 **Status: complete for the scope below.**
+
 - Every critique-7 finding (F1 to F9) was re-checked.
 - The new content was exercised: the traveling cart, x5 cooking and the legend-in-the-bin warning.
 - Two 16-day new games were played with real input. One of them fills every request it can, to judge the race with Clay.
@@ -13,6 +14,7 @@ Reviewer: independent QA lead and game critic, round 8.
 **Frozen build:** commit `3e1b9c5` (branch `depth/round2`), in `critique-8b/farm-game`. It is a `git archive`, not a checkout, so I could not confirm the hash myself.
 
 **Method:**
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, against `vite` on **port 5193**. I started the server for this session and stopped it at the end.
 - The `?debug` hook was used to set up state and read it back. No game file was edited.
 - Probes are in `critique-8b/farm-game/agents/out/c8/`, with logs in `c8/tmp/`. They are the critique-7 probes, retargeted, plus `clay8`, `new8`, `special8`, `statue8`, `play3` and `facts8.test.ts`.
@@ -52,6 +54,7 @@ Reviewer: independent QA lead and game critic, round 8.
 - **Clipping sweep** (`sweep.mjs`, 42 screens). Every menu tab and page, every shop tab and page, the board with a special and four rows, the cart, projects, the statue, villager and gift sheets, the bin, a sign, a jar, sleep and the summary. Each was machine-checked for overlap and overflow.
 
 **Verified only by reading code or data, or with the real rule functions in vitest:**
+
 - crop-request quantity against tiles grown (400 boards);
 - the board mix (300 boards per case);
 - animal specials at 70%;
@@ -61,6 +64,7 @@ Reviewer: independent QA lead and game critic, round 8.
 - the economy over one and two years (sim).
 
 **Not verified at all:**
+
 - real phone, audio and performance; walking times;
 - a real afternoon at the board on a normal day (only the day-9 3 PM look);
 - year two with real input;
@@ -71,17 +75,17 @@ Reviewer: independent QA lead and game critic, round 8.
 
 ## 1. Critique 7 findings re-checked
 
-| C7 | Then | Now | How checked |
-| --- | --- | --- | --- |
-| F1 crop requests for crops that cannot ripen in time | 4 of 8 unfillable | **Fixed for timing, not for quantity.** Every crop request in both runs was for a crop ripening in time, and its row stays open until a day after (crop rows read "4 days" or "5 days"). But a request asks for 2 to 5 whatever you planted: in run R, three parsnip requests (5, 5 and 4) were posted when about one parsnip was ripening, and none could be filled. See **F3**. | played + vitest |
-| F2 Clay took the dearest request every day | 7 of 7 days | **Fixed, and overcorrected.** He now takes only last-day rows, and "Clay stays home: you won today." appears after any fill. In run R (fills everything) he took 3 rows in 9 days, and the player held 1/4, 0/6 and 1/5 of them: **he never took anything the player could have filled.** The race now has no stakes. See **F2**. | played |
-| F3 board asks a farmer for trout | 16% crops | **Better.** Crops were 6 of 20 requests (run K) and 7 of 22 (run R), about 30%. A 300-board measure gave 26% for a farmer with two near-ripe crops. But with no crop within 3 days of ripe, the board is **100% fish and forage** (900 rows measured). In run R, days 1 to 6 had 15 rows and no crop. See F5. | played + vitest |
-| F4 special's Give starved a same-item request | | **Not fixed in its own repro.** Held 3, request "3 Cauliflower 930g": the special's button reads "Give 3", and one tap leaves the request at Have 0/3. In run K (day 11) this happened by itself: "Give 3" took the cauliflowers, and the next night "Clay filled 3 Cauliflower" (1,045g). Holding 5 works ("Give 2"), but the button then reads "Give 3", and a second tap starves the request anyway. "Give N" labels: fixed. No repeat special: fixed (cauliflower, then a different potato special). See **F1**. | played (shots `72`, `73`) |
-| F5 bench lifted by two E | | **Fixed as designed.** At 95, E says "Sit when tired (+15). Tap again to pick up." and a second E lifts it. Mashing still lifts it, but the line now warns. | played |
-| F6 eating wastes a dish | | **Fixed.** At 95 the pie's card says "Not hungry" and a tap keeps it ("You're not hungry enough."). Action with a pie at 95 is refused. The hoe at 0 with a dish in the bag says "Too tired! Eat something or go to bed." **Cursor:** it clears only after the *last* of a stack is eaten, and x5 now makes stacks, so a stray swap still happens (F6). | played (shot `82`) |
-| F7 legends | | **Fixed.** The Book's overview shows "FISH 0/6 +400g, Legends 1/4" (shot `84`). Shipping a Sun Carp gives "A legend in the bin! Take it back out before bed to keep it.", and the bin's "-" took it back. | played (shot `83`) |
-| F8 animal specials at 100% | | **Fixed.** They ask for 50% to 64% of output by the deadline: 1 hen on day 1 gets 18 eggs, 1 pig 10 truffles, 1 cow 14 milk. | vitest |
-| F9 text and small UI | | **Mostly fixed:** <ul><li>The honey tip now keys on `animalsAdded`.</li><li>The statue page says "Now +1%", stays open after a level, and then says "Now +2%" (played).</li><li>The shelf puts in-season seeds first, then glass, and Fertilizer, Bait, Speed-Gro and Fiber last (played, fall with a greenhouse).</li><li>The dishes are on Make page 1 now.</li></ul>**Still open:** placeholder dots for the dish and legend art; strawberry under glass shows "Glass 8d, own 15" with no "again". | played |
+| C7                                                   | Then              | Now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | How checked               |
+| ---------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| F1 crop requests for crops that cannot ripen in time | 4 of 8 unfillable | **Fixed for timing, not for quantity.** Every crop request in both runs was for a crop ripening in time, and its row stays open until a day after (crop rows read "4 days" or "5 days"). But a request asks for 2 to 5 whatever you planted: in run R, three parsnip requests (5, 5 and 4) were posted when about one parsnip was ripening, and none could be filled. See **F3**.                                                                                                                                    | played + vitest           |
+| F2 Clay took the dearest request every day           | 7 of 7 days       | **Fixed, and overcorrected.** He now takes only last-day rows, and "Clay stays home: you won today." appears after any fill. In run R (fills everything) he took 3 rows in 9 days, and the player held 1/4, 0/6 and 1/5 of them: **he never took anything the player could have filled.** The race now has no stakes. See **F2**.                                                                                                                                                                                    | played                    |
+| F3 board asks a farmer for trout                     | 16% crops         | **Better.** Crops were 6 of 20 requests (run K) and 7 of 22 (run R), about 30%. A 300-board measure gave 26% for a farmer with two near-ripe crops. But with no crop within 3 days of ripe, the board is **100% fish and forage** (900 rows measured). In run R, days 1 to 6 had 15 rows and no crop. See F5.                                                                                                                                                                                                        | played + vitest           |
+| F4 special's Give starved a same-item request        |                   | **Not fixed in its own repro.** Held 3, request "3 Cauliflower 930g": the special's button reads "Give 3", and one tap leaves the request at Have 0/3. In run K (day 11) this happened by itself: "Give 3" took the cauliflowers, and the next night "Clay filled 3 Cauliflower" (1,045g). Holding 5 works ("Give 2"), but the button then reads "Give 3", and a second tap starves the request anyway. "Give N" labels: fixed. No repeat special: fixed (cauliflower, then a different potato special). See **F1**. | played (shots `72`, `73`) |
+| F5 bench lifted by two E                             |                   | **Fixed as designed.** At 95, E says "Sit when tired (+15). Tap again to pick up." and a second E lifts it. Mashing still lifts it, but the line now warns.                                                                                                                                                                                                                                                                                                                                                          | played                    |
+| F6 eating wastes a dish                              |                   | **Fixed.** At 95 the pie's card says "Not hungry" and a tap keeps it ("You're not hungry enough."). Action with a pie at 95 is refused. The hoe at 0 with a dish in the bag says "Too tired! Eat something or go to bed." **Cursor:** it clears only after the _last_ of a stack is eaten, and x5 now makes stacks, so a stray swap still happens (F6).                                                                                                                                                              | played (shot `82`)        |
+| F7 legends                                           |                   | **Fixed.** The Book's overview shows "FISH 0/6 +400g, Legends 1/4" (shot `84`). Shipping a Sun Carp gives "A legend in the bin! Take it back out before bed to keep it.", and the bin's "-" took it back.                                                                                                                                                                                                                                                                                                            | played (shot `83`)        |
+| F8 animal specials at 100%                           |                   | **Fixed.** They ask for 50% to 64% of output by the deadline: 1 hen on day 1 gets 18 eggs, 1 pig 10 truffles, 1 cow 14 milk.                                                                                                                                                                                                                                                                                                                                                                                         | vitest                    |
+| F9 text and small UI                                 |                   | **Mostly fixed:** <ul><li>The honey tip now keys on `animalsAdded`.</li><li>The statue page says "Now +1%", stays open after a level, and then says "Now +2%" (played).</li><li>The shelf puts in-season seeds first, then glass, and Fertilizer, Bait, Speed-Gro and Fiber last (played, fall with a greenhouse).</li><li>The dishes are on Make page 1 now.</li></ul>**Still open:** placeholder dots for the dish and legend art; strawberry under glass shows "Glass 8d, own 15" with no "again".                | played                    |
 
 ---
 
@@ -141,7 +145,7 @@ Reviewer: independent QA lead and game critic, round 8.
 - **Played (run R):**
   - "5 Parsnip 220g", "5 Parsnip 275g" and "4 Parsnip 210g" were posted while about one parsnip was ripening. All three ended at Have 1/5 or 1/4: two went to Clay and one expired.
   - Of 7 crop requests in run R, the 4 that were filled were the ones where the field happened to be big enough.
-- **Cause:** `src/systems/orders.ts:123`. The quantity comes from the value tier (`orders.json` `tiers[].qty`). It looks only at *whether* a crop ripens within `CROP_WAIT` (`:55-61`), never at *how many*.
+- **Cause:** `src/systems/orders.ts:123`. The quantity comes from the value tier (`orders.json` `tiers[].qty`). It looks only at _whether_ a crop ripens within `CROP_WAIT` (`:55-61`), never at _how many_.
 - **Impact:** this is critique 7's F1 moved again. Now the timing is honest but the count is not. For a beginner who plants 1 to 3 of the expensive crop, the dearest crop row is usually out of reach.
 - **Fix:** cap `qty` at (carried + tiles of that crop ripening by `until`), and skip the crop if that is under the tier's minimum. Add a test: one cauliflower tile never yields "3 Cauliflower".
 
@@ -233,21 +237,21 @@ Reviewer: independent QA lead and game critic, round 8.
 
 **Run R** (fills every request, then the special; real input; teleports between spots):
 
-| Day | Wake gold | Board (morning) | Filled / Clay overnight |
-| --- | --- | --- | --- |
-| 1 | 500 | bluegill 215, carp 130, trout 395 | none |
-| 2 | 40 | special "15 Potato for Rosa 2,250g" | none |
-| 3 to 6 | 261 to 591 | trout, mushroom, carp, wild leek, daffodil (no crops) | 3 Carp 105 (day 6) |
-| 7 | 732 | daffodil 165, **5 Parsnip 220 (4 days)**, mushroom 425 | none |
-| 8 | 1,002 | "Clay wants this one": 4 Daffodil (Have 1/4) | special Give 5. **Clay took the daffodil** |
-| 9 | 685 | target 6 Mushroom (0/6); 2 Cauliflower 730 (4 days) | special Give 5. **Clay took the mushroom** |
-| 10 | 589 | target 5 Parsnip (1/5); 5 Potato 720 | special Give 1. **Clay took the parsnip** |
-| 11 | 676 | 2 Cauliflower 2/2 | **filled 730**; "Clay stays home: you won today." |
-| 12 | 1,379 | target 5 Potato, Have 5/5 | **filled 720** + special Give 3 (14/15); stays home |
-| 13 | 1,588 | 2 Cauliflower 2/2 | **filled 715**; stays home |
-| 14 | 2,434 | Flower Show; 3 Cauliflower 1,065 (1/3) | nothing; Clay "wants nothing" |
-| 15 | 2,530 | target 3 Cauliflower 3/3 | **filled 1,065**; stays home |
-| 16 | 3,360 | 5 Daffodil 5/5 | **filled 220**; stays home |
+| Day    | Wake gold  | Board (morning)                                        | Filled / Clay overnight                             |
+| ------ | ---------- | ------------------------------------------------------ | --------------------------------------------------- |
+| 1      | 500        | bluegill 215, carp 130, trout 395                      | none                                                |
+| 2      | 40         | special "15 Potato for Rosa 2,250g"                    | none                                                |
+| 3 to 6 | 261 to 591 | trout, mushroom, carp, wild leek, daffodil (no crops)  | 3 Carp 105 (day 6)                                  |
+| 7      | 732        | daffodil 165, **5 Parsnip 220 (4 days)**, mushroom 425 | none                                                |
+| 8      | 1,002      | "Clay wants this one": 4 Daffodil (Have 1/4)           | special Give 5. **Clay took the daffodil**          |
+| 9      | 685        | target 6 Mushroom (0/6); 2 Cauliflower 730 (4 days)    | special Give 5. **Clay took the mushroom**          |
+| 10     | 589        | target 5 Parsnip (1/5); 5 Potato 720                   | special Give 1. **Clay took the parsnip**           |
+| 11     | 676        | 2 Cauliflower 2/2                                      | **filled 730**; "Clay stays home: you won today."   |
+| 12     | 1,379      | target 5 Potato, Have 5/5                              | **filled 720** + special Give 3 (14/15); stays home |
+| 13     | 1,588      | 2 Cauliflower 2/2                                      | **filled 715**; stays home                          |
+| 14     | 2,434      | Flower Show; 3 Cauliflower 1,065 (1/3)                 | nothing; Clay "wants nothing"                       |
+| 15     | 2,530      | target 3 Cauliflower 3/3                               | **filled 1,065**; stays home                        |
+| 16     | 3,360      | 5 Daffodil 5/5                                         | **filled 220**; stays home                          |
 
 - **Run R totals:** 6 requests filled (about 3,550g). Clay took 3, all unfillable. The potato special stuck at 14/15 (the bot planted cauliflowers). 6,854g earned by the end of day 16 (5,330 by day 14).
 - **Run K** (one tap per visit):
@@ -257,14 +261,17 @@ Reviewer: independent QA lead and game critic, round 8.
 - **Against critique 7** (5,478 / 5,705 by day 14): about the same. The special's timing decides most of the gap.
 
 **Is the race worth running?**
+
 - No. It is now a deadline marker, not a rival (F2).
 - Racing pays only through the requests themselves. Those are now often worth it: crop rows of 700 to 1,065g that the field can fill.
 
 **Does the board feel alive for a farmer?**
+
 - **From day 7:** yes, about every other day there is a crop row worth 2 to 4 times the bin.
 - **In the first week:** no. It is fish and forage, and some crop rows ask for more than the field holds (F3, F5).
 
 **Is a 5-minute session (about 10 game hours) rewarding?** Yes, it has a clear loop:
+
 - the farm round and the bin;
 - two or three jobs paid on the spot (about 20 to 50g each);
 - the board, with usually one named target and, from day 7, often a fillable crop row;
@@ -283,6 +290,7 @@ The weak spots: the cart rarely has anything you need (F4), and Clay's line is n
 ## 5. Progression and economy
 
 **Sim (`tests/sim.test.ts`, logs in `c8/tmp/sim.out`):**
+
 - **Year one, tireless bot, five seeds:** 227,442 / 206,209 / 278,177 / 254,664 / 211,856 (median **227,442**). Critique 7 had 195,194: **+16.5%**.
 - **Human-paced bot:** 177,253 / 167,535 / 201,892 (median **177,253**). Critique 7 had 147,942: **+20%**.
 - **Board income for the year:** 9,367g (3.5× critique 7's 2,690), still only 4% of earnings.
@@ -297,10 +305,10 @@ The weak spots: the cart rarely has anything you need (F4), and Clay's line is n
 
 **The cart as a project shortcut: not a runaway.**
 
-| Project | Goods | Bought at the cart | Project gold |
-| --- | --- | --- | --- |
-| Greenhouse | 10 quartz + 5 iron | 4,000g | 20,000g |
-| Market | 10 iron | 3,000g | 60,000g |
+| Project    | Goods              | Bought at the cart | Project gold |
+| ---------- | ------------------ | ------------------ | ------------ |
+| Greenhouse | 10 quartz + 5 iron | 4,000g             | 20,000g      |
+| Market     | 10 iron            | 3,000g             | 60,000g      |
 
 - About +5% to +20% on top of the gold.
 - Each bar or quartz shows up at about one visit in three (4 random slots), so a non-miner still waits for the right week.
@@ -311,6 +319,7 @@ The weak spots: the cart rarely has anything you need (F4), and Clay's line is n
 **Legends:** about 1,750g a game; the Book line now gives them a reason to keep them. Fine.
 
 **Runaway or dead:**
+
 - **Runaway:** nothing.
 - **Near dead:**
   - Clay as a competitor (F2);
@@ -334,6 +343,7 @@ The weak spots: the cart rarely has anything you need (F4), and Clay's line is n
 ## 7. Verdict
 
 **Stable and cleaner than round 7, with no blocker.**
+
 - **Tests and errors:** 533 tests pass. There were 0 page or console errors across two 16-day games and every probe. The 42-screen sweep is clean.
 - **Critique-7 findings:**
   - F5, F6, F7, F8 and most of F9 are fixed through real input.
@@ -348,13 +358,13 @@ The weak spots: the cart rarely has anything you need (F4), and Clay's line is n
 
 ## Screenshots (`critique-8b/shots-8/`)
 
-| Group | Files |
-| --- | --- |
-| Run K (first days) | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4` |
-| Clay | `70-board-d6..d13-morning`, `70-board-d9-3pm`, `71-board-after-fill-d9` |
-| Special Give (F1) | `72-special-give-exact`, `73-special-after-give` |
-| Kitchen and bag | `80-make-page-x5`, `81-make-after-x5`, `82-bag-card-not-hungry` |
-| Legends | `83-bin-legend-warning`, `84-book-fish-legends` |
-| Cart | `85-cart-spring-5`, `85-cart-spring-26`, `86-cart-soldout-*`, `87-summary-cart-day`, `s-cart` |
-| Statue | `66-statue-after-level`, `s-project-detail` |
-| Sweep | `s-*` (42 screens), contact sheets `cs-8a-seeds` (fall shelf with a greenhouse), `cs-8b-board` (board, cart, statue, Book) |
+| Group              | Files                                                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Run K (first days) | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`                                                                     |
+| Clay               | `70-board-d6..d13-morning`, `70-board-d9-3pm`, `71-board-after-fill-d9`                                                    |
+| Special Give (F1)  | `72-special-give-exact`, `73-special-after-give`                                                                           |
+| Kitchen and bag    | `80-make-page-x5`, `81-make-after-x5`, `82-bag-card-not-hungry`                                                            |
+| Legends            | `83-bin-legend-warning`, `84-book-fish-legends`                                                                            |
+| Cart               | `85-cart-spring-5`, `85-cart-spring-26`, `86-cart-soldout-*`, `87-summary-cart-day`, `s-cart`                              |
+| Statue             | `66-statue-after-level`, `s-project-detail`                                                                                |
+| Sweep              | `s-*` (42 screens), contact sheets `cs-8a-seeds` (fall shelf with a greenhouse), `cs-8b-board` (board, cart, statue, Book) |

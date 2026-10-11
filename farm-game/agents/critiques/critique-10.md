@@ -3,6 +3,7 @@
 Reviewer: independent QA lead and game critic, round 10.
 
 **Status: complete for the scope below.**
+
 - Every critique-9 finding (F1 to F8) was re-checked.
 - Four 32-day new games (spring 1 to summer 4, real bed sleeps, a real spring-to-summer settlement) were played as a farmer who **never fishes or forages**. Two of them are valid farmers. The other two had a bot fault from day 2 (see "Not verified") and count only as board observations.
 - The ten changes of this round were each played, with edge cases set up by state:
@@ -20,6 +21,7 @@ Reviewer: independent QA lead and game critic, round 10.
 **Frozen build:** `critique-10/farm-game`, a `git archive` of `e23349b` (branch `depth/round3`). Because it is an archive, I could not confirm the hash myself.
 
 **Method:**
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, against my own `vite` on **port 5195**. I stopped the server at the end and confirmed port 5195 is free.
 - **No game source file was edited.** The `?debug` hook (`window.__farm`) was used to set up state and read it back.
 - **Probes:** `agents/out/c10/`. Logs are in `c10/tmp/`.
@@ -38,13 +40,14 @@ Reviewer: independent QA lead and game critic, round 10.
 
 **Played with real input (new games, spring 1 to summer 4, 32 days, real sleeps):**
 
-| Run | Player | Ships with | Fills | Valid? |
-| --- | --- | --- | --- | --- |
-| **F32b** | pure farmer: no fishing, no foraging, fills only farm-good rows | the bin's **"Ship all produce"**, tapped **before** visiting the board (the hurried player) | every farm row it can, then the special | yes |
-| **A32b** | same farmer | each row's **"All"** button (a careless player who ignores the warnings) | same | yes |
-| F32, A32 | same two players | as above | same | **no:** from day 2 the bot's seeds landed in bag slots and it stopped planting. Their board and Clay observations are used; their economy is not. |
+| Run      | Player                                                          | Ships with                                                                                  | Fills                                   | Valid?                                                                                                                                            |
+| -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F32b** | pure farmer: no fishing, no foraging, fills only farm-good rows | the bin's **"Ship all produce"**, tapped **before** visiting the board (the hurried player) | every farm row it can, then the special | yes                                                                                                                                               |
+| **A32b** | same farmer                                                     | each row's **"All"** button (a careless player who ignores the warnings)                    | same                                    | yes                                                                                                                                               |
+| F32, A32 | same two players                                                | as above                                                                                    | same                                    | **no:** from day 2 the bot's seeds landed in bag slots and it stopped planting. Their board and Clay observations are used; their economy is not. |
 
 **Edge probes with real taps after a state setup** (`edge10`, logs `tmp/run-*.log`, `tmp/run2-*.log`, `tmp/edge-keep.out`):
+
 - keep-back;
 - the special's keep;
 - score lines;
@@ -59,11 +62,13 @@ Reviewer: independent QA lead and game critic, round 10.
 **Clipping sweep** (`sweep10`, 6 tall boards plus bin, cart, Make, two dish cards and three letters). Plus 30-odd screens from the edge probes.
 
 **Verified only by code or sim:**
+
 - the year-2 prize and `BOARD_STAKES` text;
 - that the special is not kept back by "Ship all produce";
 - the economy (`tests/sim.test.ts` plus my `simx10.test.ts`).
 
 **Not verified at all:**
+
 - Real phone, audio, performance and walking times.
 - Year two with real input. The two-takes score line was set up by state.
 - **The 3 PM board look and the 8:00 town clock are modelled.**
@@ -74,17 +79,17 @@ Reviewer: independent QA lead and game critic, round 10.
 
 ## 1. Critique 9 findings re-checked
 
-| C9 | Then | Now | How checked |
-| --- | --- | --- | --- |
-| F1 race hidden from the loser, unwinnable for a farmer, stakes unsaid | score shown on 2 to 14 of 24 mornings; farmer lost 72 of 72 sim seasons | **Fixed as specified.** <ul><li>The score line "This season: you N, Clay M." was on the board **25 of 25 mornings from day 8** in both valid runs, and on day 8 (not day 7) in the probe.</li><li>Clay scores only farm goods: "Clay took it: no point." on fish rows.</li><li>Clay's intro letter and losing letter name "300g and a trophy".</li><li>A draw is said ("A draw with Clay on the board last season (5 to 5).").</li><li>The trophy works (two wins, a reload).</li></ul>**But** the race is now a walkover for a keeper (F32b **won 15 to 0**), Clay's daily "target" is usually a row that cannot score, and a careless shipper still loses (A32b **lost 4 to 7**). See **F2**. Also: a 5-heart Clay ends the race and soft-locks the last goal (**F3**). | played + sim |
-| F2 crop requests needed the whole harvest; the bin said nothing | 52% exact | **Rule fixed:** <ul><li>Crop rows asked for less than the field: "3 Potato" and "2 Potato" while 4 to 5 ripened; "1 Cauliflower" and "2 Cauliflower" from 3 to 5.</li><li>"Ship all produce" kept goods 15 times in F32b ("Kept 4 Potato for the board.", "Kept 5 Potato and 2 Cauliflower for the board.").</li><li>The row's All warns "The board wants 3 Potato."</li></ul>**But** every one of those toasts is drawn **under** the open bin sheet, so the player does not see it (**F1**). The careless A32b lost 7 farm rows to Clay. | played |
-| F3 special emptied a part-filled request | | **Fixed.** Hold 2 with "3 Potato, Have 2/3, 2 days": the special reads "Saved for a request." with Give off. On the request's last day: "Give 2". Hold 7: "Give 4". | played |
-| F4 Make slid under the thumb after a batch | | **Fixed.** <ul><li>"x3" at x 180 cooks 3 Baked Potato and keeps the 3 gold potatoes.</li><li>The slot stays as a dim "x1" at the same x 180; a second tap there does nothing.</li><li>Make stays at x 146.</li></ul> | played |
-| F5 special on top took the hurried tap | | **Fixed.** Requests are drawn first and the special last (all boards). | played |
-| F6 season result easy to miss | | **Mostly fixed:** <ul><li>The result comes after Clay's last take (code order, `mechanics/orders.ts:13-21`).</li><li>Mara writes "Best on the board" on a win.</li><li>The canopy nag came once in 32 days (F32b day 27).</li></ul>**Still weak:** <ul><li>"Last season: ..." gives way to Clay's target. It was shown on **1 of 3** days in F32b and **0 of 3** in A32b.</li><li>A 0-0 season says nothing.</li></ul>See F4. | played |
-| F7 cart said the use only after paying | | **Fixed.** Rows read "900g  Market Road", "600g  Waters 8", "120g  Winter crop". **New small losses:** the "N left" count is gone from tagged rows, and a greenhouse-only seed in fall reads "Spring crop" (F5). | played |
-| F8 text | | **Partly fixed:** Clay's 2-heart line was changed in data (not played). **Still open:** <ul><li>"Craft something at the workbench" (`goals.json:117`).</li><li>The cook goal's hint "cook at the workbench" (`goals.json:486`).</li><li>Dish icons are still coloured dots (shot `s10-make`).</li></ul> | read + played |
-| Day-31 stall | bin and bed would not open | **Not reproduced.** `agents/probes/stall-day31.mjs` variants A, B and C all opened the bin and the bed with `{modals: 0 -> 1, busy: false, suspended: false}` (`tmp/stall.out`). There was no stall in 4 x 32 played days either. | played |
+| C9                                                                    | Then                                                                    | Now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | How checked   |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| F1 race hidden from the loser, unwinnable for a farmer, stakes unsaid | score shown on 2 to 14 of 24 mornings; farmer lost 72 of 72 sim seasons | **Fixed as specified.** <ul><li>The score line "This season: you N, Clay M." was on the board **25 of 25 mornings from day 8** in both valid runs, and on day 8 (not day 7) in the probe.</li><li>Clay scores only farm goods: "Clay took it: no point." on fish rows.</li><li>Clay's intro letter and losing letter name "300g and a trophy".</li><li>A draw is said ("A draw with Clay on the board last season (5 to 5).").</li><li>The trophy works (two wins, a reload).</li></ul>**But** the race is now a walkover for a keeper (F32b **won 15 to 0**), Clay's daily "target" is usually a row that cannot score, and a careless shipper still loses (A32b **lost 4 to 7**). See **F2**. Also: a 5-heart Clay ends the race and soft-locks the last goal (**F3**). | played + sim  |
+| F2 crop requests needed the whole harvest; the bin said nothing       | 52% exact                                                               | **Rule fixed:** <ul><li>Crop rows asked for less than the field: "3 Potato" and "2 Potato" while 4 to 5 ripened; "1 Cauliflower" and "2 Cauliflower" from 3 to 5.</li><li>"Ship all produce" kept goods 15 times in F32b ("Kept 4 Potato for the board.", "Kept 5 Potato and 2 Cauliflower for the board.").</li><li>The row's All warns "The board wants 3 Potato."</li></ul>**But** every one of those toasts is drawn **under** the open bin sheet, so the player does not see it (**F1**). The careless A32b lost 7 farm rows to Clay.                                                                                                                                                                                                                                | played        |
+| F3 special emptied a part-filled request                              |                                                                         | **Fixed.** Hold 2 with "3 Potato, Have 2/3, 2 days": the special reads "Saved for a request." with Give off. On the request's last day: "Give 2". Hold 7: "Give 4".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | played        |
+| F4 Make slid under the thumb after a batch                            |                                                                         | **Fixed.** <ul><li>"x3" at x 180 cooks 3 Baked Potato and keeps the 3 gold potatoes.</li><li>The slot stays as a dim "x1" at the same x 180; a second tap there does nothing.</li><li>Make stays at x 146.</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | played        |
+| F5 special on top took the hurried tap                                |                                                                         | **Fixed.** Requests are drawn first and the special last (all boards).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | played        |
+| F6 season result easy to miss                                         |                                                                         | **Mostly fixed:** <ul><li>The result comes after Clay's last take (code order, `mechanics/orders.ts:13-21`).</li><li>Mara writes "Best on the board" on a win.</li><li>The canopy nag came once in 32 days (F32b day 27).</li></ul>**Still weak:** <ul><li>"Last season: ..." gives way to Clay's target. It was shown on **1 of 3** days in F32b and **0 of 3** in A32b.</li><li>A 0-0 season says nothing.</li></ul>See F4.                                                                                                                                                                                                                                                                                                                                             | played        |
+| F7 cart said the use only after paying                                |                                                                         | **Fixed.** Rows read "900g Market Road", "600g Waters 8", "120g Winter crop". **New small losses:** the "N left" count is gone from tagged rows, and a greenhouse-only seed in fall reads "Spring crop" (F5).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | played        |
+| F8 text                                                               |                                                                         | **Partly fixed:** Clay's 2-heart line was changed in data (not played). **Still open:** <ul><li>"Craft something at the workbench" (`goals.json:117`).</li><li>The cook goal's hint "cook at the workbench" (`goals.json:486`).</li><li>Dish icons are still coloured dots (shot `s10-make`).</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | read + played |
+| Day-31 stall                                                          | bin and bed would not open                                              | **Not reproduced.** `agents/probes/stall-day31.mjs` variants A, B and C all opened the bin and the bed with `{modals: 0 -> 1, busy: false, suspended: false}` (`tmp/stall.out`). There was no stall in 4 x 32 played days either.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | played        |
 
 ---
 
@@ -96,7 +101,7 @@ Reviewer: independent QA lead and game critic, round 10.
   1. Hold 3 potatoes and 2 strawberry jam, with open requests for both.
   2. Open the bin and tap **Ship all produce**. The event log has the toast "Kept 7 goods for the board.", but the screen shows the sheet with no toast.
   3. Tap a row's **All**. "The board wants 3 Potato." fires. Nothing is visible.
-  4. Press Esc within about 2 s. Both toasts appear above the dock, stacked, *after* the decision is made.
+  4. Press Esc within about 2 s. Both toasts appear above the dock, stacked, _after_ the decision is made.
 - **Cause:**
   - `src/ui/Hud.ts:389-404` draws toasts at depth 79-80, at `DOCK_Y - 6` and stacking upward (`:444`). That is inside the area every bottom sheet covers.
   - `Modal` puts its dim at depth 200 and the sheet at 210 (`src/ui/widgets.ts:291, :304`).
@@ -115,12 +120,12 @@ Reviewer: independent QA lead and game critic, round 10.
 
 - **Played (spring, real input, no fishing or foraging):**
 
-  | Run | Spring result | Clay's takes | Clay's points | Score line seen |
-  | --- | --- | --- | --- | --- |
-  | F32b (Ship all, keeps) | **won 15 to 0**, +300g, Mara's letter, trophy 1 | 13 (all fish or wild) | **0** | 25 of 25 |
-  | A32b (row All, careless) | **lost 4 to 7**, "The board is mine" letter | 15 | 7 (5 potato, 2 parsnip) | 25 of 25 |
-  | F32 (no planting after day 2) | won 5 to 0 | 17 (all fish or wild) | 0 | 25 of 25 |
-  | A32 (no planting after day 2) | won 3 to 1 | 13 | 1 (4 Potato) | 25 of 25 |
+  | Run                           | Spring result                                   | Clay's takes          | Clay's points           | Score line seen |
+  | ----------------------------- | ----------------------------------------------- | --------------------- | ----------------------- | --------------- |
+  | F32b (Ship all, keeps)        | **won 15 to 0**, +300g, Mara's letter, trophy 1 | 13 (all fish or wild) | **0**                   | 25 of 25        |
+  | A32b (row All, careless)      | **lost 4 to 7**, "The board is mine" letter     | 15                    | 7 (5 potato, 2 parsnip) | 25 of 25        |
+  | F32 (no planting after day 2) | won 5 to 0                                      | 17 (all fish or wild) | 0                       | 25 of 25        |
+  | A32 (no planting after day 2) | won 3 to 1                                      | 13                    | 1 (4 Potato)            | 25 of 25        |
 
 - **What the farmer sees each morning:**
   - "Clay wants this one at 2:00 PM." and a warning-coloured **"Clay's!"** on rows like "5 Trout", "6 Mushroom" or "4 Daffodil". That was 12 of 21 board mornings from day 8 in F32b, and every one of them was a no-point row.
@@ -186,7 +191,7 @@ Reviewer: independent QA lead and game critic, round 10.
 - **Bin toast:** "Kept 7 goods for the board." names nothing once three kinds are kept (`binText.ts:14`).
 - **Cart:**
   - A tagged row drops "N left" (`cartText.ts:11`). After buying 3 you cannot tell 2 remain until "Sold out".
-  - With a greenhouse, fall 19 offered "Strawberry Seeds 200g  **Spring crop**", which reads as unusable (`cart.ts:41-42` uses `seasons[0]`). It should say "Greenhouse".
+  - With a greenhouse, fall 19 offered "Strawberry Seeds 200g **Spring crop**", which reads as unusable (`cart.ts:41-42` uses `seasons[0]`). It should say "Greenhouse".
 - **Board truncation** at 390 px (shot `s10-board-festival-target`):
   - A 4-digit reward cuts the sub line to "Have 3/3 1,045g last ..", losing "last day".
   - The special's title loses its giver: "15 Cauliflower for Ro..".
@@ -198,10 +203,10 @@ Reviewer: independent QA lead and game critic, round 10.
 - **My sim (`simx10.test.ts`, the same keeper-farmer bot, `tmp/simx10.out`):**
 
   | Seed | Farmer y1 | Fisher | +500g on day 7 | +1,000g on day 14 | +2,000g on day 14 |
-  | --- | --- | --- | --- | --- | --- |
-  | 42 | 243,456 | +58% | +17% | +30% | +27% |
-  | 7 | 241,857 | +57% | +19% | +35% | +43% |
-  | 99 | 257,596 | +44% | +22% | +17% | +33% |
+  | ---- | --------- | ------ | -------------- | ----------------- | ----------------- |
+  | 42   | 243,456   | +58%   | +17%           | +30%              | +27%              |
+  | 7    | 241,857   | +57%   | +19%           | +35%              | +43%              |
+  | 99   | 257,596   | +44%   | +22%           | +17%              | +33%              |
 
 - So DECISIONS.md is right that fish prices are not the cause (the fisher has 2.5 to 3.8k earned by day 14).
 - But a single 500g gift in week one is worth about a fifth of the year to a tireless bot, and the response is not even monotonic (seed 42: +1,000g gives +30%, +2,000g gives +27%).
@@ -237,17 +242,17 @@ Reviewer: independent QA lead and game critic, round 10.
 
 ## 3. The days played
 
-| Run | Day 14 earned | Day 28 earned | Day 32 earned | Board (spring) | Notes |
-| --- | --- | --- | --- | --- | --- |
-| **F32b** (Ship all, hurried, keeps) | 4,069 | 16,423 | 17,174 | **won 15 to 0** | 15 "Kept ..." toasts, all unseen (F1); 15 fills; summer board all fish and wild |
-| **A32b** (row All, careless) | 2,891 | 11,933 | 12,099 | **lost 4 to 7** | lost 7 crop rows to Clay; Clay's letter |
-| F32 (fault: no planting after day 2) | 3,893 | 6,335 | 6,683 | won 5 to 0 | invalid economy |
-| A32 (fault: no planting after day 2) | 3,237 | 7,626 | 8,018 | won 3 to 1 | invalid economy |
+| Run                                  | Day 14 earned | Day 28 earned | Day 32 earned | Board (spring)  | Notes                                                                           |
+| ------------------------------------ | ------------- | ------------- | ------------- | --------------- | ------------------------------------------------------------------------------- |
+| **F32b** (Ship all, hurried, keeps)  | 4,069         | 16,423        | 17,174        | **won 15 to 0** | 15 "Kept ..." toasts, all unseen (F1); 15 fills; summer board all fish and wild |
+| **A32b** (row All, careless)         | 2,891         | 11,933        | 12,099        | **lost 4 to 7** | lost 7 crop rows to Clay; Clay's letter                                         |
+| F32 (fault: no planting after day 2) | 3,893         | 6,335         | 6,683         | won 5 to 0      | invalid economy                                                                 |
+| A32 (fault: no planting after day 2) | 3,237         | 7,626         | 8,018         | won 3 to 1      | invalid economy                                                                 |
 
 Critique 9's racers (which fished and foraged for jobs) earned 6,374 to 8,218 by day 14 and 14,075 to 14,933 by day 28. F32b's pure farmer lands close on day 28 without fish.
 
 - **Is the race worth running now?**
-  - It is visible, honest about its stakes, and fair in the sense that a farmer *can* win.
+  - It is visible, honest about its stakes, and fair in the sense that a farmer _can_ win.
   - But a player who taps the default button wins it without trying. A player who uses All loses it without seeing why (F1, F2).
 - **Is the early board alive for a farmer?**
   - Spring, yes: a crop row on most days.
@@ -271,6 +276,7 @@ Critique 9's racers (which fished and foraged for jobs) earned 6,374 to 8,218 by
 ## 5. Progression and economy
 
 **Sim (`tests/sim.test.ts`, `tmp/sim.out`):**
+
 - **Tireless bot, five seeds:** 234,833 / 241,295 / 249,871 / 267,119 / 264,481 (**median 249,871**, equal to the pin).
 - **Human-paced bot:** median **189,883** (critique 9: 184,919).
 - **Board income:** 12,787g of 234,833 (5%). Requests posted 132; Clay took 70.
@@ -281,6 +287,7 @@ Critique 9's racers (which fished and foraged for jobs) earned 6,374 to 8,218 by
   - fisher-keeper: 24 of 24.
 
 **Runaway or dead:**
+
 - **Runaway:** none in the yearly totals. But see F7: the early compounding means small early rewards have a large effect.
 - **Near dead:**
   - Clay as an opponent for a keeper (F2);
@@ -293,7 +300,7 @@ Critique 9's racers (which fished and foraged for jobs) earned 6,374 to 8,218 by
 
 1. **Put toasts above sheets** (or give sheets a status line) so keep-back, "The board wants", "Order done" and "Bought" are seen when they happen (F1).
 2. **Make Clay's day matter again.**
-   - He takes the best *farm* row on its last day.
+   - He takes the best _farm_ row on its last day.
    - The board never marks a no-point row as his.
    - Optionally he scores a little on his own, so keeping goods is necessary but not sufficient (F2).
    - Keep scoring after he turns friendly, and do not strand the last goal (F3).
@@ -302,6 +309,7 @@ Critique 9's racers (which fished and foraged for jobs) earned 6,374 to 8,218 by
 ## 7. Verdict
 
 **Stable, honest and readable, with one Major usability bug and no blocker.**
+
 - **Checks:** 700 tests and tsc pass. 0 errors in about 130 played days. No stall.
 - **Critique-9 findings:**
   - F3, F4, F5 and F7 are fixed through real input.
@@ -310,21 +318,22 @@ Critique 9's racers (which fished and foraged for jobs) earned 6,374 to 8,218 by
   - F6 is mostly fixed; F8 is partly fixed.
 
 **The main weakness has moved again:**
+
 - It is no longer that a farmer cannot win. A farmer who taps "Ship all produce" wins 15 to 0 against a Clay whose daily target scores nothing.
 - A farmer who uses the row buttons loses 4 to 7, because the warnings meant to stop him are drawn under the bin sheet.
 - The scoreboard is now visible and fair. What it lacks is an opponent who plays to win, and feedback the player can actually see.
 
 ## Screenshots (`critique-10/shots-10/`)
 
-| Group | Files |
-| --- | --- |
-| Hidden toasts (F1) | `e10-keep-toast-under-sheet`, `e10-keep-toast-after-close`, `e10-keep-bin-before`, `e10-keep-bin-after`, `e10-keep-bin-all-warn`, `s10-bin-wanted`, `s10-bin-after-shipall` |
+| Group                         | Files                                                                                                                                                                                           |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hidden toasts (F1)            | `e10-keep-toast-under-sheet`, `e10-keep-toast-after-close`, `e10-keep-bin-before`, `e10-keep-bin-after`, `e10-keep-bin-all-warn`, `s10-bin-wanted`, `s10-bin-after-shipall`                     |
 | Clay's targets and takes (F2) | `e10-score-day7`, `e10-score-day8`, `e10-score-target-fish`, `e10-score-nopoint-take`, `e10-score-y2-two-targets`, `e10-score-y2-two-taken`, `e10-score-y2-mixed`, `e10-keep-board-4pm-lastday` |
-| Clay at 5 hearts (F3) | `e10-off-board` |
-| Season endings (F4) | `e10-season-{win,lose,draw,zero}-board-summer1..4`, `-mail-list`, `-letter` |
-| Special | `e10-special-part-way`, `e10-special-lastday-partway` |
-| Trophy and statue | `e10-trophy-after-win1`, `-win2`, `-after-reload`, `e10-trophy-in-house`, `F32b-trophy-house`, `A32b-trophy-house` (no trophy after the loss), `e10-statue-full-lv1..6`, `e10-statue-page` |
-| Kitchen and eating | `e10-make-tab`, `e10-make-tab-after`, `s10-make`, `e10-eat-dish4-card`, `s10-bag-dish4`, `s10-bag-dish6` |
-| Cart | `e10-cart-spring-5`, `-summer-12`, `-fall-19` ("Spring crop" with a greenhouse), `-winter-26`, `-spring-26`, `s10-cart` |
-| Sweep (tall boards, letters) | `s10-board-cart-target`, `-festival-target` (truncation), `-y2-two-targets-lastseason`, `-cart-3pm-took`, `-lastseason-lost`, `-cart-y2`, `s10-mail-list`, `s10-mail-letter-0..2` |
-| New game | `01-day1-farm-planted`, `02`..`04-summary-day*` (from the last run to finish) |
+| Clay at 5 hearts (F3)         | `e10-off-board`                                                                                                                                                                                 |
+| Season endings (F4)           | `e10-season-{win,lose,draw,zero}-board-summer1..4`, `-mail-list`, `-letter`                                                                                                                     |
+| Special                       | `e10-special-part-way`, `e10-special-lastday-partway`                                                                                                                                           |
+| Trophy and statue             | `e10-trophy-after-win1`, `-win2`, `-after-reload`, `e10-trophy-in-house`, `F32b-trophy-house`, `A32b-trophy-house` (no trophy after the loss), `e10-statue-full-lv1..6`, `e10-statue-page`      |
+| Kitchen and eating            | `e10-make-tab`, `e10-make-tab-after`, `s10-make`, `e10-eat-dish4-card`, `s10-bag-dish4`, `s10-bag-dish6`                                                                                        |
+| Cart                          | `e10-cart-spring-5`, `-summer-12`, `-fall-19` ("Spring crop" with a greenhouse), `-winter-26`, `-spring-26`, `s10-cart`                                                                         |
+| Sweep (tall boards, letters)  | `s10-board-cart-target`, `-festival-target` (truncation), `-y2-two-targets-lastseason`, `-cart-3pm-took`, `-lastseason-lost`, `-cart-y2`, `s10-mail-list`, `s10-mail-letter-0..2`               |
+| New game                      | `01-day1-farm-planted`, `02`..`04-summary-day*` (from the last run to finish)                                                                                                                   |

@@ -8,14 +8,14 @@ never-paint runs. Runs: `round-6/runs/*/`.
 
 ## Numbers
 
-| | base 6d5e480 (round 5) | 94cb9c3 |
-|---|---|---|
-| reach town on day 2 | 9/12 | **14/14** |
-| never-paint runs | 1 dead end (540 s), 1 mail stall | 4/4 pass (clean never: 143 s, 158 s) |
-| mail step | 2 runs stuck 300+ s | 0 stalls (lit-button pointer, gift loop gone) |
-| waking to town on day 2 | water2 14-76 s, then the walk | 28-50 s (rain morning) |
-| New Game to waking on day 2 | 116-191 s | 111-166 s (one outlier 377 s, finding 1) |
-| clean-run steps over 45 s | water2 in 3 runs | none |
+|                             | base 6d5e480 (round 5)           | 94cb9c3                                       |
+| --------------------------- | -------------------------------- | --------------------------------------------- |
+| reach town on day 2         | 9/12                             | **14/14**                                     |
+| never-paint runs            | 1 dead end (540 s), 1 mail stall | 4/4 pass (clean never: 143 s, 158 s)          |
+| mail step                   | 2 runs stuck 300+ s              | 0 stalls (lit-button pointer, gift loop gone) |
+| waking to town on day 2     | water2 14-76 s, then the walk    | 28-50 s (rain morning)                        |
+| New Game to waking on day 2 | 116-191 s                        | 111-166 s (one outlier 377 s, finding 1)      |
+| clean-run steps over 45 s   | water2 in 3 runs                 | none                                          |
 
 Bed offer ("All done! Sleep, or keep exploring." / "...at home, or explore." in town) showed in 13/14 runs, at 8:29-8:49 AM.
 

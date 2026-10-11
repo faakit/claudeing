@@ -7,6 +7,7 @@ r9-night_zoom). R9-2: lamp tops on their own never-cut layer, thin placed sprite
 are full size; woods interior spots inside forage zones became bushes/stumps (accepted).
 
 Open:
+
 - minor: add a perf scenario with the player standing under a crown and behind a placed tree (mask active), since
   geometry masks can break batching; the current scenarios never trigger the hole.
 - R9-4 minor: 32x28 barn source needs a Flow fetch by the coordinator (this art session cannot download).

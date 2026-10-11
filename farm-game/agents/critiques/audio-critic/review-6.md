@@ -1,4 +1,5 @@
 # Review 6 (round 2, checkpoint 2: f633de0 + 182ac74) - 2026-10-08
+
 Frozen copy round-6/. verify green: 473 tests; perf new scene "full field + 20 sound effects a second": 102 sfx played, 10-11 dropped
 (minGap), 1.71/0.98/1.63 ms JS at 1x/4x/6x; fps 144.6/143.7/91.7 (6x drop vs 124-143 for other scenes).
 Measurement correction: my R5 sfx numbers were single-hit ebur128 M (100 ms hop, one random take). Re-measured with tools/hits.py

@@ -17,6 +17,7 @@ collision or interact tile, unless a row says otherwise and marks it as an owner
 **Verdict:** the owner is right. Two scale systems are mixed. Characters, crops and props are drawn at roughly human
 scale. Trees, animal houses, landmarks, lamps and the farmhouse walls are squeezed into one tile, and placed objects
 are pushed up to 16 px whatever their real size. The worst offenders are:
+
 - trees smaller than the player
 - a barn smaller than the cow standing next to it
 - house facades 16 px tall with a 28 px player standing at the door
@@ -36,90 +37,90 @@ are pushed up to 16 px whatever their real size. The worst offenders are:
 The rule: the trunk stays on its one tile, and the crown grows up and out as an overhead canopy that fades near the
 player. The fade already exists; widen its radius so it covers the player's tile and the target tile.
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Fruit tree, grown (`obj_tree_*_sapling`, all four) | 16x21 (1 tile) | **32x40** (2x2.5 tiles): trunk 4-6 px wide, about 14 px on the base tile; crown 32 wide, about 26 tall; fruit 3-4 px on the crown | A fruit tree should be clearly taller than a person; today it is chest-high. | No. 1-tile solid trunk; the crown is overhead. Interact stays on the trunk tile. |
-| Fruit tree, young (`obj_sapling`) | 11x19, one state for every age below grown | 3 states: **seedling 8x10, sapling 12x20, young tree 20x28**, then grown 32x40 | Growth should be visible; one bare stick for all ages hides progress. | Art plus a sprite pick by age in the fruitTree behavior's `sprite()`; no rule change. |
-| Forest/grove trees (baked canopy) | crowns about 16-20 px (1 tile), trunk row at the bottom | **32-40 px wide crowns, 44-56 px tall**, overlapping into a mass; trunks every 1-2 tiles on the front row | A forest border of 1-tile crowns reads as a hedge of shrubs. | No. The solid cells are unchanged; crowns go on the overhead layer. |
-| Lone decor tree, round (farm, woods, town) | about 15x16 | **28-32 x 40-44** | Today it is smaller than the player's head and torso. | No (overhead crown). |
-| Pine | about 14x18 | **20-24 x 40-48**, pointed | It should be the tall, narrow silhouette, contrasting with the round oak. | No. |
-| Birch | about 12x18 | **20 x 40**, light trunk 3 px | Slender and tall. | No. |
-| Old oak (woods landmark) | about 19x28 | **56-64 x 56-64**, gnarled trunk 2 tiles wide at the base | A landmark you could draw from memory; today it is shorter than the player. | Trunk solid stays on its existing tile(s); the crown is overhead. |
-| Bushes (round, berry, rose, small) | 13-16 x 10-14 | keep (about 16x14); small bush 10x10 | Shrubs at about 0.8 m are already right. | No. |
-| Stumps, logs | about 16x12 | keep | Correct. | No. |
+| thing                                              | now                                                     | recommended                                                                                                                       | why                                                                          | gameplay                                                                              |
+| -------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Fruit tree, grown (`obj_tree_*_sapling`, all four) | 16x21 (1 tile)                                          | **32x40** (2x2.5 tiles): trunk 4-6 px wide, about 14 px on the base tile; crown 32 wide, about 26 tall; fruit 3-4 px on the crown | A fruit tree should be clearly taller than a person; today it is chest-high. | No. 1-tile solid trunk; the crown is overhead. Interact stays on the trunk tile.      |
+| Fruit tree, young (`obj_sapling`)                  | 11x19, one state for every age below grown              | 3 states: **seedling 8x10, sapling 12x20, young tree 20x28**, then grown 32x40                                                    | Growth should be visible; one bare stick for all ages hides progress.        | Art plus a sprite pick by age in the fruitTree behavior's `sprite()`; no rule change. |
+| Forest/grove trees (baked canopy)                  | crowns about 16-20 px (1 tile), trunk row at the bottom | **32-40 px wide crowns, 44-56 px tall**, overlapping into a mass; trunks every 1-2 tiles on the front row                         | A forest border of 1-tile crowns reads as a hedge of shrubs.                 | No. The solid cells are unchanged; crowns go on the overhead layer.                   |
+| Lone decor tree, round (farm, woods, town)         | about 15x16                                             | **28-32 x 40-44**                                                                                                                 | Today it is smaller than the player's head and torso.                        | No (overhead crown).                                                                  |
+| Pine                                               | about 14x18                                             | **20-24 x 40-48**, pointed                                                                                                        | It should be the tall, narrow silhouette, contrasting with the round oak.    | No.                                                                                   |
+| Birch                                              | about 12x18                                             | **20 x 40**, light trunk 3 px                                                                                                     | Slender and tall.                                                            | No.                                                                                   |
+| Old oak (woods landmark)                           | about 19x28                                             | **56-64 x 56-64**, gnarled trunk 2 tiles wide at the base                                                                         | A landmark you could draw from memory; today it is shorter than the player.  | Trunk solid stays on its existing tile(s); the crown is overhead.                     |
+| Bushes (round, berry, rose, small)                 | 13-16 x 10-14                                           | keep (about 16x14); small bush 10x10                                                                                              | Shrubs at about 0.8 m are already right.                                     | No.                                                                                   |
+| Stumps, logs                                       | about 16x12                                             | keep                                                                                                                              | Correct.                                                                     | No.                                                                                   |
 
 ### Buildings and landmarks (priority 2)
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Farmhouse (baked) | 144 wide; roof about 68 deep; **facade 16 px**; door about 14x20 | Same footprint. **Facade 32 px (2 tiles)**, roof about 52 px, door **14x26** with a step, windows 10x12 at head height (y 14-26 above the ground) | The walls are lower than the player, so the house reads as a dollhouse under a giant roof. | No. Re-split the same rectangle: fewer roof rows, more wall rows. The door tile stays put. |
-| Town houses and shop (baked) | facade about 16-20 px, door about 20 | Same: **facade 32 px, door 14x26**, shop awning above head height | Same reason. | No (same rectangles). |
-| Coop | 16x17 on 1 tile | **24x24** now (8 px overhang up, 4 px each side); ideally a 2x2 footprint, 32x32 | A coop smaller than the player is a birdhouse. | Art-only at 24 px. **A 2x2 footprint is an owner decision** (placement rules, saves). |
-| Barn | 16x15 | **28x28** now; ideally 3x2, 48x40 | Today the barn is smaller than its cow (16x12). | Same as the coop. |
-| Shed | 16x16 | **24x22**; ideally 2x2 | Same reason. | Same. |
-| Sty | 16x14 | **24x18** (low fence and roof) | A pen should be wider than tall. | Same. |
-| Silo | 15x24 | **16x40** (narrow and tall, overhead top) | A silo is the tallest farm building. | No (1 tile, grows up). |
-| Town-project landmarks (bathhouse, library, fair hall, market...) | 16x13-20 on 1 tile | **32 wide x 32-40 tall**, overhang only toward the open side; or 2x2 footprints (owner decision) | A bathhouse in one 16 px tile is a toy. | Overhang is visual only, but check neighbouring tiles in town. A footprint change is an owner decision. |
-| Statue levels 1-5 | 12x16 up to 16x31 | keep. Level 5 at 31 px is right for a statue on a plinth. | Already correct. | No. |
+| thing                                                             | now                                                              | recommended                                                                                                                                       | why                                                                                        | gameplay                                                                                                |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Farmhouse (baked)                                                 | 144 wide; roof about 68 deep; **facade 16 px**; door about 14x20 | Same footprint. **Facade 32 px (2 tiles)**, roof about 52 px, door **14x26** with a step, windows 10x12 at head height (y 14-26 above the ground) | The walls are lower than the player, so the house reads as a dollhouse under a giant roof. | No. Re-split the same rectangle: fewer roof rows, more wall rows. The door tile stays put.              |
+| Town houses and shop (baked)                                      | facade about 16-20 px, door about 20                             | Same: **facade 32 px, door 14x26**, shop awning above head height                                                                                 | Same reason.                                                                               | No (same rectangles).                                                                                   |
+| Coop                                                              | 16x17 on 1 tile                                                  | **24x24** now (8 px overhang up, 4 px each side); ideally a 2x2 footprint, 32x32                                                                  | A coop smaller than the player is a birdhouse.                                             | Art-only at 24 px. **A 2x2 footprint is an owner decision** (placement rules, saves).                   |
+| Barn                                                              | 16x15                                                            | **28x28** now; ideally 3x2, 48x40                                                                                                                 | Today the barn is smaller than its cow (16x12).                                            | Same as the coop.                                                                                       |
+| Shed                                                              | 16x16                                                            | **24x22**; ideally 2x2                                                                                                                            | Same reason.                                                                               | Same.                                                                                                   |
+| Sty                                                               | 16x14                                                            | **24x18** (low fence and roof)                                                                                                                    | A pen should be wider than tall.                                                           | Same.                                                                                                   |
+| Silo                                                              | 15x24                                                            | **16x40** (narrow and tall, overhead top)                                                                                                         | A silo is the tallest farm building.                                                       | No (1 tile, grows up).                                                                                  |
+| Town-project landmarks (bathhouse, library, fair hall, market...) | 16x13-20 on 1 tile                                               | **32 wide x 32-40 tall**, overhang only toward the open side; or 2x2 footprints (owner decision)                                                  | A bathhouse in one 16 px tile is a toy.                                                    | Overhang is visual only, but check neighbouring tiles in town. A footprint change is an owner decision. |
+| Statue levels 1-5                                                 | 12x16 up to 16x31                                                | keep. Level 5 at 31 px is right for a statue on a plinth.                                                                                         | Already correct.                                                                           | No.                                                                                                     |
 
 ### Animals and villagers
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Cow | 16x12 | **24x18** (side view, 2 frames) | A cow is about 1.4 m tall and 2.4 m long. | No; animals are cosmetic and stand in front of the house. |
-| Sheep | 14x11 | **18x14** | | No. |
-| Pig | 14x9 | **18x12** | | No. |
-| Chicken | 10x11 | keep (10x10) | Correct. | No. |
-| Villagers (26-30 px), player (28) | - | keep | Decided in round 1. | No. |
+| thing                             | now   | recommended                     | why                                       | gameplay                                                  |
+| --------------------------------- | ----- | ------------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| Cow                               | 16x12 | **24x18** (side view, 2 frames) | A cow is about 1.4 m tall and 2.4 m long. | No; animals are cosmetic and stand in front of the house. |
+| Sheep                             | 14x11 | **18x14**                       |                                           | No.                                                       |
+| Pig                               | 14x9  | **18x12**                       |                                           | No.                                                       |
+| Chicken                           | 10x11 | keep (10x10)                    | Correct.                                  | No.                                                       |
+| Villagers (26-30 px), player (28) | -     | keep                            | Decided in round 1.                       | No.                                                       |
 
 ### Machines
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Preserves jar | 13x18 | **12x14** | A jar should not be keg-sized. | No. |
-| Keg | 16x16 | keep or 14x16 | Correct. | No. |
-| Loom | 16x17 | **16x22** (frame above the cloth) | A loom is chest-high. | No. |
-| Furnace | 13x18 | **16x22** (chimney above) | | No. |
-| Bee house | 14x18 | keep (12x18) | Correct. | No. |
-| Sprinkler (both) | 16x14, 16x16 | **10x10** (quality sprinkler 12x12) | A sprinkler is a small head on the ground; today it reads as a machine. | No. |
+| thing            | now          | recommended                         | why                                                                     | gameplay |
+| ---------------- | ------------ | ----------------------------------- | ----------------------------------------------------------------------- | -------- |
+| Preserves jar    | 13x18        | **12x14**                           | A jar should not be keg-sized.                                          | No.      |
+| Keg              | 16x16        | keep or 14x16                       | Correct.                                                                | No.      |
+| Loom             | 16x17        | **16x22** (frame above the cloth)   | A loom is chest-high.                                                   | No.      |
+| Furnace          | 13x18        | **16x22** (chimney above)           |                                                                         | No.      |
+| Bee house        | 14x18        | keep (12x18)                        | Correct.                                                                | No.      |
+| Sprinkler (both) | 16x14, 16x16 | **10x10** (quality sprinkler 12x12) | A sprinkler is a small head on the ground; today it reads as a machine. | No.      |
 
 ### Props and furniture
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Garden lamp (placeable) | 10x20 | **8x36** (head above the player's head) | A lamp post shorter than a person looks like a candle. | No (1 tile, grows up). |
-| Town and road lamps (baked) | about 8x22 | **8x36** | Same reason. | No. |
-| Scarecrow | 16x23 | **16x30** | Person-sized. | No. |
-| Flower pot | 13x16 | **10x12** | It is the size of a bench today. | No. |
-| Garden bench | 15x16 | **16x14** (low seat, seat line at about 8 px) | | No. |
-| Fountain | 16x14 | keep, or 24x20 overhang | Fine for a garden piece. | No. |
-| Fence | 16x11 | **16x14** with posts | About 1 m. | No. |
-| Well (baked) | about 16x20 | **20x30** with roof and winch | The well is the town's centrepiece. | No (solid tile unchanged). |
-| Mailbox | 12x18 | keep | Correct. | No. |
-| Shipping bin | about 14x18 | keep | Correct. | No. |
-| Signs, board | 14x15 | keep | Correct. | No. |
-| Mine cart | about 14x12 | keep | Correct. | No. |
-| Bed (house) | about 18x29 | keep | It fits the player. | No. |
-| Rowboat | about 12x27 | **16x36** | A 28 px person should fit in it. | No (decor on water). |
-| Lilies, reeds | about 8 px | keep | Correct. | No. |
+| thing                       | now         | recommended                                   | why                                                    | gameplay                   |
+| --------------------------- | ----------- | --------------------------------------------- | ------------------------------------------------------ | -------------------------- |
+| Garden lamp (placeable)     | 10x20       | **8x36** (head above the player's head)       | A lamp post shorter than a person looks like a candle. | No (1 tile, grows up).     |
+| Town and road lamps (baked) | about 8x22  | **8x36**                                      | Same reason.                                           | No.                        |
+| Scarecrow                   | 16x23       | **16x30**                                     | Person-sized.                                          | No.                        |
+| Flower pot                  | 13x16       | **10x12**                                     | It is the size of a bench today.                       | No.                        |
+| Garden bench                | 15x16       | **16x14** (low seat, seat line at about 8 px) |                                                        | No.                        |
+| Fountain                    | 16x14       | keep, or 24x20 overhang                       | Fine for a garden piece.                               | No.                        |
+| Fence                       | 16x11       | **16x14** with posts                          | About 1 m.                                             | No.                        |
+| Well (baked)                | about 16x20 | **20x30** with roof and winch                 | The well is the town's centrepiece.                    | No (solid tile unchanged). |
+| Mailbox                     | 12x18       | keep                                          | Correct.                                               | No.                        |
+| Shipping bin                | about 14x18 | keep                                          | Correct.                                               | No.                        |
+| Signs, board                | 14x15       | keep                                          | Correct.                                               | No.                        |
+| Mine cart                   | about 14x12 | keep                                          | Correct.                                               | No.                        |
+| Bed (house)                 | about 18x29 | keep                                          | It fits the player.                                    | No.                        |
+| Rowboat                     | about 12x27 | **16x36**                                     | A 28 px person should fit in it.                       | No (decor on water).       |
+| Lilies, reeds               | about 8 px  | keep                                          | Correct.                                               | No.                        |
 
 ### Crops
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Seed mound, stages 1-2 | 10x9, 6-12 px | keep | Readable. | No. |
-| Low crops at maturity (parsnip, potato, cauliflower, kale, melon, pumpkin, strawberry, yam) | 14-16 x 13-16 | keep | Correct for a 1-tile plot. | No. |
-| Tall crops (corn, tomato, snow pea) at maturity | 12-16 x 17-24 | corn **12x26**; tomato and snow pea keep at 24 | Corn should be about the player's height. Stay at or under 26 so a row doesn't hide the row behind it. | No. |
+| thing                                                                                       | now           | recommended                                    | why                                                                                                    | gameplay |
+| ------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------- |
+| Seed mound, stages 1-2                                                                      | 10x9, 6-12 px | keep                                           | Readable.                                                                                              | No.      |
+| Low crops at maturity (parsnip, potato, cauliflower, kale, melon, pumpkin, strawberry, yam) | 14-16 x 13-16 | keep                                           | Correct for a 1-tile plot.                                                                             | No.      |
+| Tall crops (corn, tomato, snow pea) at maturity                                             | 12-16 x 17-24 | corn **12x26**; tomato and snow pea keep at 24 | Corn should be about the player's height. Stay at or under 26 so a row doesn't hide the row behind it. | No.      |
 
 ### Forage, drops and UI icons in the world
 
-| thing | now | recommended | why | gameplay |
-|---|---|---|---|---|
-| Forage on the ground | the 16 px item icon at **scale 0.8 (12.8 px)** (`ObjectsRenderer.ts:221`) | dedicated **10-12 px world sprites drawn at 1x** (leek, mushroom, daffodil...), keeping the ring and twinkle | A non-integer scale drops pixel rows (it breaks the crisp-pixel rule), and a 16 px mushroom is knee-high. | No. |
-| Ready bubble on houses, twinkle star | scale 0.8 | 1x; author an 8-10 px bubble icon | Same crisp-pixel issue. | No. |
-| Item pop | tweens from 0.5 to 1x, ends at 16 px | keep the 1x end; snap the tween to 0.5 / 1 steps | Only transient. | No. |
-| HUD bolt and drop icons | scale 0.8 (`Hud.ts:117,121`) | 1x | Crisp-pixel issue, minor. | No. |
-| UI item icons (16x16) | - | keep. Menus are UI scale, not world scale. | | No. |
+| thing                                | now                                                                       | recommended                                                                                                  | why                                                                                                       | gameplay |
+| ------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | -------- |
+| Forage on the ground                 | the 16 px item icon at **scale 0.8 (12.8 px)** (`ObjectsRenderer.ts:221`) | dedicated **10-12 px world sprites drawn at 1x** (leek, mushroom, daffodil...), keeping the ring and twinkle | A non-integer scale drops pixel rows (it breaks the crisp-pixel rule), and a 16 px mushroom is knee-high. | No.      |
+| Ready bubble on houses, twinkle star | scale 0.8                                                                 | 1x; author an 8-10 px bubble icon                                                                            | Same crisp-pixel issue.                                                                                   | No.      |
+| Item pop                             | tweens from 0.5 to 1x, ends at 16 px                                      | keep the 1x end; snap the tween to 0.5 / 1 steps                                                             | Only transient.                                                                                           | No.      |
+| HUD bolt and drop icons              | scale 0.8 (`Hud.ts:117,121`)                                              | 1x                                                                                                           | Crisp-pixel issue, minor.                                                                                 | No.      |
+| UI item icons (16x16)                | -                                                                         | keep. Menus are UI scale, not world scale.                                                                   |                                                                                                           | No.      |
 
 ## Readability side effects to guard
 

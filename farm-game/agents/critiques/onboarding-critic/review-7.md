@@ -8,13 +8,13 @@ and 2 runs to day 3 (END=day3, one never-paint). Runs: `round-7/runs/*/`.
 
 ## Numbers
 
-| | round 5 (base) | round 6 | round 7 |
-|---|---|---|---|
-| reach town on day 2 | 9/12 | 14/14 | **16/16** (+2 house wanders) |
-| waking to town on day 2 | water2 14-76 s, then the walk | 28-50 s | 28-50 s |
-| New Game to town on day 2 | 166-273 s | 142-215 s | 142-214 s |
-| silent time in the house during free play | n/a | 282 s (1 run) | goal arrow after 5.5 s, out the door |
-| day-3 waterDaily | n/a | n/a | 2/2: "Sunny! Water your crops: 5 left." to done in 11-12 s, row tip once |
+|                                           | round 5 (base)                | round 6       | round 7                                                                  |
+| ----------------------------------------- | ----------------------------- | ------------- | ------------------------------------------------------------------------ |
+| reach town on day 2                       | 9/12                          | 14/14         | **16/16** (+2 house wanders)                                             |
+| waking to town on day 2                   | water2 14-76 s, then the walk | 28-50 s       | 28-50 s                                                                  |
+| New Game to town on day 2                 | 166-273 s                     | 142-215 s     | 142-214 s                                                                |
+| silent time in the house during free play | n/a                           | 282 s (1 run) | goal arrow after 5.5 s, out the door                                     |
+| day-3 waterDaily                          | n/a                           | n/a           | 2/2: "Sunny! Water your crops: 5 left." to done in 11-12 s, row tip once |
 
 ## Verified
 

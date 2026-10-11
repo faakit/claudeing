@@ -12,23 +12,24 @@ speed all along.
 
 ## Numbers
 
-| | Baseline | M2 | M3 |
-| --- | --- | --- | --- |
-| Steady 4x / 6x worst frame | 41.7 / 48.6 | 7.2 / 20.9 | 20.7 / 20.9 (p95 7.0 both) |
-| Worst door frame 4x / 6x | 48.6 / 69.5 | 14.0 / 20.9 | 13.9 / 34.8 |
-| Door, step to clear (60 Hz) | 367 ms | 317 ms | **283 ms** (17 frames) |
-| Title to game, worst frame 1x / 4x / 6x (2 runs each) | 146, 90 / 389, 347 / 591, 535 | n/a | 76, 28 / 132, **285** / 153, 174 |
-| Walk JS work p95 at 4x | 6.5 ms | 2.3 ms | 2.9 ms (8-frame art) |
-| First Action at 6x, touch-up to act | 17 ms | 53 ms (once) | 9 ms |
-| Camera: reversals / rest / settle | 79/s / 7 px spread / 0-300 ms | 0 / centred / 200 ms | 0 / centred / 200 ms |
-| Walk: px per animation frame at 64 px/s | 8.0 (8 fps) | 8.0 | **3.93 (16 fps)** |
-| Half-speed stick: animation rate | 8 fps | n/a (probe artifact) | 10 fps (3.15 px per frame) |
-| Planted-foot slide (art, right-facing) | about 5 px per frame | about 5 | about 3 px per frame: the front foot steps back 1 px per frame while the body moves 3.9 |
-| Visible non-integer scale or rotation | 10 kinds | squash only | **none** |
-| Calm: peak tweens on vs off | not gated | 7 / 39 | 7 / 41 |
-| e2e:controls / bench:thumb i13 | OK / 18 rows OK | OK / OK | OK / OK; gestures identical; plot3x3 257/276 mm, 23.7/25.7 s |
+|                                                       | Baseline                      | M2                   | M3                                                                                      |
+| ----------------------------------------------------- | ----------------------------- | -------------------- | --------------------------------------------------------------------------------------- |
+| Steady 4x / 6x worst frame                            | 41.7 / 48.6                   | 7.2 / 20.9           | 20.7 / 20.9 (p95 7.0 both)                                                              |
+| Worst door frame 4x / 6x                              | 48.6 / 69.5                   | 14.0 / 20.9          | 13.9 / 34.8                                                                             |
+| Door, step to clear (60 Hz)                           | 367 ms                        | 317 ms               | **283 ms** (17 frames)                                                                  |
+| Title to game, worst frame 1x / 4x / 6x (2 runs each) | 146, 90 / 389, 347 / 591, 535 | n/a                  | 76, 28 / 132, **285** / 153, 174                                                        |
+| Walk JS work p95 at 4x                                | 6.5 ms                        | 2.3 ms               | 2.9 ms (8-frame art)                                                                    |
+| First Action at 6x, touch-up to act                   | 17 ms                         | 53 ms (once)         | 9 ms                                                                                    |
+| Camera: reversals / rest / settle                     | 79/s / 7 px spread / 0-300 ms | 0 / centred / 200 ms | 0 / centred / 200 ms                                                                    |
+| Walk: px per animation frame at 64 px/s               | 8.0 (8 fps)                   | 8.0                  | **3.93 (16 fps)**                                                                       |
+| Half-speed stick: animation rate                      | 8 fps                         | n/a (probe artifact) | 10 fps (3.15 px per frame)                                                              |
+| Planted-foot slide (art, right-facing)                | about 5 px per frame          | about 5              | about 3 px per frame: the front foot steps back 1 px per frame while the body moves 3.9 |
+| Visible non-integer scale or rotation                 | 10 kinds                      | squash only          | **none**                                                                                |
+| Calm: peak tweens on vs off                           | not gated                     | 7 / 39               | 7 / 41                                                                                  |
+| e2e:controls / bench:thumb i13                        | OK / 18 rows OK               | OK / OK              | OK / OK; gestures identical; plot3x3 257/276 mm, 23.7/25.7 s                            |
 
 Strips:
+
 - `round-3/out/action-till-60hz.png`: hoe wind-up 4 frames, swing 2 with the arc, contact 7 with the dust,
   follow-through 5. Reads well.
 - `round-3/out/walk-right-60hz-world.png`

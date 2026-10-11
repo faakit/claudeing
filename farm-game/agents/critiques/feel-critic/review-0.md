@@ -9,15 +9,15 @@ exact: it calls `game.step()` at a fixed delta with `Date.now` virtualised, so f
 
 ## Frame pacing (rAF intervals, iPhone 13 profile)
 
-| | 1x | 4x | 6x |
-| --- | --- | --- | --- |
-| Steady play (idle, walk, tap-walk, paint) p95 / p99 / max | 7.0 / 7.1 / 9.2 | 7.0 / 7.2 / 41.7 | 13.9 / 14.0 / 48.6 |
-| Steady frames > 33 ms | 0 | 1 | 2 |
-| Worst map-change frame | 7.9 | 48.6 (house>farm) | 69.5 (house>farm) |
-| Doors with a frame > 33 ms | 0/12 | 3/12 | 12/12 (2 frames on 2 doors) |
-| Sheets (menu, bin, shop, board, mail) max / > 33 | 7.1 / 0 | 27.7 / 0 | 55.6 / 4 |
-| Coach marks p95 / max | 7.0 / 7.1 | 7.0 / 20.9 | 20.8 / 55.5 |
-| Sleep + summary max | 8.9 | 34.8 | 97.3 |
+|                                                           | 1x              | 4x                | 6x                          |
+| --------------------------------------------------------- | --------------- | ----------------- | --------------------------- |
+| Steady play (idle, walk, tap-walk, paint) p95 / p99 / max | 7.0 / 7.1 / 9.2 | 7.0 / 7.2 / 41.7  | 13.9 / 14.0 / 48.6          |
+| Steady frames > 33 ms                                     | 0               | 1                 | 2                           |
+| Worst map-change frame                                    | 7.9             | 48.6 (house>farm) | 69.5 (house>farm)           |
+| Doors with a frame > 33 ms                                | 0/12            | 3/12              | 12/12 (2 frames on 2 doors) |
+| Sheets (menu, bin, shop, board, mail) max / > 33          | 7.1 / 0         | 27.7 / 0          | 55.6 / 4                    |
+| Coach marks p95 / max                                     | 7.0 / 7.1       | 7.0 / 20.9        | 20.8 / 55.5                 |
+| Sleep + summary max                                       | 8.9             | 34.8              | 97.3                        |
 
 The 6x frame rate halves to 72 Hz (p95 13.9). The hitch in a door is the new scene's `create()` (JS work up to
 59 ms at 6x), which lands while the screen is black. The sleep spike is the day rollover.
@@ -26,11 +26,11 @@ The 6x frame rate halves to 72 Hz (p95 13.9). The hitch in a door is the new sce
 
 On-screen player x (or y) during a steady 1 s walk, after 0.5 s of warm-up:
 
-| Refresh | Right | Left | Down | Up |
-| --- | --- | --- | --- | --- |
-| 60 Hz | 109..112, 3 moves/s | 95..98, 3 moves/s | 128..131, 3 moves/s | 113..116, 3 moves/s |
-| 120 Hz | **107/108, 80 moves/s, 79 reversals** | 100, still | **126/127, 79 moves/s, 78 reversals** | 119, still |
-| 30 Hz | 116..119 | 89..92 | 135..138 | 107..110 |
+| Refresh | Right                                 | Left              | Down                                  | Up                  |
+| ------- | ------------------------------------- | ----------------- | ------------------------------------- | ------------------- |
+| 60 Hz   | 109..112, 3 moves/s                   | 95..98, 3 moves/s | 128..131, 3 moves/s                   | 113..116, 3 moves/s |
+| 120 Hz  | **107/108, 80 moves/s, 79 reversals** | 100, still        | **126/127, 79 moves/s, 78 reversals** | 119, still          |
+| 30 Hz   | 116..119                              | 89..92            | 135..138                              | 107..110            |
 
 - At 120 Hz, walking right or down, the farmer shimmers 1 px back and forth every frame. Left and up are
   rock-steady. Cause: `startFollow(sprite, true, 0.12)`. Phaser floors the lerped scroll and floors the sprite
@@ -86,6 +86,7 @@ Strips: `action-till-60hz.png`, `harvest-pop-30hz-strip.png`.
 ## Pixel integrity
 
 Visible objects with a non-integer scale (rotation: none seen):
+
 - `soil_tilled` pops from 0.70 to 1;
 - `fx_px` particles at 0.7 to 2.35;
 - the tile marker Graphics pulses from 1.30 to 1;
@@ -97,13 +98,13 @@ Sprite positions are integer on screen (`roundPixels` with integer camera zoom).
 Canvas scale is non-integer on every profile (`scale.txt`), so game-pixel columns are uneven, and they crawl as
 the world scrolls:
 
-| Profile | Device px per game px | Column widths | Spread |
-| --- | --- | --- | --- |
-| iPhone 13 | 5.72 | 5/6 | 20% |
-| Pixel 7 | 5.41 | 5/6 | 20% |
-| iPhone SE | 3.24 | 3/4 | 33% |
-| Pro Max | 6.29 | 6/7 | 17% |
-| Fold | 4.20 | 4/5 | 25% |
+| Profile   | Device px per game px | Column widths | Spread |
+| --------- | --------------------- | ------------- | ------ |
+| iPhone 13 | 5.72                  | 5/6           | 20%    |
+| Pixel 7   | 5.41                  | 5/6           | 20%    |
+| iPhone SE | 3.24                  | 3/4           | 33%    |
+| Pro Max   | 6.29                  | 6/7           | 17%    |
+| Fold      | 4.20                  | 4/5           | 25%    |
 
 ## Taste
 

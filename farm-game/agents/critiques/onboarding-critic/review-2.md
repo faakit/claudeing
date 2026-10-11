@@ -10,16 +10,16 @@ or no paint at all. Skip and replay: `tools/r1-skip.mjs`. Results: `round-1b/run
 
 ## Numbers (M1.1, 12 runs: i13/SE x right/left, human, never-paint, clean)
 
-| | before (round 0) | M1.1 |
-|---|---|---|
-| reaches day 2 by guidance alone | literal follower: 0 tiles in 60 s | 9/12 (8 reach town; 1 skipped by accident after waking), all 4 failures from finding 1 |
-| first harvest step done | n/a | 9-21 s |
-| day 1 (New Game to bed), clean | 65 s, only if you know the secrets | 38-54 s |
-| day 1, human-ish | n/a | 61-81 s |
-| New Game to town, clean / human | n/a | 101-124 s / 130-147 s |
-| lines longer than one row | 3-line toast, 11-line morning | 0 (24 distinct lines); morning 3 lines |
-| close/reopen mid-step | resumes, no reminder | resumes on the same step with its line (6/6) |
-| never paints | n/a | completes "grow" with single Actions (2/2 runs without a menu accident) |
+|                                 | before (round 0)                   | M1.1                                                                                   |
+| ------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
+| reaches day 2 by guidance alone | literal follower: 0 tiles in 60 s  | 9/12 (8 reach town; 1 skipped by accident after waking), all 4 failures from finding 1 |
+| first harvest step done         | n/a                                | 9-21 s                                                                                 |
+| day 1 (New Game to bed), clean  | 65 s, only if you know the secrets | 38-54 s                                                                                |
+| day 1, human-ish                | n/a                                | 61-81 s                                                                                |
+| New Game to town, clean / human | n/a                                | 101-124 s / 130-147 s                                                                  |
+| lines longer than one row       | 3-line toast, 11-line morning      | 0 (24 distinct lines); morning 3 lines                                                 |
+| close/reopen mid-step           | resumes, no reminder               | resumes on the same step with its line (6/6)                                           |
+| never paints                    | n/a                                | completes "grow" with single Actions (2/2 runs without a menu accident)                |
 
 ## Findings
 
@@ -43,6 +43,7 @@ or no paint at all. Skip and replay: `tools/r1-skip.mjs`. Results: `round-1b/run
    - (e) world taps under the bar reach the world, except on the glyph;
    - (f) keep the ring and hand at least 12 px clear of the bar, or move the bar to the bottom of the world view when the target is in the top band;
    - (g) e2e: a stray tap on the bar mid-step, then carry on.
+
 2. **major. water2 says "tap one" but needs every crop (A4).** "Crops need water daily: tap one." is done only when no crop is dry. Clean runs took 38.6 s / 23 taps (`i13-left-clean`) and 18 s / 9 taps (`se-left-clean`). In i13-left-clean one crop took 6+ taps with no effect (aim 108,198, farmer at 12,18; log @84 s). Ask: show a count ("Water the dry crops: 4 left") or accept "tap one". Offer the row (hold Action, drag waters a row) as the alt. Reproduce the no-effect taps (seed 8, i13 left, WRONG=0).
 3. **major. `coach.debug().aim` goes stale while the line menu is open.** `pointer:null` but `aim` is still set (see the stall logs), so an aim-following e2e can't see finding 1 and my bot chases a ghost. Ask: clear `aim` whenever nothing is drawn.
 4. **minor. Ship all leaves the bin open, then "Close this to carry on."** That's an extra step that teaches nothing. Ask: Ship all closes the sheet during the guide.

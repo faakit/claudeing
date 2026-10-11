@@ -3,6 +3,7 @@
 Reviewer: independent QA lead and game critic, round 12.
 
 **Status: complete for the scope below.**
+
 - Played: three new games from spring 1 with real input, plus one first-week game. Each farmer **never fishes or forages**:
   - two keepers on the hurried "Ship all produce" path (31 and 29 days);
   - one careless player who ships with each row's "All" (31 days);
@@ -15,6 +16,7 @@ Reviewer: independent QA lead and game critic, round 12.
 **Frozen build:** `critique-12/farm-game`, a `git archive` of `6d5e480` (head of `integration/round3-2026-10-10`). It is an archive, so I could not confirm the hash myself.
 
 **Method:**
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, against my own `vite` on **port 5197**. I stopped it at the end; port 5197 is confirmed free.
 - **No game source, test or data file was edited.** The `?debug&tutorial=0` hook (`window.__farm`) was used for setup and readback.
 - **Probes:** `farm-game/agents/out/c12/`. Logs are in `c12/tmp/`.
@@ -29,17 +31,19 @@ Reviewer: independent QA lead and game critic, round 12.
 ## What I played, and what I did not
 
 "Real input" means the keyboard (arrows, Space, E, M, Esc, Enter) and real touch taps on canvas buttons found from the live UI tree.
+
 - **Moving between spots was by teleport (`goMap`/`snap`), not by walking.** Before 8:00 the town clock was moved to 8:00.
 - From day 7, a 3 PM board look was modelled by setting the clock to 15:00. The bots finish their day by about 9 AM and the 3 PM look, so these are not human-paced days.
 
-| Run | Player | Ships with | Days | Valid? |
-| --- | --- | --- | --- | --- |
-| **K31** | keeper: never fishes or forages; fills every farm row it can, then the special | bin "Ship all produce", tapped before the board | 31 (spring 1 to summer 3) | yes ("Use now" moved a bag seed 7 times) |
-| **K29b** | same keeper, new random seed | same | 29 (to summer 1) | yes (5 times) |
-| **C31** | careless: same farmer | each row's "All", including Cauliflower now | 31 | yes (8 times) |
-| **W8** | does jobs (forages and fishes for them); first week only | Ship all | 8 | yes |
+| Run      | Player                                                                         | Ships with                                      | Days                      | Valid?                                   |
+| -------- | ------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------- | ---------------------------------------- |
+| **K31**  | keeper: never fishes or forages; fills every farm row it can, then the special | bin "Ship all produce", tapped before the board | 31 (spring 1 to summer 3) | yes ("Use now" moved a bag seed 7 times) |
+| **K29b** | same keeper, new random seed                                                   | same                                            | 29 (to summer 1)          | yes (5 times)                            |
+| **C31**  | careless: same farmer                                                          | each row's "All", including Cauliflower now     | 31                        | yes (8 times)                            |
+| **W8**   | does jobs (forages and fishes for them); first week only                       | Ship all                                        | 8                         | yes                                      |
 
 **Verified only by code or sim:**
+
 - the goal burst when a legend lands (`goals.ts:28-35`);
 - the order of the morning notes;
 - the economy (`tests/sim.test.ts`, `simx12.test.ts`).
@@ -50,18 +54,18 @@ Reviewer: independent QA lead and game critic, round 12.
 
 ## 1. Critique 11 findings re-checked
 
-| C11 | Then | Now | How checked |
-| --- | --- | --- | --- |
-| F1 a keeper walks the race | Medium | **Partly fixed.** The keepers won **12 to 5** and **13 to 6** (was 13 to 3). All of Clay's points were crates: 5 and 6 of them through the catch-up rule. His 26 takes in the two keeper springs (12 and 14) scored 0. The result was settled by about day 13 both times (lead of 4 or more from then on). See **F1**. | played (2 runs) + sim |
-| F2 crate unannounced; day 28 decides | Medium | **Mostly fixed.** "Clay ships a crate tonight: a point." was seen on the board on 11 of 11 keeper crate days, and no crate comes on day 28. Gaps: the line is hidden behind a target or a take (C31 day 21; edge C, Clay scored twice that day), and the letters still say "each week". See **F2**. | played + edge |
-| F3 friendly Clay = free wins | Medium | **Fixed.** At 5 hearts: "Clay no longer takes requests." / "Clay ships a crate tonight: a point.". A friendly season settled "Clay won the board last season (4 to 2)." with no gloating letter. | edge `hearts5` |
-| F4 year-two text | Minor | **Fixed.** "Clay takes two at 2:00 PM: no point."; "Clay wants two of these at 2:00 PM." with both rows marked "Clay's!". Farm plus fish says "wants this one", which is fair since one of the two scores. | edge `y2` |
-| F5 bin line clips; "Board" counts the special | Minor | **Fixed.** "Board 2  bin 1" and "Board 4  x9" fit. The toast reads "Kept 5 Potato for the board and 11 for Rosa.". The row still says "Board 16" (it counts Rosa's 11). | sweep + `edge11b keepsp` |
-| F6 special expiry silent | Minor | **Fixed.** "The special order ran out. Paid 900g for what you brought. Special order: 5 Melon for Finn, by the season's end." | edge `special` |
-| F7 board shrinks under the thumb | Minor | **Fixed.** After the special is finished, the Gives stay at y 247/273/299 and the special's button turns "Done". A second tap on the same spot does nothing. New small clip: "Special done! Thank yo.." (F6 below). | edge `special` |
-| F8 sim timeouts, early gold | Minor | **Timeouts fixed** (`vi.setConfig({testTimeout: 60_000})`). **Early gold is still chaotic** (section 5). | code + sim |
-| F9 winter prize; summary cut | Minor | **Winter fixed:** "You beat Clay on the board last season (6 to 3): +300g." **Summary: worse than feared.** On a busy season-change morning the season result itself is cut (F3 below). "Clay took one today." still does not say whether it scored. | edge + sweep |
-| F10 goal chain; three toasts | Minor | **Not fixed for round-2 goals** (as DECISIONS says). For a non-fisher the problem starts long before #54 (F4 below). Over the tallest board, three long toasts reach only the HUD. | state + shots |
+| C11                                           | Then   | Now                                                                                                                                                                                                                                                                                                                    | How checked              |
+| --------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| F1 a keeper walks the race                    | Medium | **Partly fixed.** The keepers won **12 to 5** and **13 to 6** (was 13 to 3). All of Clay's points were crates: 5 and 6 of them through the catch-up rule. His 26 takes in the two keeper springs (12 and 14) scored 0. The result was settled by about day 13 both times (lead of 4 or more from then on). See **F1**. | played (2 runs) + sim    |
+| F2 crate unannounced; day 28 decides          | Medium | **Mostly fixed.** "Clay ships a crate tonight: a point." was seen on the board on 11 of 11 keeper crate days, and no crate comes on day 28. Gaps: the line is hidden behind a target or a take (C31 day 21; edge C, Clay scored twice that day), and the letters still say "each week". See **F2**.                    | played + edge            |
+| F3 friendly Clay = free wins                  | Medium | **Fixed.** At 5 hearts: "Clay no longer takes requests." / "Clay ships a crate tonight: a point.". A friendly season settled "Clay won the board last season (4 to 2)." with no gloating letter.                                                                                                                       | edge `hearts5`           |
+| F4 year-two text                              | Minor  | **Fixed.** "Clay takes two at 2:00 PM: no point."; "Clay wants two of these at 2:00 PM." with both rows marked "Clay's!". Farm plus fish says "wants this one", which is fair since one of the two scores.                                                                                                             | edge `y2`                |
+| F5 bin line clips; "Board" counts the special | Minor  | **Fixed.** "Board 2 bin 1" and "Board 4 x9" fit. The toast reads "Kept 5 Potato for the board and 11 for Rosa.". The row still says "Board 16" (it counts Rosa's 11).                                                                                                                                                  | sweep + `edge11b keepsp` |
+| F6 special expiry silent                      | Minor  | **Fixed.** "The special order ran out. Paid 900g for what you brought. Special order: 5 Melon for Finn, by the season's end."                                                                                                                                                                                          | edge `special`           |
+| F7 board shrinks under the thumb              | Minor  | **Fixed.** After the special is finished, the Gives stay at y 247/273/299 and the special's button turns "Done". A second tap on the same spot does nothing. New small clip: "Special done! Thank yo.." (F6 below).                                                                                                    | edge `special`           |
+| F8 sim timeouts, early gold                   | Minor  | **Timeouts fixed** (`vi.setConfig({testTimeout: 60_000})`). **Early gold is still chaotic** (section 5).                                                                                                                                                                                                               | code + sim               |
+| F9 winter prize; summary cut                  | Minor  | **Winter fixed:** "You beat Clay on the board last season (6 to 3): +300g." **Summary: worse than feared.** On a busy season-change morning the season result itself is cut (F3 below). "Clay took one today." still does not say whether it scored.                                                                   | edge + sweep             |
+| F10 goal chain; three toasts                  | Minor  | **Not fixed for round-2 goals** (as DECISIONS says). For a non-fisher the problem starts long before #54 (F4 below). Over the tallest board, three long toasts reach only the HUD.                                                                                                                                     | state + shots            |
 
 ---
 
@@ -71,11 +75,11 @@ Reviewer: independent QA lead and game critic, round 12.
 
 - **Played (real input, never fishes or forages):**
 
-  | Run | Result | Clay's points | Takes that scored | Lead first reached 4 | Smallest lead after that |
-  | --- | --- | --- | --- | --- | --- |
-  | **K31** (Ship all) | **won 12 to 5**, +300g, Mara's letter, trophy 1 | 5 crates (days 15, 18, 21, 24, 27) | **0 of 12** | day 13 (4-0) | 4 |
-  | **K29b** (Ship all) | **won 13 to 6** | 6 crates (12, 15, 18, 21, 24, 27) | **0 of 14** | day 10 (4-0) | 4 |
-  | **C31** (row All) | **lost 0 to 12**, "The board is mine" letter | 10 takes + 2 crates | 10 | never | never |
+  | Run                 | Result                                          | Clay's points                      | Takes that scored | Lead first reached 4 | Smallest lead after that |
+  | ------------------- | ----------------------------------------------- | ---------------------------------- | ----------------- | -------------------- | ------------------------ |
+  | **K31** (Ship all)  | **won 12 to 5**, +300g, Mara's letter, trophy 1 | 5 crates (days 15, 18, 21, 24, 27) | **0 of 12**       | day 13 (4-0)         | 4                        |
+  | **K29b** (Ship all) | **won 13 to 6**                                 | 6 crates (12, 15, 18, 21, 24, 27)  | **0 of 14**       | day 10 (4-0)         | 4                        |
+  | **C31** (row All)   | **lost 0 to 12**, "The board is mine" letter    | 10 takes + 2 crates                | 10                | never                | never                    |
 
 - **The race each morning from day 8:**
   - **K31:** 1-0 ×4, 2-0 ×2, 4-0, 4-0, then a crate 5-1, 6-1, 6-1, then a crate 6-2, 8-2, 8-2, crate 8-3, 9-3, 9-3, crate 9-4, 9-4, 10-4, crate 12-5. Result 12 to 5.
@@ -105,16 +109,17 @@ Reviewer: independent QA lead and game critic, round 12.
 
 - **Played (`edge12 PART=catchup`, real sleeps):**
 
-  | Day, score | Board line | Overnight |
-  | --- | --- | --- |
-  | day 9, 4-0 | "Clay ships a crate tonight: a point." | crate |
-  | day 9, 3-0 | "Clay scores on farm goods only." | none |
-  | **day 14, 4-0** | "Clay scores on farm goods only." | **none** |
-  | **day 14, 3-0** | "Clay ships a crate tonight: a point." | **crate** |
-  | day 15, 4-0 | crate tonight | crate |
-  | day 21, 3-0 or 4-0 | crate tonight | crate |
+  | Day, score         | Board line                             | Overnight |
+  | ------------------ | -------------------------------------- | --------- |
+  | day 9, 4-0         | "Clay ships a crate tonight: a point." | crate     |
+  | day 9, 3-0         | "Clay scores on farm goods only."      | none      |
+  | **day 14, 4-0**    | "Clay scores on farm goods only."      | **none**  |
+  | **day 14, 3-0**    | "Clay ships a crate tonight: a point." | **crate** |
+  | day 15, 4-0        | crate tonight                          | crate     |
+  | day 21, 3-0 or 4-0 | crate tonight                          | crate     |
 
   **Leading by more removes the weekly crate on days 7 and 14.** It happened in play: K31 on day 14 at 4-0 and K29b on day 14 at 5-1 got no crate, then one on day 15. The cause is `seasonDay % every` with `every` = 3 or 7 (`rival.ts:248-249`): 14 is not a multiple of 3.
+
 - **The line moves with the score during the day:**
   - Day 12 at 3-0: "Clay scores on farm goods only."; one Give later (4-0): "Clay ships a crate tonight: a point." (shots `e12-catchup-F-before/after`).
   - Day 12 at 4-0 with a target he takes at 2 PM: lead 3, so no crate. Nothing was promised, because the target line hid the crate line.
@@ -184,21 +189,23 @@ Reviewer: independent QA lead and game critic, round 12.
 
 ## 3. The days played
 
-| Run | Earned d7 | Earned d14 | Earned d28 | Gold d28 | Spring board | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| **K31** keeper | 808 | 3,731 | 17,214 | 11,893 | **won 12 to 5** | 12 fills; special "7 Cauliflower" done (+2,400g); 16 "Kept ..." toasts; summer board fish and wild only |
-| **K29b** keeper | 758 | 3,518 | 17,112 | 11,207 | **won 13 to 6** | 13 fills; same special done |
-| **C31** careless | 662 | 3,279 | 13,551 | 8,057 | **lost 0 to 12** | 0 fills; special "15 Potato" never started; Clay's losing letter |
-| **W8** jobs + Ship all | 1,394 | - | - | - | - | 2 to 3 jobs a day at 18-50g; fills a wild-leek request on day 3 |
+| Run                    | Earned d7 | Earned d14 | Earned d28 | Gold d28 | Spring board     | Notes                                                                                                   |
+| ---------------------- | --------- | ---------- | ---------- | -------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| **K31** keeper         | 808       | 3,731      | 17,214     | 11,893   | **won 12 to 5**  | 12 fills; special "7 Cauliflower" done (+2,400g); 16 "Kept ..." toasts; summer board fish and wild only |
+| **K29b** keeper        | 758       | 3,518      | 17,112     | 11,207   | **won 13 to 6**  | 13 fills; same special done                                                                             |
+| **C31** careless       | 662       | 3,279      | 13,551     | 8,057    | **lost 0 to 12** | 0 fills; special "15 Potato" never started; Clay's losing letter                                        |
+| **W8** jobs + Ship all | 1,394     | -          | -          | -        | -                | 2 to 3 jobs a day at 18-50g; fills a wild-leek request on day 3                                         |
 
 Keeping costs nothing in gold: the keepers out-earned the careless player by 26% by day 28 (orders pay above the bin). **No bot bought land** (`play12` has no plot logic), so these totals are home-plot only.
 
 **Crate announcements:**
+
 - K31: 5 of 5 crates said on a board look that day.
 - K29b: 6 of 6.
 - C31: 1 of 2 (day 21 was hidden behind "Clay wants this one", then "Clay took one today").
 
 **Letters:**
+
 - Clay's intro on day 7 (with the weekly crate).
 - Mara's "You out-scored Clay on the board last season, 12 to 5! ..." (K31) and "13 to 6" (K29b).
 - Clay's "Last season the board was 12 to 0, my way: a farm good left to its last day is mine, and so is a crate of my own each week. ... 300g" (C31).
@@ -220,10 +227,10 @@ Keeping costs nothing in gold: the keepers out-earned the careless player by 26%
 
 ### The first week, played
 
-| Player | Days 1-4 | First payday | Gold around day 8-9 | Gold of 1,000+ |
-| --- | --- | --- | --- | --- |
-| Keeper K31 | gold 10 to 86 | **day 5** (parsnips 316g, plus a "6 Parsnip" request of 300g) | 711 on waking, day 9 | day 14 (1,008) |
-| Jobs player W8 | 94 to 247 from jobs (18-50g each) | day 5 | 607, day 8 | - |
+| Player         | Days 1-4                          | First payday                                                  | Gold around day 8-9  | Gold of 1,000+ |
+| -------------- | --------------------------------- | ------------------------------------------------------------- | -------------------- | -------------- |
+| Keeper K31     | gold 10 to 86                     | **day 5** (parsnips 316g, plus a "6 Parsnip" request of 300g) | 711 on waking, day 9 | day 14 (1,008) |
+| Jobs player W8 | 94 to 247 from jobs (18-50g each) | day 5                                                         | 607, day 8           | -              |
 
 - In all four runs a parsnip request (185-320g, 6 days) appeared on day 1. It is the best thing in week one.
 - **Days 2 to 4 are dead for a farmer.** There is nothing to harvest and only watering to do, done by about 7 AM. Gold stays under 100 and the shop has nothing between an 80g seed and a 400g upgrade (can 400, rod 450, hoe 500, stamina 600, West Field 700).
@@ -234,20 +241,21 @@ Keeping costs nothing in gold: the keepers out-earned the careless player by 26%
 
 Keeper-farmer, 112 days, seeds 42 / 7 / 99:
 
-| Variant | Human-paced (150 presses) y1 | Tireless y1 |
-| --- | --- | --- |
-| base | 192,411 / 217,696 / 103,851 (median 192k; plot day 23/26/29) | 244,472 / 271,121 / 132,674 |
-| West Field 450g | -2% / -15% / +23% | +2% / -10% / +25% |
-| West Field 500g | -6% / -8% / +12% | -6% / -10% / +15% |
-| +150g on day 3 and day 4 | +2% / +11% / **+171%** | +5% / +23% / +157% |
-| +200g starting gold | 0% / -4% / +86% | +6% / 0% / +91% |
-| +500g on day 7 (C11's test) | +26% / +5% / +130% | +31% / +20% / +141% |
+| Variant                     | Human-paced (150 presses) y1                                 | Tireless y1                 |
+| --------------------------- | ------------------------------------------------------------ | --------------------------- |
+| base                        | 192,411 / 217,696 / 103,851 (median 192k; plot day 23/26/29) | 244,472 / 271,121 / 132,674 |
+| West Field 450g             | -2% / -15% / +23%                                            | +2% / -10% / +25%           |
+| West Field 500g             | -6% / -8% / +12%                                             | -6% / -10% / +15%           |
+| +150g on day 3 and day 4    | +2% / +11% / **+171%**                                       | +5% / +23% / +157%          |
+| +200g starting gold         | 0% / -4% / +86%                                              | +6% / 0% / +91%             |
+| +500g on day 7 (C11's test) | +26% / +5% / +130%                                           | +31% / +20% / +141%         |
 
 - **The bot earns 0g in its first 7 days** on every seed (gold 20 each morning). It plants only its best-scoring seed (`tests/sim.test.ts` playDay step 8), so the 10 starting parsnip seeds are never planted. It also buys land only at 1.8x the price.
 - So the sim's week one is not the game's week one, and its early-curve answers are mostly noise.
 - Seed 99 is an unlucky outlier that any nudge rescues. On seeds 42 and 7 a cheaper plot does **not** help: it is -2% to -15%, because buying earlier starves seeds.
 
 **Race sim (`tmp/simx12-detail.txt`):**
+
 - Tireless keeper: 6 / 7 / 6 season wins of 8, with crates 2 to 7 a season.
 - Human-paced keeper: 6 / 6 / 6, with winter y1 up to 23-8 against 6 crates.
 - Shipper: 0 of 24.
@@ -277,26 +285,28 @@ Keeper-farmer, 112 days, seeds 42 / 7 / 99:
 ## 7. Verdict
 
 **Stable, readable, no blocker and no major.**
+
 - **Checks:** tsc clean, 780 tests pass, 0 errors in 99 played days.
 - **Critique-11 findings:** F3, F4, F5, F6, F7 and the winter half of F9 are fixed and were checked through real taps. F2 is mostly fixed. F1 is only partly fixed: the margin shrank from 13-3 to 12-5 and 13-6, but every one of Clay's points is still a crate.
 
 **The race is fair but not close.**
+
 - A keeper leads by 4 from about day 10 to 13 and wins by 7. A careless player loses 0 to 12.
 - The new catch-up rule shows up on the board as a run of crates every three days. Nothing explains it, and it skips the weekly crate when you lead.
 - **New this round:** the HUD goal is frozen for any farmer who never forages (F4), and the season result can be cut from the morning that decides it (F3).
 
 ## Screenshots (`critique-12/shots-12/`)
 
-| Group | Files |
-| --- | --- |
-| New games (per run) | `K31-`, `K29b-`, `C31-`, `W8-` + `01-day1-farm-planted`, `02`..`04-summary-day*`, `20-scarecrow-placed`, `trophy-house` (K31 shows the trophy, C31 none) |
-| Crate announcement (F2) | `e12-crate-A-day14-10am` (said), `-A-day14-3pm` (hidden by "took one"), `-A-summary15`, `-B-day14-target`, `-B-day14-after-give`, `-C-day14-3pm`, `-C-summary15` (take plus crate, never said), `-D-day27`, `-D-day28`, `-D-summer1` |
-| Catch-up (F2) | `e12-catchup-F-before`, `-F-after`, `-F-summary13` |
-| Friendly Clay | `e12-hearts5-day13`, `-day14`, `-summer1` |
-| Year two, winter | `e12-y2-two-farm-10am`, `-farm-plus-fish-10am`, `-two-fish-10am`, `e12-winter-y1-settle` |
-| Special | `e12-special-expired-summary`, `e12-shift-before`, `-after-tap1` ("Thank yo.."), `-after-tap2`, `e12t-keepsp-bin-before/after`, `e12t-keepsp-board` |
-| Toasts | `e12t-toast-*` (bin, board, cart, shop, make, bag-eat, three-tall-board, after-close) |
-| Goals (F4) | `g12-goal10-fish-*`, `g12-goal28-fish20-*`, `g12-goal50-book8-*`, `g12-goal54-legend-with-wins-*` (hud, menu) |
-| Sweep | `s12-board-crate-cart-day21`, `-crate-festival-day14`, `-y2-crate-catchup`, `-friendly-crate`, `s12-bin-wanted`, `s12-bin-after-shipall`, `s12-cart`, `s12-cart-after-buy`, `s12-mail-list`, `s12-mail-letter-0..2`, `s12-summary-busy-season-change` (F3), `s12-bag-tab-day1/day9` (F6) |
+| Group                   | Files                                                                                                                                                                                                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New games (per run)     | `K31-`, `K29b-`, `C31-`, `W8-` + `01-day1-farm-planted`, `02`..`04-summary-day*`, `20-scarecrow-placed`, `trophy-house` (K31 shows the trophy, C31 none)                                                                                                                                 |
+| Crate announcement (F2) | `e12-crate-A-day14-10am` (said), `-A-day14-3pm` (hidden by "took one"), `-A-summary15`, `-B-day14-target`, `-B-day14-after-give`, `-C-day14-3pm`, `-C-summary15` (take plus crate, never said), `-D-day27`, `-D-day28`, `-D-summer1`                                                     |
+| Catch-up (F2)           | `e12-catchup-F-before`, `-F-after`, `-F-summary13`                                                                                                                                                                                                                                       |
+| Friendly Clay           | `e12-hearts5-day13`, `-day14`, `-summer1`                                                                                                                                                                                                                                                |
+| Year two, winter        | `e12-y2-two-farm-10am`, `-farm-plus-fish-10am`, `-two-fish-10am`, `e12-winter-y1-settle`                                                                                                                                                                                                 |
+| Special                 | `e12-special-expired-summary`, `e12-shift-before`, `-after-tap1` ("Thank yo.."), `-after-tap2`, `e12t-keepsp-bin-before/after`, `e12t-keepsp-board`                                                                                                                                      |
+| Toasts                  | `e12t-toast-*` (bin, board, cart, shop, make, bag-eat, three-tall-board, after-close)                                                                                                                                                                                                    |
+| Goals (F4)              | `g12-goal10-fish-*`, `g12-goal28-fish20-*`, `g12-goal50-book8-*`, `g12-goal54-legend-with-wins-*` (hud, menu)                                                                                                                                                                            |
+| Sweep                   | `s12-board-crate-cart-day21`, `-crate-festival-day14`, `-y2-crate-catchup`, `-friendly-crate`, `s12-bin-wanted`, `s12-bin-after-shipall`, `s12-cart`, `s12-cart-after-buy`, `s12-mail-list`, `s12-mail-letter-0..2`, `s12-summary-busy-season-change` (F3), `s12-bag-tab-day1/day9` (F6) |
 
 Per-day board, bin, mail and summary images from the long runs are in `farm-game/agents/out/c12/tmp/` with the same run prefixes.

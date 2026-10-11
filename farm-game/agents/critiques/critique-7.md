@@ -7,6 +7,7 @@ Reviewer: independent QA lead and game critic, round 7.
 **Frozen build:** commit `f27999e` (branch `depth/round2`), copied to `critique-7/farm-game` with `git archive`. It is not a git checkout, so I could not confirm the hash myself.
 
 **Method:**
+
 - Headless Chromium (playwright-core, chromium-1217), 390x844, `hasTouch`, against `vite` on **port 5192**. The server was started for this session and stopped at the end.
 - The `?debug` hook was used to set up state and read it back. No game file was edited.
 - Probes are in `critique-7/farm-game/agents/out/c7/` (logs in `c7/tmp/`). Screenshots are in `critique-7/shots-7/`.
@@ -38,11 +39,13 @@ Reviewer: independent QA lead and game critic, round 7.
 - **Clipping sweep** (`sweep.mjs`, 44 screens): real taps on every menu tab and page, every shop tab and page, the board, projects, villager and gift sheets, bin, sign, jar, sleep and summary, each machine-checked for overlap and overflow.
 
 **Verified only by reading code or data, or with the real rule functions in vitest:**
+
 - special sizes against herd size (`specialCap`), legend odds per cast, the board's mix of request kinds;
 - what the board posts and who fills it across a simulated year (`boardsim.test.ts`);
 - dish prices against ingredients, and that legend and dish textures are missing from the atlases.
 
 **Not verified at all:**
+
 - real phone, audio, performance; walking times (every move was a teleport);
 - the Glimmer Trout, Old Whiskers and Ice Pike in live play (only the Sun Carp was cast for);
 - heart events, mine floors, the year-end screen; a second year of real play.
@@ -51,17 +54,17 @@ Reviewer: independent QA lead and game critic, round 7.
 
 ## 1. Critique 6 findings re-checked
 
-| C6 | Then | Now | How checked |
-| --- | --- | --- | --- |
-| F1 projects list overflow | Market Road under Close, statue off screen | **Fixed.** With 7 done, the list shows only the Market Road (Open at y 195) and "More after the Market Road."; its Open opens the page. With 8 done, the statue is the one open row; "Finished (8)" pages 5 + 3 rows with `<` `>` above Close, and "Open ones (1)" comes back. Two statue levels were funded by touch. Perk-less rows say "Done!". **Nits:** finishing a statue level bounces you back to the list; the statue page never says the bonus you already have (F9). | played (shots `60` to `67`) |
-| F2 Clay only if you look after 2 PM | morning player never lost | **Fixed.** A morning-only player (board looked at 9 AM, then bed) lost the eyed request every night: "Clay filled 4 Bluegill on the board." in the summary. | played |
-| F3 newest, dearest taken the same afternoon | | **Fixed as designed, with a cost (F2 below).** A request is safe on its posting day ("Clay wants nothing here today." when all are new). The board names the target ("Clay wants this one at 2:00 PM." and "Clay's!" on the row). Filling his target before 2 PM moves him to the next one (he took the 165g leek). Year two: "Clay wants two of these", both taken overnight; at 2 hearts "at 5:00 PM", one. Crop requests now appear only for crops you grow or carry, but "grow" means "planted", not "ripe in time" (F1 below). | played |
-| F4 specials ignore herd size | 30 eggs from one hen | **Fixed, tightly.** Capped at (days left − 1) × output: one hen on day 1 gets 26 eggs (every egg for 26 of 28 days); one pig gets 13 truffles at 0.6 a day (22 of 28 days, weather permitting). Not posted when the cap is under 5 (one pig on day 19). See F8. | vitest (real functions) |
-| F5 greenhouse seed trap | no season marker | **Fixed.** In fall with a greenhouse, the shelf lists Pumpkin, Yam, Cranberry first, then "Glass 4d", "Glass 12d 310g"... An x5 melon outdoors: "Won't grow in fall. Plant in summer."; under glass it planted. Regrowers outdoors say "10d 75g, again 3d". **Nit:** under glass the regrow note is dropped ("Strawberry Glass 8d 80g"). | played (shots `50-*`) |
-| F6 Feast/Fair too easy | 2.6× Clay | **Fixed.** Fair: gold pumpkin + gold melon (1,104) is 2nd; three golds of two kinds (1,234, +15%) are still 2nd behind 1,339; a plain 3-kind basket is 3rd. Feast: a lone gold wine is 2nd; three jars (2,400) win over 1,648 (1.46×). | played (shots `55`/`56`) |
-| F7 bench mashing | 3rd E lifts it | **Partly fixed.** Right after a sit, E answers "Rested. Back tomorrow." six times and never lifts it. But at 95/100 energy (sit kept), or when coming back later the same day, **two E presses lift the bench** with no "rested" line (F5 below). | played |
-| F8 text | | **Fixed:** "Done!", "1 a day." fits beside Shop, silo Move line, Enter no longer presses "Move it" (sheet stays open), "Go to bed?" clear of the time. | played (sweep, `coop6`) |
-| F9 land signs, seeds in bag | | Signs: not re-measured. The play bot still found seeds only in the bag 245 and 145 times (the long-press picker is still with the controls agent). | played |
+| C6                                          | Then                                       | Now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | How checked                 |
+| ------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| F1 projects list overflow                   | Market Road under Close, statue off screen | **Fixed.** With 7 done, the list shows only the Market Road (Open at y 195) and "More after the Market Road."; its Open opens the page. With 8 done, the statue is the one open row; "Finished (8)" pages 5 + 3 rows with `<` `>` above Close, and "Open ones (1)" comes back. Two statue levels were funded by touch. Perk-less rows say "Done!". **Nits:** finishing a statue level bounces you back to the list; the statue page never says the bonus you already have (F9).                                                     | played (shots `60` to `67`) |
+| F2 Clay only if you look after 2 PM         | morning player never lost                  | **Fixed.** A morning-only player (board looked at 9 AM, then bed) lost the eyed request every night: "Clay filled 4 Bluegill on the board." in the summary.                                                                                                                                                                                                                                                                                                                                                                         | played                      |
+| F3 newest, dearest taken the same afternoon |                                            | **Fixed as designed, with a cost (F2 below).** A request is safe on its posting day ("Clay wants nothing here today." when all are new). The board names the target ("Clay wants this one at 2:00 PM." and "Clay's!" on the row). Filling his target before 2 PM moves him to the next one (he took the 165g leek). Year two: "Clay wants two of these", both taken overnight; at 2 hearts "at 5:00 PM", one. Crop requests now appear only for crops you grow or carry, but "grow" means "planted", not "ripe in time" (F1 below). | played                      |
+| F4 specials ignore herd size                | 30 eggs from one hen                       | **Fixed, tightly.** Capped at (days left − 1) × output: one hen on day 1 gets 26 eggs (every egg for 26 of 28 days); one pig gets 13 truffles at 0.6 a day (22 of 28 days, weather permitting). Not posted when the cap is under 5 (one pig on day 19). See F8.                                                                                                                                                                                                                                                                     | vitest (real functions)     |
+| F5 greenhouse seed trap                     | no season marker                           | **Fixed.** In fall with a greenhouse, the shelf lists Pumpkin, Yam, Cranberry first, then "Glass 4d", "Glass 12d 310g"... An x5 melon outdoors: "Won't grow in fall. Plant in summer."; under glass it planted. Regrowers outdoors say "10d 75g, again 3d". **Nit:** under glass the regrow note is dropped ("Strawberry Glass 8d 80g").                                                                                                                                                                                            | played (shots `50-*`)       |
+| F6 Feast/Fair too easy                      | 2.6× Clay                                  | **Fixed.** Fair: gold pumpkin + gold melon (1,104) is 2nd; three golds of two kinds (1,234, +15%) are still 2nd behind 1,339; a plain 3-kind basket is 3rd. Feast: a lone gold wine is 2nd; three jars (2,400) win over 1,648 (1.46×).                                                                                                                                                                                                                                                                                              | played (shots `55`/`56`)    |
+| F7 bench mashing                            | 3rd E lifts it                             | **Partly fixed.** Right after a sit, E answers "Rested. Back tomorrow." six times and never lifts it. But at 95/100 energy (sit kept), or when coming back later the same day, **two E presses lift the bench** with no "rested" line (F5 below).                                                                                                                                                                                                                                                                                   | played                      |
+| F8 text                                     |                                            | **Fixed:** "Done!", "1 a day." fits beside Shop, silo Move line, Enter no longer presses "Move it" (sheet stays open), "Go to bed?" clear of the time.                                                                                                                                                                                                                                                                                                                                                                              | played (sweep, `coop6`)     |
+| F9 land signs, seeds in bag                 |                                            | Signs: not re-measured. The play bot still found seeds only in the bag 245 and 145 times (the long-press picker is still with the controls agent).                                                                                                                                                                                                                                                                                                                                                                                  | played                      |
 
 ---
 
@@ -184,28 +187,29 @@ Reviewer: independent QA lead and game critic, round 7.
 
 ## 3. The days played (run 2, board-aware, real input, teleports between spots)
 
-| Day | Wake gold | Jobs | Mail | Board (morning) / Clay overnight |
-| --- | --- | --- | --- | --- |
-| 1 | 500 | none | none | bluegill 230, trout 310, daffodil 170 (no crop rows) |
-| 2 | 40 | 3/3 | Welcome (+3 potato seeds) | + special "15 Potato for Rosa 2,250g" |
-| 3 | 141 | 3/3 | Finn, Orin | **2 Potato 255g until day 4 (potatoes ripen day 8)** |
-| 4 | 364 | 3/3 | none | **filled 4 Wild Leek 120** |
-| 5 | 733 | 3/3 | none | **filled 3 Parsnip 140** |
-| 6 | 682 | 2/3 | Rosa (+3 fertilizer) | **filled 4 Wild Leek 125**; 3 Potato 400 until day 7 (ripen day 8) |
-| 7 | 750 | 2/3 | Clay's challenge; Rosa (+scarecrow) | Clay not active yet |
-| 8 | 943 | 3/3 | Mara town fund | "Clay wants this one": 6 Trout 410; special 5/15. Clay took the trout |
-| 9 | 845 | 2/3 | Rosa (+cherry sapling) | special 7/15; Clay took 5 Mushroom 275 |
-| 10 | 876 | 3/3 | none | 2 Cauliflower 720 made Clay's (cauliflowers ripen day 11); Clay took it |
-| 11 | 834 | 1/3 | Mara's birthday hint | **filled 4 Daffodil 180**; Clay took 6 Trout 505 |
-| 12 | 768 | 3/3 | Mara (+5 speed-gro) | special finished (+2,250g); Clay took 4 Potato 595 (Have 4/4, F4) |
-| 13 | 2,578 | 2/3 | Finn (+15 bait), Orin (+3 copper bar), Flower Show notice | the same special posted again; Clay took 6 Bluegill 265 |
-| 14 | 2,552 | 2/3 | none (Finn's legends letter came on day 14 in run 1) | **filled 6 Daffodil 255**; Clay took 6 Mushroom 405 |
+| Day | Wake gold | Jobs | Mail                                                      | Board (morning) / Clay overnight                                        |
+| --- | --------- | ---- | --------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1   | 500       | none | none                                                      | bluegill 230, trout 310, daffodil 170 (no crop rows)                    |
+| 2   | 40        | 3/3  | Welcome (+3 potato seeds)                                 | + special "15 Potato for Rosa 2,250g"                                   |
+| 3   | 141       | 3/3  | Finn, Orin                                                | **2 Potato 255g until day 4 (potatoes ripen day 8)**                    |
+| 4   | 364       | 3/3  | none                                                      | **filled 4 Wild Leek 120**                                              |
+| 5   | 733       | 3/3  | none                                                      | **filled 3 Parsnip 140**                                                |
+| 6   | 682       | 2/3  | Rosa (+3 fertilizer)                                      | **filled 4 Wild Leek 125**; 3 Potato 400 until day 7 (ripen day 8)      |
+| 7   | 750       | 2/3  | Clay's challenge; Rosa (+scarecrow)                       | Clay not active yet                                                     |
+| 8   | 943       | 3/3  | Mara town fund                                            | "Clay wants this one": 6 Trout 410; special 5/15. Clay took the trout   |
+| 9   | 845       | 2/3  | Rosa (+cherry sapling)                                    | special 7/15; Clay took 5 Mushroom 275                                  |
+| 10  | 876       | 3/3  | none                                                      | 2 Cauliflower 720 made Clay's (cauliflowers ripen day 11); Clay took it |
+| 11  | 834       | 1/3  | Mara's birthday hint                                      | **filled 4 Daffodil 180**; Clay took 6 Trout 505                        |
+| 12  | 768       | 3/3  | Mara (+5 speed-gro)                                       | special finished (+2,250g); Clay took 4 Potato 595 (Have 4/4, F4)       |
+| 13  | 2,578     | 2/3  | Finn (+15 bait), Orin (+3 copper bar), Flower Show notice | the same special posted again; Clay took 6 Bluegill 265                 |
+| 14  | 2,552     | 2/3  | none (Finn's legends letter came on day 14 in run 1)      | **filled 6 Daffodil 255**; Clay took 6 Mushroom 405                     |
 
 - **Totals:** 32 jobs, 5 requests (820g) plus one special (2,250g), Clay 7 (3,175g), 5,705g earned by the end of day 14.
 - **Run 1** (ships everything) earned 5,478g with 30 jobs, one request and 5 cauliflowers to the special; Clay took 5.
 - **The goal tracker** stayed on "Craft something at the workbench" from day 5, because the bot never crafts.
 
 **Early-game verdict:**
+
 - **Days 1 to 7 are better than in critique 6.** The board asks for leeks, daffodils and fish that you can actually bring, and the potato special is a clear first plan.
 - **From day 8 the board belongs to Clay.** The dearest row is always his, and several of those rows were unfillable anyway (F1, F2).
 - **A 5-minute session (10 game hours)** still has a rhythm:
@@ -213,7 +217,7 @@ Reviewer: independent QA lead and game critic, round 7.
   - two or three jobs paid on the spot;
   - the board's named target;
   - a letter.
-  
+
   The rewards are frequent but small: about 400g a day before the special.
 
 ## 4. One-thumb reach
@@ -225,30 +229,33 @@ Reviewer: independent QA lead and game critic, round 7.
 ## 5. Progression and economy
 
 **Early game (days 1 to 14):**
+
 - **Earnings:** the play bots earned 5.5k to 5.7k, against 6.4k in critique 6, now that jobs pay 55%.
 - **Jobs:** about 30 a fortnight.
 - **The potato special** was 39% of run 2's income: it is the best early plan, and it can repeat at once (F4).
 - **Board orders** were about 14% of income in run 2 (820g of requests), and Clay took 3,175g of them.
 
 **Year one (sim):**
+
 - Tireless bot, five seeds: 163,980 / 190,625 / 205,493 / 195,194 / 199,906 (median 195,194).
 - Human-paced bot (150 presses): 125,583 / 147,942 / 159,238 (median 147,942).
 - The farm bot's board income was 0 until winter and 2,690 for the year.
 
 **Year two (sim):**
+
 - 777k earned and 662k sunk; all 8 projects by year-2 summer, statue level 5 by year-2 winter.
 - **After that the statue is glory only**, so a third year again has nothing useful to buy. This is acceptable as an endgame, but worth stating.
 
 **Cooking: not a money loop.**
 
-| Dish | Ingredients at the bin | Dish | Energy |
-| --- | --- | --- | --- |
-| Parsnip Soup | 70 | 80 | 30 |
-| Baked Potato | 200 | 220 | 40 |
-| Fish Stew | 150 | 170 | 50 |
-| Berry Tart | 96 | 105 | 35 |
-| Kale Salad | 190 | 210 | 35 |
-| Pumpkin Pie | 490 | 540 | 80 |
+| Dish         | Ingredients at the bin | Dish | Energy |
+| ------------ | ---------------------- | ---- | ------ |
+| Parsnip Soup | 70                     | 80   | 30     |
+| Baked Potato | 200                    | 220  | 40     |
+| Fish Stew    | 150                    | 170  | 50     |
+| Berry Tart   | 96                     | 105  | 35     |
+| Kale Salad   | 190                    | 210  | 35     |
+| Pumpkin Pie  | 490                    | 540  | 80     |
 
 - That is +9% to +14% with base-quality ingredients, one tap a dish, no wait.
 - Cooking takes the lowest quality first; with only silver or gold produce a dish sells for less than its ingredients.
@@ -257,6 +264,7 @@ Reviewer: independent QA lead and game critic, round 7.
 **Legends:** 350 to 500g once each, about 1,750g a game: negligible.
 
 **Runaway or dead:**
+
 - **Runaway:** nothing in year one.
 - **Near dead:**
   - the board for a farm-focused player after day 8 (F1 to F3);
@@ -272,18 +280,21 @@ Reviewer: independent QA lead and game critic, round 7.
 ## 7. Verdict
 
 **Stable, and the critique-6 blockers are gone.**
+
 - **Tests and errors:** 522 tests pass, with 0 page errors across two 14-day games and every probe.
 - **Critique-6 findings:**
   - F1, F2, F4, F5, F6 and F8 are fixed through real input, and fixed well. The projects sheet scales, Clay settles overnight and names his target, the greenhouse shelf is honest, and the festivals have teeth.
   - F3 is fixed as designed but exposes F1 and F2. F7 is half fixed (F5).
 
 **The new content works:**
+
 - the Kitchen and six dishes cook and feed;
 - Finn's letter arrives at 10 catches and is accurate;
 - the Sun Carp bit once and never again;
 - bees near tulips are a day faster.
 
 **No blocker this round.** The main weakness is design: from day 8, the board is Clay's.
+
 - He takes the dearest request every day.
 - Those requests are often crops that cannot ripen in time, or fish a farmer never catches.
 - So the race is readable but rarely worth running.
@@ -292,14 +303,14 @@ Fix F1 to F3 next. F4 to F9 are polish.
 
 ## Screenshots (`critique-7/shots-7/`)
 
-| Group | Files |
-| --- | --- |
-| Play run (run 2) | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`, `20-scarecrow-placed` |
-| Projects (C6 F1) | `60-projects-7done`, `61-market-detail`, `62-after-market-done`, `63-projects-9-open-view`, `64`/`65-projects-finished-p1/p2`, `66-statue-detail`, `67-statue-after-l1/l2` |
-| Clay | `70-board-d7..d11-*`, `70-board-y2-*`, `71-board-after-filling-target` |
-| Seed shelf (C6 F5) | `50-shop-seeds-fall-gh-p1..p4` |
-| Move sheet | `51-move-sheet-coop`, `52-coop-picked-up`, `54-move-sheet-silo` |
-| Festivals | `55-*-basket`, `56-*-result` (fair2, fair3, fair3plain, feast1, feast3, feast3plain) |
-| Kitchen and dishes | `80-shop-home-bench`, `85-make-before-kitchen-p3`, `86`/`87-shop-home*`, `88-make-dishes-p1..p4`, `89-bag-card-dish`, `90-bin-dishes` |
-| Legends | `95-letter-legends`, `96-legend-caught` |
-| Sweep | `s-*` (44 screens), contact sheets `cs-7a` (Make, Home tab, bag card, board), `cs-7b` (Make pages with dishes, bag card, Home tab), `cs-7c` (villager, sleep, summary, letter) |
+| Group              | Files                                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Play run (run 2)   | `01-day1-farm-planted`, `02`/`03`/`04-summary-day2..4`, `20-scarecrow-placed`                                                                                                  |
+| Projects (C6 F1)   | `60-projects-7done`, `61-market-detail`, `62-after-market-done`, `63-projects-9-open-view`, `64`/`65-projects-finished-p1/p2`, `66-statue-detail`, `67-statue-after-l1/l2`     |
+| Clay               | `70-board-d7..d11-*`, `70-board-y2-*`, `71-board-after-filling-target`                                                                                                         |
+| Seed shelf (C6 F5) | `50-shop-seeds-fall-gh-p1..p4`                                                                                                                                                 |
+| Move sheet         | `51-move-sheet-coop`, `52-coop-picked-up`, `54-move-sheet-silo`                                                                                                                |
+| Festivals          | `55-*-basket`, `56-*-result` (fair2, fair3, fair3plain, feast1, feast3, feast3plain)                                                                                           |
+| Kitchen and dishes | `80-shop-home-bench`, `85-make-before-kitchen-p3`, `86`/`87-shop-home*`, `88-make-dishes-p1..p4`, `89-bag-card-dish`, `90-bin-dishes`                                          |
+| Legends            | `95-letter-legends`, `96-legend-caught`                                                                                                                                        |
+| Sweep              | `s-*` (44 screens), contact sheets `cs-7a` (Make, Home tab, bag card, board), `cs-7b` (Make pages with dishes, bag card, Home tab), `cs-7c` (villager, sleep, summary, letter) |

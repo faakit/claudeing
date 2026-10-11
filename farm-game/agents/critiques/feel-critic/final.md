@@ -5,6 +5,7 @@ art round-4 merge 8ebd1b3, M3 b430892, 48b2300, cbcc60d). Rounds: `review-0.md` 
 `ledger.md`. Frozen copies are in `round-0` to `round-4`; tools are in `tools/`.
 
 **Verdict:** ship it. The game now moves like one piece:
+
 - the camera is locked to the farmer's pixel;
 - the walk is driven by speed, with the art's 8 frames;
 - tool swings have anticipation and impact;
@@ -30,34 +31,34 @@ The controls are unchanged in gestures, and verify is green.
 
 ## Before and after
 
-| | Baseline | Final |
-| --- | --- | --- |
-| **Frame pacing (rAF ms)** | | |
-| Steady play 4x: p95 / p99 / max / frames > 33 ms | 7.0 / 7.2 / 41.7 / 1 | 7.0 / 7.1 / 41.7 / 1 in the first run (one tap-walk spike, 3.9 ms JS); 6x rerun max 13.9 |
-| Steady play 6x: p95 / p99 / max | 13.9 / 14.0 / 48.6 | 7.0 / 7.1 / 13.9 |
-| Game JS per frame while walking, p95 at 4x | 6.5 ms | 2.2 ms |
-| Worst map-change frame 4x / 6x | 48.6 / 69.5 | 7.2 / 20.9 |
-| Title to game, worst frame 1x / 4x / 6x | 146 / 389 / 591 | 56 / 69 / 118, long frames under the wipe except the tap |
-| Sleep + summary worst frame at 6x | 97 | 49-56, under full black |
-| Sheets worst frame at 6x | 55.6, 4 frames > 33 ms | 27.8, none |
-| **Camera (stepped)** | | |
-| On-screen reversals in a steady walk | 79 per s at 120 Hz walking right or down | 0 in all directions at 30, 60 and 120 Hz |
-| Rest spot after walking right / left | x 107 / 100 (7 px apart) | always 100 / 119 (centred) |
-| Settle after a stop at 30 / 60 / 120 Hz | 300 / 67 / 0 ms | 200 / 200 / 200 ms |
-| **Animation** | | |
-| Walk | 4-frame shuffle (frames 0=2, 1=3) at 8 fps; 8 px per frame, about 5 px foot slide | 8 frames at 16 fps; 3.9 px per frame, about 3 px slide; half speed 10 fps |
-| Tool use | impact under a held wind-up frame (267 ms), snap to idle | wind-up, swing with arc, contact with dust (impact here), follow-through |
-| Stick after an Action | 217 ms (same direction), 300 ms (new direction) | 133 ms (83 ms after contact) |
-| Action button on touch-down | fades in over 8 frames | fully lit on the first frame (4.3 ms) |
-| Harvest | hoe pose, item stuck on the face | item arcs beside and behind, rests above the head; 34 ms hit-stop |
-| **Transitions** | | |
-| Door, step to clear | 367 ms, linear black fade, taps dropped | 283 ms, 4x4 dither wipe with HUD kept; farmhouse door opens and closes |
-| Sheet open / close | 200 ms / pops shut | 200 ms / 6-frame slide out, input back at once |
-| **Calm mode** | only the "no" wiggle | slides, particles, pops, floats, swings, hit-stop, nudges all off; peak tweens 7 vs 34 |
-| **Pixel integrity** | 10 kinds of visible non-integer scale (soil pop, particles, marker, UI icons 0.8/1.9/2.3x...) | none |
-| **Canvas** | non-integer on all 5 profiles | whole device pixels on Pixel 7 (5x), Pro Max (6x), Fold (4x); iPhone 13 (5.72) and SE (3.24) stay at fit (coordinator ruling) |
-| **Controls** | e2e:controls OK; bench i13 plot3x3 7 gestures, 250/273 mm, 23.1/24.9 s | e2e:controls OK; identical gestures; 256/276 mm, 23.7/25.5 s (the bot now waits for the camera to finish centring) |
-| `npm run verify` | green | green, plus `e2e:feel` and frame-time budgets in `perf` |
+|                                                  | Baseline                                                                                      | Final                                                                                                                         |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Frame pacing (rAF ms)**                        |                                                                                               |                                                                                                                               |
+| Steady play 4x: p95 / p99 / max / frames > 33 ms | 7.0 / 7.2 / 41.7 / 1                                                                          | 7.0 / 7.1 / 41.7 / 1 in the first run (one tap-walk spike, 3.9 ms JS); 6x rerun max 13.9                                      |
+| Steady play 6x: p95 / p99 / max                  | 13.9 / 14.0 / 48.6                                                                            | 7.0 / 7.1 / 13.9                                                                                                              |
+| Game JS per frame while walking, p95 at 4x       | 6.5 ms                                                                                        | 2.2 ms                                                                                                                        |
+| Worst map-change frame 4x / 6x                   | 48.6 / 69.5                                                                                   | 7.2 / 20.9                                                                                                                    |
+| Title to game, worst frame 1x / 4x / 6x          | 146 / 389 / 591                                                                               | 56 / 69 / 118, long frames under the wipe except the tap                                                                      |
+| Sleep + summary worst frame at 6x                | 97                                                                                            | 49-56, under full black                                                                                                       |
+| Sheets worst frame at 6x                         | 55.6, 4 frames > 33 ms                                                                        | 27.8, none                                                                                                                    |
+| **Camera (stepped)**                             |                                                                                               |                                                                                                                               |
+| On-screen reversals in a steady walk             | 79 per s at 120 Hz walking right or down                                                      | 0 in all directions at 30, 60 and 120 Hz                                                                                      |
+| Rest spot after walking right / left             | x 107 / 100 (7 px apart)                                                                      | always 100 / 119 (centred)                                                                                                    |
+| Settle after a stop at 30 / 60 / 120 Hz          | 300 / 67 / 0 ms                                                                               | 200 / 200 / 200 ms                                                                                                            |
+| **Animation**                                    |                                                                                               |                                                                                                                               |
+| Walk                                             | 4-frame shuffle (frames 0=2, 1=3) at 8 fps; 8 px per frame, about 5 px foot slide             | 8 frames at 16 fps; 3.9 px per frame, about 3 px slide; half speed 10 fps                                                     |
+| Tool use                                         | impact under a held wind-up frame (267 ms), snap to idle                                      | wind-up, swing with arc, contact with dust (impact here), follow-through                                                      |
+| Stick after an Action                            | 217 ms (same direction), 300 ms (new direction)                                               | 133 ms (83 ms after contact)                                                                                                  |
+| Action button on touch-down                      | fades in over 8 frames                                                                        | fully lit on the first frame (4.3 ms)                                                                                         |
+| Harvest                                          | hoe pose, item stuck on the face                                                              | item arcs beside and behind, rests above the head; 34 ms hit-stop                                                             |
+| **Transitions**                                  |                                                                                               |                                                                                                                               |
+| Door, step to clear                              | 367 ms, linear black fade, taps dropped                                                       | 283 ms, 4x4 dither wipe with HUD kept; farmhouse door opens and closes                                                        |
+| Sheet open / close                               | 200 ms / pops shut                                                                            | 200 ms / 6-frame slide out, input back at once                                                                                |
+| **Calm mode**                                    | only the "no" wiggle                                                                          | slides, particles, pops, floats, swings, hit-stop, nudges all off; peak tweens 7 vs 34                                        |
+| **Pixel integrity**                              | 10 kinds of visible non-integer scale (soil pop, particles, marker, UI icons 0.8/1.9/2.3x...) | none                                                                                                                          |
+| **Canvas**                                       | non-integer on all 5 profiles                                                                 | whole device pixels on Pixel 7 (5x), Pro Max (6x), Fold (4x); iPhone 13 (5.72) and SE (3.24) stay at fit (coordinator ruling) |
+| **Controls**                                     | e2e:controls OK; bench i13 plot3x3 7 gestures, 250/273 mm, 23.1/24.9 s                        | e2e:controls OK; identical gestures; 256/276 mm, 23.7/25.5 s (the bot now waits for the camera to finish centring)            |
+| `npm run verify`                                 | green                                                                                         | green, plus `e2e:feel` and frame-time budgets in `perf`                                                                       |
 
 ## Open findings
 
@@ -94,3 +95,10 @@ The controls are unchanged in gestures, and verify is green.
    that's the canvas-scale ruling, not a bug.
 9. **A cold start.** Tap the title and watch for a hitch as the farm appears; only the tap itself should show a
    pause.
+
+## Addendum: 875eda6
+
+The agent moved the pickup text 3 px higher (R2-2). Checked on a frozen copy (`round-5/out/harvest-text-zoom.png`):
+the item no longer overlaps the text, though the leaf tips touch its bottom edge for a few frames. Closed.
+**Open findings: none.** The branch tip for integration is 875eda6. The agent reports verify green there; this
+change touched only `actionFx.ts` and the handover text.
