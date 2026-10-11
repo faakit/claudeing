@@ -28,7 +28,7 @@ spring and fall; it just does not stay ("the valley drinks it by noon"). What is
 it fed. So:
 
 - **Dry:** the farm's creek bed, the town river (a trickle two tiles wide down a wide bed of cracked mud), the Old
-  Spring above the farm, Rosa's hill orchard, the mill race, the hot spring. Grass on a broken map is straw-coloured.
+  Spring above the farm, Rosa's family orchard in the woods, the mill race, the hot spring. Grass on a broken map is straw-coloured.
 - **Still wet:** the farm pond (a rain pond: the one thing the flood gave the farm), the woods lake (fed by deep
   springs, its shore lower than it was), rain itself. The watering can, the guided start's rain on day 2 and every
   fishing spot the game teaches early keep working exactly as now.
@@ -65,7 +65,7 @@ it fed. So:
 3. **People, not bundles.** A place is asked for by the person who lost it, paid for with a little gold, a part you
    make, and a few days of help at the site that preview the new verb, and opened with that person. Losses are
    specific and fixable, and most are fixed by someone coming home.
-4. **One thumb, five-minute sessions.** Every new verb is a tap, Action or the existing paint gesture. A visit to a
+4. **One thumb, five-minute sessions.** Every new verb is a tap, Action, walking or the existing paint gesture. A visit to a
    site is one tap a day. Nothing new needs two hands or a long sitting.
 5. **Cozy, never punishing.** Nothing breaks again, nothing is lost by waiting, nobody leaves because you were
    slow. The valley waits for you; there is no deadline and no failure ending.
