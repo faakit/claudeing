@@ -301,9 +301,49 @@ one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.
 - **State:** progress is stats only (`tut.<id>`, `tut.on`, `tut.off`, `tut.seen.<id>`, `tut.at.<id>.<stat>`,
   `tut.base.<stat>`, `tut.gift`). `?tutorial=0` in the URL starts a bare new game (automated checks use it).
 
+## 11. How to add a map stage
+
+The valley heals on the maps you walk (WORLD-PLAN section 4). A map can have 2-4 **variants** (stages), each its
+own `.tmj`, that may differ only inside the map's **delta rectangles**. The farm is the worked example: `dry`
+(`farm@dry.tmj`, an empty creek bed), `waking` (`farm@waking.tmj`, the bed moist) and `restored` (`farm.tmj`,
+the creek runs). Scenarios: `farm-variant-dry`, `farm-variant-waking`, `farm-variant-restored`.
+
+1. **Stage it first.** Add one scenario per stage, pinned with the `valley` key (`{ "farmGreen": 1, "spring": 3 }`:
+   `farmGreen` is the first green, a place id is that place's stat, 0 untouched to 3 restored). A scenario that
+   names a tile inside a delta rect must pin the stage (the validator says so).
+2. **Declare the stages** in `src/data/valley.json` `maps.<map>`: `variants` first to last, each
+   `{ variant, palette?, when? }`. The first whose `when` holds is shown (`{ stat | place, min?, max? }`); the last
+   has no `when` and keeps the map's own file. `delta` is a list of `[x, y, w, h]` rects, `deltaText` the line
+   that refuses placing or tilling there. It is validated at load.
+3. **Draw the variants** in `scripts/generate-maps.mjs`: turn the map's block into `function <map>(v)` that draws
+   the final layout and changes only what lies inside the delta rects for earlier stages, passes `v` to
+   `write(base, map, objects, v)`, and appends `...deltaObjects('<map>')` to the objects (they go into every
+   variant). Call it for each of `VARIANTS('<map>')`. `flush()` throws if a variant's ground or collision differs
+   outside the rects, and doors and every other object must be the same in all variants.
+4. **Keep fixed things out** of the delta rects: doors and door spawns, start and wake tiles, villager spots,
+   landmarks, trophies, the mailbox, plots and plot signs, interactables, sites, houses. A zone may cover a delta
+   tile only if it is walkable in every variant. `tests/maps.test.ts` checks all of it, and runs every map test
+   (walkable spawns, connectivity, reachable spots) once per stage.
+5. **Art per stage**: `scripts/map-art.mjs` receives `{ variant, delta }`; per-stage composition goes in the map's
+   `COMPOSITION` entry (the farm's `creek.stages`: the bed's style, trees drawn dead). Prefer baked tiles that
+   repeat (the creek bed repeats every six rows, `art-src/tools/valleytiles.py`) over one tile per cell: the whole
+   plan has 480 tileset slots. Then `npm run art:maps` (generate, bake the tiles, generate again; it is
+   reproducible) and check `public/assets/tilesets/tiles.png`'s height.
+6. **Nothing else to wire.** Every stage file is preloaded, the tilemap cache is keyed by file
+   (`scenes/mapCache.ts activeMapKey`), and the scene picks the stage when it builds (`systems/valley.ts
+   valleyStage`), never at a door: mornings start in the house, so a change made overnight shows on stepping out.
+   A load standing on a tile that is solid in the new stage goes to the nearest door spawn. Every night the delta
+   rects are cleared of soil, crops (seeds back), weeds and placed things (moved to free ground), so old saves are
+   safe when a tile turns to water.
+
+Changes that do not move geometry (a sprite by work day, a lit window, a boat afloat) are objects keyed by stats,
+not variants. In the dev sandbox, the DEV tab's "Go to map" sheet lists every stage ("farm: restored"), and
+`window.__farm.dev.stage(map, variant)` pins one in place.
+
 ## Checklist for a new mechanic
 
 - [ ] The scenario(s) that stage it, in `src/dev/scenarios/` (lab or real map), cited in the commit and the critique
+- [ ] If it changes a map with the valley: a stage in `valley.json` and its variant (section 11), not a new map
 - [ ] Rules as pure functions in `systems/` with unit tests
 - [ ] One module in `mechanics/` registering into the registries, plus one import line in `mechanics/index.ts`
 - [ ] Data in JSON; validation added if it references other data

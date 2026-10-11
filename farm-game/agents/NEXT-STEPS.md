@@ -53,6 +53,37 @@ may only go down. The lab shares the farm's soil (`state.farm.tiles`).
 4. The Dry Year reshapes maps, so per-map soil (independent lab beds and more fields) is probably needed. Decide it
    with the design lane.
 
+### Map stages (Dry Year M2, branch `valley/m2-maps`)
+
+**Now:** maps change shape with the valley. `valley.json` `maps.farm` has three stages: `dry` (farmGreen 0),
+`waking` (the spring at stage 2 or below) and `restored` (spring 3). Each has its own file (`farm@dry.tmj`,
+`farm@waking.tmj`, `farm.tmj`), and they differ only inside the delta rects over the creek bed (x 26-27, y 3-31,
+except the footbridge row at y 6).
+- API, all in `systems/valley.ts` and pure: `valleyStage(state, map)` gives the variant, stage, file and
+  palette, and `mapLook` gives the file and palette. Also `inDelta`, `deltaRefusal`, `pinStage`,
+  `clearDeltaRegions` and `allMapLooks`. `scenes/mapCache.ts activeMapKey(map)` gives the cache key of the
+  file in use. M3 drives the stage by setting `place.spring`, and M1 by setting `valley.farmGreen` (and fills in
+  the `palette: "dry"` tileset swap).
+- Ilse's gate (29,3) leads to a fenced placeholder `wendhead` map and stays locked (`lockStat` `place.spring` 1)
+  until M3.
+- Scenarios: `farm-variant-dry`, `farm-variant-waking`, `farm-variant-restored`, `farm-creek-place` and
+  `farm-creek-rescue`. The DEV tab lists each stage, and `__farm.dev.stage(map, variant)` switches to one.
+- How to add a stage: `docs/EXTENDING.md` section 11.
+- Tileset: 512x1088, +112 of the plan's 480 slots.
+
+**Open:** the creek art is drawn in code (`art-src/tools/valleytiles.py`, dead crowns in `crowns.py`) until the
+art lane paints it. The dry palette (`tiles_dry.png`) is M1's. Restored is only reachable from a scenario until
+M3.
+
+**Next:**
+
+1. M1: merge this branch. Set `valley.farmGreen`, and pass `valleyStage(...).palette` to `tilesetFor` (WorldScene
+   reads the look at its build).
+2. M3: add `wendhead` stages to `valley.json` and draw the real map in `generate-maps.mjs` as `function
+   wendhead(v)`. Set the gate's `lockStat` to `valley.farmGreen`. Budget its baked tiles: about 370 slots are
+   left for Wendhead, town and woods together.
+3. M6: town `dry`/`river` (D1 mud) the same way. Make the mud tiles periodic, like the creek bed.
+
 ### Game depth and economy
 
 **Now:** a full year loop with farming, quality, foraging, fishing, crafting, machines, animals, five villagers
