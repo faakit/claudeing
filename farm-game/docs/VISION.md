@@ -40,16 +40,15 @@ it fed. So:
 The arc is told in **chapters of a life that keeps going**, never acts toward an ending.
 
 - **Chapter one (year 1): a tired place notices you.** Day 1 is the guided start, unchanged in length, on a farm
-  that is straw-coloured from fence to fence (owner's decision: the whole farm parched, palette only). By the end of the first week your fields are the only green in the valley, and one
-  morning the whole farm turns from straw to green. Rosa hands you Ilse's seed tin and journal; its first
-  page points uphill, at the Old Spring.
-  Through summer, fall and winter it is one place at a time, one person at a time. Each broken place
-  belongs to someone. Mending it is their wish come true and changes the map you walk on: the creek runs, the
-  forge rings, the river comes home and lifts the *Heron*, dead trees bud. Each restoration teaches one new way to
-  play. Families start writing that they are thinking of coming back, then they do: a lit window, a new face, a
-  stall. Clay watches all of it from his fence, and slowly stops racing you and starts working beside you. Winter 28
-  is a pause between chapters, not a conclusion: the year-end screen reads back what came back and says "See you in
-  spring."
+  that is straw-coloured from fence to fence (the whole farm parched, palette only). By the end of the first week
+  your fields are the only green in the valley, and one morning the whole farm turns from straw to green. Rosa hands
+  you Ilse's seed tin and journal; its first page points uphill, at the Old Spring. Through summer, fall and winter it
+  is one place at a time, one person at a time. Each broken place belongs to someone. Mending it is their wish come
+  true and changes the map you walk on: the creek runs, the forge rings, the river comes home and lifts the *Heron*,
+  dead trees bud. Each restoration teaches one new way to play. Families start writing that they are thinking of
+  coming back, then they do: a lit window, a new face, a stall. Clay watches all of it from his fence, and slowly
+  stops racing you and starts working beside you. Winter 28 is a pause between chapters, not a conclusion: the
+  year-end screen reads back what came back and says "See you in spring."
 - **Chapter two (year 2): homecomings, and the valley's first full celebration.** Houses fill, Clay's board race runs
   on into the year until he calls you partner, and on fall 27 the valley holds its first full **Lantern Night** since the
   flood: each household brings a lantern made from its own mended place, you open the sluice at the weir, and the
@@ -70,8 +69,8 @@ The arc is told in **chapters of a life that keeps going**, never acts toward an
    the world, it is not a restoration.
 2. **Every mended place teaches a new verb.** Six broken places, six mechanics that play differently from each
    other and from what exists (channels, a rhythm forge, towing timber, a seed library, grafting, a market
-   stall). Each ships small first. If only three places ship (the spring, the weir, the Seed House), the game is
-   still whole.
+   stall). Each ships small first. The core three (the spring, the weir, the Seed House) are built first and make the
+   game whole on their own; the other three follow.
 3. **People, not bundles.** A place is asked for by the person who lost it, paid for with a little gold, a part you
    make, and a few days of help at the site that preview the new verb, and opened with that person. Losses are
    specific and fixable, and most are fixed by someone coming home.
