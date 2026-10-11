@@ -222,6 +222,9 @@ Night piece (M11).
   while towing; Senna not drawn or counted before her house is done; timber income bound.
 - **Acceptance:** in `tow-first-log` a log is hooked, towed and landed by taps only in under 20 s, and in
   `tow-east-lane` under 30 s; draws at most 7 while towing; the critic's real-phone checklist gains a towing-feel row.
+- **Spike first:** before any art is committed, a lab-map spike (rope, one lane, one snag, placeholder log) is played
+  by the feel critic for a go or no-go on the towing feel; a no-go sends the Weir's verb back to design, and M6 still
+  ships on its own.
 - **Depends on:** M6.
 
 ## M8. The Seed House: the seed library; Clay's turn; Dara comes home
@@ -239,7 +242,7 @@ Night piece (M11).
 - **Scenarios:** `seedhouse-ruin`, `clay-other-half`, `seedhouse-work`, `seed-borrow`, `seed-tag-first`, `seed-bolted`,
   `seed-return-gen`, `neighbours-borrow`, `dara-arrives`.
 - **Tests:** one loan per strain; smart targeting never harvests a tagged crop; bolt after 3 ripe days; yield 2-4; a
-  2x return raises the generation; generations change only watering (deep roots, rain keeper, dry-sown) and a
+  2x return raises the generation; generations change only watering (slow thirst, rain keeper, dry-sown) and a
   generation-3 field earns the same per tile-day as a watered plain field (WORLD-PLAN 9.2); neighbours borrow only from
   drawers at
   10 or more and return more; the board-race sim unchanged until `rivalOff`; retired-project saves keep their perk.
@@ -300,17 +303,17 @@ Night piece (M11).
   closes (each household's lantern made from its place; Ilse's frame from the forge that morning; one line per villager
   who stayed; you open the sluice by Interact and all the lanterns ride the water together; the "The Wend is remembered"
   sheet with place phrases); `festivals.json` Lantern Night (fall 27 evening, no contest, after the finale); the river
-  stone and the High Water morning (first spring morning after rain with the weir open; in year 3 the first two
-  notches side by side, Clay's comparing line; no letter); `SummaryPanels.ts` year-end with place phrases and Rosa's
+  stone and the High Water morning (first spring morning after rain with the weir open; the second notch, whichever
+  year, side by side with the first and Clay's comparing line; no letter); `SummaryPanels.ts` year-end with place phrases and Rosa's
   line; the Founders' Stone
   reframe (text, a toppled-stone object from day 1, carved names per level); goal renames (WORLD-PLAN 8).
 - **Scenarios:** `finale-ready` (fall 26, all restored, all home), `finale-not-yet` (fall 20, one house unfinished),
-  `finale-weir` (fall 27, 6 PM, Wendhead), `after-finale`, `high-water-y2`, `high-water-y3` (two notches),
+  `finale-weir` (fall 27, 6 PM, Wendhead), `after-finale`, `high-water-y2`, `high-water-second` (two notches),
   `year-end-y1`.
 - **Tests:** the finale only on fall 27 with every place restored and every family home, once; Lantern Night only after;
   High Water once a year, only with the weir, the notch never lower than last year's; the fall 27 market and the
   evening gathering never overlap; letters and sheets fit.
-- **Acceptance:** `finale-weir` plays through by taps in under 90 s; `year-end-y1` reads as a resting point (critic
+- **Acceptance:** `finale-weir` plays through by taps in under 90 s with at most 8 draws (lanterns are atlas frames); `year-end-y1` reads as a resting point (critic
   signs off the wording); no screen in the game grades the valley.
 - **Depends on:** M3 and every place that ships.
 

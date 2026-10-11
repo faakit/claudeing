@@ -230,7 +230,7 @@ changes.
   and walk it along the bank to the log slip, where it becomes timber, and timber rebuilds the houses families come
   home to.
   - *Verbs:* hook, tow, tug free, land. Nothing else in the game moves a thing on water.
-  - *One thumb:* with the timber hook selected, Action at the water's edge beside a log hooks it (a rope is drawn). Then
+  - *One thumb:* with the timber hook selected, Action at the water's edge hooks a log up to 3 tiles out (a rope is drawn). Then
     walk as usual (stick or tap a bank tile); the log follows on the water, pulled toward you along a rope of up to 3
     tiles and pushed by the current. If the rope would cross a rock, a reed bed or a bank corner the log snags; Action
     tugs it free (or walk back a step). Action at the slip lands it.
@@ -297,7 +297,7 @@ changes.
     it bolts (a seed-head stage); Action collects 2 to 4 Wend seeds and the tag comes back. **Return** gives seeds back
     to the drawer.
   - *Returning more:* a loan returned at 2x or more (10 for 5) raises the strain's **generation**. Wend strains were
-    bred for a dry valley, so generations grow along one axis only, **thirst**: generation 1 *deep roots* (a watered
+    bred for a dry valley, so generations grow along one axis only, **thirst**: generation 1 *slow thirst* (a watered
     Wend crop stays watered the next day too: water every other day), 2 *rain keeper* (a rain day keeps it watered for
     three days), 3 *dry-sown* (its first watering lasts until harvest). Quality and yield are never touched: those are
     the orchard's roots (3.5). Wend strains make the fields the channels cannot reach (the meadows, the lowland) worth
@@ -610,10 +610,10 @@ cut a notch at the line the water reached (Interact). It records one thing: **ho
 spring, the weir and the warm pool's v2), shown as the notch's height on the stone's sprite. No sheet, no categories, no
 score. Finn says one line about the river; Clay says one about last year.
 
-**The year-3 checkpoint** (the owner's ask) is the first High Water of year 3: the first time two notches stand side by
-side on the stone, so you see at a glance how far the river, and with it the valley, has come since last spring. Clay's
+**The checkpoint** (the owner's year-3 ask) is the **second notch, whichever year it falls in** (year 3 for a typical
+player, later if the weir opened late): the first time two notches stand side by side on the stone, so you see at a glance how far the river, and with it the valley, has come since last spring. Clay's
 line compares them ("Higher. Don't get smug."). There is no letter and no list of what is done or missing: Rosa's
-fall 20 letter already says each year what Lantern Night still waits for. If the weir is not open by year 3, the stone
+fall 20 letter already says each year what Lantern Night still waits for. Until the weir is open the stone
 stays dry and Finn says "One day."
 
 ## 7. The opening

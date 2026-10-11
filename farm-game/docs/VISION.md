@@ -76,8 +76,8 @@ it fed. So:
 - A first-time player understands why they are here before day 2 and feels the first change by the end of week one.
 - A returning player can name the villager behind each mended place, and can point at what changed.
 - The finale lands as a homecoming, not a score. Nothing in the game grades the valley: the yearly High Water notch
-  records only how high the river came; in year 3 two notches stand side by side for the first time, and that is how
-  you see how far the valley has come.
+  records only how high the river came; the year two notches first stand side by side (usually year 3) is how you
+  see how far the valley has come.
 - A player who stops after year 1 still gets a whole small arc: four places mended, the first family home, Clay
   softening at the Winter Feast, and a year-end screen that reads back what they brought back.
 
