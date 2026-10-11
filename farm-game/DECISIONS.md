@@ -1391,3 +1391,53 @@ the leg keeps growing one tile per 180 ms with the usual tick, up to the 16-tile
 (tilling, watering, planting, digging). Leaving the band takes the growth back, so a drift never extends a row and
 dragging back to the start still cancels; a drift into another edge does nothing. The controls e2e checks a
 left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone 13 and the SE.
+
+## The Dry Year, M6: the Weir (depth lane, valley/m6)
+
+- **Old saves keep their river (coordinator ruling).** New games carry `valley.weirOn` from `createInitialState`; a
+  save without it gets `place.weir` 3 and `valley.riverSeen` 1 once, in `sanitize` (`weirDefaults`): no opening, no
+  moment, no Finn letter, and **no count** in `placesDone` or `projectsDone` (the player did not restore it, and a free
+  `projectsDone` would complete project goals). This covers saves started on the Dry Year core deploy too: only games
+  started since M6 play the dry town. No version bump. A scenario writes the marker as 0 to load as an old save.
+- **Wendhead has four stages**, because an old save can have the weir restored before the spring: `dry` (both beds
+  stone), `gorge` (the gorge runs, the pool waits; only an old save reaches it), `spring` (the pool runs, the gorge
+  waits), `restored` (both; `wendhead.tmj`). Stage conditions nest (`all`/`any`); `pinStage` searches the bounds the
+  table names when a condition nests (fewest changes first). The gorge is x 19-21, top to bottom, with a plank bridge
+  at y 22 outside its delta rects; the weir's site is on its west bank (17,11), reached up a path at x 17.
+- **The town's dry stage changes only D1** (x 17-20, y 22-31): stone ground baked as the farm creek's dry bed, so the
+  dry tileset's 64 new slots are bed and bank tiles only (512x1120 -> 512x1152). `town.tmj` stays today's file tile for
+  tile (a fixture test, `tests/fixtures/town-before-m6.json`); the trickle is the river's two east columns (20 water
+  tiles). The Heron sits on the mud at 19,25-26 as `boat_t`/`boat_b` (`heron_aground_*` once art draws it), solid there
+  (stage collision inside a delta rect only). The north-east house is boarded: its facade's `<tile>_boarded` once the
+  art lane draws them, a bare wall and a cold chimney until then. Reeds, rock spurs and the mill wheel are left to art.
+- **The sluice gate is bought in Orin's sheet**, not a shop row: Orin has no shop, and a one-off part does not justify
+  a second shop panel. `valley.json parts` names the seller and price (500g); his sheet says the weir wants one and
+  offers it while an asked place's fund needs it and the bag holds none. M5 replaces it with forging. Restoration gold
+  for year one: 300 + 2,500 + 500 = 3,300g (under the 10,000g guard rail; tested).
+- **The weir is asked on the morning its ask holds**, by a Finn letter that waits on `place.weir.since` (so an old
+  save's default sends nothing): the spring open, the forge lit or summer 15 (absolute day 43), Finn at 2 hearts. Asks
+  take hearts and days (`askHolds`); `HEART_POINTS` mirrors `POINTS_PER_HEART` (an import would be a cycle; tested).
+- **The opening waits in town.** Finn spends the opening morning at the dock (16,32) beside the Heron, not at the
+  site (`opening.at`); his opening lines are his scene there, and the site only says its phrase (and the Fish Ladder,
+  its upgrade, after the canopy as before). His afternoons are at the dock from then on (a schedule row with `when`;
+  rows sharing a minute are alternatives, the last that holds wins). The dock is 16,32 because a villager spot
+  reserves its neighbours from props, and 17,32 would have moved Finn's bucket off today's town.
+- **The last work day is scripted** (`taste: "beam"`, 3.6 s): the water comes through the gap and floats the last beam
+  in. Placeholder shapes in `WorldScene.beamBeat` until the feel lane's pass; M7's towing replaces it.
+- **The river's first morning** dissolves the dry town (its straw and mud, `town@dry` on the dry tileset) around the
+  farmer on the first step into town, under "THE RIVER IS BACK" (`valley.places.weir.banner`), once
+  (`valley.riverSeen`). The dry tileset is held overnight for it (`revealPending`) and released at the next sleep.
+- **Fish follow the water.** `fish.json` rows take `place`; trout, salmon, the glimmer trout and the ice pike bite
+  only with the weir (catfish, carp and perch stay in the trickle). Board requests never ask for a fish the valley
+  cannot give (`fishOpen`). The Derby's catfish are stocked in the woods lake while the river is dry (`dryMaps`); its
+  sheet names the water ("Catfish stocked in the woods lake today!"). The Derby is still entered at the board.
+- **Finn's lines follow the town's stage**: "a trickle in town, mud where the river ran" while dry (the R2-2 ruling's
+  switch back), the river's lines after. "The Heron" (4 hearts, two variants: on the mud, afloat) replaces "A secret
+  spot" with its reward kept, under a new id, so a save that saw the old scene sees the Heron's story once.
+- **The dry palette takes the baked creek bed and water banks** (`creekbed:`, `creekwater:` prefixes in
+  `art/dryPalette.ts`, an art-lane file, two words): the dry town's river bed showed a green grass bank on straw.
+- **`dev.goto` waits for the last map to stop.** A goto straight after another one found the old scene half shut down
+  and the new one never readied.
+- Not done in M6 (wrap-up): the R6-2 channels intro corner; Clay's `rivalLate` switch at the weir's opening (only his
+  line ships); the art for the weir's site sprites, the boarded house, the Heron aground and afloat, reeds, rock spurs
+  and the mill wheel.
