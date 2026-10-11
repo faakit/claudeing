@@ -11,7 +11,7 @@
  * The scene supplies a `CoachWorld` (what the world looks like right now) and `CoachFacts` (which sheet is
  * open); `advance` marks steps done and returns the current one, `coachView` says what to show for it.
  */
-import { crops, items, jobs as jobDefs, npcs, plots, tools, tutorial } from '../data';
+import { crops, game, items, jobs as jobDefs, npcs, plots, tools, tutorial } from '../data';
 import type {
   TutorialCond,
   TutorialData,
@@ -319,6 +319,17 @@ export function newNpcInView(s: GameState, world: CoachWorld): (Tile & { id: str
   return best;
 }
 
+/**
+ * The settling-in days (depth round 4, `game.welcomeJobs`): today's jobs pay extra and one is still open. False
+ * when the data has no such days, so the intro simply never shows.
+ */
+export function welcomeJobsToday(s: GameState): boolean {
+  const w = (game as { welcomeJobs?: { from: number; to: number; factor: number } }).welcomeJobs;
+  const day = absoluteDay(s);
+  if (!w || w.factor <= 1 || day < w.from || day > w.to) return false;
+  return s.jobs.day === day && s.jobs.list.some((j) => !j.done);
+}
+
 function forageInView(s: GameState, world: CoachWorld): boolean {
   return Object.keys(s.forage[world.map] ?? {}).some((k) => {
     const [x, y] = k.split(',').map(Number) as [number, number];
@@ -356,6 +367,7 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   )
     return false;
   if (c.fact === 'forageInView' && !forageInView(s, world)) return false;
+  if (c.fact === 'welcomeJobs' && !welcomeJobsToday(s)) return false;
   if (c.wet !== undefined && isWet(s.weather) !== c.wet) return false;
   if (c.after !== undefined) {
     const at = s.stats[`tut.at.${step.id}.clock`];

@@ -686,6 +686,35 @@
       "optional": true
     },
     {
+      "id": "welcomeJobs",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "fact": "welcomeJobs"
+      },
+      "text": "Settling in: jobs pay extra today!",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Goal: today's jobs pay extra.",
+          "target": {
+            "button": "^Goal$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "tab": "goals"
+        }
+      ]
+    },
+    {
       "id": "waterDaily",
       "track": "intro",
       "optional": true,
@@ -803,7 +832,7 @@
               "npc": "mara"
             }
           },
-          "text": "Mara's shop opens at 8 AM.",
+          "text": "Tap the counter to buy seeds.",
           "target": {
             "object": "shop",
             "map": "town"
@@ -836,7 +865,7 @@
               "npc": "mara"
             }
           },
-          "text": "Mara's shop opens at 8 AM.",
+          "text": "Tap the counter to buy seeds.",
           "target": {
             "object": "shop",
             "map": "town"

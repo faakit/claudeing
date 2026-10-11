@@ -42,6 +42,8 @@ let tipsHeld: (state: GameState) => boolean = () => false;
 export function holdTipsWhile(fn: (state: GameState) => boolean): void {
   tipsHeld = fn;
 }
+/** Are first-time tips held back right now (the controls' gesture tips ask too)? */
+export const tipsHeldNow = (state: GameState): boolean => tipsHeld(state);
 
 /** One-time explanations the first time a mechanic shows up (stored as `tip.<id>` stats, so saved). */
 export function checkTips(state: GameState): void {

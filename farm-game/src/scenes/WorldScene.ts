@@ -49,7 +49,7 @@ import { mail } from '../data';
 import { type TileInfo } from '../systems/actions';
 import { actOn, chooseAction } from '../systems/autoTool';
 import { gameEvents, toast } from '../systems/events';
-import { currentGoal } from '../systems/goals';
+import { currentGoal, tipsHeldNow } from '../systems/goals';
 import { interactWith, pickUpPlaced, placedAt, solidTiles } from '../systems/placeables';
 import {
   createMoveState,
@@ -765,7 +765,8 @@ export abstract class WorldScene extends Phaser.Scene {
         !only &&
         res.kind === 'till' &&
         state.settings.controls.paint &&
-        !state.stats['tip.paint']
+        !state.stats['tip.paint'] &&
+        !tipsHeldNow(state)
       ) {
         state.stats['tip.tills'] = (state.stats['tip.tills'] ?? 0) + 1;
         if (state.stats['tip.tills'] >= 3) {

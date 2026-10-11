@@ -834,3 +834,77 @@ describe('guided start: round-5 critic findings', () => {
     expect(coachView(s, w, { ...NO_SHEET, interact: 'bin' }, cur).pointer?.kind).toBe('tile');
   });
 });
+
+describe('guided start: review 6', () => {
+  it('in town before Mara arrives, the counter is pointed at (it sells at any hour), never a closed shop', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    s.stats['foraged'] = 3;
+    s.goalIndex = goals.findIndex((g) => g.id === 'buy');
+    s.time.day = 2;
+    s.time.minutes = 6 * 60 + 55;
+    const town = world(s, {
+      map: 'town',
+      npcs: [],
+      objects: [{ type: 'shop', tx: 4, ty: 9, w: 3, h: 1 }],
+      blocked: () => false,
+    });
+    const cur = advance(s, town, NO_SHEET).current!;
+    const v = coachView(s, town, NO_SHEET, cur);
+    expect(v.text).toBe('Tap the counter to buy seeds.');
+    expect(v.pointer).toMatchObject({ kind: 'tile', ty: 9 });
+    expect(allLines().some((l) => /opens at/.test(l))).toBe(false);
+  });
+
+  it('the early goals have an arrow from the house and from town (never silent indoors)', () => {
+    for (const g of goals.slice(0, 7)) {
+      expect(g.where?.['house'], g.id).toBeDefined();
+      expect(g.where?.['town'], g.id).toBeDefined();
+    }
+  });
+
+  it('gesture tips are held back during the guided days', async () => {
+    const { tipsHeldNow } = await import('../src/systems/goals');
+    const s = freshGuided();
+    expect(tipsHeldNow(s)).toBe(true);
+    for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    expect(tipsHeldNow(s)).toBe(false);
+  });
+});
+
+describe('guided start: depth round 4 introductions', () => {
+  it('on the settling-in days an open job gets one line: Menu, then Goal', async () => {
+    const { game } = await import('../src/data');
+    const g = game as { welcomeJobs?: { from: number; to: number; factor: number } };
+    const before = g.welcomeJobs;
+    g.welcomeJobs = { from: 3, to: 4, factor: 2 };
+    try {
+      const s = freshGuided();
+      for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+      s.stats['foraged'] = 3;
+      s.time.day = 3;
+      s.jobs = {
+        day: 3,
+        list: [{ id: 'j', giver: 'finn', stat: 'caught', base: 0, n: 1, reward: 40, done: false }],
+      };
+      const house = world(s, { map: 'house', objects: [] });
+      expect(step(s, house)).toBe('welcomeJobs');
+      const cur = tutorial.steps.find((x) => x.id === 'welcomeJobs')!;
+      expect(coachView(s, house, NO_SHEET, cur).pointer).toEqual({ kind: 'ui', id: 'menu' });
+      const menu: CoachFacts = { panel: 'menu', tab: 'bag' };
+      expect(coachView(s, house, menu, cur).pointer).toEqual({ kind: 'button', pattern: '^Goal$' });
+      step(s, house, { panel: 'menu', tab: 'goals' });
+      expect(stepDone(s, 'welcomeJobs')).toBe(true);
+      // without settling-in days in the data, it never shows
+      g.welcomeJobs = undefined;
+      const t = freshGuided();
+      for (const st of tutorial.steps) if (st.track !== 'intro') t.stats[`tut.${st.id}`] = 1;
+      t.stats['foraged'] = 3;
+      t.time.day = 3;
+      t.jobs = s.jobs;
+      expect(step(t, house)).not.toBe('welcomeJobs');
+    } finally {
+      g.welcomeJobs = before;
+    }
+  });
+});

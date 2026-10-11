@@ -1,144 +1,165 @@
 # Next steps: the guided start (onboarding)
 
-Branch `onboarding/guided-start` (worktree `onboarding`), from `integration/round2-2026-10-09`. Everything was
-measured in headless Chromium with emulated touch (CDP) on emulated phone profiles. **No real phone, no real
-person**: the "naive player" is a bot that follows what the screen draws, and the critic's bot adds thumb spread,
-wrong taps, wandering and reopening. `npm run verify` is green at the last commit.
+Round 2 is on branch `onboarding/round2` (worktree `onboarding`), from `integration/round3-2026-10-10`. Round 1
+(`onboarding/guided-start`) is merged into that base. Everything was measured in headless Chromium with emulated
+touch (CDP) on emulated phone profiles. **There was no real phone and no real person**: the "naive player" is a bot
+that follows what the screen draws. The critic's bot (`onboarding-critique/tools/human.mjs`) adds thumb spread,
+wrong taps, wandering, reopening and players who never paint a row. `npm run verify` is green at the last commit.
 
-## What shipped
+## Round 2: what changed
 
-- **A data-driven tutorial system.** Steps are `src/data/tutorial.json`, validated at load by `validateTutorial`
-  (unknown conditions, targets with two kinds, gifts outside the home plot and reserved ids all fail loudly).
-  Rules are pure in `src/systems/tutorial.ts` (step machine, conditions, target resolution, replay, skip).
-  `src/mechanics/tutorial.ts` registers a stat watcher, so a step finishes the moment its stat moves, and holds
-  first-time tips back until the guided days are over. Format: `docs/EXTENDING.md` section 10.
-- **The coach-mark layer** `src/ui/CoachMarks.ts`. It draws one line at the top of the world view, or at the
-  bottom while the target sits right under the top. It adds a pulsing ring and a hand on exactly one target (a
-  world tile, a dock button, a hotbar slot, a button in an open sheet), an edge arrow for off-screen targets,
-  gesture demos (press-hold-drag for a row, a sideways flick for the tool ring, a stick drag), and a HUD outline
-  where the line is about a HUD element. Only the line's "..." is a button. It opens Skip guide (with a confirm
-  tap), Next (on optional steps after 45 s) and Back, and the menu closes after 4 s or on any other touch.
-  Left-handed play mirrors the marks; Calm stills them.
-- **Day 1:**
-  - Rosa's welcome strip offers Left hand and Skip. Then the guide walks through:
-    1. Pick 3 ripe parsnips (tap to walk and act).
-    2. Seeds on the hotbar.
-    3. Action plants, then Action waters.
-    4. "Press Action: dig, plant, water" until 5 seeds are planted. The row tip is offered, never required.
-    5. Bin, then Ship all.
-  - The clock line comes next, then the energy line, then "Free time!".
-  - The goal bar then suggests two errands: 3 wild goods (one by the house, two at the town gate) and say hello to
-    a villager.
-  - The bed step comes at 6 PM, or earlier below 25% energy. Sleeping earlier is fine.
-  - The first morning has one news line.
-- **Day 2:** water the dry crops (with a count, the row tip and the pond when the can is empty), the letter,
-  Menu > Goal (jobs), and the walk to town taught with the stick.
-- **Later introductions,** each shown once when it matters: late night, low energy, wild goods in view, Mara and
-  the shop, a new villager, gifts, the board, Clay's board race (day 8, in town), the rod through the tool ring, casting, the mine, placing a
-  machine.
-- **Never trapped:**
-  - Skip from the strip or the line's menu. A toast says where to replay it: Options > Controls > Replay guide.
-    A replay never touches goals, gold or crops.
-  - Nothing is modal. The clock runs. The guide recovers from wandering, open sheets and other maps.
-  - Refusals appear in the coach line, reworded where they would mislead.
-- **Known onboarding bugs fixed:**
-  - The welcome toasts are gone. They replayed on map changes and taught the old "hold Action".
-  - The summary tip now reads "hold Action, then drag".
-  - The swipe tip moved from the 2nd till to day 4.
-  - There is forage on day 1 (by the house and at the town gate), and the coach points at it.
-  - The "Drag to walk" ring no longer contradicts tap-to-walk.
-  - The bag hint ("Tip: hold Action to keep working." in `MenuPanel.ts`) is the controls agent's, still open on
-    this branch.
+- **Day 2 is a rain morning.** It is set by `day2Weather: "rain"` in `tutorial.json`, which `startTutorial`
+  writes into the forecast of a guided new game.
+  - Of the coordinator's three ideas, it is the only one that removes the chore for every player, painters and
+    never-painters alike.
+  - The sleep sheet already says "Tomorrow: Rain. No watering needed.", and the morning toast says the crops are
+    watered.
+  - Day 2 is now: the letter, Menu > Goal, the walk to town, and the shop.
+  - Rosa still fills the can on that morning, without a note.
+  - Daily watering is now the **`waterDaily` intro** on the first dry morning (day 3, on the farm). It reads
+    "Sunny! Water your crops: N left." and offers the can, the pond, and a row tip of dry crops only. It ends
+    when nothing is dry or when you leave the farm, so it never nags.
+  - `water2` stays, for saves whose day 2 is sunny (an older day-1 save, or a replay).
+- **The bed is offered after the errands** (owner): `bedOffer`, between the errands and the evening `sleep` step.
+  - On the farm: "All done! Sleep, or keep exploring.", with the ring on the door.
+  - In town, where the errands end: "All done! Sleep at home, or explore."
+  - In the house: "Tap the bed to sleep, or explore."
+  - It goes after 40 game minutes outside the house. The 6 PM and low-energy `sleep` step still nudges.
+  - Rosa stays the greeter, and the stick is still taught on day 2 (owner).
+- **The row tip** (`bestPaint`) now shows an unbroken row starting right beside the farmer.
+  - Straight ahead wins (a plain Action press then works the row's first tile), else the longest row another way.
+  - It is limited to the step's work kinds (`work: ["water"]` while watering; it used to preview grass to till).
+  - It **gives way after 2 refusals in a row** (`TIP_YIELD_REFUSALS`; CoachMarks counts them, and they reset
+    when the step's count moves or after 20 s). This was the round-5 blocker: a never-painter facing a planted
+    tile pressed Action 376 times.
+  - It is offered after 2 tiles tilled or 2 seeds planted one at a time.
+  - While planting, "Something is already growing here." reads "Tap an empty spot, then Action."
+- **Off-screen arrows follow the walk.** `CoachWorld.route` (the tap-to-walk BFS, cached per tile in
+  `WorldScene.coachRoute`) puts the arrow on the farthest walk tile in view, so tapping it walks around the pond
+  or the woodpile.
+  - The stick shows only while the next 4 tiles of the walk run straight (`steerDir`). Town line: "Seeds are in
+    town: drag to walk."
+  - Probe from 6 awkward farm spots, including the critic's stall spot (8,4): all reach town in 8-17 s. The old
+    arrow sat on the pond and did nothing.
+- **Interact is pointed at when it is lit for the target.** The line reads "Tap the lit button to open it." (or
+  "to talk"), and a box stays on the object. A tap a few px off the one-tile mailbox lands on the farmer's own
+  tile; the feel agent is making such taps use the faced object.
+- **Mail:** the step ends once a letter has been read and the sheet closed, so a gift left in a letter never loops
+  back to the mailbox. With a gift waiting, it points at Take gift, else at Read ("A gift came! Open it and take
+  it.").
+- **Town before 8 AM:** the shop counter sells at any hour (Mara only stands there from 8). So the guide points at
+  the counter ("Tap the counter to buy seeds."), not at "opens at 8".
+  - The shop hours are unchanged, so no `shops.json` or `npcs.json` change was needed.
+  - Probe: arriving at 6:51, the shop opened at 6:51.
+- **Never silent indoors:** the early goals (`gift` to `buy`) have a `where` for the house (its door, 5,8) and for
+  town (the farm gate), so the goal arrow leads out. This was review 6's major: 282 s in the house with nothing
+  shown.
+- **Gesture tips** (`TIPS.ring`, `TIPS.paint`) wait for the guided days like `tips.json` does (`tipsHeldNow`).
+- **Depth round 4 intro:** `welcomeJobs` reads "Settling in: jobs pay extra today!", then Menu, then "Tap Goal:
+  today's jobs pay extra."
+  - It shows on depth's settling-in days (`game.welcomeJobs`, days 3-4) while a job is open.
+  - It never shows if the data has no such days, so it is safe before and after depth merges.
+  - The Goal tab's "ALSO OPEN" section does not affect the marks: they point at the Goal tab button and the
+    sheet's Close.
+- **Coach-mark art** (the art agent's round-3 sprites):
+  - The line sits on `ui_coach_bubble` (nine-slice; ink text on parchment in the walnut skin; plum keeps its
+    strip), and `ui_coach_bubble_tail` points toward the target.
+  - `ui_coach_ring` is drawn at whole-pixel scales, with a stepped pulse to `ui_coach_ring_wide`.
+  - The `ui_coach_hand` fingertip is at (4.5, 0).
+  - Stand-ins of the same sizes are drawn only if the atlas is missing.
+- **Toasts at the top while a sheet is open** (depth): three two-line toasts end at y 77, and the line starts at
+  y 76, drawn above them. While a sheet is open, the HUD tag and the welcome strip are not drawn.
+- **After the controls merge:**
+  - The door tap and the bed's top half work (`tapIntent` and `pathToFaceAny`). The bed is offered in 13/14 of
+    the critic's runs, and every run slept.
+  - "Not your land yet. Follow the ring." is kept: "Buy it at a sign" would send a day-1 player shopping for
+    land.
+  - "Can't get there." now reads "Can't get there. Follow the ring." The ring may be on a button, not a tile.
+  - The bag hint is fixed by controls ("hold Action, then drag, to work a whole plot").
+- **e2e-onboarding** gained:
+  - an SE-left never-paint run (it presses Action under the row tip);
+  - a check that the tip never shows after 2 refusals in a row;
+  - `ONB_TRACE=1`, which prints each coach line.
 
-## Before and after (naive player, day 1)
+## Day 2 before and after
 
-|                               | before (1dffd97)                                        | after                                                                                            |
-| ----------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Moments of confusion on day 1 | 10 (C1-C10 in `agents/out/onboarding/before/notes.md`)  | 0 in the bot runs; see the critic's reviews for a human-ish bot                                  |
-| First thing done              | first till after about 3.5 min (2 refusals, 15 s stuck) | first harvest at 4.4-5.1 s (bot), 9-21 s (critic's bot)                                          |
-| Day 1 steps taught            | till, plant, water, sleep (by goals only)               | tap to walk, hotbar, Action, auto tool, row tip, bin, clock, energy, errands, stick (day 2), bed |
-| Day 1 gestures / time         | 21 gestures, about 4.5 min (41 s of it stuck)           | 42-49 gestures, 110-121 s including the town errand (bot)                                        |
-| Refusals on day 1             | 4                                                       | 0 (1 for the wanderer, shown in the coach line)                                                  |
+All runs used the critic's `human.mjs` with the same 8 seeds (i13/SE x right/left, human/never-paint, wander and
+reopen), on a frozen build.
 
-Bot runs (`npm run e2e:onboarding`, New Game to town on day 2, M4): i13 R 110 s / 59 gestures, i13 L 111 / 60, SE R 109 / 59, SE L 111 / 60, wanderer 130 / 70. The critic's human-like bot (M3): 12/12 runs reach town on day 2, first harvest 9-19 s. Screenshots: `agents/out/onboarding/after/` (m1, m2, m4).
+|                                 | base 6d5e480                                  | round 2 (milestone 2)    |
+| ------------------------------- | --------------------------------------------- | ------------------------ |
+| Reach town on day 2             | 7/8 (one 131 s mail loop)                     | 8/8, 0 stalls            |
+| water2 (day 2's watering)       | median 68 s (33-172 s); 6/8 over 45 s         | gone (rain): 0 s         |
+| Waking to town on day 2         | median 98 s (71-160 s)                        | median 32 s (28-43 s)    |
+| New Game to town on day 2       | median 254 s (203-309 s, the 7 that arrived)  | median 168 s (143-226 s) |
+| Row tip offered during watering | rows of grass to till (17 commits in one run) | dry crops only           |
 
-## Save versions
+The critic's round 6 on milestone 1 (94cb9c3): 14/14 reach town on day 2. Never-paint 4/4 with 0 refusal loops,
+mail 0 stalls, waking to town 28-50 s, New Game to waking 111-166 s, no clean-run step over 45 s.
 
-- **v17:** early goals reordered (`gift`, `plant`, `ship1`, `forage`, `talk`, `sleep`, then `buy`...). Migration
-  `migrateV16` in `src/systems/save.ts`: "till" moves to "plant", "water" and "sleep" move to "forage", everything
-  else is remapped by id. Unit-tested per old early goal. Tutorial progress itself is stats only (`tut.*`).
-  Renumber at merge if another branch took 17.
+## How it works (from round 1, still true)
 
-## Texture keys for the art agent
+- **Steps** are `src/data/tutorial.json`, validated at load by `validateTutorial`. Rules are pure in
+  `src/systems/tutorial.ts`, and `src/mechanics/tutorial.ts` has the stat watcher, the tip hold and the can hook.
+  The format is in `docs/EXTENDING.md` section 10 (updated: `after`, `wet`, `work`, `day2Weather`, `route`).
+- **The coach-mark layer** `src/ui/CoachMarks.ts` draws:
+  - one line, with a ring and a hand on exactly one target;
+  - edge arrows;
+  - gesture demos;
+  - a HUD outline.
 
-- `ui_coach_ring` (32x32, a gold ring)
-- `ui_coach_hand` (15x17, a pointing glove, fingertip at 4,1)
-
-Both are code-drawn placeholders in `ensureCoachTextures`; a real texture under the same key replaces them.
+  Only the "?" is a button: Skip guide (with a confirm), Next (optional steps, after 45 s) and Back.
+- **Day 1:** harvest, seeds, plant, water, grow (5 planted), ship. Then the clock and energy lines, "Free time!",
+  the errands (wild goods, hello), the bed offer, and the 6 PM bed step. The first morning keeps one note.
+- **Day 2:** the letter, Menu, Goal, then town. Day 3+: introductions, each shown once (waterDaily, welcomeJobs,
+  late, tired, forage, Mara, the shop, a villager, gifts, the board, Clay, the rod, casting, the mine, placing).
+- **Progress is stats only** (`tut.*`; new this round: `tut.at.<id>.clock`). There is no save change: still v17,
+  with `migrateV16` for the early goals.
 
 ## Edits outside my files (minimal, noted)
 
-- `Hud.intercept` (toast hook)
-- `Button.text` and `Label.text` getters
-- `MenuPanel.currentTab`
-- `runtime.coaching`
-- `WorldScene.coachWorld()` and its water-tile cache, plus the goal arrow pausing while coaching
-- UIScene wiring: drag hint, idle hint, `paintEnd` → `notePainted`
-- SummaryPanels: the short guided morning
-- `ControlsTab`: Replay guide button and help card text
-- `maps.json` start tile
-- Harness URLs: `?tutorial=0` in `e2e.mjs`, `e2e-mobile.mjs`, `perf.mjs`, `thumb-lib.mjs`
-- `perf.mjs`: a coach-marks scenario
+Round 2:
+
+- `WorldScene`:
+  - `coachWorld().route` and `coachRoute` (cached BFS);
+  - the `standTiles` import;
+  - the paint tip gated by `tipsHeldNow`.
+- `UIScene`:
+  - `coachFacts().interact` (the lit Interact type);
+  - the ring tip gated by `tipsHeldNow`.
+- `systems/goals.ts`: `tipsHeldNow`.
+- `src/data/index.ts`: tutorial types and validation only.
+- `goals.json`: the early goals' `where` (house and town).
+
+Round 1 (still in place):
+
+- `Hud.intercept`;
+- the `Button.text` and `Label.text` getters;
+- `MenuPanel.currentTab`;
+- `runtime.coaching`;
+- `WorldScene.coachWorld()`;
+- the goal arrow pausing while coaching;
+- the UIScene wiring;
+- SummaryPanels' guided morning;
+- the `ControlsTab` Replay button and help text;
+- the `maps.json` start tile;
+- the `?tutorial=0` harness URLs;
+- the perf coach scenario.
 
 ## Open findings and next steps
 
-The critic's final report is `C:/Users/andre/dev/tiny-acre/onboarding-critique/final.md`. It ran on M4
-(fd9dcfc) and found no blockers. 12 of 12 human-like runs (i13 and SE, both hands, wrong taps, wandering, reopening,
-never painting a row) reached town on day 2 by following on-screen guidance, with 0 accidental skips. The first
-harvest came at 9-20 s. New Game to waking on day 2 took 108-146 s clean and 139-204 s human-like. Nothing was
-pointed at for only 6-7 s per run.
-
-Its six open findings, and what the commit after M4 did about each:
-
-1. **Major: water2 for players who press Action instead of painting.** With the empty seed slot in hand, Action
-   on soil gave the planting refusal, reworded as "Tap the seed packet on the hotbar."
-   - **Fixed after M4.** Water steps have their own refusal words ("Tap a dry crop to water it."). The "seed
-     packet" wording is only used outside them.
-   - Not re-tested by the critic.
-2. **Major: the stick lesson demoed a fixed "drag down" into the woodpile and stump.**
-   - **Fixed after M4.** The stick is shown only when the straight way is open for 4 tiles. Otherwise the coach
-     points at the gate, and the tap and its edge arrow walk around obstacles.
-   - Unit-tested; not re-tested by the critic.
-3. **Minor: water2 is still the longest beat** (12-101 s, median about 36 s; the can ran dry in 3 of 12 runs; the
-   row tip showed 2-4 directions). **Open.** Ideas:
-   - water2 done at "most" crops;
-   - a sprinkler gift on day 3;
-   - lock the tip's direction for the whole step (layer state).
-4. **Minor: the day-1 leek sat beside the mailbox,** so a low tap opened an empty mailbox. **Fixed after M4:** the
-   leek moved to (10,13).
-5. **Minor: after Menu > Goal, "Close this to carry on."** **Fixed after M4:** the line now reads "Read your jobs,
-   then tap Close."
-6. **Minor: the bag hint "Tip: hold Action to keep working."** (`MenuPanel.ts`) still contradicts the row tip.
-   **Open.** It is the controls agent's string and must change before release.
-
-Other next steps:
-
-- **The evening bed step** is unit-tested only. An e2e would need about 6 real minutes of play. In the e2e, day 1
-  ends when the bot chooses to sleep after the errands, which the clock line allows.
-- **After the depth branch merges:**
-  - While a sheet is open, toasts draw at the top of the screen. Check they do not collide with the coach line
-    (y 76-94).
-  - Clay's day-7 letter: the day-8 intro points at the board in town, and could also point at the letter.
-- **After the controls branch merges:**
-  - Re-check the door tap and the bed's top half.
-  - Drop the "Not your land" and "Can't get there" rewordings if the new refusals read well.
-- **Art:** replace the `ui_coach_ring` and `ui_coach_hand` placeholders, and give the hand a pose for drags.
-- **A real phone pass:** use the critic's owner checklist at the end of `final.md`.
-
-## Questions for the owner
-
-1. Rosa greets you (she is the neighbour in the data). The brief suggested Mara. One field in `tutorial.json`
-   (`speaker`) switches it.
-2. Day 1: the guided part ends mid-morning, then the errands. Is free play until 6 PM right, or should the bed
-   step come once the errands are done?
-3. Should the guide teach the stick earlier than day 2's long walk?
+1. **Review 6, item 3 ("a stale box on the mailbox during the Menu step"):** I argue it is not a coach mark. It is
+   the world's own highlight of the faced interactable: Mara's unread letter keeps the mailbox lit and starred.
+   The coach's box only goes with an `interact` pointer, and the layer clears every frame. Left as is.
+2. **Review 6, item 5 ("+1 Wild Leek" over the "GOAL COMPLETE" banner):** this is Hud and FX (the feel and controls
+   lanes), not the guide.
+3. **The day-3 `waterDaily` intro** is unit-tested and probed: 5 crops watered in about 11 s by taps. It is not
+   yet replayed by the critic, who plans a run to day 3.
+4. **The evening `sleep` step and the bed offer's 40-minute expiry** are unit-tested only; an e2e would need
+   about 6 real minutes.
+5. **The stick demo draws its hand over the hotbar** (the stick home is just above it). This was cosmetic in
+   round 1 and is still the same.
+6. **A real phone pass:** use the critic's owner checklist in `agents/critiques/onboarding-critic/final.md`, plus:
+   - Does day 2's rain read as a gift, not a skipped lesson?
+   - Does day 3's "Sunny! Water your crops" land?
+   - Does the bed offer feel optional?

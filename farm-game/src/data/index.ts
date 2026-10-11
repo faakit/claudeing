@@ -530,7 +530,7 @@ export interface TutorialCond {
   /** The current goal's id. */
   goal?: string;
   /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
-  fact?: 'npcNew' | 'forageInView';
+  fact?: 'npcNew' | 'forageInView' | 'welcomeJobs';
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
   touched?: number;
   /** At least this many game minutes have passed since the step first showed. */

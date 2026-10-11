@@ -904,6 +904,13 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   stepped pulse to `ui_coach_ring_wide`; the hand's fingertip is the art's (4.5, 0). While a sheet is open the
   HUD tag and the welcome strip are not drawn (depth's top toasts sit there; the line itself starts at y 76,
   below three two-line toasts).
+- **Day 2's town before 8 AM (review 6, coordinator ruling):** the shop counter sells at any hour (only Mara stands
+  there from 8), so the guide points at the counter ("Tap the counter to buy seeds.") instead of "opens at 8".
+  No shop hours moved (`npcs.json` and `shops.json` unchanged; noted for the depth agent).
+- **Never silent indoors:** the early goals (`gift` to `buy`) have a goal-arrow `where` for the house (its door) and
+  for town (the farm gate). Gesture tips (ring, paint) wait for the guided days like `tips.json` (`tipsHeldNow`).
+- **Settling-in jobs (depth round 4):** a one-off `welcomeJobs` intro on `game.welcomeJobs` days while a job is open
+  (Menu, then Goal); it never shows without that data.
 
 ### Round 3 owner decisions (2026-10-09, controls round 3)
 

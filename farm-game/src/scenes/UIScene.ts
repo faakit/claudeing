@@ -19,7 +19,7 @@ import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { endDay } from '../systems/day';
 import { gameEvents, type PanelType } from '../systems/events';
-import { addStat, currentGoal, stat } from '../systems/goals';
+import { addStat, currentGoal, stat, tipsHeldNow } from '../systems/goals';
 import { cycleSlot, selectSlot, selectedStack } from '../systems/inventory';
 import { iconKey, refOf } from '../systems/itemRef';
 import { STICK_RADIUS } from '../systems/settings';
@@ -509,7 +509,7 @@ export class UIScene extends Phaser.Scene {
       return;
     }
     this.lastSelectedForTip = sel;
-    if (s.stats['tip.ring'] || this.ring.isOpen || this.ringPicked) {
+    if (s.stats['tip.ring'] || this.ring.isOpen || this.ringPicked || tipsHeldNow(s)) {
       this.ringPicked = false;
       return;
     }
