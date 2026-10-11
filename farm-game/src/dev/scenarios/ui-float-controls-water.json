@@ -1,0 +1,39 @@
+{
+  "title": "Floating controls over water",
+  "about": "The restored farm, standing north of the pond: the pond's water fills the band behind Action and the hotbar's right half. Check the plates read on blue and a tap on the water between the controls behaves as a water tap.",
+  "version": 18,
+  "tags": ["farm", "controls", "ui", "art"],
+  "at": {
+    "map": "farm",
+    "tx": 22,
+    "ty": 24,
+    "facing": "down"
+  },
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
+  },
+  "time": {
+    "season": "summer",
+    "day": 2,
+    "clock": "10:00"
+  },
+  "items": [
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 2,
+      "slot": 6
+    },
+    {
+      "item": "egg",
+      "qty": 12,
+      "slot": 7
+    }
+  ],
+  "select": 1
+}

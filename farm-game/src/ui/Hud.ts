@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { DOCK_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
+import { CONTROLS_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
 import { game, npcs } from '../data';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
@@ -11,8 +11,8 @@ import { goalProgress } from '../systems/goals';
 import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
-import { hitSize } from './hit';
-import { CH, SEAM, SKIN } from './theme';
+import { HOTBAR, HOTBAR_HIT_Y, HOTBAR_Y, hotbarSlotX, PLATE_LIP } from './layout';
+import { CH, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
 import { runtime } from '../state/runtime';
@@ -20,13 +20,16 @@ import { tickToward } from '../fx/feel';
 import { showBanner } from '../fx/hudBand';
 import { valleyStep } from '../systems/valley';
 
-/** Hotbar slot size: 23 logical px is ~45 CSS px on a typical phone, so taps land first time. */
-export const SLOT = 23;
-const SLOT_GAP = 1;
-export const HOTBAR_X = Math.round(
-  (GAME_WIDTH - (game.hotbarSlots * (SLOT + SLOT_GAP) - SLOT_GAP)) / 2,
-);
-export const HOTBAR_Y = GAME_HEIGHT - SLOT - 5;
+/**
+ * The floating hotbar (geometry in ui/layout.ts `HOTBAR`): 22 px slot faces on a 24 px pitch, each on a solid 2 px
+ * soil lip, hugging the bottom edge with no band behind them. Every slot's touch zone is the whole pitch wide and runs
+ * from just above the faces to the bottom edge (24 x 27 px: 45.8 x 51.5 CSS px on the iPhone 13, 38.8 x 43.6 on the
+ * SE), so the zones meet and a tap on the row never falls through to the world.
+ */
+export const SLOT = HOTBAR.slot;
+export const SLOT_PITCH = HOTBAR.pitch;
+export const HOTBAR_X = hotbarSlotX(0, game.hotbarSlots);
+export { HOTBAR_Y };
 
 interface Toast {
   label: Label;
@@ -39,7 +42,7 @@ interface Toast {
 
 /**
  * Always-on overlay. Top: clock, gold, weather, energy/water, goal (read-only, out of thumb reach
- * on purpose). Bottom: the dock background and hotbar. Reads state only.
+ * on purpose). Bottom: the floating hotbar, over the world. Reads state only.
  */
 /** Toasts on screen at once: a third pushes the oldest out (a tap's results never pile over the world). */
 export const MAX_TOASTS = 2;
@@ -78,7 +81,9 @@ export class Hud {
   private hotbarStars2: Phaser.GameObjects.Image[] = [];
   private hotbarZones: Phaser.GameObjects.Zone[] = [];
   private readonly nameLabel: Label;
-  private nameTween: Phaser.Tweens.Tween | null = null;
+  /** The item name's solid plate: it floats over the world just above the controls, so it needs its own ground. */
+  private readonly nameBg: Phaser.GameObjects.Rectangle;
+  private nameTimer: Phaser.Time.TimerEvent | null = null;
   private lastSelected = -1;
   private hotbarDirty = true;
 
@@ -99,28 +104,9 @@ export class Hud {
     const panels = scene.add.graphics().setDepth(depth);
     drawPanel(panels, 3, 2, 104, 32, undefined, undefined, 'chrome');
     drawPanel(panels, 110, 2, 87, 32, undefined, undefined, 'chrome');
-    // Dock: solid so the world never shows through behind controls.
-    if (SKIN === 'plum') {
-      panels.fillStyle(CH.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
-      panels.fillStyle(CH.cream, 0.55).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
-      panels.fillStyle(CH.panelLight, 0.5).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
-    } else {
-      // Walnut dock (critic R1-1): full-width planks 14 px tall, each seam a 1 px ink line over a 1 px
-      // highlight, and two small knots far from the controls; no grain behind anything you read.
-      panels.fillStyle(CH.panel, 1).fillRect(0, DOCK_Y, GAME_WIDTH, DOCK_H);
-      panels.fillStyle(CH.ink, 1).fillRect(0, DOCK_Y, GAME_WIDTH, 1);
-      panels.fillStyle(CH.rim, 1).fillRect(0, DOCK_Y + 1, GAME_WIDTH, 1);
-      for (let gy = DOCK_Y + 16; gy < GAME_HEIGHT - 2; gy += 14) {
-        panels.fillStyle(SEAM.ink, 1).fillRect(0, gy, GAME_WIDTH, 1);
-        panels.fillStyle(SEAM.lit, 1).fillRect(0, gy + 1, GAME_WIDTH, 1);
-      }
-      for (const [kx, ky] of [[182, GAME_HEIGHT - 8]] as const)
-        panels
-          .fillStyle(SEAM.knot, 1)
-          .fillRect(kx, ky, 3, 2)
-          .fillRect(kx + 1, ky - 1, 1, 1);
-    }
-    // Dark band above the world too, so the HUD reads as its own strip.
+    // No dock band any more (owner, 2026-10-11: "it still feels big"): the world runs to the bottom edge and the
+    // controls float on their own plates (DECISIONS.md "Floating controls").
+    // A dark line along the top, so the HUD reads as its own strip.
     panels.fillStyle(CH.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
 
     this.dateLabel = new Label(scene, 10, 5, '', { color: CH.creamDim }).setDepth(depth + 1);
@@ -142,11 +128,17 @@ export class Hud {
     );
 
     this.hotbarGfx = scene.add.graphics().setDepth(depth);
-    this.nameLabel = new Label(scene, GAME_WIDTH / 2, HOTBAR_Y - 11, '', { align: 'center' })
-      .setDepth(depth + 2)
+    // The selected item's name, in the toast lane just above the controls (on the old dock it sat over Interact).
+    this.nameLabel = new Label(scene, GAME_WIDTH / 2, CONTROLS_Y - 15, '', { align: 'center' })
+      .setDepth(80)
       .setAlpha(0);
+    this.nameBg = scene.add
+      .rectangle(GAME_WIDTH / 2, CONTROLS_Y - 12, 10, 10, SKIN === 'plum' ? CH.ink : CH.panel, 1)
+      .setDepth(79)
+      .setAlpha(0);
+    if (SKIN !== 'plum') this.nameBg.setStrokeStyle(1, CH.ink);
     for (let i = 0; i < game.hotbarSlots; i++) {
-      const x = HOTBAR_X + i * (SLOT + SLOT_GAP);
+      const x = HOTBAR_X + i * SLOT_PITCH;
       this.hotbarIcons.push(
         scene.add
           .image(x + SLOT / 2, HOTBAR_Y + SLOT / 2 + 1, 'ui_coin')
@@ -174,8 +166,10 @@ export class Hud {
       new Label(scene, x + 3, HOTBAR_Y + 2, String(i + 1), { color: CH.creamDim, shadow: null })
         .setDepth(depth + 2)
         .setAlpha(0.6);
+      // The whole pitch wide, from just above the faces to the bottom edge: the zones meet, so no tap on the row
+      // reaches the world, and the 2 px under the lips still pick the slot.
       const zone = scene.add
-        .zone(x, HOTBAR_Y, SLOT, SLOT)
+        .zone(x - (SLOT_PITCH - SLOT) / 2, HOTBAR_HIT_Y, SLOT_PITCH, GAME_HEIGHT - HOTBAR_HIT_Y)
         .setOrigin(0, 0)
         .setDepth(depth + 3)
         .setInteractive();
@@ -215,10 +209,7 @@ export class Hud {
       .setDepth(depth + 5)
       .setAlpha(0);
 
-    this.fitHotbarHits();
-    scene.scale.on('resize', this.fitHotbarHits, this);
     this.cleanup.push(
-      () => scene.scale.off('resize', this.fitHotbarHits, this),
       gameEvents.on('toast', (t) => this.toast(t.text, t.kind)),
       gameEvents.on('inventoryChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('energyChanged', () => (this.hotbarDirty = true)),
@@ -235,17 +226,6 @@ export class Hud {
         this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`, 'medium'),
       ),
     );
-  }
-
-  /** Slots are 24px apart; grow each touch area up to that pitch so it reaches ~44 CSS px. */
-  private fitHotbarHits(): void {
-    const size = hitSize(this.scene, SLOT, SLOT + SLOT_GAP);
-    const grow = (size - SLOT) / 2;
-    this.hotbarZones.forEach((zone, i) => {
-      const x = HOTBAR_X + i * (SLOT + SLOT_GAP);
-      zone.setPosition(x - grow, HOTBAR_Y - grow).setSize(size, size);
-      if (zone.input) zone.input.hitArea.setSize(size, size);
-    });
   }
 
   destroy(): void {
@@ -421,9 +401,14 @@ export class Hud {
     const t = now - this.selAt;
     const half = !calm && t < 60;
     for (let i = 0; i < game.hotbarSlots; i++) {
-      const x = HOTBAR_X + i * (SLOT + SLOT_GAP);
+      const x = HOTBAR_X + i * SLOT_PITCH;
       const sel = i === s.inventory.selected;
       const lift = sel ? (half ? 1 : 2) : i === this.selFrom && half ? 1 : 0;
+      // A solid soil lip under the face (its sides in ink), so each slot is its own little plate over any ground; a
+      // rising face shows more of it (the selected slot stands on 4 px of lip).
+      const lipY = HOTBAR_Y + SLOT - lift;
+      g.fillStyle(CH.ink, 1).fillRect(x, lipY, SLOT, PLATE_LIP + lift);
+      g.fillStyle(CH.panelLight, 1).fillRect(x + 1, lipY, SLOT - 2, PLATE_LIP + lift);
       drawSlot(g, x, HOTBAR_Y - lift, SLOT, sel, false, 'chrome');
       const stack = s.inventory.slots[i] ?? null;
       const icon = this.hotbarIcons[i]!;
@@ -459,16 +444,30 @@ export class Hud {
     }
   }
 
+  /**
+   * The selected item's name on a solid plate at the bottom of the toast lane (toasts stack above it while it shows).
+   * It goes in one step after 1.5 s: a fading plate over the world would be see-through.
+   */
   private showName(name: string): void {
-    this.nameTween?.stop();
-    this.nameLabel.setText(name).setAlpha(name ? 1 : 0);
+    this.nameTimer?.remove();
+    this.nameTimer = null;
+    const l = this.nameLabel.setText(name).setAlpha(name ? 1 : 0);
+    l.setY(CONTROLS_Y - 6 - l.textHeight - 2);
+    this.nameBg
+      .setPosition(l.x, l.y + l.textHeight / 2)
+      .setSize(l.textWidth + 10, l.textHeight + 5)
+      .setAlpha(name ? 1 : 0);
     if (!name) return;
-    this.nameTween = this.scene.tweens.add({
-      targets: this.nameLabel,
-      alpha: 0,
-      delay: 1100,
-      duration: 400,
+    this.nameTimer = this.scene.time.delayedCall(1500, () => {
+      this.nameLabel.setAlpha(0);
+      this.nameBg.setAlpha(0);
     });
+  }
+
+  /** Bottom of the toast lane: just above the floating controls, and above the item name while it shows. */
+  private laneBottom(): number {
+    const y = CONTROLS_Y - 6;
+    return this.nameLabel.alpha > 0 ? y - this.nameLabel.textHeight - 5 : y;
   }
 
   /**
@@ -499,7 +498,7 @@ export class Hud {
         : kind === 'warn'
           ? CH.gold
           : CH.cream;
-    const label = new Label(this.scene, GAME_WIDTH / 2, DOCK_Y - 14, text, {
+    const label = new Label(this.scene, GAME_WIDTH / 2, CONTROLS_Y - 14, text, {
       color,
       align: 'center',
       maxWidth: 186,
@@ -558,7 +557,7 @@ export class Hud {
     // the toasts move to the top of the screen, above the dim, so a sheet's own results ("Kept 4 Potato for the
     // board.", "Order done!") are seen when they happen (critique 10, F1).
     const sheet = runtime.modals > 0;
-    let y = sheet ? 4 : DOCK_Y - 6;
+    let y = sheet ? 4 : this.laneBottom();
     if (sheet) for (const t of this.toasts) y += t.label.textHeight + 2;
     for (let i = this.toasts.length - 1; i >= 0; i--) {
       const t = this.toasts[i]!;

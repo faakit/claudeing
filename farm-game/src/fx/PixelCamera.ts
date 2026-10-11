@@ -21,12 +21,19 @@ export class PixelCamera {
     private readonly cam: Phaser.Cameras.Scene2D.Camera,
     /** Aim this far above the feet (the body, not the feet). */
     private readonly bodyOffset: number,
+    /**
+     * Px at the bottom of the view that the floating thumb controls sit over (config `CONTROLS_H`). The world draws
+     * under them, but the follow, a small map's centring and the bottom bound use the view above them, so the farmer
+     * is never under a thumb, even on a map's last row (the view then shows the void below the map, behind the
+     * controls). With the old dock's height this keeps every scroll exactly what the old, shorter view had.
+     */
+    private readonly inset = 0,
   ) {}
 
-  /** The scroll range: a map smaller than the view stays centred. */
+  /** The scroll range: a map smaller than the view (above the controls) stays centred in it. */
   setMap(mapW: number, mapH: number): void {
     const w = this.cam.width;
-    const h = this.cam.height;
+    const h = this.cam.height - this.inset;
     const left = Math.round(-Math.max(0, w - mapW) / 2);
     const top = Math.round(-Math.max(0, h - mapH) / 2);
     this.bounds = {
@@ -37,7 +44,7 @@ export class PixelCamera {
     };
     // Phaser's own bounds match, on whole pixels, so its clamp never moves the camera off a pixel.
     const b = this.bounds;
-    this.cam.setBounds(b.x0, b.y0, b.x1 - b.x0 + w, b.y1 - b.y0 + h);
+    this.cam.setBounds(b.x0, b.y0, b.x1 - b.x0 + w, b.y1 - b.y0 + this.cam.height);
   }
 
   /** Cut straight to the player (a new map, a teleport). */
@@ -66,7 +73,7 @@ export class PixelCamera {
     const ly = stepFollowAxis(this.ay, py, dtMs, CAMERA_LERP);
     let sx = softClamp(fx - lx - this.cam.width / 2, this.bounds.x0, this.bounds.x1, EDGE_KNEE);
     let sy = softClamp(
-      fy - this.bodyOffset - ly - this.cam.height / 2,
+      fy - this.bodyOffset - ly - (this.cam.height - this.inset) / 2,
       this.bounds.y0,
       this.bounds.y1,
       EDGE_KNEE,

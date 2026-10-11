@@ -31,6 +31,7 @@ import {
   tileKind,
   TILE_SIZE,
   VOID_COLOR,
+  WORLD_CLEAR,
   WORLD_VIEW,
 } from '../config';
 import { items, mapsData, valley } from '../data';
@@ -603,7 +604,7 @@ export abstract class WorldScene extends Phaser.Scene {
         runtime.valleyReveal = false;
       }
     }
-    this.channels?.update(delta, this.cameras.main.worldView);
+    this.channels?.update(delta, this.clearView());
     if (this.farmDirty && this.time.now >= this.impactAt) {
       this.farmDirty = false;
       this.farm?.sync(getState(), true);
@@ -771,8 +772,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const wx = where[0] * TILE_SIZE + TILE_SIZE / 2 - cam.scrollX;
     const wy = where[1] * TILE_SIZE + TILE_SIZE / 2 - cam.scrollY;
     const m = 10;
-    const cx = Math.max(m, Math.min(WORLD_VIEW.w - m, wx));
-    const cy = Math.max(m, Math.min(WORLD_VIEW.h - m, wy));
+    const cx = Math.max(m, Math.min(WORLD_CLEAR.w - m, wx));
+    const cy = Math.max(m, Math.min(WORLD_CLEAR.h - m, wy)); // never under the floating controls
     const onScreen = cx === wx && cy === wy;
     const bob = Math.sin(time / 180) * 2;
     arrow.clear().setVisible(true).setPosition(cx, cy);
@@ -850,8 +851,12 @@ export abstract class WorldScene extends Phaser.Scene {
       route: (tx, ty) => this.coachRoute(here, { tx, ty }),
       inView: (tx, ty) => {
         const p = screen(tx, ty);
+        // above the floating controls: a tile behind a thumb gets the coach's edge arrow instead
         return (
-          p.x >= 0 && p.x < WORLD_VIEW.w && p.y >= WORLD_VIEW.y && p.y < WORLD_VIEW.y + WORLD_VIEW.h
+          p.x >= 0 &&
+          p.x < WORLD_CLEAR.w &&
+          p.y >= WORLD_CLEAR.y &&
+          p.y < WORLD_CLEAR.y + WORLD_CLEAR.h
         );
       },
       screen,
@@ -893,18 +898,26 @@ export abstract class WorldScene extends Phaser.Scene {
     return out;
   }
 
+  /** The camera's world view above the floating controls (what "in view" means for moments that must be seen). */
+  private readonly clearRect = new Phaser.Geom.Rectangle();
+  private clearView(): Phaser.Geom.Rectangle {
+    const v = this.cameras.main.worldView;
+    return this.clearRect.setTo(v.x, v.y, v.width, Math.min(v.height, WORLD_CLEAR.h));
+  }
+
   // ---- setup ----
 
   private setupCamera(mapW: number, mapH: number): void {
     const cam = this.cameras.main;
-    // The world only draws between the HUD and the dock, so nothing is ever hidden behind a control.
+    // The world draws from under the HUD to the bottom edge, behind the floating controls; the follow keeps the farmer
+    // in the part above them (PixelCamera's inset), exactly where the old dock-bound view had him.
     cam.setViewport(WORLD_VIEW.x, WORLD_VIEW.y, WORLD_VIEW.w, WORLD_VIEW.h);
     // Around a small room, the void is the ink of the outline palette, so the walls read as a framed box.
     cam.setBackgroundColor(mapsData.maps[this.mapId]?.outdoor ? VOID_COLOR : INK_HEX);
     // Maps smaller than the view stay centred in it (PixelCamera.setMap sets the bounds).
     const p = getState().player;
     const bodyOffset = PLAYER_H / 2 - 4; // aim at the body, not the feet
-    this.pcam = new PixelCamera(cam, bodyOffset);
+    this.pcam = new PixelCamera(cam, bodyOffset, WORLD_VIEW.h - WORLD_CLEAR.h);
     this.pcam.setMap(mapW, mapH);
     this.pcam.snap(p.x, p.y);
   }

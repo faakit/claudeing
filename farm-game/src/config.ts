@@ -5,14 +5,26 @@ export const TILE_SIZE = 16;
 export const GAME_WIDTH = 200;
 export const GAME_HEIGHT = 400;
 
-// Screen zones (logical px). Everything the thumb touches lives in the bottom dock.
+// Screen zones (logical px). The world draws from under the HUD to the bottom edge; the thumb controls float over its
+// lower part, each on its own solid plate, with no band behind them (ui/layout.ts; DECISIONS.md "Floating controls").
 export const HUD_H = 74; // read-only info at the top, out of thumb reach on purpose
-export const DOCK_H = 112; // controls + hotbar
-export const DOCK_Y = GAME_HEIGHT - DOCK_H;
-export const WORLD_VIEW = { x: 0, y: HUD_H, w: GAME_WIDTH, h: DOCK_Y - HUD_H } as const;
 /**
- * The floating joystick may start anywhere below this line: the whole world view and the dock, so every touch
- * off a button is either a tap or the stick (never nothing).
+ * Top of the floating thumb controls (Menu's plate, the highest, starts 2 px below; ui/layout.ts places every control
+ * from here, where the old dock's top edge was). The world still draws below this line, between the controls.
+ */
+export const CONTROLS_Y = 288;
+/** The bottom band the controls float in: the camera keeps the farmer above it. */
+export const CONTROLS_H = GAME_HEIGHT - CONTROLS_Y;
+export const WORLD_VIEW = { x: 0, y: HUD_H, w: GAME_WIDTH, h: GAME_HEIGHT - HUD_H } as const;
+/**
+ * The part of the world view above the floating controls. The camera centres the farmer in it, centres a small room in
+ * it and lets a map's last row scroll up into it (fx/PixelCamera.ts); the coach line, toasts and the goal arrow keep to
+ * it, so nothing that needs reading or tapping first sits under a thumb.
+ */
+export const WORLD_CLEAR = { x: 0, y: HUD_H, w: GAME_WIDTH, h: CONTROLS_Y - HUD_H } as const;
+/**
+ * The floating joystick may start anywhere below this line: the whole world view, so every touch off a control is
+ * either a tap or the stick (never nothing).
  */
 export const THUMB_ZONE_Y = HUD_H;
 
@@ -78,7 +90,7 @@ export const FADE_COLOR = { r: 16, g: 12, b: 28 } as const;
 export const VOID_COLOR = '#14101f';
 
 // --- Touch controls (logical px) ---
-// Gesture thresholds live in input/gesture.ts and the dock geometry in ui/layout.ts (both pure, tested).
+// Gesture thresholds live in input/gesture.ts and the control geometry in ui/layout.ts (both pure, tested).
 export const JOYSTICK = { radius: 24, axisBias: 1.6 } as const;
 export const EVT_INTERACT_TARGET = 'interact-target';
 

@@ -3,7 +3,7 @@ import type Phaser from 'phaser';
 /**
  * Draw a Graphics once into a texture (with the WebGL renderer, so it looks exactly like the live Graphics) and
  * reuse it as an image. A live Graphics with circles and triangles is re-tessellated every frame (earcut was about
- * a quarter of the frame's JS on the dock buttons alone); an image is one quad. `ox, oy` is where the drawing's
+ * a quarter of the frame's JS on the thumb buttons alone); an image is one quad. `ox, oy` is where the drawing's
  * origin lands in the texture. Returns the texture key.
  */
 export function bakeGraphics(

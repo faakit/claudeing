@@ -1,0 +1,37 @@
+{
+  "title": "Floating controls over straw, left hand",
+  "about": "As ui-float-controls with Left hand on: Action, Interact and Menu mirrored, the hotbar unchanged. Check the mirrored plates keep 12 px from the left edge and the stick's home (now open straw) walks on a tap.",
+  "version": 18,
+  "tags": ["farm", "controls", "ui", "a11y"],
+  "at": {
+    "map": "farm",
+    "tx": 12,
+    "ty": 10,
+    "facing": "up"
+  },
+  "valley": {
+    "farmGreen": 0
+  },
+  "time": {
+    "day": 3,
+    "clock": "08:00"
+  },
+  "weather": "sunny",
+  "items": [
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 2,
+      "slot": 6
+    },
+    {
+      "item": "egg",
+      "qty": 12,
+      "slot": 7
+    }
+  ],
+  "select": "parsnip_seed",
+  "settings": {
+    "leftHanded": true
+  }
+}

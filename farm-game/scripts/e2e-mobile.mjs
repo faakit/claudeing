@@ -158,6 +158,20 @@ try {
       `${p.name}: canvas keeps its 1:2 portrait shape`,
       Math.abs((m.rect.r - m.rect.l) / (m.rect.b - m.rect.t) - 1 / 2) < 0.02,
     );
+    // Floating controls: the world runs to the canvas's bottom edge, and the home-indicator strip under it is ink
+    // (index.html #safe-bottom), never a wood band that would read as the old dock.
+    if (inset.bottom > 0) {
+      const strip = await page.evaluate(() => {
+        const el = document.getElementById('safe-bottom');
+        if (!el) return null;
+        return { h: el.getBoundingClientRect().height, bg: getComputedStyle(el).backgroundColor };
+      });
+      check(
+        `${p.name}: the bottom safe area under the canvas is ink, not wood`,
+        !!strip && Math.abs(strip.h - inset.bottom) < eps && strip.bg === 'rgb(42, 26, 36)',
+        JSON.stringify(strip),
+      );
+    }
     // Phones from ~680 CSS px wide up must meet the 44px guideline; smaller ones are reported only.
     // Modern phones must meet the 44px guideline (1px of rounding slack); small ones a looser bar;
     // very narrow devices (foldables closed) are reported in the table only.

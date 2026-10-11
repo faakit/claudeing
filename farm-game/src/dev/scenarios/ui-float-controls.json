@@ -1,0 +1,34 @@
+{
+  "title": "Floating controls over straw, right hand",
+  "about": "Floating controls (no dock band): the dry farm's straw runs to the bottom edge behind Action, Interact (the bin is in reach, so it shows), Menu and the hotbar's slot plates. A full hotbar: tools, seeds selected (the gold ring and the 4 px lip), gold-star cauliflower and a stack of eggs. Check every plate is solid (no see-through pixel), the 2 px outlines and lips read on straw, a tap on the straw between the controls walks there, and the farmer stays above the controls. Open on the iPhone 13 (390x844) and the SE (375x667, ui-float-controls-se).",
+  "version": 18,
+  "tags": ["farm", "controls", "ui", "art"],
+  "at": {
+    "map": "farm",
+    "tx": 12,
+    "ty": 10,
+    "facing": "up"
+  },
+  "valley": {
+    "farmGreen": 0
+  },
+  "time": {
+    "day": 3,
+    "clock": "08:00"
+  },
+  "weather": "sunny",
+  "items": [
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 2,
+      "slot": 6
+    },
+    {
+      "item": "egg",
+      "qty": 12,
+      "slot": 7
+    }
+  ],
+  "select": "parsnip_seed"
+}

@@ -9,7 +9,7 @@ import { activeMapKey } from '../scenes/mapCache';
 
 /**
  * Work the first game frame would otherwise do, done ahead on the title screen while the player reads it, one
- * small task per frame: the generated textures (the dither wipe, the dock buttons, the night lights), the number
+ * small task per frame: the generated textures (the dither wipe, the control plates, the night lights), the number
  * formatter, and a throwaway parse of the maps (the first parse of a map runs cold, several times slower). The
  * new game's build then fits under its wipe without a long frame (scripts/perf.mjs, "new game").
  */
