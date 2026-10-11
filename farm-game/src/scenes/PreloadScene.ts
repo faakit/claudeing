@@ -5,7 +5,7 @@ import { generatePlaceholderTextures, PLAYER_TEXTURE, playerWalkFrames } from '.
 import { WALK_FPS } from '../config';
 import { mapsData, npcs } from '../data';
 import { applyArt, queueArtLoads } from '../art/atlasLoader';
-import { npcFrame, npcTexture } from '../art/manifest';
+import { NPC_IDLE_SEQUENCE, npcFrame, npcTexture, PLAYER_WALK_FRAMES } from '../art/manifest';
 import { DIRECTIONS } from '../systems/direction';
 
 export const mapCacheKey = (mapId: string) => `map_${mapId}`;
@@ -31,7 +31,8 @@ export class PreloadScene extends Phaser.Scene {
       this.anims.create({
         key: `player_walk_${dir}`,
         frames: playerWalkFrames(dir).map((frame) => ({ key: PLAYER_TEXTURE, frame })),
-        frameRate: WALK_FPS,
+        // art round 4: 8 frames per cycle, so twice the rate keeps the old cycle time (the feel agent tunes it)
+        frameRate: (WALK_FPS * PLAYER_WALK_FRAMES) / 4,
         repeat: -1,
       });
     }
@@ -39,7 +40,13 @@ export class PreloadScene extends Phaser.Scene {
       for (const dir of DIRECTIONS)
         this.anims.create({
           key: `${npcTexture(id)}_idle_${dir}`,
-          frames: [0, 1].map((i) => ({ key: npcTexture(id), frame: npcFrame(id, dir, i) })),
+          // art round 4: rest (long hold), breathe, blink, the villager's own beat; ms per frame (the feel
+          // agent may retune). Reduced motion never plays it (NpcRenderer holds frame 0).
+          frames: NPC_IDLE_SEQUENCE.map(([i, duration]) => ({
+            key: npcTexture(id),
+            frame: npcFrame(id, dir, i),
+            duration,
+          })),
           frameRate: 2,
           repeat: -1,
         });
