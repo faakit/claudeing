@@ -1,7 +1,8 @@
 # Next steps
 
-State after round 4 (`integration/round4-2026-10-11`, 2026-10-11) and the docs cleanup. Start a new session from
-the latest integration branch.
+State after the Dry Year core, M1-M4 (`integration/dry-year-core`, 2026-10-11; save v18). Start a new session from
+the latest integration branch. The valley critic's final report on M1-M4 is outside the repo, in
+`C:/Users/andre/dev/tiny-acre/valley-critique/final.md`.
 
 ## Direction: The Dry Year
 
@@ -23,7 +24,8 @@ builds on.
 ## How to work
 
 Build every feature scenario-first (see [AGENTS.md](AGENTS.md) and `docs/EXTENDING.md` section 0). Run
-`npm run verify:fast` (about 30 s) for each commit and `npm run verify` (about 6 min) before a merge. Setup, ports
+`npm run verify:fast` (about 30 s) for each commit and `npm run verify` (about 8-14 min) before a merge. Browser and
+perf suites that fail beside others rerun once alone; a pass alone counts, and the summary marks it FLAKY. Setup, ports
 and tools are in [TOOLING.md](TOOLING.md). The still-open critic findings are in
 [OPEN-FINDINGS.md](OPEN-FINDINGS.md).
 
