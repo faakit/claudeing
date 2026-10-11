@@ -7,6 +7,7 @@ import { heartsOf } from './friendship';
 import { stat } from './goals';
 import { addItem, removeStack, roomFor } from './inventory';
 import { absoluteDay, seasonLabel } from './time';
+import { t } from '../i18n';
 
 /** The mailbox keeps this many letters; the oldest read ones go first. */
 export const MAILBOX_SIZE = 24;
@@ -76,8 +77,8 @@ export function deliverCalendarLetters(state: GameState): number {
     state.stats[key] = 1;
     sendLetter(state, {
       from: 'mara',
-      title: `${f.name} tomorrow`,
-      text: `The ${f.name} is tomorrow in town! ${f.blurb} Bring your best and enter it at the town board.`,
+      title: t('mail.festTitle', { festival: f.name }),
+      text: t('mail.festText', { festival: f.name, blurb: f.blurb }),
     });
     n += 1;
   }
@@ -92,8 +93,11 @@ export function deliverCalendarLetters(state: GameState): number {
     const writer = Object.keys(npcs).find((n) => n !== id) ?? id;
     sendLetter(state, {
       from: writer,
-      title: `${def.name}'s birthday`,
-      text: `Psst! Tomorrow is ${def.name}'s birthday.${fav ? ` I happen to know they love ${fav}.` : ''} Gifts count triple on a birthday.`,
+      title: t('mail.bdayTitle', { name: def.name }),
+      text: t('mail.bdayText', {
+        name: def.name,
+        fav: fav ? t('mail.bdayFav', { item: fav }) : '',
+      }),
     });
     n += 1;
   }

@@ -1,0 +1,222 @@
+{
+  "fmt": {
+    "gold": "{n}o"
+  },
+  "season": {
+    "spring": "Primavera",
+    "summer": "Verão",
+    "fall": "Outono",
+    "winter": "Inverno"
+  },
+  "hud": {
+    "saved": "Salvo",
+    "goalComplete": "META CUMPRIDA  +{gold}",
+    "hearts": {
+      "one": "{name}: {count} CORAÇÃO!",
+      "other": "{name}: {count} CORAÇÕES!"
+    },
+    "levelUp": "{skill}: NÍVEL {level}!",
+    "date": "{season} {day}  A{year}",
+    "storm": "Tempestade",
+    "rainy": "Chuva",
+    "sunny": "Sol",
+    "allGoals": "Todas as metas cumpridas!"
+  },
+  "goals": {
+    "completeToast": "Meta cumprida! +{gold}"
+  },
+  "world": {
+    "locked": "Trancado."
+  },
+  "farm": {
+    "cantUse": "Não dá para usar {item} aqui.",
+    "nothingEquipped": "Nada na mão.",
+    "nothingToDo": "Nada a fazer aqui.",
+    "noSeed": "Escolha sementes na barra primeiro.",
+    "somethingHere": "Já tem algo aqui."
+  },
+  "almanac": {
+    "pageDone": "Página do almanaque completa: {page}! +{gold}"
+  },
+  "cart": {
+    "greenhouse": "Estufa",
+    "seasonCrop": "Safra de {season}"
+  },
+  "channels": {
+    "creekBed": "O leito do velho córrego. Melhor deixar livre.",
+    "startAtWater": "Comece junto da água."
+  },
+  "quality": {
+    "silver": "{name} de prata",
+    "gold": "{name} de ouro"
+  },
+  "orders": {
+    "done": "Pedido entregue! +{gold}"
+  },
+  "move": {
+    "tapAgainMove": "Toque de novo para mudar de lugar.",
+    "tapAgainPickUp": "Toque de novo para recolher."
+  },
+  "seasonWord": {
+    "spring": "primavera",
+    "summer": "verão",
+    "fall": "outono",
+    "winter": "inverno"
+  },
+  "common": {
+    "and": " e "
+  },
+  "mapName": {
+    "farm": "fazenda",
+    "house": "casa",
+    "town": "vila",
+    "woods": "bosque",
+    "mine": "mina",
+    "wendhead": "Wendhead"
+  },
+  "festival": {
+    "rivalTitle": "Sobre a festa",
+    "rivalText": "Primeiro lugar: {festival}. Tá, você mereceu. Aproveita enquanto dura!",
+    "placeToast": "{festival}: lugar {place}! +{gold}",
+    "joinToast": "{festival}: obrigado por participar! +{gold}",
+    "castAnywhere": "Pesque onde quiser: lago, rio ou lagoa.",
+    "stocked": "Hoje tem {fish} no rio ({maps})!"
+  },
+  "fishing": {
+    "gotAway": "Escapou...",
+    "fullReleased": "Mochila cheia! Você soltou o peixe.",
+    "derbyBest": "Recorde no torneio! {fish}. Pontos: {score}.",
+    "legend": "Uma lenda! Você pescou o {fish}!"
+  },
+  "food": {
+    "restoresNow": "Agora recupera {n}: prato {nth} de hoje.",
+    "restores": "Recupera {n} de energia.",
+    "ateNth": "{item}: +{n} de energia (prato {nth} de hoje).",
+    "ate": "{item}: +{n} de energia."
+  },
+  "energy": {
+    "tiredEat": "Cansado demais! Coma algo ou vá dormir.",
+    "tired": "Cansado demais! Vá dormir."
+  },
+  "npc": {
+    "birthdayLine": "Hoje é meu aniversário! Um presente deixaria o dia perfeito.",
+    "gaveYou": {
+      "one": "{name} te deu {count} {item}",
+      "other": "{name} te deu {count} {item}"
+    },
+    "reactLove": "Eu amo {item}!!",
+    "reactLike": "{item}, que gentil!",
+    "reactNeutral": "Ah. Que gentileza.",
+    "reactDislike": "Hum... valeu, eu acho."
+  },
+  "jobs": {
+    "headerDouble": "BICOS DE HOJE: PAGA EM DOBRO",
+    "headerFactor": "BICOS DE HOJE: PAGA {factor}x",
+    "header": "BICOS DE HOJE",
+    "done": "Bico feito! {job} +{gold}"
+  },
+  "mail": {
+    "festTitle": "{festival} amanhã",
+    "festText": "{festival}: é amanhã na vila! {blurb} Traga o seu melhor e se inscreva no mural da vila.",
+    "bdayTitle": "Aniversário de {name}",
+    "bdayText": "Psiu! Amanhã é aniversário de {name}.{fav} Presente vale o triplo no aniversário.",
+    "bdayFav": " Por acaso eu sei que adora {item}."
+  },
+  "project": {
+    "levelToast": "{name}: nível {level}! {reward}",
+    "fundedToast": "{name}: financiado! {reward}",
+    "finishedToast": "{name} está pronto! {reward}",
+    "landmarkLevel": "{name}, nível {level}: financiado por você!",
+    "landmark": "{name}: financiado por você! {reward}"
+  },
+  "silo": {
+    "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}."
+  },
+  "special": {
+    "ranOut": "A encomenda especial acabou. {paid}",
+    "paidFor": "Você recebeu {gold} pelo que trouxe.",
+    "posted": "Encomenda especial: {order}, até o fim da estação.",
+    "label": "{n} {item} para {name}",
+    "title": "Especial: {n} {item}",
+    "done": "Encomenda especial entregue! +{gold}"
+  },
+  "rival": {
+    "fallbackName": "Seu rival",
+    "number1": "um",
+    "number2": "dois",
+    "number3": "três",
+    "requestsStay": "Os pedidos ficam alguns dias.",
+    "crateTonight": "{name} despacha um caixote hoje à noite: um ponto.",
+    "noLongerTakes": "{name} não pega mais pedidos.",
+    "noPoint": "nenhum ponto",
+    "aPoint": "um ponto",
+    "points": "{n} pontos",
+    "took": "{name} pegou {n} hoje: {said}.",
+    "wantsTwo": "{name} quer dois destes às {at}.",
+    "wantsOne": "{name} quer este às {at}.",
+    "aheadDaily": "Na frente por {lead}+: caixote dele todo dia.",
+    "aheadEvery": "Na frente por {lead}+: caixote dele a cada {every} dias.",
+    "takesTwo": "{name} pega dois às {at}: nenhum ponto.",
+    "takesOne": "{name} pega um às {at}: nenhum ponto.",
+    "farmGoodsOnly": "{name} só pontua com produtos da roça.",
+    "scoreCrate": "Você {you}, {name} {rival}. Caixote dele hoje.",
+    "score": "Nesta estação: você {you}, {name} {rival}.",
+    "lastYouWon": "Estação passada: você ganhou de {you} a {rival}.",
+    "lastHeWon": "Estação passada: {name} ganhou de {rival} a {you}.",
+    "lastDraw": "Estação passada: empate, {you} a {rival}.",
+    "stakes": "a vila paga {gold} e põe um troféu na sua casa",
+    "quietSeason": "O mural ficou parado na estação passada: ninguém pontuou.",
+    "bestTitle": "O melhor do mural",
+    "bestFirst": "Você passou {name} no mural na estação passada, {you} a {rival}! A vila pôs um troféu na sua casa, e {gold} são seus.",
+    "bestAgain": "De novo o melhor do mural, {you} a {rival}! Seu troféu em casa já conta {wins} estações, e {gold} são seus.",
+    "youBeat": "Você venceu {name} no mural na estação passada ({you} a {rival}): +{gold}.",
+    "mineTitle": "O mural é meu",
+    "mineText": "Estação passada o mural ficou {rival} a {you}, pra mim. Produto da roça deixado até o último dia é meu, e um caixote meu toda semana também, mais vezes enquanto você estiver na frente. Me vence nesta estação e {stakes}.",
+    "heWon": "{name} venceu o mural na estação passada ({rival} a {you}).",
+    "draw": "Empate com {name} no mural na estação passada ({you} a {rival})."
+  },
+  "valley": {
+    "clearedMoved": "suas coisas foram para a margem",
+    "clearedCrops": {
+      "one": "uma planta voltou para a mochila",
+      "other": "plantas voltaram para a mochila"
+    },
+    "cleared": "O leito do velho córrego foi liberado: {parts}.",
+    "workDone": "Já está bom. Vamos ver o que a manhã traz.",
+    "workToday": "Chega por hoje. Volte amanhã.",
+    "workTired": "Cansado demais. Um dia de obra gasta {n} de energia.",
+    "upgradeAfter": "{phrase} {name}: depois de {after}.",
+    "stepOpen": "{name}: reaberta!",
+    "stepFund": "{name}: pronto para financiar",
+    "stepWork": "Obra: {name} ({n} de {of})",
+    "rowFund": "financiar {parts}",
+    "rowOpensTomorrow": "reabre amanhã cedo",
+    "rowWorkedToday": "obra feita hoje ({n} de {of})",
+    "rowWorkDay": "dia de obra {n} de {of}",
+    "rowOpen": "reaberta. {phrase}"
+  },
+  "tutorial": {
+    "canNote": "Rosa encheu seu regador.",
+    "them": "a pessoa",
+    "doorOutside": "Toque na porta para sair.",
+    "headBack": "Volte para {map}.",
+    "litTalk": "Toque no botão aceso para conversar.",
+    "litOpen": "Toque no botão aceso para abrir.",
+    "readJobs": "Leia seus bicos e toque em Fechar.",
+    "closeToCarryOn": "Feche isto para continuar."
+  },
+  "dir": {
+    "up": "para cima",
+    "down": "para baixo",
+    "left": "para a esquerda",
+    "right": "para a direita"
+  },
+  "mapTo": {
+    "farm": "a fazenda",
+    "house": "a casa",
+    "town": "a vila",
+    "woods": "o bosque",
+    "mine": "a mina",
+    "wendhead": "Wendhead"
+  }
+}

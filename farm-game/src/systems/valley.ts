@@ -27,6 +27,7 @@ import type { GameState, PlacedObject } from '../state/GameState';
 import { absoluteDay } from './time';
 import { addItem, roomFor } from './inventory';
 import { behaviorOf, removePlaced } from './placeables';
+import { fmtGold, t } from '../i18n';
 
 export type Rect = readonly [number, number, number, number];
 
@@ -210,10 +211,9 @@ export function clearDeltaRegions(
     }
   }
   const parts: string[] = [];
-  if (res.moved + res.returned) parts.push('your things moved to the bank');
-  if (res.crops)
-    parts.push(res.crops === 1 ? 'a crop came back to your bag' : 'crops came back to your bag');
-  if (parts.length) res.note = `The old creek bed was cleared: ${parts.join(', ')}.`;
+  if (res.moved + res.returned) parts.push(t('valley.clearedMoved'));
+  if (res.crops) parts.push(t('valley.clearedCrops', { count: res.crops }));
+  if (parts.length) res.note = t('valley.cleared', { parts: parts.join(', ') });
   return res;
 }
 
@@ -461,9 +461,9 @@ export function interactSite(s: GameState, id: string): SiteAnswer {
     const r = workAt(s, id);
     if (r.ok) return { kind: 'work', day: r.day, of: p.workDays, work: r.work };
     if (r.reason === 'done')
-      return { kind: 'say', text: 'That will do. See what the morning brings.' };
-    if (r.reason === 'today') return { kind: 'say', text: 'Enough for today. Back tomorrow.' };
-    return { kind: 'say', text: `Too tired. A work day takes ${p.energy} energy.` };
+      return { kind: 'say', text: t('valley.workDone') };
+    if (r.reason === 'today') return { kind: 'say', text: t('valley.workToday') };
+    return { kind: 'say', text: t('valley.workTired', { n: p.energy }) };
   }
   if (st(s, `place.${id}.opened`) === absoluteDay(s))
     return { kind: 'lines', npc: p.npc, lines: p.opening.lines };
@@ -473,7 +473,11 @@ export function interactSite(s: GameState, id: string): SiteAnswer {
     if (after && !st(s, `project.${after}`))
       return {
         kind: 'say',
-        text: `${p.phrase} ${up[1].name}: after the ${projects[after]?.name}.`,
+        text: t('valley.upgradeAfter', {
+          phrase: p.phrase,
+          name: up[1].name,
+          after: projects[after]?.name ?? after,
+        }),
       };
     return { kind: 'upgrade', project: up[0] };
   }
@@ -500,17 +504,18 @@ export function valleyStep(s: GameState): ValleyStep | null {
     const since = st(s, `place.${id}.since`);
     if (stage === 3) {
       if (st(s, `place.${id}.opened`) === today)
-        return { place: id, text: `The ${p.name} is open!` };
+        return { place: id, text: t('valley.stepOpen', { name: p.name }) };
       continue;
     }
     if (stage === 0 || today - since >= PLACE_WAIT_DAYS) continue;
     if (stage === 1 && since === today) return { place: id, text: p.asked };
-    if (stage === 1 && canFundNow(s, id)) return { place: id, text: `${p.name}: ready to fund` };
+    if (stage === 1 && canFundNow(s, id))
+      return { place: id, text: t('valley.stepFund', { name: p.name }) };
     const done = workDone(s, id);
     if (stage === 2 && done < p.workDays && st(s, `site.${id}.last`) !== today)
       return {
         place: id,
-        text: `Work at the ${p.name} (${done + 1} of ${p.workDays})`,
+        text: t('valley.stepWork', { name: p.name, n: done + 1, of: p.workDays }),
         count: [done, p.workDays],
       };
   }
@@ -529,19 +534,19 @@ export function valleyRows(s: GameState): { place: string; name: string; next: s
     if (stage === 1) {
       const left = fundLeft(s, id);
       const parts = [
-        ...(left.gold > 0 ? [`${left.gold}g`] : []),
+        ...(left.gold > 0 ? [fmtGold(left.gold)] : []),
         ...left.items.map((n) => `${n.qty} ${(items[n.item]?.name ?? n.item).toLowerCase()}`),
       ];
-      next = `fund ${parts.join(', ')}`;
+      next = t('valley.rowFund', { parts: parts.join(', ') });
     } else if (stage === 2) {
       const done = workDone(s, id);
       next =
         done >= p.workDays
-          ? 'opens tomorrow morning'
+          ? t('valley.rowOpensTomorrow')
           : st(s, `site.${id}.last`) === today
-            ? `worked today (${done} of ${p.workDays})`
-            : `work day ${done + 1} of ${p.workDays}`;
-    } else next = `open. ${p.phrase}`;
+            ? t('valley.rowWorkedToday', { n: done, of: p.workDays })
+            : t('valley.rowWorkDay', { n: done + 1, of: p.workDays });
+    } else next = t('valley.rowOpen', { phrase: p.phrase });
     out.push({ place: id, name: p.name, next });
   }
   return out;

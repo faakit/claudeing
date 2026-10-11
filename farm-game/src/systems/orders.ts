@@ -13,6 +13,7 @@ import { applyRival, FARM_TYPES, scoreFill } from './rival';
 import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
+import { fmtGold, t } from '../i18n';
 
 /** Is this crop's seed on a shelf the player can buy from (not waiting on a town project)? */
 function seedOnSale(state: GameState, cropId: string): boolean {
@@ -262,7 +263,7 @@ export function deliverOrder(state: GameState, id: number): DeliverResult {
   addXp(state, skill, order.xp);
   addStat(state, 'ordersDone');
   scoreFill(state, absoluteDay(state)); // a point on the season's board against the rival
-  toast(`Order done! +${gold}g`, 'good');
+  toast(t('orders.done', { gold: fmtGold(gold) }), 'good');
   return 'ok';
 }
 

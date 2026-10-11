@@ -49,12 +49,12 @@ describe('auto tool chooses the farm item for the tile', () => {
   });
 
   it('no seed chosen yet: Action on empty soil says to pick seeds', async () => {
-    const { refusalFor, NO_SEED_HINT } = await import('../src/systems/autoTool');
+    const { refusalFor, noSeedHint } = await import('../src/systems/autoTool');
     const s = game();
     till(s, 5, 5);
     s.farm.tiles['5,5']!.watered = true; // nothing else to do there
     expect(chooseAction(s, [field(5, 5)])).toBeNull();
-    expect(refusalFor(s, [field(5, 5)])).toBe(NO_SEED_HINT);
+    expect(refusalFor(s, [field(5, 5)])).toBe(noSeedHint());
   });
 
   it('what you hold wins whenever it can act', () => {

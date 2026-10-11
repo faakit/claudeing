@@ -1,0 +1,222 @@
+{
+  "fmt": {
+    "gold": "{n}g"
+  },
+  "season": {
+    "spring": "Spring",
+    "summer": "Summer",
+    "fall": "Fall",
+    "winter": "Winter"
+  },
+  "hud": {
+    "saved": "Saved",
+    "goalComplete": "GOAL COMPLETE  +{gold}",
+    "hearts": {
+      "one": "{name}: {count} HEART!",
+      "other": "{name}: {count} HEARTS!"
+    },
+    "levelUp": "{skill} LEVEL {level}!",
+    "date": "{season} {day}  Y{year}",
+    "storm": "Storm",
+    "rainy": "Rainy",
+    "sunny": "Sunny",
+    "allGoals": "All goals complete!"
+  },
+  "goals": {
+    "completeToast": "Goal complete! +{gold}"
+  },
+  "world": {
+    "locked": "Locked."
+  },
+  "farm": {
+    "cantUse": "Can't use {item} here.",
+    "nothingEquipped": "Nothing equipped.",
+    "nothingToDo": "Nothing to do here.",
+    "noSeed": "Pick seeds on the hotbar first.",
+    "somethingHere": "Something is already here."
+  },
+  "almanac": {
+    "pageDone": "Almanac page done: {page}! +{gold}"
+  },
+  "cart": {
+    "greenhouse": "Greenhouse",
+    "seasonCrop": "{season} crop"
+  },
+  "channels": {
+    "creekBed": "The old creek bed. Best left clear.",
+    "startAtWater": "Start next to water."
+  },
+  "quality": {
+    "silver": "Silver {name}",
+    "gold": "Gold {name}"
+  },
+  "orders": {
+    "done": "Order done! +{gold}"
+  },
+  "move": {
+    "tapAgainMove": "Tap again to move it.",
+    "tapAgainPickUp": "Tap again to pick up."
+  },
+  "seasonWord": {
+    "spring": "Spring",
+    "summer": "Summer",
+    "fall": "Fall",
+    "winter": "Winter"
+  },
+  "common": {
+    "and": " and "
+  },
+  "mapName": {
+    "farm": "farm",
+    "house": "house",
+    "town": "town",
+    "woods": "woods",
+    "mine": "mine",
+    "wendhead": "Wendhead"
+  },
+  "festival": {
+    "rivalTitle": "About the {festival}",
+    "rivalText": "First place at the {festival}. Fine, you earned it. Enjoy it while it lasts!",
+    "placeToast": "{festival}: place {place}! +{gold}",
+    "joinToast": "{festival}: thanks for joining! +{gold}",
+    "castAnywhere": "Cast anywhere: pond, river or lake.",
+    "stocked": "{fish} stocked in the {maps} river today!"
+  },
+  "fishing": {
+    "gotAway": "It got away...",
+    "fullReleased": "Inventory full! Released it.",
+    "derbyBest": "Derby best! {fish}. Score {score}.",
+    "legend": "A legend! You caught the {fish}!"
+  },
+  "food": {
+    "restoresNow": "Restores {n} now: dish {nth} today.",
+    "restores": "Restores {n} energy.",
+    "ateNth": "{item}: +{n} energy (dish {nth} today).",
+    "ate": "{item}: +{n} energy."
+  },
+  "energy": {
+    "tiredEat": "Too tired! Eat something or go to bed.",
+    "tired": "Too tired! Go to bed."
+  },
+  "npc": {
+    "birthdayLine": "Today is my birthday! A gift would make it perfect.",
+    "gaveYou": {
+      "one": "{name} gave you {count} {item}",
+      "other": "{name} gave you {count} {item}"
+    },
+    "reactLove": "I love {item}!!",
+    "reactLike": "{item}, how nice!",
+    "reactNeutral": "Oh. Thank you.",
+    "reactDislike": "Um... thanks, I guess."
+  },
+  "jobs": {
+    "headerDouble": "TODAY'S JOBS: DOUBLE PAY",
+    "headerFactor": "TODAY'S JOBS: {factor}x PAY",
+    "header": "TODAY'S JOBS",
+    "done": "Job done! {job} +{gold}"
+  },
+  "mail": {
+    "festTitle": "{festival} tomorrow",
+    "festText": "The {festival} is tomorrow in town! {blurb} Bring your best and enter it at the town board.",
+    "bdayTitle": "{name}'s birthday",
+    "bdayText": "Psst! Tomorrow is {name}'s birthday.{fav} Gifts count triple on a birthday.",
+    "bdayFav": " I happen to know they love {item}."
+  },
+  "project": {
+    "levelToast": "{name}: level {level}! {reward}",
+    "fundedToast": "{name}: funded! {reward}",
+    "finishedToast": "{name} is finished! {reward}",
+    "landmarkLevel": "{name}, level {level}: funded by you!",
+    "landmark": "{name}: funded by you! {reward}"
+  },
+  "silo": {
+    "hungry": "The {house} went hungry: the silo needs {n} {feed}."
+  },
+  "special": {
+    "ranOut": "The special order ran out. {paid}",
+    "paidFor": "Paid {gold} for what you brought.",
+    "posted": "Special order: {order}, by the season's end.",
+    "label": "{n} {item} for {name}",
+    "title": "Special: {n} {item}",
+    "done": "Special order done! +{gold}"
+  },
+  "rival": {
+    "fallbackName": "Your rival",
+    "number1": "one",
+    "number2": "two",
+    "number3": "three",
+    "requestsStay": "Requests stay a few days.",
+    "crateTonight": "{name} ships a crate tonight: a point.",
+    "noLongerTakes": "{name} no longer takes requests.",
+    "noPoint": "no point",
+    "aPoint": "a point",
+    "points": "{n} points",
+    "took": "{name} took {n} today: {said}.",
+    "wantsTwo": "{name} wants two of these at {at}.",
+    "wantsOne": "{name} wants this one at {at}.",
+    "aheadDaily": "Ahead {lead}+: his crate every day.",
+    "aheadEvery": "Ahead {lead}+: his crate every {every} days.",
+    "takesTwo": "{name} takes two at {at}: no point.",
+    "takesOne": "{name} takes one at {at}: no point.",
+    "farmGoodsOnly": "{name} scores on farm goods only.",
+    "scoreCrate": "You {you}, {name} {rival}. His crate tonight.",
+    "score": "This season: you {you}, {name} {rival}.",
+    "lastYouWon": "Last season: you won {you} to {rival}.",
+    "lastHeWon": "Last season: {name} won {rival} to {you}.",
+    "lastDraw": "Last season: a draw, {you} to {rival}.",
+    "stakes": "the town pays {gold} and puts a trophy in your house",
+    "quietSeason": "The board was quiet last season: nobody scored.",
+    "bestTitle": "Best on the board",
+    "bestFirst": "You out-scored {name} on the board last season, {you} to {rival}! The town put a trophy in your house, and {gold} is yours.",
+    "bestAgain": "Best on the board again, {you} to {rival}! Your trophy at home now counts {wins} seasons, and {gold} is yours.",
+    "youBeat": "You beat {name} on the board last season ({you} to {rival}): +{gold}.",
+    "mineTitle": "The board is mine",
+    "mineText": "Last season the board was {rival} to {you}, my way: a farm good left to its last day is mine, and so is a crate of my own each week, more often while you lead. Beat me this season and {stakes}.",
+    "heWon": "{name} won the board last season ({rival} to {you}).",
+    "draw": "A draw with {name} on the board last season ({you} to {rival})."
+  },
+  "valley": {
+    "clearedMoved": "your things moved to the bank",
+    "clearedCrops": {
+      "one": "a crop came back to your bag",
+      "other": "crops came back to your bag"
+    },
+    "cleared": "The old creek bed was cleared: {parts}.",
+    "workDone": "That will do. See what the morning brings.",
+    "workToday": "Enough for today. Back tomorrow.",
+    "workTired": "Too tired. A work day takes {n} energy.",
+    "upgradeAfter": "{phrase} {name}: after the {after}.",
+    "stepOpen": "The {name} is open!",
+    "stepFund": "{name}: ready to fund",
+    "stepWork": "Work at the {name} ({n} of {of})",
+    "rowFund": "fund {parts}",
+    "rowOpensTomorrow": "opens tomorrow morning",
+    "rowWorkedToday": "worked today ({n} of {of})",
+    "rowWorkDay": "work day {n} of {of}",
+    "rowOpen": "open. {phrase}"
+  },
+  "tutorial": {
+    "canNote": "Rosa filled your watering can.",
+    "them": "them",
+    "doorOutside": "Tap the door to go outside.",
+    "headBack": "Head back to {map}.",
+    "litTalk": "Tap the lit button to talk.",
+    "litOpen": "Tap the lit button to open it.",
+    "readJobs": "Read your jobs, then tap Close.",
+    "closeToCarryOn": "Close this to carry on."
+  },
+  "dir": {
+    "up": "up",
+    "down": "down",
+    "left": "left",
+    "right": "right"
+  },
+  "mapTo": {
+    "farm": "the farm",
+    "house": "the house",
+    "town": "the town",
+    "woods": "the woods",
+    "mine": "the mine",
+    "wendhead": "Wendhead"
+  }
+}

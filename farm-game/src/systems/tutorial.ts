@@ -29,6 +29,7 @@ import { isMature, tileKey } from './farming';
 import { addStat, currentGoal, stat } from './goals';
 import { absoluteDay } from './time';
 import { isWet } from './weather';
+import { t, toEnglish, type Key } from '../i18n';
 
 export interface Tile {
   tx: number;
@@ -106,8 +107,8 @@ const data = (): TutorialData => tutorial;
 
 /** The coach line is one row: the widest text it may show (tests measure every line). */
 export const COACH_LINE_PX = 184;
-/** The labels sheets give their close button (Modal.closeButton). */
-export const CLOSE_BUTTON = '^(Close|Done|Not now|Leave it)$';
+/** The labels sheets give their close button (Modal.closeButton), in English: buttons match through `toEnglish`. */
+export const CLOSE_BUTTON = '^(Close|Done|Not now|Leave it)$'; // i18n-ok: a pattern over English labels
 /** The welcome strip's text box (two lines at most). */
 export const WELCOME_PX = 158;
 const DIRS: Direction[] = ['up', 'down', 'left', 'right'];
@@ -117,13 +118,8 @@ const VEC: Record<Direction, Tile> = {
   left: { tx: -1, ty: 0 },
   right: { tx: 1, ty: 0 },
 };
-const MAP_NAMES: Record<string, string> = {
-  farm: 'farm',
-  house: 'house',
-  town: 'town',
-  woods: 'woods',
-  mine: 'mine',
-};
+/** A map's name with its article, inside a coach line ("Head back to the farm"). */
+const mapName = (map: string): string => t(`mapTo.${map}` as Key);
 
 // ---------------------------------------------------------------- on, off, replay
 
@@ -471,14 +467,15 @@ export function guidedMorning(s: GameState): boolean {
 
 /** The one morning note a guided first morning keeps: the letter if there is one, else the first. */
 export function guidedNotes(notes: readonly string[]): string[] {
-  const letter = notes.find((n) => /letter/i.test(n));
-  const can = notes.find((n) => n === CAN_NOTE);
-  const out = letter ? [letter] : notes.filter((n) => n !== CAN_NOTE).slice(0, 1);
+  // notes are in the player's language; the letter one is found by its English
+  const letter = notes.find((n) => /letter/i.test(toEnglish(n)));
+  const can = notes.find((n) => n === canNote());
+  const out = letter ? [letter] : notes.filter((n) => n !== canNote()).slice(0, 1);
   return can ? [can, ...out] : out;
 }
 
 /** The first guided morning: Rosa fills the can, so day 2's watering never starts at an empty can. */
-export const CAN_NOTE = 'Rosa filled your watering can.';
+export const canNote = (): string => t('tutorial.canNote');
 export function guidedMorningCan(s: GameState, capacity: number): boolean {
   if (!tutorialOn(s) || absoluteDay(s) !== 2 || s.stats['tut.can']) return false;
   s.stats['tut.can'] = 1;
@@ -765,14 +762,14 @@ function doorToward(world: CoachWorld, map: string): CoachObject | null {
 function fill(text: string, s: GameState, world: CoachWorld, pointer: Pointer | null): string {
   let out = text;
   if (out.includes('{dir}'))
-    out = out.replace('{dir}', pointer?.kind === 'paint' ? pointer.dir : 'down');
+    out = out.replace('{dir}', t(`dir.${pointer?.kind === 'paint' ? pointer.dir : 'down'}`));
   if (out.includes('{dry}')) {
     const n = soils(s).filter(([, t]) => !!t.crop && !t.watered && !isMature(t.crop)).length;
     out = out.replace('{dry}', String(n));
   }
   if (out.includes('{npc}')) {
     const n = newNpcInView(s, world);
-    out = out.replace('{npc}', n ? (npcs[n.id]?.name ?? n.id) : 'them');
+    out = out.replace('{npc}', n ? (npcs[n.id]?.name ?? n.id) : t('tutorial.them'));
   }
   return out;
 }
@@ -809,8 +806,8 @@ export function coachView(
     away = true;
     text =
       world.map === 'house'
-        ? 'Tap the door to go outside.'
-        : `Head back to the ${MAP_NAMES[wantMap] ?? wantMap}.`;
+        ? t('tutorial.doorOutside')
+        : t('tutorial.headBack', { map: mapName(wantMap) });
   } else if (target) {
     pointer = resolveTarget(s, world, target);
     // The line follows the pointer: with Action not ready, the "else" line says where to go first.
@@ -833,7 +830,7 @@ export function coachView(
       (target?.npc && (lit === `npc:${target.npc}` || lit === 'npc')))
   ) {
     pointer = { kind: 'ui', id: 'interact', tile: { tx: pointer.tx, ty: pointer.ty } };
-    text = target?.npc ? 'Tap the lit button to talk.' : 'Tap the lit button to open it.';
+    text = t(target?.npc ? 'tutorial.litTalk' : 'tutorial.litOpen');
   }
   // A sheet is open but the step wants the world: say how to get back to it.
   if (
@@ -844,8 +841,8 @@ export function coachView(
   ) {
     text =
       facts.panel === 'menu' && facts.tab === 'goals'
-        ? 'Read your jobs, then tap Close.'
-        : 'Close this to carry on.';
+        ? t('tutorial.readJobs')
+        : t('tutorial.closeToCarryOn');
     pointer = { kind: 'button', pattern: CLOSE_BUTTON };
     away = false;
   }
@@ -865,7 +862,9 @@ export function coachView(
 /** A refusal said in the coach line, in the guide's words where the game's would mislead a beginner. */
 export function rewriteRefusal(text: string, stepId?: string | null): string {
   const st = stepId ? tutorialStep(stepId) : undefined;
-  return st?.refusals?.[text] ?? data().refusals?.[text] ?? text;
+  // the refusal maps are keyed by the game's English refusal (tutorial.json); their values are translated
+  const en = toEnglish(text);
+  return st?.refusals?.[en] ?? data().refusals?.[en] ?? text;
 }
 
 /** The speaker's name and the welcome line (shown while the first step runs). */
@@ -882,13 +881,16 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
     if (st.elseText) out.push(st.elseText);
     for (const a of st.alt ?? []) out.push(a.text);
   }
-  const dirs = ['up', 'down', 'left', 'right'];
+  const dirs = (['up', 'down', 'left', 'right'] as const).map((d) => t(`dir.${d}`));
   out.push(...Object.values(data().refusals ?? {}));
   for (const st of steps) out.push(...Object.values(st.refusals ?? {}));
   out.push(
-    'Read your jobs, then tap Close.',
-    'Tap the lit button to open it.',
-    'Tap the lit button to talk.',
+    t('tutorial.readJobs'),
+    t('tutorial.litOpen'),
+    t('tutorial.litTalk'),
+    t('tutorial.closeToCarryOn'),
+    t('tutorial.doorOutside'),
+    ...['farm', 'town', 'woods', 'mine'].map((m) => t('tutorial.headBack', { map: mapName(m) })),
   );
   const names = Object.values(npcs).map((n) => n.name);
   return out

@@ -2,6 +2,7 @@ import { collections } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
 import { checkGoals } from './goals';
+import { fmtGold, t } from '../i18n';
 
 /**
  * The almanac records every kind of good the player has ever held. Discoveries live in `stats` as `got.<item>`
@@ -33,7 +34,7 @@ export function discover(state: GameState, item: string): boolean {
     state.stats['pagesDone'] = pagesDone(state);
     state.money += page.reward;
     gameEvents.emit('moneyChanged', { delta: page.reward });
-    toast(`Almanac page done: ${page.name}! +${page.reward}g`, 'good');
+    toast(t('almanac.pageDone', { page: page.name, gold: fmtGold(page.reward) }), 'good');
     checkGoals(state);
   }
   return true;

@@ -7,6 +7,7 @@ import { keyOf, refOf, sellValue, type ItemRef } from './itemRef';
 import { removeStack } from './inventory';
 import { sendLetter } from './mail';
 import { perk } from './skills';
+import { fmtGold, t, type Key } from '../i18n';
 
 /** Today's festival, if the calendar says so. */
 export function festivalToday(state: GameState): { id: string; def: FestivalDef } | null {
@@ -114,14 +115,14 @@ function award(
     // The rival farmer is the top score to beat; beating them earns a grudging letter.
     sendLetter(state, {
       from: game.rival.npc,
-      title: `About the ${today.def.name}`,
-      text: `First place at the ${today.def.name}. Fine, you earned it. Enjoy it while it lasts!`,
+      title: t('festival.rivalTitle', { festival: today.def.name }),
+      text: t('festival.rivalText', { festival: today.def.name }),
     });
   }
   toast(
     place <= 3
-      ? `${today.def.name}: place ${place}! +${gold}g`
-      : `${today.def.name}: thanks for joining! +${gold}g`,
+      ? t('festival.placeToast', { festival: today.def.name, place, gold: fmtGold(gold) })
+      : t('festival.joinToast', { festival: today.def.name, gold: fmtGold(gold) }),
     'good',
   );
   return { ok: true, place, gold, score };
@@ -218,9 +219,12 @@ export function recordCatch(state: GameState, ref: ItemRef): boolean {
 
 /** Where today's derby fish are biggest, for the derby page ("Catfish bite in town today."). */
 export function derbyHint(def: FestivalDef): string {
-  if (!def.stocked) return 'Cast anywhere: pond, river or lake.';
+  if (!def.stocked) return t('festival.castAnywhere');
   const name = items[def.stocked.fish]?.name ?? def.stocked.fish;
-  return `${name} stocked in the ${def.stocked.maps.join(' and ')} river today!`;
+  return t('festival.stocked', {
+    fish: name,
+    maps: def.stocked.maps.map((m) => t(`mapName.${m}` as Key)).join(t('common.and')),
+  });
 }
 
 /** Handing in ends the derby for the year; before this hour the sheet asks first. */

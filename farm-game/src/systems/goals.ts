@@ -2,6 +2,7 @@ import { goals, tips } from '../data';
 import type { GoalDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
+import { fmtGold, t } from '../i18n';
 
 /**
  * Goals run in order (`goalIndex`), but an `aside` goal (a legendary fish) does not hold up the ones after it:
@@ -106,7 +107,7 @@ export function checkGoals(state: GameState): void {
         state.money += goal.reward;
         gameEvents.emit('moneyChanged', { delta: goal.reward });
         gameEvents.emit('goalCompleted', { text: goal.text, reward: goal.reward });
-        toast(`Goal complete! +${goal.reward}g`, 'good');
+        toast(t('goals.completeToast', { gold: fmtGold(goal.reward) }), 'good');
         more = true;
       }
       if (goal === cur) break;

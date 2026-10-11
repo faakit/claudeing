@@ -3,6 +3,7 @@ import type { GameState, PlacedObject } from '../state/GameState';
 import { houseOf, speciesOf } from './animals';
 import { countItem, removeItem } from './inventory';
 import { forEachPlaced } from './placeables';
+import { t } from '../i18n';
 
 /** Every feed an animal eats (hay, chicken feed...). A silo only takes these. */
 export const feedIds = (): string[] => [...new Set(Object.values(animals).map((a) => a.feed))];
@@ -62,7 +63,11 @@ export function feedFromSilos(state: GameState, hungry: string[] = []): number {
     if (!silo) {
       // Say so: a silo with 1 hay for a barn of 2 looks stocked but feeds no one (critique 5, F7).
       hungry.push(
-        `The ${def.name.toLowerCase()} went hungry: the silo needs ${h.n} ${items[sp.feed]?.name ?? sp.feed}.`,
+        t('silo.hungry', {
+          house: def.name.toLowerCase(),
+          n: h.n,
+          feed: items[sp.feed]?.name ?? sp.feed,
+        }),
       );
       return;
     }

@@ -513,7 +513,8 @@ describe('guided start: the wrong thing in hand', () => {
 
 describe('guided start: review 3', () => {
   it('the first guided morning fills the can once, and says so', async () => {
-    const { guidedMorningCan, CAN_NOTE } = await import('../src/systems/tutorial');
+    const { guidedMorningCan, canNote } = await import('../src/systems/tutorial');
+    const CAN_NOTE = canNote();
     const s = freshGuided();
     s.water = 3;
     expect(guidedMorningCan(s, 20)).toBe(false); // still day 1

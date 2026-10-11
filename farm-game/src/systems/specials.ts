@@ -9,6 +9,7 @@ import { isProjectDone } from './projects';
 import { random } from './rng';
 import { absoluteDay } from './time';
 import { animalOutput } from './animals';
+import { fmtGold, t } from '../i18n';
 
 /**
  * Special orders: one big seasonal request at a time on the town board ("10 Pumpkins for Rosa by Fall 28").
@@ -89,8 +90,9 @@ export function morningSpecial(state: GameState): string | null {
       state.stats['earned'] = stat(state, 'earned') + refund;
       gameEvents.emit('moneyChanged', { delta: refund });
     }
-    news =
-      `The special order ran out. ${refund > 0 ? `Paid ${refund}g for what you brought.` : ''}`.trim();
+    news = t('special.ranOut', {
+      paid: refund > 0 ? t('special.paidFor', { gold: fmtGold(refund) }) : '',
+    }).trim();
     state.special = null;
   }
   if (!state.special && game.seasonLength - state.time.day + 1 >= SPECIAL_MIN_DAYS) {
@@ -98,7 +100,7 @@ export function morningSpecial(state: GameState): string | null {
     if (pool.length > 0) {
       const def = pool[Math.floor(random(state) * pool.length)] as SpecialDef;
       state.special = makeSpecial(state, def);
-      const posted = `Special order: ${specialLabel(state.special)}, by the season's end.`;
+      const posted = t('special.posted', { order: specialLabel(state.special) });
       // Both lines when the old one ran out this morning (critique 11, F6).
       news = news ? `${news} ${posted}` : posted;
     }
@@ -107,15 +109,19 @@ export function morningSpecial(state: GameState): string | null {
 }
 
 export const specialLabel = (sp: SpecialOrder): string =>
-  `${sp.qty} ${items[sp.item]?.name ?? sp.item} for ${npcs[sp.giver]?.name ?? sp.giver}`;
+  t('special.label', {
+    n: sp.qty,
+    item: items[sp.item]?.name ?? sp.item,
+    name: npcs[sp.giver]?.name ?? sp.giver,
+  });
 
 /** The board row's title: "Special: 15 Cauliflower" (the giver moves to the second line: critique 10, F6). */
 export const specialTitle = (sp: SpecialOrder): string =>
-  `Special: ${sp.qty} ${items[sp.item]?.name ?? sp.item}`;
+  t('special.title', { n: sp.qty, item: items[sp.item]?.name ?? sp.item });
 
 /** The board row's second line: "Rosa 4/15  2,250g". Specials are always due at the season's end. */
 export const specialSub = (sp: SpecialOrder): string =>
-  `${npcs[sp.giver]?.name ?? sp.giver} ${sp.given}/${sp.qty}  ${sp.reward.toLocaleString('en-US')}g`;
+  `${npcs[sp.giver]?.name ?? sp.giver} ${sp.given}/${sp.qty}  ${fmtGold(sp.reward)}`;
 
 export type SpecialResult =
   { ok: true; gave: number; finished: boolean } | { ok: false; reason: 'none' | 'nothing' };
@@ -145,7 +151,7 @@ export function giveToSpecial(state: GameState, keep = 0): SpecialResult {
   gameEvents.emit('moneyChanged', { delta: sp.reward });
   befriend(state, sp.giver, SPECIAL_FRIENDSHIP);
   state.stats[`special.last.${sp.id}`] = absoluteDay(state);
-  toast(`Special order done! +${sp.reward}g`, 'good');
+  toast(t('special.done', { gold: fmtGold(sp.reward) }), 'good');
   state.special = null;
   addStat(state, 'specialsDone');
   return { ok: true, gave: take, finished: true };

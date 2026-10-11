@@ -5,6 +5,7 @@ import { gameEvents, toast } from './events';
 import { addStat, checkGoals } from './goals';
 import { markFunded, siteSprite } from './valley';
 import { countItem, removeItem } from './inventory';
+import { t } from '../i18n';
 
 /**
  * Town projects: big shared goals the player funds with gold and goods, a little at a time. Finishing one
@@ -119,9 +120,9 @@ function tryFinish(state: GameState, id: string): boolean {
     delete state.stats[goldKey(id)];
     for (const n of p.items ?? []) delete state.stats[itemKey(id, n.item)];
     addStat(state, 'projectLevels');
-    toast(`${p.name}: level ${level}! ${p.reward}`, 'good');
-  } else if (p.place) toast(`${p.name}: funded! ${p.reward}`, 'good');
-  else toast(`${p.name} is finished! ${p.reward}`, 'good');
+    toast(t('project.levelToast', { name: p.name, level, reward: p.reward }), 'good');
+  } else if (p.place) toast(t('project.fundedToast', { name: p.name, reward: p.reward }), 'good');
+  else toast(t('project.finishedToast', { name: p.name, reward: p.reward }), 'good');
   // A growing landmark (the statue) is redrawn at every level.
   if (p.landmark && (first || p.landmark.levels))
     gameEvents.emit('placedChanged', { map: p.landmark.map });
@@ -214,8 +215,8 @@ export function landmarksOn(state: GameState, map: string): Landmark[] {
       sprite: level ? `${l.sprite}_${level}` : l.sprite,
       color: l.color,
       text: p.repeat
-        ? `${p.name}, level ${projectLevel(state, id)}: funded by you!`
-        : `${p.name}: funded by you! ${p.reward}`,
+        ? t('project.landmarkLevel', { name: p.name, level: projectLevel(state, id) })
+        : t('project.landmark', { name: p.name, reward: p.reward }),
       ...(level ? { level } : {}),
       kind: 'project',
     });

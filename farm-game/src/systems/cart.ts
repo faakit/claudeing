@@ -6,6 +6,8 @@ import { addStat } from './goals';
 import { addItem, roomFor } from './inventory';
 import { ownsGreenhouse } from './plots';
 import { absoluteDay } from './time';
+import { t } from '../i18n';
+import { seasonWord } from './time';
 
 /**
  * The traveling cart: on a few days each season it stands by the town board with a handful of things the
@@ -41,9 +43,8 @@ export function cartTag(item: string, state?: GameState): string | undefined {
   const crop = crops[items[item]?.plants ?? ''];
   if (!crop) return undefined;
   // Out of season it can only grow under glass: say so, not "Spring crop" in fall (critique 10, F6).
-  if (state && !crop.seasons.includes(state.time.season)) return 'Greenhouse';
-  const season = crop.seasons[0]!;
-  return `${season[0]!.toUpperCase()}${season.slice(1)} crop`;
+  if (state && !crop.seasons.includes(state.time.season)) return t('cart.greenhouse');
+  return t('cart.seasonCrop', { season: seasonWord(crop.seasons[0]!) });
 }
 
 /** What a cart good is for, if the data says. */

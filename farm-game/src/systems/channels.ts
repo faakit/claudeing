@@ -7,6 +7,7 @@
  * State: a channel is a soil tile with `channel: true` (no crop, never watered itself).
  */
 import type { GameState, SoilTile } from '../state/GameState';
+import { t } from '../i18n';
 
 export type Tile = readonly [number, number];
 const N4: Tile[] = [
@@ -110,8 +111,8 @@ export function waterFromChannels(
   return wet.length;
 }
 
-export type DigRefusal =
-  'Start next to water.' | 'Something is already here.' | 'The old creek bed. Best left clear.';
+/** Why a channel cannot be dug here (a line in the current language). */
+export type DigRefusal = string;
 
 /**
  * Can a channel be dug on this tile? Only on open farm ground (the caller checks walkability, ownership and fixed
@@ -124,12 +125,12 @@ export function canDig(
   isSource: (x: number, y: number) => boolean,
   inDelta: (x: number, y: number) => boolean,
 ): DigRefusal | null {
-  if (inDelta(x, y)) return 'The old creek bed. Best left clear.';
-  if (state.farm.tiles[key(x, y)]) return 'Something is already here.';
+  if (inDelta(x, y)) return t('channels.creekBed');
+  if (state.farm.tiles[key(x, y)]) return t('farm.somethingHere');
   const wet = N4.some(
     ([dx, dy]) => isSource(x + dx, y + dy) || isChannel(state.farm.tiles[key(x + dx, y + dy)]),
   );
-  return wet ? null : 'Start next to water.';
+  return wet ? null : t('channels.startAtWater');
 }
 
 /** Dig a channel (after `canDig`). */

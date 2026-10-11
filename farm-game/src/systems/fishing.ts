@@ -10,6 +10,7 @@ import { rollQuality } from './quality';
 import { isWet } from './weather';
 import { random } from './rng';
 import { addXp, perk } from './skills';
+import { t } from '../i18n';
 
 /** Fish that can bite on `map` today. */
 export function fishFor(state: GameState, map: string): FishDef[] {
@@ -155,24 +156,27 @@ export function resolveCatch(
 ): { ok: boolean; q: number } {
   const def = fishTable.find((f) => f.item === fishId);
   if (!def || !outcome.caught) {
-    toast('It got away...', 'warn');
+    toast(t('fishing.gotAway'), 'warn');
     return { ok: false, q: 0 };
   }
   if (roomFor(state, fishId, 1) < 1) {
-    toast('Inventory full! Released it.', 'warn');
+    toast(t('fishing.fullReleased'), 'warn');
     return { ok: false, q: 0 };
   }
   const q = rollQuality(state, outcome.perfect ? 0.15 : 0);
   addItem(state, q > 0 ? { item: fishId, q } : fishId, 1);
   // The Fishing Derby counts the day's best catches; say so when this one improves the score.
   if (recordCatch(state, { item: fishId, q }))
-    toast(`Derby best! ${displayName({ item: fishId, q })}. Score ${derbyScore(state)}.`, 'good');
+    toast(
+      t('fishing.derbyBest', { fish: displayName({ item: fishId, q }), score: derbyScore(state) }),
+      'good',
+    );
   addStat(state, 'caught');
   if (def.legend) {
     // A legend bites once a game: remember it, and make a fuss.
     state.stats[`legend.${fishId}`] = 1;
     addStat(state, 'legends');
-    toast(`A legend! You caught the ${items[fishId]?.name ?? fishId}!`, 'good');
+    toast(t('fishing.legend', { fish: items[fishId]?.name ?? fishId }), 'good');
   }
   if (q > 0) addStat(state, 'qualityCaught');
   if (outcome.perfect) addStat(state, 'perfectCatch');

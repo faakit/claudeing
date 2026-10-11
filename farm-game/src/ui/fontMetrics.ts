@@ -94,7 +94,47 @@ export const GLYPHS: Record<string, string> = {
   '|': '04 04 04 04 04 04 04',
   '~': '00 00 08 15 02 00 00',
   '^': '04 0a 11 00 00 00 00',
+  // Portuguese (pt-BR): lowercase accents sit in the two rows above the x-height, the cedilla in the descender rows
+  á: '02 04 0e 01 0f 11 0f',
+  à: '08 04 0e 01 0f 11 0f',
+  â: '04 0a 0e 01 0f 11 0f',
+  ã: '0d 16 0e 01 0f 11 0f',
+  é: '02 04 0e 11 1f 10 0e',
+  ê: '04 0a 0e 11 1f 10 0e',
+  í: '02 04 0c 04 04 04 0e',
+  ó: '02 04 0e 11 11 11 0e',
+  ô: '04 0a 0e 11 11 11 0e',
+  õ: '0d 16 0e 11 11 11 0e',
+  ú: '02 04 11 11 11 13 0d',
+  ç: '00 00 0e 10 10 11 0e 04 08',
+  Ç: '0e 11 10 10 10 11 0e 04 08',
 };
+
+/**
+ * Capitals with an accent: 11 rows, the first two above the cap line (drawn into the 2 px line gap, so line
+ * height and layout do not change). `generateFont` gives them a -2 px y offset.
+ */
+export const TALL_GLYPHS: Record<string, string> = {
+  Á: '02 04 0e 11 11 1f 11 11 11',
+  À: '08 04 0e 11 11 1f 11 11 11',
+  Â: '04 0a 0e 11 11 1f 11 11 11',
+  Ã: '0d 16 0e 11 11 1f 11 11 11',
+  É: '02 04 1f 10 10 1e 10 10 1f',
+  Ê: '04 0a 1f 10 10 1e 10 10 1f',
+  Í: '02 04 0e 04 04 04 04 04 0e',
+  Ó: '02 04 0e 11 11 11 11 11 0e',
+  Ô: '04 0a 0e 11 11 11 11 11 0e',
+  Õ: '0d 16 0e 11 11 11 11 11 0e',
+  Ú: '02 04 11 11 11 11 11 11 0e',
+};
+/** Rows of a tall glyph above the cap line. */
+export const TALL_ROWS = 2;
+
+/** The glyph spec of a character (regular or tall); unknown characters draw as '?'. */
+export const glyphSpec = (ch: string): string => GLYPHS[ch] ?? TALL_GLYPHS[ch] ?? GLYPHS['?'] ?? '';
+/** True when the font can draw `ch` (a space always). */
+export const hasGlyph = (ch: string): boolean =>
+  ch === ' ' || ch === '\n' || GLYPHS[ch] !== undefined || TALL_GLYPHS[ch] !== undefined;
 
 export const GAP = 1; // blank column between glyphs in the atlas
 
@@ -121,6 +161,17 @@ export function parseGlyph(ch: string, spec: string): Glyph {
   return { ch, rows, min, width: max - min + 1 };
 }
 
+const widths = new Map<string, number>();
+/** Ink width of one character in px (cached: measureText runs for every row a sheet lays out). */
+function glyphWidth(ch: string): number {
+  let w = widths.get(ch);
+  if (w === undefined) {
+    w = parseGlyph(ch, glyphSpec(ch)).width;
+    widths.set(ch, w);
+  }
+  return w;
+}
+
 /** Advance width in px of a string at scale 1 (same maths the bitmap font uses). Pure, so tests can
  * prove that UI strings fit their boxes. Unknown characters count as the width of '?'. */
 export function measureText(text: string, scale = 1): number {
@@ -128,8 +179,7 @@ export function measureText(text: string, scale = 1): number {
   for (const ch of text) {
     if (ch === ' ') w += 3;
     else {
-      const spec = GLYPHS[ch] ?? GLYPHS['?'] ?? '';
-      w += parseGlyph(ch, spec).width + 1;
+      w += glyphWidth(ch) + 1;
     }
   }
   return Math.max(0, w - 1) * scale;

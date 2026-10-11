@@ -13,6 +13,7 @@ import type { GameState, ItemStack } from '../state/GameState';
 import { planAction, type ActionPlan, type ActionResult, type TileInfo } from './actions';
 import { game } from '../data';
 import { toast } from './events';
+import { t } from '../i18n';
 
 /** An item auto tool may pick from the hotbar. Mechanics can register more (see docs/EXTENDING.md). */
 export interface AutoItem {
@@ -186,9 +187,10 @@ export function refusalFor(state: GameState, candidates: TileInfo[]): string {
     const soil = t.farmland ? state.farm.tiles[`${t.tx},${t.ty}`] : undefined;
     return !!soil && !soil.crop && !soil.channel;
   });
-  if (emptySoil && autoMode(state) && seedSlot(state) === null) return NO_SEED_HINT;
+  if (emptySoil && autoMode(state) && seedSlot(state) === null) return noSeedHint();
   const planned = planAction(state, first);
-  return planned.ok ? 'Nothing to do here.' : planned.message;
+  return planned.ok ? t('farm.nothingToDo') : planned.message;
 }
 
-export const NO_SEED_HINT = 'Pick seeds on the hotbar first.';
+/** The refusal when Action would plant but no seed is on the hotbar. */
+export const noSeedHint = (): string => t('farm.noSeed');

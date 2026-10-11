@@ -3,7 +3,7 @@ import { waterCapacity } from '../systems/actions';
 import { holdTipsWhile, registerStatWatcher } from '../systems/goals';
 import {
   advance,
-  CAN_NOTE,
+  canNote,
   coachContext,
   guidedMorningCan,
   guidedTracksDone,
@@ -28,6 +28,6 @@ registerDayHook({
   id: 'tutorial:can',
   phase: 'end',
   run(state, ctx) {
-    if (guidedMorningCan(state, waterCapacity(state))) ctx.notes.push(CAN_NOTE);
+    if (guidedMorningCan(state, waterCapacity(state))) ctx.notes.push(canNote());
   },
 });

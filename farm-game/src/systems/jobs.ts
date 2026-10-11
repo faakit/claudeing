@@ -9,6 +9,7 @@ import { addStat, stat } from './goals';
 import { befriend } from './friendship';
 import { random } from './rng';
 import { absoluteDay } from './time';
+import { fmtGold, t } from '../i18n';
 
 /** Jobs posted each morning. */
 export const JOBS_PER_DAY = 3;
@@ -56,10 +57,10 @@ export function welcomeFactor(day: number): number {
 /** The Goal tab's jobs header; on the settling-in days it says the pay is raised. */
 export const welcomeJobsHeader = (factor: number): string =>
   factor === 2
-    ? "TODAY'S JOBS: DOUBLE PAY"
+    ? t('jobs.headerDouble')
     : factor > 1
-      ? `TODAY'S JOBS: ${factor}x PAY`
-      : "TODAY'S JOBS";
+      ? t('jobs.headerFactor', { factor })
+      : t('jobs.header');
 
 /** Pick today's jobs: any intro job for today first, then a weighted draw without repeats. */
 export function generateJobs(state: GameState): Job[] {
@@ -121,7 +122,7 @@ export function checkJobs(state: GameState, atPayout = false): void {
     state.stats['earned'] = stat(state, 'earned') + job.reward;
     gameEvents.emit('moneyChanged', { delta: job.reward });
     befriend(state, job.giver, JOB_FRIENDSHIP);
-    toast(`Job done! ${jobLabel(job)} +${job.reward}g`, 'good');
+    toast(t('jobs.done', { job: jobLabel(job), gold: fmtGold(job.reward) }), 'good');
     addStat(state, 'jobsDone');
   }
 }

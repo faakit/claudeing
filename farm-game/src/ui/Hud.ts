@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DOCK_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
-import { game, npcs } from '../data';
+import { game, npcs, skills } from '../data';
+import { fmtGold, fmtNum, t } from '../i18n';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
@@ -43,8 +44,8 @@ interface Toast {
  */
 /** Toasts on screen at once: a third pushes the oldest out (a tap's results never pile over the world). */
 export const MAX_TOASTS = 2;
-/** The goal toast that the GOAL COMPLETE banner replaces. */
-const GOAL_TOAST = /^Goal complete! \+/;
+/** The goal toast that the GOAL COMPLETE banner replaces (its text up to the gold, in the current language). */
+const isGoalToast = (text: string): boolean => text.startsWith(t('goals.completeToast', { gold: '' }));
 
 export class Hud {
   private readonly dateLabel: Label;
@@ -187,7 +188,7 @@ export class Hud {
       });
     }
 
-    this.savedLabel = new Label(scene, GAME_WIDTH - 5, HUD_H + 3, 'Saved', {
+    this.savedLabel = new Label(scene, GAME_WIDTH - 5, HUD_H + 3, t('hud.saved'), {
       color: CH.green,
       align: 'right',
     })
@@ -223,16 +224,24 @@ export class Hud {
       gameEvents.on('inventoryChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('energyChanged', () => (this.hotbarDirty = true)),
       gameEvents.on('saved', () => this.flashSaved()),
-      gameEvents.on('goalCompleted', (g) => this.goalBanner(`GOAL COMPLETE  +${g.reward}g`)),
+      gameEvents.on('goalCompleted', (g) =>
+        this.goalBanner(t('hud.goalComplete', { gold: fmtGold(g.reward) })),
+      ),
       gameEvents.on('heartUp', (h) =>
         this.goalBanner(
-          `${(npcs[h.id]?.name ?? h.id).toUpperCase()}: ${h.hearts} HEART${h.hearts > 1 ? 'S' : ''}!`,
+          t('hud.hearts', { name: (npcs[h.id]?.name ?? h.id).toUpperCase(), count: h.hearts }),
         ),
       ),
       // The first green: the banner with the special-order fanfare until audio gives it its own jingle.
       gameEvents.on('valleyMoment', (m) => this.valleyMoment(m.text)),
       gameEvents.on('levelUp', (e) =>
-        this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`, 'medium'),
+        this.goalBanner(
+          t('hud.levelUp', {
+            skill: (skills[e.skill]?.name ?? e.skill).toUpperCase(),
+            level: e.level,
+          }),
+          'medium',
+        ),
       ),
     );
   }
@@ -252,9 +261,20 @@ export class Hud {
     this.cleanup.forEach((c) => c());
   }
 
+  /** After a language change: redraw every cached text on the next update. */
+  relocalize(): void {
+    this.goalKey = '';
+    this.goldLabel.setText('');
+    this.savedLabel.setText(t('hud.saved'));
+    this.lastSelected = -1;
+    this.hotbarDirty = true;
+  }
+
   update(time: number, dt: number): void {
     const s = this.getState();
-    this.dateLabel.setText(`${seasonLabel(s.time.season)} ${s.time.day}  Y${s.time.year}`);
+    this.dateLabel.setText(
+      t('hud.date', { season: seasonLabel(s.time.season), day: s.time.day, year: s.time.year }),
+    );
     this.timeLabel.setText(formatClock(s.time.minutes));
     // Late-night warning: the clock turns orange then red as pass-out nears.
     this.timeLabel.setColor(
@@ -267,15 +287,17 @@ export class Hud {
     const rainy = s.weather !== 'sunny';
     const weatherKey = rainy ? 'ui_rain' : 'ui_sun';
     if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
-    this.weatherLabel.setText(s.weather === 'storm' ? 'Storm' : rainy ? 'Rainy' : 'Sunny');
+    this.weatherLabel.setText(
+      t(s.weather === 'storm' ? 'hud.storm' : rainy ? 'hud.rainy' : 'hud.sunny'),
+    );
 
     if (this.shownMoney < 0) this.shownMoney = s.money;
     if (this.shownMoney !== s.money) {
       // Gold ticks toward its new value (frame-rate independent); the coin hops a pixel as it counts.
       this.shownMoney = tickToward(this.shownMoney, s.money, dt);
       if (time - this.coinHopAt > 180) this.coinHopAt = time;
-      this.goldLabel.setText(this.shownMoney.toLocaleString('en-US'));
-    } else if (this.goldLabel.text === '') this.goldLabel.setText(s.money.toLocaleString('en-US'));
+      this.goldLabel.setText(fmtNum(this.shownMoney));
+    } else if (this.goldLabel.text === '') this.goldLabel.setText(fmtNum(s.money));
     this.coin.setY(time - this.coinHopAt < 90 ? 9 : 10);
 
     this.drawGoal(s);
@@ -303,14 +325,12 @@ export class Hud {
       return;
     }
     if (!prog) {
-      this.goalLabel.setText('All goals complete!').setColor(CH.green);
+      this.goalLabel.setText(t('hud.allGoals')).setColor(CH.green);
       this.goalCount.setText('');
       return;
     }
     this.goalLabel.setText(prog.goal.text).setColor(CH.cream);
-    this.goalCount.setText(
-      `${prog.value.toLocaleString('en-US')}/${prog.goal.target.toLocaleString('en-US')}`,
-    );
+    this.goalCount.setText(`${fmtNum(prog.value)}/${fmtNum(prog.goal.target)}`);
     drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, CH.gold);
   }
 
@@ -481,7 +501,7 @@ export class Hud {
   toast(text: string, kind: 'info' | 'warn' | 'good' = 'info'): void {
     if (this.intercept?.(text, kind)) return;
     // the goal banner already says it (critic, valley review 4: one tap stacked the banner and two toasts)
-    if (GOAL_TOAST.test(text)) return;
+    if (isGoalToast(text)) return;
     const now = this.scene.time.now;
     const dup = this.toasts.find((t) => t.text === text && now - t.born < 1400);
     if (dup) {

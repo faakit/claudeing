@@ -6,6 +6,7 @@ import { sendLetter } from './mail';
 import { absoluteDay, formatClock } from './time';
 import { gameEvents } from './events';
 import { parseKey } from './itemRef';
+import { fmtGold, t } from '../i18n';
 
 /**
  * The rival farmer competes for the town board: once a day, at a set time, they fill one open request
@@ -15,7 +16,7 @@ import { parseKey } from './itemRef';
  * Resolved lazily (whenever the board is looked at or an order is delivered), so it needs no clock hook
  * and is exact in tests. The day it acted is kept as the `rival.day` stat.
  */
-export const rivalName = (): string => npcs[game.rival.npc]?.name ?? 'Your rival';
+export const rivalName = (): string => npcs[game.rival.npc]?.name ?? t('rival.fallbackName');
 
 export const rivalActive = (state: GameState): boolean =>
   absoluteDay(state) >= game.rival.startDay && perk(state, 'rivalOff') < 1;
@@ -42,7 +43,9 @@ export function rivalTakes(state: GameState): number {
   return Math.max(1, Math.min(n, r.maxTakes ?? 1));
 }
 
-const NUMBER_WORDS = ['none', 'one', 'two', 'three'];
+/** "one", "two", "three" in the current language (a bigger number stays a figure). */
+const numberWord = (n: number): string =>
+  n >= 1 && n <= 3 ? t(`rival.number${n as 1 | 2 | 3}`) : String(n);
 
 /** Goods of the farm (weighted up on the board, and the only rows the rival scores on). */
 export const FARM_TYPES = ['crop', 'preserve', 'product'];
@@ -83,40 +86,40 @@ export function rivalPicks(state: GameState, day = state.orders.day): Order[] {
  * rule that he scores on farm goods only (critique 9 F1, critique 10 F2).
  */
 export function rivalNotice(state: GameState): string {
-  if (!boardRaceOn(state)) return 'Requests stay a few days.';
+  if (!boardRaceOn(state)) return t('rival.requestsStay');
   const name = rivalName();
   const crate = crateTonight(state);
   if (!rivalActive(state))
-    return crate ? `${name} ships a crate tonight: a point.` : `${name} no longer takes requests.`;
+    return crate ? t('rival.crateTonight', { name }) : t('rival.noLongerTakes', { name });
   const taken = state.orders.list.filter((o) => o.rival && o.takenOn === absoluteDay(state));
   if (taken.length) {
     // Whether it scored is said here too, not only on the row (critique 12, F6).
     const points = taken.filter(isFarmGood).length;
     const said =
       points === 0
-        ? 'no point'
+        ? t('rival.noPoint')
         : points === 1
-          ? 'a point'
-          : `${NUMBER_WORDS[points] ?? points} points`;
-    return `${name} took ${NUMBER_WORDS[taken.length] ?? taken.length} today: ${said}.`;
+          ? t('rival.aPoint')
+          : t('rival.points', { n: numberWord(points) });
+    return t('rival.took', { name, n: numberWord(taken.length), said });
   }
   const picks = state.stats['rival.day'] === absoluteDay(state) ? [] : rivalPicks(state);
   const at = formatClock(rivalMinute(state));
   const scoring = picks.filter(isFarmGood).length;
   // His target is named only when it would score (critique 10, F2), counted right in year two (critique 11, F4).
-  if (scoring > 1) return `${name} wants two of these at ${at}.`;
-  if (scoring === 1) return `${name} wants this one at ${at}.`;
+  if (scoring > 1) return t('rival.wantsTwo', { name, at });
+  if (scoring === 1) return t('rival.wantsOne', { name, at });
   // While you lead, the catch-up rule is said where the player looks (critique 12, F2); the score line above
   // says when a crate comes tonight.
-  const t = boardTally(state, absoluteDay(state));
-  const every = crateEvery(t.you - t.rival);
-  if (every === 1) return `Ahead ${CATCH_UP[0]!.lead}+: his crate every day.`;
-  if (every < CRATE_EVERY) return `Ahead ${CATCH_UP[1]!.lead}+: his crate every ${every} days.`;
+  const tally = boardTally(state, absoluteDay(state));
+  const every = crateEvery(tally.you - tally.rival);
+  if (every === 1) return t('rival.aheadDaily', { lead: CATCH_UP[0]!.lead });
+  if (every < CRATE_EVERY) return t('rival.aheadEvery', { lead: CATCH_UP[1]!.lead, every });
   // A crate tonight is said before it scores (critique 11, F2).
-  if (crate) return `${name} ships a crate tonight: a point.`;
-  if (picks.length > 1) return `${name} takes two at ${at}: no point.`;
-  if (picks.length === 1) return `${name} takes one at ${at}: no point.`;
-  return `${name} scores on farm goods only.`;
+  if (crate) return t('rival.crateTonight', { name });
+  if (picks.length > 1) return t('rival.takesTwo', { name, at });
+  if (picks.length === 1) return t('rival.takesOne', { name, at });
+  return t('rival.farmGoodsOnly', { name });
 }
 
 /** The board rows the rival is after today that would score for him (marked "Clay's!" on the board). */
@@ -131,12 +134,12 @@ export function rivalTargets(state: GameState): Order[] {
  */
 export function boardScoreLine(state: GameState): string | null {
   if (!boardRaceOn(state)) return null;
-  const t = boardTally(state, absoluteDay(state));
-  const last = t.you === 0 && t.rival === 0 ? lastSeasonLine(state) : null;
+  const tally = boardTally(state, absoluteDay(state));
+  const last = tally.you === 0 && tally.rival === 0 ? lastSeasonLine(state) : null;
+  const score = { you: tally.you, name: rivalName(), rival: tally.rival };
   // A crate tonight is always said, even when the line below names a target or a take (critique 12, F2).
-  if (!last && crateTonight(state))
-    return `You ${t.you}, ${rivalName()} ${t.rival}. His crate tonight.`;
-  return last ?? `This season: you ${t.you}, ${rivalName()} ${t.rival}.`;
+  if (!last && crateTonight(state)) return t('rival.scoreCrate', score);
+  return last ?? t('rival.score', score);
 }
 
 /** Days into a season that the board still names last season's result. */
@@ -148,9 +151,9 @@ export function lastSeasonLine(state: GameState): string | null {
   if (day === undefined || absoluteDay(state) - day >= LAST_SEASON_DAYS) return null;
   const you = state.stats['board.last.you'] ?? 0;
   const rival = state.stats['board.last.rival'] ?? 0;
-  if (you > rival) return `Last season: you won ${you} to ${rival}.`;
-  if (rival > you) return `Last season: ${rivalName()} won ${rival} to ${you}.`;
-  return `Last season: a draw, ${you} to ${rival}.`;
+  if (you > rival) return t('rival.lastYouWon', { you, rival });
+  if (rival > you) return t('rival.lastHeWon', { name: rivalName(), you, rival });
+  return t('rival.lastDraw', { you, rival });
 }
 
 /**
@@ -194,7 +197,7 @@ export const BOARD_PRIZE = 300;
 
 /** What the winner gets this year, said in the rival's letters before anyone has won (critique 9, F1). */
 export const boardStakes = (state: GameState): string =>
-  `the town pays ${BOARD_PRIZE * state.time.year}g and puts a trophy in your house`;
+  t('rival.stakes', { gold: fmtGold(BOARD_PRIZE * state.time.year) });
 
 /**
  * On the first morning of a season, settle the season just ended. Beat the rival on the board and the town
@@ -205,13 +208,14 @@ export const boardStakes = (state: GameState): string =>
 export function settleSeason(state: GameState): string | null {
   const day = absoluteDay(state) - 1; // the last day of the season that just ended
   if (!boardRaceOn(state, day)) return null;
-  const t = boardTally(state, day);
-  if (t.you === 0 && t.rival === 0) return 'The board was quiet last season: nobody scored.';
+  const tally = boardTally(state, day);
+  if (tally.you === 0 && tally.rival === 0) return t('rival.quietSeason');
   state.stats['board.last.day'] = absoluteDay(state);
-  state.stats['board.last.you'] = t.you;
-  state.stats['board.last.rival'] = t.rival;
+  state.stats['board.last.you'] = tally.you;
+  state.stats['board.last.rival'] = tally.rival;
   const name = rivalName();
-  if (t.you > t.rival) {
+  const score = { name, you: tally.you, rival: tally.rival };
+  if (tally.you > tally.rival) {
     // The year of the season settled, not the new one: winter of year one pays year one's prize (critique 11, F9).
     const gold = BOARD_PRIZE * yearOf(day);
     state.money += gold;
@@ -222,26 +226,26 @@ export function settleSeason(state: GameState): string | null {
     state.stats['boardWins'] = wins;
     sendLetter(state, {
       from: 'mara',
-      title: 'Best on the board',
+      title: t('rival.bestTitle'),
       text:
         wins === 1
-          ? `You out-scored ${name} on the board last season, ${t.you} to ${t.rival}! The town put a trophy in your house, and ${gold}g is yours.`
-          : `Best on the board again, ${t.you} to ${t.rival}! Your trophy at home now counts ${wins} seasons, and ${gold}g is yours.`,
+          ? t('rival.bestFirst', { ...score, gold: fmtGold(gold) })
+          : t('rival.bestAgain', { ...score, wins, gold: fmtGold(gold) }),
     });
     gameEvents.emit('placedChanged', { map: 'house' }); // the trophy appears (or counts one more)
-    return `You beat ${name} on the board last season (${t.you} to ${t.rival}): +${gold}g.`;
+    return t('rival.youBeat', { ...score, gold: fmtGold(gold) });
   }
-  if (t.rival > t.you) {
+  if (tally.rival > tally.you) {
     // A friend who no longer takes requests does not gloat (critique 11, F3).
     if (rivalActive(state))
       sendLetter(state, {
         from: game.rival.npc,
-        title: 'The board is mine',
-        text: `Last season the board was ${t.rival} to ${t.you}, my way: a farm good left to its last day is mine, and so is a crate of my own each week, more often while you lead. Beat me this season and ${boardStakes(state)}.`,
+        title: t('rival.mineTitle'),
+        text: t('rival.mineText', { ...score, stakes: boardStakes(state) }),
       });
-    return `${name} won the board last season (${t.rival} to ${t.you}).`;
+    return t('rival.heWon', score);
   }
-  return `A draw with ${name} on the board last season (${t.you} to ${t.rival}).`;
+  return t('rival.draw', score);
 }
 
 /** Clay's own crates: this many days after his last one (or the season's start) he scores a point from his field. */

@@ -6,6 +6,7 @@ import { orderedHandlers, toolActionFor } from './actionRegistry';
 import { game } from '../data';
 import { toast } from './events';
 import { selectedStack } from './inventory';
+import { t } from '../i18n';
 
 export type { ActionContext, ActionDetail, ActionPlan, TileInfo } from './actionTypes';
 export { registerActionHandler, registerToolAction } from './actionRegistry';
@@ -38,7 +39,10 @@ export function planAction(state: GameState, tile: TileInfo): PlanResult {
     if ('plan' in answer) return { ok: true, plan: answer.plan, priority: handler.priority };
     return { ok: false, message: answer.refusal };
   }
-  return { ok: false, message: ctx.def ? `Can't use ${ctx.def.name} here.` : 'Nothing equipped.' };
+  return {
+    ok: false,
+    message: ctx.def ? t('farm.cantUse', { item: ctx.def.name }) : t('farm.nothingEquipped'),
+  };
 }
 
 function execute(plan: ActionPlan): ActionResult {

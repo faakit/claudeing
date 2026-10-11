@@ -1,4 +1,5 @@
 import { game, items } from '../data';
+import { t } from '../i18n';
 
 /**
  * Identity of a kind of stack. Two stacks merge only when all three fields match:
@@ -33,7 +34,8 @@ export function parseKey(key: string): ItemRef {
 
 export const sameRef = (a: ItemRef, b: ItemRef): boolean => keyOf(a) === keyOf(b);
 
-export const QUALITY_LABELS = ['', 'Silver', 'Gold'] as const;
+/** Quality tiers 1 and 2 by key (0 has no label). */
+const QUALITY_KEYS = ['', 'quality.silver', 'quality.gold'] as const;
 
 /** Player-facing name: "Parsnip", "Gold Parsnip", "Tomato Jam". */
 export function displayName(ref: ItemRef): string {
@@ -44,8 +46,8 @@ export function displayName(ref: ItemRef): string {
     const base = items[ref.of]?.name ?? ref.of;
     name = (def.nameTemplate ?? '{of}').replace('{of}', base);
   }
-  const q = QUALITY_LABELS[ref.q ?? 0] ?? '';
-  return q ? `${q} ${name}` : name;
+  const q = QUALITY_KEYS[ref.q ?? 0];
+  return q ? t(q, { name }) : name;
 }
 
 export const iconKey = (ref: ItemRef): string => items[ref.item]?.icon ?? 'ui_coin';

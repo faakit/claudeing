@@ -7,6 +7,8 @@ import {
 } from '../state/GameState';
 import { DIR_VECTORS, isDirection } from './direction';
 import { createGrid, isTileBlocked, type CollisionGrid, type Hitbox } from './movement';
+import { t } from '../i18n';
+import { mapText } from '../i18n/dataText';
 
 type PropValue = string | number | boolean;
 
@@ -179,7 +181,7 @@ export function doorLocked(state: Pick<GameState, 'stats'>, door: WorldObject): 
   if (door.type !== 'door' || typeof lockStat !== 'string') return null;
   const min = typeof lockMin === 'number' ? lockMin : 1;
   if ((state.stats[lockStat] ?? 0) >= min) return null;
-  return typeof lockedText === 'string' ? lockedText : 'Locked.';
+  return typeof lockedText === 'string' ? mapText(lockedText) : t('world.locked');
 }
 
 /**

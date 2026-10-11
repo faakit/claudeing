@@ -4,6 +4,7 @@ import type { GameState, PlacedObject } from '../state/GameState';
 import type { DayContext } from './dayHooks';
 import { gameEvents } from './events';
 import { addItem, roomFor } from './inventory';
+import { t } from '../i18n';
 
 /** What the UI should do when the player interacts with a placed object. */
 export type InteractResult =
@@ -154,7 +155,7 @@ export function interactWith(state: GameState, obj: PlacedObject): InteractResul
     armed = { id: obj.id, at: now };
     return {
       ...res,
-      text: `${res.text} ${occupied ? 'Tap again to move it.' : 'Tap again to pick up.'}`,
+      text: `${res.text} ${t(occupied ? 'move.tapAgainMove' : 'move.tapAgainPickUp')}`,
     };
   }
   armed = null;

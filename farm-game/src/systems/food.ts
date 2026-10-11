@@ -5,6 +5,9 @@ import { gameEvents, toast } from './events';
 import { addStat } from './goals';
 import { removeFromSlot } from './inventory';
 import { absoluteDay } from './time';
+import { t } from '../i18n';
+
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Dishes a day at full strength. Later ones give a share of their energy (owner default, round 3: no hard cap,
@@ -35,8 +38,10 @@ export const dishEnergy = (state: GameState, item: string | undefined): number =
 export function dishText(state: GameState, item: string): string {
   const desc = items[item]?.description ?? '';
   if (dishShare(state) >= 1) return desc;
-  const now = `Restores ${dishEnergy(state, item)} now: dish ${dishesToday(state) + 1} today.`;
-  const restores = /Restores \d+ energy\./;
+  const now = t('food.restoresNow', { n: dishEnergy(state, item), nth: dishesToday(state) + 1 });
+  // the description's own "Restores 30 energy." sentence (in the current language) gives way to today's number
+  const [pre = '', post = ''] = t('food.restores').split('{n}');
+  const restores = new RegExp(`${escapeRe(pre)}\\d+${escapeRe(post)}`);
   return restores.test(desc) ? desc.replace(restores, now) : `${desc} ${now}`;
 }
 
@@ -61,8 +66,8 @@ export const tooFullFor = (state: GameState, item: string | undefined): boolean 
 /** The "out of energy" line: point at food when the bag holds some. */
 export const tiredText = (state: GameState): string =>
   state.inventory.slots.some((s) => foodEnergy(s?.item) > 0)
-    ? 'Too tired! Eat something or go to bed.'
-    : 'Too tired! Go to bed.';
+    ? t('energy.tiredEat')
+    : t('energy.tired');
 
 /**
  * Eat one of the stack in `slot`: energy back, up to the maximum. A full player is refused, so a dish is
@@ -84,8 +89,8 @@ export function eat(state: GameState, slot: number): EatResult {
   state.stats['ate.today'] = nth;
   toast(
     nth > FULL_DISHES
-      ? `${name}: +${Math.min(gain, room)} energy (dish ${nth} today).`
-      : `${name}: +${Math.min(gain, room)} energy.`,
+      ? t('food.ateNth', { item: name, n: Math.min(gain, room), nth })
+      : t('food.ate', { item: name, n: Math.min(gain, room) }),
     'good',
   );
   return 'ok';

@@ -9,6 +9,7 @@ import { items } from '../data';
 import { absoluteDay } from './time';
 import { openingLine, openingScene, valleyHolds } from './valley';
 import { isWet } from './weather';
+import { t } from '../i18n';
 
 export const POINTS_PER_HEART = 50;
 export const MAX_HEARTS = 5;
@@ -74,7 +75,7 @@ export const linesNow = (state: GameState, group: readonly NpcLine[]): string[] 
  */
 export function lineFor(state: GameState, id: string): string {
   const def = npcs[id] as NpcDef;
-  if (isBirthday(state, id)) return 'Today is my birthday! A gift would make it perfect.';
+  if (isBirthday(state, id)) return t('npc.birthdayLine');
   // the morning a place of theirs opens, that is all they talk about (systems/valley.ts)
   const opened = openingLine(state, id);
   if (opened) return opened;
@@ -143,7 +144,10 @@ export function chat(state: GameState, id: string): ChatResult {
     if (g && roomFor(state, g.item, g.qty) >= g.qty) {
       addItem(state, g.item, g.qty);
       gift = g;
-      toast(`${def.name} gave you ${g.qty} ${items[g.item]?.name ?? g.item}`, 'good');
+      toast(
+        t('npc.gaveYou', { name: def.name, count: g.qty, item: items[g.item]?.name ?? g.item }),
+        'good',
+      );
     }
   }
   gameEvents.emit('friendsChanged', undefined);
@@ -176,10 +180,10 @@ export function giveGift(state: GameState, id: string, ref: ItemRef): GiftResult
 }
 
 export const REACTION_TEXT: Record<Reaction, (name: string) => string> = {
-  love: (n) => `I love ${n}!!`,
-  like: (n) => `${n}, how nice!`,
-  neutral: () => 'Oh. Thank you.',
-  dislike: () => 'Um... thanks, I guess.',
+  love: (n) => t('npc.reactLove', { item: n }),
+  like: (n) => t('npc.reactLike', { item: n }),
+  neutral: () => t('npc.reactNeutral'),
+  dislike: () => t('npc.reactDislike'),
 };
 
 /** Next friendship perk the player has not reached yet, for the panel. */

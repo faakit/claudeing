@@ -2,6 +2,7 @@ import { MS_PER_GAME_MINUTE } from '../config';
 import { game } from '../data';
 import type { GameState, Season } from '../state/GameState';
 import { SEASONS } from '../state/GameState';
+import { getLocale, t } from '../i18n';
 
 /**
  * Advance the clock by real elapsed ms. Never reads the wall clock, so changing the
@@ -37,15 +38,22 @@ export function advanceCalendar(state: GameState): boolean {
   return true;
 }
 
-/** "6:00 AM" style, wrapping past midnight (1500 -> "1:00 AM"). */
+/**
+ * "6:00 AM" style in English, wrapping past midnight (1500 -> "1:00 AM"); 24-hour "18:00" in Portuguese, the way a
+ * Brazilian reads a clock.
+ */
 export function formatClock(minutes: number): string {
   const h24 = Math.floor(minutes / 60) % 24;
-  const m = Math.floor(minutes % 60);
+  const m = String(Math.floor(minutes % 60)).padStart(2, '0');
+  if (getLocale() !== 'en') return `${h24}:${m}`;
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-  return `${h12}:${String(m).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`;
+  return `${h12}:${m} ${h24 < 12 ? 'AM' : 'PM'}`; // i18n-ok: English clock suffixes
 }
 
-export const seasonLabel = (s: Season): string => s.charAt(0).toUpperCase() + s.slice(1);
+/** The season's name in the current language ("Spring", "Primavera"). */
+export const seasonLabel = (s: Season): string => t(`season.${s}`);
+/** The season's name inside a sentence ("Spring", "primavera": Portuguese writes seasons in lower case). */
+export const seasonWord = (s: Season): string => t(`seasonWord.${s}`);
 
 /** A day number that keeps rising across seasons and years (1 = the first day). */
 export const absoluteDay = (state: GameState): number => {

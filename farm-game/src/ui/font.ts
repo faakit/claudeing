@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAP, GLYPHS, parseGlyph } from './fontMetrics';
+import { GAP, GLYPHS, parseGlyph, TALL_GLYPHS, TALL_ROWS } from './fontMetrics';
 import { C } from './theme';
 
 const isDark = (c: number): boolean =>
@@ -14,37 +14,45 @@ export const FONT_KEY = 'px';
 
 /** Build the font texture and register it with Phaser's bitmap font cache. */
 export function generateFont(scene: Phaser.Scene): void {
-  const glyphs = Object.entries(GLYPHS).map(([ch, spec]) => parseGlyph(ch, spec));
-  const atlasW = glyphs.reduce((w, g) => w + g.width + GAP, 0) + 2;
+  // Regular glyphs are 9 rows; accented capitals (TALL_GLYPHS) have TALL_ROWS more above the cap line, drawn
+  // with a negative y offset into the line gap, so every line keeps the same height.
+  const glyphs = [
+    ...Object.entries(GLYPHS).map(([ch, spec]) => ({ g: parseGlyph(ch, spec), tall: false })),
+    ...Object.entries(TALL_GLYPHS).map(([ch, spec]) => ({ g: parseGlyph(ch, spec), tall: true })),
+  ];
+  const atlasW = glyphs.reduce((w, { g }) => w + g.width + GAP, 0) + 2;
   const H = 9;
-  const tex = scene.textures.createCanvas('font_px', atlasW, H);
+  const atlasH = H + TALL_ROWS;
+  const tex = scene.textures.createCanvas('font_px', atlasW, atlasH);
   if (!tex) throw new Error('Could not create font texture');
   const ctx = tex.getContext();
   ctx.fillStyle = '#ffffff';
   const chars: Record<number, unknown> = {};
   let x = 0;
-  for (const g of glyphs) {
-    for (let r = 0; r < H; r++) {
+  for (const { g, tall } of glyphs) {
+    const top = tall ? 0 : TALL_ROWS; // texture row of the glyph's first row
+    const h = tall ? atlasH : H;
+    for (let r = 0; r < h; r++) {
       for (let c = 0; c < g.width; c++) {
-        if ((g.rows[r] ?? 0) & (1 << (4 - (g.min + c)))) ctx.fillRect(x + c, r, 1, 1);
+        if ((g.rows[r] ?? 0) & (1 << (4 - (g.min + c)))) ctx.fillRect(x + c, top + r, 1, 1);
       }
     }
     chars[g.ch.charCodeAt(0)] = {
       x,
-      y: 0,
+      y: top,
       width: g.width,
-      height: H,
+      height: h,
       centerX: g.width / 2,
-      centerY: H / 2,
+      centerY: h / 2,
       xOffset: 0,
-      yOffset: 0,
+      yOffset: tall ? -TALL_ROWS : 0,
       xAdvance: g.width + 1,
       data: {},
       kerning: {},
       u0: x / atlasW,
-      v0: 0,
+      v0: top / atlasH,
       u1: (x + g.width) / atlasW,
-      v1: 1,
+      v1: (top + h) / atlasH,
     };
     x += g.width + GAP;
   }
