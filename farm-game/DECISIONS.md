@@ -1391,3 +1391,18 @@ the leg keeps growing one tile per 180 ms with the usual tick, up to the 16-tile
 (tilling, watering, planting, digging). Leaving the band takes the growth back, so a drift never extends a row and
 dragging back to the start still cancels; a drift into another edge does nothing. The controls e2e checks a
 left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone 13 and the SE.
+
+### Dry Year audio (audio lane, 2026-10-11)
+
+- **One jingle for every valley moment.** `green` plays for the first green, the creek's first morning and later
+  place mornings: one recognisable "the valley comes back" motif, weeks apart, instead of a new jingle each time.
+  It has priority 3, so a level, goal, heart or order within a second gives way. The dawn flourish is spent on a
+  reveal morning.
+- **Audio follows the map stage, by data** (`src/audio/stages.json`), and a dry-palette stage is thin by default, so
+  a new dry stage needs no audio edit. Today's town (no variants yet) keeps its river bed because its map shows the
+  river; M6's `dry` variant makes it thin, with a trickle.
+- **Rain wins over thin:** the rainy arrangement is already sparse, and both together sank below -30 LUFS.
+- **Water beds are positional** by tile distance (full within 1.5 tiles, down to a quarter over 12 more), flat on
+  Wendhead; a storm takes them to 0.4.
+- **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
+
