@@ -1,113 +1,123 @@
-# Art: next steps (handover, round 5, 2026-10-11)
+# Art: next steps (handover, The Dry Year, 2026-10-11)
 
-Branch `art/round5` (from `integration/round4-2026-10-11`). `npm run verify:fast` is green before each commit and the
-full `npm run verify` before the hand-off. Perf stays at 2-5 draws. Atlases: world 512x256, ui 512x128, chars
-**512x1024** (the action frames filled it; the limit is 1024, so the next big batch needs a second chars atlas).
-Everything was judged from **headless renders only**. Reviews: `C:/Users/andre/dev/tiny-acre/art-critique/
-review-16.md` to `review-19.md`: the menu sheet accepted (16-17), the actions settled (18) and round 5 closed
-(19; its nit R19-1, the reel pull's rod across the face, is fixed in the last commit).
-- **Perf note:** the full `verify` on this machine (other agents running) failed perf 4x/6x on single frame-pacing
-  spikes in different scenes on each run (a sleep, a Woods door, a Town door). Perf alone passed draws and JS
-  every time (2-5 draws; holding Action 1.2-1.3 ms), and the critic's frozen copy had pacing within budget.
-  Rerun perf on a quiet machine before the merge.
+Branch `art/dry-year` (from `integration/dry-year-core` db29f2a). The owner asked every lane to wrap up after item 1.
+`npm run verify:fast` was green before each commit. Perf stays at 2-5 draws. Everything was judged from headless
+renders at the iPhone 13 and SE sizes; nobody has looked at it on a real phone.
 
 ## Shipped this round
 
-1. **The menu sheet background** (the owner: "looks buggy" on a phone). Findings and the slice spec:
-   `agents/out/art-round5-menu.md`.
-   - Cause: the canvas is fractional on the iPhone 13 (5.72 device px per game px) and the SE (3.24). The old
-     frame was all 1-2 px stripes, so it rendered unevenly. The coordinator ruled to keep those phones fractional,
-     so the UI art carries it: 2 px lines over 1 px, no fine stripes or checkers, no semi-alpha.
-   - New: Flow `ui1` b (a parchment sheet in a walnut frame with brass corner caps), rebuilt on its native grid
-     into nine on-palette 9-slice pieces (`art-src/tools/uisheet.py`). `src/ui/sheetSkin.ts` tiles them (never
-     stretches) into one canvas texture per sheet size. Slice: left 6, right 5, top 7, bottom 5; content inset 8;
-     inner ink and top bevel 2 px.
-   - `widgets.ts` (drawing helpers only):
-     - `Modal.panel()` uses the skin.
-     - `drawPanel` (walnut) has no alpha shadow and no 1 px inner stripes.
-     - `Button` has a separate solid 2 px soil lip, the face sinks onto it when pressed, and the disabled hatch is
-       solid 2 px blocks.
-     - `drawSlot`'s recess is a solid 2 px soil row.
-     - `drawBar`'s highlight is the next lighter ramp colour (`LIGHTER`).
-     The UI has no semi-alpha pixels left in the walnut skin.
-2. **Player action animations** (the owner's request, settled by review 18):
-   - **Tools stay on the round-4 code-drawn frames.** On every side-by-side they beat Flow's on consistency, tool
-     identity and anchoring.
-   - **Kept from Flow, cleaned:** harvest (down, right), plant (down, up) and eat (all three). The Flow prompts
-     used the project's own `player1` a sheet as the reference (entries 31-41 in `art-src/flow/prompts.md`, with
-     what was used from each). `art-src/tools/flowanim.py`:
-     - finds each farmer by his hair and keeps his connected piece;
-     - samples to native pixels on the palette and plants the feet on row 39;
-     - pastes the **idle head pixel for pixel**;
-     - keeps only one 8-connected piece;
-     - uses the exact idle frame where the farmer simply stands.
-   - **Drawn in code** (`art-src/tools/codeacts.py`, on the round-4 toolanim parts): pet (crouch, reach, pat),
-     reel (wait, bite, pull) and place (the held item's icon is drawn by the game at `ACT_ITEM_ANCHORS`).
-   - Keys `player_act_<anim>_<dir>_<i>`, 32 x 44, feet on row 39, origin (0.5, 40/44), contact on frame 2; table
-     in `agents/out/art-feel-frames.md`.
-   - **Wired here** (the feel agent finished its round):
-     - `PlayerFrames.act()`;
-     - `WorldScene.playAct()` plays plant, harvest/forage, eat and place on the action result, pet on the daily
-       pat, and reel on a new `fishCaught` event once the fishing sheet closes;
-     - the fx land on the contact frame; Calm mode plays none; moving cuts the pose, so input is never blocked;
-     - the pose origin comes from the frame height (44: 40/44).
-   - **Tests:** `tests/animation-frames.test.ts` checks the idle head, the row-39 feet and one piece per frame;
-     `scripts/e2e-scenarios.mjs` gained an `actions` block (each animation plays on its event, the farmer walks
-     right after a harvest, Calm mode plays none).
-   - **Review pack:** `agents/out/art-shots/round5/tools/`: strips, onions, 1x/4x GIFs, and
-     `ingame/ingame_rows.png` (frame-exact in-game strips of harvest, place, pet and reel).
+1. **The chars atlas split** (128ef5d). The 68 player action frames (`player_act_*`) moved to a second chars atlas,
+   `chars2` (512x256). `chars` is now 512x512, with room for new character frames. Frames load by name across
+   atlases, so no texture key changed.
+   - `build.py` has a `chars2` group, and `drawn.py` routes the action frames to it.
+   - `manifest.ts` has `ATLAS_FILES.chars2`, and the action entries are in group `chars2`.
+   - `tests/animation-frames.test.ts` reads both chars atlases.
+   - New character art (villagers, the missing action facings) goes into `chars2`.
+2. **Channel tiles** (0dd9a35): item 1, the valley critic's R5-3.
+   - **Drawn in code:** `art-src/tools/channeltiles.py`. As with the creek, an autotile comes out better in code
+     than from Flow.
+   - **Tiles:**
+     - `chan:<wet|dry>:<mask>`: the ditch, autotiled by its four neighbours;
+     - `culvert:<mask>`: stone headwalls on a path cell;
+     - `chanmouth:<n|e|s|w>`: the cut through the creek bank.
 
-## Flow usage
+     The mask is N1 E2 S4 W8. A bit is set where that neighbour is a channel or creek water.
+   - **Shape:** the cut is 10 px wide, with a 3 px shadowed north face, a 2 px west face, and a 2 px lit lip on the
+     south and east sides.
+     - Dry bed: earth dark with clods and pebbles.
+     - Wet bed: water, a 2 px dusk-blue shade and a 3x2 sky glint.
+     - No 1 px features and no alpha.
+   - **Placement:** `authored.build` appends the tiles at the END of the tileset, after the baked map tiles, so no
+     map gid moved.
+     - The game looks them up by name in `src/art/channelTiles.ts` (`channelMask`, `channelTileName`,
+       `culvertTileName`, `mouthTileName`, `tileGid`, `isGroundDecal`, `CHANNEL_WATER_BAND`).
+     - The tileset grew to 512x1136. The `.tmj` files changed only in their tileset header (imageheight and
+       tilecount, from `npm run gen:maps`).
+   - **WorldScene** (a shared file):
+     - `paintChannel` now autotiles each cell and repaints its painted neighbours.
+     - It hides ground decals (flowers, tufts) on a channel cell and restores them when the channel is filled in.
+       This follows the critic's ruling: the hiding is worked out at draw time and nothing is saved.
+     - It draws culverts and creek mouths in the shade layer.
+     - The new public `channelGid(tx, ty, look)` is for the feel lane's water fx.
+     - A few new lines in `create` index the gids beyond the `.tmj` tile count. Phaser's `putTileAt` needs that
+       for tiles past the map's own count.
+   - **Seasons:** wet channels and mouths use the `shore` category (in winter: ice water and sand lips). Dry channels
+     use `ground`. The dry palette doesn't touch them, because they contain no grass ramp.
+   - **Scenario:** `channels-serpentine` has corners, a T, a cross, a culvert under the 2-wide path, the creek
+     mouth, and a dry tail past flow 24.
+   - **Tests:** `tests/channel-tiles.test.ts`, plus an e2e check in the `channels` block of
+     `scripts/e2e-scenarios.mjs`.
+3. **Flow sources for items 2 and 3**, generated and downloaded to `flow-raw/` but not built yet. They are recorded
+   as entries 42-45 in `art-src/flow/prompts.json`:
+   - `site_spring-a/b`: the Old Spring in four stages. Both are good; b sits on a hillside.
+   - `warm_pool-a/b`: the Warm Pool, dry and full. In a, both versions are clean.
+   - `icons_ilse-a/b`: the seed tin, the journal and the spade. b has six small, clean icons.
+   - `letter_paper-a/b`: parchment with a cherry blossom, a fold and a tea stain.
 
-- 14 prompts this round in "out. 08 - 07:06" (1:1, Nano Banana 2.1, x2): `ui1` and `ui2` (the menu sheet) and
-  `anim_*` (11 animations; `anim_can` was resubmitted after its first run failed silently). No quota message.
-- **References:** local uploads are not possible from the agent's browser pane. Use the project's own images
-  through the prompt box's + picker (search "Farmer character sprite sheet"). After picking a result, the picker
-  closes by itself. Do **not** click its X then: it lands on the grid's filter button, and the typed prompt is lost.
-- **Downloads:** the coordinator fetched every image into `flow-raw/`. Flow virtualizes the grid: older items show
-  only 512 px previews; opening an item in the viewer exposes the full-size signed URL (the viewer also loads the
-  attached reference image, so don't confuse the two).
+   **Reference images can now be uploaded:**
+   - The prompt box accepts a dropped file. Build a `File` in the page with `javascript_tool`, then dispatch
+     `dragenter`, `dragover` and `drop` on the prompt's contenteditable.
+   - Base64 pasted into the tool call got corrupted at 16 KB. Send it in chunks of about 1.5 KB, each with a CRC32
+     check (see `C:/Users/andre/dev/tiny-acre/art-scratch/refs/`), then upscale it in a canvas before the drop.
+   - The upload `tiny-acre-farm-reference.png` is in the Flow project "out. 08 - 07:06". Attach it with the +
+     picker; the attachment clears after each submit.
 
 ## Merge notes (for the coordinator)
 
-- Round 5 shared files:
-  - `src/ui/widgets.ts`: `Modal.panel`, `drawPanel`, `Button`, `drawSlot`, `drawBar`; drawing only.
-  - `src/scenes/WorldScene.ts`: `playAct`, the pose origin, `pendingAct`/held-item fields, a `fishCaught`
-    listener, the act call after `toolSwing`, and the pet check in `onInteract`.
-  - `src/fx/playerFrames.ts`: `act()`.
-  - `src/systems/events.ts`: `fishCaught`.
-  - `src/ui/panels/FishingPanel.ts`: emits `fishCaught`.
-  - `scripts/e2e-scenarios.mjs`: the `actions` block.
-  - `src/art/manifest.ts`; new `src/ui/sheetSkin.ts`, `src/art/actFrames.json`.
-  - `Hud.ts`, layout and `actionFx.ts` are untouched.
+- **Merge order and map rebuild:** merge `art/dry-year` after any branch that changes `art-src/map-tiles.json` (the
+  M6 builder). Then run `npm run art:maps` and commit the maps, the tilesets and `map-tiles.json`. The channel tiles
+  stay last whatever the maps add, because the game reads them by name.
+- **WorldScene conflict with `feel/dry-year`:** both lanes touched the channel code.
+  - Keep this branch's `paintChannel`, `drawChannelCell` and `channelGid`.
+  - Point the feel lane's `ChannelFx` `src` callback at `channelGid(tx, ty, look)`, and its foam band at
+    `CHANNEL_WATER_BAND`. The feel lane noted this in NEXT-STEPS-FEEL.md.
+- **Other shared files:** `scripts/e2e-scenarios.mjs` (the serpentine check), `art-src/tools/seasons.py` (two
+  categories) and `tests/animation-frames.test.ts`.
+- **Text baked into images (for i18n):** none. No shipped image contains text.
+  - Rosa's letter paper is blank by design, and the game draws its text.
+  - Once the paper ships, `TitleScene.drawLetter` must draw the letter in ink instead of cream, which is unreadable
+    on parchment.
 
-Round 4 notes, still valid:
+## Next steps (the rest of the Dry Year list, by priority)
 
-- Shared files touched, a few lines each:
-  - `src/scenes/PreloadScene.ts`: the walk anim uses 8 frames at `WALK_FPS * 8 / 4` fps; the villager idle uses
-    `NPC_IDLE_SEQUENCE` with per-frame durations. The feel agent may own the timing; keep its numbers if they
-    conflict.
-  - `src/art/placeholders.ts`: the stand-in player sheet has 8 walk frames, the villagers 4 idle frames.
-  - `scripts/map-art.mjs`: the `m_*` three-wide prop kind, the town well.
-- Maps and tileset changed (new well tiles). After merging a branch that touches `scripts/generate-maps.mjs`, run
-  `npm run art:maps` and commit the maps, the tilesets and `art-src/map-tiles.json`.
-- `fx_splash_*` changed size (manifest `FX_SPRITES` updated); nothing in `src/` used them before.
-- Python edits on Windows: write files with `newline='\n'`, or git warns about CRLF.
+1. **The critic's follow-ups on channels**, if any arrive after this handover. Options already weighed:
+   - a grassy rim: tried as 2 px leaf-dark tufts, removed because they read as weeds over the field's dirt;
+   - wider culvert walls on the 2-wide path;
+   - a whole-frame glint swap: the tiles are static today, like the map's water.
+2. **The Old Spring site in four stages**, `obj_site_spring_0..3`.
+   - 32x32: a 2x2 rockfall at the pool's mouth. Build it from `site_spring-b` with the pixelize pipeline (crop,
+     `sprites.json`, `build.py --sprites`).
+   - Judge it in `spring-site-ask`, `spring-site-funded`, `spring-site-work` and `spring-opened`.
+   - The Warm Pool landmark (`obj_landmark_bathhouse`) comes from `warm_pool-a`.
+3. **Rosa's letter paper** (`ui_letter_paper`; scenario `title-first-launch`).
+   - Build it from `letter_paper-a` as a 9-slice, like `ui/sheetSkin.ts`. The card is 184 px wide and its height
+     varies with the text, and `setDisplaySize` would stretch the pixels.
+   - Switch the letter text to ink in `TitleScene` (a few lines in the onboarding lane's file).
+   - The seed tin, journal and spade icons come from `icons_ilse-b`.
+4. **Bake the dry palette** in `seasons.py` from the table in `art/dryPalette.ts`. Keep it only if it looks at least
+   as good as the runtime remap: `valley-farm-dry` must stay straw-coloured, never orange.
+5. **Wendhead's look.** Today it is a fenced meadow with a pool, generated into `wendhead.tmj`.
+   - It needs the hillside, the spring under the rockfall, ferns, and the dry gorge for M6.
+   - This lane makes the tiles. The map owner places them, in `function wendhead(v)` in `generate-maps.mjs`.
+6. **M6 visuals**, with the M6 builder (`valley/m6`):
+   - town `dry`: D1 cracked mud and the boarded north-east house;
+   - town `river`: reeds, rocks and the mill wheel;
+   - the Heron afloat;
+   - Wendhead restored.
+7. **The missing action facings:** the harvest back view and the plant side view, into `chars2`.
 
-## Open items (by priority)
+## Flow usage this round
 
-1. **Actions not drawn for every facing:** harvest has no back view and plant no side view (the Flow rows mixed
-   facings and were dropped). Those facings simply play no animation. A redraw in code, or a new Flow row per
-   facing, would complete them.
-2. **The round-4 tool frames** remain the tool animations. The chars atlas is 512x1024 with the action frames:
-   split it (a `chars2` group) before the next big batch.
-3. **Eat** is standing-only Flow art. The critic may still ask for front/side cleanups after the final review.
-4. **Fidelity seams:** the bodies under our head are Flow's drawing in harvest and eat; any frame the critic flags
-   can be swapped for the idle or redrawn in code (`flowanim.SELECT` / `codeacts.py`).
-5. **Layout (the UI owner):** tall sheets cut through the HUD goal plate; the menu tabs are crowded at 1x.
-6. Round 4 leftovers: a 9 px side stride, the statue's footprint, mine and woods details, winter paths.
+Four prompts in "out. 08 - 07:06" (Nano Banana 2.1, x2 each). The first three use the uploaded farm reference; the
+letter uses none. One reference upload. No quota message.
 
-## Questions for the owner
+## Verified and not verified
 
-- **Look on a phone:** the animations were judged only from headless renders and GIFs.
-- **Footprints:** may the animal houses and town landmarks get real 2x2 or 3x2 footprints?
+- **Verified:**
+  - `verify:fast` was green at 128ef5d and at 0dd9a35. The full `verify` result is in the summary to the
+    coordinator.
+  - Headless shots of `channels-row`, `channels-flow-cap` and `channels-serpentine` at the iPhone 13 and SE sizes.
+- **Not verified:**
+  - a real phone and the native builds;
+  - the channels' winter, summer and fall looks, which were never shot in-game. They come from `seasons.py`
+    automatically.
