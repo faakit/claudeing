@@ -82,10 +82,13 @@ import {
   type Route,
 } from '../systems/movement';
 import { tickTime } from '../systems/time';
+import { inDelta } from '../systems/valley';
 import {
   adjacentDirection,
   buildCollisionGrid,
   nearestFreeTile,
+  nearestDoorSpawn,
+  doorLocked,
   doorTarget,
   facingTile,
   objectAt,
@@ -96,8 +99,7 @@ import {
   type TiledMapLike,
   type WorldObject,
 } from '../systems/world';
-import { mapCacheKey } from './PreloadScene';
-import { preparseMap, takeTilemap } from './mapCache';
+import { activeMapKey, preparseMap, takeTilemap } from './mapCache';
 import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutorial';
 import type { CoachScreenWorld } from '../ui/CoachMarks';
 import { npcLocation } from '../systems/npcs';
@@ -246,15 +248,20 @@ export abstract class WorldScene extends Phaser.Scene {
     this.fresh = true;
     this.lastTile = { tx: -1, ty: -1 };
 
-    const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
+    // the file of the map's current stage (systems/valley.ts): chosen here, at the build, never at a door
+    const raw = this.cache.tilemap.get(activeMapKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
-    this.rebuildGrid();
     this.objects = parseMapObjects(raw);
-    // A saved position can be damaged (out of the map, inside a wall): step out to the nearest open tile.
+    this.rebuildGrid();
+    // A saved position can be damaged (out of the map, inside a wall): step out to the nearest open tile. A tile
+    // that is solid in this stage of the map (a scenario standing in the creek bed once it runs) sends the player
+    // to the nearest door spawn instead (WORLD-PLAN 4.2.4).
     {
       const here = playerTile(state.player);
       if (isTileBlocked(this.grid, here.tx, here.ty)) {
-        const free = nearestFreeTile(this.grid, here.tx, here.ty);
+        const free = inDelta(this.mapId, here.tx, here.ty)
+          ? nearestDoorSpawn(this.grid, this.doorSpawns(), here.tx, here.ty)
+          : nearestFreeTile(this.grid, here.tx, here.ty);
         const pos = spawnPosition(free.tx, free.ty);
         state.player.x = pos.x;
         state.player.y = pos.y;
@@ -509,7 +516,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.things?.seeThrough(player.x, player.y, facing, this.seeThrough.mask) ?? false;
     if (holeMap || holeObj) this.seeThrough.update(player.x, player.y, facing);
     const door = objectAt(this.objects, here.tx, here.ty, 'door');
-    if (door) {
+    if (door && !doorLocked(getState(), door)) {
       this.useDoor(door);
       return;
     }
@@ -826,9 +833,25 @@ export abstract class WorldScene extends Phaser.Scene {
     return t.tx >= 0 && t.ty >= 0 && t.tx < this.grid.width && t.ty < this.grid.height;
   }
 
+  /** Where other maps' doors drop the player on this map (doors are the same in every stage). */
+  private doorSpawns(): TileCoord[] {
+    const out: TileCoord[] = [];
+    for (const id of Object.keys(mapsData.maps)) {
+      const raw = this.cache.tilemap.get(activeMapKey(id))?.data as TiledMapLike | undefined;
+      if (!raw) continue;
+      for (const o of parseMapObjects(raw))
+        if (o.type === 'door' && o.props['targetMap'] === this.mapId) out.push(doorTarget(o));
+    }
+    return out;
+  }
+
   /** Placed objects block movement when solid, so the collision grid is the map plus those. */
   private rebuildGrid(): void {
     this.grid = buildCollisionGrid(this.raw);
+    // a door that is still shut (Ilse's gate) blocks; Interact reads its text
+    for (const o of this.objects)
+      if (doorLocked(getState(), o) && this.inMap(o))
+        this.grid.blocked[o.ty * this.grid.width + o.tx] = 1;
     for (const [tx, ty] of solidTiles(getState(), this.mapId)) {
       if (tx >= 0 && ty >= 0 && tx < this.grid.width && ty < this.grid.height)
         this.grid.blocked[ty * this.grid.width + tx] = 1;
@@ -871,6 +894,8 @@ export abstract class WorldScene extends Phaser.Scene {
     if (landmark) return `landmark:${landmark}`;
     const obj = objectAt(this.objects, t.tx, t.ty);
     if (obj && ['bed', 'bin', 'shop', 'board'].includes(obj.type)) return obj.type;
+    const shut = objectAt(this.objects, t.tx, t.ty, 'door');
+    if (shut && doorLocked(getState(), shut)) return 'locked';
     return placedAt(getState(), this.mapId, t.tx, t.ty)?.type ?? null;
   }
 
@@ -1037,6 +1062,11 @@ export abstract class WorldScene extends Phaser.Scene {
     if (hit.type === 'bin') return void gameEvents.emit('openPanel', { type: 'bin' });
     if (hit.type === 'shop') return void gameEvents.emit('openPanel', { type: 'shop' });
     if (hit.type === 'board') return void gameEvents.emit('openPanel', { type: 'board' });
+    if (hit.type === 'locked') {
+      const shut = objectAt(this.objects, hit.tile.tx, hit.tile.ty, 'door');
+      const text = shut && doorLocked(getState(), shut);
+      return void (text && toast(text, 'info'));
+    }
     const state = getState();
     const obj = placedAt(state, this.mapId, hit.tile.tx, hit.tile.ty);
     if (!obj) return;

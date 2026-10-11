@@ -169,3 +169,39 @@ export function nearestFreeTile(grid: CollisionGrid, tx: number, ty: number): Ti
   }
   return { tx: cx, ty: cy };
 }
+
+/**
+ * A door that stays shut until a stat reaches a value (door properties `lockStat`, `lockMin`, `lockedText`; Ilse's
+ * gate to Wendhead): its text while shut, or null when it opens. A locked door's tile blocks.
+ */
+export function doorLocked(state: Pick<GameState, 'stats'>, door: WorldObject): string | null {
+  const { lockStat, lockMin, lockedText } = door.props;
+  if (door.type !== 'door' || typeof lockStat !== 'string') return null;
+  const min = typeof lockMin === 'number' ? lockMin : 1;
+  if ((state.stats[lockStat] ?? 0) >= min) return null;
+  return typeof lockedText === 'string' ? lockedText : 'Locked.';
+}
+
+/**
+ * Where to put a player whose tile is solid in this map's stage (WORLD-PLAN 4.2.4: a scenario standing in the creek
+ * bed of the restored farm): the nearest open door spawn (where other maps' doors drop the player), else the
+ * nearest open tile.
+ */
+export function nearestDoorSpawn(
+  grid: CollisionGrid,
+  spawns: readonly TileCoord[],
+  tx: number,
+  ty: number,
+): TileCoord {
+  let best: TileCoord | null = null;
+  let bestD = Infinity;
+  for (const s of spawns) {
+    if (isTileBlocked(grid, s.tx, s.ty)) continue;
+    const d = (s.tx - tx) ** 2 + (s.ty - ty) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = s;
+    }
+  }
+  return best ?? nearestFreeTile(grid, tx, ty);
+}

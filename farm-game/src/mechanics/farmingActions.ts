@@ -31,6 +31,7 @@ import { addXp } from '../systems/skills';
 import { inGreenhouse, ownsPlot, plotAtTile } from '../systems/plots';
 import { villagerSpot } from '../systems/npcs';
 import { tiredText } from '../systems/food';
+import { deltaRefusal, inDelta } from '../systems/valley';
 
 /** Harvesting a mature crop beats whatever is equipped, so players never swap tools to collect. */
 registerActionHandler({
@@ -143,6 +144,9 @@ registerActionHandler({
   priority: 50,
   plan({ state, tile, stack, def }) {
     if (!stack || !def?.placeable) return null;
+    // where the map changes with the valley's stage (the old creek bed), nothing may be placed (WORLD-PLAN 4.2.2)
+    const stageOnly = deltaRefusal(tile.map, tile.tx, tile.ty);
+    if (stageOnly) return { refusal: stageOnly };
     if (!tile.farmland || !tile.tillable || tile.blocked)
       return { refusal: "Can't place that here." };
     const soil = state.farm.tiles[tileKey(tile.tx, tile.ty)];
@@ -230,7 +234,8 @@ function canTill(state: GameState, t: TileInfo): boolean {
     !t.blocked &&
     t.owned !== false &&
     !state.farm.tiles[tileKey(t.tx, t.ty)] &&
-    !placedAt(state, t.map, t.tx, t.ty)
+    !placedAt(state, t.map, t.tx, t.ty) &&
+    !inDelta(t.map, t.tx, t.ty)
   );
 }
 
@@ -239,6 +244,8 @@ registerToolAction('till', ({ state, tile, tool }) => {
     return { refusal: 'Already tilled.' };
   if (tile.farmland && tile.owned === false)
     return { refusal: 'Not your land yet. Buy it at a sign.' };
+  const stageOnly = tile.farmland ? deltaRefusal(tile.map, tile.tx, tile.ty) : null;
+  if (stageOnly) return { refusal: stageOnly };
   if (!canTill(state, tile)) return { refusal: "Can't till here." };
   if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A better hoe breaks several tiles in a row for the same energy.

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { PLACEHOLDER_TILES } from '../src/config';
 import { mapsData } from '../src/data';
 import { spawnPosition } from '../src/state/GameState';
 import { isTileBlocked } from '../src/systems/movement';
@@ -10,14 +11,37 @@ import {
   type TiledMapLike,
   type WorldObject,
 } from '../src/systems/world';
+import { deltaRects, inDelta, mapVariants, variantFile } from '../src/systems/valley';
 
 const load = (file: string): TiledMapLike =>
   JSON.parse(readFileSync(new URL(`../public/${file}`, import.meta.url), 'utf8')) as TiledMapLike;
-const maps = Object.fromEntries(Object.entries(mapsData.maps).map(([id, d]) => [id, load(d.file)]));
-const grids = Object.fromEntries(
-  Object.entries(maps).map(([id, m]) => [id, buildCollisionGrid(m)]),
-);
-const objects = Object.fromEntries(Object.entries(maps).map(([id, m]) => [id, parseMapObjects(m)]));
+
+/**
+ * Map stages (WORLD-PLAN 4.2.3): every variant passes every map test. A world is every map in its final look, or
+ * one staged map in one of its earlier variants (the others final); each world runs the whole suite below.
+ */
+const WORLDS: { label: string; map?: string; variant?: string }[] = [
+  { label: 'final' },
+  ...Object.keys(mapsData.maps).flatMap((map) =>
+    mapVariants(map)
+      .slice(0, -1)
+      .map((variant) => ({ label: `${map}@${variant}`, map, variant })),
+  ),
+];
+let maps: Record<string, TiledMapLike> = {};
+let grids: Record<string, ReturnType<typeof buildCollisionGrid>> = {};
+let objects: Record<string, WorldObject[]> = {};
+function useWorld(w: { map?: string; variant?: string }): void {
+  maps = Object.fromEntries(
+    Object.keys(mapsData.maps).map((id) => [
+      id,
+      load(variantFile(id, id === w.map ? (w.variant ?? null) : null)),
+    ]),
+  );
+  grids = Object.fromEntries(Object.entries(maps).map(([id, m]) => [id, buildCollisionGrid(m)]));
+  objects = Object.fromEntries(Object.entries(maps).map(([id, m]) => [id, parseMapObjects(m)]));
+}
+useWorld({});
 
 /** Flood-fill the walkable tiles of a map from a start tile. */
 function reachable(id: string, tx: number, ty: number): Set<string> {
@@ -50,7 +74,9 @@ const touchable = (seen: Set<string>, o: WorldObject): boolean => {
   return seen.has(`${o.tx},${o.ty}`);
 };
 
-describe('map content', () => {
+describe.each(WORLDS)('map content ($label)', (world) => {
+  beforeAll(() => useWorld(world));
+
   it('every map is portrait (taller than wide), the shape the game is designed around', () => {
     for (const [id, m] of Object.entries(maps)) {
       if (id === 'house') continue; // a small room is exempt
@@ -110,7 +136,7 @@ describe('map content', () => {
     expect([...entry.keys()].sort()).toEqual(Object.keys(maps).sort());
     for (const [id, list] of Object.entries(objects)) {
       const seen = entry.get(id)!;
-      for (const o of list.filter((o) => o.type !== 'weedzone' && o.type !== 'forage')) {
+      for (const o of list.filter((o) => !['weedzone', 'forage', 'delta'].includes(o.type))) {
         expect(touchable(seen, o), `${id}: ${o.type} #${o.id} is unreachable`).toBe(true);
       }
     }
@@ -153,7 +179,9 @@ describe('map content', () => {
   });
 });
 
-describe('fixed spots on the maps', () => {
+describe.each(WORLDS)('fixed spots on the maps ($label)', (world) => {
+  beforeAll(() => useWorld(world));
+
   it('every villager stands on open ground, never in water or a wall', async () => {
     const { npcs } = await import('../src/data');
     for (const [id, n] of Object.entries(npcs))
@@ -198,6 +226,128 @@ describe('fixed spots on the maps', () => {
       for (let j = y; j < y + h; j++)
         for (let i = x; i < x + w; i++)
           expect(isTileBlocked(grids['farm']!, i, j), `${id} ${i},${j}`).toBe(false);
+    }
+  });
+});
+
+describe('map stages: variants differ only inside their delta rects (WORLD-PLAN 4.2)', () => {
+  const staged = Object.keys(mapsData.maps).filter((m) => mapVariants(m).length > 0);
+  const variants = (map: string) =>
+    mapVariants(map).map((v) => ({ v, raw: load(variantFile(map, v)) }));
+  const layer = (raw: TiledMapLike, name: string) => raw.layers.find((l) => l.name === name)!.data!;
+
+  it('the farm has stages', () => expect(staged).toContain('farm'));
+
+  it.each(staged)('%s: every variant carries the delta rects of valley.json as objects', (map) => {
+    for (const { v, raw } of variants(map)) {
+      const rects = parseMapObjects(raw)
+        .filter((o) => o.type === 'delta')
+        .map((o) => [o.tx, o.ty, o.tw, o.th]);
+      expect(rects, v).toEqual(deltaRects(map).map((r) => [...r]));
+    }
+  });
+
+  it.each(staged)('%s: outside the delta rects, ground and collision are tile-identical', (map) => {
+    const all = variants(map);
+    const fin = all[all.length - 1]!.raw;
+    for (const { v, raw } of all) {
+      expect([raw.width, raw.height], v).toEqual([fin.width, fin.height]);
+      for (const name of ['ground', 'collision']) {
+        const a = layer(raw, name);
+        const b = layer(fin, name);
+        const diff: string[] = [];
+        a.forEach((g, i) => {
+          const x = i % raw.width;
+          const y = Math.floor(i / raw.width);
+          if (g !== b[i] && !inDelta(map, x, y)) diff.push(`${x},${y}`);
+        });
+        expect(diff, `${v} ${name}`).toEqual([]);
+      }
+    }
+  });
+
+  it.each(staged)('%s: doors, zones and interactables are identical in every variant', (map) => {
+    const all = variants(map).map(({ v, raw }) => ({ v, objs: parseMapObjects(raw) }));
+    for (const { v, objs } of all) expect(objs, v).toEqual(all[all.length - 1]!.objs);
+  });
+
+  it.each(staged)('%s: nothing fixed sits in a delta rect', async (map) => {
+    const { game, mail, npcs, plots, projects } = await import('../src/data');
+    const fixed: [number, number, string][] = [];
+    const raw = load(variantFile(map, null));
+    for (const o of parseMapObjects(raw))
+      if (!['weedzone', 'forage', 'ore', 'delta'].includes(o.type))
+        for (let y = o.ty; y < o.ty + o.th; y++)
+          for (let x = o.tx; x < o.tx + o.tw; x++) fixed.push([x, y, `${o.type} #${o.id}`]);
+    // where every door in the world drops the player on this map
+    for (const id of Object.keys(mapsData.maps))
+      for (const d of parseMapObjects(load(variantFile(id, null))).filter(
+        (o) => o.type === 'door',
+      )) {
+        const t = doorTarget(d);
+        if (t.map === map) fixed.push([t.tx, t.ty, `spawn of ${id} door #${d.id}`]);
+      }
+    for (const [what, sp] of [
+      ['start', mapsData.start],
+      ['wake', mapsData.wake],
+    ] as const)
+      if (sp.map === map) fixed.push([sp.tx, sp.ty, what]);
+    for (const [id, n] of Object.entries(npcs))
+      for (const w of n.schedule ?? [{ map: n.map, tx: n.tx, ty: n.ty }])
+        if (w.map === map) fixed.push([w.tx, w.ty, `villager ${id}`]);
+    for (const [id, p] of Object.entries(projects))
+      if (p.landmark?.map === map) fixed.push([p.landmark.tx, p.landmark.ty, `landmark ${id}`]);
+    for (const t of game.trophies ?? [])
+      if (t.map === map) fixed.push([t.tx, t.ty, `trophy ${t.id}`]);
+    if (mail.mailbox.map === map) fixed.push([mail.mailbox.tx, mail.mailbox.ty, 'mailbox']);
+    if (mapsData.maps[map]?.farmland)
+      for (const [id, p] of Object.entries(plots)) {
+        const [x0, y0, w, h] = p.rect;
+        for (let y = y0; y < y0 + h; y++)
+          for (let x = x0; x < x0 + w; x++) fixed.push([x, y, `plot ${id}`]);
+        if (p.sign) fixed.push([p.sign[0], p.sign[1], `sign of plot ${id}`]);
+      }
+    expect(
+      fixed.filter(([x, y]) => inDelta(map, x, y)).map(([x, y, w]) => `${w} at ${x},${y}`),
+    ).toEqual([]);
+  });
+
+  it.each(staged)('%s: a zone tile in a delta rect is walkable in every variant', (map) => {
+    const bad: string[] = [];
+    for (const { v, raw } of variants(map)) {
+      const grid = buildCollisionGrid(raw);
+      for (const z of parseMapObjects(raw).filter((o) =>
+        ['weedzone', 'forage', 'ore'].includes(o.type),
+      ))
+        for (let y = z.ty; y < z.ty + z.th; y++)
+          for (let x = z.tx; x < z.tx + z.tw; x++)
+            if (inDelta(map, x, y) && isTileBlocked(grid, x, y))
+              bad.push(`${v}: ${z.type} ${x},${y}`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("the farm creek: a dry stony bed before the spring, water after; the footbridge open; Ilse's gate", () => {
+    const kind = (raw: TiledMapLike, x: number, y: number) =>
+      PLACEHOLDER_TILES[(layer(raw, 'ground')[y * raw.width + x] ?? 0) - 1]?.name;
+    for (const { v, raw } of variants('farm')) {
+      const grid = buildCollisionGrid(raw);
+      for (let y = 3; y <= 30; y++)
+        for (const x of [26, 27]) {
+          const want = y === 6 ? 'path' : v === 'restored' ? 'water' : 'stone';
+          expect(kind(raw, x, y), `${v} ${x},${y}`).toBe(want);
+          expect(isTileBlocked(grid, x, y), `${v} ${x},${y}`).toBe(want === 'water');
+        }
+      expect(kind(raw, 26, 31), v).toBe(v === 'restored' ? 'water' : 'stone');
+      // the creek's old trees moved to the west bank; the weed field stops short of the creek
+      expect([kind(raw, 25, 8), kind(raw, 25, 19)], v).toEqual(['tree', 'tree']);
+      const field = parseMapObjects(raw).find((o) => o.type === 'weedzone')!;
+      expect([field.tx, field.tx + field.tw - 1], v).toEqual([3, 25]);
+      const gate = parseMapObjects(raw).find(
+        (o) => o.type === 'door' && o.tx === 29 && o.ty === 3,
+      )!;
+      expect(doorTarget(gate).map, v).toBe('wendhead');
+      expect(gate.props['lockedText'], v).toBe("Ilse's old gate. Locked.");
     }
   });
 });

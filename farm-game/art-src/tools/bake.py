@@ -368,6 +368,10 @@ def bake(P, name: str, grass: np.ndarray, floor: np.ndarray | None = None) -> np
         return floor_dark(P, r, floor)
     if r[0] == "ao":
         return occlusion(P, r)
+    if r[0] in ("creekbed", "bridge"):  # map stages (M2): the farm creek's bed and its footbridge
+        import valleytiles
+
+        return valleytiles.creekbed(P, r, grass) if r[0] == "creekbed" else valleytiles.bridge(P, r)
     raise ValueError(f"unknown baked tile {name}")
 
 

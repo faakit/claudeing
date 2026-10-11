@@ -107,9 +107,9 @@ const COMPOSITION = {
       ['p_flowerbed', 11, 8],
       ['p_cat', 11, 9],
       ['p_trellis', 9, 7],
-      // a bench to sit by the pond
-      ['p_bench', 27, 26],
-      ['t_scarecrow', 27, 24],
+      // a bench to sit by the pond (east of it, below the creek's mouth)
+      ['p_bench', 27, 33],
+      ['t_scarecrow', 28, 37],
       ['p_hollowlog', 5, 42],
       ['p_sign_sprout', 17, 42],
     ],
@@ -132,6 +132,30 @@ const COMPOSITION = {
     trees: ['oak', 'oak', 'birch'],
     bushes: ['bush_big', 'bush_rose', 'bush_small'],
     blooms: 0.35,
+    // the creek (map stages, M2): its bed is the stone ground inside the delta rects; the footbridge crosses at
+    // y 6; per stage the bed is dry or damp, and the creek trees stand dead until the water comes back
+    creek: {
+      bridge: [
+        [26, 6],
+        [27, 6],
+      ],
+      stages: {
+        dry: {
+          bed: 'dry',
+          dead: [
+            [25, 8],
+            [25, 19],
+          ],
+        },
+        waking: {
+          bed: 'damp',
+          dead: [
+            [25, 8],
+            [25, 19],
+          ],
+        },
+      },
+    },
   },
   town: {
     props: [
@@ -355,7 +379,7 @@ export function spawnTiles(name, allObjects) {
  *   blooms: { x: number, y: number, n: number }[], tilecount: number,
  *   columns: number, rows: number }}
  */
-export function artLayers(name, m, objects, extraReserved = []) {
+export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
   if (!existsSync(TILES_JSON)) return null;
   const { tiles, columns } = JSON.parse(readFileSync(TILES_JSON, 'utf8'));
   const gid = (n) => {
@@ -412,6 +436,23 @@ export function artLayers(name, m, objects, extraReserved = []) {
     if (['weedzone', 'forage', 'ore'].includes(o.type))
       for (let j = o.y / 16; j < (o.y + o.height) / 16; j++)
         for (let i = o.x / 16; i < (o.x + o.width) / 16; i++) zoneTiles.add(j * w + i);
+
+  // --- map stages (M2): the creek bed is the stone ground inside the delta rects; the footbridge over it ---
+  const stage = (C.creek?.stages ?? {})[opts.variant] ?? {};
+  const inDelta = (x, y) =>
+    (opts.delta ?? []).some(([rx, ry, rw, rh]) => x >= rx && y >= ry && x < rx + rw && y < ry + rh);
+  const bed = new Set();
+  const bridge = new Set((C.creek?.bridge ?? []).map(([x, y]) => y * w + x));
+  if (C.creek)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) if (inDelta(x, y) && kind(x, y) === 'stone') bed.add(y * w + x);
+  /** What runs under the footbridge: water when the creek beside it runs, else its dry bed. */
+  const underBridge = (x, y) =>
+    kind(x, y - 1) === 'water' || kind(x, y + 1) === 'water' ? 'water' : 'bed';
+  const isBed = (x, y) =>
+    bed.has(y * w + x) || (bridge.has(y * w + x) && underBridge(x, y) === 'bed');
+  const isBridgeWater = (x, y) => bridge.has(y * w + x) && underBridge(x, y) === 'water';
+  const deadTrees = new Set((stage.dead ?? []).map(([x, y]) => y * w + x));
 
   // --- additions: small groves of trees and rock bays, only on open ground outside every zone and reserved
   // spot (the same rule as props); they are solid, so they go into `solid` like props ---
@@ -497,7 +538,9 @@ export function artLayers(name, m, objects, extraReserved = []) {
       [0, 1],
       [0, -1],
     ].filter(([dx, dy]) => kind(x + dx, y + dy) === 'water').length >= 3;
-  const waterish = (k, x, y) => k === 'water' || wet(x, y);
+  // the creek's dry bed counts as water for the pond's bank, so the pond opens into the creek's mouth; water runs
+  // under the footbridge once the creek runs
+  const waterish = (k, x, y) => k === 'water' || wet(x, y) || isBed(x, y) || isBridgeWater(x, y);
 
   const torches = (C.props ?? []).filter(([n]) => n === 'p_torch').map(([, x, y]) => [x, y]);
   if (C.lintel) torches.push([C.lintel[0] + 0.5, C.lintel[1]]); // daylight at the mine's mouth
@@ -556,6 +599,32 @@ export function artLayers(name, m, objects, extraReserved = []) {
     for (let x = 0; x < w; x++) {
       const k = kind(x, y);
       const i = y * w + x;
+      const plank = () => set('props', x, y, bake('bridge', bridge.has(i - 1) ? 'r' : 'l'));
+      if (isBed(x, y)) {
+        // the creek's bed: banks where the land is, wet mud where it meets water (bake.py `creekbed`)
+        const b = nb(
+          x,
+          y,
+          3,
+          (n, nx, ny) => n === 'water' || isBed(nx, ny) || isBridgeWater(nx, ny),
+          true,
+        );
+        const wt = nb(x, y, 3, (n, nx, ny) => n === 'water' || isBridgeWater(nx, ny), false);
+        set('detail', x, y, bake('creekbed', stage.bed ?? 'dry', seed, x, y % 6, b, wt));
+        if (bridge.has(i)) plank();
+        continue;
+      }
+      if (isBridgeWater(x, y)) {
+        const wa = nb(x, y, 3, waterish, true);
+        set(
+          'detail',
+          x,
+          y,
+          wa.includes('0') ? bake('shore', seed, x, y, wa) : bake('water', seed, x, y),
+        );
+        plank();
+        continue;
+      }
       if (k === 'path') {
         const g = nb(x, y, 3, (n) => GREEN.has(n), false);
         if (g.includes('1')) set('detail', x, y, bake('creep', 'path', seed, x, y, g));
@@ -672,6 +741,7 @@ export function artLayers(name, m, objects, extraReserved = []) {
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const k = kind(x, y);
+      if (bed.has(y * w + x) || bridge.has(y * w + x)) continue; // the creek bed draws its own stones
       if (k === 'water') {
         const f = (hash(x, y, 91 + w) % 1000) / 1000;
         const n = noise(x, y, 3, 61 + h);
@@ -776,6 +846,7 @@ export function artLayers(name, m, objects, extraReserved = []) {
   /** Tree tiles drawn as a bush or stump instead (no room for a full tree): kept out of the crown pass. */
   const shrubs = new Set();
   const treeKind = (x, y) => {
+    if (deadTrees.has(y * w + x)) return 'd'; // a creek tree before the water comes back: bare branches
     const t = C.trees.length ? C.trees[hash(x, y, 5) % C.trees.length] : 'oak';
     return t === 'birch' ? 'b' : t === 'pine' ? 'p' : 'o';
   };
@@ -845,7 +916,7 @@ export function artLayers(name, m, objects, extraReserved = []) {
       const room = (cx, cy) =>
         cx >= 0 && cy >= 0 && cx < w && cy < h && !BUILT.has(kind(cx, cy)) && !L.roof[cy * w + cx];
       const noForage = (cx, cy) => room(cx, cy) && !forageTiles.has(cy * w + cx);
-      const big = { o: [14, 28], b: [12, 28], p: [11, 29] }[k];
+      const big = { o: [14, 28], b: [12, 28], p: [11, 29], d: [13, 27] }[k];
       if (fits(2, noForage))
         crowns.push({
           k,

@@ -8,17 +8,19 @@ import {
   buildScenarioState,
   mapInfoFromTiled,
   parseClock,
+  scenarioVariant,
   ScenarioError,
   validateScenario,
   type MapInfoFn,
   type ScenarioDef,
 } from '../src/dev/scenarios';
 import { SCENARIOS } from '../src/dev/scenarioIndex';
+import { valleyStage, variantFile } from '../src/systems/valley';
 
 registerLabMapDef();
 
-/** Bounds and walkability from the real .tmj files (and the generated lab). */
-const mapInfo: MapInfoFn = (map) => {
+/** Bounds and walkability from the real .tmj files of the stage asked for (and the generated lab). */
+const mapInfo: MapInfoFn = (map, variant) => {
   if (map === LAB_MAP)
     return {
       w: labMap.w,
@@ -27,7 +29,7 @@ const mapInfo: MapInfoFn = (map) => {
     };
   const def = mapsData.maps[map];
   if (!def) return null;
-  const raw = JSON.parse(readFileSync(`public/${def.file}`, 'utf8'));
+  const raw = JSON.parse(readFileSync(`public/${variantFile(map, variant ?? null)}`, 'utf8'));
   return mapInfoFromTiled(raw);
 };
 
@@ -45,6 +47,11 @@ describe('scenarios', () => {
     const s = buildScenarioState(def, mapInfo);
     expect(s.version).toBe(STATE_VERSION);
     expect(migrate(JSON.parse(JSON.stringify(s)))).toEqual(s);
+    // Every map shows the stage the scenario pins (WORLD-PLAN 4.2.6): the stage file it was validated against.
+    for (const map of Object.keys(mapsData.maps)) {
+      const look = valleyStage(s, map);
+      expect(look.final ? null : look.variant, `${name}: ${map}`).toBe(scenarioVariant(def, map));
+    }
     // Where it says the player stands is where the state puts them.
     if (def.at) {
       expect(s.player.map).toBe(def.at.map);
@@ -136,6 +143,35 @@ describe('scenarios', () => {
     expect(validateScenario({ title: 'x', version: STATE_VERSION + 1 })).toEqual([
       `version ${STATE_VERSION + 1} is newer than this game (${STATE_VERSION})`,
     ]);
+  });
+
+  it('pins map stages: the farm-variant scenarios load in the variant they name', () => {
+    for (const v of ['dry', 'waking', 'restored']) {
+      const s = buildScenarioState(SCENARIOS[`farm-variant-${v}`]!, mapInfo);
+      expect(valleyStage(s, 'farm').variant).toBe(v);
+    }
+    // a scenario without the key starts as a new game: the dry farm
+    expect(valleyStage(buildScenarioState(SCENARIOS['day1-fresh']!), 'farm').variant).toBe('dry');
+  });
+
+  it('refuses a bad valley key, and a tile in a delta rect without one', () => {
+    const base = { title: 't', version: STATE_VERSION };
+    expect(validateScenario({ ...base, valley: { sprnig: 3 } }).join()).toMatch(
+      /unknown key "sprnig"/,
+    );
+    expect(validateScenario({ ...base, valley: { spring: 4 } }).join()).toMatch(
+      /spring must be 0-3/,
+    );
+    expect(validateScenario({ ...base, valley: { farmGreen: 2 } }).join()).toMatch(
+      /farmGreen must be 0-1/,
+    );
+    const inBed = { ...base, at: { map: 'farm', tx: 26, ty: 12 } };
+    expect(validateScenario(inBed, mapInfo).join()).toMatch(/changes with the valley's stage/);
+    expect(validateScenario({ ...inBed, valley: { farmGreen: 0 } }, mapInfo)).toEqual([]);
+    // pinned to the restored farm, that tile is water
+    expect(
+      validateScenario({ ...inBed, valley: { spring: 3, farmGreen: 1 } }, mapInfo).join(),
+    ).toMatch(/blocked/);
   });
 
   it('parses clock times, after midnight too', () => {

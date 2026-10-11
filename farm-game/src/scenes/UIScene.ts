@@ -64,9 +64,8 @@ import {
   YearEndPanel,
 } from '../ui/panels';
 import type { Modal } from '../ui/widgets';
-import { mapCacheKey } from './PreloadScene';
 import { WorldScene } from './WorldScene';
-import { preparseMap } from './mapCache';
+import { activeMapKey, preparseMap } from './mapCache';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
@@ -747,11 +746,11 @@ export class UIScene extends Phaser.Scene {
     audio.play('sleep');
 
     const state = getState();
-    const farm = this.cache.tilemap.get(mapCacheKey('farm')).data as TiledMapLike;
+    const farm = this.cache.tilemap.get(activeMapKey('farm')).data as TiledMapLike;
     const forageSpots: Record<string, [number, number][]> = {};
     const oreSpots: Record<string, [number, number][]> = {};
     for (const id of Object.keys(mapsData.maps)) {
-      const raw = this.cache.tilemap.get(mapCacheKey(id))?.data as TiledMapLike | undefined;
+      const raw = this.cache.tilemap.get(activeMapKey(id))?.data as TiledMapLike | undefined;
       if (raw) {
         forageSpots[id] = forageCandidates(raw);
         oreSpots[id] = oreCandidates(raw);

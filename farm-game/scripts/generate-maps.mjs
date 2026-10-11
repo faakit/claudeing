@@ -1,8 +1,25 @@
 // Generates the .tmj maps in public/assets/maps. Output stays editable in Tiled.
 // Tile ids follow PLACEHOLDER_TILES order in src/config.ts (gid = index + 1).
 // Layout is portrait-first: every map is taller than it is wide, and exits sit on the long axis.
-import { writeFileSync } from 'node:fs';
+//
+// Map stages (MILESTONES M2, WORLD-PLAN section 4): a map listed in src/data/valley.json `maps` is drawn once per
+// variant by its function (`farm(v)`), first to last. The last variant keeps the map's own file (`farm.tmj`), the
+// others are `<map>@<variant>.tmj`. Variants may differ only inside the map's delta rects (written into every
+// variant as `delta` objects); `flush()` refuses to write a variant whose ground or collision differs outside them.
+import { readFileSync, writeFileSync } from 'node:fs';
 import { artLayers, bakedTiles, spawnTiles } from './map-art.mjs';
+
+const VALLEY = JSON.parse(
+  readFileSync(new URL('../src/data/valley.json', import.meta.url), 'utf8'),
+).maps;
+/** A map's variants, first to last ([null] for a map with one look). */
+const VARIANTS = (id) => VALLEY[id]?.variants.map((v) => v.variant) ?? [null];
+/** The file name (without .tmj) of one variant: the last one keeps the map's own name. */
+const fileOf = (id, v) => {
+  const list = VARIANTS(id);
+  return v === null || v === list[list.length - 1] ? id : `${id}@${v}`;
+};
+const DELTA = (id) => VALLEY[id]?.delta ?? [];
 
 const T = {
   grass: 1,
@@ -65,13 +82,26 @@ const obj = (type, name, tx, ty, tw, th, properties = []) => ({
   visible: true,
   properties,
 });
-const door = (name, tx, ty, targetMap, spawnTx, spawnTy, facing) =>
+const door = (name, tx, ty, targetMap, spawnTx, spawnTy, facing, extra = []) =>
   obj('door', name, tx, ty, 1, 1, [
     prop('targetMap', 'string', targetMap),
     prop('spawnTx', 'int', spawnTx),
     prop('spawnTy', 'int', spawnTy),
     prop('facing', 'string', facing),
+    ...extra,
   ]);
+/**
+ * A door that stays shut until a stat reaches a value (src/systems/world.ts `doorLocked`): its tile blocks and
+ * Interact reads `lockedText`.
+ */
+const locked = (stat, min, text) => [
+  prop('lockStat', 'string', stat),
+  prop('lockMin', 'int', min),
+  prop('lockedText', 'string', text),
+];
+/** The delta rects of a map as objects, appended last so object ids match across variants. */
+const deltaObjects = (id) =>
+  DELTA(id).map(([x, y, w, h], k) => obj('delta', `delta_${k}`, x, y, w, h));
 /** A named area where daily spawns (weeds, forageables) may appear. */
 const zone = (type, name, tx, ty, tw, th) => obj(type, name, tx, ty, tw, th);
 
@@ -195,20 +225,49 @@ function toTmj({ w, h, ground }, objects, art) {
 
 /** Maps are collected first, so each map's art knows where the other maps' doors drop the player. */
 const pending = [];
-function write(name, map, objects) {
-  pending.push({ name, map, objects, firstId: nextId });
+/** Queue one map file: `base` is the map id, `variant` its stage (null for a map with one look). */
+function write(base, map, objects, variant = null) {
+  pending.push({ name: fileOf(base, variant), base, variant, map, objects, firstId: nextId });
 }
+const inDelta = (base, x, y) =>
+  DELTA(base).some(([rx, ry, rw, rh]) => x >= rx && y >= ry && x < rx + rw && y < ry + rh);
 function flush() {
-  const all = Object.fromEntries(pending.map((p) => [p.name, p.objects]));
-  for (const { name, map, objects, firstId } of pending) {
+  // doors are identical in every variant, so the final variant's objects stand for the map
+  const all = Object.fromEntries(
+    pending.filter((p) => p.name === p.base).map((p) => [p.base, p.objects]),
+  );
+  const written = {};
+  for (const { name, base, variant, map, objects, firstId } of pending) {
     nextId = firstId;
-    const art = artLayers(name, map, objects, spawnTiles(name, all));
+    const art = artLayers(base, map, objects, spawnTiles(base, all), {
+      variant,
+      delta: DELTA(base),
+    });
+    const tmj = toTmj(map, objects, art);
+    written[name] = { base, tmj };
     const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
-    writeFileSync(out, JSON.stringify(toTmj(map, objects, art), null, 1) + '\n');
+    writeFileSync(out, JSON.stringify(tmj, null, 1) + '\n');
     console.log(
       `wrote ${name}.tmj ${map.w}x${map.h}` +
         (art ? ` (+${art.solid.size} solid props, ${art.lights.length} lights)` : ''),
     );
+  }
+  // WORLD-PLAN 4.2.1: outside the delta rects, ground and collision are identical in every variant
+  for (const [name, { base, tmj }] of Object.entries(written)) {
+    if (name === base) continue;
+    const fin = written[base].tmj;
+    for (const layer of ['ground', 'collision']) {
+      const a = tmj.layers.find((l) => l.name === layer).data;
+      const b = fin.layers.find((l) => l.name === layer).data;
+      a.forEach((g, i) => {
+        const x = i % tmj.width;
+        const y = Math.floor(i / tmj.width);
+        if (g !== b[i] && !inDelta(base, x, y))
+          throw new Error(
+            `${name}: ${layer} at ${x},${y} differs from ${base} outside the delta rects`,
+          );
+      });
+    }
   }
   // The baked tiles these maps use: art-src/tools/build.py renders them into the tileset.
   const { recipes, missing } = bakedTiles();
@@ -244,7 +303,9 @@ const border = (m, t) => {
 const inside = (x, y, [rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && y < ry + rh;
 
 // ---- Farm 30x44: house at the top, fields down the middle, gate to town at the bottom ----
-{
+// Stages: dry and waking (the creek bed x 26-27, y 3-30, its mouth at 26,31, is a dry stony bed), restored (the
+// creek runs into the pond's east bank). A footbridge crosses it at y 6 in every stage; Ilse's gate (29,3) leads up to Wendhead.
+function farm(v) {
   nextId = 1;
   const m = makeMap(30, 44, T.grass);
   const { h, rect } = m;
@@ -276,15 +337,50 @@ const inside = (x, y, [rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && 
   ])
     rect(x, y, 1, 1, T.tree);
   scatter(m, T.flower, 46, 7, (x, y) => !inside(x, y, keep[0]));
-  write('farm', m, [
-    obj('bin', 'shipping_bin', 12, 9, 1, 1),
-    zone('weedzone', 'field', 3, 14, 24, 26),
-    zone('forage', 'west_meadow', 2, 27, 8, 14),
-    zone('forage', 'pond_edge', 18, 37, 9, 5),
-    door('house_door', 14, 7, 'house', 5, 7, 'up'),
-    door('to_town_14', 14, h - 1, 'town', 11, 2, 'down'),
-    door('to_town_15', 15, h - 1, 'town', 12, 2, 'down'),
-  ]);
+  // the creek (drawn after the scatter, so the flowers elsewhere stay where they always were): water in the final
+  // stage, a dry stony bed before it; its two old trees (26,4 and 27,7) give way to two on the west bank
+  rect(26, 3, 2, 28, v === 'restored' ? T.water : T.stone);
+  rect(26, 31, 1, 1, v === 'restored' ? T.water : T.stone); // the mouth turns into the pond (two tiles of bank)
+  rect(26, 6, 2, 1, T.path); // the footbridge
+  rect(25, 8, 1, 1, T.tree);
+  rect(25, 19, 1, 1, T.tree);
+  rect(29, 3, 1, 1, T.path); // Ilse's gate in the east fence
+  write(
+    'farm',
+    m,
+    [
+      obj('bin', 'shipping_bin', 12, 9, 1, 1),
+      zone('weedzone', 'field', 3, 14, 23, 26),
+      zone('forage', 'west_meadow', 2, 27, 8, 14),
+      zone('forage', 'pond_edge', 18, 37, 9, 5),
+      door('house_door', 14, 7, 'house', 5, 7, 'up'),
+      door('to_town_14', 14, h - 1, 'town', 11, 2, 'down'),
+      door('to_town_15', 15, h - 1, 'town', 12, 2, 'down'),
+      // shut until the Old Spring is asked for (M3 opens it at the first green)
+      door(
+        'to_wendhead',
+        29,
+        3,
+        'wendhead',
+        1,
+        13,
+        'right',
+        locked('place.spring', 1, "Ilse's old gate. Locked."),
+      ),
+      ...deltaObjects('farm'),
+    ],
+    v,
+  );
+}
+for (const v of VARIANTS('farm')) farm(v);
+
+// ---- Wendhead (a placeholder until M3): a fenced meadow behind Ilse's gate, the way back at the south-west ----
+{
+  nextId = 1;
+  const m = makeMap(12, 16, T.grass);
+  border(m, T.fence);
+  m.rect(0, 13, 1, 1, T.path);
+  write('wendhead', m, [door('to_farm', 0, 13, 'farm', 28, 3, 'left')]);
 }
 
 // ---- House 10x9 ----

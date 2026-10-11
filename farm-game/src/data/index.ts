@@ -27,6 +27,7 @@ import jobsRaw from './jobs.json';
 import mailRaw from './mail.json';
 import specialsRaw from './specials.json';
 import tutorialRaw from './tutorial.json';
+import valleyRaw from './valley.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -50,6 +51,34 @@ export interface MapsData {
   /** Where the player wakes up after sleeping. */
   wake: SpawnDef;
   maps: Record<string, MapDef>;
+}
+
+/** A stat condition (`stat`, or `place` as shorthand for the stat `place.<id>`), true when min <= value <= max. */
+export interface StageWhen {
+  stat?: string;
+  place?: string;
+  min?: number;
+  max?: number;
+}
+/** One stage of a map: its variant file (`<map>@<variant>.tmj`; the last stage keeps the map's own file). */
+export interface MapStageDef {
+  variant: string;
+  /** Tileset palette for this stage (e.g. "dry"); the season's normal tiles when absent. */
+  palette?: string;
+  /** Holds while the valley is at this stage. The first stage whose `when` holds is used; the last has none. */
+  when?: StageWhen;
+}
+/** A map that changes with the valley (WORLD-PLAN section 4). */
+export interface MapStagesDef {
+  /** First to last; the last is the final look and uses the map's own file. */
+  variants: MapStageDef[];
+  /** [x, y, w, h] tile rectangles where tiles may differ between stages. Nothing fixed sits in them. */
+  delta: [number, number, number, number][];
+  /** The refusal when placing or tilling in a delta rectangle. */
+  deltaText: string;
+}
+export interface ValleyData {
+  maps: Record<string, MapStagesDef>;
 }
 
 export type ItemType =
@@ -648,6 +677,52 @@ function validateMaps(data: unknown): MapsData {
 }
 
 export const mapsData: MapsData = validateMaps(mapsRaw);
+
+/** Map stages (valley.json `maps`): checked at load so a typo in a stage table fails loudly. */
+export function validateValley(data: unknown, maps: Record<string, MapDef>): ValleyData {
+  const d = data as ValleyData;
+  const bad = (msg: string): never => fail('valley', msg);
+  if (!d || typeof d !== 'object' || !d.maps || typeof d.maps !== 'object') bad('missing "maps"');
+  for (const [id, m] of Object.entries(d.maps)) {
+    if (!maps[id]) bad(`maps.${id}: unknown map`);
+    if (!Array.isArray(m.variants) || m.variants.length < 2 || m.variants.length > 4)
+      bad(`maps.${id}: 2-4 variants`);
+    const names = new Set<string>();
+    m.variants.forEach((v, i) => {
+      if (!/^[a-z][a-z0-9]*$/.test(v.variant ?? '')) bad(`maps.${id}: variant name "${v.variant}"`);
+      if (names.has(v.variant)) bad(`maps.${id}: variant "${v.variant}" twice`);
+      names.add(v.variant);
+      const last = i === m.variants.length - 1;
+      if (last && v.when)
+        bad(`maps.${id}: the last variant ("${v.variant}") is the default, no "when"`);
+      if (!last && !v.when) bad(`maps.${id}: variant "${v.variant}" needs a "when"`);
+      if (v.when) {
+        const w = v.when;
+        if (!!w.stat === !!w.place) bad(`maps.${id}.${v.variant}: "when" needs a stat or a place`);
+        if (w.min === undefined && w.max === undefined)
+          bad(`maps.${id}.${v.variant}: "when" needs min or max`);
+        for (const n of [w.min, w.max])
+          if (n !== undefined && !Number.isInteger(n))
+            bad(`maps.${id}.${v.variant}: integer min/max`);
+      }
+      if (v.palette !== undefined && !/^[a-z]+$/.test(v.palette))
+        bad(`maps.${id}.${v.variant}: palette "${v.palette}"`);
+    });
+    if (!Array.isArray(m.delta) || m.delta.length === 0) bad(`maps.${id}: needs "delta" rects`);
+    for (const r of m.delta)
+      if (
+        !Array.isArray(r) ||
+        r.length !== 4 ||
+        r.some((n) => !Number.isInteger(n)) ||
+        r[2]! < 1 ||
+        r[3]! < 1
+      )
+        bad(`maps.${id}: a delta rect is [x, y, w, h] with w, h >= 1`);
+    if (!m.deltaText) bad(`maps.${id}: needs "deltaText"`);
+  }
+  return d;
+}
+export const valley: ValleyData = validateValley(valleyRaw, mapsData.maps);
 export const items = itemsRaw as unknown as Record<string, ItemDef>;
 export const crops = cropsRaw as unknown as Record<string, CropDef>;
 export const tools = toolsRaw as unknown as Record<string, ToolDef>;

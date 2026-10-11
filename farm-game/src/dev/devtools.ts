@@ -12,6 +12,7 @@ import { spawnPosition, type Direction, type GameState } from '../state/GameStat
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { mapCacheKey } from '../scenes/PreloadScene';
+import { pinStage } from '../systems/valley';
 import type { TiledMapLike } from '../systems/world';
 import type { FarmDevApi, ScenarioInfo } from './api';
 import { DevControl } from './control';
@@ -30,8 +31,8 @@ export const DEVTOOLS_MARKER = 'tiny-acre-devtools';
 
 /** Map bounds and walkability from the loaded tilemaps (validation before a scenario starts). */
 function mapInfoFrom(game: Phaser.Game): MapInfoFn {
-  return (map) => {
-    const raw = game.cache.tilemap.get(mapCacheKey(map))?.data as
+  return (map, variant) => {
+    const raw = game.cache.tilemap.get(mapCacheKey(map, variant ?? null))?.data as
       Parameters<typeof mapInfoFromTiled>[0] | undefined;
     return raw ? mapInfoFromTiled(raw) : null;
   };
@@ -187,6 +188,14 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
       set: (t) => control.setTime(t),
       skipDays: (n, o) => control.skipDays(n, o),
     },
+    stage: async (map, variant) => {
+      const s = getState();
+      const stats = pinStage(map, variant, s.stats);
+      if (!stats) throw new Error(`Map "${map}" has no stage "${variant}"`);
+      Object.assign(s.stats, stats);
+      const p = s.player;
+      await api.goto(p.map, Math.floor(p.x / 16), Math.floor((p.y - 3) / 16), p.facing);
+    },
     goto: async (map, tx, ty, facing) => {
       if (!mapsData.maps[map]) throw new Error(`Unknown map "${map}"`);
       if (map === LAB_MAP) await installLab(game);
@@ -195,10 +204,17 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
       s.player = { map, ...spawnPosition(tx ?? at.tx, ty ?? at.ty), facing: facing ?? at.facing };
       standVillagersInLab(map === LAB_MAP);
       runtime.busy = false;
+      const key = mapsData.maps[map]!.scene;
       const world = waits.world();
-      world?.scene.stop();
-      game.scene.start(mapsData.maps[map]!.scene);
-      await waits.sceneReady(mapsData.maps[map]!.scene);
+      if (world?.scene.key === key) {
+        // the same map: restart it (a stop and a start of one scene in one step left it shut down every other time)
+        world.scene.restart();
+        await waits.frames(2);
+      } else {
+        world?.scene.stop();
+        game.scene.start(key);
+      }
+      await waits.sceneReady(key);
     },
     wait: {
       until: (pred, what, o) => waits.until(pred, what, o),

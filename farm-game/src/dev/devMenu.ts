@@ -10,6 +10,7 @@
  */
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, WORLD_VIEW } from '../config';
 import { mapsData } from '../data';
+import { mapVariants } from '../systems/valley';
 import { getState } from '../state/store';
 import { formatClock, seasonLabel } from '../systems/time';
 import type { FarmDevApi } from './api';
@@ -229,6 +230,13 @@ export class DevMenu {
           this.close();
           void api.goto(id);
         });
+      // map stages (M2): show a staged map in each of its variants (sets the valley stats that pick it)
+      for (const id of Object.keys(mapsData.maps))
+        for (const v of mapVariants(id))
+          btn(`${id}: ${v}`, () => {
+            this.close();
+            void api.goto(id).then(() => api.stage(id, v));
+          });
       btn('Back', () => this.open('main'));
     }
     document.body.appendChild(sheet);
