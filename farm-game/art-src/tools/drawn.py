@@ -599,6 +599,26 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
         import motion
 
         motion.build(names, groups, lambda rgba: to_idx(rgba, pal), lambda idx: px.idx_to_rgba(idx, pal))
+    if all(f"player_idle_{d}_0" in chars for d in ("down", "up", "right")):
+        # round 5: tool and action animations from Google Flow, composed on the player's own head (flowanim.py)
+        import json
+        import os
+
+        import flowanim
+
+        idle = {d: to_idx(chars[f"player_idle_{d}_0"], pal) for d in ("down", "up", "right")}
+        acts = flowanim.build(names, pal, idle, lambda rgba: to_idx(rgba, pal))
+        for key, idx in acts.items():
+            add("chars", key, idx)
+        if acts:  # the frame counts the game reads (src/art/actFrames.json)
+            counts: dict = {}  # only the frames that composed (a split-off fragment is skipped), in order
+            for key in acts:
+                anim, d, i = key[len("player_act_"):].rsplit("_", 2)
+                counts.setdefault(anim, {})[d] = max(counts.get(anim, {}).get(d, 0), int(i) + 1)
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "src", "art", "actFrames.json")
+            with open(path, "w", newline="\n") as fh:
+                json.dump(counts, fh, indent=1, sort_keys=True)
+                fh.write("\n")
 
 
 # ---------------------------------------------------------------- the town well (round 4): 24 x 32, three tiles wide

@@ -77,7 +77,8 @@ export function drawSlot(
   const rimC = selected ? t.select : marked ? t.blue : t.slotRim;
   g.fillStyle(rimC, 1).fillRect(x + 1, y + 1, size - 2, size - 2);
   g.fillStyle(t.slot, 1).fillRect(x + 2, y + 2, size - 4, size - 4);
-  g.fillStyle(t.ink, 0.25).fillRect(x + 2, y + 2, size - 4, 1); // recessed: shadow under the top edge
+  // recessed: a solid 2 px soil shadow under the top edge (no semi-alpha, nothing 1 px to shimmer; review 17)
+  g.fillStyle(t.slotRim, 1).fillRect(x + 2, y + 2, size - 4, 2);
   if (selected) drawSelection(g, x, y, size, t.select, t.ink);
 }
 
@@ -110,6 +111,23 @@ export function drawSelection(
       .fillRect(cx, cy + dy, 1, 1);
 }
 
+/** The next lighter colour on each palette ramp, for bar highlights (palette v2). */
+const LIGHTER: Record<number, number> = {
+  0x2a1a24: 0x4a2a40, // ink -> plum shadow
+  0x2e6a3e: 0x4a8f3a, // leaf dark -> leaf mid
+  0x4a8f3a: 0x74b043, // leaf mid -> grass
+  0x74b043: 0xb4d45a, // grass -> new leaf
+  0x2e4a7a: 0x3c74b4, // dusk blue -> water
+  0x3c74b4: 0x72aadc, // water -> sky
+  0x72aadc: 0xd6ecf0, // sky -> ice white
+  0x7c442c: 0xb47c4c, // soil -> wood
+  0xb47c4c: 0xdcb47c, // wood -> sand
+  0xe48c24: 0xf4cc3c, // orange -> gold
+  0xf4cc3c: 0xfff0a0, // gold -> lamp
+  0x8c1c2c: 0xcc3a2a, // wine -> red
+  0xcc3a2a: 0xe07a8a, // red -> rose
+};
+
 export function drawBar(
   g: Phaser.GameObjects.Graphics,
   x: number,
@@ -125,14 +143,18 @@ export function drawBar(
   const track = SKIN === 'plum' ? 0x0c0914 : color === C.ink ? C.slot : 0x4a2a40;
   g.fillStyle(track, 1).fillRect(x + 1, y + 1, w - 2, h - 2);
   const r = Math.max(0, Math.min(1, ratio));
+  // the highlight is the next lighter colour on the palette ramp (no semi-alpha white; review 17), or none
+  const lit = SKIN === 'plum' ? null : (LIGHTER[color] ?? null);
   if (vertical) {
     const fh = Math.round((h - 2) * r);
     g.fillStyle(color, 1).fillRect(x + 1, y + h - 1 - fh, w - 2, fh);
-    g.fillStyle(0xffffff, 0.25).fillRect(x + 1, y + h - 1 - fh, 1, fh);
+    if (SKIN === 'plum') g.fillStyle(0xffffff, 0.25).fillRect(x + 1, y + h - 1 - fh, 1, fh);
+    else if (lit !== null) g.fillStyle(lit, 1).fillRect(x + 1, y + h - 1 - fh, 1, fh);
   } else {
     const fw = Math.round((w - 2) * r);
     g.fillStyle(color, 1).fillRect(x + 1, y + 1, fw, h - 2);
-    g.fillStyle(0xffffff, 0.25).fillRect(x + 1, y + 1, fw, 1);
+    if (SKIN === 'plum') g.fillStyle(0xffffff, 0.25).fillRect(x + 1, y + 1, fw, 1);
+    else if (lit !== null) g.fillStyle(lit, 1).fillRect(x + 1, y + 1, fw, 1);
   }
 }
 

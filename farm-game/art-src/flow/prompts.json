@@ -360,7 +360,7 @@
    "anim_hoe-a.jpg",
    "anim_hoe-b.jpg"
   ],
-  "used": "",
+  "used": "down a, up b, right b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -372,8 +372,8 @@
    "anim_can-a.jpg",
    "anim_can-b.jpg"
   ],
-  "used": "",
-  "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
+  "used": "b only, frames 2-5 (a's pour frames lost the body when cut): frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
+  "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane); the first submission failed silently and was resubmitted"
  },
  {
   "id": "anim_scythe",
@@ -384,7 +384,7 @@
    "anim_scythe-a.jpg",
    "anim_scythe-b.jpg"
   ],
-  "used": "",
+  "used": "a: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -396,7 +396,7 @@
    "anim_pick-a.jpg",
    "anim_pick-b.jpg"
   ],
-  "used": "",
+  "used": "b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -408,7 +408,7 @@
    "anim_rodcast-a.jpg",
    "anim_rodcast-b.jpg"
   ],
-  "used": "",
+  "used": "a: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -420,7 +420,7 @@
    "anim_rodreel-a.jpg",
    "anim_rodreel-b.jpg"
   ],
-  "used": "",
+  "used": "b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -432,7 +432,7 @@
    "anim_plant-a.jpg",
    "anim_plant-b.jpg"
   ],
-  "used": "",
+  "used": "b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -444,7 +444,7 @@
    "anim_harvest-a.jpg",
    "anim_harvest-b.jpg"
   ],
-  "used": "",
+  "used": "b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -456,7 +456,7 @@
    "anim_pet-a.jpg",
    "anim_pet-b.jpg"
   ],
-  "used": "",
+  "used": "b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -468,7 +468,7 @@
    "anim_eat-a.jpg",
    "anim_eat-b.jpg"
   ],
-  "used": "",
+  "used": "a: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  },
  {
@@ -480,7 +480,7 @@
    "anim_place-a.jpg",
    "anim_place-b.jpg"
   ],
-  "used": "",
+  "used": "b (weak: the crate does not survive the cut; see NEXT-STEPS-ART): frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)",
   "note": "round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet (\"Farmer character sprite sheet\" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)"
  }
 ]

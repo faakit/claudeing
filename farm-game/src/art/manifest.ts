@@ -14,6 +14,7 @@ import {
   trees,
 } from '../data';
 import { DIRECTIONS } from '../systems/direction';
+import actFrameCounts from './actFrames.json';
 
 /**
  * Every texture key (and frame) the game draws, derived from data wherever the data names it, so new
@@ -163,6 +164,37 @@ export const SHEET_PIECE_SIZES: Record<SheetPiece, [number, number]> = {
   b: [16, 5],
   br: [5, 5],
 };
+
+/**
+ * Player action animations (art round 5), drawn by Google Flow from the player's own sheet and composed on the
+ * idle head (pixel-identical): `player_act_<anim>_<dir>_<i>`, 32 x 44, the body at x 8..23 and the feet on row 39
+ * (12 rows of headroom for raised tools, 4 below for a blade): origin (0.5, ACT_ORIGIN_Y). Facings: down, up and
+ * right; left is right flipped (setFlipX). Frames: wind-up, swing, contact (ACT_CONTACT_FRAME, index 2: spawn the
+ * dust, splash, sound and haptic here), follow-through, rest; some have 4 (or 3) frames, the last being the rest.
+ */
+export const ACT_FRAME_W = 32;
+export const ACT_FRAME_H = 44;
+export const ACT_FEET_ROW = 39;
+export const ACT_ORIGIN_Y = (ACT_FEET_ROW + 1) / ACT_FRAME_H;
+export const ACT_CONTACT_FRAME = 2;
+/** Frame counts per animation and facing (written by the art build). */
+export const ACT_FRAMES: Record<string, Record<string, number>> = actFrameCounts;
+/** Which action animation a tool item plays (the rod: `rodcast` to cast, `rodreel` on a bite). */
+export const ACT_FOR_ITEM: Record<string, string> = {
+  hoe: 'hoe',
+  watering_can: 'can',
+  scythe: 'scythe',
+  pickaxe: 'pick',
+  fishing_rod: 'rodcast',
+};
+export const actKey = (anim: string, dir: string, i: number): string =>
+  `player_act_${anim}_${dir}_${i}`;
+/** The frames of one action for a facing ([] when it has none), and whether to flip them (left). */
+export function actFrames(anim: string, dir: string): { keys: string[]; flipX: boolean } {
+  const d = dir === 'left' ? 'right' : dir;
+  const n = ACT_FRAMES[anim]?.[d] ?? 0;
+  return { keys: Array.from({ length: n }, (_, i) => actKey(anim, d, i)), flipX: dir === 'left' };
+}
 
 /** UI glyphs and fx drawn in code (gameArt.drawGlyphs / placeholders). */
 /** Small effect and ambient sprites (ui atlas): drawn only when the art exists, no generated fallback. */
@@ -444,6 +476,18 @@ export function artManifest(): ArtEntry[] {
           group: 'chars',
           kind: `player tool use ${item} ${d}`,
           from: 'art round 4 (toolanim.py)',
+          optional: true,
+        });
+  for (const [anim, dirs] of Object.entries(ACT_FRAMES))
+    for (const [d, n] of Object.entries(dirs))
+      for (let i = 0; i < n; i++)
+        add({
+          texture: actKey(anim, d, i),
+          w: ACT_FRAME_W,
+          h: ACT_FRAME_H,
+          group: 'chars',
+          kind: `player action ${anim} ${d}`,
+          from: 'art round 5 (flowanim.py, Flow anim_*)',
           optional: true,
         });
   // the feel agent's names (feel/smooth frames-wanted.md), atlas aliases of the frames above (build.py)

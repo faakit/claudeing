@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import {
+  ACT_FEET_ROW,
+  ACT_FRAMES,
+  actKey,
   artManifest,
   atlasFrameName,
   NPC_IDLE_FRAMES,
@@ -215,5 +218,33 @@ describe('animation frames (art round 4)', () => {
           ).toEqual(rest.slice(-2).map((r) => r.join('|')));
         }
       }
+  });
+
+  it('composes every Flow action frame on the idle head, pixel for pixel, with a foot on row 39', () => {
+    let n = 0;
+    for (const [anim, dirs] of Object.entries(ACT_FRAMES))
+      for (const [d, count] of Object.entries(dirs)) {
+        const idle = frame(`player_idle_${d}_0`);
+        const top = idle.findIndex((r) => r.some((p) => p !== ''));
+        const head = idle.slice(top, top + 10); // crown to eyes: the face and hair the critic checks
+        for (let i = 0; i < count; i++) {
+          const k = actKey(anim, d, i);
+          const f = frame(k);
+          expect([f[0]!.length, f.length], k).toEqual([32, 44]);
+          let found = false;
+          for (let oy = 0; oy + head.length <= f.length && !found; oy++)
+            for (let ox = 0; ox + 16 <= 32 && !found; ox++)
+              found = head.every((row, y) =>
+                row.every((p, x) => p === '' || f[oy + y]![ox + x] === p),
+              );
+          expect(found, `${k}: the idle head`).toBe(true);
+          expect(
+            f.slice(ACT_FEET_ROW - 1, ACT_FEET_ROW + 1).some((r) => r.some((p) => p !== '')),
+            `${k}: feet on row ${ACT_FEET_ROW}`,
+          ).toBe(true);
+          n++;
+        }
+      }
+    expect(n).toBeGreaterThan(100);
   });
 });

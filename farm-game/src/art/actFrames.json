@@ -1,0 +1,57 @@
+{
+ "can": {
+  "down": 4,
+  "right": 4,
+  "up": 4
+ },
+ "eat": {
+  "down": 4,
+  "right": 4,
+  "up": 4
+ },
+ "harvest": {
+  "down": 5,
+  "right": 5,
+  "up": 5
+ },
+ "hoe": {
+  "down": 5,
+  "right": 4,
+  "up": 5
+ },
+ "pet": {
+  "down": 5,
+  "right": 5,
+  "up": 5
+ },
+ "pick": {
+  "down": 5,
+  "right": 4,
+  "up": 5
+ },
+ "place": {
+  "down": 4,
+  "right": 2,
+  "up": 4
+ },
+ "plant": {
+  "down": 5,
+  "right": 5,
+  "up": 5
+ },
+ "rodcast": {
+  "down": 4,
+  "right": 3,
+  "up": 4
+ },
+ "rodreel": {
+  "down": 5,
+  "right": 4,
+  "up": 5
+ },
+ "scythe": {
+  "down": 4,
+  "right": 4,
+  "up": 4
+ }
+}
