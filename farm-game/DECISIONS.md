@@ -1456,3 +1456,24 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   Wendhead; a storm takes them to 0.4.
 - **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
 
+
+## The Dry Year, feel lane (feel/dry-year)
+
+- **Channel juice is drawn over the map, never in a new layer.** The water into a cut and the morning's run crop the
+  real wet tile out of the map's tileset and grow it from the side the water enters, so the art lane's
+  `chan:wet:<mask>` tiles drop in through the same path; clods, drops and foam are pooled 1-2 px images (no
+  Graphics), so the batch holds (at most 3 draws in the probes).
+- **The morning run plays every day, once, on first sight**, not only for newly reached tiles: it is the day's
+  "your channels watered the crops" moment that replaces the can, and it is short (65 ms a tile, at most 1.5 s).
+  It waits until its first 3 tiles or half its tiles are inside the view inset by 16 px (feel critic C1-1), and it
+  is keyed to the state object and day in memory only (nothing saved).
+- **Edge hold: band and interval unchanged, exit hysteresis added** (feel critic ruling): enter at 36 CSS px,
+  leave at 52 along the leg's axis. A faster interval was rejected because edge-grown tiles can't be trimmed one at
+  a time (leaving the band takes them all back), so a 220 ms reaction would overshoot by 2 tiles at 120 ms.
+- **The creek's first-morning reveal waits for the bed to be wholly in view** (it started as the view's edge passed
+  x 25, with the bed still off screen).
+- **Towing spike (M7):** tow by walking, with taps as the primary input (feel critic): a tap on the log walks over
+  and hooks it, a tap on the water means the bank beside it, a snag holds the farmer where it caught and any tap or
+  Action tugs, the cut walk resumes after a tug, and standing at the slip hauls the log in and lands it. A walk to
+  the slip stops beside it so the log never lands on the farmer. Rules in `systems/towing.ts` (pure); the
+  controller and placeholder art are debug-only (`src/dev/towSpike.ts`, stat `lab.towSpike`).

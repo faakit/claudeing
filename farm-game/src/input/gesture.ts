@@ -68,6 +68,12 @@ export const PAINT_MAX_TILES = 16;
 export const PAINT_EDGE_HOLD_MS = 180;
 /** The edge band, in CSS px (about 6 mm on a phone). */
 export const PAINT_EDGE_CSS = 36;
+/**
+ * Once an edge hold is growing a leg, the finger must leave this wider band (along the leg's axis) to stop it: a
+ * thumb resting just inside the band trembles across its line, and each crossing took the whole growth back (feel
+ * critic D3: 4 tiles lost in one frame at a 33 px rest). Dragging back toward the start still leaves it.
+ */
+export const PAINT_EDGE_EXIT_CSS = 52;
 /** Direction hysteresis of the first leg: the other axis must be this many times stronger to switch lines. */
 export const PAINT_BIAS = 1.6;
 /**
@@ -269,12 +275,15 @@ export class ActionPress {
    * Each frame while painting: which edge bands the finger is in (x: -1 left, 1 right; y: -1 top, 1 bottom; 0 none).
    * In the band the newest leg points at, the leg grows a tile every PAINT_EDGE_HOLD_MS; out of it, the growth is
    * taken back (the path is the finger's own again), so a drift never extends a row and dragging back cancels.
+   * `keep` is the same reading for the wider exit band (PAINT_EDGE_EXIT_CSS): once growing, the hold lasts until
+   * the finger leaves that one.
    */
-  hold(edge: { x: number; y: number }, t: number): ActionEvent[] {
+  hold(edge: { x: number; y: number }, t: number, keep = edge): ActionEvent[] {
     if (this.phase !== 'armed' || this.legs.length === 0) return [];
     const leg = this.legs[this.legs.length - 1]!;
     const v = VEC[leg.dir];
-    const inBand = (v.x !== 0 && edge.x === v.x) || (v.y !== 0 && edge.y === v.y);
+    const band = this.boostDir === leg.dir ? keep : edge;
+    const inBand = (v.x !== 0 && band.x === v.x) || (v.y !== 0 && band.y === v.y);
     const px = this.last.x - this.armAt.x;
     const py = this.last.y - this.armAt.y;
     if (!inBand || (this.boostDir !== null && this.boostDir !== leg.dir)) {

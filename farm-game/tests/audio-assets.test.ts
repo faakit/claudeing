@@ -33,12 +33,24 @@ describe('audio cue map', () => {
       expect(files.length > 0 || jingle, id).toBe(true);
       expect(files.length > 0 && jingle, `${id} is both a file and a jingle`).toBe(false);
     }
-    for (const id of Object.keys(MANIFEST.sfx)) expect(SFX_IDS as readonly string[], id).toContain(id);
+    for (const id of Object.keys(MANIFEST.sfx))
+      expect(SFX_IDS as readonly string[], id).toContain(id);
     for (const id of JINGLE_CUES) expect(SFX_IDS as readonly string[], id).toContain(id);
   });
 
   it('gives frequent sounds several takes plus pitch and volume variation', () => {
-    for (const id of ['stepGrass', 'stepWood', 'till', 'water', 'harvest', 'coin', 'ui', 'cut', 'plant', 'swing']) {
+    for (const id of [
+      'stepGrass',
+      'stepWood',
+      'till',
+      'water',
+      'harvest',
+      'coin',
+      'ui',
+      'cut',
+      'plant',
+      'swing',
+    ]) {
       const a = MANIFEST.sfx[id]!;
       expect(a.files.length, id).toBeGreaterThanOrEqual(2);
       expect(a.pitch, id).toBeGreaterThan(0);
@@ -52,7 +64,8 @@ describe('audio cue map', () => {
     for (const z of allFiles()) {
       const p = join(AUDIO_DIR, z.file);
       const head = readFileSync(p).subarray(0, 3);
-      const mp3 = (head[0] === 0xff && (head[1]! & 0xe0) === 0xe0) || head.toString('latin1') === 'ID3';
+      const mp3 =
+        (head[0] === 0xff && (head[1]! & 0xe0) === 0xe0) || head.toString('latin1') === 'ID3';
       expect(mp3, z.file).toBe(true);
       expect(statSync(p).size, z.file).toBeGreaterThan(200);
     }
@@ -81,8 +94,10 @@ describe('audio cue map', () => {
       }
     }
     for (const [name, inst] of Object.entries(MANIFEST.instruments)) {
-      if (inst.kind === 'sustain') for (const z of inst.zones ?? []) expect(z.loop, `${name} ${z.file}`).toBeDefined();
-      if (inst.kind !== 'perc') for (const z of inst.zones ?? []) expect(z.root, z.file).toBeTypeOf('number');
+      if (inst.kind === 'sustain')
+        for (const z of inst.zones ?? []) expect(z.loop, `${name} ${z.file}`).toBeDefined();
+      if (inst.kind !== 'perc')
+        for (const z of inst.zones ?? []) expect(z.root, z.file).toBeTypeOf('number');
       expect(instrumentFiles(name).length, name).toBeGreaterThan(0);
     }
   });

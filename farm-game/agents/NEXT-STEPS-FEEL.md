@@ -1,114 +1,110 @@
-# Next steps: game feel (round 4)
+# Next steps: game feel (The Dry Year)
 
-Branch `feel/smooth` (worktree `controls`), from `integration/round3-2026-10-10`. Everything below was measured in
-headless Chromium (software GL, a 144 Hz rAF on this host) with CDP CPU throttling, on a machine shared with
-other agents (often 80% CPU busy). **No real phone was used**, and headless GL is software-rendered, so absolute
-frame times say little about a phone: judge by the relative change against the same harness on the round-3 tree.
-`npm run verify` is green at the last commit (the feel critic accepted `cbcc60d` as final: 0 blockers, 0 majors;
-`C:/Users/andre/dev/tiny-acre/feel-critique/final.md`) (it now also runs `e2e:feel`, and `perf` enforces frame-time budgets).
+Branch `feel/dry-year` (worktree `controls`), from `integration/dry-year-core` (db29f2a). The feel critic reviewed
+frozen copies with real CDP touches on the iPhone 13 and SE, both hands, at 1x and 4x CPU; its notes are outside the
+repo in `C:/Users/andre/dev/tiny-acre/feel-critique/` (`dry-*`). **No real phone was used**, and headless GL is
+software-rendered: frame times are relative, judge by draws and JS.
 
-Decisions and the measurements behind them: `DECISIONS.md`, "Game feel (feel agent, round 4)" and "Whole-pixel
-canvas scale". Frame strips (every rendered frame of a moment, `scripts/frame-strip.mjs`):
-`agents/out/feel/strips/` (`before/` is the round-3 tree, `m1/` and `m1-crop/` this branch before the art merge,
-`art-merge/` after merging `art/round4`).
+The previous handover (rounds 4 and 5: the pixel camera, wipes, tool timing, canvas scale) is in git history and in
+`DECISIONS.md`, "Game feel (feel agent, round 4)".
 
-## What changed
+## What changed this round
 
 | area | what | where |
 |---|---|---|
-| Camera | Pixel-locked follow: the camera sits on the farmer's drawn pixel minus an eased whole-pixel lag (frame-rate independent; hysteresis while walking; a faster catch-up, a pixel a frame, once still; a soft 16 px knee at map edges; a cut on teleports). No shimmer, rest always centred, centred about 200 ms after a stop. | `fx/PixelCamera.ts`, `fx/feel.ts` |
-| Map changes | A 4x4 ordered-dither wipe in the palette ink over the world view (HUD and dock stay): 130 ms close, held 1 frame after the new map draws, 140 ms open. The next map is parsed on the frame the door is stepped on; the save snapshot, the scene stop and the new build each get their own covered frame; the new map's first update is skipped. The farmhouse door opens (the art's `obj_door_open_0..3`) and closes behind you on the way out. | `fx/Wipe.ts`, `fx/DoorFx.ts`, `scenes/mapCache.ts`, `WorldScene.useDoor` |
-| New game | The title dithers away; HUD and dock are built on one frame and the world on the next, under the wipe; the title prewarms the generated textures, the number formatter and the map parser; the reverb impulse is built after the unlocking tap (and with one multiply per sample instead of a pow). | `fx/prewarm.ts`, `TitleScene.ts`, `audio/graph.ts` |
-| Walk | The cycle rate follows the speed actually walked (art critic: 16 fps at 64 px/s, held to 10-20 fps; the art's 8-frame cycle is merged); footsteps on contact frames; a placeholder breathing idle after 1.5 s still. | `WorldScene.syncSprite`, `fx/feel.walkFps`, `fx/playerFrames.ts` |
-| Tool use | Wind-up, swing, contact, follow-through (the art's 4 frames, merged; origin from the frame height, so the 36 px hoe and pickaxe frames keep the feet still); particles, sound, haptic and the field change land together on the contact frame; only a tool's own use poses. The stick walks 120 ms after a use, without the turn-in-place wait stacked on. Hit-stop (34 ms) on a single harvest or the first of a hold or row. | `WorldScene.toolSwing`, `tryAction` |
-| UI motion | Press-down states on the touch's own frame (1 px sink and glow); sheets slide in from the frame after their build and slide out while the world already takes input; toasts ease in; gold, energy and water tick; the hotbar selection rises in two steps; the coach line fades in per step; the goal banner rises in whole pixels. | `input/TouchButton.ts`, `ui/widgets.ts`, `ui/Hud.ts`, `ui/CoachMarks.ts` |
-| Juice | 2 px view nudges on level-ups and completed goals only; crops lean when walked through (the art's lean frames); pops hop 1 px (the art's stretch and squash frames for gathered items, which rest above the farmer's head); ripples on a cast; animal idles loop the art's breath and head-dip frames. | `fx/Effects.ts`, `game/FarmRenderer.ts`, `game/ObjectsRenderer.ts` |
-| Pixel integrity | No fractional scales or free rotation on pixel art: Action icon 2x, HUD bolt and drop 1x, particles 1-2 px squares, the marker pulse is a flash, the tap ring is redrawn by radius, tool icons turn in quarter turns, the tool ring fades in. | various |
-| Calm | Sheet slides, particles, item hops, floating text, pops, swings, hit-stop, hotbar rise, toast and banner rise, drag-hint pulse, crop lean. | various |
-| Canvas | Whole device pixels per game pixel where that costs at most 10% and keeps the hotbar over 38 CSS px (coordinator ruling): Pixel 7 5x, Pro Max 6x, Fold 4x; iPhone 13 and SE keep the fit. Walnut margins, all above the HUD so the dock sits on the bottom safe area (round 5). | `platform/displayFit.ts`, `main.ts`, `index.html` |
-| Input | A tap on your own tile uses the faced tile (Interact or a harmless act, never till or plant): the mailbox case from the new-player critic. | `systems/tapIntent.ownTileTap` |
-| Perf | Dock buttons and Interact icons baked to textures (live Graphics circles were re-tessellated by earcut every frame, about a quarter of the frame's JS). | `fx/bake.ts` |
-| Tooling | Frame pacing in `perf` (per-frame p50/p95/p99/max across real play at 1x, 4x and 6x, budgets set against the baseline with the critic); `e2e:feel`; `scripts/frame-strip.mjs`. | `scripts/` |
+| Channel dig | The spade swings with a 50 ms wind-up (a key item, it had no swing at all). On impact 7 soil clods (1-2 px, palette wood/sand/soil) arc onto both banks beside the cut, 2/3 to the throwing side, hop 1 px, rest 0.4 s and fade in two steps; the cut stands 1 px proud for 70 ms and settles; a haptic tick per dug tile, even along a painted row. | `fx/ChannelFx.ts`, `fx/channelRun.ts`, `WorldScene.tryAction` |
+| Water into a cut | The new tiles are held dry and the water runs in from upstream (the real wet tile cropped from the tileset and grown from the entry side, 220 ms ease-out, a 1 px foam line on its front), the bank tile first; drops and the water cue when full. The old instant splash and ripple at the cut are gone. | same; `FarmRenderer.holdDry/release` |
+| Morning run | The first time the reached channels come into view each day, the water runs from the creek down the ditch as one continuous front (65 ms a tile, a whole run capped at 1.5 s so the weir's 64 still reads), and each watered soil tile beside it darkens with a droplet as the front passes. It waits until its first 3 tiles, or half the run, are inside the view inset by 16 px (critic C1-1). Not on the creek's first morning, not in Calm (the water is simply there); rain: the run plays, soil not held. | `ChannelFx.planMorning`, `channelRun.runSeen` |
+| Creek reveal | The creek's first morning starts once the bed (x 26-27) is wholly in view, a tile in from the edge (it started with the bed still off screen). | `WorldScene.update` |
+| Edge hold | Band 36 CSS px and 180 ms unchanged (critic ruling: an edge-grown tile can't be trimmed, so a faster interval overshoots). Exit hysteresis: once growing, the hold lasts until the finger leaves a 52 CSS px band along the leg's axis (critic D3: a 33 px rest lost 4 tiles in a frame). | `input/gesture.ts` `PAINT_EDGE_EXIT_CSS`, `UIScene.updateHold` |
+| Taps | A tap in the upper 60% of the void under a door on a map's bottom edge (the house's front door) goes out that door. The dug toast counts the bank tile. | `systems/tapIntent.ts` |
+| Towing spike (M7) | See below. | `systems/towing.ts`, `dev/towSpike.ts` |
 
-## Frame pacing: before and after
+Scenarios: `channels-first-dig`, `channels-row` (the run plays on load), `channels-morning` (step out of the house),
+`channels-home-only`, `tow-spike`, `tow-spike-long`. e2e: `e2e:scenarios` blocks `morning` (house door by a real
+tap; the run holds until its head is in view) and `towing`; `e2e:controls` has the trembling-rest row. Unit tests:
+`tests/channel-fx.test.ts`, `tests/towing.test.ts`, `tests/paint.test.ts`, `tests/tapmove.test.ts`. Probes:
+`agents/probes/feel-channels.mjs`, `tow-spike.mjs`, `feel-beats.mjs`.
 
-`node scripts/perf.mjs 1,4,6 pacing`, ms between animation frames (rAF; 6.9 ms = one 144 Hz frame). Baseline is
-the round-3 tree on the same host. Max frame per scene:
+Perf (headless, my probes): at most 3 draws during a dig and a morning run, at most 2 while towing; the critic
+measured JS p95 at 4x of 3.5-3.8 ms against 3.8-4.4 on the base, no frame over 33 ms at 4x.
 
-| scene | 1x before | 1x now | 4x before | 4x now | 6x before | 6x now |
-|---|---|---|---|---|---|---|
-| new game (title to farm) | 167 | 21 | 514 | 63 | 625 | 118 |
-| map changes, worst door | 7 | 7 | 35 | 14 | 63 | 21 |
-| sleep and morning summary | 14 | 21 | 42 | 28 | 77 | 49 |
-| sheets (bag, shop, bin, board, mail) | 7 | 7 | 21 | 14 | 42 | 35 |
-| idle | - | 14 | - | 7 | - | 7 |
-| walk | 7 | 7 | 7 | 7 | 28 | 7 |
-| tap-walk | 7 | 7 | 14 | 202 (one host stall: game work max 6 ms; p99 7.1) | 35 | 14 |
-| painted row | 7 | 7 | 14 | 7 | 28 | 14 |
-| coach marks (p95) | 7.0 | 7.0 | 7.0 | 7.0 | 13.9 | 7.0 |
+The critic accepted item 1 (dig and fill juice) at acbcd24, with C1-1 open; C1-1 was fixed at 281f5a4. It ruled on
+item 3 (keep band and interval, add hysteresis), done at dfaa633.
 
-Every frame of a new game over 50 ms now lands while a wipe fully covers the screen at 1x and 4x, except the tap's
-own frame (the AudioContext is created inside the gesture, about 60-110 ms at 4-6x on this host); at 6x one more
-frame right after the tap is about 70 ms (a probe that marks each long frame covered or in view; see DECISIONS.md).
+## The towing spike (M7 "spike first")
 
-Game work per frame (Phaser pre-step to post-render, p95, 4x): walk 4.7 -> 2.1 ms, coach marks 7.5 -> 3.5 ms.
-Camera (`e2e:feel`, and a probe on the round-3 tree): walking right, the farmer's screen position reversed 125
-times in 350 frames; now 0 in all four directions. Rest after walking right / left: x 100 / 108; now always centred.
+On the lab's south shore (debug only): water rows 29-32 flowing west at 6 px/s, a rock snag at (17,29) in the
+near-bank row, slip planks at (13,28) where the road meets the shore, the farmer at (13,27), a log spawning at
+(19,30).
 
-Budgets now in `npm run perf` (agreed with the feel critic): steady play (idle, walk, tap-walk, painted row) p95 <= 8
-at 1x, p99 <= 14 at 4x, max <= 100 at 6x; doors <= 34 at 1x and 4x, <= 50 at 6x; sleep <= 50 at 1x, <= 100 at 4x;
-a new game <= 100 at 1x, <= 200 at 4x.
+- **Hook:** tap the log anywhere: the farmer walks to the nearest bank tile with the log a tile inside the rope's
+  reach and hooks it the moment it is in reach (the rope throws out over 120 ms). Action hooks too when in reach. A
+  tap on the bank or water on the way is kept as the tow destination and walked right after the hook.
+- **Tow:** tap a bank tile, or the water (it resolves to the nearest bank beside it). The log follows on a 3-tile
+  rope (an eased chase, so it lags and swings round turns), slides along the bank and only ever lies on open water.
+  The rope is a solid 1 px line that sags when slack and is straight when taut. The stick works the same.
+- **Snag:** the log stops, tilts and bobs a pixel, the rope goes straight, a knock and a tick; the farmer is held
+  where it caught and the walk is cut. Action, a tap on the log, or any bank or water tap tugs: he leans back, the
+  log pops a tile past the rock in a 4 px hop, a splash, and the walk resumes. A long log gives on the first tug and
+  comes free on the second.
+- **Land:** standing at the slip he hauls it in (110 px/s) to the slip's water tile, then it is lifted onto the
+  planks and dropped (dust, splash, "+1 Timber", success haptic); input stays free. A walk to the slip stops beside
+  it, so the log never lands on the farmer.
+- **Numbers:** 3 taps (log, slip, tug), first input to landing 3.7-4.0 s with instant reactions on i13 and SE, both
+  hands (the spec asks under 20 s). `__farm.dev.tow()` reports taps, actions, tugs, times and the phase.
+- **Rules for M7** (`systems/towing.ts`, pure, tested): `makeLog`, `placeAt`, `drift`, `follow`, `tug`, `haul`,
+  `atSlip`, `atSlipBank`, `land`, `bankFor`, `hookStand`, `inReach`; constants `ROPE_PX` 48, `FOLLOW_RATE` 0.16,
+  `HAUL_PX_S` 110, `TUGS` 1/2, `TIMBER` 1/3. Not yet: lanes chosen by day hash, the spur that turns a log, ice
+  rims, saving while towing, logs turning into a vertical lane.
+- **Critic's verdict:** not given yet; the go/no-go waits for the next round (owner order to stop testing).
 
-## One-thumb numbers
+WorldScene gained small verb hooks for it (also usable by M7): `tapHook`, `actionHook`, `walkTo`, `walkGoal`,
+`stopWalk`, `walkable`, `farmerSprite`. The lab scene creates the spike when the stat `lab.towSpike` is set.
 
-`bench:thumb` on five phones and both hands: 89/90 rows ok at M1 (after the art merge the feel critic re-ran
-i13 only, 18 rows with both hands: OK, identical gestures) (the miss, SE right fish 17 gestures, is the reel
-minigame's random fish; re-runs gave 10 and 12). Gestures are identical to round 3 in every task. Time is up
-0.4-0.7 s on plot3x3 (i13) because the bench waits for the camera to stop before each tap and the camera now
-finishes centring (see DECISIONS.md); the game itself works a painted row in the same 1710 ms. `e2e:controls` is
-green (run with `E2E_CONTROLS_PARALLEL=1` on the busy host; with two combos in parallel one lagged ring flick in a
-retry was read as hold-then-drag twice).
+## Other lanes' files touched
 
-## Unverified
+`scenes/WorldScene.ts` (ChannelFx wiring, the spade swing, verb hooks, the creek reveal threshold),
+`game/FarmRenderer.ts` (`holdDry`/`release`), `scenes/UIScene.ts` (edge-hold exit band), `systems/tapIntent.ts`
+(the void under a door), `dev/lab.ts`, `dev/api.ts`, `dev/devtools.ts` (`__farm.dev.tow()`),
+`scripts/e2e-scenarios.mjs`, `scripts/e2e-controls.mjs`.
 
-- No real phone and no native build: the 16 fps walk, haptic timing on the contact frame, the dither on a real
-  panel and the whole-pixel canvas on real screens are judged from strips, timers and emulated profiles only.
-- Headless GL is software-rendered and the host was shared with other agents: numbers are relative.
-- `art/round4` (350cf1a) is merged into this branch (8ebd1b3); the coordinator's integration merge may still
-  differ.
+## Open
 
-## Next steps
+1. **Item 2, the restoration beats, is not done.** From strips (`feel-beats.mjs work|reveal|creek`): the pickaxe
+   day (`spring-site-work`) is 3.3 s with about 600 ms of dead air between swings, and the stone rolls off at
+   2.2 s, a second after the last hit. Plan: swings about 560 ms apart, grey chips and a 1 px heap shudder per hit
+   (needs a landmark getter in `ObjectsRenderer`), the stone breaking loose on the third hit with the site's lower
+   sprite showing as it leaves, about 2.6 s in all. The spade day (no scenario yet: add `spring-site-work-3`)
+   should reuse the channel clods and the foam-edged fill. The first-green dissolve (`valley-farm-green-reveal`)
+   reads well. Doors must stay under 0.3 s.
+2. **Art merge** (art/dry-year 0dd9a35 landed the channel tiles `chan:wet|dry:<mask>`): at integration, the ChannelFx
+   `src(tx, ty, look)` callback in `WorldScene.create` should use the art lane's `channelGid(tx, ty, look)` (null on a
+   path; `tileset.getTileTextureCoordinates(gid)`) in place of `CHANNEL_GID`, and the foam line in `ChannelFx.stepFills`
+   should be limited to `CHANNEL_WATER_BAND` ([6, 12], from `src/art/channelTiles.ts`; columns on a vertical run).
+3. **Audio:** the audio lane is adding `dig` (actionFx's dig case) and `logLand`; the spike already asks for
+   `logHook`, `logKnock`, `logTug` and `logLand` and falls back to existing cues until they exist.
+4. Critic nit passed on (not feel): decor (a pebble, a bush, a canopy) is drawn over channel water.
+5. Towing after a go: a bench:thumb row, art (logs short and long, rope, slip), turn frames, the M7 rules above.
 
-1. Owner's phone pass (below), then tune: camera rate (0.12 walking, 0.2 still), wipe times (130/150 ms), tool
-   timing, walk fps band.
-2. Strips of the door with the art's `obj_door_open_*` (the farmer covers most of it when he stands on the
-   door tile; the arrival close is the visible part).
-3. The coach marks' pulsing ring scales smoothly (onboarding's file): a whole-pixel pulse would match the rest.
-4. Some placed objects still sit at a static 0.8 / 0.62 scale (placeholder sizes): art or depth to redraw at 1x.
-5. The bench could tap while the camera eases (as people do) instead of waiting for a still camera.
+## Unverified, and what must run before the merge
 
-## Owner questions
+The owner stopped all tests before the full verify finished (the PC was needed). What did run on this branch:
 
-1. The world camera now trails you by about 8 px while walking and centres 200 ms after you stop. Snappier
-   (less trail) or floatier?
-2. Map changes: the dither wipe keeps the HUD and dock on screen. Do you want the old fade back anywhere (sleep
-   still fades to black)?
-3. On Pixel 7, Pro Max and Fold-size phones the game is drawn 5-8% smaller so every pixel is the same size
-   (walnut bands above and below). Keep that, or prefer filling the screen with uneven pixels?
-4. Tool swings: the hoe's dust lands about 100 ms after you lift your thumb (wind-up first). Snappier?
+- `verify:fast` green at 281f5a4 and at dfaa633 (the unit suite's 2 ms pathfind timing test failed once at dfaa633
+  while the machine was loaded and passed when rerun alone).
+- `e2e:scenarios` full green at 281f5a4 plus the morning-run fixes (towing and morning blocks included).
+- `e2e:controls` before dfaa633's last edits: the new trembling-rest rows passed on i13, both hands; 7 SE rows
+  failed on harness lag (flicks, swipes, a rolled press) while verify:fast ran beside it. Not rerun alone.
+- The interrupted full `npm run verify` at dfaa633: typecheck, lint, build, e2e:onboarding, e2e:mobile, bundle and
+  lab-map ok; e2e and e2e:scenarios ok when rerun alone; **test failed** on `tests/sim.test.ts` (the board-race
+  balance sim, a 91 s run under load, most likely a timeout, not a logic change: nothing in this branch touches the
+  sim's rules); controls, feel and perf never ran.
 
-## Round 5 (branch `feel/round5`, from `integration/round4-2026-10-11`)
+**Before merging, run** `npm run verify` on an idle machine and check in particular: `tests/sim.test.ts` alone,
+`npm run e2e:controls` (SE rows), `npm run e2e:feel`, and `npm run perf` (draws and frame pacing; the channel run
+and the dig add pooled images only). `npm run bench:thumb` was not run this round. The towing go/no-go waits for
+the next round (the critic has the spike at 281f5a4).
 
-- **Blocker fixed: the camera froze during a floating-stick walk** (owner, real phone). The hold that stops a tap
-  from drifting compared the farmer's position with the one `syncSprite` had just stored, so with a finger down it
-  always read "still". It now compares before and after the frame's tick (`shouldHoldCamera`). New `e2e:joystick`
-  (scenario `joystick-walk`): real touches hold a stick drag over 3 s across the farm and a town street, iPhone 13
-  and SE, both hands; the farmer stays within 12 px of centre every frame (201 px off before). The host's rAF runs
-  at 144 Hz; the follow maths is unit-tested at 30, 60 and 144 Hz.
-- **Dock flush with the bottom safe area:** all leftover walnut goes above the HUD (Pixel 7 was 64.7 px up, Fold 60,
-  Pro Max 19.7; iPhone 13 and SE were already flush). Table in DECISIONS.md.
-- **iPhone 13 and SE stay at the fitted scale** (ruling a): whole 5x / 3x would put the hotbar at 40 / 36 CSS px,
-  under the 43 / 38 floors, with no layout that fits 8 slots. Recorded in DECISIONS.md.
-- **Sheets stop under the HUD** (326 px cap); **menu tabs and Close share two rows** (48 px tabs, Close on the
-  thumb's side, reading order kept).
-- Slot recess and bar highlight drawn solid. `bench:thumb` 90/90 on five phones, gestures unchanged; full verify green.
+No real phone or native build. Haptic timing, the rope's 1 px line and the clods on a real panel are judged from
+strips and emulated touches only.

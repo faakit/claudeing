@@ -9,7 +9,12 @@ import { WIPE_OPEN_MS } from '../fx/feel';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { controlsLog } from '../input/controlsLog';
-import { ActionPress, PAINT_EDGE_CSS, type ActionEvent } from '../input/gesture';
+import {
+  ActionPress,
+  PAINT_EDGE_CSS,
+  PAINT_EDGE_EXIT_CSS,
+  type ActionEvent,
+} from '../input/gesture';
 import { cssPerLogical } from '../ui/hit';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
@@ -464,12 +469,17 @@ export class UIScene extends Phaser.Scene {
     if (this.actionPress.armed && this.actionPointer !== null) {
       const ptr = this.input.manager.pointers.find((p) => p.id === this.actionPointer && p.isDown);
       if (ptr) {
-        const band = PAINT_EDGE_CSS / cssPerLogical(this);
-        const edge = {
-          x: ptr.x <= band ? -1 : ptr.x >= GAME_WIDTH - band ? 1 : 0,
-          y: ptr.y <= band ? -1 : ptr.y >= GAME_HEIGHT - band ? 1 : 0,
+        const at = (css: number) => {
+          const band = css / cssPerLogical(this);
+          return {
+            x: ptr.x <= band ? -1 : ptr.x >= GAME_WIDTH - band ? 1 : 0,
+            y: ptr.y <= band ? -1 : ptr.y >= GAME_HEIGHT - band ? 1 : 0,
+          };
         };
-        this.actionEvents(this.actionPress.hold(edge, this.time.now));
+        // enter at 36 CSS px, leave at 52 (a resting thumb's tremor never retracts the row)
+        this.actionEvents(
+          this.actionPress.hold(at(PAINT_EDGE_CSS), this.time.now, at(PAINT_EDGE_EXIT_CSS)),
+        );
       }
     }
   }

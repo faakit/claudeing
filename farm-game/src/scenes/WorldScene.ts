@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { MapArt, tilesetFor } from '../art/mapLayers';
 import { DRY_SAFETY_NET, dryTilesetKey, ensureDryTileset } from '../art/dryTiles';
 import { GreenReveal } from '../fx/GreenReveal';
+import { ChannelFx } from '../fx/ChannelFx';
 import {
   interactSite,
   paletteOf,
@@ -195,6 +196,8 @@ export abstract class WorldScene extends Phaser.Scene {
   /** Detail-layer tiles a channel drew over, to put back when it is filled in. */
   private channelUnder = new Map<string, number>();
   private farm: FarmRenderer | null = null;
+  /** The channels' juice: the spade's cut, the water running into it, the morning's run (fx/ChannelFx.ts). */
+  private channels: ChannelFx | null = null;
   private mapArt: MapArt | null = null;
   private ambient: Ambient | null = null;
   /** The pixel-art see-through hole over crowns and tall objects in front of the player (review 9). */
@@ -266,6 +269,14 @@ export abstract class WorldScene extends Phaser.Scene {
   private lastTile = { tx: -1, ty: -1 };
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
+  /**
+   * A verb that reads taps and Action its own way (the towing spike, src/dev/towSpike.ts): a tap at a world point
+   * or an Action press it took returns true, and the usual handling is skipped.
+   */
+  protected tapHook: ((wx: number, wy: number) => boolean) | null = null;
+  protected actionHook: (() => boolean) | null = null;
+  /** Called when a walk started with `walkTo` arrives. */
+  private walkDone: (() => void) | null = null;
 
   protected constructor(
     key: string,
@@ -385,6 +396,22 @@ export abstract class WorldScene extends Phaser.Scene {
     if (this.mapId === 'farm') {
       this.farm = new FarmRenderer(this, (tx, ty, look) => this.paintChannel(tx, ty, look));
       this.farm.sync(state, false);
+      const detail = !!map.getLayer('detail');
+      this.channels = new ChannelFx(
+        this,
+        this.farm,
+        {
+          texture: detail ? look.key : null,
+          src: (tx, ty, l) =>
+            detail && tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) !== 'path' // a culvert shows nothing
+              ? (tileset.getTileTextureCoordinates(CHANNEL_GID[l]) as {
+                  x: number;
+                  y: number;
+                } | null)
+              : null,
+        },
+        () => getState().settings.reduceMotion,
+      );
     }
     // The first green (systems/valley.ts): the first time the farmer stands on the green farm, the straw gives way
     // to green outward from them (the dry tileset is held for this one morning), with its banner and jingle.
@@ -428,6 +455,9 @@ export abstract class WorldScene extends Phaser.Scene {
         audio.play('water');
         gameEvents.emit('valleyMoment', { text: RIVER_BANNER });
       });
+    } else if (this.mapId === 'farm' && !creekMomentDue(state)) {
+      // the morning's water runs down the channels the first time they come into view today
+      this.channels?.planMorning(state);
     } else if (this.mapId === 'farm' && creekMomentDue(state)) {
       // The creek's first morning: the dry bed drawn over the running one and cut away from Ilse's gate down, once
       // the creek comes into view (update starts it; until then the overlay is hidden and costs nothing).
@@ -526,6 +556,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.cleanup.forEach((off) => off());
       this.cleanup = [];
+      this.channels?.destroy();
+      this.channels = null;
       this.farm?.destroy();
       this.farm = null;
       this.things?.destroy();
@@ -549,8 +581,13 @@ export abstract class WorldScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     runtime.paintWork = this.work !== null; // a painted row digs on, never fills (mechanics/channels.ts)
-    // the creek's first morning starts when the creek bed (x 26-27) comes into view
-    if (this.creekReveal && !this.reveal && this.cameras.main.worldView.right > 25 * TILE_SIZE) {
+    // The creek's first morning starts once the creek bed (x 26-27) is wholly in view, a tile in from the edge: it
+    // started as the view's edge passed x 25, with the bed still off screen (the same sliver as feel critic C1-1).
+    if (
+      this.creekReveal &&
+      !this.reveal &&
+      this.cameras.main.worldView.right >= 28 * TILE_SIZE + TILE_SIZE
+    ) {
       takeCreekMoment(getState());
       this.reveal = this.creekReveal;
       this.creekReveal = null;
@@ -566,6 +603,7 @@ export abstract class WorldScene extends Phaser.Scene {
         runtime.valleyReveal = false;
       }
     }
+    this.channels?.update(delta, this.cameras.main.worldView);
     if (this.farmDirty && this.time.now >= this.impactAt) {
       this.farmDirty = false;
       this.farm?.sync(getState(), true);
@@ -686,7 +724,13 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = false;
       this.holdUses = 0;
       this.holdKind = null;
-    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
+    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) {
+      if (this.actionHook?.()) {
+        // a verb took the press (one use per press, as a refused Action is)
+        this.actionLock = ACTION_LOCK_MS.ok;
+        this.heldFailed = true;
+      } else this.tryAction();
+    }
 
     this.updateNpcs(state);
     this.updateTarget();
@@ -1221,6 +1265,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     // what the farmer holds before the action (placing the last one empties the slot): `place` shows it in his hands
     const heldBefore = state.inventory.slots[state.inventory.selected]?.item;
+    this.channels?.beforeAct(state, heldBefore);
     const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
@@ -1246,7 +1291,11 @@ export abstract class WorldScene extends Phaser.Scene {
       });
     this.highlight.pulse();
     if (res.ok) {
-      if (this.work && res.kind === 'dig') this.work.dug = (this.work.dug ?? 0) + 1;
+      // the cut's new tiles the water reaches are held dry until it runs into them on the impact
+      const fresh = res.kind === 'dig' ? (this.channels?.afterDig(state) ?? []) : [];
+      // the row's toast counts every tile that became channel, the bank tile too (feel critic N1)
+      if (this.work && res.kind === 'dig')
+        this.work.dug = (this.work.dug ?? 0) + Math.max(1, this.channels?.lastDug ?? 1);
       this.actionLock = ACTION_LOCK_MS.ok;
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
@@ -1263,15 +1312,30 @@ export abstract class WorldScene extends Phaser.Scene {
       const def = stack?.item ? items[stack.item] : undefined;
       if (!swing.shown && def?.type === 'tool' && TOOL_KINDS[stack!.item]?.includes(res.kind))
         this.fx.swing(at.x, at.y, def.icon, at.facing);
+      // Ilse's spade (a key item, so no tool pose): its icon swings, and the cut lands after the wind-up
+      if (!swing.shown && def && (res.kind === 'dig' || res.kind === 'fill')) {
+        this.fx.swing(at.x, at.y, def.icon, at.facing);
+        swing.delay = SWING.windup;
+      }
       const repeat = inputHub.actionHeld && this.holdUses > 0;
       // Hit-stop only on a single harvest or the first of a hold or a painted row: a freeze per tile is a stutter.
       const firstUse = !repeat && (!this.work || (this.work.done <= 1 && this.work.tileUses === 0));
       // The impact: particles, sound and the haptic all land on the strike frame together.
       const impact = () => {
         if (!this.sys.isActive()) return;
-        playActionFx(this.fx, res, at, stack?.item, true);
+        // a dig's water is ChannelFx's (it runs into the cut from upstream), not a splash on the spot
+        playActionFx(
+          this.fx,
+          res.kind === 'dig' && this.channels ? { ...res, wet: false } : res,
+          at,
+          stack?.item,
+          true,
+        );
+        if (res.kind === 'dig') this.channels?.dig(res.tx, res.ty, at.facing, fresh);
         // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
-        if (quietHaptic) {
+        if (res.kind === 'dig') haptic('tick');
+        // a cut is felt tile by tile, even along a painted row (the 120 ms tick gap spaces them)
+        else if (quietHaptic) {
           /* a painted row: no buzz per use */
         } else if (res.kind === 'harvest') haptic('medium');
         else haptic('tick', { repeat });
@@ -1685,6 +1749,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private onTap(x: number, y: number): void {
     this.preview = false;
     if (this.transitioning || runtime.blocked) return;
+    const wp = this.tapHook ? this.worldPoint(x, y) : null;
+    if (wp && this.tapHook?.(wp.x, wp.y)) return;
     if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
     // A new tap replaces a painted row in progress.
     if (this.work) {
@@ -1761,8 +1827,16 @@ export abstract class WorldScene extends Phaser.Scene {
   /** At the end of a tap's walk: face the target and do it. */
   private arrive(): void {
     const end = this.routeEnd;
+    const done = this.walkDone;
     this.cancelRoute();
     if (!end) return;
+    if (done) {
+      const player = getState().player;
+      if (end.face) faceDirection(player, end.face);
+      this.syncSprite(false);
+      done();
+      return;
+    }
     const player = getState().player;
     if (end.face) faceDirection(player, end.face);
     this.syncSprite(false);
@@ -1782,7 +1856,54 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Walk to a tile by the usual tap walk (the plan shown, the stick takes over at once), then face `face` and call
+   * `done`. False when there is no way there.
+   */
+  protected walkTo(t: TileCoord, face: Direction | null = null, done?: () => void): boolean {
+    const here = playerTile(getState().player);
+    const path =
+      here.tx === t.tx && here.ty === t.ty
+        ? [here]
+        : findPath(this.grid, here, [t], { avoid: (tx, ty) => this.isDoor(tx, ty) });
+    if (!path) return false;
+    this.work = null;
+    this.highlight.showPaint(null);
+    this.route = createRoute(path);
+    this.routeEnd = { intent: { kind: 'none', target: t }, face };
+    this.walkDone = done ?? null;
+    this.highlight.showPlan(path, t, 'none');
+    if (path.length === 1 && this.actionLock <= 0) this.arrive();
+    return true;
+  }
+
+  /** A walk is in progress (a tap's, a painted row's or `walkTo`'s). */
+  protected get walking(): boolean {
+    return this.route !== null;
+  }
+
+  /** Where the walk in progress ends, if one is. */
+  protected get walkGoal(): TileCoord | null {
+    return this.route ? (this.route.path[this.route.path.length - 1] ?? null) : null;
+  }
+
+  /** Stop a walk where the farmer stands. */
+  protected stopWalk(): void {
+    this.cancelRoute();
+  }
+
+  /** Can the farmer stand on this tile? */
+  protected walkable(tx: number, ty: number): boolean {
+    return this.inMap({ tx, ty }) && !isTileBlocked(this.grid, tx, ty);
+  }
+
+  /** The farmer's sprite (a verb may lean it for a frame; syncSprite puts it back each frame). */
+  protected get farmerSprite(): Phaser.GameObjects.Sprite {
+    return this.sprite;
+  }
+
   private cancelRoute(): void {
+    this.walkDone = null;
     this.route = null;
     this.routeEnd = null;
     if (!this.preview) this.highlight.showPlan(null, null, 'none');

@@ -1063,6 +1063,13 @@ async function channels() {
     }),
   );
   await farm.load('channels-flow-cap');
+  // the morning's run holds the water back until it passes (fx/ChannelFx.ts)
+  await farm.until(
+    (_s, w) => !w.game.scene.getScene('Farm').channels.running,
+    null,
+    'the morning run to finish',
+    8000,
+  );
   const look = await farm.eval(() => {
     const f = window.__farm.game.scene.getScene('Farm').farm;
     const tint = (k) => f.cells.get(k)?.channel ?? null;
@@ -1135,6 +1142,128 @@ async function channels() {
 
 // Art round 5: the farmer's action animations (harvest, plant, eat, place, pet, reel) play on their events, never
 // block input, and stay off in Calm mode. A recorder notes every action frame the pose shows.
+// The morning run and the house doors by real taps (feel critic C1-1): from the house, a tap on the front door goes
+// out; the morning's run waits until its entry is on screen (never spent on a sliver at the view's edge), then
+// starts with its first tiles in view. Back at the farmhouse, a tap on the door drawn above its warp tile goes in.
+async function morning() {
+  const farm = await openScenario(browser, url, 'channels-morning', { profile: PROFILE });
+  await farm.frames(5);
+  // a low thumb: the middle of the void tile just under the front door (5,8)
+  await farm.during('sceneReady', ['Farm'], () => farm.tapTile(5, 9));
+  check(
+    'house: a tap just under the front door goes out',
+    (await farm.state()).player.map === 'farm',
+  );
+  const fx = () =>
+    farm.eval(() => {
+      const c = window.__farm.game.scene.getScene('Farm').channels;
+      return { started: c.started, running: c.running };
+    });
+  await farm.frames(40);
+  const early = await fx();
+  // walk east along the field until the channel's head is on screen
+  await farm.tapTile(19, 8);
+  const started = await farm.until(
+    (_s, w) => w.game.scene.getScene('Farm').channels.started,
+    null,
+    'the morning run to start',
+    15000,
+  );
+  const inside = ([tx, ty]) =>
+    tx * 16 >= started.view.x &&
+    (tx + 1) * 16 <= started.view.x + started.view.width &&
+    ty * 16 >= started.view.y &&
+    (ty + 1) * 16 <= started.view.y + started.view.height;
+  // the critic's rule: its entry and next two tiles on screen, or half the run or more
+  const inView = started.head.every(inside) || started.seen * 2 >= started.of;
+  check(
+    'channels-morning: the run waits off screen, then starts with its head (or half of it) in view',
+    early.started === null && early.running && inView,
+    JSON.stringify({ early, started }),
+  );
+  await farm.until(
+    (_s, w) => !w.game.scene.getScene('Farm').channels.running,
+    null,
+    'run end',
+    8000,
+  );
+  const s = await farm.state();
+  check(
+    'channels-morning: after the run the soil beside the channel shows watered',
+    [19, 20, 21, 22, 23, 24].every((x) => s.farm.tiles[`${x},11`]?.watered),
+  );
+  await farm.idle();
+  await farm.during('sceneReady', ['House'], () => farm.tapTile(14, 6));
+  check(
+    'farm: a tap on the farmhouse door drawn above its warp tile goes in',
+    (await farm.state()).player.map === 'house',
+  );
+  check('morning: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
+// The towing spike (M7 "spike first", feel lane): by real taps only, a drifting log is hooked, towed along the
+// bank, tugged off the snag and landed at the slip, in under 20 s and a handful of taps, never leaving the water;
+// a long log takes two tugs (here by Action, with the left hand).
+async function towing() {
+  for (const [name, hand, tugBy] of [
+    ['tow-spike', 'right', 'tap'],
+    ['tow-spike-long', 'left', 'action'],
+  ]) {
+    const farm = await openScenario(browser, url, name, { profile: PROFILE, hand });
+    await farm.frames(5);
+    // every frame until it lands: the log's centre stays on a water tile while it floats
+    const watch = farm.eval(async () => {
+      const d = window.__farm.dev;
+      const lab = window.__farm.game.scene.getScene('Lab');
+      const off = [];
+      for (let i = 0; i < 60 * 60; i++) {
+        await d.wait.frames(1);
+        const t = d.tow();
+        if (!t) continue;
+        if (t.landed) break;
+        if (['drift', 'hooking', 'towing', 'hauling'].includes(t.phase)) {
+          const tx = Math.floor(t.log.x / 16);
+          const ty = Math.floor(t.log.y / 16);
+          if (!lab.tow.world.water(tx, ty)) off.push([t.phase, tx, ty]);
+        }
+      }
+      return off.slice(0, 5);
+    });
+    const tow = () => farm.eval(() => window.__farm.dev.tow());
+    const tapLog = async () => {
+      const t = await tow();
+      await farm.tapTile(Math.floor(t.log.x / 16), Math.floor(t.log.y / 16));
+    };
+    await tapLog();
+    await farm.until((_s, w) => w.dev.tow()?.log.hooked, null, `${name}: hooked`, 15000);
+    await farm.tapTile(13, 28); // the slip
+    await farm.until((_s, w) => w.dev.tow()?.log.snagged, null, `${name}: the snag`, 15000);
+    const snagged = await tow();
+    for (let i = 0; i < (name.includes('long') ? 2 : 1); i++) {
+      if (tugBy === 'action') await farm.tapButton('ACTION');
+      else await tapLog();
+      await farm.frames(6);
+    }
+    await farm.until((_s, w) => w.dev.tow()?.landed > 0, null, `${name}: landed`, 20000);
+    const t = await tow();
+    const off = await watch;
+    check(
+      `${name} (${hand}): hooked, towed, tugged free and landed by taps in under 20 s`,
+      t.ms !== null && t.ms < 20000 && t.taps + t.actions <= 6,
+      JSON.stringify(t),
+    );
+    check(
+      `${name}: the snag stops the log, the tugs free it (${name.includes('long') ? 2 : 1})`,
+      snagged.log.snagged && t.tugs === (name.includes('long') ? 2 : 1),
+      JSON.stringify({ snagged: snagged.log, tugs: t.tugs }),
+    );
+    check(`${name}: the log never leaves the water`, off.length === 0, JSON.stringify(off));
+    check(`${name}: no console errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
 async function actions() {
   const farm = await openScenario(browser, url, 'ripe-plot', { profile: PROFILE });
   await farm.eval(() => {
@@ -1278,7 +1407,20 @@ async function actions() {
 try {
   const blocks = SMOKE
     ? [smoke]
-    : [smoke, everyScenario, mechanics, stages, ambient, actions, valley, spring, channels, weir];
+    : [
+        smoke,
+        everyScenario,
+        mechanics,
+        stages,
+        ambient,
+        actions,
+        valley,
+        spring,
+        channels,
+        weir,
+        morning,
+        towing,
+      ];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

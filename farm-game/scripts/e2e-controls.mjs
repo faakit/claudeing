@@ -820,6 +820,54 @@ async function runCombo(p, hand) {
         );
       }
 
+      // Edge hold hysteresis (feel critic D3): a thumb resting about 34 CSS px from its edge (just inside the 36 px
+      // band) and trembling (sigma 4 CSS px) for 2 s: the row only ever grows (the hold leaves at 52 px, not 36).
+      {
+        const toEdge = hand === 'left' ? -1 : 1;
+        await place(page, hand === 'left' ? 20 : 4, 20, hand === 'left' ? 'left' : 'right');
+        await page.evaluate(() => window.__farm.controls.clear());
+        await t.down(L.action.x, L.action.y);
+        await page.waitForFunction(
+          () => window.__farm.game.scene.getScene('UI').actionPress?.armed,
+          null,
+          { timeout: 3000, polling: 16 },
+        );
+        const k = t.geo.k; // CSS px per logical px
+        const restX = toEdge < 0 ? 34 / k : 200 - 34 / k;
+        for (let j = 1; j <= 6; j++) {
+          await t.move(L.action.x + ((restX - L.action.x) * j) / 6, L.action.y);
+          await sleep(30);
+        }
+        let seed = 7;
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+        const gauss = () => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
+        const lengths = [];
+        const t0 = Date.now();
+        while (Date.now() - t0 < 2000) {
+          await t.move(restX + (gauss() * 4) / k, L.action.y + (gauss() * 4) / k);
+          lengths.push(
+            await page.evaluate(
+              () =>
+                window.__farm.game.scene.getScenes(true).find((sc) => sc.grid)?.painting?.length ??
+                0,
+            ),
+          );
+          await sleep(16);
+        }
+        const drops = lengths.filter((n, i) => i > 0 && n < lengths[i - 1]).length;
+        for (let j = 5; j >= 0; j--) {
+          await t.move(L.action.x + ((restX - L.action.x) * j) / 6, L.action.y);
+          await sleep(30);
+        }
+        await t.up();
+        await paintDone();
+        check(
+          `${tag}: a trembling rest just inside the edge band never shortens the row (edge-hold hysteresis)`,
+          drops === 0 && Math.max(...lengths) >= 6,
+          `drops ${drops}, lengths ${[...new Set(lengths)].join(',')}`,
+        );
+      }
+
       // World touches never paint or till by duration: slow taps on grass and rest-then-steer just walk.
       let slowWorked = 0;
       for (const ms of [240, 350, 600]) {
