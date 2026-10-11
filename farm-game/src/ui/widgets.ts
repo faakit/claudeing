@@ -7,6 +7,7 @@ import { fitRow, Label } from './font';
 import { rowLayout } from './layout';
 import { getState } from '../state/store';
 import { C, CH, SKIN } from './theme';
+import { sheetTexture } from './sheetSkin';
 
 /**
  * Notched pixel-art panel drawn at (x, y). Plum skin: ink outline, cream rim, soft shadow. Walnut skin: a
@@ -417,10 +418,15 @@ export abstract class Modal {
     this.onClosed?.();
   }
 
-  /** The sheet background. Extends below the screen so its bottom corners are never visible. */
+  /**
+   * The sheet background. Extends below the screen so its bottom corners are never visible. The walnut skin uses
+   * the 9-slice parchment-and-walnut sheet when its art is in the ui atlas (sheetSkin.ts), else the drawn panel.
+   */
   protected panel(h = this.panelH): Phaser.GameObjects.Graphics {
     const g = this.scene.add.graphics();
-    drawPanel(g, 0, 0, this.panelW, h + 6);
+    const skin = sheetTexture(this.scene, this.panelW, h + 6);
+    if (skin) this.content.add(this.scene.add.image(0, 0, skin).setOrigin(0));
+    else drawPanel(g, 0, 0, this.panelW, h + 6);
     this.content.add(g);
     return g;
   }

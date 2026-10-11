@@ -24,7 +24,11 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game sprites for Tiny Acre, a cozy, warm top-down farming game. Every sprite is drawn with big chunky square pixels on a strict pixel grid, limited warm palette, a 1-pixel soft dark plum outline around every sprite, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no labels, no drop shadows. Flat solid pure magenta (#FF00FF) background. Contains no magenta or hot pink.
 
-Generations: **28** prompts.
+## Preamble: tinyacre-ui
+
+> Pixel art game user interface asset for Tiny Acre, a cozy, warm top-down farming game. Drawn with big chunky square pixels on a strict pixel grid, seen straight on (flat, no perspective, no tilt), limited warm palette: walnut and honey wood browns, cream parchment, a little gold, a 1-pixel soft dark plum outline, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no letters, no icons, no drop shadows. Flat solid pure magenta (#FF00FF) background around the asset. The asset contains no magenta or hot pink.
+
+Generations: **30** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -233,3 +237,19 @@ Generations: **28** prompts.
 - raw: town4-a.jpg, town4-b.jpg
 - used: a: the library as a lending-library book cabinet on a post with a bench; b: the fair hall as an open bandstand with bunting (review 11, R11-1)
 - note: round 3, art critic review 11 (R11-1): the library and fair hall drawn as things that honestly fit 32x40 on one tile (a book kiosk, a bandstand) instead of dollhouses; submitted by the art agent, downloaded by the coordinator
+
+## 29. `ui1` (1:1, preamble: tinyacre-ui)
+
+> One single large rectangular menu sheet filling most of the image: a plain sheet of cream parchment paper inside a sturdy wooden picture frame of dark walnut wood about one twentieth of the panel's width thick, with a lighter honey-wood bevel on its inner edge, a thin dark line where the wood meets the paper, and a small square brass cap with one rivet on each of the four corners. The frame's long sides are straight, evenly repeating wood grain, the same on all four sides. The parchment centre is almost flat cream with only a very faint, even paper texture and a slightly darker one-pixel shadow along its inner edge, so text can sit on it.
+
+- raw: ui1-a.jpg, ui1-b.jpg
+- used: 
+- note: round 5, the menu sheet background (owner: the old one looked buggy on a phone); submitted by the art agent, to be downloaded by the coordinator. The preamble says 'assets' in the plural for ui2.
+
+## 30. `ui2` (1:1, preamble: tinyacre-ui)
+
+> A 2x2 grid of four separate small rectangular menu panels with wide even spacing, each a plain cream parchment sheet inside a wooden frame, seen straight on, each frame with evenly repeating straight sides and four matching corners, in this order, left to right, top to bottom: dark walnut frame with small brass corner caps; dark walnut frame with carved leafy sprout corners; warm honey-oak plank frame held by little wooden pegs at the corners; dark walnut frame with a thin gold inner trim line. The parchment centres are almost flat cream with only a very faint, even paper texture.
+
+- raw: ui2-a.jpg, ui2-b.jpg
+- used: 
+- note: round 5, frame style variants for the menu sheet, submitted in parallel with ui1

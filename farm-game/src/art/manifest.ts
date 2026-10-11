@@ -141,6 +141,29 @@ export function toolAnimFrames(item: string, dir: string): string[] {
   return Array.from({ length: TOOL_ANIM_FRAMES }, (_, i) => toolAnimKey(t.tool, dir, i));
 }
 
+/**
+ * The menu sheet skin (art round 5): a parchment sheet in a walnut frame with brass corner caps, as 9-slice pieces
+ * in the ui atlas (art-src/tools/uisheet.py, Flow `ui1` b), composed by src/ui/sheetSkin.ts. Edges and the centre
+ * TILE, never stretch.
+ */
+export const SHEET_PIECES = ['tl', 't', 'tr', 'l', 'c', 'r', 'bl', 'b', 'br'] as const;
+export type SheetPiece = (typeof SHEET_PIECES)[number];
+export const sheetPieceKey = (p: SheetPiece): string => `ui_sheet_${p}`;
+/** Frame widths in px (the left and top include a 1 px paper shadow) and the safe content inset. */
+export const SHEET_SLICE = { left: 6, right: 5, top: 7, bottom: 5, inset: 8 } as const;
+/** Piece sizes [w, h], as the art pipeline builds them. */
+export const SHEET_PIECE_SIZES: Record<SheetPiece, [number, number]> = {
+  tl: [6, 7],
+  t: [16, 7],
+  tr: [5, 7],
+  l: [6, 16],
+  c: [16, 16],
+  r: [5, 16],
+  bl: [6, 5],
+  b: [16, 5],
+  br: [5, 5],
+};
+
 /** UI glyphs and fx drawn in code (gameArt.drawGlyphs / placeholders). */
 /** Small effect and ambient sprites (ui atlas): drawn only when the art exists, no generated fallback. */
 export const FX_SPRITES: [string, number, number][] = [
@@ -455,6 +478,19 @@ export function artManifest(): ArtEntry[] {
       group: 'world',
       kind: `house exit door ${i}`,
       from: 'art round 4 (motion.py)',
+      optional: true,
+    });
+  }
+  // the menu sheet's 9-slice pieces (art round 5, src/ui/sheetSkin.ts); without them sheets draw the old panel
+  for (const p of SHEET_PIECES) {
+    const [w, h] = SHEET_PIECE_SIZES[p];
+    add({
+      texture: sheetPieceKey(p),
+      w,
+      h,
+      group: 'ui',
+      kind: `menu sheet 9-slice ${p}`,
+      from: 'art round 5 (uisheet.py, Flow ui1)',
       optional: true,
     });
   }

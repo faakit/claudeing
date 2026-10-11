@@ -193,7 +193,7 @@ describe('animation frames (art round 4)', () => {
 
   it('packs every round-4 frame the manifest names, at its size', () => {
     const all = { ...chars.frames, ...atlas('world').frames, ...atlas('ui').frames };
-    const want = artManifest().filter((e) => e.from.startsWith('art round 4'));
+    const want = artManifest().filter((e) => /^art round [45]/.test(e.from));
     expect(want.length).toBeGreaterThan(150);
     for (const e of want) {
       const f = all[atlasFrameName(e)];
