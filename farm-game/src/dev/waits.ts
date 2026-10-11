@@ -4,10 +4,22 @@
  * what it was waiting for.
  */
 import Phaser from 'phaser';
+import { GAME_HEIGHT } from '../config';
 import { controlsLog, type ActLog } from '../input/controlsLog';
 import { inputHub } from '../input/InputHub';
 import { runtime } from '../state/runtime';
 import { gameEvents, type GameEvents } from '../systems/events';
+
+/**
+ * A sheet has reached its open position. The slide starts one frame after open() (feel/smooth), so "open and
+ * not tweening" alone is also true on that first frame, while the sheet still sits below the screen.
+ */
+function atRest(m: Loose): boolean {
+  const root = m['root'] as { y?: number } | undefined;
+  const h = m['panelH'];
+  if (typeof root?.y !== 'number' || typeof h !== 'number') return true; // not a sliding sheet
+  return Math.round(root.y) === GAME_HEIGHT - h;
+}
 
 type Loose = Record<string, unknown>;
 const loose = (o: unknown): Loose => o as Loose;
@@ -60,11 +72,17 @@ export class DevWaits {
     return out;
   }
 
+  /** The map-change wipe (feel/smooth, fx/Wipe.ts) is closing, covering or opening. */
+  private wiping(): boolean {
+    const wipe = loose(this.ui() ?? {})['wipe'] as { busy?: boolean } | undefined;
+    return !!wipe?.busy;
+  }
+
   /** The open sheet's name, once it has finished sliding in (null when none is open). */
   openSheet(): string | null {
     const ui = this.ui();
     for (const [name, m] of this.sheets())
-      if (m['isOpen'] && !ui?.tweens.isTweening(m['root'] as object)) return name;
+      if (m['isOpen'] && !ui?.tweens.isTweening(m['root'] as object) && atRest(m)) return name;
     return null;
   }
 
@@ -135,7 +153,8 @@ export class DevWaits {
       () => {
         const w = this.world();
         if (!w || (key && w.scene.key !== key) || !this.ui()) return null;
-        if (loose(w)['transitioning'] || w.cameras.main.fadeEffect.isRunning) return null;
+        if (loose(w)['transitioning'] || w.cameras.main.fadeEffect.isRunning || this.wiping())
+          return null;
         return runtime.inGame && !runtime.busy ? w.scene.key : null;
       },
       `the ${key ?? 'world'} scene to be ready`,
@@ -195,6 +214,7 @@ export class DevWaits {
           !!loose(w)['work'] ||
           Number(loose(w)['actionLock'] ?? 0) > 0 ||
           w.cameras.main.fadeEffect.isRunning ||
+          this.wiping() ||
           inputHub.direction !== null ||
           inputHub.actionHeld ||
           runtime.busy ||

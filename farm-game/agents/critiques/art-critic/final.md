@@ -32,7 +32,6 @@ evidence crops are in `round-1/` to `round-6/`.
 There are no blockers and no majors left.
 
 **Minor**
-
 - R6-2: on the title screen, "New Game" still has doubled-looking letters (light letters with a dark offset on the
   sand button; see `round-6/f_newgame.png`). In-game buttons are clean, so this is only the title screen's label
   style. It is a one-line fix.
@@ -40,12 +39,10 @@ There are no blockers and no majors left.
   and is logged for when the poses are redone.
 
 **Transferred**
-
 - R3-6: when the player faces up, the target marker's brackets draw over the player's head. This belongs to the
   controls agent (`TileHighlight.ts`).
 
 **Accepted under the coordinator's rulings**
-
 - R3-1: ponds stay rounded rectangles, because their water tiles and collision can't change.
 - R3-2: groves only go outside the forage zones.
 - R1-5: no coin glyph next to "Gold", because it would need a layout change.
@@ -53,7 +50,6 @@ There are no blockers and no majors left.
 ## What improved because of the conversation
 
 **Foundations (round 1)**
-
 - The outline was the darkest colour, picked automatically: a hot red-black, not the documented brown, and 28% of
   all pixels. It is now ink, set explicitly.
 - The palette had five near-blacks you couldn't tell apart. It is now ramps by role, at least 32 RGB units apart
@@ -63,7 +59,6 @@ There are no blockers and no majors left.
 - The "classic 16-bit farming RPGs" phrase is gone from the prompts.
 
 **Maps (round 2)**
-
 - Flat lawns became authored layers: walk-behind tree canopy, shorelines, grass creeping onto paths, carved mine walls.
 - Clay-tile roofs with staggered courses, a ridge cap and eaves.
 - Landmarks: a farmhouse with a chimney and rooster weathervane, a crooked oak, a cobbled square with a well, Orin's
@@ -72,7 +67,6 @@ There are no blockers and no majors left.
 - Decorative crystals were taken off floor boulders, so they no longer look like gem nodes.
 
 **Atmosphere**
-
 - Seasons are their own tilesets instead of a multiply tint.
 - Dusk shifts toward rose instead of turning sand orange.
 - Night glow went from lime and blown-out white to warm stepped rings, with window light pooling on the ground.
@@ -80,13 +74,11 @@ There are no blockers and no majors left.
 - Winter has snow-mass roofs and a cast shadow on the snow.
 
 **Signature**
-
 - A rose-pink wildflower that recurs across the valley.
 - Carved-sprout signs and board.
 - A sunset title on the palette, with a hill farmhouse and an embossed wood logo with the sprout on the "I".
 
 **UI**
-
 - Walnut and parchment is the default, with no grain behind text, one sand slot style everywhere, one gold
   selection style, ink button text, and the toast as a walnut plate.
 
@@ -102,7 +94,6 @@ There are no blockers and no majors left.
 5. Before any store release, decision 4 in `decisions.md` and the record in `ASSETS.md`.
 
 Suggested next art work, beyond `agents/NEXT-STEPS-ART.md`:
-
 - Fix R6-2.
 - Redo the tool-use poses on the player's head.
 - Look at everything on a real phone, both in sunlight and at night brightness.
@@ -130,3 +121,34 @@ Suggested next art work, beyond `agents/NEXT-STEPS-ART.md`:
 - **Still open:**
   - The well at 20x30, parked as a nit.
   - The 2x2 and 3x2 footprints for animal houses, which are an owner decision.
+
+## Addendum: art round 4, animation (reviews 13-15, art/round4 d2baabc / 7336fd5, 2026-10-11)
+
+- **Frames delivered:**
+  - **Walk:** 8 frames per direction. The head is pixel-identical in every frame and a foot is always planted; both
+    are test-enforced.
+  - **Tool use:** 4-frame swings (wind-up, swing, contact at index 2, follow-through). Head and torso lean or sink
+    1 px together, so the swings have weight.
+  - **Idles:** villagers have 4 frames with a breath, a blink and one signature beat each; animals got a breath and
+    a head dip.
+  - **Smaller animations:** a door with a fixed frame, a 1 px crop lean, stepped water ripples, a splash crown, and
+    squash-and-stretch harvest pops drawn on the pixel grid.
+  - **The well:** a 24x32 three-tile prop with its roof overhead.
+- **What improved because of the reviews:**
+  - Raised arms are a natural length.
+  - The torso moves with the tool.
+  - Arms swing in the front and back walks.
+  - The door frame is stable.
+  - The town-at-night draw count went back to 4 (the well eave had been triggering the see-through mask).
+  - Facing down, the hoe and pickaxe blades bite the tile in front instead of the feet.
+  - The tool-pose head matches the player's (an old minor, now closed).
+  - The tree crowns now change with the seasons, fixing a round-3 regression.
+- **Decided:** the walk plays at 16 fps at base speed and scales with speed (10-20 fps); a little foot slide is
+  accepted.
+- **Checks:** zero off-palette pixels, perf 2-5 draws and at most 1.38 ms of script per frame, and 787/787 unit tests
+  on my frozen copy.
+- **Still open from the critic:** nothing. The animal-house footprints remain an owner decision.
+- **What the owner should look at first:**
+  - `agents/out/art-shots/round4/strips/*_1x.gif`, especially `walk_right`, `tool_hoe_right` and `idle_rosa_right`.
+  - `well_before_after.png`.
+  - `crowns_winter_fall_after.png`.

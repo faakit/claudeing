@@ -251,6 +251,8 @@ export class Farm {
   async load(name) {
     this.scenario = name;
     await this.eval((n) => window.__farm.dev.load(n), name);
+    // A scenario restarts the world scene behind the map-change wipe; input is ignored until it has opened.
+    await this.eval(() => window.__farm.dev.wait.sceneReady());
   }
 
   close() {

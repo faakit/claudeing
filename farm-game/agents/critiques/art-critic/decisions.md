@@ -7,7 +7,6 @@ Delegated by the owner. Evidence files in this folder: `palette_compare.png` (cu
 ## 1. Palette: not approved as is. Replace with the hand-tuned v2 ramps (`palette_proposed.gpl`).
 
 Findings on the current k-means palette (`public/assets/palette.gpl`):
-
 - Five near-blacks c00-c03 and c05 are 11 to 20 RGB units apart; indistinguishable at 1x on a phone. c03 `#242424`
   is a neutral grey-black, against the brief's "no pure black" spirit.
 - The pipeline's outline is `argmin(L)` = **c00 `#2c0c04`** (a saturated red-black), not the documented `#2b191c`
@@ -23,20 +22,19 @@ Findings on the current k-means palette (`public/assets/palette.gpl`):
 
 Decision: adopt v2 (32 colours, ramps by role; min pairwise distance 32 RGB units vs 11 today):
 
-| ramp                                 | colours                                                                                            |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| ink and shadow                       | ink `#2a1a24` (the one outline colour, also UI ink and font shadow), plum shadow `#4a2a40`         |
-| night / water (cool)                 | night navy `#1e2848`, dusk blue `#2e4a7a`, water `#3c74b4`, sky `#72aadc`, ice white `#d6ecf0`     |
+| ramp | colours |
+|---|---|
+| ink and shadow | ink `#2a1a24` (the one outline colour, also UI ink and font shadow), plum shadow `#4a2a40` |
+| night / water (cool) | night navy `#1e2848`, dusk blue `#2e4a7a`, water `#3c74b4`, sky `#72aadc`, ice white `#d6ecf0` |
 | foliage (hue-shifted teal -> yellow) | teal shade `#1f4a40`, leaf dark `#2e6a3e`, leaf mid `#4a8f3a`, grass `#74b043`, new leaf `#b4d45a` |
-| earth / wood                         | earth dark `#4c2c1c`, soil `#7c442c`, wood `#b47c4c`, sand `#dcb47c`, parchment `#f4e4bc`          |
-| skin                                 | skin light `#f4c09c`, skin mid `#d88c6c`, skin deep `#9c5a3c`                                      |
-| reds                                 | wine `#8c1c2c`, red `#cc3a2a`, rose `#e07a8a`                                                      |
-| warm lights                          | orange `#e48c24`, gold `#f4cc3c`, lamp `#fff0a0` (night glow core)                                 |
-| purples                              | plum `#8c5ca4`, lilac `#c4a0d8`                                                                    |
-| stone (cool to warm)                 | stone dark `#4a4858`, stone `#7a7684`, stone light `#aeb0b4`, taupe `#8a7468`                      |
+| earth / wood | earth dark `#4c2c1c`, soil `#7c442c`, wood `#b47c4c`, sand `#dcb47c`, parchment `#f4e4bc` |
+| skin | skin light `#f4c09c`, skin mid `#d88c6c`, skin deep `#9c5a3c` |
+| reds | wine `#8c1c2c`, red `#cc3a2a`, rose `#e07a8a` |
+| warm lights | orange `#e48c24`, gold `#f4cc3c`, lamp `#fff0a0` (night glow core) |
+| purples | plum `#8c5ca4`, lilac `#c4a0d8` |
+| stone (cool to warm) | stone dark `#4a4858`, stone `#7a7684`, stone light `#aeb0b4`, taupe `#8a7468` |
 
 Rules that come with it:
-
 - The outline index is **explicit** (ink, slot 0), not `argmin(L)`. Shadows go toward plum/teal/navy, never toward
   grey. Highlights go toward yellow (foliage) or parchment (wood), never pure white.
 - Swatches are a starting point: the art agent may nudge values by up to ~10 per channel after seeing the rebuilt
@@ -89,11 +87,9 @@ children, and their faces vanish at 1x.
   image (or rebuild them on the player body template) so they share the body.
 
 ## 4. Licensing of Google Flow output: OK to keep using for the hobby build; commercial release looks permitted but
-
 ## must be re-checked and documented. Not legal advice; the owner decides before any store release.
 
 What the sources say (checked 2026-10-08):
-
 - Google Terms of Service (effective 30 July 2026): for generated original content, "Google won't claim ownership over
   that content". https://policies.google.com/terms
 - Flow help (https://support.google.com/flow/answer/16353333): the Terms of Service "must be consulted and followed in
@@ -111,7 +107,6 @@ What the sources say (checked 2026-10-08):
   likely copy raw AI-derived sprites; the protectable parts are the human-authored terrain, edits and composition.
 
 Recommendation:
-
 1. Keep using Flow as source material. Before a store release, the owner re-reads the terms in force that day and
    decides (optionally a short consult with a lawyer if the release is paid).
 2. Never present the art as hand-drawn (ASSETS.md already says it was not; keep that line, and use the same honesty
@@ -123,7 +118,6 @@ Recommendation:
    after the pipeline, and log those edits.
 
 Record in `ASSETS.md` (add to the Flow paragraph):
-
 - Account tier used (free / Google AI Pro / Ultra) and date range of generations.
 - The terms versions relied on: Google Terms of Service effective 30 July 2026; Generative AI Prohibited Use Policy
   last modified 17 Dec 2024; Flow help article 16353333 as read on 2026-10-08; plus archived copies (PDF or Wayback

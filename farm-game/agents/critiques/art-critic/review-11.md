@@ -7,7 +7,6 @@ Verdict: accepted. R9-4 barn 32x28 gambrel reads clearly bigger than the coop. R
 budget. R9-5 item pop now steps crisply; baked fences already 14 px (accepted). R8-7 landmarks are 32x40.
 
 Open:
-
 - minor (new, R11-1): the house-shaped landmarks (library, fair hall) read as dollhouses next to the 32 px facades:
   their doors are ~10-12 px, smaller than the player (landmarks_east.png, the red-roof and timber houses). On a
   one-tile footprint, depict them as structures that honestly fit 32x40 (a lending-library cabinet with a roof, a
