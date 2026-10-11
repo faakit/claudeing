@@ -54,7 +54,13 @@ export type Sfx =
   | 'ringClose'
   | 'confirm'
   // A special order delivered in full: a bigger fanfare than an ordinary order.
-  | 'special';
+  | 'special'
+  // The Dry Year: the valley comes back (the first green, a place's first morning), a channel dug with the
+  // spade, a towed log landing on the slip and knocking a snag.
+  | 'green'
+  | 'dig'
+  | 'logLand'
+  | 'logKnock';
 
 /** Every cue id, for tests and tooling (keep in sync with the union above; a test checks it). */
 export const SFX_IDS: readonly Sfx[] = [
@@ -84,6 +90,10 @@ export const SFX_IDS: readonly Sfx[] = [
   'ringClose',
   'confirm',
   'special',
+  'green',
+  'dig',
+  'logLand',
+  'logKnock',
 ];
 
 // A major pentatonic keeps any random melody pleasant.
@@ -155,7 +165,11 @@ class AudioEngine {
   private homeSlot: MusicSlot = 'spring';
   private indoor = false;
   private ambienceTargets: Partial<AmbienceTargets> = {};
-  private mood: { rain: boolean; year: number } = { rain: false, year: 1 };
+  private mood: { rain: boolean; year: number; thin: boolean } = {
+    rain: false,
+    year: 1,
+    thin: false,
+  };
   private lastEvict = 0;
   readonly bank = new SampleBank(AUDIO_BASE);
   private sfxPlayer: SfxPlayer | null = null;
@@ -287,6 +301,7 @@ class AudioEngine {
           await new Promise((r) => globalThis.setTimeout(r, 16));
         }
     });
+    this.musicPlayer.setMood(this.mood, ctx.currentTime);
     if (this.slot) this.musicPlayer.setSlot(this.slot, this.indoor, ctx.currentTime);
     for (const [k, v] of Object.entries(this.ambienceTargets)) this.ambience.set(k, v ?? 0);
   }
@@ -597,6 +612,26 @@ class AudioEngine {
           this.tone(f, i === 6 ? 0.6 : 0.14, { gain: 0.18, type: 'triangle', delay: i * 0.09 }),
         );
         break;
+      case 'green':
+        // the same notes as the sampled jingle, in the playing piece's key
+        this.synthJingle('green', this.musicPlayer?.jingleKey() ?? 0, 0, 1);
+        break;
+      case 'dig':
+        // a spade cut: a lower, longer thud than the hoe, and earth thrown after it
+        this.tone(95, 0.16, { to: 45, gain: 0.45 });
+        this.hiss(0.1, { type: 'lowpass', freq: 700, gain: 0.3 });
+        this.hiss(0.14, { type: 'bandpass', freq: 1800, q: 0.8, gain: 0.1, delay: 0.06 });
+        break;
+      case 'logLand':
+        // a heavy wet log dropped on timber: a body thud in the phone's range and a short drip
+        this.tone(160, 0.22, { to: 90, gain: 0.5, type: 'triangle' });
+        this.hiss(0.12, { type: 'lowpass', freq: 600, gain: 0.35 });
+        this.hiss(0.18, { freq: 2400, to: 3600, q: 1, gain: 0.08, delay: 0.08 });
+        break;
+      case 'logKnock':
+        this.tone(220, 0.1, { to: 150, gain: 0.32, type: 'triangle' });
+        this.hiss(0.06, { type: 'lowpass', freq: 900, gain: 0.2 });
+        break;
     }
   }
 
@@ -610,9 +645,18 @@ class AudioEngine {
   }
 
   /** Choose the piece (title, a season, mine, festival...), whether we are indoors, and the weather and year. */
-  setMusic(slot: MusicSlot, indoor: boolean, mood?: { rain?: boolean; year?: number }): void {
+  setMusic(
+    slot: MusicSlot,
+    indoor: boolean,
+    mood?: { rain?: boolean; year?: number; thin?: boolean },
+  ): void {
     const entering = slot !== this.slot && this.slot !== null;
-    if (mood) this.mood = { rain: !!mood.rain, year: mood.year ?? this.mood.year };
+    if (mood)
+      this.mood = {
+        rain: !!mood.rain,
+        year: mood.year ?? this.mood.year,
+        thin: mood.thin ?? this.mood.thin,
+      };
     if (this.ctx && this.musicPlayer) this.musicPlayer.setMood(this.mood, this.ctx.currentTime);
     this.slot = slot;
     this.indoor = indoor;
@@ -699,6 +743,8 @@ class AudioEngine {
       slot: this.slot,
       indoor: this.indoor,
       synthMusic: this.synthMusicOn,
+      thin: this.mood.thin,
+      ambience: { ...this.ambienceTargets },
       decoded: this.bank.decodedCount,
       residentMB: Math.round((this.bank.residentBytes() / 1e6) * 10) / 10,
       music: this.musicPlayer?.stats,

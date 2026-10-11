@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { paletteOf } from '../systems/valley';
+import { valleyStage } from '../systems/valley';
+import { stageThin, waterBeds } from '../audio/stages';
 import {
   MomentClock,
   PanelTracker,
@@ -8,7 +9,8 @@ import {
   type Scene,
 } from '../audio/director';
 import { inputHub } from '../input/InputHub';
-import { mapsData } from '../data';
+import { TILE_SIZE } from '../config';
+import { mapsData, valley } from '../data';
 import { audio } from '../platform/audio';
 import { isNative } from '../platform/native';
 import { runtime } from '../state/runtime';
@@ -25,6 +27,9 @@ const panels = new PanelTracker();
 const moments = new MomentClock();
 const SEASON_INDEX: Record<string, number> = { spring: 0, summer: 1, fall: 2, winter: 3 };
 
+/** The arrangement last chosen (a reveal keeps it until the straw is gone). */
+let lastThin = false;
+
 function describe(): Scene {
   if (!runtime.inGame)
     return {
@@ -38,6 +43,15 @@ function describe(): Scene {
     };
   const s = getState();
   const fest = festivalToday(s);
+  const map = s.player.map;
+  const look = valleyStage(s, map);
+  // A reveal (the first green, the creek's first morning) shows the stage before it until it ends: the dry wind
+  // and few birds hold if that stage was dry, and the arrangement stays as it was; the water runs from its start.
+  const before =
+    runtime.valleyReveal && look.stage > 0 ? valley.maps[map]?.variants[look.stage - 1] : undefined;
+  const dry = (before ?? look).palette === 'dry';
+  const thin = runtime.valleyReveal ? lastThin : stageThin(map, look.variant, look.palette);
+  lastThin = thin;
   return {
     inGame: true,
     map: s.player.map,
@@ -49,7 +63,15 @@ function describe(): Scene {
     panel: panels.current(performance.now()),
     year: s.time.year,
     // the first green's dissolve keeps the dry bed; the birdsong swells back in as it ends (the bed glides)
-    dry: paletteOf(s, s.player.map) === 'dry' || runtime.valleyReveal,
+    dry,
+    thin,
+    water: waterBeds(
+      map,
+      look.variant,
+      s.stats,
+      Math.floor(s.player.x / TILE_SIZE),
+      Math.floor(s.player.y / TILE_SIZE),
+    ),
   };
 }
 
@@ -93,7 +115,7 @@ export function wireAudio(game: Phaser.Game): void {
     last = time;
     const scene = describe();
     const m = chooseMusic(scene);
-    audio.setMusic(m.slot, m.indoor, { rain: m.rain, year: m.year });
+    audio.setMusic(m.slot, m.indoor, { rain: m.rain, year: m.year, thin: m.thin });
     audio.setAmbience(chooseAmbience(scene));
     // A special order delivered in full: its fanfare follows the order jingle the board plays.
     const done = runtime.inGame ? (getState().stats['specialsDone'] ?? 0) : null;
@@ -101,7 +123,8 @@ export function wireAudio(game: Phaser.Game): void {
     specials = done;
     if (scene.inGame && !runtime.blocked) {
       const m2 = moments.step(absDay(), scene.night, scene.outdoor && m.slot === scene.season);
-      if (m2) audio.sting(m2);
+      // a reveal morning's jingle is that morning's moment: the dawn flourish is spent, not played over it
+      if (m2 && !runtime.valleyReveal) audio.sting(m2);
     }
   });
   // Musical moments: villager motifs, new hearts, the season changing under the sleep screen.

@@ -48,6 +48,10 @@ export interface BarOptions {
   rain?: boolean;
   /** Game year: from year two a piece plays its `form2` (variation sections) if it has one. */
   year?: number;
+  /** The Dry Year's thinned arrangement (piece.thin): swapped patterns, dropped layers skipped. */
+  thin?: boolean;
+  /** Thinning has just begun: the dropped layers still play while the player fades their strips out. */
+  thinFading?: boolean;
 }
 
 /** Extra chance that a melody sits a section out on a rainy day. */
@@ -146,6 +150,7 @@ export class PiecePlayer {
         : null;
       if (layer.tacet?.includes(sectionId)) continue;
       if (opt.rain && PERC.has(layer.inst)) continue;
+      if (opt.thin && !opt.thinFading && this.piece.thin?.drop.includes(layer.id)) continue;
       if (opt.indoor && layer.outdoorOnly) continue;
       if (layer.time === 'day' && !opt.day) continue;
       if (layer.time === 'night' && !opt.night) continue;
@@ -230,7 +235,8 @@ export class PiecePlayer {
     rng: () => number,
     opt: BarOptions,
   ): NoteEvent[] {
-    const steps = this.patterns[layer.pattern!]!;
+    const swap = opt.thin ? this.piece.thin?.swap?.[layer.id] : undefined;
+    const steps = this.patterns[swap ?? layer.pattern!]!;
     const meter = this.piece.meter;
     const patBars = Math.floor(Math.max(...steps.map((s) => s[0])) / meter) + 1;
     const from = (bar % patBars) * meter;

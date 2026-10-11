@@ -27,6 +27,22 @@
   "sha1": "63326da48ec3788268b3d58483cc21fd681bbf65",
   "bytes": 5291948
  },
+ "sfx/kenney-impact/footstep_grass_000": {
+  "sha1": "c087600e0cf894a5b7b1bd02e39124e67db38b2a",
+  "bytes": 8290
+ },
+ "sfx/kenney-impact/footstep_grass_001": {
+  "sha1": "2a5515acedf713032285c9fdf0bb03170090d476",
+  "bytes": 8313
+ },
+ "sfx/kenney-impact/footstep_grass_002": {
+  "sha1": "955c4d6011700381ca05b70a721ef5cb53c1b895",
+  "bytes": 8278
+ },
+ "sfx/kenney-impact/footstep_grass_003": {
+  "sha1": "ae41046908fcfb9502991a769830fd367fc92dff",
+  "bytes": 8129
+ },
  "sfx/kenney-impact/footstep_snow_000": {
   "sha1": "2d2102d24e131cd0ea7097942ddf451713dd5972",
   "bytes": 7880
@@ -66,6 +82,54 @@
  "sfx/kenney-impact/impactMetal_heavy_001": {
   "sha1": "d86571ae1b4a9d2014371d2a8b65143461f602e0",
   "bytes": 7279
+ },
+ "sfx/kenney-impact/impactPlank_medium_000": {
+  "sha1": "2b2a669e55d2ca2667a9068c97f3cfa0e034d9c8",
+  "bytes": 12016
+ },
+ "sfx/kenney-impact/impactPlank_medium_001": {
+  "sha1": "3a5285db9ae01d4bfc6b550c0109875998303544",
+  "bytes": 12082
+ },
+ "sfx/kenney-impact/impactPlank_medium_002": {
+  "sha1": "7c3d0938e9c5298150e527bb3ebd46a844983eec",
+  "bytes": 12313
+ },
+ "sfx/kenney-impact/impactSoft_heavy_000": {
+  "sha1": "b2b75f013ecb675cea6df9fc424dbae7a39f5a7a",
+  "bytes": 6570
+ },
+ "sfx/kenney-impact/impactSoft_heavy_002": {
+  "sha1": "0b8df7ffc157a0fe0923ca0f266d95dd028ec1a5",
+  "bytes": 6749
+ },
+ "sfx/kenney-impact/impactSoft_heavy_004": {
+  "sha1": "57eae8421d903d4a9d50abc7d0ec66d8fd67ed43",
+  "bytes": 6478
+ },
+ "sfx/kenney-impact/impactWood_heavy_000": {
+  "sha1": "fd6cbe0bb73ce1186ad89617eaf5af22373d7b78",
+  "bytes": 6233
+ },
+ "sfx/kenney-impact/impactWood_heavy_001": {
+  "sha1": "24a5c2fb1f71fbc2a4693516b826da437e002566",
+  "bytes": 6239
+ },
+ "sfx/kenney-impact/impactWood_heavy_003": {
+  "sha1": "89baaffdfc1b97956e7e2edcec494d312ce39cf4",
+  "bytes": 6181
+ },
+ "sfx/kenney-impact/impactWood_medium_000": {
+  "sha1": "894be07d2029526c4583b04b484a8fd15bd1f82f",
+  "bytes": 6575
+ },
+ "sfx/kenney-impact/impactWood_medium_001": {
+  "sha1": "cddbb1b87ab7ad72e721e56b826ba6119534f476",
+  "bytes": 6555
+ },
+ "sfx/kenney-impact/impactWood_medium_002": {
+  "sha1": "25c33c00e35a6d39496037b72f13fd3d053b83e4",
+  "bytes": 6607
  },
  "sfx/kenney-interface/drop_002": {
   "sha1": "c0f735670be0a38a98d2bc3701a4993d0a063c6f",
@@ -223,17 +287,41 @@
   "sha1": "0f5858fcc1b6ce712e637d24aacd4709ec7dc08f",
   "bytes": 18962
  },
+ "sfx/oga-rubberduck-water/bubble_02": {
+  "sha1": "02bd791b8f3fcd28c721ce24113c103d0f599153",
+  "bytes": 16017
+ },
  "sfx/oga-rubberduck-water/loop_bubbles_02": {
   "sha1": "0b2c4f3c36e89ca1b5795c5ccd523b230badcc7e",
   "bytes": 316960
+ },
+ "sfx/oga-rubberduck-water/loop_bubbles_1": {
+  "sha1": "c7a09a8689be02f8a42eefbb0b3fe40ff4fd59fd",
+  "bytes": 187538
  },
  "sfx/oga-rubberduck-water/loop_water_01": {
   "sha1": "6d93c1ca9282f9c7958da821b469be9a27b85b56",
   "bytes": 176039
  },
+ "sfx/oga-rubberduck-water/loop_water_02": {
+  "sha1": "edb33e06971098394fd7cfa48dc6c53fec9d2aea",
+  "bytes": 269372
+ },
+ "sfx/oga-rubberduck-water/loop_water_03": {
+  "sha1": "468c2018eaf465fb89f1972a9eb4da0686b95643",
+  "bytes": 172397
+ },
+ "sfx/oga-rubberduck-water/splash_02": {
+  "sha1": "4cf02ef57e63011185e7d1bee2c378d5857ef3f4",
+  "bytes": 37895
+ },
  "sfx/oga-rubberduck-water/splash_06": {
   "sha1": "e45ed2ae92863e5c9159e1bac32ee76cdcb6e1f5",
   "bytes": 25975
+ },
+ "sfx/oga-rubberduck-water/splash_09": {
+  "sha1": "9844825465a60583cc40a5d20c2164b0323a3d82",
+  "bytes": 14795
  },
  "sfx/oga-shovel": {
   "sha1": "18904de57177e9f040267560fd2767a4d06ef5f6",

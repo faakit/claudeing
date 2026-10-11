@@ -15,7 +15,7 @@ const FILTER = process.argv[4] ?? '';
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
-const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'special'];
+const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'special', 'green', 'dig', 'logLand', 'logKnock'];
 
 const jobs = [];
 for (const s of SEASONS) {
@@ -109,6 +109,69 @@ jobs.push({
     cues: Array.from({ length: 24 }, (_, i) => ({ cue: ['till', 'water', 'stepGrass', 'stepGrass', 'harvest', 'coin'][i % 6], at: 1 + i * 1.1 })),
   },
 });
+
+// ---- The Dry Year (dy-*): thinned pieces on dry stages, the first green, water beds, dig and log cues.
+const DRY = { wind: 0.6, birds: 0.15 };
+for (const s of SEASONS) {
+  jobs.push({ name: `dy-thin-${s}-day`, o: { seconds: 60, slot: s, thin: true } });
+  jobs.push({ name: `dy-thin-${s}-night`, o: { seconds: 60, slot: s, night: 1, thin: true } });
+  jobs.push({ name: `dy-thin-rain-${s}-day`, o: { seconds: 60, slot: s, thin: true, rain: true } });
+  // the dry farm as heard: thinned piece over the dry wind, a bird now and then
+  jobs.push({ name: `dy-dryfarm-${s}`, o: { seconds: 60, slot: s, thin: true, ambience: s === 'winter' ? { wind: 0.5 } : DRY } });
+  // the first green: the jingle over the thinned piece, then the reveal ends (3.4 s): full piece, birds back
+  jobs.push({
+    name: `dy-green-${s}`,
+    o: {
+      seconds: 16,
+      slot: s,
+      thin: true,
+      ambience: s === 'winter' ? { wind: 0.5 } : DRY,
+      cues: [{ cue: 'green', at: 3 }],
+      changes: [{ at: 6.4, thin: false, ambience: s === 'winter' ? {} : { wind: 0, birds: 1 } }],
+    },
+  });
+}
+jobs.push({ name: 'dy-green-fullpiece', o: { seconds: 10, slot: 'spring', cues: [{ cue: 'green', at: 2 }] } });
+jobs.push({ name: 'dy-dryfarm-rain', o: { seconds: 60, slot: 'spring', thin: true, rain: true, ambience: { rain: 1 } } });
+// collisions the same morning: a level-up or goal within a second gives way to the green jingle
+jobs.push({ name: 'dy-green-vs-level', o: { seconds: 8, slot: 'spring', thin: true, cues: [{ cue: 'green', at: 1 }, { cue: 'level', at: 1.5 }] } });
+jobs.push({ name: 'dy-green-vs-goal-first', o: { seconds: 8, slot: 'spring', thin: true, cues: [{ cue: 'goal', at: 1 }, { cue: 'green', at: 1.3 }] } });
+jobs.push({ name: 'dy-green-season-sting', o: { seconds: 10, slot: 'summer', thin: true, cues: [{ cue: 'season-summer', at: 1 }, { cue: 'green', at: 4.5 }] } });
+jobs.push({ name: 'sting-green', o: { seconds: 5, cues: [{ cue: 'green', at: 0.2 }] } });
+// water beds alone, long (loop repeats), and in their scenes
+jobs.push({ name: 'dy-creek-long', o: { seconds: 150, ambience: { creek: 1, burble: 1 } } });
+jobs.push({ name: 'dy-creek-bed-long', o: { seconds: 150, ambience: { creek: 1 } } });
+jobs.push({ name: 'dy-river-long', o: { seconds: 150, ambience: { river: 1 } } });
+jobs.push({ name: 'dy-wind-long', o: { seconds: 200, ambience: { wind: 0.6 } } });
+jobs.push({ name: 'dy-trickle', o: { seconds: 30, ambience: { creek: 0.35, burble: 0.35 } } });
+jobs.push({ name: 'dy-creek-house', o: { seconds: 30, slot: 'spring', ambience: { birds: 1, creek: 0.25, burble: 0.25 } } });
+jobs.push({ name: 'dy-farm-creek', o: { seconds: 60, slot: 'spring', ambience: { birds: 1, creek: 1, burble: 1 } } });
+jobs.push({ name: 'dy-wendhead', o: { seconds: 60, slot: 'spring', ambience: { birds: 1, creek: 1, burble: 1 } } });
+jobs.push({ name: 'dy-town-river', o: { seconds: 60, slot: 'summer', ambience: { birds: 1, river: 1 } } });
+jobs.push({ name: 'dy-storm-creek', o: { seconds: 90, slot: 'summer', rain: true, ambience: { rain: 1, thunder: 1, wind: 0.8, creek: 0.4, burble: 0.4 } } });
+jobs.push({
+  name: 'dy-water-over-creek',
+  o: { seconds: 20, ambience: { creek: 1, burble: 1 }, cues: Array.from({ length: 16 }, (_, i) => ({ cue: 'water', at: 0.2 + i * 1.2 })) },
+});
+// A painted channel as the game plays it (measured in channels-first-dig: a cut every 0.451 s, a footstep 56 ms
+// before each, the water with each cut that meets running water; the posed farmer plays no swing).
+const DIG_GAP = Number(process.env.DIG_GAP ?? 0.451);
+const row = (cue, wet) =>
+  Array.from({ length: 24 }, (_, i) => [
+    { cue: 'stepGrass', at: 0.444 + i * DIG_GAP },
+    { cue, at: 0.5 + i * DIG_GAP },
+    ...(wet ? [{ cue: 'water', at: 0.5 + i * DIG_GAP }] : []),
+  ]).flat();
+const ROW_S = 0.5 + 24 * DIG_GAP + 1;
+jobs.push({ name: 'dy-dig-row', o: { seconds: ROW_S, slot: 'spring', cues: row('dig', false) } });
+jobs.push({ name: 'dy-dig-row-wet', o: { seconds: ROW_S, slot: 'spring', cues: row('dig', true) } });
+jobs.push({ name: 'dy-dig-row-alone', o: { seconds: ROW_S, cues: row('dig', false) } });
+// the same row tilled (the accepted painted-row level the dig row is held to)
+jobs.push({ name: 'dy-till-row-alone', o: { seconds: ROW_S, cues: row('till', false) } });
+jobs.push({ name: 'dy-till-row', o: { seconds: ROW_S, slot: 'spring', cues: row('till', false) } });
+jobs.push({ name: 'dy-dig-vs-till', o: { seconds: 8, cues: [0, 1, 2, 3].flatMap((i) => [{ cue: 'till', at: 0.3 + i * 0.9 }, { cue: 'dig', at: 4.2 + i * 0.9 }]) } });
+// the log landing over the music it will meet (summer by the river), and a snag knock
+jobs.push({ name: 'dy-log-land', o: { seconds: 8, slot: 'summer', ambience: { river: 1 }, cues: [{ cue: 'logKnock', at: 1 }, { cue: 'logKnock', at: 2.2 }, { cue: 'logLand', at: 4 }] } });
 
 function wav(path, pcmB64, sr) {
   const data = Buffer.from(pcmB64, 'base64');

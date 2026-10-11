@@ -1441,3 +1441,18 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
 - Not done in M6 (wrap-up): the R6-2 channels intro corner; Clay's `rivalLate` switch at the weir's opening (only his
   line ships); the art for the weir's site sprites, the boarded house, the Heron aground and afloat, reeds, rock spurs
   and the mill wheel.
+
+## The Dry Year, audio (audio lane, 2026-10-11)
+
+- **One jingle for every valley moment.** `green` plays for the first green, the creek's first morning and later
+  place mornings: one recognisable "the valley comes back" motif, weeks apart, instead of a new jingle each time.
+  It has priority 3, so a level, goal, heart or order within a second gives way. The dawn flourish is spent on a
+  reveal morning.
+- **Audio follows the map stage, by data** (`src/audio/stages.json`), and a dry-palette stage is thin by default, so
+  a new dry stage needs no audio edit. Today's town (no variants yet) keeps its river bed because its map shows the
+  river; M6's `dry` variant makes it thin, with a trickle.
+- **Rain wins over thin:** the rainy arrangement is already sparse, and both together sank below -30 LUFS.
+- **Water beds are positional** by tile distance (full within 1.5 tiles, down to a quarter over 12 more), flat on
+  Wendhead; a storm takes them to 0.4.
+- **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
+

@@ -154,6 +154,8 @@ wrap-up (see Open).
   jingle, and the owner's left-hand edge-hold question.
 - `src/art/dryPalette.ts` (art lane) now remaps the baked creek bed and water banks too; `src/dev/devtools.ts`
   `goto` waits for the last map to stop.
+- Audio for the valley (the `green` jingle, thinned arrangements by stage, creek and river beds, `dig`) is on
+  `audio/dry-year` (see Audio).
 
 **Next:** finish M6 from the critic's findings and the list above, then **M7** (towing and the first homecoming:
 a lab spike played by the feel critic first; the feel lane is prototyping it on `feel/dry-year`), M8 (the Seed House),
@@ -249,25 +251,71 @@ merges.
 
 ### Audio
 
-**Now:** composed music played live on CC0 samples, with day and night arrangements for each season, plus title,
-festival, mine, shop, lullaby, villager motifs, dawn and dusk, and season stings. There are recorded CC0 effects,
-ambience and touch cues, with a synth fallback for each. Credits are in `ASSETS.md` and the per-file sources in
-`audio-src/SOURCES.md`.
+**Now (branch `audio/dry-year`, ab8cdab plus a docs commit):** composed music on CC0 samples (day and night per
+season, title, festival, mine, shop, lullaby, motifs, dawn/dusk, stings), recorded CC0 effects and ambience with a
+synth fallback for each; the owner listened and approved the direction. The Dry Year round adds, in the same
+direction (no new compositions):
 
-**Open:** nobody has listened to any of it. Two nits remain (see OPEN-FINDINGS.md).
+- **Audio by map stage** (`src/audio/stages.json`, read through `src/audio/stages.ts`): keyed on
+  `valleyStage(state, map).variant` (`default` for a map with one look). A stage marked `arrangement: "thin"`, or on
+  the dry palette, plays the season piece thinned (each season piece's `thin` in `music_src.py`: bass and percussion
+  fade out on their own strips, then are not played; fall's harp moves to its half pattern; about 3 dB under the
+  full piece), over the dry wind (now 0.6, about 11 dB under the thinned piece) with a bird now and then. A rainy
+  dry day plays the rainy arrangement, never both. `water` lists the beds a stage runs (creek, river), positional
+  by tile distance to `near` rects (floor 0.25), with a `wait` stat for a reveal (`valley.creekSeen`). Farm
+  `restored` and Wendhead `spring`/`restored` run the creek; town `river` and today's town (`default`) run the
+  river; town `dry` is thin with a faint trickle at x 21-22; Wendhead `gorge` (old saves) is thin with the river.
+  The M6 builder confirmed these variant names.
+- **A reveal** (`runtime.valleyReveal`) holds the stage before it: the dry wind and few birds while the straw
+  dissolves, then the birds return and the arrangement fills back in on the same bar clock (about 2 s). The dawn
+  flourish is spent, not played, on a reveal morning.
+- **The `green` jingle** (jingle system, priority 3, 92 bpm, about 3.3 s, synth fallback) plays for every valley
+  moment (`Hud.valleyMoment`: the first green, THE CREEK RUNS, and M6's THE RIVER IS BACK) instead of the special
+  fanfare.
+- **New cues:** `dig` (a channel cut: `actionFx` case `dig` and the spring site's channel beat), `logLand` and
+  `logKnock` for M7 towing (the feel lane calls them from `tow-spike`). All come from packs already credited (Kenney
+  Impact Sounds, rubberduck's water pack, the shovel), extracted from the cached archives: no new downloads.
+- **New beds:** `creek` (three water-loop layers), `burble` (gurgle one-shots), `river`; the `wind` bed has a second
+  11 s layer (combined period 165 s). New payload about 0.35 MB.
+- Tools: `build.py` loop layers take their own `src`, `shift`, `gain`, `lp` and a `search` that slides the start to a
+  matched wrap level; per-cue `repeatWindow`; `render.ts` renders `thin` and timed `changes`; `render.mjs` has the
+  `dy-*` jobs. Tests: `tests/audio-dry-year.test.ts`.
 
-**Next:**
+**Verified:** `verify:fast` green at ab8cdab. The full `verify` ran at ab8cdab while renders loaded the PC: the unit
+`tapmove` pathfind timing (9.4 ms against 2 ms) and `e2e:controls` gesture and timing checks failed (harness lag; no
+input code changed here); everything else passed, and `perf` was not reached. Renders and `LISTEN.md` are in
+`C:/Users/andre/dev/tiny-acre/audio-renders/dry-year/`. **Not verified:** no real phone; no scenario was checked by
+ear in the built-in browser (only a Playwright probe of `channels-first-dig` cue timing); the critic
+(`audio-critique/review-11.md`) has not reviewed a checkpoint yet.
 
-1. A human listening pass on an iPhone and an Android phone: unlock on the first tap, resume after a call, the
-   silent switch, and Bluetooth latency. Renders and the listening order are outside the repo, in
-   `C:/Users/andre/dev/tiny-acre/audio-renders/round2/LISTEN.md`.
-2. Music and ambience for the Dry Year: a dry valley that comes back to life could change the score as it heals.
-3. Optional: indoor and woods ambience, more takes for coin and harvest, and more phrases per section.
+**Open:**
 
-How to rebuild: `python -I audio-src/tools/build.py <raw-dir>` (the raw sources are in
-`C:/Users/andre/dev/tiny-acre/audio-raw/samples`; `fetch.py` downloads them again),
-`python -I audio-src/tools/music_src.py` for the music, and `node audio-src/tools/render.mjs` plus
-`measure.py` / `sfxlevels.py` / `seasons.py` to measure. The details are in `docs/EXTENDING.md` section 9.
+1. **Major, fix first:** the creek's layers 1 and 2 (2.25 s, 2.4 s) realign every 36 s (self-correlation 0.83 at
+   36 s in `dy-creek-long`). Set creek layer 2 `body` to 2.47 in `audio-src/recipes.json` (repeat over 500 s),
+   rebuild, and check the self-correlation stays under 0.6 over 3-120 s.
+2. Critic D2 (provisional, disputed): the critic wants town `default` to be thin with the trickle before M6. Today's
+   town map shows a full river (Finn's lines say it still flows), so audio follows the map, and M6's `dry` variant
+   flips it by data. Settle it with the critic.
+3. The dig row is louder than rapid water but 3.8 dB under the same row tilled (`dy-dig-row-alone` -22.9 against
+   `dy-till-row-alone` -19.7 LUFS); a wet row adds the water at full level every 0.45 s (-17.4 LUFS with music).
+   Consider `repeatWindow` 0.5 for `water` (painted watering rows have the same 0.45 s rate).
+4. The rainy arrangement alone is quiet in fall (-35 LUFS, music only): base behaviour, untouched here.
+5. Wendhead's gorge rect for a positional river (the M6 builder will send it).
+
+**Before merge (none of this ran after the last commit):** `npm run verify` on an idle PC (`e2e:controls`, the
+pathfind timing and `perf` alone if they fail beside others); the creek fix above and its rebuild; renders with
+`node audio-src/tools/render.mjs <dir> <url> dy-`, plus `hits-` and the baselines (`music-`, `rain-`,
+`storm-summer`, `amb-wind`, `mix-farm-work`, `stress-max`, `water-rapid`), then `measure.py` and `sfxlevels.py`;
+these scenarios by ear: `valley-farm-dry`, `valley-farm-green-reveal`, `valley-farm-green`,
+`farm-creek-first-morning`, `farm-creek-running`, `spring-opened`, `channels-row`, and `tow-spike` once the feel lane
+lands it; the critic's acceptance.
+
+How to rebuild: `python -I audio-src/tools/fetch.py <raw-dir> --lock` (extracts from the cached archives in
+`<raw-dir>/_archives`), `python -I audio-src/tools/build.py <raw-dir>` (raw sources in
+`C:/Users/andre/dev/tiny-acre/audio-raw/samples`), `python -I audio-src/tools/music_src.py` for the music, then
+`npx prettier --write src/audio/manifest.json src/audio/music.json` and `python -I audio-src/tools/sources_md.py`.
+Measure with `render.mjs`, `measure.py`, `sfxlevels.py` and `seasons.py`. Details are in `docs/EXTENDING.md`
+section 9.
 
 ## Needs the owner
 

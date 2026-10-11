@@ -39,6 +39,8 @@ export interface SfxAsset {
   voices: number;
   /** Level change (dB) for a repeat within 350 ms of the last one (held tools). Default -4; steps 0. */
   repeatDb?: number;
+  /** Seconds within which a repeat counts as held (default REPEAT_WINDOW): a painted channel cuts every 0.45 s. */
+  repeatWindow?: number;
   /** Repeats closer than this (seconds) are dropped: a fast drag over a row ticks at most this often. */
   minGap?: number;
   /** Cues this one silences for `maskFor` seconds after it plays (a row tick hides the footstep on that tile). */
@@ -129,6 +131,11 @@ export interface Piece {
   /** The form from year two on (variation sections), so the second year does not repeat the first. */
   form2?: string[];
   layers: Layer[];
+  /**
+   * The Dry Year's thinned arrangement (a dry map stage): `drop` layers fade out and then stop being played,
+   * `swap` gives accompaniment layers a sparser pattern, `db` is the level offset (default THIN_DB).
+   */
+  thin?: { drop: string[]; swap?: Record<string, string>; db?: number };
   /** Melody phrases in note:beats tokens, bars separated by '|'. */
   phrases: Record<string, string>;
 }
