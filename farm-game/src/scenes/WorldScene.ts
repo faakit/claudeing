@@ -7,6 +7,8 @@ import {
   paletteOf,
   placeWhere,
   creekMomentDue,
+  riverMomentDue,
+  takeRiverMoment,
   creekSource,
   takeCreekMoment,
   takeFirstGreenMoment,
@@ -131,12 +133,15 @@ import { npcs as npcData } from '../data';
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
 const CREEK_REVEAL_MS = 1800;
 const CREEK_BANNER = "THE CREEK RUNS\nIlse's creek, full again.";
+/** The river's first morning in town (M6): the dry town dissolves around the farmer, a little slower. */
+const RIVER_REVEAL_MS = 1600;
+const RIVER_BANNER = valley.places['weir']?.banner ?? 'THE RIVER IS BACK';
 
 /** A bank tile where a first channel can start on any farm (open ground beside the creek, no plot). */
 const CREEK_BANK = [25, 14] as const;
 
 /** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
-const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400 } as const;
+const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400, beam: 3600 } as const;
 
 /** The tiles a channel shows in the detail layer until the art lands: plain water, and dug earth (tile gids). */
 const CHANNEL_GID = { wet: 5, dry: 2 } as const;
@@ -398,6 +403,30 @@ export abstract class WorldScene extends Phaser.Scene {
       this.time.delayedCall(WIPE_OPEN_MS, () => {
         this.reveal?.start();
         gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner });
+      });
+    } else if (this.mapId === 'town' && riverMomentDue(state)) {
+      // The river's first morning: the dry town (its straw and its mud) drawn over the river town, cut away around
+      // the farmer as they come in (the dry tileset is held for it until the next sleep), with its banner. Once.
+      takeRiverMoment(state);
+      const dry = dryTilesetKey(state.time.season);
+      const before = lookCacheKey(
+        valleyStage({ stats: { ...state.stats, 'place.weir': 2 } }, 'town'),
+      );
+      if (this.textures.exists(dry) && this.cache.tilemap.exists(before)) {
+        this.reveal = new GreenReveal(
+          this,
+          before,
+          dry,
+          { x: state.player.x, y: state.player.y - 8 },
+          state.settings.reduceMotion,
+          RIVER_REVEAL_MS,
+        );
+        runtime.valleyReveal = !this.reveal.done;
+      }
+      this.time.delayedCall(WIPE_OPEN_MS, () => {
+        this.reveal?.start();
+        audio.play('water');
+        gameEvents.emit('valleyMoment', { text: RIVER_BANNER });
       });
     } else if (this.mapId === 'farm' && creekMomentDue(state)) {
       // The creek's first morning: the dry bed drawn over the running one and cut away from Ilse's gate down, once
@@ -1297,7 +1326,7 @@ export abstract class WorldScene extends Phaser.Scene {
     // and the water runs into it. The site's new sprite shows when the beat ends.
     gameEvents.emit('energyChanged', undefined);
     const channel = res.work.taste === 'channel';
-    const beat = channel ? SITE_BEAT_MS.channel : SITE_BEAT_MS.pickaxe;
+    const beat = SITE_BEAT_MS[res.work.taste];
     this.things?.hold(`site.${id}`, beat);
     runtime.busy = true;
     this.siteBeat = true;
@@ -1305,6 +1334,16 @@ export abstract class WorldScene extends Phaser.Scene {
     const rockX = (tile.tx + 1) * TILE_SIZE; // the rockfall's middle (it covers this tile and the next)
     const rockY = tile.ty * TILE_SIZE;
     const live = () => this.sys.isActive();
+    if (res.work.taste === 'beam') {
+      this.beamBeat(tile, live);
+      this.time.delayedCall(beat, () => {
+        this.endSiteBeat();
+        if (!live()) return;
+        haptic('medium');
+        toast(`${res.work.text} (${res.day} of ${res.of})`, 'good');
+      });
+      return;
+    }
     const swings = channel ? [0, 650] : [0, 800, 1600];
     swings.forEach((t, k) =>
       this.time.delayedCall(t, () => {
@@ -1377,6 +1416,73 @@ export abstract class WorldScene extends Phaser.Scene {
       if (!live()) return;
       haptic('medium');
       toast(`${res.work.text} (${res.day} of ${res.of})`, 'good');
+    });
+  }
+
+  /**
+   * The weir's last work day (scripted until towing, M7): Orin opens the gate a crack, the gorge's water comes through
+   * the gap beside the site, and it lifts the last beam up into place. Placeholder shapes until the feel lane's pass.
+   */
+  private beamBeat(tile: TileCoord, live: () => boolean): void {
+    const gapX = (tile.tx + 2) * TILE_SIZE; // the gorge's bank, east of the site's two tiles
+    const y = tile.ty * TILE_SIZE;
+    const water = this.add.graphics().setDepth(10 + y + 18);
+    const flow = { w: 0 };
+    this.time.delayedCall(300, () => {
+      if (!live()) return;
+      audio.play('water');
+      haptic('tick');
+      this.tweens.add({
+        targets: flow,
+        w: TILE_SIZE * 1.5,
+        duration: 1000,
+        ease: 'Sine.easeOut',
+        onUpdate: () => {
+          const w = Math.round(flow.w);
+          water.clear();
+          water.fillStyle(0x3c74b4, 1).fillRect(gapX - w, y + 4, w, 10);
+          water.fillStyle(0x72aadc, 1).fillRect(gapX - w, y + 4, w, 2);
+        },
+        onComplete: () => live() && this.fx.splash(gapX - TILE_SIZE, y + 10),
+      });
+    });
+    // the beam floats up on the water and swings into the gap
+    const beam = this.add
+      .graphics()
+      .setDepth(10 + y + 19)
+      .setVisible(false);
+    beam.fillStyle(0x241a2a, 1).fillRect(-13, -3, 26, 6);
+    beam.fillStyle(0x8a6a4a, 1).fillRect(-12, -2, 24, 4);
+    beam.fillStyle(0xb08a5a, 1).fillRect(-12, -2, 24, 1);
+    beam.setPosition(gapX + 6, y + 22).setAngle(70);
+    this.time.delayedCall(1400, () => {
+      if (!live()) return;
+      beam.setVisible(true);
+      this.tweens.add({
+        targets: beam,
+        x: gapX - TILE_SIZE,
+        y: y + 2,
+        angle: 0,
+        duration: 1100,
+        ease: 'Back.easeOut',
+        onComplete: () => {
+          if (!live()) return;
+          audio.play('till');
+          haptic('medium');
+          this.fx.dust(gapX - TILE_SIZE, y + 4);
+        },
+      });
+    });
+    this.time.delayedCall(3400, () => {
+      this.tweens.add({
+        targets: [water, beam],
+        alpha: 0,
+        duration: 200,
+        onComplete: () => {
+          water.destroy();
+          beam.destroy();
+        },
+      });
     });
   }
 

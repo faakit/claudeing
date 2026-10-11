@@ -105,19 +105,19 @@
       "work": [
         {
           "taste": "pickaxe",
-          "text": "You and Finn lever stones out of the weir's gap. The gorge is deep."
+          "text": "You and Finn lever stones out of the weir's gap."
         },
         {
           "taste": "pickaxe",
-          "text": "The old footings show under the rubble. Still sound, Finn says."
+          "text": "Under the rubble, the old footings. Still sound."
         },
         {
           "taste": "pickaxe",
-          "text": "Finn sets Orin's sluice gate in its frame. One beam short."
+          "text": "Finn sets Orin's gate in its frame. One beam short."
         },
         {
           "taste": "beam",
-          "text": "Orin opens the gate a crack. The water lifts the last beam into the gap."
+          "text": "Orin opens the gate. The water lifts the last beam in."
         }
       ],
       "sprites": [
@@ -141,7 +141,8 @@
           "ty": 32
         }
       },
-      "phrase": "The river's home."
+      "phrase": "The river's home.",
+      "banner": "THE RIVER IS BACK\nThe Wend came home."
     }
   },
   "planned": {

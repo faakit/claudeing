@@ -22,6 +22,7 @@ import {
 import { keyOf, displayName, iconKey, refOf, sellValue, type ItemRef } from '../../systems/itemRef';
 import { countStack } from '../../systems/inventory';
 import { gameEvents, toast } from '../../systems/events';
+import { buyPart, partOffer } from '../../systems/valley';
 import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
@@ -135,7 +136,13 @@ export class NpcPanel extends Modal {
   private buildTalk(hearts: number): void {
     const s = getState();
     const def = npcs[this.id]!;
-    this.label(8, 42, `"${this.reply || this.line}"`, C.cream, 1, 'left', 184);
+    // a part an asked place's fund needs (the sluice gate from Orin, until the forge is lit): said, and sold here
+    const offer = partOffer(s, this.id);
+    const offerName = offer ? (items[offer.item]?.name ?? offer.item) : '';
+    const say =
+      this.reply ||
+      (offer ? `The weir wants a ${offerName.toLowerCase()}. I can make you one.` : this.line);
+    this.label(8, 42, `"${say}"`, C.cream, 1, 'left', 184);
     if (this.gained > 0) this.label(8, 88, `+${this.gained} friendship`, C.green);
     const next = nextPerk(s, this.id);
     this.label(
@@ -171,6 +178,24 @@ export class NpcPanel extends Modal {
         this.close();
         gameEvents.emit('openPanel', { type: 'shop' });
       });
+    if (offer) {
+      this.button(104, y, 88, 24, `${offerName} ${offer.price}g`, () => {
+        const res = buyPart(getState(), this.id);
+        if (!res.ok) {
+          audio.play('error');
+          return void toast(
+            res.reason === 'gold' ? `Not enough gold: ${offer.price}g.` : 'Your bag is full.',
+            'warn',
+          );
+        }
+        audio.play('coin');
+        haptic('success');
+        toast(`${offerName} in your bag. Take it to the site.`, 'good');
+        gameEvents.emit('moneyChanged', { delta: -offer.price });
+        this.rebuild();
+      }).setEnabled(s.money >= offer.price);
+      return;
+    }
     // Beside a Shop button there is less room (critique 6, F8: "1 gift a day." ran off the edge).
     const x = def.role === 'shop' ? 136 : 104;
     this.label(

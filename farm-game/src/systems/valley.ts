@@ -594,7 +594,10 @@ export function valleyRows(s: GameState): { place: string; name: string; next: s
       const left = fundLeft(s, id);
       const parts = [
         ...(left.gold > 0 ? [`${left.gold}g`] : []),
-        ...left.items.map((n) => `${n.qty} ${(items[n.item]?.name ?? n.item).toLowerCase()}`),
+        ...left.items.map((n) => {
+          const name = (items[n.item]?.name ?? n.item).toLowerCase();
+          return n.qty === 1 ? name : `${n.qty} ${name}`; // "60 stone, sluice gate"
+        }),
       ];
       next = `fund ${parts.join(', ')}`;
     } else if (stage === 2) {

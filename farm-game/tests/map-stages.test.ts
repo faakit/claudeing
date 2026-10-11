@@ -165,7 +165,7 @@ describe('valleyStage: which variant a map shows', () => {
     expect(pinStage('town', 'dry', { 'place.weir': 3 })).toEqual({ 'place.weir': 2 });
     // nested conditions: the fewest changes that show the stage
     for (const v of ['dry', 'gorge', 'spring', 'restored'])
-      for (const base of [
+      for (const base of <Record<string, number>[]>[
         {},
         { 'place.spring': 3 },
         { 'place.weir': 3 },

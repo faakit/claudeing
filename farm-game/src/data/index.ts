@@ -476,6 +476,8 @@ export interface PlaceDef {
     item?: string;
     at?: { map: string; tx: number; ty: number };
   };
+  /** The banner of its first morning on the map it changes most (the weir: the town), title and line. */
+  banner?: string;
   /** What the place does for the valley, said on the year-end and THE VALLEY ("The creek runs."). */
   phrase: string;
   /** The spring's channels: tiles the water reaches each morning, before and after the weir. */
