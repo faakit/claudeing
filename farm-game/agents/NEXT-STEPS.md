@@ -135,7 +135,12 @@ wrap-up (see Open).
   and e2e passed; e2e:scenarios (a `channels` Action timeout, a forage pickup) and e2e:controls (gesture timings,
   "harness lag") failed under that load and were never rerun alone. Run the full verify (and `bench:thumb`) on a quiet
   machine before merging; the controls and channels failures are expected to pass alone (M6 touches neither).
-- M6 review: the valley critic has the wrap-up checkpoint; its findings are not in yet. Its checklist also asks for
+- M6 review (valley critic, read-only, `valley-critique/review-8.md` and `final-m6.md`): safe to merge once the
+  pre-merge checks pass. **Major, needs a run:** `river-first-morning` builds a second full tilemap (`town@dry`) in
+  the town scene's create, and the first step into town comes through the farm-to-town door; measure that door on
+  the reveal morning at 1x and 4x before merge. If it busts 0.3 s or the 34 ms frame gate, build the overlay under the
+  sleep blackout or after the wipe opens. Minor: Clay's `rivalLate` switch; R6-2. Nit: "The Heron" has a new id,
+  so a save that saw "A secret spot" gets its 2 catfish again (mark `heron` seen when `secret` is, if unwanted). Its checklist also asks for
   a re-run of its 14 paired onboarding bot runs on the dry town's day-2 walk (gate: 173 s median) and `bench:thumb`.
 - Left of M6 (not started, nothing half-wired): the R6-2 nit (the `channels` intro showing a corner in its paint
   target); Clay's `rivalLate` switching on at the weir's opening when he is below 2 hearts (WORLD-PLAN 5.1 step 5;
