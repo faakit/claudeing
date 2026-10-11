@@ -1,205 +1,84 @@
 # Tiny Acre roadmap
 
-Where the game is, and what we build next. Ordered by how much each item improves the daily loop, with the
-cheapest high-impact work first. Every item says how it plugs into the existing extension points
-(see [docs/EXTENDING.md](docs/EXTENDING.md)), so it stays a module plus data, not a core rewrite.
+What we build next, in order. The direction is **The Dry Year**: read [docs/VISION.md](docs/VISION.md) first, then
+[docs/WORLD-PLAN.md](docs/WORLD-PLAN.md) (the full design) and [docs/MILESTONES.md](docs/MILESTONES.md) (the build
+order with acceptance criteria). Every item plugs into the existing registries ([docs/EXTENDING.md](docs/EXTENDING.md))
+and is built scenario-first.
 
-Guiding question for every item: **is it fun on a phone, with one thumb, in a 5-minute session?**
+Guiding question for every item: **is it fun on a phone, with one thumb, in a 5-minute session, and does the valley
+visibly heal because of it?**
 
 ## Where we are
 
-Portrait, one-handed, web-playable. Farming with quality and fertilizer, foraging, fishing mini-game, crafting,
-sprinklers, preserve jars, a town order board, three skills with perks, coop and barn animals, three villagers
-with friendship, gifts and perks. 226 unit tests, e2e and perf budgets pass. Art and audio are generated in code.
+A complete, portrait, one-handed farming game: farming with quality, foraging, fishing, the mine, crafting and
+machines, animals, trees and a greenhouse, five villagers with schedules, hearts and heart events, daily jobs, the town
+board and Clay's board race, special orders, festivals, town projects and the Founder's Statue, mail, the Book, a
+guided start, real art and audio, and a dev sandbox of named scenarios. Earlier roadmap phases (R1 to R3 and the
+depth items D1 to D10) are done; the reasoning behind each lives in [DECISIONS.md](DECISIONS.md) and git history.
 
-Known gaps carried from earlier work (not yet scheduled below): the native Android and iOS projects are synced but
-never compiled or run on a device; real-phone frame rate, haptics and audio interruptions are unverified; the balance
-simulation's income floor was lowered from 20k to 15k gold after the quality system and should be re-tuned.
+What it lacked was a reason that ties the systems together. The Dry Year gives one: the river left the valley, most
+families left with it, and you mend it place by place.
 
----
+## Now: The Dry Year (docs/MILESTONES.md)
 
-## Now: make what exists feel great (R1, about 1 sprint)
+| # | Milestone | Owner areas |
+| - | --------- | ----------- |
+| M1 | The letter, the first green, and lines that fit the valley | onboarding, art, depth |
+| M2 | Map variants: maps change shape with the valley; the farm's dry creek bed | art, depth |
+| M3 | The restoration pattern and the Old Spring: ask, gather, work days, opening; the creek runs | depth, art, onboarding |
+| M4 | Channels: dig a water network off the creek (and the plan's one save bump) | depth, feel, onboarding |
+| M5 | The Cold Forge: strike in time, and the parts later places need | depth, feel, audio, art |
+| M6 | The Weir: the river returns to town, the Heron floats | depth, art, audio |
+| M7 | Towing timber, and the first family home in a house you rebuilt | depth, art, feel, audio |
+| M8 | The Seed House: the seed library; Clay's turn from rival to ally | depth, art |
+| M9 | The Bucket Orchard: grafting onto dead stumps | depth, art |
+| M10 | The Market Field: market day, families' stalls, the Trade Road | depth, art, audio |
+| M11 | Lantern Night (the first full celebration, not an ending), High Water, chapter breaks, the Founders' Stone | depth, onboarding, art, audio |
 
-Status: R1.2 to R1.4 done and R1.5 partly done (see below). R1.1 needs a human with a phone.
+**Committed scope (owner, 2026-10-11): M1-M4, M6-M8 and M11**: the Old Spring, the Weir with towing, the Seed House
+and Lantern Night. Build these first. M5 (forge), M9 (orchard) and M10 (market) are approved and come after the core.
+Lantern Night is a yearly celebration and a milestone, never an ending: the valley keeps growing after it.
 
-Highest value per effort. None of this adds a mechanic; it makes the current ones land.
+Audio: the owner approved the existing music and SFX direction. The milestones give audio a small role only (ambience
+per map stage, the first-green moment, Lantern Night), with no new compositions.
 
-- [ ] **R1.1 Real-device pass.** Build and run the Android and iOS projects on actual phones. Check frame rate,
-      safe areas, haptics, audio resume after calls, one-handed reach on small and large phones. Fix what breaks.
-      Output: a filled-in device checklist in `docs/MOBILE.md`.
-- [x] **R1.2 Balance pass.** Re-tune the bot simulation with animals, orders and fishing included. Targets: first
-      year feels generous, a comfortable player finishes with a satisfying surplus, nothing is a runaway money loop
-      (check eggs, jam and orders against raw shipping). Restore a meaningful income band in `tests/sim.test.ts`.
-- [x] **R1.3 First-hour onboarding.** The goals teach in order, but add light guidance: highlight the current goal's
-      target (the board, the pond, the coop), a short "what to do next" nudge after idle time, and a one-time
-      explanation of hearts and quality the first time each appears.
-      _Done:_ every goal has a hint (shown in Menu > Goals, and as a toast after 40 s of no input); seven one-time
-      tips fire when quality, foraging, hearts, orders, animals, skills and perfect catches first happen. Not done:
-      highlighting the goal's target in the world.
-- [x] **R1.4 Juice and feedback.** Sparkles and sounds for quality drops, level-ups, heart gains and order
-      completion; a satisfying collect animation for eggs and jam; screen-edge toasts that never cover the thumb zone.
-      _Done:_ quality sparkles and "Silver/Gold quality!" text on harvest, forage pick-up effects, a cast splash.
-      Since then: heart-gain and level-up flourishes, and goods pop out of coops, jars, hives and trees.
-- [~] **R1.5 Accessibility basics.** Done: quality shown by star count (silver one, gold two) as well as tint, and a
-  "Calm" reduce-motion toggle. Still open: text-size option, larger touch targets option.
+After the first pass, each mechanic's v2 is its own small milestone (listed at the end of MILESTONES.md).
 
-## Critique follow-ups (from `agents/critiques/critique-1.md`)
+## Alongside
 
-An independent agent played the game and reviewed it. Its report is kept in `agents/critiques/`. Triage:
+- **Living villagers** (`agents/PLAN-NPC-LLM.md`, branch `plan/npc-llm`): a rule-based dialogue database, villager
+  memory, barks, reactive requests, ties and gossip, walking schedules, seasonal arcs; no runtime LLM. The Dry Year does not
+  wait for it (its own M1 adds conditional villager lines); the plan's dialogue, memory, barks and ties enrich the
+  arcs later (MILESTONES section E).
+- **Open findings and per-area next steps** (onboarding, controls, feel, art, audio, depth): `agents/OPEN-FINDINGS.md`
+  and `agents/NEXT-STEPS.md`. They keep their own order; where one touches a Dry Year milestone, it is fixed in that
+  milestone.
+- **Needs a human:** play on a real phone one-handed as a first-time player; decide the open questions in
+  `agents/NEXT-STEPS.md` (the Dry Year's were answered on 2026-10-11, WORLD-PLAN section 11).
 
-Done in this round:
+## Later: production polish
 
-- [x] First week had dead days: forage and "buy items" goals now come before "harvest 5".
-- [x] Shop rows were truncated and hid the facts: they now show days to grow and sell price, and warn "Too late now".
-- [x] Seeds that cannot ripen before the season ends are refused with a reason.
-- [x] Produce filled the hotbar: produce now goes to the bag first, seeds and machines to the hotbar.
-- [x] Menu tabs moved to the bottom of the sheet, next to the thumb.
-- [x] Empty coops and barns can be picked up (second deliberate tap); houses are capped at 2 each, jars at 6.
-- [x] Farming level 10 "+5% sell price" now works; the bin no longer accepts machines.
-- [x] Economy: jam and pickles multipliers lowered (jam 1.5x, pickles 1.3x), order rewards 1.2 to 1.6x with a 1,200 cap,
-      forage spawns trimmed further (about 150 to 280 gold a day if you walk all maps).
-- [x] Winter had no crops: added Kale (winter seed, 7 days, sells 95).
-- [x] The year-end screen fired on Summer 28; it now fires on Winter 28 ("END OF YEAR").
-- [x] Toasts have a dark backing so they read over grass; level-ups play a sound.
-
-Still open (ranked):
-
-- [x] Touch tool-cycle: swipe up or down on the Action button to change tool (with a one-time tip).
-- [x] Side income (machines, animals, orders) is bounded by data-driven guard rails in `tests/balance.test.ts`; the bot simulation now farms real plots, fills orders and keeps jars busy, with a tight income band.
-- [x] A save from a newer version now shows a message on the title screen, and New Game asks before erasing it.
-- [x] A saved player position inside a wall or outside the map is moved to the nearest open tile on load.
-- [x] Placement undo for big placeables; confirm before placing a barn. _Done as:_ every building can be picked up
-      with a second tap and moved with its animals and goods (no confirm step; see DECISIONS).
-- [x] Fiber is now sold in the General Store (5 gold), so crafting is no longer capped by weed supply.
-- [x] Seasonal music (tempo, key, chords, melody density per season) and sounds for level-ups, hearts and orders.
-- [~] Art: tilled soil now reads as earth (done); the house is huge next to a 1-tile coop, animals do not roam (see R4.1).
-- [x] A bobbing arrow now points at the current goal's target after 14 s of no input (per-map `where` in goals.json).
-
-## Next: depth in the daily loop (R2)
-
-Give players reasons to plan their day and their season.
-
-- [x] **R2.1 Tool upgrades.** Copper and iron hoe, can and rod bought or crafted with ore/bars. Better hoe tills a
-      line of tiles; better can waters an area; better rod widens the catch zone. _Plug in:_ tool actions read an
-      upgrade level from state; recipes unlock by skill and friendship; one new data file for tiers.
-      _Done:_ hoe and can tiers act on a line of 1 to 4 tiles for the same energy (can tier reuses the capacity
-      upgrade); rod tiers widen the zone and shorten bites. Bought in the shop's Upgrades tab. Not done: iron/ore
-      tiers (waits for the mine).
-- [x] **R2.2 Farm expansion.** Buy extra plots with gold so the field grows over the first year. Gives gold a
-      lasting purpose. _Plug in:_ `tillable` zones become state-driven; shop upgrade row.
-- [x] **R2.3 Fruit trees and a greenhouse.** Done: four fruit trees (cherry, peach, apple, frost plum), one per season, saplings bought in the shop, ten mornings to grow, fruit every third day in season. Kale also gives winter a crop. The greenhouse is a 32-tile farm plot unlocked by a town project, where any crop grows in any season. Trees that regrow seasonally, and a greenhouse that grows crops in
-  winter (today winter has almost nothing to do). _Plug in:_ placeable behaviors and the day-hook pipeline.
-- [x] **R2.4 More machines.** Keg (juice, wine), loom (cloth from wool), bee house (honey), furnace (needs ore).
-      Same shape as the preserve jar: a behavior, a recipe, derived goods keyed by `of`.
-      _Done:_ `machines.json` now drives jar-like machines (days, XP, family -> product); added the keg (fruit -> wine,
-      5 days) and the bee house (honey every 4 days, no input). Renderer uses a generic `status` hook. Not done: loom,
-      furnace (waits for sheep and the mine).
-- [x] **R2.5 Weather with consequences.** Storms that can damage unwatered young crops, a rare rainbow day with a
-      forage bonus, wind that scatters forage. Telegraphed the evening before so players can react.
-      _Done:_ tomorrow's weather is shown on the bed sheet and the morning summary. Storms (summer and fall) water
-      the soil, shake ripe fruit off trees (pick it first!), make wet-weather fish bite three times as often and
-      leave a rainbow morning with a second helping of wild goods.
-- [~] **R2.6 Animal depth.** Sheep (wool), pigs (truffles), a petting action for happiness, animal products as
-  order and gift targets, a hay-silo placeable for bulk feed. Animals roam beyond their house.
-  _Done:_ sheep, petting, pigs that dig truffles on dry days, a feed silo that feeds every house overnight,
-  animal goods as board requests and specials (sized to what the animals make). Not done: animals roaming
-  beyond their house (waits for real animal sprites).
-
-## Then: a living world (R3)
-
-More people, more places, more to discover.
-
-- [x] **R3.1 Villager schedules and events.** Villagers move between spots by time of day and weather; a birthday
-      each with a bonus gift reaction; one short friendship event per villager at 2, 4 and 5 hearts that rewards a
-      recipe or a perk. _Plug in:_ `npcs.json` gains `schedule` and `events`; the NPC renderer reads them.
-      _Done:_ daily schedules (home, town, farm, woods) and birthdays (double chat, triple gifts, morning note).
-      Not done: per-heart friendship events that reward a recipe or perk.
-- [x] **R3.2 More villagers.** A blacksmith (tool upgrades), a fisher, a young farmer rival for the order board.
-  Each is a JSON entry plus a role.
-  _Done:_ Orin the blacksmith (tool-upgrade discounts by hearts); Finn is the fisher; Clay the rival farmer
-  takes one board request a day from day 8 and leads the festival rivals; friendship tames him.
-- [x] **R3.3 The mine.** A fifth map with ore and gems, a pickaxe tool, energy-versus-risk floors. Ore feeds the
-      furnace and tool upgrades.
-      _Done:_ a mine north of the woods trail, a pickaxe (the fifth tool; saves migrate), copper/iron veins, crystals and
-      rocks that respawn each morning, a Mining skill, a furnace (ore -> bars in 2 days) and bar-gated tool upgrades. _Plug in:_ map generator, tool action, forage-like spawn hook for ore nodes.
-- [x] **R3.4 Seasonal festivals.** One event per season on a fixed day: a fishing contest, a crop show, a winter
-      feast. Orders, skills and friendship all feed into a score. _Plug in:_ a day hook that swaps in an event map
-      state and a modal.
-      _Done:_ four festivals (Flower Show spring 14, Fishing Derby summer 22, Harvest Fair fall 16, Winter Feast
-      winter 24): enter one item at the town board, ranked against three rivals that grow stronger each year, with
-      gold prizes. Since then: the Harvest Fair and Winter Feast take a basket of three goods (variety scores extra)
-  and the Fishing Derby counts the day's three best catches, fished anywhere. Not done: festival maps.
-- [x] **R3.5 Almanac and collections.** A log of every crop, fish, forageable and recipe found, with page rewards.
-      Doubles as a gentle hint system for what to try next.
-      _Done:_ Menu > Book has six pages (crops, orchard, fish, wild goods, animal goods, preserves); unfound goods
-      show as dark shapes, finishing a page pays gold.
-- [x] **R3.6 Mail and notes.** A mailbox that delivers villager letters, order reminders and gifts, replacing
-      scattered toasts for slower news.
-      _Done:_ a mailbox by the bin, data letters (milestones, hearts, seasons) with gifts, festival notices and
-      birthday hints the day before, a marker while mail waits.
-
-## Depth: a second act (game-depth agent, from critique 3)
-
-Critique 4 (`agents/critiques/critique-4.md`) was triaged: F1 to F12 fixed except forage visibility, day-1
-land signs and fence art (see DECISIONS.md, "Critique 4 fixes").
-
-- [x] **D1 Town projects.** Six projects funded at the town board (`projects.json`), each granting a perk
-      for good and a landmark in town. About 103k gold of late-game sink plus mined and crafted goods.
-- [x] **D2 Home upgrades and decorations.** Bigger Bag (two rows of 8 slots) and seven decorations on the
-      shop's new Home tab; dear rows lose the x5 button.
-- [x] **D3 Daily jobs.** Three small villager requests every morning from day 2 (`jobs.json`), paid on the
-      spot with friendship; early days point at fishing, the mine and the board.
-- [x] **D4 One-thumb conveniences.** Gift memory, plant a row, load all machines, no welcome-toast replays,
-      seasonal morning tips. Not done: a quick bag-to-hotbar swap (critique 3, F11).
-- [x] **D5 A rival with teeth (critique 5).** Requests stay two or three days, so Clay's afternoon pick can take
-      one you were gathering for; from year two he takes two a day unless he likes you.
-- [x] **D6 A repeatable late-game sink.** Projects can repeat; the Founder's Statue absorbs year-two gold (backed by
-      a two-year sim run that funds every project).
-- [x] **D7 Decorations with a small use.** A bench to rest on once a day; a scarecrow against mild crows.
-- [x] **D8 Festivals as small games, all four.** Baskets count goods and data-driven kinds; the Flower Show is an
-      arrangement with a new tulip crop; the derby has feedback and a stocked river.
-- [x] **D9 A fair race with Clay (critique 9).** The season score has its own board line every day; Clay scores
-      only on farm goods, so a farmer who never fishes can win; the prize is said up front and lasts (a trophy in
-      the house that counts seasons won, Mara's letter, 300g a year). Crop requests leave slack and the bin keeps
-      what requests want.
-- [x] **D10 Growing statue, gentler feasts.** The Founder's Statue shows a bigger landmark per level (six keys); from
-      the 4th dish of a day food gives less energy, and the dish says so.
-
-## Later: production polish (R4)
-
-- [ ] **R4.1 Real art.** Replace generated placeholders with hand-made tilesets, character sheets, animal and item
-      icons, a proper UI skin. All art is addressed by texture key, so this is an asset swap plus an atlas loader.
-- [~] **R4.2 Real audio.** Composed music per season and time of day, recorded or authored sound effects, with the
-      current synthesized set as a fallback. Done as sampled CC0 instruments playing composed pieces, CC0 recorded
-      sound effects and ambience (see DECISIONS "Real audio"). Partial: nobody has listened to it yet (no human
-      listening pass, no real phone); open critic findings and next steps in agents/NEXT-STEPS-AUDIO.md.
-- [ ] **R4.3 Localization.** Move every player-facing string out of code and data into locale files. Text-fit tests
-      already exist and will catch overflow in other languages.
-- [ ] **R4.4 Store release.** Final app id, store listings, privacy statement, crash and error reporting, signed
-      builds. Follows R1.1.
-- [~] **Second-year content.** Done: a Seed Exchange project with four rare regrowing crops, a Rare Crops Book page,
-      mastery goals (gold-quality sales, every Book page). Special orders: one big seasonal request at a time,
-      due at the season's end. Year 2: Clay takes two requests a day unless befriended; a repeatable
-      Founder's Statue absorbs year-two gold.
-- [ ] **R4.5 Retention hooks.** Optional notifications ("your crops are ready"), seasonal cosmetic rewards.
-      Only after the core loop is proven fun. No daily login streak (owner, 2026-10-08): the game never reads
-      the real clock.
-- [ ] **R4.6 Cloud save and cross-device sync.** Optional account, conflict-safe merges. Needs a backend decision.
+- [ ] **Localization.** Move every player-facing string into locale files; the text-fit tests catch overflow.
+- [ ] **Store release.** Final app id, listings, privacy statement, crash reporting, signed builds; after a real
+      device pass. Re-check the licence terms for generated art first (`ASSETS.md`).
+- [ ] **Retention hooks.** Optional notifications ("your crops are ready"), seasonal cosmetics. No daily login
+      streak (owner, 2026-10-08): the game never reads the real clock.
+- [ ] **Cloud save and cross-device sync.** Optional account, conflict-safe merges; needs a backend decision.
+- [ ] **Animals that roam and festival maps** (wait for the art they need).
 
 ## Engineering health (continuous)
 
-Done alongside features, not as a separate phase.
-
-- [ ] Keep `npm run verify` green on every change; add a unit test with every new system and an e2e line for every
-      new player-facing flow.
-- [ ] Grow the "proof" tests that add a feature through the registries without touching core files.
-- [ ] Split `UIScene` and `WorldScene` further as they grow; panels stay one per file.
-- [ ] Track perf budgets per mechanic (draws per frame, JS ms per frame) as the world gets busier.
-- [ ] Keep save compatibility: every state change bumps the version with a migration and a migration test.
+- [ ] Keep `npm run verify` green on every change; a unit test with every system, an e2e check on a scenario for every
+      player-facing flow, no new fixed waits.
+- [ ] Every map variant passes the map tests; every scenario pins the variant it needs.
+- [ ] Track perf per mechanic (budget 12 draws and 3.5 ms JS per frame; target 6 draws).
+- [ ] Save compatibility: every state change bumps the version with a migration and a migration test; goals are
+      append-only.
 
 ## How we decide what is next
 
-1. Does it improve the first hour or the daily return? Do that first (R1, then R2).
-2. Is it data plus a module on an existing registry? Prefer it over anything that touches the core.
-3. Can it be verified without a device? If not, schedule a device pass right after it.
-4. After each release, play a full in-game season and cut or rebalance anything that does not earn its place.
+1. Does it make the premise felt, or the first hour better? Do that first.
+2. Can the player see it in the world? A restoration that only changes a menu is not done.
+3. Is it data plus a module on an existing registry? Prefer it over touching the core.
+4. Can it be verified without a device? If not, schedule a device pass right after it.
+5. After each milestone, play a full in-game season and cut or rebalance anything that does not earn its place.
