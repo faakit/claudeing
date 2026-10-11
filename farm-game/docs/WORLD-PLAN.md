@@ -29,31 +29,32 @@ north cave to the Mine (20x30); the House is the farm's interior. The plan adds 
 each behind a broken place, and keeps every existing door where it is.
 
 ```
-                    N (the hills)
-                                         THE NARROWS (new, 20x26)
-     MINE               SPRING HOLLOW    the weir; upstream pool
-      |                 (new, 16x24)          ^
-      | cave            the Old Spring        | (rowing, Y1 summer+)
-    WOODS     ORCHARD   |  NE gap in fence    |
-   (20x30)    HILL -----+-- FARM (30x44)      |
-      |      (new,       creek bed runs down  |
-      |      20x28)      the farm's east side |
-      |      W gate      to the rain pond     |
-      |                     | south gate      |
-      +---- west road ---- TOWN (24x34) ------+  east path (Y1 summer)
-      |                  forge, seed house,
-  LANTERN HILL           market square, river (east side),
-  (new, 16x20)           the Heron at the dock
-  W edge of woods           |
-  (opens Y2 fall)        south road: the trade road (Y2)
+                               N (the hills)
+
+                                          SPRING HOLLOW (new, 16x24)
+   MINE                                   the Old Spring
+    |                                        |  NE gap (29,3)
+    | cave       ORCHARD HILL    W gate   +--+-----------------+
+    |            (new, 20x28) --(0,20)--- | FARM (30x44)       |     THE NARROWS
+    |            Rosa's land              | creek bed: x 26-27 |     (new, 20x26)
+    |                                     | down to the pond   |     the weir,
+    |                                     +--------+-----------+     upstream pool
+    |                                              | south gate          |
+  WOODS (20x30) ------- west road -------- TOWN (24x34) ---- east path --+
+    |                                      forge, seed house,   (23,19)
+    | W edge (0,6)                         market square,
+  LANTERN HILL (new, 16x20)                river on the east side,
+  opens Y2 fall                            the Heron at the dock
+                                                   |
+                                           south road: the trade road (Y2)
 ```
 
-- **Spring Hollow** (from the farm's north-east corner; a gap in the fence at 28,3): a fern-choked basin, a rockfall
+- **Spring Hollow** (from the farm's north-east corner; a gap in the east fence at 29,3): a fern-choked basin, a rockfall
   over the spring's mouth, a dry stream bed leading down to the farm. Open from day 1 (it is where the first broken
   place is); a few forage spots.
 - **The farm creek**: a dry bed two tiles wide down the farm's free east strip (x 26-27, y 3-30) into the pond's
-  east bank. Today that strip is grass with two trees; it becomes a **delta region** (section 4) in every farm
-  variant, so nothing fixed may sit there.
+  east bank. Today that strip is grass with two trees (moved) and the edge of the weed zone (shrunk to x 3-25); it
+  becomes a **delta region** (section 4) in every farm variant, so nothing fixed may sit there.
 - **Orchard Hill** (Rosa's land, through a new west gate at 0,20 on the farm): eight dead stumps on terraces, Rosa's
   one living "bucket tree", a cottage that Wren later moves into. Open from Rosa's 4-heart event.
 - **The Narrows** (from a new path off town's east edge, 23,19, north of the river): the broken weir, a rock shelf,

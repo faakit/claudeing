@@ -102,7 +102,7 @@ M4 and M8, A3 (anvil and bellows) with M7, A4 (market murmur) with M11, A5 (the 
 - **Files and data:**
   - `scripts/generate-maps.mjs`: map blocks become `function farm(v)`, a `VARIANTS` table, `delta` objects written in
     every variant, one `.tmj` per variant (`farm@dry.tmj`, `farm@waking.tmj`, `farm.tmj`). The farm's east strip
-    (x 26-27, y 3-30) becomes the creek bed (dry in `dry` and `waking`, water in `restored`); its two trees move.
+    (x 26-27, y 3-30) becomes the creek bed (dry in `dry` and `waking`, water in `restored`); its two trees move and the `field` weed zone shrinks to x 3-25.
   - `scripts/map-art.mjs`, `art-src/tools/bake.py`: bake per variant; new tiles: dry stream bed, cracked mud and
     their edges, a dead crown.
   - `valley.json` `maps.farm` gets `variant` names; `systems/valley.ts mapLook` returns the file.
@@ -130,7 +130,7 @@ M4 and M8, A3 (anvil and bellows) with M7, A4 (market murmur) with M11, A5 (the 
   - `projects.json` row `place_spring` (300g, 20 stone, `"place": "spring"`, hidden from the board list).
   - `systems/valley.ts`: place stages, ask, funded, work day (once a day, 20 energy, one game hour), opening;
     `mechanics/valley.ts`: site interactable (sign, project sheet, work), `start` hook for openings, perk source.
-  - `generate-maps.mjs`: `hollow` map (16x24, `dry` and `restored`), the farm's north-east gap door (28,3).
+  - `generate-maps.mjs`: `hollow` map (16x24, `dry` and `restored`), the farm's north-east gap door (29,3).
   - Items: Ilse's seed tin and journal (key items, not sellable, not giftable); Rosa's day-3 letter brings them.
   - `ui/panels/MenuPanel.ts` Goal tab: THE VALLEY section above the goals (each asked place and its next step); the
     HUD goal line shows "Work at the Old Spring (n of 3)" on a day not yet worked.
