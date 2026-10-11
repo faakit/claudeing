@@ -954,6 +954,14 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   actually walked and held to 10-20 fps (planted feet would need about 37 fps, too busy for a cozy walk).
 - **Tool timing:** the art suggested 90/50/110/80 ms for the hoe; the wind-up is shortened to 60/40/110/80 (the
   impact about 100 ms after the press, since a still press already acts on its lift).
+- **A new game's long frames go under the wipe (feel critic, review 2):** the title builds its wipe with the
+  screen, so the tap only starts it; leftover prewarm and the first map's parse run once it covers; the HUD and the
+  world are built on separate covered frames, and a new game's wipe holds two frames more (the world's first full
+  update). Audio work that landed in view right after the tap is spread out: effects and jingle instruments decode
+  one at a time a frame apart (a cue asked for before its file is ready plays the synth, as before), the onset
+  scan reads the peak from every 4th sample, and the reverb impulse is built in 4096-sample tasks 2.5 s later.
+  What remains in view is the tap's own frame: creating the AudioContext inside the gesture (iOS needs it there),
+  about 60-110 ms at 4-6x throttle on this host.
 - **No acceleration ramp.** Stop precision is carried by settle-on-release (a decelerating glide to the tile
   centre); an acceleration ramp would shorten the 120 ms nudge that is exactly one tile, and the walk cycle now
   starts on a stride frame, which reads as the start of motion. Kept as is.

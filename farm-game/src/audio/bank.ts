@@ -40,10 +40,14 @@ function decode(ctx: BaseAudioContext, data: ArrayBuffer): Promise<AudioBuffer> 
   });
 }
 
-/** First sample above -40 dB of the peak, in seconds (the same rule the build script uses). */
+/**
+ * First sample above -40 dB of the peak, in seconds (the same rule the build script uses). The peak is read from
+ * every 4th sample: it runs on the main thread as each file decodes, and a full scan of a long sample made a
+ * visible frame (feel round 4); the threshold then sits at most a hair lower, a few samples' difference at most.
+ */
 export function detectOnset(data: Float32Array, sampleRate: number): number {
   let peak = 0;
-  for (let i = 0; i < data.length; i++) {
+  for (let i = 0; i < data.length; i += 4) {
     const a = Math.abs(data[i]!);
     if (a > peak) peak = a;
   }

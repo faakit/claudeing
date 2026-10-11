@@ -232,7 +232,7 @@ class AudioEngine {
   }
 
   private build(ctx: AudioContext): void {
-    const g = buildGraph(ctx, (fn) => globalThis.setTimeout(fn, 250));
+    const g = buildGraph(ctx, (fn, ms) => globalThis.setTimeout(fn, ms));
     this.master = g.master;
     this.sfxBus = g.sfxBus;
     this.synthBus = g.synthBus;
@@ -278,10 +278,15 @@ class AudioEngine {
     );
     this.setNight(this.night);
     // Decode in priority order: sound effects and jingles first, then the music being played.
-    void this.sfxPlayer.preload();
-    jingleInstruments().forEach((i) =>
-      instrumentFiles(i).forEach((z) => void this.bank.load(ctx, z.file, z.onset)),
-    );
+    // One file at a time, a frame apart (sound effects first, then the jingles' instruments): decoded all at once,
+    // their onset scans landed together on the main thread and made long frames right after the tap.
+    void this.sfxPlayer.preload().then(async () => {
+      for (const i of jingleInstruments())
+        for (const z of instrumentFiles(i)) {
+          await this.bank.load(ctx, z.file, z.onset);
+          await new Promise((r) => globalThis.setTimeout(r, 16));
+        }
+    });
     if (this.slot) this.musicPlayer.setSlot(this.slot, this.indoor, ctx.currentTime);
     for (const [k, v] of Object.entries(this.ambienceTargets)) this.ambience.set(k, v ?? 0);
   }

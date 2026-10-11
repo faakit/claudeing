@@ -227,7 +227,7 @@ export class Hud {
     this.cleanup.forEach((c) => c());
   }
 
-  update(time: number): void {
+  update(time: number, dt: number): void {
     const s = this.getState();
     this.dateLabel.setText(`${seasonLabel(s.time.season)} ${s.time.day}  Y${s.time.year}`);
     this.timeLabel.setText(formatClock(s.time.minutes));
@@ -244,7 +244,6 @@ export class Hud {
     if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
     this.weatherLabel.setText(s.weather === 'storm' ? 'Storm' : rainy ? 'Rainy' : 'Sunny');
 
-    const dt = this.scene.game.loop.delta;
     if (this.shownMoney < 0) this.shownMoney = s.money;
     if (this.shownMoney !== s.money) {
       // Gold ticks toward its new value (frame-rate independent); the coin hops a pixel as it counts.

@@ -47,6 +47,8 @@ export class Wipe {
   private phase: Phase = { kind: 'idle' };
   private shown = -1;
   private rectKey = '';
+  /** Opened out of the title's wipe (a new game), not a door. */
+  private startHold = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -93,6 +95,7 @@ export class Wipe {
   cover(): void {
     this.show(DITHER_LEVELS);
     this.phase = { kind: 'covered' };
+    this.startHold = true;
   }
 
   /** Open over `ms` once the new scene has drawn `WIPE_HOLD_FRAMES` frames. */
@@ -104,7 +107,8 @@ export class Wipe {
       return;
     }
     this.show(DITHER_LEVELS);
-    this.phase = { kind: 'holding', frames: WIPE_HOLD_FRAMES, ms };
+    // A new game holds two frames more: the world's first full update follows its build frame.
+    this.phase = { kind: 'holding', frames: WIPE_HOLD_FRAMES + (this.startHold ? 2 : 0), ms };
   }
 
   /** Each frame (from the owning scene's update). */
@@ -127,6 +131,7 @@ export class Wipe {
       if (p.t >= p.ms) {
         this.show(0);
         this.phase = { kind: 'idle' };
+        this.startHold = false;
       }
     }
   }

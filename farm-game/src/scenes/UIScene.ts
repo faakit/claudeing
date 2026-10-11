@@ -316,7 +316,7 @@ export class UIScene extends Phaser.Scene {
     }
     // The Interact icon rides with its button (its 2 px rise and 1 px press).
     if (this.interactIcon && this.interactButton) this.interactIcon.y = this.interactButton.view.y;
-    this.hud.update(time);
+    this.hud.update(time, delta);
     this.updateHold();
     this.worldTouch.update();
     this.updateActionIcon();

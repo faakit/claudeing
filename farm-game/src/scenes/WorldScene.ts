@@ -486,7 +486,7 @@ export abstract class WorldScene extends Phaser.Scene {
       ).moving;
     }
     this.stillMs = moving ? 0 : this.stillMs + delta;
-    this.syncSprite(moving);
+    this.syncSprite(moving, delta);
 
     const here = playerTile(player);
     // Crops lean as the farmer walks through them.
@@ -676,7 +676,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.pcam?.push(dx, dy, px, this.time.now);
   }
 
-  private syncSprite(moving: boolean): void {
+  private syncSprite(moving: boolean, delta = 0): void {
     const p = getState().player;
     const now = this.time.now;
     this.sprite.setPosition(p.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
@@ -708,7 +708,7 @@ export abstract class WorldScene extends Phaser.Scene {
       const n = this.frames.walkCount;
       // The cycle runs at a rate set by the speed actually walked (fx/feel walkFps), so half speed and the settle
       // glide step at their own pace; a first stride shows at once.
-      const dt = Math.max(1, this.game.loop.delta);
+      const dt = Math.max(1, delta);
       const fps = walkFps((moved * 1000) / dt, n);
       this.walkDist = this.walkIdx < 0 ? 1 : this.walkDist + (Math.min(dt, 50) * fps) / 1000;
       const i = Math.floor(this.walkDist) % n;

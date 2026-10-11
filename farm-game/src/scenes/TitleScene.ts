@@ -35,6 +35,9 @@ export class TitleScene extends Phaser.Scene {
   private worldNext: string | null = null;
   private warm: (() => void)[] = [];
   private warmIn = 0;
+  /** The game to start once the title's wipe has covered the screen (and any leftover prewarm ran). */
+  private coveredFor: GameState | null = null;
+  private parsed = false;
 
   constructor() {
     super('Title');
@@ -44,10 +47,12 @@ export class TitleScene extends Phaser.Scene {
     runtime.inGame = false;
     hideSplash(); // first real screen is up: drop the native splash
     this.starting = false;
-    this.wipe = null;
     this.worldNext = null;
     this.warm = prewarmTasks(this, 'farm');
-    this.warmIn = 400;
+    this.warmIn = 150;
+    this.coveredFor = null;
+    this.parsed = false;
+    this.wipe = new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
     this.confirmNew = false;
     this.buttons = [];
     this.cameras.main.setBackgroundColor('#1e2848');
@@ -209,11 +214,24 @@ export class TitleScene extends Phaser.Scene {
       return;
     }
     this.wipe?.update(delta);
+    // Covered and about to start: any prewarm not done yet runs now, one task a frame, under the wipe.
+    if (this.coveredFor) {
+      if (this.warm.length) this.warm.shift()!();
+      else if (!this.parsed) {
+        this.parsed = true;
+        preparseMap(this, this.coveredFor.player.map);
+      } else {
+        const state = this.coveredFor;
+        this.coveredFor = null;
+        this.enter(state);
+      }
+      return;
+    }
     // Prewarm (fx/prewarm.ts): one small task a frame once the title has settled, never while a game starts.
     this.warmIn -= delta;
     if (!this.starting && this.warmIn <= 0 && this.warm.length) {
       this.warm.shift()!();
-      this.warmIn = 60;
+      this.warmIn = 30;
     }
   }
 
@@ -225,9 +243,9 @@ export class TitleScene extends Phaser.Scene {
     audio.unlock(); // inside the tap: iOS only unlocks audio during a gesture
     if (this.starting) return;
     this.starting = true;
-    preparseMap(this, state.player.map);
-    this.wipe = new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
-    this.wipe.close(WIPE_CLOSE_MS, () => this.enter(state), state.settings.reduceMotion);
+    // The tap frame only starts the wipe (built with the title); the map is parsed once the screen is covered.
+    this.wipe ??= new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
+    this.wipe.close(WIPE_CLOSE_MS, () => (this.coveredFor = state), state.settings.reduceMotion);
   }
 
   private enter(state: GameState): void {

@@ -48,24 +48,42 @@ export interface Graph {
 
 /** Exponentially decaying stereo noise, darker as it fades: a plausible small room. */
 export function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
-  const len = Math.floor(ctx.sampleRate * seconds);
-  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-  // -60 dB over `seconds`, as a per-sample factor (one multiply instead of a pow per sample: the reverb is
-  // built inside the first tap, where a long frame is felt).
+  const buf = ctx.createBuffer(2, Math.floor(ctx.sampleRate * seconds), ctx.sampleRate);
+  const steps = fillImpulse(ctx, seconds, buf, Infinity);
+  while (!steps.next().done);
+  return buf;
+}
+
+/**
+ * Fill `buf` with the impulse, `chunk` samples at a time (yields between chunks), so live play can spread it over
+ * several tasks instead of one long frame. Same samples as filling it in one go.
+ */
+export function* fillImpulse(
+  ctx: BaseAudioContext,
+  seconds: number,
+  buf: AudioBuffer,
+  chunk: number,
+): Generator<void> {
+  const len = buf.length;
+  // -60 dB over `seconds`, as a per-sample factor (one multiply instead of a pow per sample).
   const step = Math.pow(10, -3 / (seconds * ctx.sampleRate));
   for (let c = 0; c < 2; c++) {
     const rnd = makeRng(1234 + c);
     const data = buf.getChannelData(c);
     let lp = 0;
     let decay = 1;
+    let done = 0;
     for (let i = 0; i < len; i++, decay *= step) {
       const t = i / ctx.sampleRate;
       const smooth = 0.15 + 0.8 * (t / seconds); // a one-pole low-pass that closes over time
       lp += (rnd() * 2 - 1 - lp) * (1 - smooth);
       data[i] = t < 0.012 ? 0 : lp * decay * 0.35;
+      if (++done >= chunk) {
+        done = 0;
+        yield;
+      }
     }
   }
-  return buf;
 }
 
 /** Soft-clip transfer curve: identity up to KNEE, then a tanh shoulder towards CEILING (linear). */
@@ -91,10 +109,13 @@ function softClipper(ctx: BaseAudioContext): WaveShaperNode {
 }
 
 /**
- * `later` (live play only) builds the reverb's impulse after the current frame: the convolver is silent for that
+ * `later` (live play only) builds the reverb's impulse in small tasks after the current frame: the convolver is silent for that
  * moment, and the tap that unlocked audio does not pay for it. Offline renders build it at once.
  */
-export function buildGraph(ctx: BaseAudioContext, later?: (fn: () => void) => void): Graph {
+export function buildGraph(
+  ctx: BaseAudioContext,
+  later?: (fn: () => void, ms: number) => void,
+): Graph {
   const master = ctx.createGain();
   // A safety limiter at the very end: many sounds at once must never clip a phone speaker.
   const limiter = ctx.createDynamicsCompressor();
@@ -127,8 +148,16 @@ export function buildGraph(ctx: BaseAudioContext, later?: (fn: () => void) => vo
   reverbIn.channelCount = 1;
   reverbIn.channelCountMode = 'explicit';
   const conv = ctx.createConvolver();
-  if (later) later(() => (conv.buffer = impulse(ctx, REVERB_SECONDS)));
-  else conv.buffer = impulse(ctx, REVERB_SECONDS);
+  if (later) {
+    // Live: once the game is in (2.5 s after the unlocking tap), 4096 samples per task, then the reverb is on.
+    const buf = ctx.createBuffer(2, Math.floor(ctx.sampleRate * REVERB_SECONDS), ctx.sampleRate);
+    const steps = fillImpulse(ctx, REVERB_SECONDS, buf, 4096);
+    const run = () => {
+      if (steps.next().done) conv.buffer = buf;
+      else later(run, 0);
+    };
+    later(run, 2500);
+  } else conv.buffer = impulse(ctx, REVERB_SECONDS);
   reverbIn.connect(conv).connect(mk(musicBus, REVERB_RETURN));
   return {
     master,
