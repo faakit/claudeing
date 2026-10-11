@@ -259,7 +259,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one hoe stroke in five frames: 1 the hoe raised high over the shoulder, 2 swinging down, 3 the blade biting into the soil just in front of the feet, 4 pulling the hoe back up a little, 5 standing at rest holding the hoe. The hoe has a straight wooden handle and a flat grey iron blade.
 
 - raw: anim_hoe-a.jpg, anim_hoe-b.jpg
-- used: down a, up b, right b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: the round-4 code-drawn hoe frames win on consistency and tool identity)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 32. `anim_can` (1:1, preamble: tinyacre-character)
@@ -267,7 +267,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one watering in five frames: 1 lifting the watering can, 2 tipping it forward, 3 water pouring from the spout onto the ground just in front of the feet, 4 still pouring with a few drops, 5 lowering the can at rest. The watering can is grey metal with a long spout; the water is light blue.
 
 - raw: anim_can-a.jpg, anim_can-b.jpg
-- used: b only, frames 2-5 (a's pour frames lost the body when cut): frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: round-4 frames kept)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane); the first submission failed silently and was resubmitted
 
 ## 33. `anim_scythe` (1:1, preamble: tinyacre-character)
@@ -275,7 +275,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one scythe sweep in five frames: 1 the scythe pulled back to one side, 2 sweeping low across the front, 3 the curved blade cutting grass at ground level just in front of the feet, 4 following through to the other side, 5 standing at rest holding the scythe. The scythe has a long wooden handle and a curved grey blade.
 
 - raw: anim_scythe-a.jpg, anim_scythe-b.jpg
-- used: a: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: the Flow scythe read as a bow)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 34. `anim_pick` (1:1, preamble: tinyacre-character)
@@ -283,7 +283,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one pickaxe blow in five frames: 1 the pickaxe raised high over the shoulder, 2 swinging down, 3 the iron head striking a small grey rock just in front of the feet, 4 the pickaxe bouncing back up a little, 5 standing at rest holding the pickaxe. The pickaxe has a wooden handle and a grey double-pointed iron head.
 
 - raw: anim_pick-a.jpg, anim_pick-b.jpg
-- used: b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: round-4 frames kept)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 35. `anim_rodcast` (1:1, preamble: tinyacre-character)
@@ -291,7 +291,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one fishing cast in five frames: 1 the rod drawn back over the shoulder, 2 whipping the rod forward, 3 the rod pointing forward with the line flying out ahead, 4 the line out and the rod held forward and level, 5 holding the rod still while waiting. The fishing rod is a thin brown wooden rod with a dark line and a small red and white bobber.
 
 - raw: anim_rodcast-a.jpg, anim_rodcast-b.jpg
-- used: a: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: round-4 frames kept)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 36. `anim_rodreel` (1:1, preamble: tinyacre-character)
@@ -299,7 +299,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is one bite and reel in five frames: 1 holding the rod still while waiting, 2 the rod tip dipping down at a bite, 3 pulling the rod up sharply, 4 reeling in with the rod raised high, 5 holding up a small silver fish on the line. The fishing rod is a thin brown wooden rod with a dark line.
 
 - raw: anim_rodreel-a.jpg, anim_rodreel-b.jpg
-- used: b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: the rod pieces floated; the reel is drawn in code, codeacts.py)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 37. `anim_plant` (1:1, preamble: tinyacre-character)
@@ -307,7 +307,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is planting seeds in five frames: 1 standing holding a small seed packet, 2 bending down, 3 crouching and pressing seeds into the soil just in front of the feet with one hand, 4 patting the soil, 5 standing up again.
 
 - raw: anim_plant-a.jpg, anim_plant-b.jpg
-- used: b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: b, facing down and up (frames 2-4; standing frames are the idle): composed on the idle head, flowanim.py
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 38. `anim_harvest` (1:1, preamble: tinyacre-character)
@@ -315,7 +315,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is picking a crop by hand in five frames: 1 standing, 2 bending down and reaching to the ground in front, 3 gripping a leafy vegetable at the ground, 4 pulling it up out of the soil, 5 standing up holding the vegetable up proudly.
 
 - raw: anim_harvest-a.jpg, anim_harvest-b.jpg
-- used: b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: b, facing down and right (frames 2-5; the first is the idle): composed on the idle head, flowanim.py
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 39. `anim_pet` (1:1, preamble: tinyacre-character)
@@ -323,7 +323,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is petting an animal in five frames: 1 standing, 2 crouching down, 3 reaching out one hand low in front, 4 patting gently with the hand moved a little, 5 standing up again. Draw only the farmer, no animal.
 
 - raw: anim_pet-a.jpg, anim_pet-b.jpg
-- used: b: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: front bodies under side heads; the pat is drawn in code)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 40. `anim_eat` (1:1, preamble: tinyacre-character)
@@ -331,7 +331,7 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is eating a snack in five frames: 1 standing holding a red apple at the waist, 2 lifting the apple to the mouth, 3 taking a bite with the apple at the mouth, 4 chewing with the apple lowered a little, 5 standing happily with the apple gone.
 
 - raw: anim_eat-a.jpg, anim_eat-b.jpg
-- used: a: frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: a, all three facings: composed on the idle head, flowanim.py
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
 
 ## 41. `anim_place` (1:1, preamble: tinyacre-character)
@@ -339,5 +339,5 @@ Generations: **41** prompts.
 > Character animation sprite sheet of the young farmer in the reference image: exactly the same character with the same short brown hair, blue shirt, dark blue trousers and brown boots, the same head and body, the same size, proportions and pixel scale as the reference, full body, each frame 32 pixels wide and 32 pixels tall, the feet on the same baseline in every frame of a row. A grid of 3 rows and 5 columns with wide even spacing. Row 1 facing the viewer, row 2 seen from behind, row 3 facing right in side view. Each row is placing an object in five frames: 1 standing holding a small wooden crate in both hands at the chest, 2 bending forward, 3 setting the crate down on the ground just in front of the feet, 4 letting go with the hands lifting away, 5 standing up again with empty hands.
 
 - raw: anim_place-a.jpg, anim_place-b.jpg
-- used: b (weak: the crate does not survive the cut; see NEXT-STEPS-ART): frames composed on the player's own idle head by art-src/tools/flowanim.py (crops in art-src/flow/crops/anim/)
+- used: not used (review 18: no crate survived; the place is drawn in code with the held item's icon)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)

@@ -245,6 +245,39 @@ describe('animation frames (art round 4)', () => {
           n++;
         }
       }
-    expect(n).toBeGreaterThan(100);
+    expect(n).toBeGreaterThanOrEqual(60);
+  });
+
+  it('draws every action frame as one piece: no detached tool parts or specks (review 18)', () => {
+    for (const [anim, dirs] of Object.entries(ACT_FRAMES))
+      for (const [d, count] of Object.entries(dirs))
+        for (let i = 0; i < count; i++) {
+          const k = actKey(anim, d, i);
+          const f = frame(k);
+          const H = f.length;
+          const W = f[0]!.length;
+          const seen = f.map((r) => r.map(() => false));
+          let pieces = 0;
+          for (let y = 0; y < H; y++)
+            for (let x = 0; x < W; x++) {
+              if (f[y]![x] === '' || seen[y]![x]) continue;
+              pieces++;
+              const stack: [number, number][] = [[y, x]];
+              seen[y]![x] = true;
+              while (stack.length) {
+                const [cy, cx] = stack.pop()!;
+                for (let dy = -1; dy <= 1; dy++)
+                  for (let dx = -1; dx <= 1; dx++) {
+                    const ny = cy + dy;
+                    const nx = cx + dx;
+                    if (ny < 0 || nx < 0 || ny >= H || nx >= W) continue;
+                    if (f[ny]![nx] === '' || seen[ny]![nx]) continue;
+                    seen[ny]![nx] = true;
+                    stack.push([ny, nx]);
+                  }
+              }
+            }
+          expect(pieces, `${k}: pieces`).toBe(1);
+        }
   });
 });

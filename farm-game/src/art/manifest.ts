@@ -166,8 +166,9 @@ export const SHEET_PIECE_SIZES: Record<SheetPiece, [number, number]> = {
 };
 
 /**
- * Player action animations (art round 5), drawn by Google Flow from the player's own sheet and composed on the
- * idle head (pixel-identical): `player_act_<anim>_<dir>_<i>`, 32 x 44, the body at x 8..23 and the feet on row 39
+ * Player action animations (art round 5): harvest, plant and eat drawn by Google Flow from the player's own sheet,
+ * pet, reel and place drawn in code (review 18); all composed on the idle head (pixel-identical):
+ * `player_act_<anim>_<dir>_<i>`, 32 x 44, the body at x 8..23 and the feet on row 39
  * (12 rows of headroom for raised tools, 4 below for a blade): origin (0.5, ACT_ORIGIN_Y). Facings: down, up and
  * right; left is right flipped (setFlipX). Frames: wind-up, swing, contact (ACT_CONTACT_FRAME, index 2: spawn the
  * dust, splash, sound and haptic here), follow-through, rest; some have 4 (or 3) frames, the last being the rest.
@@ -180,13 +181,27 @@ export const ACT_CONTACT_FRAME = 2;
 /** Frame counts per animation and facing (written by the art build). */
 export const ACT_FRAMES: Record<string, Record<string, number>> = actFrameCounts;
 /** Which action animation a tool item plays (the rod: `rodcast` to cast, `rodreel` on a bite). */
-export const ACT_FOR_ITEM: Record<string, string> = {
-  hoe: 'hoe',
-  watering_can: 'can',
-  scythe: 'scythe',
-  pickaxe: 'pick',
-  fishing_rod: 'rodcast',
+/** Which action a successful action kind plays (pet and reel come from their own events). */
+export const ACT_FOR_KIND: Record<string, string> = {
+  plant: 'plant',
+  harvest: 'harvest',
+  forage: 'harvest',
+  eat: 'eat',
+  place: 'place',
 };
+/**
+ * Where the game draws the held item's icon during `place` (its centre in the 32 x 44 frame's pixels; null:
+ * hidden behind the farmer). Facing left mirrors x (32 - x).
+ */
+export const ACT_ITEM_ANCHORS: Record<string, Record<string, ([number, number] | null)[]>> = {
+  place: {
+    down: [[16, 28], [16, 33], [16, 38], null],
+    right: [[23, 28], [25, 33], [27, 38], null],
+    up: [null, null, null, null],
+  },
+};
+/** Suggested ms per action frame: wind-up, swing, contact, follow-through, rest. */
+export const ACT_MS = [90, 70, 120, 100, 140] as const;
 export const actKey = (anim: string, dir: string, i: number): string =>
   `player_act_${anim}_${dir}_${i}`;
 /** The frames of one action for a facing ([] when it has none), and whether to flip them (left). */

@@ -266,6 +266,35 @@ def idle_head(idle: np.ndarray) -> tuple[np.ndarray, int, int]:
     return head, top, (cols[0] + cols[-1]) / 2
 
 
+def largest8(m: np.ndarray) -> np.ndarray:
+    """The biggest 8-connected region of a mask."""
+    from collections import deque  # noqa: PLC0415
+
+    H, W = m.shape
+    seen = np.zeros_like(m, dtype=bool)
+    best: list[tuple[int, int]] = []
+    for sy, sx in zip(*np.nonzero(m)):
+        if seen[sy, sx]:
+            continue
+        q, pts = deque([(sy, sx)]), []
+        seen[sy, sx] = True
+        while q:
+            y, x = q.popleft()
+            pts.append((y, x))
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < H and 0 <= nx < W and m[ny, nx] and not seen[ny, nx]:
+                        seen[ny, nx] = True
+                        q.append((ny, nx))
+        if len(pts) > len(best):
+            best = pts
+    out = np.zeros_like(m, dtype=bool)
+    for y, x in best:
+        out[y, x] = True
+    return out
+
+
 FRAME_H, FEET = 44, 39  # the Flow-based action frames: 32 x 44, 12 rows of headroom, the feet on row 39
 
 
@@ -317,12 +346,9 @@ def compose(names: list[str], frame: np.ndarray, head_xy: tuple[float, float], i
         for x in range(head.shape[1]):
             if head[y, x] >= 0 and 0 <= hy0 + y < H:
                 canvas[hy0 + y, 8 + x] = head[y, x]
-    # stray bits: anything not connected to the farmer, up to 6 px (a neighbour's tool tip, a lone jpeg speck)
-    comps = px.components(canvas >= 0, 1)
-    for c in comps:
-        if c[0] <= 6:
-            for yy, xx in c[5]:
-                canvas[yy, xx] = -1
+    # no detached pieces (review 18): only the farmer's own 8-connected piece stays
+    keep = largest8(canvas >= 0)
+    canvas[~keep] = -1
     from anim import fix_edges  # noqa: PLC0415
 
     fix_edges(canvas, 0, 32, max(0, hy0 - 1), min(H, hy0 + hh + 2))
@@ -370,19 +396,15 @@ def preview_composed(out_dir: str, only: str = "") -> None:
 # anim -> dir -> (variant, frame indices in the detected row). 5 frames: wind-up, swing, contact, follow-through,
 # rest; where the model drew only 4 (or 3), the contact is still index 2 and the last frame is the rest.
 SELECT: dict[str, dict[str, tuple[str, list[int]]]] = {
-    "hoe": {"down": ("a", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3])},
-    # the can: b's water first shows on its 4th frame, so frames 1-4 put the pour on the contact index (2)
-    "can": {"down": ("b", [1, 2, 3, 4]), "up": ("b", [1, 2, 3, 4]), "right": ("b", [1, 2, 3, 4])},
-    "pick": {"down": ("b", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3])},
-    "scythe": {"down": ("a", [0, 1, 2, 3]), "up": ("a", [0, 1, 2, 3]), "right": ("a", [0, 1, 2, 3])},
-    "rodcast": {"down": ("a", [0, 1, 2, 3]), "up": ("a", [0, 1, 2, 3]), "right": ("a", [0, 1, 2])},
-    "rodreel": {"down": ("b", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3])},
-    "plant": {"down": ("b", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3, 4])},
-    "harvest": {"down": ("b", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3, 4])},
-    "pet": {"down": ("b", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3, 4])},
+    # review 18: the tools stay on the round-4 code-drawn frames; pet, reel and place are drawn in code
+    # (codeacts.py). Kept from Flow, cleaned: harvest (down, right), plant (down, up), eat (all three). Frame 0
+    # (the farmer simply standing) is replaced by the idle frame at build time ("IDLE_FIRST").
+    "plant": {"down": ("b", [0, 1, 2, 3, 4]), "up": ("b", [0, 1, 2, 3, 4])},
+    "harvest": {"down": ("b", [0, 1, 2, 3, 4]), "right": ("b", [0, 1, 2, 3, 4])},
     "eat": {"down": ("a", [0, 1, 2, 3]), "up": ("a", [0, 1, 2, 3]), "right": ("a", [0, 1, 2, 3])},
-    "place": {"down": ("b", [0, 1, 2, 3]), "up": ("b", [0, 1, 2, 3]), "right": ("b", [0, 1, 2])},
 }
+IDLE_FIRST = {"plant", "harvest"}
+IDLE_LAST = {"plant"}  # standing up again: the idle frame (Flow's standing body was three-quarter)
 CROPS = os.path.normpath(os.path.join(HERE, "..", "flow", "crops", "anim"))
 
 
@@ -434,6 +456,13 @@ def build(names: list[str], pal, idle: dict[str, np.ndarray], to_idx) -> dict[st
         for d, m in dirs.items():
             k = 0  # renumbered, so a skipped fragment leaves no gap
             for i, fr in enumerate(m["frames"]):
+                last = i == len(m["frames"]) - 1
+                if (i == 0 and anim in IDLE_FIRST) or (last and anim in IDLE_LAST):  # standing: the idle frame
+                    c = np.full((FRAME_H, 32), -1, dtype=np.int32)
+                    c[FEET - 31 : FEET + 1, 8:24] = idle[d]
+                    out[f"player_act_{anim}_{d}_{k}"] = c
+                    k += 1
+                    continue
                 rgba = np.asarray(Image.open(os.path.join(CROPS, f"{anim}_{d}_{i}.png")).convert("RGBA"))
                 c = compose(names, to_idx(rgba), tuple(fr["head"]), idle[d], m["rest_h"])
                 if c is not None:

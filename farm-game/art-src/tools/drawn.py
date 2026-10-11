@@ -608,6 +608,9 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
 
         idle = {d: to_idx(chars[f"player_idle_{d}_0"], pal) for d in ("down", "up", "right")}
         acts = flowanim.build(names, pal, idle, lambda rgba: to_idx(rgba, pal))
+        import codeacts  # pet, reel and place, drawn in code on the round-4 machinery (review 18)
+
+        acts.update(codeacts.build(names, idle))
         for key, idx in acts.items():
             add("chars", key, idx)
         if acts:  # the frame counts the game reads (src/art/actFrames.json)

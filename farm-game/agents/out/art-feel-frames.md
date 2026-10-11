@@ -149,42 +149,25 @@ up near trees and roofs pay that cost on top.
 - Harvest: `fx.itemPop` can step through `popFrames(icon)` instead of the scale tween.
 - Animals: `ObjectsRenderer` can loop `animalIdleFrames`.
 
-## Round 5: Flow action animations (the owner's request)
+## Round 5: action animations (final after review 18; wired in this round by the art agent)
 
-Every tool and the common actions, drawn by Google Flow (Nano Banana 2.1) from the player's own sheet as the
-reference, then composed by `art-src/tools/flowanim.py` on the **idle head, pixel for pixel** (tested), on palette,
-re-inked, the feet on one baseline. The round-4 keys (`player_tool_*`, `player_swing_*`, `player_use_*`) are
-unchanged, so nothing breaks; these are new keys you can switch to.
+**Final keys.** Tools stay on the round-4 code-drawn frames (`player_tool_*`, `player_swing_*`, `player_use_*`,
+unchanged). The new **actions** are `player_act_<anim>_<dir>_<i>`, 32 x 44, body at x 8..23, the feet on row 39
+(`ACT_FEET_ROW`), origin `(0.5, ACT_ORIGIN_Y)` = 40/44, contact on frame 2 (`ACT_CONTACT_FRAME`). Left is right
+flipped. Every frame holds the idle head pixel for pixel, plants a foot on row 39, and is one connected piece
+(all three are tested).
 
-- **Keys:** `player_act_<anim>_<dir>_<i>`; `actFrames(anim, dir)` in `src/art/manifest.ts` returns
-  `{ keys, flipX }` (left = right flipped; no left keys are stored). Counts per facing: `ACT_FRAMES`
-  (`src/art/actFrames.json`, written by the art build).
-- **Size and origin:** 32 x 44; the body sits at x 8..23 and the feet on row 39 (`ACT_FEET_ROW`), with 12 rows of
-  headroom for raised tools and 4 below for a blade biting the next tile. `setOrigin(0.5, ACT_ORIGIN_Y)`
-  (= 40 / 44) and place it at the feet, like the walk sprite.
-- **Contact:** `ACT_CONTACT_FRAME` = 2 for every animation: spawn the dust, splash, soil change, sound and haptic
-  on frame 2. Frames: 0 wind-up, 1 swing, 2 contact, 3 follow-through, 4 rest. Where the model drew 4 frames, the
-  last is the rest (no separate follow-through); `rodcast` facing right has 3 (wind-up, whip, line out). Settle on
-  the idle frame.
-- **Animations:**
-
-| anim | what | for | down / up / right frames |
+| anim | source | facings (frames) | plays on |
 |---|---|---|---|
-| `hoe` | raise, swing, blade bites the soil, pull back, rest | item `hoe` | 5 / 5 / 4 |
-| `can` | lift, tip, pour (water on the contact frame), lower | `watering_can` | 4 / 4 / 4 |
-| `scythe` | draw back, sweep low, cut at ground level, rest | `scythe` | 4 / 4 / 4 |
-| `pick` | raise, swing, strike the rock, bounce, rest | `pickaxe` | 5 / 5 / 4 |
-| `rodcast` | draw back, whip forward, line out, hold | `fishing_rod` (cast) | 4 / 4 / 3 |
-| `rodreel` | wait, bite (tip dips), pull up, reel, hold up the fish | `fishing_rod` (bite) | 5 / 5 / 4 |
-| `plant` | hold packet, bend, press seeds in, pat, stand | planting seeds | 5 / 5 / 5 |
-| `harvest` | bend, grip the crop, pull it up, stand holding it | harvest / pick up | 5 / 5 / 5 |
-| `pet` | crouch, reach low, pat, stand | petting animals | 5 / 5 / 5 |
-| `eat` | apple at the waist, lift, bite, chew | eating / using an item | 4 / 4 / 4 |
-| `place` | bend, set down, let go, stand (weak: no crate drawn) | placing an object | 4 / 4 / 2 |
+| `harvest` | Flow (cleaned), frame 0 = idle | down 5, right 5 (left flips; up: none) | `harvest`, `forage` action results |
+| `plant` | Flow (cleaned), first and last = idle | down 5, up 5 (side: none) | `plant` |
+| `eat` | Flow (cleaned) | down 4, up 4, right 4 | `eat` |
+| `pet` | code (`codeacts.py`), last = idle | down 5, up 5, right 5 | the daily pat at an animal house |
+| `reel` | code: waiting, the bite, the pull (contact) | down 3, up 3, right 3 | `fishCaught`, played when the fishing sheet closes |
+| `place` | code, with the held item's icon at `ACT_ITEM_ANCHORS` | down 4, up 4 (item hidden), right 4 | `place` |
 
-- **Timing (suggested, ms):** 90, 60, 120 (contact), 100, 160, then idle; `rodreel` frame 0 loops while waiting;
-  `can` frames 2-3 can loop for a longer pour. `ACT_FOR_ITEM` maps tool item ids to anims.
-- **Facing up** now exists for the can, scythe and rod too (the round-4 frames lacked it).
-- **Hooks:** play `actFrames(ACT_FOR_ITEM[item], facing)` in `WorldScene` for tool use; `plant`, `harvest`,
-  `pet`, `eat` and `place` on those actions (actionFx's `plant`, `harvest`/`forage`, the animal pet, eating and
-  placing).
+Wiring (done): `PlayerFrames.act(anim, dir)` returns the frames and times (`ACT_MS`: 90, 70, 120, 100, then 140
+for the last). `WorldScene.playAct` shows them through the same pose path as the tool swings. The action's fx,
+sound and haptic land on the contact frame, so dust, soil and haptics stay in sync; moving cuts the pose short,
+so input is never blocked. Calm mode plays none. In `src/fx/actionFx.ts` nothing changed: it is the impact,
+delayed to the contact frame.

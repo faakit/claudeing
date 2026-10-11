@@ -26,28 +26,32 @@ hand-off.
      - `drawSlot`'s recess is a solid 2 px soil row.
      - `drawBar`'s highlight is the next lighter ramp colour (`LIGHTER`).
      The UI has no semi-alpha pixels left in the walnut skin.
-2. **Player action animations from Google Flow** (the owner's request), for every tool and the common actions:
-   hoe, watering can, scythe, pickaxe, rod cast, rod bite and reel, planting, harvesting, petting, eating and
-   placing; facing down, up and right (left flips).
-   - The prompts used the project's own `player1` a sheet (the source of the current player sprite) as the
-     reference image: entries 31-41 in `art-src/flow/prompts.md`.
-   - `art-src/tools/flowanim.py`:
-     - finds each farmer by his hair, cuts a window around him and keeps only the connected group with his head;
-     - samples it to native pixels and quantizes to the palette;
-     - plants the feet on one baseline;
-     - clears the generated head and pastes the **idle head pixel for pixel** (the hair blob is found with an
-       opening, so tools crossing the head survive);
-     - drops stray specks and re-inks.
-     It builds from committed crops (`art-src/flow/crops/anim/`); `--extract` re-reads the raw sheets in
-     `flow-raw/` using the `SELECT` table (which variant and frames per animation and facing).
-   - Keys `player_act_<anim>_<dir>_<i>`, 32 x 44, feet on row 39, origin (0.5, 40/44), contact on frame 2.
-     Helpers are in `src/art/manifest.ts` (`actFrames`, `ACT_FRAMES`, `ACT_FOR_ITEM`). The full table and the
-     hooks are in `agents/out/art-feel-frames.md` (round 5 section). The round-4 keys are unchanged.
-   - Tests (`tests/animation-frames.test.ts`): every action frame holds the idle head exactly and has a foot on
-     row 39; every round-4 and round-5 manifest frame is packed at its size; the atlases are all palette.
-   - Review pack: `agents/out/art-shots/round5/tools/`:
-     - `<anim>_<dir>_strip.png`, `_onion.png`, `_1x.gif` and `_4x.gif`;
-     - `<anim>_<dir>_vs_round4.png`: the round-4 code-drawn frames above, the Flow frames below.
+2. **Player action animations** (the owner's request, settled by review 18):
+   - **Tools stay on the round-4 code-drawn frames.** On every side-by-side they beat Flow's on consistency, tool
+     identity and anchoring.
+   - **Kept from Flow, cleaned:** harvest (down, right), plant (down, up) and eat (all three). The Flow prompts
+     used the project's own `player1` a sheet as the reference (entries 31-41 in `art-src/flow/prompts.md`, with
+     what was used from each). `art-src/tools/flowanim.py`:
+     - finds each farmer by his hair and keeps his connected piece;
+     - samples to native pixels on the palette and plants the feet on row 39;
+     - pastes the **idle head pixel for pixel**;
+     - keeps only one 8-connected piece;
+     - uses the exact idle frame where the farmer simply stands.
+   - **Drawn in code** (`art-src/tools/codeacts.py`, on the round-4 toolanim parts): pet (crouch, reach, pat),
+     reel (wait, bite, pull) and place (the held item's icon is drawn by the game at `ACT_ITEM_ANCHORS`).
+   - Keys `player_act_<anim>_<dir>_<i>`, 32 x 44, feet on row 39, origin (0.5, 40/44), contact on frame 2; table
+     in `agents/out/art-feel-frames.md`.
+   - **Wired here** (the feel agent finished its round):
+     - `PlayerFrames.act()`;
+     - `WorldScene.playAct()` plays plant, harvest/forage, eat and place on the action result, pet on the daily
+       pat, and reel on a new `fishCaught` event once the fishing sheet closes;
+     - the fx land on the contact frame; Calm mode plays none; moving cuts the pose, so input is never blocked;
+     - the pose origin comes from the frame height (44: 40/44).
+   - **Tests:** `tests/animation-frames.test.ts` checks the idle head, the row-39 feet and one piece per frame;
+     `scripts/e2e-scenarios.mjs` gained an `actions` block (each animation plays on its event, the farmer walks
+     right after a harvest, Calm mode plays none).
+   - **Review pack:** `agents/out/art-shots/round5/tools/`: strips, onions, 1x/4x GIFs, and
+     `ingame/ingame_rows.png` (frame-exact in-game strips of harvest, place, pet and reel).
 
 ## Flow usage
 
@@ -62,9 +66,16 @@ hand-off.
 
 ## Merge notes (for the coordinator)
 
-- Round 5 shared files: `src/ui/widgets.ts` (`Modal.panel`, `drawPanel`, `Button`, `drawSlot`, `drawBar`:
-  drawing only), `src/art/manifest.ts`, new `src/ui/sheetSkin.ts`, `src/art/actFrames.json`. `Hud.ts` and layout
-  untouched.
+- Round 5 shared files:
+  - `src/ui/widgets.ts`: `Modal.panel`, `drawPanel`, `Button`, `drawSlot`, `drawBar`; drawing only.
+  - `src/scenes/WorldScene.ts`: `playAct`, the pose origin, `pendingAct`/held-item fields, a `fishCaught`
+    listener, the act call after `toolSwing`, and the pet check in `onInteract`.
+  - `src/fx/playerFrames.ts`: `act()`.
+  - `src/systems/events.ts`: `fishCaught`.
+  - `src/ui/panels/FishingPanel.ts`: emits `fishCaught`.
+  - `scripts/e2e-scenarios.mjs`: the `actions` block.
+  - `src/art/manifest.ts`; new `src/ui/sheetSkin.ts`, `src/art/actFrames.json`.
+  - `Hud.ts`, layout and `actionFx.ts` are untouched.
 
 Round 4 notes, still valid:
 
@@ -81,15 +92,14 @@ Round 4 notes, still valid:
 
 ## Open items (by priority)
 
-1. **Wiring the action frames** (the feel agent, `feel/round5`): `actFrames(...)` in `WorldScene` for tool use and
-   the actions, the contact effects on frame 2, origin 40/44. Then retire the round-4 `player_tool_*` frames to
-   free chars-atlas space.
-2. **`place` is weak:** neither Flow variant kept the crate in the cut, and facing right has only 2 frames.
-   Regenerate it (a single row per facing helps the cutter), or draw the crate in.
-3. **Fidelity seams:** the bodies are Flow's (three-quarter in the down rows) under our front-facing head; a few
-   back-view frames turn sideways, because the model mixed facings. The critic's review will say which frames to
-   hand-correct (in the crops, then `build.py --sprites`).
-4. **The chars atlas is full** (512x1024): split it (a `chars2` atlas group) before the next batch.
+1. **Actions not drawn for every facing:** harvest has no back view and plant no side view (the Flow rows mixed
+   facings and were dropped). Those facings simply play no animation. A redraw in code, or a new Flow row per
+   facing, would complete them.
+2. **The round-4 tool frames** remain the tool animations. The chars atlas is 512x1024 with the action frames:
+   split it (a `chars2` group) before the next big batch.
+3. **Eat** is standing-only Flow art. The critic may still ask for front/side cleanups after the final review.
+4. **Fidelity seams:** the bodies under our head are Flow's drawing in harvest and eat; any frame the critic flags
+   can be swapped for the idle or redrawn in code (`flowanim.SELECT` / `codeacts.py`).
 5. **Layout (the UI owner):** tall sheets cut through the HUD goal plate; the menu tabs are crowded at 1x.
 6. Round 4 leftovers: a 9 px side stride, the statue's footprint, mine and woods details, winter paths.
 
