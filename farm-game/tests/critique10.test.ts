@@ -93,6 +93,7 @@ describe('critique 10 F3: at 5 hearts the race goes on without his takes', () =>
     const s = newState();
     s.friends['clay'] = { points: 5 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
     s.time.day = 20;
+    s.stats['rival.crate'] = 19; // his last crate was last night
     expect(boardScoreLine(s)).toBe('This season: you 0, Clay 0.');
     expect(rivalNotice(s)).toBe('Clay no longer takes requests.');
     expect(rivalCrate(s)).toBe(false);

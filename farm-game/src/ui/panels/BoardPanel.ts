@@ -157,7 +157,7 @@ export class BoardPanel extends Modal {
     if (!sp && this.doneSpecial)
       y = this.row(y, {
         title: this.doneSpecial,
-        sub: 'Special done! Thank you!',
+        sub: 'Special done! Thanks!',
         subColor: C.green,
         buttons: [
           { label: 'Done', width: 40, enabled: false, color: C.creamDim, onClick: () => {} },

@@ -305,7 +305,16 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     C.creamDim,
   );
   c.label(8, ly + 12, `Gold ${fmt(s.money)}`, C.gold);
-  c.label(8, ly + 24, 'Tip: hold Action, then drag, to work a whole plot.', C.creamDim);
+  // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
+  c.label(
+    8,
+    ly + 24,
+    'Tip: hold Action, then drag, to work a whole plot.',
+    C.creamDim,
+    1,
+    'left',
+    184,
+  );
 }
 
 function buildGoals(c: MenuTabContext): void {
@@ -366,12 +375,16 @@ function buildGoals(c: MenuTabContext): void {
     y += 3;
     c.label(8, y, 'ALSO OPEN', C.gold);
     y += 12;
-    for (const g of aside.slice(0, 2)) {
+    // Two rows at most: the oldest open goal, then either the next or a count of the rest.
+    const shown = aside.length > 2 ? aside.slice(0, 1) : aside;
+    for (const g of shown) {
       const right = `${fmt(Math.min(g.target, stat(s, g.stat)))}/${fmt(g.target)}`;
       c.label(192, y, right, C.gold, 1, 'right');
       c.label(8, y, fitRow(g.text, 184 - measureText(right) - 6), C.cream);
       y += 11;
     }
+    if (aside.length > shown.length)
+      c.label(8, y, `and ${aside.length - shown.length} more open goals`, C.creamDim);
   }
   y = c.bottom - 62;
   c.label(8, y, 'STATS', C.gold);

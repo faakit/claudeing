@@ -624,6 +624,34 @@ sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
   aside goal is remembered as the stat `goal.<id>` until `goalIndex` reaches it, so no save change; goals are
   still an append-only index and are not reordered. Goals beyond the current one never complete early.
 
+## Critique 12 fixes (depth round 4)
+
+The critic played the frozen round-3 head `6d5e480` (two 29-31 day keepers, a careless player, a first-week
+player who does jobs; edge probes; a sweep; a sensitivity and race sim). No blocker or major. Its first-week
+recommendation (fill days 2-4, do not cut the plot price, make the sim plant its starting seeds) is what the
+section above did.
+- **F1 the race was fair but not close** (keepers 12-5 and 13-6, every Clay point a crate, settled by day 13).
+  Crates now come 7 days after his last one, every 2 days while you lead by 3, every day while you lead by 5
+  (`CATCH_UP` in `systems/rival.ts`), never on day 28. A keeper filling about 0.6 rows a day stays a few points
+  ahead and slack is punished. Sim keeper: 20 of 24 seasons, margins 1 to 6 (mostly 2 to 4); shipper 3.
+  Clay still scores only on last-day rows (owner default: the crates are the catch-up pressure).
+- **F2 the rule was not said and leading by 4 lost the day-14 crate** (`seasonDay % 3`): counted from the last
+  crate, so a bigger lead never means fewer crates (tested over every day, last crate and lead). The score line
+  says "You 12, Clay 10. His crate tonight." whatever the line below says; while you lead, that line says the rule
+  ("Ahead 3+: his crate every 2 days."); his letters say "more often while you lead"; "Clay took one today: a
+  point." says whether it scored.
+- **F3 the season result was cut on a busy morning:** the result and the special's expiry are headlines that
+  come first, and the sales list shrinks to two lines before any note is dropped.
+- **F4 the chain froze on the first skipped activity** (all three farmers on "Pick up 3 wild goods" from day 5 to
+  31): a shown goal whose stat has not moved for 3 days waits (`goalWait.<id>`) and the next goal shows, with a
+  morning note; the waiting goal stays under "Also open" and still completes. Not while the guided start runs;
+  never when nothing else could show. Goals now pay as you go, so the sims earn more: tireless median 251,354
+  (pin 261,631, -4%), human-paced median 161k -> 198k.
+- **F6:** "Special done! Thanks!" fits; the Bag tab tip wraps.
+- **Not changed:** F5 summer for a farmer (crop rows come once a summer crop is within 7 days of ripe, about day 1
+  for tomatoes planted on day 1; the critic's bot had not planted); "Board 16" on the bin row (requests plus
+  the special, the toast splits it).
+
 ## One-thumb controls (PLAN-CONTROLS.md, owner decisions 2026-10-08)
 
 Owner decisions: tap-to-move and auto tool on by default (both can be turned off; the floating stick always

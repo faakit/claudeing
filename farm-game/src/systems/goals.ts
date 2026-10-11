@@ -9,6 +9,10 @@ import { gameEvents, toast } from './events';
  * aside goal is remembered as the stat `goal.<id>` until `goalIndex` moves past it, so saves need no new field.
  */
 const doneKey = (g: GoalDef): string => `goal.${g.id}`;
+/** A goal that sat without progress (`noteGoalDay`) waits like an aside goal (critique 12, F4). */
+const waitKey = (g: GoalDef): string => `goalWait.${g.id}`;
+const passedOver = (state: GameState, g: GoalDef): boolean =>
+  !!g.aside || !!state.stats[waitKey(g)];
 const isDoneAt = (state: GameState, i: number): boolean =>
   i < state.goalIndex || !!state.stats[doneKey(goals[i]!)];
 
@@ -18,7 +22,7 @@ export function currentGoal(state: GameState): GoalDef | null {
   for (let i = state.goalIndex; i < goals.length; i++) {
     if (isDoneAt(state, i)) continue;
     const g = goals[i]!;
-    if (!g.aside) return g;
+    if (!passedOver(state, g)) return g;
     aside ??= g;
   }
   return aside;
@@ -29,7 +33,7 @@ export function asideGoals(state: GameState): GoalDef[] {
   const cur = currentGoal(state);
   const out: GoalDef[] = [];
   for (let i = state.goalIndex; i < goals.length && goals[i] !== cur; i++)
-    if (!isDoneAt(state, i) && goals[i]!.aside) out.push(goals[i]!);
+    if (!isDoneAt(state, i) && passedOver(state, goals[i]!)) out.push(goals[i]!);
   return out;
 }
 
@@ -42,6 +46,37 @@ export const recentGoals = (state: GameState, n: number): GoalDef[] =>
   goals.filter((_g, i) => isDoneAt(state, i)).slice(-n);
 
 export const stat = (state: GameState, name: string): number => state.stats[name] ?? 0;
+
+/** Days the shown goal may sit without any progress before the next one is shown instead. */
+export const STALL_DAYS = 3;
+
+/**
+ * Once a day (absolute `day`): when the shown goal's stat has not moved for `STALL_DAYS` days, it waits and the
+ * next goal shows (critique 12, F4: a farmer who never forages sat on "Pick up 3 wild goods" for 26 days). The
+ * waiting goal stays under "Also open" and still completes when met; nothing is reordered. Tracked in stats
+ * (`goalStall.*`, `goalWait.<id>`), so no save change. Returns the goal that now waits, if any.
+ */
+export function noteGoalDay(state: GameState, day: number): GoalDef | null {
+  const cur = currentGoal(state);
+  if (!cur) return null;
+  const at = goals.indexOf(cur) + 1;
+  const value = stat(state, cur.stat);
+  if (state.stats['goalStall.i'] !== at || state.stats['goalStall.v'] !== value) {
+    state.stats['goalStall.i'] = at;
+    state.stats['goalStall.v'] = value;
+    state.stats['goalStall.day'] = day;
+    return null;
+  }
+  if (day - (state.stats['goalStall.day'] ?? day) < STALL_DAYS) return null;
+  state.stats[waitKey(cur)] = 1;
+  const next = currentGoal(state);
+  if (!next || next === cur || next.aside) {
+    delete state.stats[waitKey(cur)]; // nothing better to show: it stays the goal
+    return null;
+  }
+  checkGoals(state); // goals the player already met on the way pay now, so the note names a real next goal
+  return cur;
+}
 
 export function goalProgress(state: GameState): { goal: GoalDef; value: number } | null {
   const goal = currentGoal(state);
@@ -78,6 +113,7 @@ export function checkGoals(state: GameState): void {
     }
     while (state.goalIndex < goals.length && state.stats[doneKey(goals[state.goalIndex]!)]) {
       delete state.stats[doneKey(goals[state.goalIndex]!)];
+      delete state.stats[waitKey(goals[state.goalIndex]!)];
       state.goalIndex += 1;
     }
   }

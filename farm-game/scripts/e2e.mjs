@@ -749,7 +749,9 @@ try {
   let texts = await uiTexts();
   check(
     'the board shows the season score on its own line once Clay is about',
-    texts.some((t) => /^This season: you \d+, Clay \d+\.$/.test(t)),
+    texts.some((t) =>
+      /^(This season: you \d+, Clay \d+\.|You \d+, Clay \d+\. His crate tonight\.)$/.test(t),
+    ),
     texts.join(' | '),
   );
   // Critique 9, F2: "Ship all produce" keeps what an open request wants, and says so.

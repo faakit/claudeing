@@ -85,18 +85,33 @@ export function rivalPicks(state: GameState, day = state.orders.day): Order[] {
 export function rivalNotice(state: GameState): string {
   if (!boardRaceOn(state)) return 'Requests stay a few days.';
   const name = rivalName();
-  const crate =
-    crateDue(state, absoluteDay(state)) && state.stats['rival.crate'] !== absoluteDay(state);
+  const crate = crateTonight(state);
   if (!rivalActive(state))
     return crate ? `${name} ships a crate tonight: a point.` : `${name} no longer takes requests.`;
-  const took = state.orders.list.filter((o) => o.rival && o.takenOn === absoluteDay(state)).length;
-  if (took) return `${name} took ${NUMBER_WORDS[took] ?? took} today.`;
+  const taken = state.orders.list.filter((o) => o.rival && o.takenOn === absoluteDay(state));
+  if (taken.length) {
+    // Whether it scored is said here too, not only on the row (critique 12, F6).
+    const points = taken.filter(isFarmGood).length;
+    const said =
+      points === 0
+        ? 'no point'
+        : points === 1
+          ? 'a point'
+          : `${NUMBER_WORDS[points] ?? points} points`;
+    return `${name} took ${NUMBER_WORDS[taken.length] ?? taken.length} today: ${said}.`;
+  }
   const picks = state.stats['rival.day'] === absoluteDay(state) ? [] : rivalPicks(state);
   const at = formatClock(rivalMinute(state));
   const scoring = picks.filter(isFarmGood).length;
   // His target is named only when it would score (critique 10, F2), counted right in year two (critique 11, F4).
   if (scoring > 1) return `${name} wants two of these at ${at}.`;
   if (scoring === 1) return `${name} wants this one at ${at}.`;
+  // While you lead, the catch-up rule is said where the player looks (critique 12, F2); the score line above
+  // says when a crate comes tonight.
+  const t = boardTally(state, absoluteDay(state));
+  const every = crateEvery(t.you - t.rival);
+  if (every === 1) return `Ahead ${CATCH_UP[0]!.lead}+: his crate every day.`;
+  if (every < CRATE_EVERY) return `Ahead ${CATCH_UP[1]!.lead}+: his crate every ${every} days.`;
   // A crate tonight is said before it scores (critique 11, F2).
   if (crate) return `${name} ships a crate tonight: a point.`;
   if (picks.length > 1) return `${name} takes two at ${at}: no point.`;
@@ -118,6 +133,9 @@ export function boardScoreLine(state: GameState): string | null {
   if (!boardRaceOn(state)) return null;
   const t = boardTally(state, absoluteDay(state));
   const last = t.you === 0 && t.rival === 0 ? lastSeasonLine(state) : null;
+  // A crate tonight is always said, even when the line below names a target or a take (critique 12, F2).
+  if (!last && crateTonight(state))
+    return `You ${t.you}, ${rivalName()} ${t.rival}. His crate tonight.`;
   return last ?? `This season: you ${t.you}, ${rivalName()} ${t.rival}.`;
 }
 
@@ -219,34 +237,51 @@ export function settleSeason(state: GameState): string | null {
       sendLetter(state, {
         from: game.rival.npc,
         title: 'The board is mine',
-        text: `Last season the board was ${t.rival} to ${t.you}, my way: a farm good left to its last day is mine, and so is a crate of my own each week. Beat me this season and ${boardStakes(state)}.`,
+        text: `Last season the board was ${t.rival} to ${t.you}, my way: a farm good left to its last day is mine, and so is a crate of my own each week, more often while you lead. Beat me this season and ${boardStakes(state)}.`,
       });
     return `${name} won the board last season (${t.rival} to ${t.you}).`;
   }
   return `A draw with ${name} on the board last season (${t.you} to ${t.rival}).`;
 }
 
-/** Clay's own crates: every this-many days of a season he scores a point from his own field. */
+/** Clay's own crates: this many days after his last one (or the season's start) he scores a point from his field. */
 export const CRATE_EVERY = 7;
-/** While you lead by at least `CATCH_UP_LEAD`, he ships one every `CATCH_UP_EVERY` days instead. */
-export const CATCH_UP_LEAD = 4;
-export const CATCH_UP_EVERY = 3;
+/**
+ * Catch-up (critique 12, F1): while you lead by `lead` or more, his next crate comes `every` days after the last.
+ * A steady keeper (about 0.6 fills a day) then stays a few points ahead instead of running away.
+ */
+export const CATCH_UP: readonly { lead: number; every: number }[] = [
+  { lead: 5, every: 1 },
+  { lead: 3, every: 2 },
+];
+
+/** Days from one crate to the next at a lead of `lead`. */
+export const crateEvery = (lead: number): number =>
+  CATCH_UP.find((c) => lead >= c.lead)?.every ?? CRATE_EVERY;
+
+/** A crate is due tonight and not shipped yet (the board says so). */
+export const crateTonight = (state: GameState): boolean =>
+  crateDue(state, absoluteDay(state)) && state.stats['rival.crate'] !== absoluteDay(state);
 
 /** The year an absolute day belongs to. */
 const yearOf = (day: number): number => Math.floor((day - 1) / (game.seasonLength * 4)) + 1;
 
 /**
- * Is a crate due on absolute day `day` (shipped that night)? Every 7th day of a season, every 3rd while you lead by
- * 4 or more (critique 11, F1: a keeper must keep filling, not only turn up), and never on a season's last day, so
- * the last move of a season is yours (critique 11, F2). He keeps shipping crates once he is your friend, so a
- * friendly season still has an opponent (critique 11, F3).
+ * Is a crate due on absolute day `day` (shipped that night)? Seven days after his last crate of the season (or
+ * its start), sooner while you lead (`CATCH_UP`), counted from the last one so a bigger lead never means fewer
+ * crates (critique 12, F2). Never on a season's last day, so the last move of a season is yours (critique 11, F2).
+ * He keeps shipping crates once he is your friend, so a friendly season still has an opponent (critique 11, F3).
  */
 export function crateDue(state: GameState, day: number): boolean {
   const seasonDay = ((day - 1) % game.seasonLength) + 1;
   if (!boardRaceOn(state, day) || seasonDay >= game.seasonLength) return false;
+  const last = Math.max(
+    day - seasonDay,
+    game.rival.startDay - 1,
+    Math.min(day, state.stats['rival.crate'] ?? 0),
+  );
   const t = boardTally(state, day);
-  const every = t.you - t.rival >= CATCH_UP_LEAD ? CATCH_UP_EVERY : CRATE_EVERY;
-  return seasonDay % every === 0;
+  return day - last >= crateEvery(t.you - t.rival);
 }
 
 /**

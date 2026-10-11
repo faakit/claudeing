@@ -27,3 +27,4 @@ import './jobs';
 import './mail';
 import './specials';
 import './tutorial';
+import './goalStall';

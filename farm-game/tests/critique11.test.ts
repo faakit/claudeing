@@ -15,14 +15,15 @@ const friend = (s: GameState) =>
   (s.friends['clay'] = { points: 5 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 });
 
 describe("critique 11 F1/F2: Clay's crates are said, keep up with a leader, and never end a season", () => {
-  it('every 7th day, every 3rd while you lead by four, never on day 28', () => {
+  it('a week after the race starts, then counted from his last crate (critique 12 cadence), never on day 28', () => {
     const s = newState();
     expect(crateDue(s, 14)).toBe(true);
     expect(crateDue(s, 12)).toBe(false);
+    s.stats['rival.crate'] = 21;
+    expect(crateDue(s, 27)).toBe(false);
     expect(crateDue(s, 28)).toBe(false); // the season's last move is yours
-    s.stats['board.s0.you'] = 6;
-    expect(crateDue(s, 12)).toBe(true);
-    expect(crateDue(s, 13)).toBe(false);
+    s.stats['board.s0.you'] = 6; // ahead by 5 or more: a crate every day
+    expect(crateDue(s, 22)).toBe(true);
     expect(crateDue(s, 27)).toBe(true);
     expect(crateDue(s, 28)).toBe(false);
   });
@@ -71,6 +72,7 @@ describe('critique 11 F4/F9: year-two text and the winter prize', () => {
       until: today,
     });
     s.orders = { day: today, list: [row(1, 'trout'), row(2, 'wild_leek'), row(3, 'carp')] };
+    s.stats['rival.crate'] = today - 1; // no crate due tonight
     expect(rivalNotice(s)).toBe('Clay takes two at 2:00 PM: no point.');
     expect(measureText(rivalNotice(s))).toBeLessThanOrEqual(184);
   });

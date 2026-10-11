@@ -1,93 +1,90 @@
 # Next steps for the game-depth work
 
-Branch `depth/round3` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/round2-2026-10-09`, pushed to
-`origin/depth/round3`. Every commit passed `npm run verify` (lint, typecheck, unit, build, e2e, mobile e2e, controls
-e2e, perf). Save version is still **16**: everything new this round is a stat or an optional field. Unit tests
-680 -> 719. Round 2's handover: `git show 1dffd97:farm-game/agents/NEXT-STEPS-DEPTH.md`. Round report:
-`agents/out/depth-round3-2026-10-09.md`.
+Branch `depth/round4` (worktree `C:/Users/andre/dev/tiny-acre/depth`), from `integration/round3-2026-10-10`, pushed to
+`origin/depth/round4`. Every commit passed `npm run verify` (lint, typecheck, unit, build, e2e, mobile e2e, controls
+e2e, onboarding e2e, perf). Save version is still **17**: everything new is a stat or optional data. Unit tests
+780 -> 803. Round 3's handover: `git show 6d5e480:farm-game/agents/NEXT-STEPS-DEPTH.md`. Round report:
+`agents/out/depth-round4-2026-10-10.md`.
 
-## Shipped in round 3 (oldest first)
+## Shipped in round 4 (oldest first)
 
 | Commit | What |
 | --- | --- |
-| `e23349b` | Critique 9 fixes: the season score on its own board line; Clay scores farm goods only; stakes said up front, a draw said, a Board Trophy in the house and Mara's letter; crop requests at 75% of supply; "Ship all produce" keeps what requests want and the bin warns; special keeps part-filled requests; fixed batch slot; requests above the special; result after Clay's last take; project nudge once a season; cart use before paying; growing statue (6 keys); dishes give less from the 4th of a day; sim keeper and fisher; day-31 stall probe |
-| `20c779f` | Festival Ribbons and a Legend Wall as trophies at home; polite Clay (4 hearts) spares your farm goods |
-| `70e861a` | Critique 10 fixes: toasts above open sheets, Clay takes farm rows first and ships a weekly crate, the race goes on at 5 hearts, last season on the score line, Ship all keeps the special, text fixes; four mastery goals appended |
-| `8a07167` | Make is the outermost button on every Make-tab row; early-gold sensitivity measured for the owner |
-| `9eb7b36` | Critique 11 fixes: crates keep up with a leader and are announced, none on day 28, a friendly Clay still ships crates and stops gloating, year-two text, winter prize year, bin line, kept toast splits the special, special expiry note, a finished special keeps its row, sim timeouts; handover and report |
+| `ab618e7` | Owner defaults: sim bot calibrated against play (plants its starting seeds, buys fastest payback while gold is short; tireless median repinned 213,730 -> 261,631); settling-in pay (jobs on days 3 and 4 pay double, `game.json welcomeJobs`, said in the morning note and the Goal tab); `aside` goals (both legendary-fish goals no longer hold up the chain; "Also open" in the Goal tab); sim test "the first week" |
+| (last) | Critique 12 fixes: crates counted from the last one and faster while you lead (every 2 days at 3+, daily at 5+), the crate always said on the score line and the rule on the line below, letters and "took one today: a point"; season result and special expiry first on a busy morning, sales shrink first; a goal with no progress for 3 days waits and the next shows; "Special done! Thanks!", Bag tip wraps; critique 12 kept in `agents/critiques/` |
+
+## Early game: sim before and after (owner question 1)
+
+- **The round-3 spike was the bot.** It kept its 10 starting parsnip seeds and bought 6 cauliflower seeds on day 1:
+  no income until day 11, 1.5k earned by day 14 (a played farmer: 3.6k). Calibrated, it earns 3.3k by day 14.
+  Then 500g on day 7 moves the human-paced year by **+4% on average over 12 seeds** (was "+18% to +76%" on 3).
+- **Settling-in pay** (human-paced bot that does its jobs, 5 seeds, `tests/sim.test.ts` "the first week"):
+  days 3-4 earn 130-180g -> 260-360g; day 7 about 1,870 -> 2,030; first plot day 14-15 -> 12-13; a 500g lump on
+  day 7 moves the year by a median 0.8% (bound: under 15%).
+- A cheaper first plot (500g) was measured too (first plot day 23 -> 17 for a bot without jobs, same sensitivity)
+  and not chosen: it hands out land rather than filling the empty days. Critique 12 reached the same advice.
 
 ## Critiques
 
-- `agents/critiques/critique-9.md` (frozen `1a7464d`): fixed in `e23349b`, except the onboarding-owned goal title.
-- `agents/critiques/critique-10.md` (frozen `e23349b`): one major, fixed in `70e861a`/`8a07167`. Its critic was stopped
-  by the usage limit just after writing the complete report; the report was kept.
-- `agents/critiques/critique-11.md` (frozen `70e861a`, a fresh copy, so critique 10 effectively re-run): no major;
-  fixed in the last commit except the toast stack over tall sheets and the early-gold question.
+- `agents/critiques/critique-12.md` (frozen `6d5e480`, before this round's changes): no blocker or major. F1 (race
+  not close), F2 (crate rule unsaid, lost day-14 crate), F3 (season result cut), F4 (goal chain frozen), F6 (two
+  text slips) fixed in the last commit; F5 (farmer's summer board) and "Board 16" not changed (see DECISIONS).
+- **Played after the fix** (critic's `play12.mjs` keeper, Ship all, never fishes or forages, 29 days, real input,
+  against this build; logs in `C:/Users/andre/dev/tiny-acre/depth-play/r4play/tmp/R4K.out`): **won 15 to 12**.
+  The lead was 4 to 6 through mid-season and 3 to 4 from day 21; "His crate tonight" and "Ahead 3+/5+" were on
+  the board every crate day; summer 1's morning led with the result. 0 page errors. Not replayed: a careless
+  player (critique 12 lost 0 to 12; crates only add to that), year two.
 
 ## Next goals, in priority order
 
-1. **Critique 12** on a fresh frozen copy of the head: play the race again with real input (the crates' catch-up
-   rule and announcement are unplayed). Probes: `C:/Users/andre/dev/tiny-acre/critique-11/farm-game/agents/out/c11/`
-   (`play10.mjs` with `FARMER`, `SHIPALL`, `USENOW`; `edge10.mjs`/`edge11` parts; `sweep10.mjs`; `lib.mjs` with the
-   fixed button finder). Aim: a keeper usually wins, by a few points.
-2. **Calibrate the sim keeper against play** (critique 11 F1: it fills 4 spring rows where a played keeper fills 13), so
-   the board-race win counts mean something.
-3. **Early economy sensitivity** (critiques 10 and 11): 500g on day 7 lifts the human-paced year by 18% to 76%. Owner
-   question below; if yes, a cheaper first plot (700g) or a little more starting gold.
-4. **Goal order:** round-2 goal #54 "Catch a legendary fish" gates the board and festival goals. Goals are an index
-   (append only), so the fix is a goal system that can show the next unblocked goal, or an owner decision to reorder
-   with a save migration.
-5. **Long-press hotbar picker** (seeds in bag slots stop a one-thumb farmer planting; critiques 3 to 10). Lives in
-   `ui/Hud.ts`, owned by the controls agent; `systems/inventory.ts equipFromBag` does the swap.
-6. **Animals that roam** (R2.6), rendering only, once real animal sprites exist.
-7. **Festival maps** (R3.4 leftover), needs the art agent's map generator.
+1. **Critique 13** on a fresh frozen copy: replay the race (keeper and careless), the goal waits on a long game
+   (does the HUD now follow what the player does, and is "Also open" readable after many waits?), the day 3-4
+   jobs, and the busy season-change morning.
+2. **Farmer's summer board** (critique 11 F1, 12 F5): the first days of summer and fall have only fish and wild
+   rows for a farmer (crop rows wait for a crop within 7 days of ripe). Maybe a "seasonal crop" request posted on
+   day 1 for a crop you planted, lasting until it ripens.
+3. **Bin row "Board 16"** says requests plus the special as one number; split it ("Board 5  Rosa 11") if it fits.
+4. **Long-press hotbar picker** (seeds in bag slots stop a one-thumb farmer planting; the critic's bot still
+   needed "Use now" 5 times). Lives in `ui/Hud.ts` (controls/feel agents).
+5. **Animals that roam** (rendering, once real animal sprites exist) and **festival maps** (needs the art agent's
+   map generator), as before.
 
 Risks to keep in mind:
-- Goals are an index into a list: only append (round 3 appended fest1, board4, statue6, legend4).
-- `tests/sim.test.ts` pins the five-seed median at 213,730 (-20% / +25%). Year one is chaotic for the tireless bot
-  (one 300g spring prize moved a seed by 60k): explain any move in DECISIONS.md. The board-race sim asserts a keeper
-  wins 12 to 22 of 24 seasons and a shipper under half of that. Sim tests have a 60 s timeout.
-- Clay: `boardRaceOn` (score kept from day 8, always) versus `rivalActive` (takes requests; off at 5 hearts). He takes
-  on last days only, farm goods first. `crateDue`: every 7th season day, every 3rd while you lead by 4, never day 28,
-  also when friendly.
-- Toasts move above sheets while a modal is open (`ui/Hud.ts updateToasts`, depth and position only). Tell the
-  controls agent, who owns the HUD.
+- Goals are an index into a list: only append. `aside` goals and `goalWait.<id>` stats change which goal shows,
+  never the order; goals past the current one never complete early.
+- `tests/sim.test.ts` pins the five-seed median at 261,631 (-20% / +25%); today 251,354 (goals now pay as you go).
+  The board-race sim asserts a keeper wins 12 to 22 of 24 (today 20) and a shipper under half of that (3).
+- Clay: `crateDue` (7 days after the last crate, 2 at a lead of 3, 1 at 5, never day 28), counted from
+  `rival.crate`; the race starts on day 8 (`game.rival.startDay`). He still scores only last-day farm rows.
 
-## New texture keys still needing art
+## New texture keys
 
-All have a generated placeholder (a growing figure for the statue, a cup for trophies):
-- `obj_landmark_statue_1` .. `obj_landmark_statue_6` (16x32, level 6 gilded), replacing `obj_landmark_statue`
-- `obj_trophy_board` (house 6,2), `obj_trophy_festival` (house 4,2), `obj_trophy_legends` (house 7,2), 16x16
+None this round. Still needing art from round 3: `obj_landmark_statue_1` .. `_6`, `obj_trophy_board`,
+`obj_trophy_festival`, `obj_trophy_legends`.
 
 ## For onboarding
 
-- Clay's board race starts on day 8 (his intro letter arrives on day 7); detect a season result with the
-  `board.last.day` stat, a win with `boardWins`. His weekly crate is a morning note.
-- Trophies appear at home when `boardWins`, `festivalWins` or `legends` reach 1.
-- Dishes give less from the 4th of a day (stat `ate.today`); the dish card says so.
-- The early goal title "Craft something at the workbench" (`goals.json`, goal 10) still says Craft; the tab is "Make".
-- While a sheet is open, toasts now appear at the top of the screen (coach marks there would collide).
+- Jobs posted on days 3 and 4 pay double: the morning note says "...: double pay while you settle in. See Menu >
+  Goal." and the Goal tab header "TODAY'S JOBS: DOUBLE PAY". If the guided start talks about jobs, it can lean on it.
+- A shown goal with no progress for 3 days now waits and the next goal shows, with a morning note ("New goal: X.
+  "Y" can wait in Menu > Goal."). This is off while the guided start runs (`tutorialOn && !guidedTracksDone`),
+  so tutorial steps that check `currentGoal` are safe. With the guide skipped, early goals can wait from day 4.
+- The Goal tab may show "ALSO OPEN" (waiting goals) under COMPLETED, which then shows one row instead of two.
+- Clay's intro letter changed: "I fill board requests too: ... not fish or wild goods. Each week I ship a crate of
+  my own, more often while you lead."
 
 ## Save versions
 
-No `STATE_VERSION` bump: still **16**. New: optional `Order.noPoint` (sanitized in `systems/save.ts`) and stats
-(`board.last.day|you|rival`, `rival.crate`, `ate.day`, `ate.today`, `projectNag.<id>`).
+No `STATE_VERSION` bump: still **17**. New stats only: `goal.<id>` (a goal finished out of order),
+`goalWait.<id>`, `goalStall.i|v|day`. New optional data: `GoalDef.aside`, `GameData.welcomeJobs`.
 
 ## Map changes
 
-None to `.tmj` files. Placed from data: three trophies in the house (6,2), (4,2), (7,2); `tests/maps.test.ts` checks
-every landmark and trophy is on its own reachable tile.
-
-## Owner defaults applied this round
-
-- Crows kept as a mild threat; the statue grows with its level (six keys); eating has no cap but diminishes after
-  three dishes a day; a farmer who never fishes can win the board, and the prize is a lasting trophy plus modest gold.
+None.
 
 ## Open questions for the owner
 
-1. Early gold compounds strongly (500g on day 7 = +18% to +76% of the human-paced year). Soften the first plot price
-   (700g) or raise starting gold, or leave the early game as it is?
-2. Clay's crates (weekly, every 3rd day while you lead by 4): is a rival who scores on his own field the right kind of
-   pressure, or should the race be only about the board's rows (then he would need to contest rows earlier)?
-3. Goal #54 (a legend) gates the late board, festival and statue goals. Reorder with a migration, or show the next
-   unblocked goal?
+1. The catch-up crates now keep a keeper 3 to 6 ahead (played: won 15 to 12). Is a rival who scores daily while
+   you lead by 5 the right feel, or should the race be about the rows (Clay contesting a farm row a day early)?
+2. Goals that wait after 3 quiet days: is 3 days right, and should a waiting goal come back to the HUD once the
+   player makes progress on it?
