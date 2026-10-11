@@ -219,7 +219,10 @@ describe('delta rectangles', () => {
     s.inventory.slots[5] = { item: 'sprinkler', qty: 2 };
     equip(s, 'sprinkler');
     const before = JSON.stringify(s);
-    expect(performAction(s, { ...grass(26, 12), kind: 'stone', tillable: false })).toEqual({
+    // as the scene builds it: stone, and solid in every stage (owner bug 3: dry beds are not walkable)
+    expect(
+      performAction(s, { ...grass(26, 12), kind: 'stone', tillable: false, blocked: true }),
+    ).toEqual({
       ok: false,
       message: CREEK,
     });
@@ -233,8 +236,9 @@ describe('delta rectangles', () => {
     const s = newState();
     equip(s, 'hoe');
     const before = JSON.stringify(s);
-    // as the scene builds it: the bed is stone, lies in no plot (owned: false) and is open in the dry stage
-    const bed = { ...grass(27, 20), kind: 'stone', tillable: false, owned: false };
+    // as the scene builds it: the bed is stone, lies in no plot (owned: false) and is solid in every stage
+    // (owner bug 3, coordinator ruling: a dry bed is a sunken bed, not a floor)
+    const bed = { ...grass(27, 20), kind: 'stone', tillable: false, owned: false, blocked: true };
     expect(performAction(s, bed)).toEqual({
       ok: false,
       message: CREEK,

@@ -1,6 +1,6 @@
 {
   "title": "The farm, waking stage: green, the creek still dry",
-  "about": "Map stages (M2). After the first green, the Old Spring not yet restored (farmGreen 1, spring 0): farm@waking.tmj. The bed is moist, its cracks closing, the first shoots in it, green at the lip; the creek trees are still bare.",
+  "about": "Map stages (M2). After the first green, the Old Spring not yet restored (farmGreen 1, spring 0): farm@waking.tmj. The bed is moist, its cracks closing, the first shoots in it, green at the lip; the creek trees are still bare. The bed is solid, as in every stage (owner bug 3): the footbridge at y 6 is the crossing.",
   "version": 17,
   "tags": ["farm", "valley", "stages"],
   "valley": {

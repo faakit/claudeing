@@ -245,12 +245,26 @@ function flush() {
     });
     const tmj = toTmj(map, objects, art);
     written[name] = { base, tmj };
-    const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
-    writeFileSync(out, JSON.stringify(tmj, null, 1) + '\n');
     console.log(
       `wrote ${name}.tmj ${map.w}x${map.h}` +
         (art ? ` (+${art.solid.size} solid props, ${art.lights.length} lights)` : ''),
     );
+  }
+  // Coordinator ruling (owner bug 3, 2026-10-11): a dry bed is a sunken bed below its banks, not a floor. Inside the
+  // delta rects every variant blocks wherever the map's final (water) stage blocks, so the bridges are the crossings
+  // in every stage, routes and spawns are the same in all of them, and nobody stands where the water comes back.
+  // The ground (and so the dry look) is unchanged.
+  for (const [name, { base, tmj }] of Object.entries(written)) {
+    if (name === base || !written[base]) continue;
+    const col = tmj.layers.find((l) => l.name === 'collision').data;
+    const fin = written[base].tmj.layers.find((l) => l.name === 'collision').data;
+    col.forEach((c, i) => {
+      if (!c && fin[i] && inDelta(base, i % tmj.width, Math.floor(i / tmj.width))) col[i] = fin[i];
+    });
+  }
+  for (const [name, { tmj }] of Object.entries(written)) {
+    const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
+    writeFileSync(out, JSON.stringify(tmj, null, 1) + '\n');
   }
   // WORLD-PLAN 4.2.1: outside the delta rects, ground and collision are identical in every variant
   for (const [name, { base, tmj }] of Object.entries(written)) {
@@ -441,7 +455,8 @@ for (const v of VARIANTS('wendhead')) wendhead(v);
 }
 
 // ---- Town 24x34: north gate to the farm, shop + board on the road, river east, woods west ----
-// Stages (M6): `dry` (the weir broken: the river's west four columns, D1 x 17-20, y 22-31, are a walkable bed of mud;
+// Stages (M6): `dry` (the weir broken: the river's west four columns, D1 x 17-20, y 22-31, are a bed of mud, solid
+// like the river (owner bug 3);
 // the two east columns a trickle), `river` (the weir restored: today's water, the final file).
 function town(v) {
   nextId = 1;

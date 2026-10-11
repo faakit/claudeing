@@ -1477,3 +1477,24 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   Action tugs, the cut walk resumes after a tug, and standing at the slip hauls the log in and lands it. A walk to
   the slip stops beside it so the log never lands on the farmer. Rules in `systems/towing.ts` (pure); the
   controller and placeholder art are debug-only (`src/dev/towSpike.ts`, stat `lab.towSpike`).
+
+## Owner bugs (feel lane, fix/owner-bugs, 2026-10-11)
+
+- **Dry beds are not walkable (coordinator ruling, owner bug 3: "there is a bridge, but this bridge is above a
+  walkable area").** A dry bed is a sunken bed below its banks, not a floor. Inside the delta rects every earlier
+  stage blocks exactly where the map's final (water) stage blocks: the farm creek (both delta rects, the mouth tile
+  included), the town's river bed (D1) and Wendhead's pool, creek head and gorge. The footbridge (farm y 6) and the
+  plank bridges (Wendhead y 22) are the crossings in every stage, as they will be when the water returns. This
+  replaces "walkable" in the M2 entry (the dry creek bed as `stone`) and the M6 entry (D1 "a walkable bed of mud").
+  - Done in the data: `generate-maps.mjs` copies the final stage's collision into each earlier variant inside the
+    delta rects (the ground, and so the dry look and the dry art, are unchanged), and the six variant files were
+    patched the same way without regenerating (farm@dry, farm@waking: 55 tiles each; town@dry: 38, the Heron's two
+    were solid already; wendhead@dry 112, @gorge 31, @spring 81). No variant had a solid tile its final stage lacks.
+  - What it settles: villager routes, forage and weed spawns, onboarding paths and the day-2 walk are the same in
+    every stage (stage walkability is now identical, `tests/maps.test.ts`), and nobody can stand on a tile that turns
+    to water on load (the M6 critic's risk); a save already standing in a dry bed is moved to the nearest door spawn
+    by the existing rescue (`farm-creek-rescue`).
+  - Nothing relied on walking in a bed: no scenario, villager spot, zone or spawn is in a delta rect (already
+    tested); the creek reveal waits for the bed to be in view, not for a step into it; channels are dug from the
+    bank; placing and tilling in a bed still answer with the bed's own line (it is checked before "blocked"). A tap
+    on a dry bed now answers "Can't get there.", as a tap on the water does.
