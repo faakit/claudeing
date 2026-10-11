@@ -15,6 +15,40 @@ src/ui/panels/*             <- the portrait sheets (Phaser only)
 Rule of thumb: rules in `systems/`, wiring in `mechanics/`, drawing in `ui/` + `scenes/`. Scenes never change
 game state themselves; they call a system function.
 
+## 0. How to build a feature (the sandbox workflow)
+
+Every feature is built, tuned, tested and reviewed against **named scenarios**: reproducible game states you open
+with one URL, instead of playing up to the moment or hand-building state in a script.
+
+1. **Stage it first.** Before the code, add the scenario(s) that put the player right where the feature happens:
+   `src/dev/scenarios/<name>.json` (kebab-case). Use the real map it belongs on, or the **lab** (`"preset": "lab"`,
+   `"at": { "map": "lab", ... }`): the debug-only map with every crop stage, placeable, machine, node, forage good,
+   a door, water, the board, the bin and villager spots within a few screens. Prefer the semantic keys (`at`,
+   `time`, `items`, `crops`, `placed` with `ready`, `friends`, `goal`, `letters`, `tutorial`, `settings`); use the raw
+   `state` patch only for what they do not cover. The format is documented on `ScenarioDef` in
+   `src/dev/scenarios.ts`.
+2. **Develop and tune in it.** `npm run dev`, open `http://localhost:5195/?scenario=<name>` (a build needs
+   `?debug&scenario=<name>`). The DEV tab (top-left) jumps to any scenario or map, pauses or speeds the clock,
+   freezes and steps frames, and shows the frame graph and tile coordinates. `window.__farm.dev` is the same as a
+   typed API (`src/dev/api.ts`): `clock.pause()`, `loop.step(n)`, `seed(n)`, `time.set({ clock: '18:30' })`,
+   `time.skipDays(n)`, `goto(map)`, and the await helpers `wait.sceneReady / panelOpen / panelClosed / actionDone /
+transitionDone / idle / frames / event`.
+3. **Ship e2e checks that load those scenarios** and wait on the game, never on the clock: `scripts/lib/farm.mjs`
+   (`openScenario`, `farm.act()`, `farm.interact()`, `farm.tapTile()`, `farm.tapButton('INTERACT')`,
+   `farm.panel('bin')`, `farm.idle()`, `farm.shot(name)`, `farm.strip(name)`). Add them to
+   `scripts/e2e-scenarios.mjs` (or a suite built the same way). **No new fixed waits:** a `waitForTimeout`/`sleep`
+   over 100 ms in `scripts/` or `agents/` fails `tests/fixed-waits.test.ts` (the existing ones are listed per file
+   in `scripts/fixed-waits-baseline.json` and may only go down).
+4. **Review through the same names.** Critics open the scenario, and every finding cites it (`coop-hens`, i13
+   left hand: "the Move sheet covers the coop"), so the agent reproduces it exactly with one URL.
+5. **Keep scenarios valid across save versions.** Write the current `STATE_VERSION` in `"version"`. The loader runs
+   raw patches through `migrate` and `sanitize`, and `tests/dev-scenarios.test.ts` loads every scenario on every
+   run (valid references, walkable tiles, a state that survives a save round trip). A map change that blocks a
+   scenario's tile fails there with the scenario's name: move the scenario, do not delete it.
+
+`npm run verify:fast` (lint, typecheck, unit tests, build, bundle check, scenario smoke e2e; about two minutes) is
+the inner-loop gate; `npm run verify` (everything, suites in parallel) gates every commit.
+
 ## 1. What does Action do? (action handlers)
 
 `registerActionHandler({ id, priority, plan })` in `systems/actionRegistry.ts`. `plan` looks at the faced tile
@@ -260,10 +294,12 @@ one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.
 
 ## Checklist for a new mechanic
 
+- [ ] The scenario(s) that stage it, in `src/dev/scenarios/` (lab or real map), cited in the commit and the critique
 - [ ] Rules as pure functions in `systems/` with unit tests
 - [ ] One module in `mechanics/` registering into the registries, plus one import line in `mechanics/index.ts`
 - [ ] Data in JSON; validation added if it references other data
 - [ ] UI as a tab or sheet; text proven to fit
 - [ ] A goal in `goals.json` that introduces it
 - [ ] An `intro` step in `tutorial.json` if it needs showing the first time
+- [ ] e2e checks on those scenarios with the await helpers (`scripts/lib/farm.mjs`), no fixed waits
 - [ ] `npm run verify`

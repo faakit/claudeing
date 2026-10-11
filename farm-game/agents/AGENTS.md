@@ -29,6 +29,14 @@ mechanics/*                 each mechanic registers itself (one import line in m
 `npm run verify` = lint, typecheck, unit tests, build, e2e, mobile e2e, perf budgets.
 
 - Add a unit test with every new system; an e2e check for every new player-facing flow.
+- **Definition of done for a feature (the sandbox workflow, `docs/EXTENDING.md` section 0):**
+  1. it starts with the scenario(s) that stage it (`src/dev/scenarios/<name>.json`, on the lab or a real map);
+  2. it was developed and tuned by opening that scenario (`?scenario=<name>`), not by playing up to it;
+  3. its e2e checks load those scenarios and use the await helpers (`scripts/lib/farm.mjs`,
+     `window.__farm.dev.wait.*`); no new `waitForTimeout`/`sleep` over 100 ms (`tests/fixed-waits.test.ts` fails);
+  4. the critic reviewed it through the same scenario names, and every finding cites one;
+  5. its scenarios load in `tests/dev-scenarios.test.ts` (every scenario does, migrated across save versions).
+- `npm run verify:fast` (about 2 min) in the inner loop; `npm run verify` (parallel suites) before every commit.
 - UI text must fit: use `fitText`/`measureText` (pure) and let tests prove it. Goal text <= 182px.
 - Touch targets >= 43 CSS px on phones; Menu stays away from the Action thumb.
 - Perf budget: <= 12 GL draws/frame, <= 3.5 ms JS/frame.

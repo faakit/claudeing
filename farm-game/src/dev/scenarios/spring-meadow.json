@@ -1,0 +1,9 @@
+{
+  "title": "Spring meadow with ambient life",
+  "about": "Spring 1 at 11:40, sunny, motion on, standing in the middle of the farm: drifting petals and butterflies around the flower patches. The ambient e2e block steps frames from here.",
+  "version": 17,
+  "tags": ["farm", "fx", "art", "e2e"],
+  "at": { "map": "farm", "tx": 15, "ty": 20, "facing": "down" },
+  "time": { "clock": "11:40" },
+  "weather": "sunny"
+}

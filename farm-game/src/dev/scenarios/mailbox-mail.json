@@ -1,0 +1,20 @@
+{
+  "title": "Next to the mailbox, with mail",
+  "about": "Spring 2: the welcome letter (with its gift) and the first-harvest letter wait unread; facing the mailbox.",
+  "version": 17,
+  "tags": ["farm", "mail"],
+  "at": {
+    "map": "farm",
+    "tx": 13,
+    "ty": 10,
+    "facing": "up"
+  },
+  "time": {
+    "day": 2,
+    "clock": "07:00"
+  },
+  "stats": {
+    "harvested": 3
+  },
+  "letters": ["welcome", "first_harvest"]
+}

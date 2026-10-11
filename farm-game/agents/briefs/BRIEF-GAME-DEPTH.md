@@ -33,6 +33,12 @@ sessions, always in an extendable way. You do **not** touch art or audio files (
 
 ## Workflow
 
+**Sandbox workflow (required, `docs/EXTENDING.md` section 0):** every feature starts with the
+scenario(s) that stage it (`src/dev/scenarios/<name>.json`, on the lab or a real map),
+is developed and tuned by opening it (`?scenario=<name>`; the DEV tab for frames, clock and the frame graph),
+ships checks that load those scenarios with the await helpers (`scripts/lib/farm.mjs`, no new fixed waits), and is
+reviewed by the critic through the same scenario names (each finding cites one). `npm run verify:fast` while iterating.
+
 - Work on your own branch off `ccr-57a7430b-tj2108` (name it `depth/<topic>`); the art agent works on `art/*`.
   Commit small, push often, no PRs unless asked. Commit messages end with the attribution lines the session gives you.
 - One goal at a time: design note (5 lines in `DECISIONS.md`) -> data -> system -> mechanic -> tests -> e2e -> docs

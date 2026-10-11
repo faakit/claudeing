@@ -1,0 +1,39 @@
+{
+  "title": "A coop with hens",
+  "about": "A coop with two hungry hens and two eggs waiting, feed in the bag; facing the coop.",
+  "version": 17,
+  "tags": ["farm", "animals"],
+  "at": {
+    "map": "farm",
+    "tx": 11,
+    "ty": 10,
+    "facing": "left"
+  },
+  "time": {
+    "day": 9,
+    "clock": "08:00"
+  },
+  "placed": [
+    {
+      "type": "coop",
+      "tx": 10,
+      "ty": 10,
+      "data": {
+        "house": {
+          "n": 2,
+          "fed": false,
+          "ready": 2,
+          "petted": false,
+          "joy": 2
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "item": "chicken_feed",
+      "qty": 10
+    }
+  ],
+  "goal": "eggs"
+}

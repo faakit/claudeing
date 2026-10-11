@@ -1,0 +1,32 @@
+{
+  "title": "A festival day (Flower Show)",
+  "about": "Spring 14 in town, facing the board, with three kinds of flowers in the bag.",
+  "version": 17,
+  "tags": ["town", "festival"],
+  "at": {
+    "map": "town",
+    "tx": 14,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "day": 14,
+    "clock": "10:00"
+  },
+  "items": [
+    {
+      "item": "tulip",
+      "qty": 3,
+      "q": 2
+    },
+    {
+      "item": "daffodil",
+      "qty": 2
+    },
+    {
+      "item": "wild_sunflower",
+      "qty": 1
+    }
+  ],
+  "goal": "festival"
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Day 1, a brand-new game",
+  "about": "Exactly what New Game gives today, with a fixed seed. The guided start runs unless the URL has ?tutorial=0.",
+  "version": 17,
+  "tags": ["farm", "onboarding"],
+  "tutorial": "fresh",
+  "hints": "on"
+}

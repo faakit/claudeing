@@ -1,0 +1,18 @@
+{
+  "title": "A fishing spot",
+  "about": "On the farm pond bank facing the water, rod selected, mid-morning.",
+  "version": 17,
+  "tags": ["farm", "fishing"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "day": 4,
+    "clock": "10:00"
+  },
+  "select": 3,
+  "goal": "fish"
+}

@@ -18,26 +18,35 @@ Never start the next layer while the current one is red.
 
 ## 2. The inner loop (repeat per feature)
 
+0. **Stage it**: add the scenario(s) where the feature happens (`src/dev/scenarios/<name>.json`, lab or real map;
+   `docs/EXTENDING.md` section 0). Everything below is done by opening it: `?scenario=<name>`.
 1. **Design in data first**: add JSON rows and types; extend `validateContent` for new references.
 2. **Rules next**: pure functions in `systems/`, events instead of Phaser calls.
 3. **Wire**: a `mechanics/*` module registering into the registries + one import line.
 4. **Test**: unit tests beside the rules (include failure paths and "no change on refusal").
 5. **Render**: scene/UI code last. Reuse `Modal`, `row()`, menu tabs.
-6. **See it**: run a probe (`agents/probes/*`) and look at the screenshots. Fix overlaps, clipping, readability.
-7. **Gate**: `npm run verify`.
-8. **Record**: DECISIONS.md, docs, goals; commit; push.
+6. **See it**: open the scenario (dev server, `?scenario=<name>`; the DEV tab steps frames and shows the frame
+   graph), or run a probe built on `scripts/lib/farm.mjs` (`agents/probes/scenario-template.mjs`) and look at the
+   screenshots. Fix overlaps, clipping, readability.
+7. **Check it**: e2e checks that open the scenario and wait on game events (`farm.act()`, `farm.panel('bin')`,
+   `farm.idle()`), never on fixed timeouts. `npm run verify:fast` while iterating.
+8. **Review it**: the critic gets the scenario names and cites one in every finding.
+9. **Gate**: `npm run verify`.
+10. **Record**: DECISIONS.md, docs, goals; commit; push.
 
 ## 3. How the agent sees the game
 
 There is no human to look. Headless Chromium (Playwright) drives the real build through `window.__farm`
-(enabled by `?debug`): read state, set state, emit game events, press keys, tap, screenshot. Screenshots are
-read back as images and judged like a reviewer would. See `probes/`.
-Useful patterns:
+(enabled by `?debug`). Screenshots are read back as images and judged like a reviewer would.
 
-- Teleport the player, seed state (forage, placed objects, inventory), emit `placedChanged`/`forageChanged`.
-- Open a panel by event, then screenshot it.
-- Poll panel flags (`UI.npc.isOpen`) for assertions instead of pixel clicks.
-- Quick taps can start and end between frames: record presses in event handlers, not by polling.
+- **Start from a scenario**, not from New Game plus teleports: `openScenario(browser, url, 'coop-hens', { profile:
+'se', hand: 'left' })` (`scripts/lib/farm.mjs`). Need a new situation? Add a scenario file: one JSON file.
+- **Wait on the game**: `farm.act()` resolves on the Action result, `farm.panel('npc')` when the sheet has settled,
+  `farm.idle()` when nothing moves, `farm.ready()` after a door. Never `waitForTimeout`.
+- **Freeze time for exact pictures**: `farm.strip(name, n, every)` steps the engine frame by frame
+  (`__farm.dev.loop.step`); `__farm.dev.clock.pause()` keeps the light and the hour still.
+- Quick taps can start and end between frames: record presses in event handlers, not by polling (the dev API's
+  `actionDone` does).
 
 ## 4. Debugging discipline
 

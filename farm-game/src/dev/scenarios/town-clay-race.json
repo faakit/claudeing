@@ -1,0 +1,29 @@
+{
+  "title": "Town on the first day of Clay's board race",
+  "about": "Spring 8 at 13:30, facing the board: the board race is on (it starts on day 8; Clay's intro letter comes on day 7) and Clay comes by at 14:00.",
+  "version": 17,
+  "tags": ["town", "rival", "board"],
+  "at": {
+    "map": "town",
+    "tx": 14,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "day": 8,
+    "clock": "13:30"
+  },
+  "money": 900,
+  "items": [
+    {
+      "item": "parsnip",
+      "qty": 10
+    },
+    {
+      "item": "potato",
+      "qty": 6
+    }
+  ],
+  "letters": ["clay_intro"],
+  "goal": "board1"
+}

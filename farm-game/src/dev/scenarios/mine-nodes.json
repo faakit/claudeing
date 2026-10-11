@@ -1,0 +1,40 @@
+{
+  "title": "In the mine at ore nodes",
+  "about": "A copper node in front, iron, gem and rock nodes beside; pickaxe selected.",
+  "version": 17,
+  "tags": ["mine"],
+  "at": {
+    "map": "mine",
+    "tx": 9,
+    "ty": 24,
+    "facing": "up"
+  },
+  "time": {
+    "day": 10,
+    "clock": "11:00"
+  },
+  "nodes": [
+    {
+      "node": "copper_node",
+      "tx": 9,
+      "ty": 23
+    },
+    {
+      "node": "iron_node",
+      "tx": 10,
+      "ty": 23
+    },
+    {
+      "node": "gem_node",
+      "tx": 8,
+      "ty": 22
+    },
+    {
+      "node": "rock_node",
+      "tx": 11,
+      "ty": 24
+    }
+  ],
+  "select": 4,
+  "goal": "mine10"
+}

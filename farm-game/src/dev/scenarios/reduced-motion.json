@@ -1,0 +1,28 @@
+{
+  "title": "Reduced motion, rainy day",
+  "about": "Options > Reduce motion on, on a rainy morning with ambient life around: nothing should shake, bob or wander.",
+  "version": 17,
+  "tags": ["farm", "a11y", "fx"],
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 6,
+    "clock": "09:00"
+  },
+  "weather": "rain",
+  "settings": {
+    "reduceMotion": true
+  },
+  "crops": [
+    {
+      "crop": "potato",
+      "stage": 2,
+      "rect": [9, 16, 4, 2],
+      "watered": true
+    }
+  ]
+}

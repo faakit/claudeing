@@ -15,4 +15,8 @@ URL=http://localhost:5173/ OUT=agents/out/ node agents/probes/<name>.mjs
 | `villagers-animals.mjs` | coop and barn with animals, a villager sheet, gifting, the Animals shop tab       |
 | `debug-template.mjs`    | minimal loop to reproduce an input/targeting bug with state dumps                 |
 
-Copy `debug-template.mjs` for new probes. All use the `?debug` hook (`window.__farm`).
+**New probes start from `scenario-template.mjs`**: it opens a named scenario on a phone profile with
+`scripts/lib/farm.mjs` and waits on game events (no fixed waits; `tests/fixed-waits.test.ts` refuses new ones over
+100 ms). Run `SCENARIO=coop-hens PROFILE=se HAND=left node agents/probes/scenario-template.mjs` after
+`npm run build` (or with `URL=http://localhost:5195/` against the dev server). The older probes build their state
+by hand on the real maps through the `?debug` hook; they move to scenarios after the round-3 merge.
