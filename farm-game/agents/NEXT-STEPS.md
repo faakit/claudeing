@@ -129,6 +129,12 @@ wrap-up (see Open).
 
 **Open:**
 
+- **Verify before merge (M6 is not fully verified):** `npm run verify:fast` passed at fa03829 (lint, types, 1,126
+  unit tests, build, the scenario smoke), and `npm run e2e:scenarios` passed alone (the `weir` block included). The
+  full `npm run verify` was stopped partway on a machine loaded by other lanes: mobile, onboarding (16/16 to day 2)
+  and e2e passed; e2e:scenarios (a `channels` Action timeout, a forage pickup) and e2e:controls (gesture timings,
+  "harness lag") failed under that load and were never rerun alone. Run the full verify (and `bench:thumb`) on a quiet
+  machine before merging; the controls and channels failures are expected to pass alone (M6 touches neither).
 - M6 review: the valley critic has the wrap-up checkpoint; its findings are not in yet. Its checklist also asks for
   a re-run of its 14 paired onboarding bot runs on the dry town's day-2 walk (gate: 173 s median) and `bench:thumb`.
 - Left of M6 (not started, nothing half-wired): the R6-2 nit (the `channels` intro showing a corner in its paint
