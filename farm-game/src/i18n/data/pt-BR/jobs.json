@@ -1,0 +1,14 @@
+{
+  "catch {n} fish": "pescar {n} peixe{s}",
+  "break {n} mine rock{s}": "quebrar {n} pedra{s} da mina",
+  "fill {n} board request{s}": "atender {n} pedido{s} do mural",
+  "pick {n} wild good{s}": "catar {n} coisa{s} do mato",
+  "greet {n} villager{s}": "cumprimentar {n} pessoa{s}",
+  "give a gift they like": "dar um presente de que goste",
+  "ship {n} good{s}": "enviar {n} produto{s}",
+  "harvest {n} crop{s}": "colher {n} planta{s}",
+  "cut {n} weed{s}": "cortar {n} moita{s}",
+  "get {n} animal good{s}": "pegar {n} produto{s} dos bichos",
+  "load {n} machine{s}": "carregar {n} máquina{s}",
+  "craft {n} thing{s}": "fabricar {n} coisa{s}"
+}
