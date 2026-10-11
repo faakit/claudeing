@@ -23,7 +23,7 @@ import { valleyStep } from '../systems/valley';
 /**
  * The floating hotbar (geometry in ui/layout.ts `HOTBAR`): 22 px slot faces on a 24 px pitch, each on a solid 2 px
  * soil lip, hugging the bottom edge with no band behind them. Every slot's touch zone is the whole pitch wide and runs
- * from just above the faces to the bottom edge (24 x 27 px: 45.8 x 51.5 CSS px on the iPhone 13, 38.8 x 43.6 on the
+ * from just above the faces to the bottom edge (24 x 27 px: 45.8 x 51.5 CSS px on the iPhone 13, 38.8 x 43.7 on the
  * SE), so the zones meet and a tap on the row never falls through to the world.
  */
 export const SLOT = HOTBAR.slot;

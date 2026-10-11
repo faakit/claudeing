@@ -11,8 +11,8 @@
 ## Product
 
 - Mobile-only, portrait, **one hand**. The logical canvas is 200x400 (1:2): the world sits in a camera viewport
-  between a read-only HUD at the top and a control dock at the bottom. Dialogs are bottom sheets. Left-handed mode
-  mirrors the dock.
+  from under a read-only HUD at the top to the bottom edge, and the thumb controls float over its lower part on their
+  own solid plates (no dock band). Dialogs are bottom sheets. Left-handed mode mirrors the controls.
 - Ask of every change: **is it fun, on a phone, with one thumb, in a 5-minute session?** Prefer fewer taps.
 - Playable web first. The native apps (Capacitor) wrap the web build and are never forked.
 

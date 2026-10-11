@@ -1477,3 +1477,68 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   Action tugs, the cut walk resumes after a tug, and standing at the slip hauls the log in and lands it. A walk to
   the slip stops beside it so the log never lands on the farmer. Rules in `systems/towing.ts` (pure); the
   controller and placeholder art are debug-only (`src/dev/towSpike.ts`, stat `lab.towSpike`).
+
+## Floating controls (UI lane, ui/float-controls, 2026-10-11)
+
+The owner: "I want to remove the wooden dock at the bottom of the screen, it still feels big." The 112 px walnut band
+is gone; the world runs from under the HUD to the bottom edge and the controls float over it. Nothing here was run
+(owner order: no tests); every number below is arithmetic from the code.
+
+- **Controls stay where the thumbs are, to the pixel.** Action (160, 324) r 28, Interact (98, 342) r 20, Menu
+  (58, 306) r 16, the stick's home (56, 346), all mirrored for the left hand, measured from `CONTROLS_Y` (288, the
+  old dock top, renamed). Reach, ownership, the ring, bench geometry and e2e coordinates are unchanged. The names
+  `dockLayout`/`DockSpot` stay (historical) to keep the diff out of other lanes' files.
+- **Plates, not a band.** Each round control is one baked texture: a solid 2 px ink outline, a 2 px wood ring, a
+  walnut face and a solid 2 px soil lip under the face (`bakeButton`, walnut skin; plum keeps its old disc). The ink
+  carries it over grass, straw and water; the wood ring carries it over the dark mine. Pressed, the face sinks 2 px
+  onto its lip and turns soil in one frame (the old 30% cream glow and its fade were see-through). The Interact icons
+  lost their alpha too. No semi-transparent pixel in any control at rest or pressed; only the show/hide fades of
+  Interact, toasts and the joystick are transient. Draws: the same two textures per radius as before (body and
+  pressed), so the batch is unchanged; the hotbar's lips go into the hotbar's existing Graphics.
+- **Hotbar: the full 8-slot row, slimmed, not compacted.** 22 px faces on the 24 px pitch (2 px of world between
+  faces), each on a 2 px soil lip, 2 px off the bottom edge: the whole row is 26 px tall (27 with its touch zones)
+  against the 112 px band. The pitch is the touch floor (24 px = 38.8 CSS px on the SE, 45.8 on the iPhone 13), so the
+  row cannot get narrower, and at 192 px it already fits the canvas; nothing needed compacting, and every slot keeps
+  its one-tap access (the tool ring and swipes still work too). Compacting to "current tool + ring" would have broken
+  the guided start's hotbar steps, the e2e and bench slot taps, and made the far slots two gestures away; a 7-slot
+  hotbar remains the way to whole-pixel scales on the iPhone 13 and SE (ruling round 5). The selected slot keeps the
+  gold ring, notches and ledge and now stands on 4 px of lip. The face keeps the bag's accepted slot frame (1 px ink +
+  1 px rim, art round 5).
+- **Slot touch zones meet.** Each zone is the whole pitch wide (it grew to 23.07 px on the iPhone 13 before, leaving
+  0.9 px slivers between zones that would now fall through to the world) and runs from 1 px above the faces to the
+  bottom edge: 24 x 27 px, 45.8 x 51.5 CSS px on the iPhone 13 and 38.8 x 43.7 on the SE.
+- **The camera keeps exactly the old scrolls.** The viewport is 200 x 326 (was 214). `PixelCamera` takes the controls'
+  band (112 px) as an inset: the follow centres the farmer in the 214 px above it, a small room is centred there, and
+  the bottom bound lets a map's last row scroll up to `CONTROLS_Y` (the void shows behind the controls there, as the
+  old view's edge did). So the farmer is never under a thumb, and a tile's screen position is the same as before at
+  every scroll (unit test over every 8 px on four map sizes), which kept tap accuracy, coach geometry and e2e tile
+  coordinates valid.
+- **What "in view" means.** `WORLD_CLEAR` (74..288) is the view above the controls. The coach line's low position,
+  its arrows and `inView`, the goal arrow's clamp, the channel morning run's "seen" test and the dev overlay's
+  status strip use it, so nothing that must be read or tapped first sits under a thumb. The rain keeps its density
+  over the taller view (90 -> 137 drops); ambient petals keep their count and spread over the whole view (about a
+  third sparser).
+- **Toasts and the item name.** Toasts stack from just above the controls (as before). The selected item's name
+  moved from over Interact into the bottom of the toast lane on a solid walnut plate, hidden in one step after 1.5 s;
+  toasts stack above it while it shows.
+- **Taps between the controls reach the world.** `WORLD_VIEW` runs to the bottom, so `WorldTouch` treats a touch on
+  no control as a world touch: a still one taps (walk or act), a moving one is the stick. A touch inside a control's
+  touch circle or a slot zone is the control's (Phaser hit test, unchanged); a hidden Interact gives its area to the
+  world. The stick's home is now open world: a still tap there walks, a drag steers. No plate marks it: the stick
+  floats under the thumb anywhere below the HUD, and a plate there would only cover more world.
+- **Safe areas.** The canvas already sits inside `env(safe-area-inset-*)` (`#frame` padding) with the hotbar flush
+  on the bottom safe area (`displayFit`). Under it, the home-indicator strip is now ink (`#safe-bottom`, the
+  theme colour) instead of the walnut margin, so no wood band shows under the world on an iPhone 13 (34 CSS px; zero
+  on the SE and Android). The world does not extend under the home indicator: that would change the fitted scale and
+  every touch target. Action and its mirror keep 12 px from the side edges (Android back swipe); the hotbar is taps
+  only, which the edge gestures ignore.
+
+**World gained.** The view is 12.5 x 20.4 tiles (was 12.5 x 13.4): +112 px of rows, +52% of area. The plates cover
+about 9,000 px² of the old 22,400 px² band (Action 2,600, Interact 1,340 when shown, Menu 870, hotbar 4,220), so
+60% of the band shows world (66% with Interact hidden): about +31% visible world in all, all of it below the farmer.
+
+**To re-measure before merging:** `npm run perf` (12 draws, 3.5 ms at 1x: the tilemap layers now cull and draw a
+52% taller view, and rain draws 137 drops), `e2e:controls` (the graze check now covers the hotbar row only, plus a new
+"tap between the controls walks" check), `e2e:mobile` (new ink-strip check; slot zones are 24 x 27),
+`e2e:onboarding` (coach geometry should be identical), `bench:thumb` against its baseline. `bench-thresholds.json`
+is unchanged: no control moved and the camera scrolls are identical.
