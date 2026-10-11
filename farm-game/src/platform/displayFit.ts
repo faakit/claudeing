@@ -4,7 +4,8 @@
  * Pixel art reads best when every game pixel covers the same whole number of device pixels: at 5.72 device px
  * per game px (an iPhone 13 at "fit") the columns come out 5 or 6 px wide and crawl as the world scrolls. So the
  * canvas is scaled by a whole number of device pixels whenever that costs at most `MAX_LOSS` of the fitted size;
- * the leftover margin is walnut, split top and bottom (the dock stays at the thumb). Where a whole number would
+ * the leftover margin is walnut and all of it goes above the HUD, so the dock sits on the bottom safe area, where
+ * the thumb rests (owner, round 5: split top and bottom it lifted the dock 60 px on a Pixel 7). Where a whole number would
  * cost more, the canvas keeps the fitted size (one nearest-neighbour step from the game's pixels), aligned to the
  * device-pixel grid. Ruling: coordinator, round 4 (DECISIONS.md "Whole-pixel canvas scale").
  */
@@ -74,7 +75,8 @@ export function displayFit(
   const wDev = Math.floor(gw * devScale + 1e-6);
   const hDev = Math.floor(gh * devScale + 1e-6);
   const leftDev = Math.floor((devW - wDev) / 2);
-  const topDev = Math.floor((devH - hDev) / 2);
+  // Every leftover pixel above the canvas: the dock (the canvas's bottom) sits on the bottom of the safe area.
+  const topDev = Math.floor(devH - hDev);
   return {
     mode: integer ? 'integer' : 'fit',
     devScale,

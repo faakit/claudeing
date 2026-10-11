@@ -9,6 +9,7 @@ import {
   frameRate,
   isContactFrame,
   nudgeOffset,
+  shouldHoldCamera,
   smoothstep,
   softClamp,
   stepFollowAxis,
@@ -115,6 +116,17 @@ describe('pixel-locked camera follow', () => {
     const a = createFollowAxis();
     stepFollowAxis(a, 10, 16, 0.12);
     expect(stepFollowAxis(a, 400, 16, 0.12)).toBe(0);
+  });
+});
+
+describe('camera hold under a finger (round 5 blocker)', () => {
+  it('follows a held stick walk: a finger down while the farmer moves never holds', () => {
+    expect(shouldHoldCamera(true, 100, 200, 100.4, 200)).toBe(false);
+    expect(shouldHoldCamera(true, 100, 200, 100, 199.6)).toBe(false);
+  });
+  it('holds only with a finger down and the farmer still', () => {
+    expect(shouldHoldCamera(true, 100, 200, 100, 200)).toBe(true);
+    expect(shouldHoldCamera(false, 100, 200, 100, 200)).toBe(false);
   });
 });
 
