@@ -84,12 +84,59 @@ M3.
 wendhead(v)`. Budget its baked tiles: about 400 slots are left for Wendhead, town and woods together.
 3. M6: town `dry`/`river` (D1 mud) the same way. Make the mud tiles periodic, like the creek bed.
 
+### The Dry Year: M1, M3, M4 (depth lane, branch `valley/m1`)
+
+**Now:** M1 (the letter, the first green, lines that fit the valley), M3 (the restoration pattern and the Old
+Spring) and M4 (channels, save v18) are built on M2's map stages. Save version is **18** (the plan's one bump).
+
+- `valley.json` holds Rosa's letter, the first-green rule (5 shipped, day 5 at the earliest), the places (the
+  spring) and the planned ones, and M2's map stages (farm; Wendhead `dry`/`spring`). `systems/valley.ts`: stages,
+  conditions, the first green, the restoration pattern (ask, fund, work days, opening), the HUD's valley step and
+  THE VALLEY rows, the creek as the channels' source. `systems/channels.ts`: the flow and digging.
+- First launch shows Rosa's letter on the title (New Game under it, still `Title.buttons[0]`); it is kept in the
+  mailbox, read, from day 3. Day 1 is straw (a runtime palette remap, `art/dryPalette.ts`); the first green
+  dissolves straw to green around the farmer (`fx/GreenReveal.ts`), Rosa's letter brings Ilse's tin and journal.
+- The Old Spring: asked on the first-green morning (Ilse's gate opens), funded from its site in one tap, three
+  one-tap work days that play a beat each (the last hands over Ilse's spade), the opening morning (Rosa's scene, the
+  creek's first morning reveal, Clay's unsigned sack after). The Hot Spring is the spring's Warm Pool.
+- Channels: the spade digs from the creek's bank (one drag), the water reaches 24 tiles and waters the soil beside
+  them each morning; drawn in the map's detail layer.
+- Scenarios: `title-first-launch`, `valley-farm-dry`, `valley-farm-green-eve`, `valley-farm-green`,
+  `valley-farm-green-reveal`, `talk-dry-mara`, `spring-site-ask`, `spring-site-funded`, `spring-site-work`,
+  `spring-opened`, `farm-creek-running`, `farm-creek-first-morning`, `hud-valley-line`, `channels-first-dig`,
+  `channels-row`, `channels-flow-cap`, `channels-morning`. The scenario e2e has `valley`, `spring` and `channels`
+  blocks.
+
+**Open:**
+
+- The site sprites (`obj_site_spring_0..3`, 32x32), the letter's paper (`ui_letter_paper`, optional), the key item
+  icons, the dry palette (baked `tiles_dry.png`, `tiles_<season>_dry.png` under the same keys) and channel tiles are
+  code placeholders (see For art below). Fall's dry farm keeps the fall tileset's orange oak crowns.
+- Finn's dry lines say the dryness is upstream because the town river still flows; M6 switches back to the "mud and
+  a trickle" lines, keyed on the town's stage (coordinator ruling).
+- The critic's review of M4 (sent at 9e2ea35) may still have findings.
+- Wendhead is small on purpose; its gorge and the weir come with M6 (a `restored` stage and delta rects there).
+
+**Next:** M6 (the Weir: the town's `dry` and `river` stages, Wendhead `restored`, fish gated on the weir, the
+flow to 64), then M7 (towing; a lab spike first), M8 (the Seed House, using the v18 tag fields), M11.
+
+**For art:** the Old Spring's site in four stages (a 2x2 rockfall at the pool's mouth, lower each day, the mouth
+running at the end); the letter's parchment (`ui_letter_paper`); icons for Ilse's seed tin, journal and spade; the
+dry palette baked by `seasons.py` (the table is `art/dryPalette.ts`: parchment ground with gold flecks, grey-green
+crowns, never orange or gold crowns); channel tiles (a dug ditch, dry and with water, with banks); Wendhead's look
+(the pool, ferns, the gorge for M6); the Warm Pool landmark at Wendhead.
+
+**For audio:** a first-green jingle (the special-order fanfare stands in); the A1 dry ambience is a thin wind bed and
+a fraction of the birdsong on dry maps (existing beds), but the thinned music arrangement is not done; A2: a creek
+loop for the farm and Wendhead once the spring runs (the creek reveal plays the water cue); a dig cue for channels
+(the till cue stands in).
+
 ### Game depth and economy
 
 **Now:** a full year loop with farming, quality, foraging, fishing, crafting, machines, animals, five villagers
 (Mara, Finn, Rosa, Orin, Clay) with hearts and events, jobs, mail, festivals, town projects, a greenhouse, the
 mine, cooking and a board race with Clay. The sim bot is calibrated against real play: the five-seed median is
-pinned at 261,631, within -20% / +25%. Save version is **17**.
+pinned at 261,631, within -20% / +25%. Save version is **18** (the Dry Year's bump, see above).
 
 **Open:** see OPEN-FINDINGS.md: summer for a farmer, the "Board 16" row, the race replay, and Clay's crates.
 
