@@ -3,7 +3,7 @@
 // and the most draws and JS ms while towing; shots and a strip of the snag and landing.
 //
 //   URL=http://localhost:5331/ PROFILE=se HAND=left node agents/probes/tow-spike.mjs
-//   SCENARIO=tow-spike-long TUG=action ...
+//   SCENARIO=tow-spike-long TUG=action THROTTLE=4 ...
 import { launch, openScenario, serve } from '../../scripts/lib/farm.mjs';
 
 const scenario = process.env.SCENARIO ?? 'tow-spike';
@@ -16,6 +16,8 @@ try {
   const farm = await openScenario(browser, url, scenario, { profile, hand });
   const tag = `${scenario}-${profile}-${hand}`;
   const tow = () => farm.eval(() => window.__farm.dev.tow());
+  if (process.env.THROTTLE)
+    await farm.cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.THROTTLE) });
   await farm.frames(10);
   await farm.shot(`${tag}-0-start`, dir);
   // draws and JS while the spike runs, sampled every frame in the page until landed
@@ -32,7 +34,7 @@ try {
           const s = d.frameStats();
           draws = Math.max(draws, s.draws);
           js = Math.max(js, s.jsMs);
-          gap = Math.max(gap, s.frameMs);
+          gap = Math.max(gap, d.frameStats().frameMs);
         }
         if (t?.landed) break;
       }

@@ -552,8 +552,13 @@ export abstract class WorldScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     runtime.paintWork = this.work !== null; // a painted row digs on, never fills (mechanics/channels.ts)
-    // the creek's first morning starts when the creek bed (x 26-27) comes into view
-    if (this.creekReveal && !this.reveal && this.cameras.main.worldView.right > 25 * TILE_SIZE) {
+    // The creek's first morning starts once the creek bed (x 26-27) is wholly in view, a tile in from the edge: it
+    // started as the view's edge passed x 25, with the bed still off screen (the same sliver as feel critic C1-1).
+    if (
+      this.creekReveal &&
+      !this.reveal &&
+      this.cameras.main.worldView.right >= 28 * TILE_SIZE + TILE_SIZE
+    ) {
       takeCreekMoment(getState());
       this.reveal = this.creekReveal;
       this.creekReveal = null;
