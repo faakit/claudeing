@@ -406,7 +406,7 @@
     "them": "a pessoa",
     "doorOutside": "Toque na porta para sair.",
     "headBack": "Volte para {map}.",
-    "litTalk": "Toque no botão aceso para conversar.",
+    "litTalk": "Toque no botão aceso e converse.",
     "litOpen": "Toque no botão aceso para abrir.",
     "readJobs": "Leia seus bicos e toque em Fechar.",
     "closeToCarryOn": "Feche isto para continuar."
@@ -414,8 +414,8 @@
   "dir": {
     "up": "para cima",
     "down": "para baixo",
-    "left": "para a esquerda",
-    "right": "para a direita"
+    "left": "à esquerda",
+    "right": "à direita"
   },
   "mapTo": {
     "farm": "a fazenda",
