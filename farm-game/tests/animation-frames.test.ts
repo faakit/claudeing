@@ -92,19 +92,23 @@ const atlas = (g: string) => {
   };
   return { frames: json.frames, img: decodePng(readFileSync(`public/assets/sprites/${g}.png`)) };
 };
-const chars = atlas('chars');
+// the characters span two atlases (the first is full at 512x1024; actions and new frames go in chars2)
+const charSheets = [atlas('chars'), atlas('chars2')];
+const chars = { frames: Object.assign({}, ...charSheets.map((a) => a.frames)) as (typeof charSheets)[0]['frames'] };
+const sheetOf = (name: string) => charSheets.find((a) => a.frames[name]) ?? charSheets[0]!;
 
 /** A frame as rows of 'rrggbbaa' strings ('' for transparent). */
 function frame(name: string): string[][] {
   const f = chars.frames[name];
   expect(f, name).toBeTruthy();
+  const { img } = sheetOf(name);
   const { x, y, w, h } = f!.frame;
   const rows: string[][] = [];
   for (let j = 0; j < h; j++) {
     const row: string[] = [];
     for (let i = 0; i < w; i++) {
-      const o = ((y + j) * chars.img.w + x + i) * 4;
-      const px = chars.img.px;
+      const o = ((y + j) * img.w + x + i) * 4;
+      const px = img.px;
       row.push(px[o + 3] ? `${px[o]},${px[o + 1]},${px[o + 2]}` : '');
     }
     rows.push(row);
@@ -181,8 +185,8 @@ describe('animation frames (art round 4)', () => {
   });
 
   it('uses only palette colours in every atlas', () => {
-    for (const g of ['chars', 'world', 'ui']) {
-      const { img } = g === 'chars' ? chars : atlas(g);
+    for (const g of ['chars', 'chars2', 'world', 'ui']) {
+      const { img } = atlas(g);
       const off = new Set<string>();
       for (let o = 0; o < img.px.length; o += 4)
         if (img.px[o + 3]) {

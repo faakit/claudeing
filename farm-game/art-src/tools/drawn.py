@@ -611,8 +611,8 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
         import codeacts  # pet, reel and place, drawn in code on the round-4 machinery (review 18)
 
         acts.update(codeacts.build(names, idle))
-        for key, idx in acts.items():
-            add("chars", key, idx)
+        for key, idx in acts.items():  # the chars atlas is full (512x1024): actions live in the second one
+            add("chars2", key, idx)
         if acts:  # the frame counts the game reads (src/art/actFrames.json)
             counts: dict = {}  # only the frames that composed (a split-off fragment is skipped), in order
             for key in acts:
