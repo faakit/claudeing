@@ -53,7 +53,7 @@ export function playActionFx(
       if (good) {
         fx.sparkle(x, y - 4, parseInt(good.color.slice(1), 16));
         fx.itemPop(x, y - 8, good.icon, head);
-        fx.floatText(player.x, above - 24, `+${res.qty ?? 1} ${good.name}`, 0xf4ead2);
+        fx.floatText(player.x, above - 27, `+${res.qty ?? 1} ${good.name}`, 0xf4ead2);
       }
       audio.play('harvest');
       break;
@@ -68,14 +68,14 @@ export function playActionFx(
       fx.sparkle(x, y - 4, parseInt((crop?.color ?? '#ffffff').slice(1), 16));
       if (crop) {
         fx.itemPop(x, y - 8, crop.icon, head);
-        fx.floatText(player.x, above - 24, `+${res.qty ?? 1} ${crop.name}`, 0xf4ead2);
+        fx.floatText(player.x, above - 27, `+${res.qty ?? 1} ${crop.name}`, 0xf4ead2);
       }
       if ((res.q ?? 0) > 0) {
         const gold = (res.q ?? 0) >= 2;
         fx.sparkle(x, y - 6, gold ? 0xf4d35e : 0xc9d3e4);
         fx.floatText(
           player.x,
-          above - 34,
+          above - 37,
           gold ? 'Gold quality!' : 'Silver quality!',
           gold ? 0xf4d35e : 0xc9d3e4,
         );
