@@ -103,7 +103,17 @@ const GROUND_EXACT = new Set([
   'puddle',
   'stepping',
 ]);
-const BAKED_GROUND_PREFIX = ['ao:', 'rock', 'creep:', 'edge_', 'shore_', 'cracks'];
+// (the creek's bed and water banks too, M6: the dry town's river bed showed a green bank on straw)
+const BAKED_GROUND_PREFIX = [
+  'ao:',
+  'rock',
+  'creep:',
+  'edge_',
+  'shore_',
+  'cracks',
+  'creekbed:',
+  'creekwater:',
+];
 const FLORA_PREFIX = ['bloom_', 'patch_', 'rose_', 'tallgrass', 'fern_flat'];
 const BOX_PREFIX = ['f_window_box', 'p_flowerbed', 'p_trellis'];
 const AQUATIC_PREFIX = ['lily_', 'reeds_'];

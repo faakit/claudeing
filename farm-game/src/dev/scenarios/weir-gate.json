@@ -1,0 +1,44 @@
+{
+  "title": "Buying the sluice gate from Orin",
+  "about": "Summer 15, 10:00, in town facing Orin by his cold forge: the weir is asked and its fund needs a sluice gate. His sheet says so and sells one for 500g (600g in the purse); once it is in the bag the offer goes.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "villagers"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 1
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 43
+  },
+  "friends": {
+    "finn": 2
+  },
+  "at": {
+    "map": "town",
+    "tx": 9,
+    "ty": 16,
+    "facing": "down"
+  },
+  "time": {
+    "season": "summer",
+    "day": 15,
+    "clock": "10:00"
+  },
+  "money": 600,
+  "letters": [],
+  "goal": "tree"
+}

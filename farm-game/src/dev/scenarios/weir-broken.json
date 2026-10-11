@@ -1,0 +1,54 @@
+{
+  "title": "The broken weir on the ask morning, facing its site",
+  "about": "Summer 15, 08:00, at Wendhead's gorge: the Old Spring is open, Finn is at 2 hearts and asked for the weir this morning (place.weir 1; the HUD reads \"Finn asked: the Weir\", his letter is in the mailbox). The gorge is a dry stony bed. 2,600g, 60 stone and Orin's sluice gate in the bag: Interact at the broken weir opens its fund, and Fund it takes all three in one tap.",
+  "version": 18,
+  "tags": ["wendhead", "valley", "weir"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 1
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 43
+  },
+  "friends": {
+    "finn": 2
+  },
+  "at": {
+    "map": "wendhead",
+    "tx": 17,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "season": "summer",
+    "day": 15,
+    "clock": "08:00"
+  },
+  "money": 2600,
+  "items": [
+    {
+      "item": "stone",
+      "qty": 60
+    },
+    {
+      "item": "sluice_gate",
+      "qty": 1
+    }
+  ],
+  "letters": ["weir_ask"],
+  "goal": "tree"
+}

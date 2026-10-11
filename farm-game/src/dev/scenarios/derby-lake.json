@@ -1,0 +1,46 @@
+{
+  "title": "Fishing Derby day with the river dry: Finn's lake derby",
+  "about": "Summer 22, 10:00, on the woods lake's east shore with the rod: the weir is not restored, so the Derby's catfish are stocked in the woods lake, not the town's trickle (festivals.json dryMaps). The derby sheet says \"Catfish stocked in the woods lake today!\".",
+  "version": 18,
+  "tags": ["woods", "festival", "fishing", "weir"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 0
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1
+  },
+  "at": {
+    "map": "woods",
+    "tx": 11,
+    "ty": 20,
+    "facing": "left"
+  },
+  "time": {
+    "season": "summer",
+    "day": 22,
+    "clock": "10:00"
+  },
+  "weather": "sunny",
+  "select": 3,
+  "items": [
+    {
+      "item": "bait",
+      "qty": 10
+    }
+  ],
+  "goal": "festival"
+}

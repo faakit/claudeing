@@ -1,0 +1,49 @@
+{
+  "title": "The weir, its last work day",
+  "about": "Summer 19, 08:00: the weir is funded and three work days are done (the gap cleared, Orin's gate set, one beam short). Tap the site: Orin opens the gate a crack, the water comes through and lifts the last beam into the gap (scripted until towing). Tomorrow the river comes home.",
+  "version": 18,
+  "tags": ["wendhead", "valley", "weir"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 2
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "project.place_weir": 1,
+    "fund.place_weir": 2500,
+    "fund.place_weir.stone": 60,
+    "fund.place_weir.sluice_gate": 1,
+    "site.weir.work": 3,
+    "site.weir.last": 46
+  },
+  "friends": {
+    "finn": 2
+  },
+  "at": {
+    "map": "wendhead",
+    "tx": 17,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "season": "summer",
+    "day": 19,
+    "clock": "08:00"
+  },
+  "letters": [],
+  "goal": "tree"
+}
