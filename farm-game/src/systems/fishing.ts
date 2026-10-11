@@ -3,7 +3,7 @@ import type { FishDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { toast } from './events';
 import { addStat } from './goals';
-import { derbyScore, festivalToday, recordCatch } from './festivals';
+import { derbyMaps, derbyScore, festivalToday, recordCatch } from './festivals';
 import { addItem, countItem, removeItem, roomFor } from './inventory';
 import { displayName } from './itemRef';
 import { rollQuality } from './quality';
@@ -11,15 +11,22 @@ import { isWet } from './weather';
 import { random } from './rng';
 import { addXp, perk } from './skills';
 
+/** Is this fish in the valley's water at all? The river's fish come back with the weir (`place`). */
+export const fishOpen = (state: Pick<GameState, 'stats'>, f: FishDef): boolean =>
+  f.place === undefined || (state.stats[`place.${f.place}`] ?? 0) >= 3;
+
 /** Fish that can bite on `map` today. */
 export function fishFor(state: GameState, map: string): FishDef[] {
   // Derby day: the organisers stock a big fish that bites whatever the weather.
-  const stocked = festivalToday(state)?.def.stocked;
+  const today = festivalToday(state)?.def;
+  const stocked = today?.stocked;
+  const stockedMaps = today ? derbyMaps(state, today) : [];
   return fishTable.filter(
     (f) =>
       !(f.legend && state.stats[`legend.${f.item}`]) &&
-      ((stocked?.fish === f.item && stocked.maps.includes(map)) ||
+      ((stocked?.fish === f.item && stockedMaps.includes(map)) ||
         (f.maps.includes(map) &&
+          fishOpen(state, f) &&
           f.seasons.includes(state.time.season) &&
           (!f.weather ||
             (f.weather === 'rain' && isWet(state.weather)) ||

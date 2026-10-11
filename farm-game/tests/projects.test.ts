@@ -77,6 +77,9 @@ describe('town projects', () => {
     expect(s.stats['projectsDone']).toBe(1);
     expect(donateGold(s, 'canopy', 100)).toEqual({ ok: false, reason: 'closed' });
     expect(isProjectOpen(s, 'library')).toBe(true);
+    // the Fish Ladder is the weir's site upgrade (M6): open once the weir is restored
+    expect(isProjectOpen(s, 'fishladder')).toBe(false);
+    s.stats['place.weir'] = 3;
     expect(isProjectOpen(s, 'fishladder')).toBe(true);
   });
 
@@ -141,6 +144,7 @@ describe('town projects', () => {
   it('every project chain can be finished, and all of them together are a real late sink', () => {
     const s = newState();
     s.stats['place.spring'] = 3; // the warm pool is the Old Spring's upgrade
+    s.stats['place.weir'] = 3; // the Fish Ladder is the Weir's (M6)
     for (let round = 0; round < 10; round++)
       for (const id of Object.keys(projects))
         if (isProjectOpen(s, id) && !isProjectDone(s, id)) finish(s, id);

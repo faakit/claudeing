@@ -267,7 +267,8 @@ export function createInitialState(): GameState {
     shipping: {},
     player: { map, ...spawnPosition(tx, ty), facing },
     // `valley.on`: this save knows the valley (systems/valley.ts); saves from before get their defaults once.
-    stats: { 'valley.on': 1 },
+    // `valley.weirOn`: it plays the dry town and the Weir (M6); saves from before keep their river.
+    stats: { 'valley.on': 1, 'valley.weirOn': 1 },
     goalIndex: 0,
     settings: {
       music: 0.6,

@@ -28,7 +28,8 @@
     "slots": 3,
     "stocked": {
       "fish": "catfish",
-      "maps": ["town"]
+      "maps": ["town"],
+      "dryMaps": ["woods"]
     }
   },
   "harvest_fair": {

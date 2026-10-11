@@ -167,10 +167,17 @@
         "Fishing is mostly waiting.",
         "Nice lake, huh?",
         {
-          "text": "The Wend came down from the gorge, once. Town's water is all that's left.",
+          "text": "The Wend's a trickle in town now. Mud where the river ran.",
           "when": {
             "place": "weir",
             "max": 2
+          }
+        },
+        {
+          "text": "Hear that? The river's back. Still sounds wrong to me. Good wrong.",
+          "when": {
+            "place": "weir",
+            "min": 3
           }
         }
       ],
@@ -179,7 +186,7 @@
         "Bait helps. A lot.",
         "The big ones bite in the rain.",
         {
-          "text": "My dad built the Heron. She's sat high and dry for seven years.",
+          "text": "My dad built the Heron. She's sat on the mud for seven years.",
           "when": {
             "place": "weir",
             "max": 2
@@ -190,6 +197,13 @@
           "when": {
             "place": "weir",
             "max": 2
+          }
+        },
+        {
+          "text": "The Heron rides high again. I keep going down to check.",
+          "when": {
+            "place": "weir",
+            "min": 3
           }
         }
       ],
@@ -202,6 +216,13 @@
           "when": {
             "place": "weir",
             "max": 2
+          }
+        },
+        {
+          "text": "Come aboard the Heron sometime. You earned the first trip.",
+          "when": {
+            "place": "weir",
+            "min": 3
           }
         }
       ],
@@ -252,6 +273,16 @@
         "ty": 17
       },
       {
+        "from": 900,
+        "map": "town",
+        "tx": 16,
+        "ty": 32,
+        "when": {
+          "place": "weir",
+          "min": 3
+        }
+      },
+      {
         "from": 1200,
         "map": "away",
         "tx": 0,
@@ -275,12 +306,34 @@
       },
       {
         "hearts": 4,
-        "id": "secret",
-        "title": "A secret spot",
+        "id": "heron",
+        "title": "The Heron",
+        "when": {
+          "place": "weir",
+          "max": 2
+        },
         "lines": [
-          "There is a deep spot behind the reeds.",
-          "Big fish rest there when it rains.",
-          "Take these. They were biting yesterday."
+          "Come see the Heron with me sometime. Dad built her the year I was born.",
+          "His initials are cut by the bow. I scrape round them every spring.",
+          "She'll float again. Here, these were biting yesterday."
+        ],
+        "reward": {
+          "item": "catfish",
+          "qty": 2
+        }
+      },
+      {
+        "hearts": 4,
+        "id": "heron",
+        "title": "The Heron",
+        "when": {
+          "place": "weir",
+          "min": 3
+        },
+        "lines": [
+          "Seven years on the mud, and now she just floats. Dad built her.",
+          "His initials are by the bow. I touch them for luck before I cast.",
+          "First catch off her deck. They're yours."
         ],
         "reward": {
           "item": "catfish",
@@ -667,6 +720,13 @@
             "place": "seedhouse",
             "max": 2
           }
+        },
+        {
+          "text": "Didn't ask for help. River's on my fields too, though.",
+          "when": {
+            "place": "weir",
+            "min": 3
+          }
         }
       ],
       "friend": [
@@ -685,6 +745,13 @@
           "when": {
             "place": "seedhouse",
             "max": 2
+          }
+        },
+        {
+          "text": "Didn't ask for help. River's on my fields too, though.",
+          "when": {
+            "place": "weir",
+            "min": 3
           }
         }
       ],

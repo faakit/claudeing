@@ -1,4 +1,4 @@
-import { valleyDefaults } from './valley';
+import { valleyDefaults, weirDefaults } from './valley';
 import {
   crops,
   game,
@@ -488,6 +488,7 @@ export function sanitize(raw: Raw): GameState {
   for (const [k, v] of Object.entries(obj(raw['stats'])))
     if (isFiniteNum(v) && v >= 0) stats[k] = v;
   valleyDefaults(stats);
+  weirDefaults(stats);
 
   const st = obj(raw['settings']);
   const settings = {

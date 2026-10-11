@@ -216,11 +216,29 @@ export function recordCatch(state: GameState, ref: ItemRef): boolean {
   return derbyScore(state) > before;
 }
 
-/** Where today's derby fish are biggest, for the derby page ("Catfish bite in town today."). */
-export function derbyHint(def: FestivalDef): string {
+/**
+ * Where the derby's stocked fish bite: the town river, or (`dryMaps`) the woods lake while the river is dry (the
+ * weir not restored: "Finn's lake derby", WORLD-PLAN 6).
+ */
+export function derbyMaps(state: Pick<GameState, 'stats'>, def: FestivalDef): string[] {
+  if (!def.stocked) return [];
+  const dry = (state.stats['place.weir'] ?? 0) < 3;
+  return dry && def.stocked.dryMaps ? def.stocked.dryMaps : def.stocked.maps;
+}
+
+/** What each map's fishing water is called. */
+const WATER: Record<string, string> = {
+  town: 'town river',
+  woods: 'woods lake',
+  farm: 'farm pond',
+};
+
+/** Where today's derby fish are biggest, for the derby page ("Catfish stocked in the woods lake today!"). */
+export function derbyHint(state: Pick<GameState, 'stats'>, def: FestivalDef): string {
   if (!def.stocked) return 'Cast anywhere: pond, river or lake.';
   const name = items[def.stocked.fish]?.name ?? def.stocked.fish;
-  return `${name} stocked in the ${def.stocked.maps.join(' and ')} river today!`;
+  const where = derbyMaps(state, def).map((m) => WATER[m] ?? m);
+  return `${name} stocked in the ${where.join(' and ')} today!`;
 }
 
 /** Handing in ends the derby for the year; before this hour the sheet asks first. */

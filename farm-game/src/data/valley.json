@@ -64,11 +64,88 @@
       },
       "phrase": "The creek runs.",
       "flow": [24, 64]
+    },
+    "weir": {
+      "name": "Weir",
+      "map": "wendhead",
+      "site": [17, 11],
+      "where": {
+        "farm": [29, 3],
+        "town": [11, 0]
+      },
+      "npc": "finn",
+      "ask": {
+        "all": [
+          {
+            "place": "spring",
+            "min": 3
+          },
+          {
+            "any": [
+              {
+                "place": "forge",
+                "min": 3
+              },
+              {
+                "day": 43
+              }
+            ]
+          },
+          {
+            "npc": "finn",
+            "hearts": 2
+          }
+        ]
+      },
+      "project": "place_weir",
+      "workDays": 4,
+      "energy": 20,
+      "sign": "The old weir. Broken, and the river gone east.",
+      "asked": "Finn asked: the Weir",
+      "work": [
+        {
+          "taste": "pickaxe",
+          "text": "You and Finn lever stones out of the weir's gap. The gorge is deep."
+        },
+        {
+          "taste": "pickaxe",
+          "text": "The old footings show under the rubble. Still sound, Finn says."
+        },
+        {
+          "taste": "pickaxe",
+          "text": "Finn sets Orin's sluice gate in its frame. One beam short."
+        },
+        {
+          "taste": "beam",
+          "text": "Orin opens the gate a crack. The water lifts the last beam into the gap."
+        }
+      ],
+      "sprites": [
+        "obj_site_weir_0",
+        "obj_site_weir_1",
+        "obj_site_weir_2",
+        "obj_site_weir_3",
+        "obj_site_weir_4"
+      ],
+      "color": "#7a8494",
+      "opening": {
+        "note": "The river came home in the night!",
+        "lines": [
+          "She floats. Seven years on the mud, and she floats.",
+          "Dad would've stood right here. Grinning, probably.",
+          "Go and see the river. I'll be on deck."
+        ],
+        "at": {
+          "map": "town",
+          "tx": 16,
+          "ty": 32
+        }
+      },
+      "phrase": "The river's home."
     }
   },
   "planned": {
     "forge": "Cold Forge",
-    "weir": "Weir",
     "seedhouse": "Seed House",
     "orchard": "Bucket Orchard",
     "market": "Market Field"
@@ -107,20 +184,68 @@
           "variant": "dry",
           "palette": "dry",
           "when": {
+            "all": [
+              {
+                "place": "spring",
+                "max": 2
+              },
+              {
+                "place": "weir",
+                "max": 2
+              }
+            ]
+          }
+        },
+        {
+          "variant": "gorge",
+          "palette": "dry",
+          "when": {
             "place": "spring",
             "max": 2
           }
         },
         {
-          "variant": "spring"
+          "variant": "spring",
+          "when": {
+            "place": "weir",
+            "max": 2
+          }
+        },
+        {
+          "variant": "restored"
         }
       ],
       "delta": [
         [7, 16, 5, 3],
         [10, 19, 2, 3],
-        [10, 23, 2, 5]
+        [10, 23, 2, 5],
+        [19, 0, 3, 22],
+        [19, 23, 3, 5]
       ],
       "deltaText": "The spring's old bed. Best left clear."
+    },
+    "town": {
+      "variants": [
+        {
+          "variant": "dry",
+          "palette": "dry",
+          "when": {
+            "place": "weir",
+            "max": 2
+          }
+        },
+        {
+          "variant": "river"
+        }
+      ],
+      "delta": [[17, 22, 4, 10]],
+      "deltaText": "The old river bed. Best left clear."
+    }
+  },
+  "parts": {
+    "sluice_gate": {
+      "npc": "orin",
+      "price": 500
     }
   }
 }

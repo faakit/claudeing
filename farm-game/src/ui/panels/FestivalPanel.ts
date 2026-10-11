@@ -120,7 +120,7 @@ export class FestivalPanel extends Modal {
     this.label(
       8,
       64 + slots * 12 + 20,
-      `${derbyHint(today.def)} Hand in before bed.`,
+      `${derbyHint(s, today.def)} Hand in before bed.`,
       C.creamDim,
       1,
       'left',

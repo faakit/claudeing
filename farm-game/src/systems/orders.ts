@@ -10,6 +10,7 @@ import { random } from './rng';
 import { addXp, isRecipeUnlocked, perk } from './skills';
 import { absoluteDay } from './time';
 import { applyRival, FARM_TYPES, scoreFill } from './rival';
+import { fishOpen } from './fishing';
 import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
@@ -82,7 +83,9 @@ export function orderCandidates(state: GameState): ItemRef[] {
       add({ item: c.harvestItem });
   for (const map of ['farm', 'town', 'woods'])
     for (const f of forageTable(map, season)) add({ item: f.item });
-  for (const f of fishTable) if (f.seasons.includes(season) && !f.legend) add({ item: f.item });
+  // the river's fish only once the weir has brought them back (never a request nobody could fill)
+  for (const f of fishTable)
+    if (f.seasons.includes(season) && !f.legend && fishOpen(state, f)) add({ item: f.item });
   // Eggs, milk, wool, truffles and honey, once the farm makes them.
   for (const item of animalOutput(state).keys()) add({ item });
   // Goods from any machine the player has unlocked (jam, pickles, wine...).

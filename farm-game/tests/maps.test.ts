@@ -355,4 +355,48 @@ describe('map stages: variants differ only inside their delta rects (WORLD-PLAN 
       expect(gate.props['gateOpen'], v).not.toBe(gate.props['gateShut']);
     }
   });
+
+  it("the town river (M6): today's town exactly once the weir is back; mud and a trickle before", () => {
+    const today = JSON.parse(
+      readFileSync(new URL('./fixtures/town-before-m6.json', import.meta.url), 'utf8'),
+    ) as { ground: string[]; collision: string[] };
+    const flat = (rows: string[]) => rows.join(',').split(',').map(Number);
+    const all = Object.fromEntries(variants('town').map(({ v, raw }) => [v, raw]));
+    // walkability and ground of the river town are today's, tile for tile (WORLD-PLAN 1)
+    expect(layer(all['river']!, 'ground')).toEqual(flat(today.ground));
+    expect(layer(all['river']!, 'collision')).toEqual(flat(today.collision));
+    const kind = (raw: TiledMapLike, x: number, y: number) =>
+      PLACEHOLDER_TILES[(layer(raw, 'ground')[y * raw.width + x] ?? 0) - 1]?.name;
+    const dry = all['dry']!;
+    const grid = buildCollisionGrid(dry);
+    let trickle = 0;
+    for (let y = 22; y <= 31; y++) {
+      for (let x = 17; x <= 20; x++) expect(kind(dry, x, y), `${x},${y}`).toBe('stone');
+      for (let x = 21; x <= 22; x++) if (kind(dry, x, y) === 'water') trickle++;
+    }
+    expect(trickle).toBe(20); // the dry town fishes a two-tile trickle (WORLD-PLAN 1: 20 tiles, 60 after)
+    // the mud is walkable down to the trickle, except where the Heron sits on it
+    expect(isTileBlocked(grid, 19, 25)).toBe(true);
+    expect(isTileBlocked(grid, 19, 26)).toBe(true);
+    expect(isTileBlocked(grid, 20, 28)).toBe(false);
+    expect(isTileBlocked(grid, 17, 22)).toBe(false);
+  });
+
+  it("Wendhead's gorge (M6): a stony bed until the weir, water after; its bridge open in every stage", () => {
+    const kind = (raw: TiledMapLike, x: number, y: number) =>
+      PLACEHOLDER_TILES[(layer(raw, 'ground')[y * raw.width + x] ?? 0) - 1]?.name;
+    for (const { v, raw } of variants('wendhead')) {
+      const runs = v === 'gorge' || v === 'restored';
+      const pool = v === 'spring' || v === 'restored';
+      for (const x of [19, 20, 21]) {
+        expect(kind(raw, x, 22), `${v} bridge`).toBe('path');
+        for (const y of [0, 10, 21, 23, 27])
+          expect(kind(raw, x, y), `${v} ${x},${y}`).toBe(runs ? 'water' : 'stone');
+      }
+      expect(kind(raw, 8, 17), `${v} pool`).toBe(pool ? 'water' : 'stone');
+      // the weir's site on the gorge's west bank, reached up the bank path
+      expect(kind(raw, 17, 12), v).toBe('path');
+      expect(isTileBlocked(buildCollisionGrid(raw), 17, 12), v).toBe(false);
+    }
+  });
 });

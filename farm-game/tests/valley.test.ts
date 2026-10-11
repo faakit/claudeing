@@ -59,12 +59,15 @@ describe('the valley: how maps look', () => {
     const s = newState();
     expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@dry.tmj', palette: 'dry' });
     expect(paletteOf(s, 'farm')).toBe('dry');
-    expect(dryMaps(s)).toEqual(['farm', 'wendhead']);
+    expect(dryMaps(s)).toEqual(['farm', 'town', 'wendhead']);
     s.stats[FARM_GREEN] = 1;
     expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@waking.tmj' });
     expect(paletteOf(s, 'farm')).toBeNull();
-    expect(dryMaps(s)).toEqual(['wendhead']); // straw until the spring opens (coordinator ruling)
+    // Wendhead is straw until the spring opens (coordinator ruling), the town until the weir does (M6)
+    expect(dryMaps(s)).toEqual(['town', 'wendhead']);
     s.stats['place.spring'] = 3;
+    expect(dryMaps(s)).toEqual(['town']);
+    s.stats['place.weir'] = 3;
     expect(dryMaps(s)).toEqual([]);
   });
 
@@ -88,7 +91,7 @@ describe('the valley: how maps look', () => {
 
   it('maps with no rows look as they always have', () => {
     const s = newState();
-    for (const m of ['town', 'woods', 'mine', 'house']) expect(paletteOf(s, m), m).toBeNull();
+    for (const m of ['woods', 'mine', 'house']) expect(paletteOf(s, m), m).toBeNull();
   });
 
   it('conditions read stats and places, with min and max', () => {
