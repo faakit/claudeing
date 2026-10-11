@@ -40,6 +40,7 @@ const ALL = [
     cmd: node('scripts/e2e-onboarding.mjs'),
     deps: ['build'],
     full: true,
+    retryAlone: true,
     env: { E2E_ONBOARDING_PARALLEL: process.env.E2E_ONBOARDING_PARALLEL ?? String(SUITE_PAR) },
   },
   {
@@ -72,12 +73,21 @@ const ALL = [
     quiet: 'feel',
     retryAlone: true,
   },
-  { name: 'e2e', cmd: node('scripts/e2e.mjs'), deps: ['build'], full: true },
-  { name: 'e2e:mobile', cmd: node('scripts/e2e-mobile.mjs'), deps: ['build'], full: true },
+  // Browser suites that wait on real frames: a failure beside other suites reruns once alone (owner ruling: a pass
+  // alone counts, and the summary says FLAKY).
+  { name: 'e2e', cmd: node('scripts/e2e.mjs'), deps: ['build'], full: true, retryAlone: true },
+  {
+    name: 'e2e:mobile',
+    cmd: node('scripts/e2e-mobile.mjs'),
+    deps: ['build'],
+    full: true,
+    retryAlone: true,
+  },
   {
     name: 'e2e:scenarios',
     cmd: node('scripts/e2e-scenarios.mjs'),
     deps: ['build'],
+    retryAlone: true,
     env: FAST ? { SMOKE: '1' } : {},
   },
   {
@@ -94,6 +104,8 @@ const ALL = [
     full: true,
     quiet: 'perf',
     last: true,
+    // 4x and 6x frame pacing drifts when the other throttle levels share the machine: rerun once alone.
+    retryAlone: true,
     env: { PERF_PORT: String(i === 0 ? perfPort : perfPort + 40 + i) },
   })),
 ];
@@ -128,7 +140,7 @@ function run(job) {
       if (code !== 0 && job.retryAlone && !st.firstFails) {
         st.firstFails = out.split('\n').filter((l) => l.startsWith('FAIL'));
         st.status = 'waiting';
-        job.quiet = 'retry'; // again, with nothing beside it
+        job.quiet = `retry:${job.name}`; // again, with nothing beside it (not even another retry)
         console.log(
           `\n===== ${job.name}: failed beside other suites in ${secs} s, retrying alone =====\n${out.trimEnd()}`,
         );
