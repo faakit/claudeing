@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { game, goals, items, shops, tips } from '../src/data';
 import { fitText, measureText } from '../src/ui/fontMetrics';
-import { TAB_LABELS } from '../src/ui/panels/tabLabels';
+import { TAB_IDS, tabLabel } from '../src/ui/panels/tabLabels';
+import { LOCALES, setLocale } from '../src/i18n';
 import { menuTabGrid } from '../src/ui/layout';
 import { shopFacts } from '../src/ui/panels/shopFacts';
 import { formatClock } from '../src/systems/time';
@@ -80,11 +81,16 @@ describe('shop rows never truncate', () => {
 
 describe('menu tabs', () => {
   it('every tab label fits its button with room to spare (inside the 4 px frame, 6 px either side)', () => {
-    const labels = Object.entries(TAB_LABELS);
-    const { tabs } = menuTabGrid(labels.length, false);
-    labels.forEach(([id, label], i) =>
-      expect(measureText(label), id).toBeLessThanOrEqual(tabs[i]!.w - 8 - 12),
-    );
+    const { tabs } = menuTabGrid(TAB_IDS.length, false);
+    for (const locale of LOCALES) {
+      setLocale(locale);
+      TAB_IDS.forEach((id, i) =>
+        expect(measureText(tabLabel(id)), `${locale} ${id}`).toBeLessThanOrEqual(
+          tabs[i]!.w - 8 - 12,
+        ),
+      );
+    }
+    setLocale('en');
   });
   it('tabs and Close share two rows; Close sits on the thumb side and mirrors for the left hand', () => {
     const right = menuTabGrid(6, false, GAME_WIDTH, [0, 30]);

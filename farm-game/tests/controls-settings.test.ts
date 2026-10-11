@@ -10,6 +10,7 @@ import {
 } from '../src/systems/settings';
 import { measureText } from '../src/ui/fontMetrics';
 import { controlLabels } from '../src/ui/panels/ControlsTab';
+import { LOCALES, setLocale } from '../src/i18n';
 import { newState } from './helpers';
 
 describe('control settings (save v16)', () => {
@@ -77,7 +78,11 @@ describe('control settings (save v16)', () => {
       }
       for (let i = 0; i < 3; i++) {
         cycleStickSize(s);
-        for (const l of controlLabels(s)) expect(measureText(l), l).toBeLessThanOrEqual(86);
+        for (const locale of LOCALES) {
+          setLocale(locale);
+          for (const l of controlLabels(s)) expect(measureText(l), l).toBeLessThanOrEqual(86);
+        }
+        setLocale('en');
       }
     }
   });
@@ -85,9 +90,13 @@ describe('control settings (save v16)', () => {
 
 describe('help card and tips fit', () => {
   it('each help card line fits beside its picture (70 px)', async () => {
-    const { HELP_ITEMS } = await import('../src/ui/panels/ControlsTab');
-    for (const it of HELP_ITEMS)
-      for (const l of it.lines) expect(measureText(l), l).toBeLessThanOrEqual(70);
+    const { helpItems } = await import('../src/ui/panels/ControlsTab');
+    for (const locale of LOCALES) {
+      setLocale(locale);
+      for (const it of helpItems())
+        for (const l of it.lines) expect(measureText(l), l).toBeLessThanOrEqual(70);
+    }
+    setLocale('en');
   });
 
   it('each first-run tip fits a toast (186 px wide, at most 3 lines)', async () => {

@@ -131,7 +131,8 @@ import { t } from '../i18n';
 
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
 const CREEK_REVEAL_MS = 1800;
-const CREEK_BANNER = "THE CREEK RUNS\nIlse's creek, full again.";
+/** The creek's banner: a title line and a line under it. */
+const creekBanner = (): string => `${t('valley.creekTitle')}\n${t('valley.creekLine')}`;
 
 /** A bank tile where a first channel can start on any farm (open ground beside the creek, no plot). */
 const CREEK_BANK = [25, 14] as const;
@@ -529,7 +530,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.reveal.start();
       runtime.valleyReveal = true;
       audio.play('water');
-      gameEvents.emit('valleyMoment', { text: CREEK_BANNER });
+      gameEvents.emit('valleyMoment', { text: creekBanner() });
     }
     if (this.reveal) {
       this.reveal.update(delta);
@@ -1442,7 +1443,7 @@ export abstract class WorldScene extends Phaser.Scene {
     else if (res.kind === 'message' && res.text) toast(res.text, 'info');
     else if (res.kind === 'pickup') {
       const got = pickUpPlaced(state, this.mapId, obj);
-      if (got === 'busy') toast("It's busy. Wait until it's done.", 'warn');
+      if (got === 'busy') toast(t('move.busy'), 'warn');
       else if (got === 'full') toast(t('common.inventoryFull'), 'warn');
     }
     this.things?.sync(state, true);
@@ -1595,7 +1596,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.highlight.ping(plan.intent.target.tx, plan.intent.target.ty);
       audio.play('select');
       if (plan.intent.kind !== 'none' && !this.onPlayerTile(plan.intent.target)) {
-        toast("Can't get there.", 'warn');
+        toast(t('ui.cantGetThere'), 'warn');
         haptic('error');
       }
       controlsLog.push({ kind: 'silent', t: this.time.now, detail: plan.intent.kind });
@@ -1622,7 +1623,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const what = ownTileTap(act.plan, near !== null);
     if (what === 'none') return false;
     this.cancelRoute();
-    controlsLog.push({ kind: 'route', t: this.time.now, detail: `own tile: ${what}` });
+    controlsLog.push({ kind: 'route', t: this.time.now, detail: `own tile: ${what}` }); // i18n-ok
     if (what === 'interact') this.onInteract(near!.tile);
     else if (this.actionLock <= 0) this.tryAction(act.tile);
     return true;
@@ -1749,16 +1750,16 @@ export abstract class WorldScene extends Phaser.Scene {
     const next = nextWork(
       w,
       (t) => this.actKindAt(t) !== null,
-      () => (state.energy <= 0 ? 'Too tired! Go to bed.' : null),
+      () => (state.energy <= 0 ? t('energy.tired') : null),
     );
     if ('stop' in next) {
       this.work = null;
       this.highlight.showPaint(null);
       if (next.stop) toast(next.stop, 'warn');
       // a dug row says what it dug, never that tiles "had nothing left to do" (critic, valley review 5)
-      else if (w.dug) toast(`Channel dug: ${w.dug} tile${w.dug > 1 ? 's' : ''}.`, 'good');
+      else if (w.dug) toast(t('channels.dug', { count: w.dug }), 'good');
       else if (w.skipped > 0)
-        toast(`${w.skipped} tile${w.skipped > 1 ? 's' : ''} had nothing left to do.`, 'info');
+        toast(t('farm.skipped', { count: w.skipped }), 'info');
       return;
     }
     this.highlight.showPaint(this.paintMarks(w.tiles), w.i);

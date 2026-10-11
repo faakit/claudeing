@@ -24,7 +24,20 @@
   },
   "goals": {
     "completeToast": "Meta cumprida! +{gold}",
-    "stallNote": "Nova meta: {next}. \"{waits}\" pode esperar em Menu > Metas."
+    "stallNote": "Nova meta: {next}. \"{waits}\" pode esperar em Menu > Metas.",
+    "valley": "O VALE",
+    "current": "META ATUAL",
+    "reward": "Prêmio: +{gold}",
+    "allDone": "Todas as metas cumpridas. Você é uma lenda da colheita!",
+    "jobsEveryMorning": "Bicos novos toda manhã.",
+    "completed": "CUMPRIDAS",
+    "nothingYet": "Nada ainda. Você consegue!",
+    "alsoOpen": "TAMBÉM ABERTAS",
+    "moreOpen": {
+      "one": "e mais {count} meta aberta",
+      "other": "e mais {count} metas abertas"
+    },
+    "stats": "NÚMEROS"
   },
   "world": {
     "locked": "Trancado."
@@ -61,7 +74,11 @@
     "nothingToWater": "Nada para regar aqui.",
     "watered": "Já foi regado.",
     "canEmpty": "Regador vazio. Encha no lago.",
-    "nothingToCut": "Nada para cortar."
+    "nothingToCut": "Nada para cortar.",
+    "skipped": {
+      "one": "{count} espaço já não tinha nada a fazer.",
+      "other": "{count} espaços já não tinham nada a fazer."
+    }
   },
   "almanac": {
     "pageDone": "Página do almanaque completa: {page}! +{gold}"
@@ -76,7 +93,11 @@
     "startAtWater": "Comece junto da água.",
     "dryCut": "A água acaba antes daqui.",
     "farmOnly": "Valas são coisa da fazenda.",
-    "cantDig": "Não dá para cavar aqui."
+    "cantDig": "Não dá para cavar aqui.",
+    "dug": {
+      "one": "Vala cavada: {count} espaço.",
+      "other": "Vala cavada: {count} espaços."
+    }
   },
   "quality": {
     "silver": "{name} de prata",
@@ -91,7 +112,8 @@
   },
   "move": {
     "tapAgainMove": "Toque de novo para mudar de lugar.",
-    "tapAgainPickUp": "Toque de novo para recolher."
+    "tapAgainPickUp": "Toque de novo para recolher.",
+    "busy": "Está trabalhando. Espere terminar."
   },
   "seasonWord": {
     "spring": "primavera",
@@ -103,7 +125,12 @@
     "and": " e ",
     "inventoryFull": "Mochila cheia!",
     "backTomorrow": "Volte amanhã.",
-    "or": " ou "
+    "or": " ou ",
+    "close": "Fechar",
+    "done": "Pronto",
+    "on": "SIM",
+    "off": "NÃO",
+    "back": "Voltar"
   },
   "mapName": {
     "farm": "fazenda",
@@ -254,7 +281,9 @@
     "rowWorkedToday": "obra feita hoje ({n} de {of})",
     "rowWorkDay": "dia de obra {n} de {of}",
     "rowOpen": "reaberta. {phrase}",
-    "spadeLetter": "A pá da Ilse. Suas mãos estavam cheias na nascente, então aqui está. Cave a partir da margem do córrego."
+    "spadeLetter": "A pá da Ilse. Suas mãos estavam cheias na nascente, então aqui está. Cave a partir da margem do córrego.",
+    "creekTitle": "O CÓRREGO VOLTOU",
+    "creekLine": "O córrego da Ilse, cheio de novo."
   },
   "tutorial": {
     "canNote": "Rosa encheu seu regador.",
@@ -343,5 +372,104 @@
     "nothing": "Nada para minerar aqui.",
     "usePickaxe": "Quebre com a picareta (deslize o botão de Ação para trocar).",
     "freshNote": "Minério novo na mina."
+  },
+  "ui": {
+    "lateWarning": "Está ficando tarde. Vá dormir logo!",
+    "hint": "Dica: {hint}",
+    "dragToWalk": "Arraste para andar",
+    "morningStorm": "Bom dia! Tempestade: as plantas estão regadas.",
+    "morningRain": "Bom dia! Está chovendo: as plantas estão regadas.",
+    "morning": "Bom dia! {season} {day}",
+    "cantGetThere": "Não dá para chegar lá."
+  },
+  "title": {
+    "subtitle": "um joguinho aconchegante de fazenda",
+    "version": "protótipo v0.2",
+    "newerSave": "Seu jogo salvo é de uma versão mais nova. Atualize o jogo para continuar.",
+    "recovered": "Recuperado do seu jogo salvo reserva.",
+    "continue": "Continuar",
+    "saveLine": "{season} {day}, ano {year}  {gold}",
+    "eraseConfirm": "Apagar? Toque de novo",
+    "newGame": "Novo jogo"
+  },
+  "tab": {
+    "bag": "Bolsa",
+    "goals": "Meta",
+    "craft": "Criar",
+    "skills": "Nível",
+    "book": "Livro",
+    "opts": "Opç."
+  },
+  "lang": {
+    "name": "Português",
+    "short": "PT"
+  },
+  "bag": {
+    "notHungry": "Sem fome",
+    "eat": "Comer +{n}",
+    "useNow": "Usar já",
+    "sellsFor": "Vende por {gold}",
+    "costs": "Custa {gold} na vila",
+    "title": "Mochila",
+    "help": "As casas de borda azul são sua barra. Toque num item e depois em outra casa para mudar de lugar. Toque na mesma casa para segurar.",
+    "meters": "Energia {energy}/{maxEnergy}   Água {water}/{maxWater}",
+    "gold": "Ouro {gold}",
+    "tip": "Dica: segure Ação e arraste para trabalhar um canteiro inteiro."
+  },
+  "stats": {
+    "earned": "Ouro ganho",
+    "harvested": "Colheitas",
+    "planted": "Sementes plantadas",
+    "slept": "Noites dormidas"
+  },
+  "opts": {
+    "language": "Idioma: {lang}",
+    "autosave1": "Salva sozinho ao",
+    "autosave2": "dormir e ao sair.",
+    "saveNow": "Salvar agora",
+    "saved": "Salvo!",
+    "saveFailed": "Falhou",
+    "saveUnavailable": "Não dá para salvar neste navegador. O progresso não fica guardado.",
+    "tapAgain": "Toque de novo!",
+    "quitAnyway": "Sair assim?",
+    "quit": "Sair ao início",
+    "couldNotSave": "Não deu para salvar. Toque de novo para sair e perder o progresso.",
+    "leftHand": "Canhoto: {state}",
+    "fullscreen": "Tela cheia",
+    "addHome1": "Compartilhar >",
+    "addHome2": "Tela de Início",
+    "vibrate": "Vibrar: {state}",
+    "controls": "Controles...",
+    "sound": "Som: {state}",
+    "calm": "Calmo: {state}",
+    "music": "Música",
+    "soundVolume": "Som"
+  },
+  "tips": {
+    "paint": "Dica: segure Ação um instante e arraste para trabalhar uma fileira. Faça a curva arrastando para um canteiro inteiro.",
+    "ring": "Dica: deslize Ação para o lado e abra o círculo com todas as ferramentas."
+  },
+  "controls": {
+    "sizeS": "P",
+    "sizeM": "M",
+    "sizeL": "G",
+    "autoTool": "Auto-ferr.: {state}",
+    "tapToWalk": "Toque-anda: {state}",
+    "paint": "Fileiras: {state}",
+    "fineStick": "Dir. fina: {state}",
+    "stickSize": "Direcional: {size}",
+    "replayGuide": "Rever o guia",
+    "title": "CONTROLES",
+    "help": "Toque num lugar para andar até lá (e colher, regar, abrir...). Segure Ação e arraste para trabalhar uma fileira; faça a curva para um canteiro inteiro. Deslize Ação para o lado para o círculo de ferramentas. A auto-ferramenta escolhe enxada, regador, foice ou picareta, e as últimas sementes plantadas."
+  },
+  "help": {
+    "tap1": "Toque:",
+    "tap2": "anda e faz",
+    "paint1": "Segure Ação,",
+    "paint2": "arraste: fila",
+    "stick1": "Arraste:",
+    "stick2": "direção",
+    "ring1": "Deslize Ação:",
+    "ring2": "ferramentas"
   }
 }

@@ -14,12 +14,13 @@ import {
 import { C } from '../theme';
 import { replayTutorial } from '../../systems/tutorial';
 import type { MenuTabContext } from './MenuPanel';
+import { t } from '../../i18n';
+import { onOff } from './onOff';
 
-const SIZE_NAME = { s: 'S', m: 'M', l: 'L' } as const;
+const SIZE_KEY = { s: 'controls.sizeS', m: 'controls.sizeM', l: 'controls.sizeL' } as const;
 
 /** Whether Options shows the Controls page (kept while the menu is reopened, until Back). */
 export const controlsPage = { open: false };
-const onOff = (on: boolean) => (on ? 'ON' : 'OFF');
 
 type GameStateT = ReturnType<typeof getState>;
 
@@ -33,37 +34,38 @@ interface ControlItem {
 const ITEMS: ControlItem[] = [
   {
     id: 'autoTool',
-    label: (s) => `Auto tool: ${onOff(s.settings.controls.autoTool)}`,
+    label: (s) => t('controls.autoTool', { state: onOff(s.settings.controls.autoTool) }),
     run: (s) => (toggleControl(s, 'autoTool'), 'settings'),
   },
   {
     id: 'tapToMove',
-    label: (s) => `Tap to walk: ${onOff(s.settings.controls.tapToMove)}`,
+    label: (s) => t('controls.tapToWalk', { state: onOff(s.settings.controls.tapToMove) }),
     run: (s) => (toggleControl(s, 'tapToMove'), 'settings'),
   },
   {
     id: 'paint',
-    label: (s) => `Paint rows: ${onOff(s.settings.controls.paint)}`,
+    label: (s) => t('controls.paint', { state: onOff(s.settings.controls.paint) }),
     run: (s) => (toggleControl(s, 'paint'), 'settings'),
   },
   {
     id: 'twoSpeed',
-    label: (s) => `Fine stick: ${onOff(s.settings.controls.twoSpeed)}`,
+    label: (s) => t('controls.fineStick', { state: onOff(s.settings.controls.twoSpeed) }),
     run: (s) => (toggleControl(s, 'twoSpeed'), 'settings'),
   },
   {
     id: 'stickSize',
-    label: (s) => `Stick size: ${SIZE_NAME[s.settings.controls.stickSize]}`,
+    label: (s) =>
+      t('controls.stickSize', { size: t(SIZE_KEY[s.settings.controls.stickSize]) }),
     run: (s) => (cycleStickSize(s), 'settings'),
   },
   {
     id: 'leftHanded',
-    label: (s) => `Left hand: ${onOff(s.settings.leftHanded)}`,
+    label: (s) => t('opts.leftHand', { state: onOff(s.settings.leftHanded) }),
     run: (s) => (toggleLeftHanded(s), 'settings'),
   },
   {
     id: 'vibrate',
-    label: (s) => `Vibrate: ${onOff(s.settings.vibrate)}`,
+    label: (s) => t('opts.vibrate', { state: onOff(s.settings.vibrate) }),
     run: (s) => (setHapticsEnabled(toggleVibration(s)), 'haptics'),
   },
 ];
@@ -76,7 +78,7 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
   const half = 92;
   // Rows from the bottom of the tab area up: Back lowest, then the switches, two per row.
   let y = c.bottom - 26;
-  c.button(8, y, c.width - 16, 22, 'Back', back, { textColor: C.creamDim });
+  c.button(8, y, c.width - 16, 22, t('common.back'), back, { textColor: C.creamDim });
   const rows = Math.ceil(ITEMS.length / 2);
   for (let row = rows - 1; row >= 0; row--) {
     y -= 26;
@@ -89,7 +91,7 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
           y,
           half,
           22,
-          'Replay guide',
+          t('controls.replayGuide'),
           () => {
             replayTutorial(getState());
             controlsPage.open = false;
@@ -107,11 +109,11 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
     }
   }
   y -= 16;
-  c.label(8, y, 'CONTROLS', C.gold);
+  c.label(8, y, t('controls.title'), C.gold);
   c.label(
     8,
     c.top + 4,
-    'Tap a tile to walk there (and harvest, water, open...). Hold Action, then drag, to work a row; turn as you drag for a whole plot. Flick Action sideways for the tool ring. Auto tool picks the hoe, can, scythe or pickaxe, and the seeds you planted last.',
+    t('controls.help'),
     C.creamDim,
     1,
     'left',
@@ -120,15 +122,15 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
 }
 
 /** The four one-thumb gestures, for the help card: a picture and two short lines each (tests measure them). */
-export const HELP_ITEMS: readonly {
-  lines: [string, string];
-  icon: 'tap' | 'paint' | 'stick' | 'ring';
-}[] = [
-  { icon: 'tap', lines: ['Tap a tile:', 'walk + do'] },
-  { icon: 'paint', lines: ['Hold Action,', 'drag: a row'] },
-  { icon: 'stick', lines: ['Drag:', 'steer'] },
-  { icon: 'ring', lines: ['Flick Action:', 'tool ring'] },
+export const HELP_ICONS = ['tap', 'paint', 'stick', 'ring'] as const;
+/** The card's two lines for each picture, in the current language. */
+export const helpLines = (icon: (typeof HELP_ICONS)[number]): [string, string] => [
+  t(`help.${icon}1`),
+  t(`help.${icon}2`),
 ];
+/** Kept for the tests that measure the card: the four pictures with their lines, now. */
+export const helpItems = (): { icon: (typeof HELP_ICONS)[number]; lines: [string, string] }[] =>
+  HELP_ICONS.map((icon) => ({ icon, lines: helpLines(icon) }));
 
 /**
  * A compact "how to play" card (M7): four pictures with two lines each, in a 2 x 2 grid 184 px wide and 56 px
@@ -137,7 +139,7 @@ export const HELP_ITEMS: readonly {
 export function drawHelpCard(c: MenuTabContext, x: number, y: number): void {
   const g = c.scene.add.graphics();
   c.add(g);
-  HELP_ITEMS.forEach((it, i) => {
+  helpItems().forEach((it, i) => {
     const cx = x + (i % 2) * 92;
     const cy = y + Math.floor(i / 2) * 28;
     const ix = cx + 9;

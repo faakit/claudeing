@@ -29,11 +29,14 @@ import type { Label } from '../font';
 import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from '../widgets';
 import { fmt } from './format';
 import { buildAlmanac } from './AlmanacTab';
-import { TAB_LABELS } from './tabLabels';
+import { tabLabel } from './tabLabels';
 import { menuTabGrid } from '../layout';
 import { buildCraft } from './CraftTab';
 import { buildSkills } from './SkillsTab';
 import { buildControlsPage, controlsPage, drawHelpCard } from './ControlsTab';
+import { fmtGold, t } from '../../i18n';
+import { chooseLanguage, nextLanguage } from '../../game/language';
+import { onOff } from './onOff';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -71,15 +74,15 @@ export interface MenuTabContext {
 
 export interface MenuTab {
   id: string;
-  /** At most 5 characters: six tabs share 200px. */
-  label: string;
+  /** The tab's name, read each time the menu draws (so it follows the language). It must fit a 48 px tab. */
+  label: () => string;
   build: (ctx: MenuTabContext) => void;
 }
 
 /** Tabs shown in the menu, in order. Mechanics register their own (see docs/EXTENDING.md). */
 export const menuTabs: MenuTab[] = [];
 export function registerMenuTab(tab: MenuTab): void {
-  const at = menuTabs.findIndex((t) => t.id === tab.id);
+  const at = menuTabs.findIndex((other) => other.id === tab.id);
   if (at >= 0) menuTabs[at] = tab;
   else menuTabs.push(tab);
 }
@@ -116,16 +119,16 @@ export class MenuPanel extends Modal {
       this.panelH - 58,
       this.panelH - 28,
     ]);
-    tabs.forEach((t, i) => {
-      const active = t.id === this.tab;
+    tabs.forEach((tab, i) => {
+      const active = tab.id === this.tab;
       const r = grid.tabs[i]!;
-      this.button(r.x, r.y, r.w, r.h, t.label, () => this.openTab(t.id), {
+      this.button(r.x, r.y, r.w, r.h, tab.label(), () => this.openTab(tab.id), {
         rim: active ? C.select : C.creamDim,
         textColor: active ? C.gold : C.cream,
       });
     });
     const cr = grid.close;
-    this.button(cr.x, cr.y, cr.w, cr.h, 'Close', () => this.close(), { textColor: C.warn });
+    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), { textColor: C.warn });
     const ctx: MenuTabContext = {
       width: this.panelW,
       height: this.panelH,
@@ -142,7 +145,7 @@ export class MenuPanel extends Modal {
       rebuild: () => this.rebuild(),
       close: () => this.close(),
     };
-    (tabs.find((t) => t.id === this.tab) ?? tabs[0])?.build(ctx);
+    (tabs.find((tab) => tab.id === this.tab) ?? tabs[0])?.build(ctx);
   }
 
   // The remaining state the Options tab needs lives here so the tab functions below stay stateless.
@@ -202,12 +205,12 @@ export class MenuPanel extends Modal {
 
 /** Registered by `installMenuTabs`, which binds the tabs to a live MenuPanel. */
 export function installMenuTabs(menu: MenuPanel): void {
-  registerMenuTab({ id: 'bag', label: TAB_LABELS.bag, build: (c) => buildBag(c, menu) });
-  registerMenuTab({ id: 'goals', label: TAB_LABELS.goals, build: buildGoals });
-  registerMenuTab({ id: 'craft', label: TAB_LABELS.craft, build: buildCraft });
-  registerMenuTab({ id: 'skills', label: TAB_LABELS.skills, build: buildSkills });
-  registerMenuTab({ id: 'book', label: TAB_LABELS.book, build: buildAlmanac });
-  registerMenuTab({ id: 'opts', label: TAB_LABELS.opts, build: (c) => buildOptions(c, menu) });
+  registerMenuTab({ id: 'bag', label: () => tabLabel('bag'), build: (c) => buildBag(c, menu) });
+  registerMenuTab({ id: 'goals', label: () => tabLabel('goals'), build: buildGoals });
+  registerMenuTab({ id: 'craft', label: () => tabLabel('craft'), build: buildCraft });
+  registerMenuTab({ id: 'skills', label: () => tabLabel('skills'), build: buildSkills });
+  registerMenuTab({ id: 'book', label: () => tabLabel('book'), build: buildAlmanac });
+  registerMenuTab({ id: 'opts', label: () => tabLabel('opts'), build: (c) => buildOptions(c, menu) });
 }
 
 function buildBag(c: MenuTabContext, menu: MenuPanel): void {
@@ -254,11 +257,11 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       y0 - 26,
       82,
       22,
-      tooFullFor(s, cur.item) ? 'Not hungry' : `Eat +${gain}`,
+      tooFullFor(s, cur.item) ? t('bag.notHungry') : t('bag.eat', { n: gain }),
       () => {
         if (eat(getState(), cursor) === 'full') {
           audio.play('error');
-          toast("You're not hungry enough.", 'info');
+          toast(t('food.notHungry'), 'info');
         } else audio.play('select');
         menu.clearCursor(); // the next slot tap selects, never swaps (critique 8, F6)
         c.rebuild();
@@ -274,7 +277,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       y0 - 26,
       82,
       22,
-      'Use now',
+      t('bag.useNow'),
       () => {
         equipFromBag(getState(), cursor);
         audio.play('select');
@@ -292,14 +295,16 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
     const desc = foodEnergy(cur.item) > 0 ? dishText(s, cur.item) : def.description;
     c.label(8, dy + 20, desc, C.cream, 1, 'left', 184);
     // Only say what the bin pays for things the bin takes (machines and decorations are kept, not sold).
-    if (isShippable(ref)) c.label(8, dy + 52, `Sells for ${fmt(sellValue(ref))}g`, C.creamDim);
-    if (def.buyPrice) c.label(8, dy + 64, `Costs ${fmt(def.buyPrice)}g in town`, C.creamDim);
+    if (isShippable(ref))
+      c.label(8, dy + 52, t('bag.sellsFor', { gold: fmtGold(sellValue(ref)) }), C.creamDim);
+    if (def.buyPrice)
+      c.label(8, dy + 64, t('bag.costs', { gold: fmtGold(def.buyPrice) }), C.creamDim);
   } else {
-    c.label(8, dy + 2, 'Backpack', C.gold);
+    c.label(8, dy + 2, t('bag.title'), C.gold);
     c.label(
       8,
       dy + 16,
-      'Blue-edged slots are your hotbar. Tap an item, then another slot to move it. Tap the same slot to equip it.',
+      t('bag.help'),
       C.creamDim,
       1,
       'left',
@@ -310,15 +315,20 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   c.label(
     8,
     ly,
-    `Energy ${s.energy}/${maxEnergy(s)}   Water ${s.water}/${waterCapacity(s)}`,
+    t('bag.meters', {
+      energy: s.energy,
+      maxEnergy: maxEnergy(s),
+      water: s.water,
+      maxWater: waterCapacity(s),
+    }),
     C.creamDim,
   );
-  c.label(8, ly + 12, `Gold ${fmt(s.money)}`, C.gold);
+  c.label(8, ly + 12, t('bag.gold', { gold: fmt(s.money) }), C.gold);
   // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
   c.label(
     8,
     ly + 24,
-    'Tip: hold Action, then drag, to work a whole plot.',
+    t('bag.tip'),
     C.creamDim,
     1,
     'left',
@@ -333,7 +343,7 @@ function buildGoals(c: MenuTabContext): void {
   const rows = valleyLines(s);
   let top = c.top + 2;
   if (rows.length > 0) {
-    c.label(8, top, 'THE VALLEY', C.gold);
+    c.label(8, top, t('goals.valley'), C.gold);
     top += 12;
     for (const r of rows) {
       c.label(8, top, r, C.cream);
@@ -341,17 +351,17 @@ function buildGoals(c: MenuTabContext): void {
     }
     top += 6;
   }
-  c.label(8, top, 'CURRENT GOAL', C.gold);
+  c.label(8, top, t('goals.current'), C.gold);
   if (prog) {
     c.label(8, top + 12, prog.goal.text, C.cream, 1, 'left', 184);
     const g = c.scene.add.graphics();
     drawBar(g, 8, top + 26, 184, 7, prog.value / prog.goal.target, C.gold);
     c.add(g);
     c.label(192, top + 38, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold, 1, 'right');
-    c.label(8, top + 38, `Reward: +${fmt(prog.goal.reward)}g`, C.green);
-    c.label(8, top + 50, `Hint: ${prog.goal.hint}`, C.creamDim, 1, 'left', 184);
+    c.label(8, top + 38, t('goals.reward', { gold: fmtGold(prog.goal.reward) }), C.green);
+    c.label(8, top + 50, t('ui.hint', { hint: prog.goal.hint }), C.creamDim, 1, 'left', 184);
   } else {
-    c.label(8, top + 12, 'Every goal is done. You are a Harvest Legend!', C.green, 1, 'left', 184);
+    c.label(8, top + 12, t('goals.allDone'), C.green, 1, 'left', 184);
   }
   let y = top + 80;
   // Rows below never run into STATS at the bottom (THE VALLEY can push them down).
@@ -361,11 +371,13 @@ function buildGoals(c: MenuTabContext): void {
   c.label(8, y, welcomeJobsHeader(today.length > 0 ? welcomeFactor(s.jobs.day) : 1), C.gold);
   y += 12;
   if (today.length === 0) {
-    c.label(8, y, 'New jobs every morning.', C.creamDim);
+    c.label(8, y, t('goals.jobsEveryMorning'), C.creamDim);
     y += 11;
   }
   for (const job of today) {
-    const right = job.done ? 'Done' : `${jobProgress(s, job)}/${job.n} +${job.reward}g`;
+    const right = job.done
+      ? t('common.done')
+      : `${jobProgress(s, job)}/${job.n} +${fmtGold(job.reward)}`;
     c.label(192, y, right, job.done ? C.green : C.gold, 1, 'right');
     c.label(
       8,
@@ -378,10 +390,10 @@ function buildGoals(c: MenuTabContext): void {
   y += 6;
   // A goal the chain does not wait for (a legendary fish) stays in view here while the next one is current.
   const aside = asideGoals(s);
-  c.label(8, y, 'COMPLETED', C.gold);
+  c.label(8, y, t('goals.completed'), C.gold);
   y += 12;
   const done = recentGoals(s, aside.length > 0 ? 1 : 2);
-  if (done.length === 0) c.label(8, y, 'Nothing yet. You can do it!', C.creamDim);
+  if (done.length === 0) c.label(8, y, t('goals.nothingYet'), C.creamDim);
   for (const d of done) {
     if (y + 11 > floor) break;
     const row = c.label(8, y, `+ ${d.text}`, C.creamDim, 1, 'left', 184);
@@ -389,7 +401,7 @@ function buildGoals(c: MenuTabContext): void {
   }
   if (aside.length > 0 && y + 26 <= floor) {
     y += 3;
-    c.label(8, y, 'ALSO OPEN', C.gold);
+    c.label(8, y, t('goals.alsoOpen'), C.gold);
     y += 12;
     // Two rows at most: the oldest open goal, then either the next or a count of the rest.
     const shown = aside.length > 2 ? aside.slice(0, 1) : aside;
@@ -400,15 +412,15 @@ function buildGoals(c: MenuTabContext): void {
       y += 11;
     }
     if (aside.length > shown.length)
-      c.label(8, y, `and ${aside.length - shown.length} more open goals`, C.creamDim);
+      c.label(8, y, t('goals.moreOpen', { count: aside.length - shown.length }), C.creamDim);
   }
   y = c.bottom - 62;
-  c.label(8, y, 'STATS', C.gold);
+  c.label(8, y, t('goals.stats'), C.gold);
   const stats: [string, number][] = [
-    ['Gold earned', stat(s, 'earned')],
-    ['Crops harvested', stat(s, 'harvested')],
-    ['Seeds planted', stat(s, 'planted')],
-    ['Days slept', stat(s, 'daysSlept')],
+    [t('stats.earned'), stat(s, 'earned')],
+    [t('stats.harvested'), stat(s, 'harvested')],
+    [t('stats.planted'), stat(s, 'planted')],
+    [t('stats.slept'), stat(s, 'daysSlept')],
   ];
   stats.forEach(([name, v], i) => {
     c.label(8, y + 12 + i * 11, name, C.creamDim);
@@ -441,29 +453,26 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   };
   // Laid out from the bottom of the tab area up (the rows end right above the tab strip, where the thumb
   // already is) rather than from the top of a tall sheet.
-  const STACK_H = 26 + 32 + 26 + 26 + 26 + 32 + 22;
+  // Rows: the language (with the autosave note beside it), Save/Quit, three rows of switches, then the volumes.
+  const STACK_H = 26 + 26 + 26 + 26 + 26 + 32 + 22;
   let y = Math.max(c.top + 4, c.bottom - STACK_H);
   // How to play, two taps from anywhere (Menu, Opts), in the space above the rows.
   if (y - c.top >= 60) drawHelpCard(c, 8, c.top);
   // The volume rows go last, nearest the tabs: their small -/+ buttons sit at both edges, which only the
   // lowest rows keep in reach for either thumb.
-  y -= 26 + 6;
-  // The autosave note heads the rows (it used to sit under them, keeping every row 22 px further up).
-  c.label(
-    8,
-    y + 32,
-    'Your game saves automatically when you sleep, change maps, or leave the page.',
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
-  y += 34; // the note, and the slack under the last row: the rows sit as low as the tab strip allows
-
   const half = 92;
   // Each row puts its more used switch in the column on the holding thumb's side (mirrored for the left hand).
   const thumbX = s.settings.leftHanded ? 8 : 100;
   const farX = s.settings.leftHanded ? 100 : 8;
+  // The language heads the rows: one tap steps to the next and every text redraws (the open menu right now).
+  // The autosave note sits beside it, two short lines in the far column.
+  c.button(thumbX, y, half, 22, t('opts.language', { lang: t('lang.short') }), () => {
+    chooseLanguage(nextLanguage());
+    c.rebuild();
+  });
+  c.label(farX, y + 1, t('opts.autosave1'), C.creamDim);
+  c.label(farX, y + 11, t('opts.autosave2'), C.creamDim);
+
   const pair = (
     yy: number,
     thumb: [string, () => void, number?],
@@ -475,12 +484,12 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   // Top to bottom: the rarely used rows first (Save, Quit), the switches people flip mid-play last, just
   // above the volume rows and the tab strip (round 3: Sound and Vibrate were in the top row, hard for the
   // right and the left thumb respectively).
-  y += 32;
-  const saveBtn: Button = c.button(thumbX, y, half, 22, 'Save now', () => {
+  y += 26;
+  const saveBtn: Button = c.button(thumbX, y, half, 22, t('opts.saveNow'), () => {
     void saveNow().then((ok) => {
-      saveBtn.setLabel(ok ? 'Saved!' : 'Save failed');
+      saveBtn.setLabel(ok ? t('opts.saved') : t('opts.saveFailed'));
       saveBtn.setTextColor(ok ? C.green : C.red);
-      if (!ok) toast('Saving is unavailable in this browser. Progress is not stored.', 'warn');
+      if (!ok) toast(t('opts.saveUnavailable'), 'warn');
     });
   });
   const q = menu.quit;
@@ -489,7 +498,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     y,
     half,
     22,
-    q === 'confirm' ? 'Tap again!' : q === 'unsaved' ? 'Quit anyway?' : 'Quit to title',
+    q === 'confirm' ? t('opts.tapAgain') : q === 'unsaved' ? t('opts.quitAnyway') : t('opts.quit'),
     () => {
       if (q === 'idle') return menu.setQuit('confirm');
       if (q === 'unsaved') return menu.leave();
@@ -497,7 +506,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
         if (ok) menu.leave();
         else {
           // Never discard a session the player believes is saved.
-          toast('Could not save. Tap again to quit and lose progress.', 'warn');
+          toast(t('opts.couldNotSave'), 'warn');
           menu.setQuit('unsaved');
         }
       });
@@ -508,25 +517,25 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   pair(
     y,
     [
-      s.settings.leftHanded ? 'Left hand: ON' : 'Left hand: OFF',
+      t('opts.leftHand', { state: onOff(s.settings.leftHanded) }),
       () => {
         toggleLeftHanded(s);
         gameEvents.emit('settingsChanged', undefined);
         c.rebuild();
       },
     ],
-    fullscreenSupported() ? ['Fullscreen', () => void toggleFullscreen()] : undefined,
+    fullscreenSupported() ? [t('opts.fullscreen'), () => void toggleFullscreen()] : undefined,
   );
   if (!fullscreenSupported() && isIosSafari()) {
-    c.label(farX, y + 2, 'Share > Add to', C.creamDim);
-    c.label(farX, y + 12, 'Home Screen', C.creamDim);
+    c.label(farX, y + 2, t('opts.addHome1'), C.creamDim);
+    c.label(farX, y + 12, t('opts.addHome2'), C.creamDim);
   }
   y += 26;
   // Sound and Vibrate both on the thumb's side, in the two lowest rows (the far column is a stretch there).
   pair(
     y,
     [
-      s.settings.vibrate ? 'Vibrate: ON' : 'Vibrate: OFF',
+      t('opts.vibrate', { state: onOff(s.settings.vibrate) }),
       () => {
         setHapticsEnabled(toggleVibration(s));
         haptic('tick');
@@ -534,7 +543,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
       },
     ],
     [
-      'Controls...',
+      t('opts.controls'),
       () => {
         controlsPage.open = true;
         c.rebuild();
@@ -546,7 +555,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
   pair(
     y,
     [
-      s.settings.muted ? 'Sound: OFF' : 'Sound: ON',
+      t('opts.sound', { state: onOff(!s.settings.muted) }),
       () => {
         toggleMute(s);
         apply();
@@ -554,7 +563,7 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
       },
     ],
     [
-      s.settings.reduceMotion ? 'Calm: ON' : 'Calm: OFF',
+      t('opts.calm', { state: onOff(s.settings.reduceMotion) }),
       () => {
         toggleReduceMotion(s);
         gameEvents.emit('settingsChanged', undefined);
@@ -563,6 +572,6 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     ],
   );
   y += 32;
-  volumeRow(y, 'Music', 'music');
-  volumeRow(y + 26, 'Sound', 'sfx');
+  volumeRow(y, t('opts.music'), 'music');
+  volumeRow(y + 26, t('opts.soundVolume'), 'sfx');
 }

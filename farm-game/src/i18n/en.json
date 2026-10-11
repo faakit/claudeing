@@ -24,7 +24,20 @@
   },
   "goals": {
     "completeToast": "Goal complete! +{gold}",
-    "stallNote": "New goal: {next}. \"{waits}\" can wait in Menu > Goal."
+    "stallNote": "New goal: {next}. \"{waits}\" can wait in Menu > Goal.",
+    "valley": "THE VALLEY",
+    "current": "CURRENT GOAL",
+    "reward": "Reward: +{gold}",
+    "allDone": "Every goal is done. You are a Harvest Legend!",
+    "jobsEveryMorning": "New jobs every morning.",
+    "completed": "COMPLETED",
+    "nothingYet": "Nothing yet. You can do it!",
+    "alsoOpen": "ALSO OPEN",
+    "moreOpen": {
+      "one": "and {count} more open goal",
+      "other": "and {count} more open goals"
+    },
+    "stats": "STATS"
   },
   "world": {
     "locked": "Locked."
@@ -61,7 +74,11 @@
     "nothingToWater": "Nothing to water here.",
     "watered": "Already watered.",
     "canEmpty": "Can is empty. Refill at the pond.",
-    "nothingToCut": "Nothing to cut."
+    "nothingToCut": "Nothing to cut.",
+    "skipped": {
+      "one": "{count} tile had nothing left to do.",
+      "other": "{count} tiles had nothing left to do."
+    }
   },
   "almanac": {
     "pageDone": "Almanac page done: {page}! +{gold}"
@@ -76,7 +93,11 @@
     "startAtWater": "Start next to water.",
     "dryCut": "The water runs out before here.",
     "farmOnly": "Channels belong on the farm.",
-    "cantDig": "Can't dig here."
+    "cantDig": "Can't dig here.",
+    "dug": {
+      "one": "Channel dug: {count} tile.",
+      "other": "Channel dug: {count} tiles."
+    }
   },
   "quality": {
     "silver": "Silver {name}",
@@ -91,7 +112,8 @@
   },
   "move": {
     "tapAgainMove": "Tap again to move it.",
-    "tapAgainPickUp": "Tap again to pick up."
+    "tapAgainPickUp": "Tap again to pick up.",
+    "busy": "It's busy. Wait until it's done."
   },
   "seasonWord": {
     "spring": "Spring",
@@ -103,7 +125,12 @@
     "and": " and ",
     "inventoryFull": "Inventory full!",
     "backTomorrow": "Back tomorrow.",
-    "or": " or "
+    "or": " or ",
+    "close": "Close",
+    "done": "Done",
+    "on": "ON",
+    "off": "OFF",
+    "back": "Back"
   },
   "mapName": {
     "farm": "farm",
@@ -254,7 +281,9 @@
     "rowWorkedToday": "worked today ({n} of {of})",
     "rowWorkDay": "work day {n} of {of}",
     "rowOpen": "open. {phrase}",
-    "spadeLetter": "Ilse's spade. Your hands were full at the spring, so here it is. Dig from the creek's bank."
+    "spadeLetter": "Ilse's spade. Your hands were full at the spring, so here it is. Dig from the creek's bank.",
+    "creekTitle": "THE CREEK RUNS",
+    "creekLine": "Ilse's creek, full again."
   },
   "tutorial": {
     "canNote": "Rosa filled your watering can.",
@@ -343,5 +372,104 @@
     "nothing": "Nothing to mine here.",
     "usePickaxe": "Break it with the pickaxe (swipe the Action button to switch).",
     "freshNote": "Fresh ore in the mine."
+  },
+  "ui": {
+    "lateWarning": "It's getting late. Head to bed soon!",
+    "hint": "Hint: {hint}",
+    "dragToWalk": "Drag to walk",
+    "morningStorm": "Good morning! A storm, crops are watered.",
+    "morningRain": "Good morning! It's raining, crops are watered.",
+    "morning": "Good morning! {season} {day}",
+    "cantGetThere": "Can't get there."
+  },
+  "title": {
+    "subtitle": "a cozy little farming game",
+    "version": "prototype v0.2",
+    "newerSave": "Your save is from a newer version. Update the game to continue it.",
+    "recovered": "Recovered from your backup save.",
+    "continue": "Continue",
+    "saveLine": "{season} {day}, year {year}  {gold}",
+    "eraseConfirm": "Erase save? Tap again",
+    "newGame": "New Game"
+  },
+  "tab": {
+    "bag": "Bag",
+    "goals": "Goal",
+    "craft": "Make",
+    "skills": "Skill",
+    "book": "Book",
+    "opts": "Opts"
+  },
+  "lang": {
+    "name": "English",
+    "short": "EN"
+  },
+  "bag": {
+    "notHungry": "Not hungry",
+    "eat": "Eat +{n}",
+    "useNow": "Use now",
+    "sellsFor": "Sells for {gold}",
+    "costs": "Costs {gold} in town",
+    "title": "Backpack",
+    "help": "Blue-edged slots are your hotbar. Tap an item, then another slot to move it. Tap the same slot to equip it.",
+    "meters": "Energy {energy}/{maxEnergy}   Water {water}/{maxWater}",
+    "gold": "Gold {gold}",
+    "tip": "Tip: hold Action, then drag, to work a whole plot."
+  },
+  "stats": {
+    "earned": "Gold earned",
+    "harvested": "Crops harvested",
+    "planted": "Seeds planted",
+    "slept": "Days slept"
+  },
+  "opts": {
+    "language": "Language: {lang}",
+    "autosave1": "Saves itself on",
+    "autosave2": "sleep and exit.",
+    "saveNow": "Save now",
+    "saved": "Saved!",
+    "saveFailed": "Save failed",
+    "saveUnavailable": "Saving is unavailable in this browser. Progress is not stored.",
+    "tapAgain": "Tap again!",
+    "quitAnyway": "Quit anyway?",
+    "quit": "Quit to title",
+    "couldNotSave": "Could not save. Tap again to quit and lose progress.",
+    "leftHand": "Left hand: {state}",
+    "fullscreen": "Fullscreen",
+    "addHome1": "Share > Add to",
+    "addHome2": "Home Screen",
+    "vibrate": "Vibrate: {state}",
+    "controls": "Controls...",
+    "sound": "Sound: {state}",
+    "calm": "Calm: {state}",
+    "music": "Music",
+    "soundVolume": "Sound"
+  },
+  "tips": {
+    "paint": "Tip: hold Action a moment, then drag, to work a row. Turn as you drag to work a whole plot.",
+    "ring": "Tip: flick Action sideways for a ring of all your tools."
+  },
+  "controls": {
+    "sizeS": "S",
+    "sizeM": "M",
+    "sizeL": "L",
+    "autoTool": "Auto tool: {state}",
+    "tapToWalk": "Tap to walk: {state}",
+    "paint": "Paint rows: {state}",
+    "fineStick": "Fine stick: {state}",
+    "stickSize": "Stick size: {size}",
+    "replayGuide": "Replay guide",
+    "title": "CONTROLS",
+    "help": "Tap a tile to walk there (and harvest, water, open...). Hold Action, then drag, to work a row; turn as you drag for a whole plot. Flick Action sideways for the tool ring. Auto tool picks the hoe, can, scythe or pickaxe, and the seeds you planted last."
+  },
+  "help": {
+    "tap1": "Tap a tile:",
+    "tap2": "walk + do",
+    "paint1": "Hold Action,",
+    "paint2": "drag: a row",
+    "stick1": "Drag:",
+    "stick2": "steer",
+    "ring1": "Flick Action:",
+    "ring2": "tool ring"
   }
 }

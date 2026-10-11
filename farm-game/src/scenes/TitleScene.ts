@@ -20,6 +20,8 @@ import { WIPE_CLOSE_MS } from '../fx/feel';
 import { prewarmTasks } from '../fx/prewarm';
 import { preparseMap } from './mapCache';
 import { syncDryTiles } from '../art/dryTiles';
+import { fmtGold, onLocaleChange, t } from '../i18n';
+import { chooseLanguage, nextLanguage } from '../game/language';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */
 export class TitleScene extends Phaser.Scene {
@@ -68,12 +70,13 @@ export class TitleScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#1e2848');
     this.drawBackdrop();
 
-    const title = new Label(this, GAME_WIDTH / 2, 52, 'TINY', {
+    // The logo is the game's name, the same in every language.
+    const title = new Label(this, GAME_WIDTH / 2, 52, 'TINY', { // i18n-ok: the logo
       scale: 6,
       align: 'center',
       color: C.gold,
     });
-    const title2 = new Label(this, GAME_WIDTH / 2, 98, 'ACRE', {
+    const title2 = new Label(this, GAME_WIDTH / 2, 98, 'ACRE', { // i18n-ok: the logo
       scale: 6,
       align: 'center',
       color: C.gold,
@@ -82,8 +85,8 @@ export class TitleScene extends Phaser.Scene {
     // foot, and the valley's carved sprout standing on the I of TINY
     const layers: Label[] = [];
     for (const [word, y] of [
-      ['TINY', 52],
-      ['ACRE', 98],
+      ['TINY', 52], // i18n-ok: the logo
+      ['ACRE', 98], // i18n-ok: the logo
     ] as const)
       for (const [dy, color] of [
         [4, 0x2a1a24],
@@ -136,11 +139,11 @@ export class TitleScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
     }
-    const subtitle = new Label(this, GAME_WIDTH / 2, 150, 'a cozy little farming game', {
+    const subtitle = new Label(this, GAME_WIDTH / 2, 150, t('title.subtitle'), {
       align: 'center',
       color: C.cream,
     });
-    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 10, 'prototype v0.2', {
+    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 10, t('title.version'), {
       align: 'right',
       color: C.creamDim,
     });
@@ -155,9 +158,9 @@ export class TitleScene extends Phaser.Scene {
       if (!this.loaded && (await hasNewerSave(saveStore))) {
         // Never silently overwrite progress we cannot read: say so and make New Game ask first.
         this.newerSave = true;
-        this.note.setText('Your save is from a newer version. Update the game to continue it.');
+        this.note.setText(t('title.newerSave'));
       }
-      if (res?.fromBackup) this.note.setText('Recovered from your backup save.');
+      if (res?.fromBackup) this.note.setText(t('title.recovered'));
       this.firstLaunch = !this.loaded && !this.newerSave;
       if (this.firstLaunch) {
         subtitle.setVisible(false);
@@ -165,6 +168,14 @@ export class TitleScene extends Phaser.Scene {
       }
       this.buildButtons();
     });
+    // The language, one tap away (top right, clear of the letter and the buttons): the title redraws in it.
+    new Button(this, GAME_WIDTH - 62, 4, 58, 22, t('lang.name'), () => {
+      if (!this.starting) chooseLanguage(nextLanguage());
+    });
+    const offLocale = onLocaleChange(() => {
+      if (!this.starting) this.scene.restart();
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, offLocale);
     this.input.once('pointerdown', () => audio.unlock());
     this.input.keyboard?.once('keydown', () => audio.unlock());
     this.input.keyboard?.on('keydown-ENTER', () => this.primary?.());
@@ -182,11 +193,11 @@ export class TitleScene extends Phaser.Scene {
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;
     if (this.loaded) {
-      const t = this.loaded.time;
+      const time = this.loaded.time;
       this.buttons.push(
         // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
         // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
-        new Button(this, x, y, w, 30, 'Continue', () => this.start(this.loaded as GameState), {
+        new Button(this, x, y, w, 30, t('title.continue'), () => this.start(this.loaded as GameState), {
           textColor: INK.green,
           rim: INK.green,
         }),
@@ -195,7 +206,12 @@ export class TitleScene extends Phaser.Scene {
         this,
         GAME_WIDTH / 2,
         y + 36,
-        `${seasonLabel(t.season)} ${t.day}, year ${t.year}  ${this.loaded.money}g`,
+        t('title.saveLine', {
+          season: seasonLabel(time.season),
+          day: time.day,
+          year: time.year,
+          gold: fmtGold(this.loaded.money),
+        }),
         { align: 'center', color: C.creamDim },
       );
       y += 62;
@@ -207,7 +223,7 @@ export class TitleScene extends Phaser.Scene {
         y,
         w,
         30,
-        this.confirmNew ? 'Erase save? Tap again' : 'New Game',
+        this.confirmNew ? t('title.eraseConfirm') : t('title.newGame'),
         () => {
           if ((this.loaded || this.newerSave) && !this.confirmNew) {
             this.confirmNew = true;

@@ -23,9 +23,12 @@ import { inputHub } from './input/InputHub';
 import { setHapticsEnabled } from './platform/haptics';
 import { controlsLog } from './input/controlsLog';
 import { displayFit } from './platform/displayFit';
+import { initLanguage } from './game/language';
 
 suppressBrowserGestures();
 audio.installAutoUnlock();
+// The language first (?lang=, then the stored choice, then the device), before anything draws text.
+void initLanguage();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

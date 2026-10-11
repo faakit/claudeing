@@ -68,6 +68,7 @@ import {
 import type { Modal } from '../ui/widgets';
 import { WorldScene } from './WorldScene';
 import { activeMapKey, preparseMap } from './mapCache';
+import { onLocaleChange, t } from '../i18n';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
@@ -258,6 +259,13 @@ export class UIScene extends Phaser.Scene {
       gameEvents.on('levelUp', () => audio.play('level')),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       gameEvents.on('settingsChanged', () => this.buildControls()),
+      // A language change (Menu > Opts): the HUD, the coach line and the dock redraw now; every sheet is built
+      // from the dictionaries each time it opens, and the open menu rebuilds itself.
+      onLocaleChange(() => {
+        this.hud.relocalize();
+        this.coach.relocalize();
+        this.buildControls();
+      }),
       gameEvents.on('placedPanel', ({ panel, id }) => {
         if (!runtime.blocked) {
           inputHub.clearHeld();
@@ -346,7 +354,7 @@ export class UIScene extends Phaser.Scene {
       !runtime.busy
     ) {
       this.lateWarnedDay = s.time.day;
-      this.hud.toast("It's getting late. Head to bed soon!", 'warn');
+      this.hud.toast(t('ui.lateWarning'), 'warn');
     }
     if (s.time.season !== this.lastSeason) {
       this.lastSeason = s.time.season;
@@ -367,7 +375,7 @@ export class UIScene extends Phaser.Scene {
     if (this.idleMs < IDLE_HINT_MS) return;
     this.idleMs = -IDLE_HINT_MS / 2;
     const goal = currentGoal(getState());
-    if (goal) this.hud.toast(`Hint: ${goal.hint}`, 'info');
+    if (goal) this.hud.toast(t('ui.hint', { hint: goal.hint }), 'info');
   }
 
   // ---- thumb controls ----
@@ -628,7 +636,7 @@ export class UIScene extends Phaser.Scene {
           Math.sin(r - 0.35) * 28,
         );
     }
-    const label = new Label(this, 0, -44, 'Drag to walk', { align: 'center', color: 0xf4ead2 });
+    const label = new Label(this, 0, -44, t('ui.dragToWalk'), { align: 'center', color: 0xf4ead2 });
     this.dragHint = this.add.container(cx, cy, [ring, label]).setDepth(60);
     if (!getState().settings.reduceMotion)
       this.tweens.add({
@@ -793,8 +801,8 @@ export class UIScene extends Phaser.Scene {
     if (summary.yearEnd) await this.yearEnd.present();
     this.hud.toast(
       state.weather !== 'sunny'
-        ? `Good morning! ${state.weather === 'storm' ? 'A storm' : "It's raining"}, crops are watered.`
-        : `Good morning! ${seasonLabel(state.time.season)} ${state.time.day}`,
+        ? t(state.weather === 'storm' ? 'ui.morningStorm' : 'ui.morningRain')
+        : t('ui.morning', { season: seasonLabel(state.time.season), day: state.time.day }),
       'info',
     );
     await this.fadeBlackout(0, 600);
