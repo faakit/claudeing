@@ -255,6 +255,24 @@ describe('taps on solid art and multi-tile things (round 3, guided-start finding
     expect(tapIntent(walls, 3 * TS + 8, 2 * TS + 8).kind).toBe('none');
   });
 
+  it('a tap in the void just under a door on the bottom edge goes out that door (feel critic nit)', () => {
+    // a room 7x4 whose front door is on its bottom row at (3,3); below it, outside the map, the void
+    const room = ['#######', '#.....#', '#.....#', '###.###'];
+    const inside: TapWorld = {
+      tileSize: TS,
+      inMap: (t) => t.tx >= 0 && t.ty >= 0 && t.tx < 7 && t.ty < 4,
+      blocked: (t) => room[t.ty]![t.tx] === '#',
+      interactable: () => null,
+      actKind: () => null,
+      door: (t) => t.tx === 3 && t.ty === 3,
+    };
+    const door = { kind: 'walk', target: { tx: 3, ty: 3 }, door: true };
+    for (const oy of [1, 8]) expect(tapIntent(inside, 3 * TS + 8, 4 * TS + oy)).toEqual(door);
+    // further down the void, or beside the door, is nothing
+    expect(tapIntent(inside, 3 * TS + 8, 4 * TS + 12).kind).toBe('none');
+    expect(tapIntent(inside, 2 * TS + 8, 4 * TS + 2).kind).toBe('none');
+  });
+
   it('a multi-tile thing is reached from whichever side is open', () => {
     const room = gridFrom(
       ['#####', '#XX.#', '#XX.#', '#...#', '#####'].map((r) => r.replace(/X/g, '#')),

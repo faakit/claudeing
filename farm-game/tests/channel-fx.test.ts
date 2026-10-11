@@ -8,7 +8,9 @@ import {
   runLength,
   runStart,
   runStepMs,
+  runSeen,
   runSteps,
+  seenCount,
   wetBeside,
 } from '../src/fx/channelRun';
 
@@ -76,6 +78,25 @@ describe('the water run down a channel', () => {
     expect(beside.get('24,10')?.sort()).toEqual(['24,11', '24,9']);
     expect(beside.get('23,10')?.sort()).toEqual(['22,10', '23,11']);
     expect([...beside.values()].flat()).not.toContain('1,1');
+  });
+});
+
+describe('when the morning run may start (feel critic C1-1)', () => {
+  // a channel from the creek at x 26 west along row 10, x 19-25
+  const steps = runSteps(['25,10', '24,10', '23,10', '22,10', '21,10', '20,10', '19,10'], isSource);
+  const view = (x: number) => ({ x, y: 100, width: 200, height: 200 });
+  it('waits while only its downstream end peeks in at the edge', () => {
+    // the view's right edge at 332 (inset 316): x 19 peeks in but is not wholly inside
+    expect(seenCount(steps, view(132))).toBe(0);
+    expect(runSeen(steps, view(132))).toBe(false);
+  });
+  it('starts once its entry and the next two tiles are inside the inset view', () => {
+    expect(runSeen(steps, view(250))).toBe(true); // inset 266..434: x 17..26 inside
+  });
+  it('or once half of it is inside', () => {
+    // inset 228..396: x 15-23, so 19-23 (5 of 7) are in but the entry (25) is not
+    expect(runSeen(steps, view(212))).toBe(true);
+    expect(seenCount(steps, view(212))).toBe(5);
   });
 });
 

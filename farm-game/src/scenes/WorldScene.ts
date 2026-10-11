@@ -264,6 +264,14 @@ export abstract class WorldScene extends Phaser.Scene {
   private lastTile = { tx: -1, ty: -1 };
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
+  /**
+   * A verb that reads taps and Action its own way (the towing spike, src/dev/towSpike.ts): a tap at a world point
+   * or an Action press it took returns true, and the usual handling is skipped.
+   */
+  protected tapHook: ((wx: number, wy: number) => boolean) | null = null;
+  protected actionHook: (() => boolean) | null = null;
+  /** Called when a walk started with `walkTo` arrives. */
+  private walkDone: (() => void) | null = null;
 
   protected constructor(
     key: string,
@@ -682,7 +690,13 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = false;
       this.holdUses = 0;
       this.holdKind = null;
-    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) this.tryAction();
+    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) {
+      if (this.actionHook?.()) {
+        // a verb took the press (one use per press, as a refused Action is)
+        this.actionLock = ACTION_LOCK_MS.ok;
+        this.heldFailed = true;
+      } else this.tryAction();
+    }
 
     this.updateNpcs(state);
     this.updateTarget();
@@ -1243,9 +1257,11 @@ export abstract class WorldScene extends Phaser.Scene {
       });
     this.highlight.pulse();
     if (res.ok) {
-      if (this.work && res.kind === 'dig') this.work.dug = (this.work.dug ?? 0) + 1;
       // the cut's new tiles the water reaches are held dry until it runs into them on the impact
       const fresh = res.kind === 'dig' ? (this.channels?.afterDig(state) ?? []) : [];
+      // the row's toast counts every tile that became channel, the bank tile too (feel critic N1)
+      if (this.work && res.kind === 'dig')
+        this.work.dug = (this.work.dug ?? 0) + Math.max(1, this.channels?.lastDug ?? 1);
       this.actionLock = ACTION_LOCK_MS.ok;
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
@@ -1622,6 +1638,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private onTap(x: number, y: number): void {
     this.preview = false;
     if (this.transitioning || runtime.blocked) return;
+    const wp = this.tapHook ? this.worldPoint(x, y) : null;
+    if (wp && this.tapHook?.(wp.x, wp.y)) return;
     if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
     // A new tap replaces a painted row in progress.
     if (this.work) {
@@ -1698,8 +1716,16 @@ export abstract class WorldScene extends Phaser.Scene {
   /** At the end of a tap's walk: face the target and do it. */
   private arrive(): void {
     const end = this.routeEnd;
+    const done = this.walkDone;
     this.cancelRoute();
     if (!end) return;
+    if (done) {
+      const player = getState().player;
+      if (end.face) faceDirection(player, end.face);
+      this.syncSprite(false);
+      done();
+      return;
+    }
     const player = getState().player;
     if (end.face) faceDirection(player, end.face);
     this.syncSprite(false);
@@ -1719,7 +1745,54 @@ export abstract class WorldScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Walk to a tile by the usual tap walk (the plan shown, the stick takes over at once), then face `face` and call
+   * `done`. False when there is no way there.
+   */
+  protected walkTo(t: TileCoord, face: Direction | null = null, done?: () => void): boolean {
+    const here = playerTile(getState().player);
+    const path =
+      here.tx === t.tx && here.ty === t.ty
+        ? [here]
+        : findPath(this.grid, here, [t], { avoid: (tx, ty) => this.isDoor(tx, ty) });
+    if (!path) return false;
+    this.work = null;
+    this.highlight.showPaint(null);
+    this.route = createRoute(path);
+    this.routeEnd = { intent: { kind: 'none', target: t }, face };
+    this.walkDone = done ?? null;
+    this.highlight.showPlan(path, t, 'none');
+    if (path.length === 1 && this.actionLock <= 0) this.arrive();
+    return true;
+  }
+
+  /** A walk is in progress (a tap's, a painted row's or `walkTo`'s). */
+  protected get walking(): boolean {
+    return this.route !== null;
+  }
+
+  /** Where the walk in progress ends, if one is. */
+  protected get walkGoal(): TileCoord | null {
+    return this.route ? (this.route.path[this.route.path.length - 1] ?? null) : null;
+  }
+
+  /** Stop a walk where the farmer stands. */
+  protected stopWalk(): void {
+    this.cancelRoute();
+  }
+
+  /** Can the farmer stand on this tile? */
+  protected walkable(tx: number, ty: number): boolean {
+    return this.inMap({ tx, ty }) && !isTileBlocked(this.grid, tx, ty);
+  }
+
+  /** The farmer's sprite (a verb may lean it for a frame; syncSprite puts it back each frame). */
+  protected get farmerSprite(): Phaser.GameObjects.Sprite {
+    return this.sprite;
+  }
+
   private cancelRoute(): void {
+    this.walkDone = null;
     this.route = null;
     this.routeEnd = null;
     if (!this.preview) this.highlight.showPlan(null, null, 'none');

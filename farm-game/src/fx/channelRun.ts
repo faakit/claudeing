@@ -86,6 +86,43 @@ export function runStepMs(maxDepth: number): number {
   return Math.max(16, Math.min(RUN_STEP_MS, Math.floor(RUN_MAX_MS / (Math.max(0, maxDepth) + 1))));
 }
 
+/**
+ * Has the run come into view enough to start (feel critic, C1-1: it must not spend itself on a sliver at the edge)?
+ * Yes once its entry and the next two tiles of its way lie wholly inside the view inset by `inset` px, or half or
+ * more of its tiles do. `view` is the camera's world view in px; `steps` in run order.
+ */
+export function runSeen(
+  steps: readonly RunStep[],
+  view: { x: number; y: number; width: number; height: number },
+  inset = 16,
+  size = 16,
+): boolean {
+  if (!steps.length) return false;
+  const inside = (s: RunStep): boolean =>
+    s.tx * size >= view.x + inset &&
+    (s.tx + 1) * size <= view.x + view.width - inset &&
+    s.ty * size >= view.y + inset &&
+    (s.ty + 1) * size <= view.y + view.height - inset;
+  if (steps.slice(0, 3).every(inside)) return true;
+  return seenCount(steps, view, inset, size) * 2 >= steps.length;
+}
+
+/** How many of the run's tiles lie wholly inside the view inset by `inset` px. */
+export function seenCount(
+  steps: readonly RunStep[],
+  view: { x: number; y: number; width: number; height: number },
+  inset = 16,
+  size = 16,
+): number {
+  return steps.filter(
+    (s) =>
+      s.tx * size >= view.x + inset &&
+      (s.tx + 1) * size <= view.x + view.width - inset &&
+      s.ty * size >= view.y + inset &&
+      (s.ty + 1) * size <= view.y + view.height - inset,
+  ).length;
+}
+
 /** When each tile starts to fill (ms after the run starts). */
 export function runStart(step: RunStep, stepMs: number): number {
   return step.depth * stepMs;

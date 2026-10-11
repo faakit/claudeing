@@ -13,6 +13,8 @@ import {
   fillRect,
   runStart,
   runStepMs,
+  runSeen,
+  seenCount,
   runSteps,
   wetBeside,
   type Clod,
@@ -87,13 +89,22 @@ export class ChannelFx {
   private pool: Phaser.GameObjects.Image[] = [];
   private tilePool: Phaser.GameObjects.Image[] = [];
   private age = 0;
-  /** The morning run waiting for the channels to come into view: its steps and their bounds. */
+  /** The morning run waiting for the channels to come into view: its steps and the soil beside them. */
   private pending: {
     steps: RunStep[];
     beside: Map<string, string[]>;
-    box: Phaser.Geom.Rectangle;
   } | null = null;
   private held = new Set<string>();
+  /** The last morning run's start: its first tiles and the view then (for the e2e and probes). */
+  started: {
+    head: [number, number][];
+    view: { x: number; y: number; width: number; height: number };
+    /** Tiles of the run inside the view (inset) when it started, of all its tiles. */
+    seen: number;
+    of: number;
+  } | null = null;
+  /** Tiles the last dig turned into channel (2 when the bank tile was cut too). */
+  lastDug = 1;
   /** Channel tiles before the current action (to find the ones a dig just cut). */
   private before: Set<string> | null = null;
 
@@ -126,24 +137,8 @@ export class ChannelFx {
         ? []
         : wateredByChannels(state, reach, flow).filter((k) => state.farm.tiles[k]?.watered);
     const beside = wetBeside(steps, watered);
-    let x0 = Infinity;
-    let y0 = Infinity;
-    let x1 = -Infinity;
-    let y1 = -Infinity;
-    for (const s of steps) {
-      x0 = Math.min(x0, s.tx);
-      y0 = Math.min(y0, s.ty);
-      x1 = Math.max(x1, s.tx + 1);
-      y1 = Math.max(y1, s.ty + 1);
-    }
-    const box = new Phaser.Geom.Rectangle(
-      x0 * TILE_SIZE,
-      y0 * TILE_SIZE,
-      (x1 - x0) * TILE_SIZE,
-      (y1 - y0) * TILE_SIZE,
-    );
     this.hold([...steps.map((s) => s.key), ...[...beside.values()].flat()]);
-    this.pending = { steps, beside, box };
+    this.pending = { steps, beside };
   }
 
   /** The run is waiting for the channels to come into view, or running. */
@@ -151,9 +146,15 @@ export class ChannelFx {
     return this.pending !== null || this.fills.length > 0;
   }
 
-  private startRun(): void {
+  private startRun(view: Phaser.Geom.Rectangle): void {
     const run = this.pending!;
     this.pending = null;
+    this.started = {
+      head: run.steps.slice(0, 3).map((s) => [s.tx, s.ty] as [number, number]),
+      view: { x: view.x, y: view.y, width: view.width, height: view.height },
+      seen: seenCount(run.steps, view),
+      of: run.steps.length,
+    };
     const deepest = run.steps.reduce((m, s) => Math.max(m, s.depth), 0);
     const step = runStepMs(deepest);
     for (const s of run.steps)
@@ -175,6 +176,7 @@ export class ChannelFx {
     const before = this.before;
     this.before = null;
     if (!before) return [];
+    this.lastDug = channelKeys(state).length - before.size;
     const source = creekSource(state);
     if (!source.running || this.calm()) return [];
     const reach = flowReach(state, source.at, channelFlow(state));
@@ -260,13 +262,7 @@ export class ChannelFx {
     if (this.scene.tweens.timeScale === 0) return;
     this.age += delta;
     if (this.pending && this.age >= RUN_DELAY_MS) {
-      const v = new Phaser.Geom.Rectangle(
-        view.x + 8,
-        view.y + 8,
-        view.width - 16,
-        view.height - 16,
-      );
-      if (Phaser.Geom.Intersects.RectangleToRectangle(v, this.pending.box)) this.startRun();
+      if (runSeen(this.pending.steps, view)) this.startRun(view);
     }
     if (this.fills.length) this.stepFills(delta);
     if (this.flying.length) this.stepClods(delta);

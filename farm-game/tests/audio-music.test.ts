@@ -54,17 +54,22 @@ describe('composed music data', () => {
       expect(p.bpm, name).toBeGreaterThan(40);
       expect(p.bpm, name).toBeLessThan(130);
       const bars: Record<string, number> = {};
-      for (const [id, sec] of Object.entries(p.sections)) bars[id] = parseChords(sec.chords, p.meter).bars;
-      for (const s of [...(p.intro ?? []), ...p.form]) expect(bars[s], `${name} form ${s}`).toBeDefined();
+      for (const [id, sec] of Object.entries(p.sections))
+        bars[id] = parseChords(sec.chords, p.meter).bars;
+      for (const s of [...(p.intro ?? []), ...p.form])
+        expect(bars[s], `${name} form ${s}`).toBeDefined();
       for (const l of p.layers) {
         expect(MANIFEST.instruments[l.inst], `${name}.${l.id} ${l.inst}`).toBeDefined();
         expect(MUSIC.instruments[l.inst], `${name}.${l.id} mix`).toBeDefined();
-        expect(!!l.pattern !== !!l.phrases, `${name}.${l.id} needs a pattern or phrases`).toBe(true);
+        expect(!!l.pattern !== !!l.phrases, `${name}.${l.id} needs a pattern or phrases`).toBe(
+          true,
+        );
         if (l.pattern) {
           const steps = MUSIC.patterns[l.pattern];
           expect(steps, `${name}.${l.id} ${l.pattern}`).toBeDefined();
           const span = Math.floor(Math.max(...steps!.map((s) => s[0])) / p.meter) + 1;
-          for (const sec of Object.values(bars)) expect(sec % span, `${name}.${l.id} pattern bars`).toBe(0);
+          for (const sec of Object.values(bars))
+            expect(sec % span, `${name}.${l.id} pattern bars`).toBe(0);
         }
         for (const [sec, slots] of Object.entries(l.phrases ?? {})) {
           expect(bars[sec], `${name}.${l.id} section ${sec}`).toBeDefined();
@@ -88,9 +93,10 @@ describe('composed music data', () => {
       const a = MANIFEST.instruments[inst]!;
       if (a.kind === 'perc') return;
       const { shift } = pickZone(a.zones!, midi);
-      expect(Math.abs(shift), `${where}: ${inst} note ${midi} shifts ${shift.toFixed(2)} st`).toBeLessThanOrEqual(
-        maxShift(inst, a) + 1e-9,
-      );
+      expect(
+        Math.abs(shift),
+        `${where}: ${inst} note ${midi} shifts ${shift.toFixed(2)} st`,
+      ).toBeLessThanOrEqual(maxShift(inst, a) + 1e-9);
     };
     for (const [name, p] of Object.entries(MUSIC.pieces)) {
       for (const l of p.layers) {
@@ -98,7 +104,8 @@ describe('composed music data', () => {
           for (const slots of Object.values(l.phrases))
             for (const pool of slots)
               for (const id of pool)
-                for (const n of parsePhrase(p.phrases[id]!, p.meter).notes) if (n.midi !== null) check(l.inst, n.midi, `${name}.${id}`);
+                for (const n of parsePhrase(p.phrases[id]!, p.meter).notes)
+                  if (n.midi !== null) check(l.inst, n.midi, `${name}.${id}`);
         if (l.pattern) {
           for (const sec of Object.values(p.sections))
             for (const c of parseChords(sec.chords, p.meter).chords)
@@ -107,8 +114,14 @@ describe('composed music data', () => {
                 for (const t of tones) {
                   if (l.bass) {
                     const root = bassNote(c.chord, l.anchor ?? 36);
-                    for (const m of [root, root + 7, root + 12, root + 4]) check(l.inst, m, `${name}.${l.id} bass`);
-                  } else check(l.inst, voiceTone(voicing(c.chord, l.anchor ?? 60), t), `${name}.${l.id} ${c.chord.symbol}`);
+                    for (const m of [root, root + 7, root + 12, root + 4])
+                      check(l.inst, m, `${name}.${l.id} bass`);
+                  } else
+                    check(
+                      l.inst,
+                      voiceTone(voicing(c.chord, l.anchor ?? 60), t),
+                      `${name}.${l.id} ${c.chord.symbol}`,
+                    );
                 }
               }
         }
@@ -118,7 +131,8 @@ describe('composed music data', () => {
     for (const [cue, j] of Object.entries({ ...MUSIC.jingles, ...MUSIC.stings }))
       for (const p of Object.values(MUSIC.pieces))
         for (const part of j.parts)
-          for (const n of parseNotes(part.notes)) if (n.midi !== null) check(part.inst, n.midi + p.jingleKey, `jingle ${cue}`);
+          for (const n of parseNotes(part.notes))
+            if (n.midi !== null) check(part.inst, n.midi + p.jingleKey, `jingle ${cue}`);
   });
 
   it('held jingle and sting notes never sound a semitone against the chord under them (after the chord fit)', () => {
@@ -132,15 +146,21 @@ describe('composed music data', () => {
                 const m = fitToChord(n.midi + p.jingleKey, c.chord);
                 const pcs = chordPcs(c.chord);
                 const pc = m % 12;
-                const clash = !pcs.has(pc) && [...pcs].some((t) => (pc - t + 12) % 12 === 1 || (t - pc + 12) % 12 === 1);
+                const clash =
+                  !pcs.has(pc) &&
+                  [...pcs].some((t) => (pc - t + 12) % 12 === 1 || (t - pc + 12) % 12 === 1);
                 expect(clash, `${cue} over ${name} ${c.chord.symbol}`).toBe(false);
-                expect(Math.abs(m - n.midi - p.jingleKey), 'moves at most 3 semitones').toBeLessThanOrEqual(3);
+                expect(
+                  Math.abs(m - n.midi - p.jingleKey),
+                  'moves at most 3 semitones',
+                ).toBeLessThanOrEqual(3);
               }
   });
 
   it('every jingle instrument has samples', () => {
     for (const [cue, j] of Object.entries(MUSIC.jingles))
-      for (const p of j.parts) expect(sampleFor(p.inst, 72, false), `${cue} ${p.inst}`).not.toBeNull();
+      for (const p of j.parts)
+        expect(sampleFor(p.inst, 72, false), `${cue} ${p.inst}`).not.toBeNull();
   });
 });
 
@@ -169,7 +189,9 @@ describe('sequencer', () => {
           expect(e.vel, slot).toBeLessThanOrEqual(1);
           expect(Math.abs(e.jitter), slot).toBeLessThanOrEqual(0.008);
         }
-      expect(new Set(out.map((b) => b.section)), slot).toEqual(new Set([...(piece.intro ?? []), ...piece.form]));
+      expect(new Set(out.map((b) => b.section)), slot).toEqual(
+        new Set([...(piece.intro ?? []), ...piece.form]),
+      );
     }
   });
 
@@ -193,7 +215,9 @@ describe('sequencer', () => {
 
   it('drops outdoor-only layers indoors and the silent bus layers', () => {
     const count = (opt: BarOptions, layer: string) =>
-      bars('spring', 16, 1, opt).flatMap((b) => b.events).filter((e) => e.layer === layer).length;
+      bars('spring', 16, 1, opt)
+        .flatMap((b) => b.events)
+        .filter((e) => e.layer === layer).length;
     expect(count(ALL, 'shaker')).toBeGreaterThan(0);
     expect(count({ ...ALL, indoor: true }, 'shaker')).toBe(0);
     expect(count({ ...ALL, night: false }, 'pad')).toBe(0);
@@ -201,7 +225,8 @@ describe('sequencer', () => {
   });
 
   it('rain drops the percussion, thins the accompaniment to the main beats and rests the melody more', () => {
-    const all = (rain: boolean) => bars('summer', 120, 4, { ...ALL, rain }).flatMap((b) => b.events);
+    const all = (rain: boolean) =>
+      bars('summer', 120, 4, { ...ALL, rain }).flatMap((b) => b.events);
     const dry = all(false);
     const wet = all(true);
     expect(dry.some((e) => e.perc)).toBe(true);
@@ -209,7 +234,9 @@ describe('sequencer', () => {
     const comp = (es: typeof dry) => es.filter((e) => e.layer === 'comp');
     expect(comp(wet).length).toBeLessThan(comp(dry).length / 1.5);
     for (const e of comp(wet)) expect(Math.round(e.beat) % 2, 'main beats only').toBe(0);
-    expect(wet.filter((e) => e.layer === 'tune').length).toBeLessThan(dry.filter((e) => e.layer === 'tune').length);
+    expect(wet.filter((e) => e.layer === 'tune').length).toBeLessThan(
+      dry.filter((e) => e.layer === 'tune').length,
+    );
   });
 
   it('plays the year-two variation sections from year two only', () => {
@@ -220,7 +247,10 @@ describe('sequencer', () => {
       const y2 = new Set(bars(slot, 120, 2, { ...ALL, year: 2 }).map((b) => b.section));
       expect(y1, slot).toEqual(new Set(piece.form));
       expect(y2, slot).toEqual(new Set(piece.form2));
-      expect([...y2].some((s) => !y1.has(s)), `${slot} has new sections in year two`).toBe(true);
+      expect(
+        [...y2].some((s) => !y1.has(s)),
+        `${slot} has new sections in year two`,
+      ).toBe(true);
     }
   });
 
@@ -229,12 +259,20 @@ describe('sequencer', () => {
     expect(piece.intro, 'the title has a sting').toBeDefined();
     for (let seed = 1; seed < 12; seed++) {
       const out = bars('title', 60, seed);
-      const introBars = piece.intro!.reduce((n, s) => n + parseChords(piece.sections[s]!.chords, piece.meter).bars, 0);
+      const introBars = piece.intro!.reduce(
+        (n, s) => n + parseChords(piece.sections[s]!.chords, piece.meter).bars,
+        0,
+      );
       expect(out.slice(0, introBars).map((b) => b.section)).toEqual(
-        piece.intro!.flatMap((s) => Array(parseChords(piece.sections[s]!.chords, piece.meter).bars).fill(s)),
+        piece.intro!.flatMap((s) =>
+          Array(parseChords(piece.sections[s]!.chords, piece.meter).bars).fill(s),
+        ),
       );
       expect(out.slice(introBars).some((b) => piece.intro!.includes(b.section))).toBe(false);
-      expect(out[0]!.events.some((e) => e.layer === 'tune'), `seed ${seed}`).toBe(true);
+      expect(
+        out[0]!.events.some((e) => e.layer === 'tune'),
+        `seed ${seed}`,
+      ).toBe(true);
     }
   });
 
@@ -257,21 +295,33 @@ describe('each piece has its own harmony and melodies', () => {
   const piece = (n: string) => MUSIC.pieces[n]!;
   const tonicOf = (n: string) => {
     const k = piece(n).key;
-    expect(k, `${n} declares its key`).toMatch(/^[A-G][#b]? (major|minor|mixolydian|dorian|lydian)$/);
+    expect(k, `${n} declares its key`).toMatch(
+      /^[A-G][#b]? (major|minor|mixolydian|dorian|lydian)$/,
+    );
     return parseChord(k!.split(' ')[0]!).root;
   };
   /** Triad class for bigrams: sus, dim, min or maj. */
   const triad = (q: number[]) =>
-    !q.includes(3) && !q.includes(4) ? 'sus' : q.includes(3) && q.includes(6) ? 'dim' : q.includes(3) ? 'min' : 'maj';
-  const chordsOf = (n: string, sec: string) => parseChords(piece(n).sections[sec]!.chords, piece(n).meter).chords;
+    !q.includes(3) && !q.includes(4)
+      ? 'sus'
+      : q.includes(3) && q.includes(6)
+        ? 'dim'
+        : q.includes(3)
+          ? 'min'
+          : 'maj';
+  const chordsOf = (n: string, sec: string) =>
+    parseChords(piece(n).sections[sec]!.chords, piece(n).meter).chords;
   const deg = (n: string, pc: number, shift = 0) => (pc - tonicOf(n) + shift + 24) % 12;
   const token = (n: string, c: { root: number; tones: number[]; bass: number }) =>
     `${deg(n, c.root)}:${c.tones.join('.')}${c.bass !== c.root ? `/${deg(n, c.bass)}` : ''}`;
   const bigrams = (n: string, shift = 0) => {
-    const seq = piece(n).form.flatMap((s) => chordsOf(n, s).map((c) => `${deg(n, c.chord.root, shift)}${triad(c.chord.tones)}`));
+    const seq = piece(n).form.flatMap((s) =>
+      chordsOf(n, s).map((c) => `${deg(n, c.chord.root, shift)}${triad(c.chord.tones)}`),
+    );
     seq.push(seq[0]!);
     const out = new Set<string>();
-    for (let i = 0; i + 1 < seq.length; i++) if (seq[i] !== seq[i + 1]) out.add(`${seq[i]}>${seq[i + 1]}`);
+    for (let i = 0; i + 1 < seq.length; i++)
+      if (seq[i] !== seq[i + 1]) out.add(`${seq[i]}>${seq[i + 1]}`);
     return out;
   };
   const phraseIds = (n: string, time?: string) => [
@@ -282,19 +332,25 @@ describe('each piece has its own harmony and melodies', () => {
     ),
   ];
   const notesOf = (n: string, id: string): Note[] =>
-    parsePhrase(piece(n).phrases[id]!, piece(n).meter).notes.filter((x): x is Note => x.midi !== null);
+    parsePhrase(piece(n).phrases[id]!, piece(n).meter).notes.filter(
+      (x): x is Note => x.midi !== null,
+    );
   const trigrams = (n: string) => {
     const out = new Set<string>();
     for (const id of phraseIds(n)) {
       const m = notesOf(n, id).map((x) => x.midi);
-      for (let i = 0; i + 3 < m.length; i++) out.add(`${m[i + 1]! - m[i]!},${m[i + 2]! - m[i + 1]!},${m[i + 3]! - m[i + 2]!}`);
+      for (let i = 0; i + 3 < m.length; i++)
+        out.add(`${m[i + 1]! - m[i]!},${m[i + 2]! - m[i + 1]!},${m[i + 3]! - m[i + 2]!}`);
     }
     return out;
   };
   const features = (n: string) => {
     const ids = phraseIds(n, 'day');
     const notes = ids.map((id) => notesOf(n, id));
-    const beats = ids.reduce((s, id) => s + parsePhrase(piece(n).phrases[id]!, piece(n).meter).bars * piece(n).meter, 0);
+    const beats = ids.reduce(
+      (s, id) => s + parsePhrase(piece(n).phrases[id]!, piece(n).meter).bars * piece(n).meter,
+      0,
+    );
     const flat = notes.flat();
     const ivs = notes.flatMap((ns) => ns.slice(1).map((x, i) => Math.abs(x.midi - ns[i]!.midi)));
     const mids = flat.map((x) => x.midi).sort((a, b) => a - b);
@@ -313,9 +369,18 @@ describe('each piece has its own harmony and melodies', () => {
   }
 
   it('no two pieces share an A-section progression or a cadence (Roman numerals)', () => {
-    const progs = NAMES.map((n) => chordsOf(n, 'A').map((c) => token(n, c.chord)).join(' '));
+    const progs = NAMES.map((n) =>
+      chordsOf(n, 'A')
+        .map((c) => token(n, c.chord))
+        .join(' '),
+    );
     expect(new Set(progs).size).toBe(NAMES.length);
-    const cadences = NAMES.map((n) => chordsOf(n, 'A').slice(-3).map((c) => token(n, c.chord)).join(' '));
+    const cadences = NAMES.map((n) =>
+      chordsOf(n, 'A')
+        .slice(-3)
+        .map((c) => token(n, c.chord))
+        .join(' '),
+    );
     expect(new Set(cadences).size).toBe(NAMES.length);
   });
 
@@ -378,7 +443,10 @@ describe('each piece has its own harmony and melodies', () => {
                 const tones = new Set([...c.tones.map((t) => (c.root + t) % 12), c.bass]);
                 if (tones.has(n.midi % 12)) return;
                 const next = ns[k + 1]?.midi;
-                expect(next !== undefined && Math.abs(next - n.midi) <= 2, `${name}.${id} beat ${n.beat} over ${c.symbol}`).toBe(true);
+                expect(
+                  next !== undefined && Math.abs(next - n.midi) <= 2,
+                  `${name}.${id} beat ${n.beat} over ${c.symbol}`,
+                ).toBe(true);
               });
             }
             start += parsePhrase(p.phrases[pool[0]!]!, p.meter).bars;
@@ -393,7 +461,8 @@ describe('each piece has its own harmony and melodies', () => {
           for (const sec of Object.values(p.sections))
             for (const c of parseChords(sec.chords, p.meter).chords) {
               const v = voicing(c.chord, l.anchor ?? 60);
-              for (let i = 0; i + 1 < v.length; i++) expect(v[i + 1]! - v[i]!, c.chord.symbol).toBeGreaterThan(1);
+              for (let i = 0; i + 1 < v.length; i++)
+                expect(v[i + 1]! - v[i]!, c.chord.symbol).toBeGreaterThan(1);
             }
     expect(voicing(parseChord('Fmaj7'), 64)).toEqual([65, 69, 72, 76]);
   });
