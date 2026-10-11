@@ -4,12 +4,17 @@
 // Usage: npm run build && node scripts/perf.mjs [throttle=1,4,6]
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { frameStats, pacingInit, pacingRow, startPacing, stopPacing } from './pacing-lib.mjs';
 
 // Override with PERF_PORT when another checkout runs its checks at the same time.
 const PORT = Number(process.env.PERF_PORT ?? 4174);
 const URL_ = `http://localhost:${PORT}/?debug&tutorial=0`; // a bare new game (no guided start)
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const throttles = (process.argv[2] ?? '1,4,6').split(',').map(Number);
+// Which parts to run: `all` (default), `budget` (draws and JS per frame) or `pacing` (per-frame times in play).
+const PARTS = process.argv[3] ?? 'all';
+const runBudget = PARTS === 'all' || PARTS === 'budget';
+const runPacingPart = PARTS === 'all' || PARTS === 'pacing';
 
 const server = spawn(
   process.execPath,
@@ -35,12 +40,237 @@ for (let i = 0; i < 50; i++) {
   await new Promise((r) => setTimeout(r, 200));
 }
 
+/**
+ * Frame pacing in real play, one fresh game per throttle level: walking, a tap's walk, a painted row being worked,
+ * sheets and the bag opening and closing, map changes through real doors, sleep and the morning summary, a
+ * festival, and the guided start's coach marks. Records every frame (pacing-lib.mjs).
+ */
+async function runPacing(rate) {
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    deviceScaleFactor: 2,
+  });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.addInitScript(pacingInit);
+  const cdp = await ctx.newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate });
+  await page.goto(URL_);
+  await page.waitForFunction(
+    () => window.__farm?.game?.scene?.getScene('Title')?.sys.isActive(),
+    null,
+    { timeout: 30000 },
+  );
+  await page.waitForTimeout(500 * Math.min(rate, 3));
+  // From the title: New Game is part of what the player sees, so it is recorded too.
+  await startPacing(page);
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(
+    () => window.__farm.game.scene.getScene('Farm')?.sys.isActive(),
+    null,
+    { timeout: 30000 },
+  );
+  await page.waitForTimeout(1500);
+  const first = await stopPacing(page);
+  pacing.push(pacingRow(`${rate}x`, 'new game: title -> farm', first.raf, first.work));
+  pacingRaw.push({ rate, scene: 'new game', f: frameStats(first.raf) });
+  await page.waitForTimeout(1000 * Math.min(rate, 3));
+
+  const rec = async (label, run) => {
+    await startPacing(page);
+    await run();
+    const res = await stopPacing(page);
+    pacing.push(pacingRow(`${rate}x`, label, res.raf, res.work));
+    pacingRaw.push({ rate, scene: label.split(':')[0], f: frameStats(res.raf) });
+    return res;
+  };
+  const place = (tx, ty, facing = 'down') =>
+    page.evaluate(
+      ([tx, ty, facing]) => {
+        const p = window.__farm.getState().player;
+        p.x = tx * 16 + 8;
+        p.y = ty * 16 + 11;
+        p.facing = facing;
+      },
+      [tx, ty, facing],
+    );
+  const hold = async (key, ms) => {
+    await page.keyboard.down(key);
+    await page.waitForTimeout(ms);
+    await page.keyboard.up(key);
+  };
+
+  // 1. Walking: a loop with the keys (the stick's path through the same code), turns and stops included.
+  await place(8, 19, 'right');
+  await page.waitForTimeout(300);
+  await rec('walk: a loop with stops', async () => {
+    for (const [k, ms] of [
+      ['ArrowRight', 1400],
+      ['ArrowDown', 700],
+      ['ArrowLeft', 1400],
+      ['ArrowUp', 700],
+    ]) {
+      await hold(k, ms);
+      await page.waitForTimeout(250);
+    }
+  });
+
+  // 2. A tap's walk across the field (routes, path dots, arrival).
+  await rec('tap-walk: long routes', async () => {
+    for (const [x, y] of [
+      [20, 170],
+      [180, 270],
+      [20, 270],
+      [180, 170],
+    ]) {
+      await page.evaluate(([x, y]) => window.__farm.inputHub.emit('tap', { x, y }), [x, y]);
+      await page.waitForTimeout(1300);
+    }
+  });
+
+  // 3. A painted row worked tile by tile: till, plant, water (the seeds and the can come from the hotbar).
+  await place(8, 21, 'right');
+  await page.evaluate(() => {
+    const s = window.__farm.getState();
+    s.energy = 270;
+    s.water = 40;
+  });
+  await page.waitForTimeout(300);
+  await rec('paint: a 6-tile row worked', async () => {
+    await page.evaluate(() => {
+      const h = window.__farm.inputHub;
+      h.emit('paintLine', { dir: null, tiles: 0 });
+      h.emit('paintLine', { dir: 'right', tiles: 6, path: Array(6).fill('right') });
+      h.emit('paintEnd', { commit: true });
+    });
+    await page.waitForTimeout(5500);
+  });
+
+  // 4. Sheets: the bag (menu), the shop, the bin, the board and the mail, opened and closed one after another.
+  await rec('sheets: bag, shop, bin, board, mail', async () => {
+    for (const type of ['menu', 'shop', 'bin', 'board', 'mail', 'menu']) {
+      await page.evaluate((type) => window.__farm.gameEvents.emit('openPanel', { type }), type);
+      await page.waitForTimeout(600);
+      await page.evaluate(() => window.__farm.inputHub.emit('menu', undefined));
+      await page.waitForTimeout(450);
+    }
+  });
+
+  // 5. Map changes through real doors (fade, save, scene start): a loop through every map and back.
+  const doors = [
+    [14, 7, 'House'],
+    [5, 8, 'Farm'],
+    [14, 43, 'Town'],
+    [0, 24, 'Woods'],
+    [9, 0, 'Mine'],
+    [9, 29, 'Woods'],
+    [19, 14, 'Town'],
+    [11, 0, 'Farm'],
+  ];
+  const worst = [];
+  await rec('map changes: 8 doors, every map', async () => {
+    for (const [tx, ty, to] of doors) {
+      const i0 = await page.evaluate(() => window.__pace.raf.length);
+      await place(tx, ty);
+      await page.waitForFunction(
+        (to) => {
+          const sc = window.__farm.game.scene.getScene(to);
+          return sc?.sys.isActive() && !sc.transitioning;
+        },
+        to,
+        { timeout: 20000 },
+      );
+      await page.waitForTimeout(700);
+      const xs = await page.evaluate((i0) => window.__pace.raf.slice(i0), i0);
+      worst.push(`${to}:${Math.round(Math.max(...xs))}`);
+      pacingRaw.push({ rate, scene: 'door', door: to, f: frameStats(xs) });
+    }
+  });
+  doorWorst.push({ throttle: `${rate}x`, worst: worst.join(' ') });
+
+  // 6. Sleep, the roll to the next day, the house, and the morning summary (acknowledged like Enter).
+  await rec('sleep: night -> summary -> morning', async () => {
+    await page.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
+    for (let i = 0; i < 30; i++) {
+      await page.waitForTimeout(400);
+      const done = await page.evaluate(() => {
+        const f = window.__farm;
+        if (!f.runtime.busy) return true;
+        f.inputHub.emit('confirm', undefined);
+        return false;
+      });
+      if (done) break;
+    }
+    await page.waitForTimeout(600);
+  });
+
+  // 7. A festival day in town: the festival sheet opens and closes.
+  await page.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.time.season = 'fall';
+    s.time.day = 16;
+    s.time.minutes = 600;
+    s.player.map = 'town';
+    s.player.x = 11 * 16 + 8;
+    s.player.y = 12 * 16 + 11;
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key !== 'UI')
+      .scene.start('Town');
+  });
+  await page.waitForTimeout(1500);
+  await rec('festival: fall fair sheet in town', async () => {
+    for (let i = 0; i < 2; i++) {
+      await page.evaluate(() => window.__farm.gameEvents.emit('openPanel', { type: 'festival' }));
+      await page.waitForTimeout(800);
+      await page.evaluate(() => window.__farm.inputHub.emit('menu', undefined));
+      await page.waitForTimeout(500);
+    }
+  });
+
+  // 8. The guided start's coach marks on the farm (the row tip with its animated hand).
+  await page.evaluate(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    s.time.season = 'spring';
+    s.time.day = 3;
+    s.player.map = 'farm';
+    s.player.x = 13 * 16 + 8;
+    s.player.y = 18 * 16 + 11;
+    delete s.stats['tut.off'];
+    s.stats['tut.on'] = 1;
+    for (const id of ['harvest', 'seeds', 'plant', 'water']) s.stats[`tut.${id}`] = 1;
+    s.stats['tut.seen.grow'] = 1;
+    s.stats.tilled = 2;
+    s.stats['tut.at.grow.tilled'] = 0;
+    s.stats['tut.at.grow.painted'] = 0;
+    s.stats.planted = 0;
+    f.game.scene
+      .getScenes(true)
+      .find((x) => x.scene.key !== 'UI')
+      .scene.start('Farm');
+  });
+  await page.waitForTimeout(1500);
+  await rec('guided start: coach marks', () => page.waitForTimeout(3000));
+
+  if (errors.length) console.error(`${rate}x pacing page errors:`, errors.slice(0, 5));
+  await ctx.close();
+}
+
 const browser = await chromium.launch({ executablePath: CHROMIUM });
 const results = [];
 /** Sound effects played from files during the storm scene, per throttle level. */
 const sfxCounts = [];
+const pacing = [];
+/** The same recordings as numbers, for the frame-time budgets. */
+const pacingRaw = [];
+/** Per-door worst frame in the map-change run, per throttle. */
+const doorWorst = [];
 try {
-  for (const rate of throttles) {
+  for (const rate of runBudget ? throttles : []) {
     const ctx = await browser.newContext({
       viewport: { width: 390, height: 844 },
       hasTouch: true,
@@ -284,14 +514,21 @@ try {
     );
     await ctx.close();
   }
+  for (const rate of runPacingPart ? throttles : []) await runPacing(rate);
 } finally {
   await browser.close();
   server.kill();
 }
-console.table(results);
+if (results.length) console.table(results);
+if (pacing.length) {
+  console.log('Frame pacing (ms between frames; "work" is the game\'s own time per frame):');
+  console.table(pacing);
+  console.log('Map changes, worst frame per door:', JSON.stringify(doorWorst));
+}
 
 // The storm scene must really have played sound effects from files (not the synth, not nothing).
-console.log('sfx played from files during the storm scene:', JSON.stringify(sfxCounts));
+if (runBudget)
+  console.log('sfx played from files during the storm scene:', JSON.stringify(sfxCounts));
 const quiet = sfxCounts.filter((c) => c.played < 20);
 if (quiet.length > 0) {
   console.error('PERF: the sound-effect scene played fewer than 20 sfx from files:', quiet);
@@ -313,6 +550,47 @@ if (bad.length > 0) {
   );
   process.exit(1);
 }
-console.log(
-  `Within budget (<= ${BUDGET.drawsPerFrame} draws/frame, <= ${BUDGET.jsMsPerFrame} ms JS/frame at 1x).`,
-);
+if (runBudget)
+  console.log(
+    `Within budget (<= ${BUDGET.drawsPerFrame} draws/frame, <= ${BUDGET.jsMsPerFrame} ms JS/frame at 1x).`,
+  );
+
+// Frame-time budgets (ms between frames, headless software GL; set against the round-3 baseline with the feel
+// critic, so a regression fails rather than hides under a loose bar):
+//  - steady play (walk, tap-walk, a painted row): p95 <= 8 at 1x, p99 <= 14 at 4x, no frame over 100 at 6x;
+//  - other steady scenes (sheets, festival, coach marks): p95 <= 8 at 1x;
+//  - a map change: worst frame <= 34 at 1x and 4x, <= 50 at 6x (the build runs while the wipe covers the world);
+//  - sleep and the morning summary: no frame over 50 at 1x, 100 at 4x;
+//  - a new game: no frame over 100 at 1x, 200 at 4x (the build runs under the title's wipe).
+const STEADY = ['walk', 'tap-walk', 'paint'];
+const CALM = ['sheets', 'festival', 'guided start'];
+const pacingBad = [];
+for (const r of pacingRaw) {
+  const f = r.f;
+  const why = [];
+  const over = (limit, what = 'max') =>
+    f.max > limit && why.push(`${what} ${f.max.toFixed(0)} > ${limit}`);
+  if (STEADY.includes(r.scene) || CALM.includes(r.scene)) {
+    if (r.rate === 1 && f.p95 > 8) why.push(`p95 ${f.p95.toFixed(1)} > 8`);
+    if (STEADY.includes(r.scene) && r.rate === 4 && f.p99 > 14)
+      why.push(`p99 ${f.p99.toFixed(1)} > 14`);
+    if (STEADY.includes(r.scene) && r.rate >= 6) over(100);
+  } else if (r.scene === 'door') {
+    over(r.rate >= 6 ? 50 : 34, r.door);
+  } else if (r.scene === 'sleep') {
+    if (r.rate === 1) over(50);
+    if (r.rate === 4) over(100);
+  } else if (r.scene === 'new game') {
+    if (r.rate === 1) over(100);
+    if (r.rate === 4) over(200);
+  }
+  if (why.length) pacingBad.push(`${r.rate}x ${r.scene}: ${why.join(', ')}`);
+}
+if (pacingBad.length) {
+  console.error('FRAME PACING BUDGET EXCEEDED:', pacingBad);
+  process.exit(1);
+}
+if (pacingRaw.length)
+  console.log(
+    'Frame pacing within budget (steady p95 <= 8 ms at 1x, p99 <= 14 at 4x; map changes <= 34 ms at 4x, 50 at 6x).',
+  );

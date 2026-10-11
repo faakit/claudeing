@@ -103,18 +103,13 @@ export class ToolRing {
     this.hover = null;
     this.draw();
     this.root.setVisible(true).setAlpha(1);
+    // Fades in where it will be (no scale pop: the item icons keep whole pixels); Calm: there at once.
+    this.root.setScale(1).setPosition(0, 0);
+    this.scene.tweens.killTweensOf(this.root);
     if (!s.settings.reduceMotion) {
-      this.root.setScale(0.85);
-      this.root.setPosition(centre.x * 0.15, centre.y * 0.15);
-      this.scene.tweens.add({
-        targets: this.root,
-        scale: 1,
-        x: 0,
-        y: 0,
-        duration: 110,
-        ease: 'Back.easeOut',
-      });
-    } else this.root.setScale(1).setPosition(0, 0);
+      this.root.setAlpha(0);
+      this.scene.tweens.add({ targets: this.root, alpha: 1, duration: 90, ease: 'Quad.easeOut' });
+    }
     audio.play('ringOpen');
     haptic('tick');
   }

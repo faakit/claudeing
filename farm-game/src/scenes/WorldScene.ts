@@ -4,11 +4,11 @@ import { hasArt } from '../art/registry';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
   ACTION_LOCK_MS,
-  CAMERA_LERP,
   EVT_INTERACT_TARGET,
   FADE_COLOR,
   FADE_MS,
   MAX_CLOCK_DT_MS,
+  TURN_HOLD_MS,
   PLAYER_SPEED,
   SEASON_TINT,
   tileKind,
@@ -22,11 +22,29 @@ import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient, parseBlooms } from '../fx/Ambient';
 import { SeeThrough } from '../fx/SeeThrough';
+import { PixelCamera } from '../fx/PixelCamera';
+import { DoorFx } from '../fx/DoorFx';
+import { PlayerFrames, showFrame, TOOL_CONTACT_FRAME, type FrameRef } from '../fx/playerFrames';
+import {
+  breathFrame,
+  HIT_STOP_MS,
+  isContactFrame,
+  walkFps,
+  WIPE_CLOSE_MS,
+  WIPE_OPEN_MS,
+} from '../fx/feel';
+import type { Wipe } from '../fx/Wipe';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
 import { findPath, pathToFace, pathToFaceAny } from '../systems/pathfind';
 import { createWork, nextWork, type WorkQueue } from '../systems/workQueue';
-import { compensateTouch, tapIntent, type TapIntent, type TapWorld } from '../systems/tapIntent';
+import {
+  compensateTouch,
+  ownTileTap,
+  tapIntent,
+  type TapIntent,
+  type TapWorld,
+} from '../systems/tapIntent';
 import { cssPerLogical } from '../ui/hit';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
@@ -78,6 +96,7 @@ import {
   type WorldObject,
 } from '../systems/world';
 import { mapCacheKey } from './PreloadScene';
+import { preparseMap, takeTilemap } from './mapCache';
 import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutorial';
 import type { CoachScreenWorld } from '../ui/CoachMarks';
 import { npcLocation } from '../systems/npcs';
@@ -89,6 +108,21 @@ const TOOL_POSES: Record<string, string> = {
   watering_can: 'player_use_can',
   fishing_rod: 'player_use_rod',
 };
+/** What each tool's own use is called, so a harvest with the hoe in hand never shows the hoe pose. */
+const TOOL_KINDS: Record<string, string[]> = {
+  hoe: ['till'],
+  watering_can: ['water', 'refill'],
+  fishing_rod: ['cast'],
+  scythe: ['clear'],
+  pickaxe: ['mine'],
+};
+/** Doors with a leaf that opens (frames-wanted.md): the farmhouse door outside, the house door inside. */
+const doorStyle = (map: string, to: string): string | null =>
+  map === 'farm' && to === 'house' ? 'farmhouse' : null;
+/** Swing timing (ms): the wind-up shows at once, the impact (fx, sound, haptic) lands on the strike frame. */
+const SWING = { windup: 50 } as const;
+/** After a swing the stick may walk again this soon, even while the next use still waits for the lock. */
+const MOVE_ROOT_MS = 120;
 
 /** Palette slot 0 (ink): the outline colour, also the void around indoor maps. */
 const INK_HEX = '#2a1a24';
@@ -118,7 +152,15 @@ export abstract class WorldScene extends Phaser.Scene {
   private seeThrough: SeeThrough | null = null;
   /** The tool-use pose shown for a moment after a tool action (art only; see toolPose). */
   private pose: Phaser.GameObjects.Image | null = null;
+  /** The pose frames in order, each shown from `at` (scene ms), until `poseUntil`. */
+  private poseSeq: { f: FrameRef; at: number }[] = [];
   private poseUntil = 0;
+  /** The farmer dips 1 px on a strike without a drawn strike frame (until this time). */
+  private dipUntil = 0;
+  /** The stick is held back until this many ms after a use (shorter than the use's lock). */
+  private moveLock = 0;
+  /** A push held while rooted walks the moment the root ends, without a second turn-in-place wait. */
+  private rootedPush = false;
   protected fx!: Effects;
   private transitioning = false;
   /** After a door, ignore held input until it is released once, so doors never bounce. */
@@ -146,6 +188,22 @@ export abstract class WorldScene extends Phaser.Scene {
   private work: WorkQueue | null = null;
   /** Turn-in-place and settle-on-release state (runtime only). */
   private move: MoveState = createMoveState();
+  /** The pixel-locked camera follow (fx/PixelCamera.ts). */
+  private pcam!: PixelCamera;
+  /** Where the farmer's frames come from (newer atlas frames when drawn, today's otherwise). */
+  private frames!: PlayerFrames;
+  /** Px walked into the current walk cycle (the cycle runs by distance, so feet never slide). */
+  private walkDist = 0;
+  private walkIdx = -1;
+  /** Real ms standing still (idle breathing starts after a while). */
+  private stillMs = 0;
+  private lastPos = { x: 0, y: 0 };
+  /** When the current tool use's impact lands (scene ms): field changes show then. */
+  private impactAt = 0;
+  private farmDirty = false;
+  /** Built this frame (the first update is skipped). */
+  private fresh = false;
+  private lastTile = { tx: -1, ty: -1 };
   private lastTarget: string | null | undefined;
   private cleanup: (() => void)[] = [];
 
@@ -163,7 +221,11 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     this.transitioning = false;
     this.pose = null; // the scene object is reused across visits; its old images are gone
+    this.poseSeq = [];
     this.poseUntil = 0;
+    this.dipUntil = 0;
+    this.moveLock = 0;
+    this.rootedPush = false;
     this.inputLocked = true;
     this.actionLock = 0;
     this.heldFailed = false;
@@ -175,6 +237,10 @@ export abstract class WorldScene extends Phaser.Scene {
     this.work = null;
     this.painting = null;
     this.water = null;
+    this.impactAt = 0;
+    this.farmDirty = false;
+    this.fresh = true;
+    this.lastTile = { tx: -1, ty: -1 };
 
     const raw = this.cache.tilemap.get(mapCacheKey(this.mapId)).data as TiledMapLike;
     this.raw = raw;
@@ -191,7 +257,7 @@ export abstract class WorldScene extends Phaser.Scene {
       }
     }
 
-    const map = this.make.tilemap({ key: mapCacheKey(this.mapId) });
+    const map = takeTilemap(this, this.mapId); // parsed ahead when the door was stepped on (mapCache.ts)
     const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
     const look = tilesetFor(this.textures, state.time.season, outdoor);
     const tileset = map.addTilesetImage('placeholder', look.key, TILE_SIZE, TILE_SIZE, 0, 0);
@@ -240,16 +306,29 @@ export abstract class WorldScene extends Phaser.Scene {
     this.sprite = this.add
       .sprite(0, 0, PLAYER_TEXTURE, playerIdleFrame(state.player.facing))
       .setOrigin(0.5, 1);
-    this.sprite.on(
-      Phaser.Animations.Events.ANIMATION_UPDATE,
-      (_a: unknown, f: Phaser.Animations.AnimationFrame) => {
-        if (f.index % 2 === 0) this.footstep();
-      },
-    );
+    this.frames = new PlayerFrames(this);
+    this.walkIdx = -1;
+    this.stillMs = 0;
+    this.lastPos = { x: state.player.x, y: state.player.y };
     this.syncSprite(false);
 
     this.setupCamera(map.widthInPixels, map.heightInPixels);
-    this.cameras.main.fadeIn(FADE_MS, FADE_COLOR.r, FADE_COLOR.g, FADE_COLOR.b);
+    // Through a door: the wipe that closed over the last map opens a couple of frames after this one has drawn.
+    const wipe = this.wipe();
+    if (wipe?.covered) {
+      wipe.open(WIPE_OPEN_MS, state.settings.reduceMotion);
+      // The door just come through closes behind the farmer as the view clears.
+      const here = playerTile(state.player);
+      const came = this.objects.find(
+        (o) =>
+          o.type === 'door' &&
+          Math.abs(o.tx - here.tx) + Math.abs(o.ty - here.ty) === 1 &&
+          doorStyle(this.mapId, doorTarget(o).map),
+      );
+      const style = came ? doorStyle(this.mapId, doorTarget(came).map) : null;
+      if (came && style)
+        new DoorFx(this, came.tx, came.ty, this.frames.door()).closeAfter(WIPE_OPEN_MS / 2);
+    }
 
     this.cleanup.push(
       inputHub.on('interact', () => this.onInteract()),
@@ -258,7 +337,8 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('tapCancel', () => this.onTapCancel()),
       inputHub.on('paintLine', (p) => this.onPaintLine(p.dir, p.tiles, p.path)),
       inputHub.on('paintEnd', (p) => this.onPaintEnd(p.commit)),
-      gameEvents.on('farmChanged', () => this.farm?.sync(getState(), true)),
+      // Drawn on the next frame, or on a tool's strike frame: the tilled soil appears with its dust.
+      gameEvents.on('farmChanged', () => (this.farmDirty = true)),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
       gameEvents.on('heartUp', () => {
@@ -268,7 +348,9 @@ export abstract class WorldScene extends Phaser.Scene {
       gameEvents.on('levelUp', () => {
         const p = getState().player;
         this.fx.celebrate(p.x, p.y - 10);
+        this.nudgeCamera(0, 1, 2); // a big moment: the view dips 2 px and springs back
       }),
+      gameEvents.on('goalCompleted', () => this.nudgeCamera(0, 1, 2)),
       gameEvents.on('friendsChanged', () =>
         this.npcs?.sync(getState(), playerTile(getState().player)),
       ),
@@ -305,6 +387,21 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    if (this.farmDirty && this.time.now >= this.impactAt) {
+      this.farmDirty = false;
+      this.farm?.sync(getState(), true);
+    }
+    // The frame a map is built on has done enough: its first update waits a frame (the wipe still covers it).
+    if (this.fresh) {
+      this.fresh = false;
+      return;
+    }
+    this.tick(time, delta);
+    const p = getState().player;
+    this.pcam.update(p.x, p.y, delta, time);
+  }
+
+  private tick(time: number, delta: number): void {
     this.ambient?.update(time, getState());
     this.things?.syncLandmarkLevels(getState());
     if (this.transitioning) return;
@@ -313,8 +410,8 @@ export abstract class WorldScene extends Phaser.Scene {
 
     if (runtime.blocked) {
       // Panels and flows freeze the world and the clock.
-      this.sprite.anims.stop();
-      this.sprite.setFrame(playerIdleFrame(player.facing));
+      this.walkIdx = -1;
+      showFrame(this.sprite, this.frames.idle(player.facing, 0));
       this.actionLock = Math.max(0, this.actionLock - delta);
       this.updateHighlight(time);
       return;
@@ -327,12 +424,24 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.actionLock = Math.max(0, this.actionLock - delta);
+    this.moveLock = Math.max(0, this.moveLock - delta);
     let dir = inputHub.direction;
     if (this.inputLocked) {
       if (dir === null) this.inputLocked = false;
       dir = null;
     }
-    if (this.actionLock > 0) dir = null; // a swing roots you for a moment
+    if (this.moveLock > 0) {
+      // A swing roots you for a moment; a push held through it walks as soon as it ends.
+      this.rootedPush = dir !== null;
+      dir = null;
+    } else if (this.rootedPush) {
+      this.rootedPush = false;
+      if (dir !== null) {
+        this.move.turnDir = dir;
+        this.move.turnMs = TURN_HOLD_MS;
+        player.facing = dir;
+      }
+    }
 
     // A tap's walk runs until the stick or a key takes over (they always win, at once).
     let moving: boolean;
@@ -356,9 +465,16 @@ export abstract class WorldScene extends Phaser.Scene {
         slow ? PLAYER_SPEED / 2 : PLAYER_SPEED,
       ).moving;
     }
+    this.stillMs = moving ? 0 : this.stillMs + delta;
     this.syncSprite(moving);
 
     const here = playerTile(player);
+    // Crops lean as the farmer walks through them.
+    if (moving && (here.tx !== this.lastTile.tx || here.ty !== this.lastTile.ty)) {
+      const dx = here.tx - this.lastTile.tx || ((here.tx + here.ty) % 2 ? 1 : -1);
+      this.farm?.brush(here.tx, here.ty, Math.sign(dx));
+    }
+    this.lastTile = here;
     const facing = facingTile(player);
     this.seeThrough ??= new SeeThrough(this);
     const holeMap =
@@ -526,50 +642,119 @@ export abstract class WorldScene extends Phaser.Scene {
     cam.setViewport(WORLD_VIEW.x, WORLD_VIEW.y, WORLD_VIEW.w, WORLD_VIEW.h);
     // Around a small room, the void is the ink of the outline palette, so the walls read as a framed box.
     cam.setBackgroundColor(mapsData.maps[this.mapId]?.outdoor ? VOID_COLOR : INK_HEX);
-    // Maps smaller than the view get bounds equal to the view, centered on the map.
-    const bw = Math.max(mapW, WORLD_VIEW.w);
-    const bh = Math.max(mapH, WORLD_VIEW.h);
-    cam.setBounds(-(bw - mapW) / 2, -(bh - mapH) / 2, bw, bh);
+    // Maps smaller than the view stay centred in it (PixelCamera.setMap sets the bounds).
     const p = getState().player;
     const bodyOffset = PLAYER_H / 2 - 4; // aim at the body, not the feet
-    cam.centerOn(p.x, p.y - bodyOffset);
-    cam.startFollow(this.sprite, true, CAMERA_LERP, CAMERA_LERP);
-    cam.setFollowOffset(0, bodyOffset);
+    this.pcam = new PixelCamera(cam, bodyOffset);
+    this.pcam.setMap(mapW, mapH);
+    this.pcam.snap(p.x, p.y);
+  }
+
+  /** A small push of the view on a big moment (never in Calm mode). */
+  nudgeCamera(dx: number, dy: number, px = 2): void {
+    if (getState().settings.reduceMotion) return;
+    this.pcam?.push(dx, dy, px, this.time.now);
   }
 
   private syncSprite(moving: boolean): void {
     const p = getState().player;
-    this.sprite.setPosition(p.x, p.y);
+    const now = this.time.now;
+    this.sprite.setPosition(p.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
     this.sprite.setDepth(10 + p.y);
-    const posing = !!this.pose && this.time.now < this.poseUntil && !moving;
+    const posing = !!this.pose && now < this.poseUntil && !moving;
     this.sprite.setVisible(!posing);
-    this.pose
-      ?.setVisible(posing)
-      .setPosition(p.x, p.y)
-      .setDepth(10 + p.y);
+    if (this.pose) {
+      this.pose
+        .setVisible(posing)
+        .setPosition(p.x, p.y)
+        .setDepth(10 + p.y);
+      let cur: FrameRef | null = null;
+      for (const step of this.poseSeq) if (now >= step.at) cur = step.f;
+      if (posing && cur) {
+        if (this.pose.texture.key !== cur.texture || this.pose.frame.name !== cur.frame)
+          this.pose.setTexture(cur.texture, cur.frame);
+        this.pose.setFlipX(cur.flipX);
+      }
+    }
     this.shadow.setPosition(p.x, p.y - 2).setDepth(9 + p.y);
+    const moved = Math.abs(p.x - this.lastPos.x) + Math.abs(p.y - this.lastPos.y);
+    this.lastPos = { x: p.x, y: p.y };
     if (moving) {
-      this.sprite.anims.play(`player_walk_${p.facing}`, true);
+      // The walk cycle runs by distance walked: half speed walks it at half rate, a slow frame skips ahead.
+      const n = this.frames.walkCount;
+      // The cycle runs at a rate set by the speed actually walked (fx/feel walkFps), so half speed and the settle
+      // glide step at their own pace; a first stride shows at once.
+      const dt = Math.max(1, this.game.loop.delta);
+      const fps = walkFps((moved * 1000) / dt, n);
+      this.walkDist = this.walkIdx < 0 ? 1 : this.walkDist + (Math.min(dt, 50) * fps) / 1000;
+      const i = Math.floor(this.walkDist) % n;
+      if (i !== this.walkIdx && isContactFrame(i, n)) this.footstep();
+      this.walkIdx = i;
+      showFrame(this.sprite, this.frames.walk(p.facing, i));
     } else {
-      this.sprite.anims.stop();
-      this.sprite.setFrame(playerIdleFrame(p.facing));
+      this.walkIdx = -1;
+      const calm = getState().settings.reduceMotion;
+      showFrame(this.sprite, this.frames.idle(p.facing, calm ? 0 : breathFrame(this.stillMs)));
     }
   }
 
   /**
-   * For a moment after a tool action, show the player's tool-use pose (hoe raised, can pouring, rod cast) when
-   * that art exists. Facing up keeps the walk sprite (there is no back-view pose); left mirrors the right one.
+   * The swing for a tool use, with anticipation: returns how long after the press the impact lands (the fx,
+   * sound and haptic wait for it) and whether a pose shows the tool (else the tool icon swings).
+   *
+   * - Drawn swing frames (agents/out/feel/frames-wanted.md): wind-up 50 ms, strike 100 ms, follow-through 110 ms.
+   * - The single drawn pose: the hoe pose (raised overhead) is the wind-up, then the strike is the farmer
+   *   dipping 1 px; the can and rod poses are already the impact, so they show at once.
+   * - No pose: the tool icon swings in three whole steps (fx/Effects.swing), impact on the second.
+   *
+   * Only the tool's own use poses (a harvest with the hoe in hand shows no hoe).
    */
-  private toolPose(item?: string): boolean {
-    const key = item ? TOOL_POSES[item] : undefined;
+  private toolSwing(item: string | undefined, kind: string): { delay: number; shown: boolean } {
     const p = getState().player;
-    if (!key || p.facing === 'up' || !hasArt(key)) return false;
-    if (key === TOOL_POSES['hoe'] && p.facing !== 'down') return false;
-    this.pose ??= this.add.image(0, 0, key).setOrigin(0.5, 1);
-    this.pose.setTexture(key).setFlipX(p.facing === 'left');
-    this.poseUntil = this.time.now + ACTION_LOCK_MS.ok + 60;
+    const now = this.time.now;
+    const own = !!item && (TOOL_KINDS[item]?.includes(kind) ?? false);
+    if (!own) return { delay: 0, shown: false };
+    const drawn = this.frames.tool(item, p.facing);
+    let delay: number = SWING.windup;
+    if (drawn) {
+      // Wind-up, swing, contact (the impact lands here), follow-through, then the idle frame.
+      let at = now;
+      this.poseSeq = drawn.frames.map((f, i) => {
+        const step = { f, at };
+        at += drawn.ms[i]!;
+        return step;
+      });
+      this.poseUntil = at;
+      delay = this.poseSeq[TOOL_CONTACT_FRAME]!.at - now;
+    } else {
+      const key = item ? TOOL_POSES[item] : undefined;
+      const hoe = key === TOOL_POSES['hoe'];
+      if (!key || p.facing === 'up' || !hasArt(key) || (hoe && p.facing !== 'down'))
+        return { delay: SWING.windup, shown: false };
+      this.poseSeq = [
+        { f: { texture: key, frame: '__BASE', flipX: p.facing === 'left' }, at: now },
+      ];
+      if (hoe) {
+        this.poseUntil = now + SWING.windup;
+        this.dipUntil = now + SWING.windup + 50;
+      } else {
+        this.poseUntil = now + ACTION_LOCK_MS.ok;
+        delay = 0;
+      }
+    }
+    const first = this.poseSeq[0]!.f;
+    this.pose ??= this.add.image(0, 0, first.texture, first.frame).setOrigin(0.5, 1);
     this.syncSprite(false);
-    return true;
+    return { delay, shown: true };
+  }
+
+  /** Hold the frame for a moment on an impact (a harvest): tweens pause, input does not. */
+  private hitStop(): void {
+    if (getState().settings.reduceMotion) return;
+    this.tweens.timeScale = 0;
+    window.setTimeout(() => {
+      if (this.sys.isActive()) this.tweens.timeScale = 1;
+    }, HIT_STOP_MS);
   }
 
   private footstep(): void {
@@ -736,14 +921,30 @@ export abstract class WorldScene extends Phaser.Scene {
     this.highlight.pulse();
     if (res.ok) {
       this.actionLock = ACTION_LOCK_MS.ok;
+      this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
-      const posed = this.toolPose(stack?.item);
-      playActionFx(this.fx, res, getState().player, stack?.item, posed);
-      // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
-      if (quietHaptic) {
-        /* a painted row: no buzz per use */
-      } else if (res.kind === 'harvest') haptic('medium');
-      else haptic('tick', { repeat: inputHub.actionHeld && this.holdUses > 0 });
+      const swing = this.toolSwing(stack?.item, res.kind);
+      const at = { ...getState().player };
+      const def = stack?.item ? items[stack.item] : undefined;
+      if (!swing.shown && def?.type === 'tool' && TOOL_KINDS[stack!.item]?.includes(res.kind))
+        this.fx.swing(at.x, at.y, def.icon, at.facing);
+      const repeat = inputHub.actionHeld && this.holdUses > 0;
+      // Hit-stop only on a single harvest or the first of a hold or a painted row: a freeze per tile is a stutter.
+      const firstUse = !repeat && (!this.work || (this.work.done <= 1 && this.work.tileUses === 0));
+      // The impact: particles, sound and the haptic all land on the strike frame together.
+      const impact = () => {
+        if (!this.sys.isActive()) return;
+        playActionFx(this.fx, res, at, stack?.item, true);
+        // Light tick per tile worked (a held press repeats it at most every 450 ms); a ripe harvest is medium.
+        if (quietHaptic) {
+          /* a painted row: no buzz per use */
+        } else if (res.kind === 'harvest') haptic('medium');
+        else haptic('tick', { repeat });
+        if (res.kind === 'harvest' && firstUse) this.hitStop();
+      };
+      this.impactAt = this.time.now + swing.delay;
+      if (swing.delay > 0) this.time.delayedCall(swing.delay, impact);
+      else impact();
       if (inputHub.actionHeld) {
         if (this.holdUses === 0) this.holdKind = res.kind;
         this.holdUses++;
@@ -763,6 +964,7 @@ export abstract class WorldScene extends Phaser.Scene {
       }
     } else {
       this.actionLock = ACTION_LOCK_MS.fail;
+      this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = true;
       audio.play('error');
       haptic('error');
@@ -961,6 +1163,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     const plan = this.planTap(x, y);
     if (!plan) return;
+    if (!plan.path && this.onPlayerTile(plan.intent.target) && this.ownTileTap()) return;
     if (!plan.path) {
       // Nothing to do there, or no way to get there: answer anyway, never silently.
       this.cancelRoute();
@@ -985,6 +1188,19 @@ export abstract class WorldScene extends Phaser.Scene {
     // Already there: act now, or, mid-swing, as soon as the swing ends (the route waits for the lock), so a
     // quick second tap is buffered, never dropped.
     if (plan.path.length === 1 && this.actionLock <= 0) this.arrive();
+  }
+
+  /** A tap on your own tile uses what you face (systems/tapIntent ownTileTap); true when it did something. */
+  private ownTileTap(): boolean {
+    const near = this.interactTile();
+    const act = this.actionTile();
+    const what = ownTileTap(act.plan, near !== null);
+    if (what === 'none') return false;
+    this.cancelRoute();
+    controlsLog.push({ kind: 'route', t: this.time.now, detail: `own tile: ${what}` });
+    if (what === 'interact') this.onInteract(near!.tile);
+    else if (this.actionLock <= 0) this.tryAction(act.tile);
+    return true;
   }
 
   private onPlayerTile(t: TileCoord): boolean {
@@ -1153,14 +1369,44 @@ export abstract class WorldScene extends Phaser.Scene {
     else this.tryAction(target);
   }
 
+  /** The UI scene's map-change wipe, when the UI is up. */
+  private wipe(): Wipe | null {
+    const ui = this.scene.get('UI') as unknown as { wipe?: Wipe } | null;
+    return ui?.wipe && ui.wipe.busy !== undefined ? ui.wipe : null;
+  }
+
+  /**
+   * Through a door: a short dither wipe closes over the world view (the HUD and dock stay), the next map is built
+   * and the game saved while it is covered, and the new map opens out of it (about 280 ms in all).
+   */
   private useDoor(door: WorldObject): void {
     const target = doorTarget(door);
     const def = mapsData.maps[target.map];
     if (!def) throw new Error(`Door ${door.id} targets unknown map "${target.map}"`);
     this.transitioning = true;
+    preparseMap(this, target.map);
     audio.play('door');
-    this.sprite.anims.stop();
-    this.sprite.setFrame(playerIdleFrame(getState().player.facing));
+    const style = doorStyle(this.mapId, target.map);
+    if (style && !getState().settings.reduceMotion)
+      new DoorFx(this, door.tx, door.ty, this.frames.door()).open();
+    this.walkIdx = -1;
+    showFrame(this.sprite, this.frames.idle(getState().player.facing, 0));
+    const wipe = this.wipe();
+    if (wipe && !wipe.busy) {
+      // Under the closed wipe, one job per frame: snapshot the save, take this map down, build the next one.
+      const ui = this.scene.get('UI');
+      const game = this.game;
+      return wipe.close(
+        WIPE_CLOSE_MS,
+        () => {
+          teleportPlayer(getState(), target);
+          void saveNow(true);
+          this.scene.stop();
+          ui.time.delayedCall(1, () => game.scene.start(def.scene));
+        },
+        getState().settings.reduceMotion,
+      );
+    }
     const cam = this.cameras.main;
     cam.fadeOut(FADE_MS, FADE_COLOR.r, FADE_COLOR.g, FADE_COLOR.b);
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

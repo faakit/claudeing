@@ -133,9 +133,10 @@ export class TileHighlight {
 
   /** Brief pop so every press feels acknowledged. */
   pulse(): void {
+    // A flash, not a scale pop: the marker keeps its whole-pixel corners.
     this.scene.tweens.killTweensOf(this.gfx);
-    this.gfx.setScale(1.3);
-    this.scene.tweens.add({ targets: this.gfx, scale: 1, duration: 150, ease: 'Back.easeOut' });
+    this.gfx.setScale(1).setAlpha(0.35);
+    this.scene.tweens.add({ targets: this.gfx, alpha: 1, duration: 150, ease: 'Quad.easeOut' });
   }
 
   /**
@@ -145,16 +146,32 @@ export class TileHighlight {
   ping(tx: number, ty: number, ok = false): void {
     const r = this.ring;
     this.scene.tweens.killTweensOf(r);
-    r.clear();
-    r.lineStyle(3, 0x14101f, 0.5).strokeCircle(0, 0, 6);
-    r.lineStyle(1, ok ? MARKER_COLORS.work : MARKER_COLORS.none, 1).strokeCircle(0, 0, 6);
+    // The ring grows by whole pixels (redrawn at each radius, never scaled) as it fades.
+    const color = ok ? MARKER_COLORS.work : MARKER_COLORS.none;
+    const draw = (rad: number) => {
+      r.clear();
+      r.lineStyle(3, 0x14101f, 0.5).strokeCircle(0, 0, rad);
+      r.lineStyle(1, color, 1).strokeCircle(0, 0, rad);
+    };
+    let shown = 4;
+    draw(shown);
     r.setPosition(tx * TILE_SIZE + TILE_SIZE / 2, ty * TILE_SIZE + TILE_SIZE / 2)
       .setVisible(true)
       .setAlpha(1)
-      .setScale(0.6);
+      .setScale(1);
+    const grow = { rad: 4 };
+    this.scene.tweens.add({
+      targets: grow,
+      rad: 8,
+      duration: 380,
+      ease: 'Sine.easeOut',
+      onUpdate: () => {
+        const rad = Math.round(grow.rad);
+        if (rad !== shown) draw((shown = rad));
+      },
+    });
     this.scene.tweens.add({
       targets: r,
-      scale: 1.3,
       alpha: 0,
       duration: 380,
       ease: 'Sine.easeOut',

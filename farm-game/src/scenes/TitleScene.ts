@@ -14,6 +14,10 @@ import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
 import { Button } from '../ui/widgets';
+import { Wipe } from '../fx/Wipe';
+import { WIPE_CLOSE_MS } from '../fx/feel';
+import { prewarmTasks } from '../fx/prewarm';
+import { preparseMap } from './mapCache';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */
 export class TitleScene extends Phaser.Scene {
@@ -24,6 +28,13 @@ export class TitleScene extends Phaser.Scene {
   private note!: Label;
   /** Enter on the title runs the main button (Continue if there is a save, else New Game). */
   private primary: (() => void) | null = null;
+  /** The dither wipe that closes over the title when a game starts (the world opens out of it). */
+  private wipe: Wipe | null = null;
+  private starting = false;
+  /** The world scene to start on the frame after the UI scene was launched. */
+  private worldNext: string | null = null;
+  private warm: (() => void)[] = [];
+  private warmIn = 0;
 
   constructor() {
     super('Title');
@@ -32,6 +43,11 @@ export class TitleScene extends Phaser.Scene {
   create(): void {
     runtime.inGame = false;
     hideSplash(); // first real screen is up: drop the native splash
+    this.starting = false;
+    this.wipe = null;
+    this.worldNext = null;
+    this.warm = prewarmTasks(this, 'farm');
+    this.warmIn = 400;
     this.confirmNew = false;
     this.buttons = [];
     this.cameras.main.setBackgroundColor('#1e2848');
@@ -185,8 +201,37 @@ export class TitleScene extends Phaser.Scene {
     );
   }
 
+  update(_time: number, delta: number): void {
+    if (this.worldNext && this.scene.get('UI').sys.isActive()) {
+      const key = this.worldNext;
+      this.worldNext = null;
+      this.scene.start(key);
+      return;
+    }
+    this.wipe?.update(delta);
+    // Prewarm (fx/prewarm.ts): one small task a frame once the title has settled, never while a game starts.
+    this.warmIn -= delta;
+    if (!this.starting && this.warmIn <= 0 && this.warm.length) {
+      this.warm.shift()!();
+      this.warmIn = 60;
+    }
+  }
+
+  /**
+   * Start a game: the title dithers away (about 130 ms), and the farm is built while the screen is covered, so
+   * the build's long frame is never seen; the world then opens out of the same wipe (UIScene).
+   */
   private start(state: GameState): void {
-    audio.unlock();
+    audio.unlock(); // inside the tap: iOS only unlocks audio during a gesture
+    if (this.starting) return;
+    this.starting = true;
+    preparseMap(this, state.player.map);
+    this.wipe = new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
+    this.wipe.close(WIPE_CLOSE_MS, () => this.enter(state), state.settings.reduceMotion);
+  }
+
+  private enter(state: GameState): void {
+    Wipe.carry = true;
     setState(state);
     audio.setVolumes(state.settings.music, state.settings.sfx, state.settings.muted);
     setHapticsEnabled(state.settings.vibrate);
@@ -194,9 +239,10 @@ export class TitleScene extends Phaser.Scene {
     runtime.inGame = true;
     runtime.busy = false;
     runtime.modals = 0;
-    const scene = mapsData.maps[state.player.map]?.scene ?? 'Farm';
-    this.scene.start(scene);
+    // The HUD and dock are built on one frame and the world on the next, both under the wipe, so neither build
+    // makes a frame long enough to see (or to feel, if a touch lands on it).
     this.scene.launch('UI');
+    this.worldNext = mapsData.maps[state.player.map]?.scene ?? 'Farm';
   }
 
   /**

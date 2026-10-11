@@ -16,6 +16,7 @@ import { CH, SEAM, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
 import { runtime } from '../state/runtime';
+import { tickToward } from '../fx/feel';
 
 /** Hotbar slot size: 23 logical px is ~45 CSS px on a typical phone, so taps land first time. */
 export const SLOT = 23;
@@ -54,6 +55,13 @@ export class Hud {
 
   private readonly meters: Phaser.GameObjects.Graphics;
   private meterKey = '';
+  /** Energy and water as shown: they tick toward the real values (whole bar pixels). */
+  private shownEnergy = -1;
+  private shownWater = -1;
+  /** The hotbar's selection rise: when it changed, and which slot it left. */
+  private selAt = -1e9;
+  private selFrom = -1;
+  private coinHopAt = -1e9;
 
   private readonly hotbarGfx: Phaser.GameObjects.Graphics;
   private hotbarIcons: Phaser.GameObjects.Image[] = [];
@@ -113,14 +121,9 @@ export class Hud {
     this.weatherLabel = new Label(scene, 130, 21, '', { color: CH.creamDim }).setDepth(depth + 1);
 
     this.meters = scene.add.graphics().setDepth(depth);
-    scene.add
-      .image(10, 41, 'ui_bolt')
-      .setScale(0.8)
-      .setDepth(depth + 1);
-    scene.add
-      .image(107, 41, 'ui_drop')
-      .setScale(0.8)
-      .setDepth(depth + 1);
+    // 1x: a 0.8 scale dropped a row and a column of the icons' pixels
+    scene.add.image(10, 41, 'ui_bolt').setDepth(depth + 1);
+    scene.add.image(107, 41, 'ui_drop').setDepth(depth + 1);
 
     this.goalGfx = scene.add.graphics().setDepth(depth);
     this.goalLabel = new Label(scene, 9, 52, '', { color: CH.cream }).setDepth(depth + 1);
@@ -240,19 +243,22 @@ export class Hud {
     if (this.weatherIcon.texture.key !== weatherKey) this.weatherIcon.setTexture(weatherKey);
     this.weatherLabel.setText(s.weather === 'storm' ? 'Storm' : rainy ? 'Rainy' : 'Sunny');
 
+    const dt = this.scene.game.loop.delta;
     if (this.shownMoney < 0) this.shownMoney = s.money;
     if (this.shownMoney !== s.money) {
-      const diff = s.money - this.shownMoney;
-      this.shownMoney += Math.sign(diff) * Math.max(1, Math.round(Math.abs(diff) * 0.12));
-      if (Math.abs(s.money - this.shownMoney) < 1) this.shownMoney = s.money;
-      this.coin.setScale(1 + 0.25 * Math.abs(Math.sin(time / 60)));
-    } else this.coin.setScale(1);
-    this.goldLabel.setText(this.shownMoney.toLocaleString('en-US'));
+      // Gold ticks toward its new value (frame-rate independent); the coin hops a pixel as it counts.
+      this.shownMoney = tickToward(this.shownMoney, s.money, dt);
+      if (time - this.coinHopAt > 180) this.coinHopAt = time;
+      this.goldLabel.setText(this.shownMoney.toLocaleString('en-US'));
+    } else if (this.goldLabel.text === '') this.goldLabel.setText(s.money.toLocaleString('en-US'));
+    this.coin.setY(time - this.coinHopAt < 90 ? 9 : 10);
 
     this.drawGoal(s);
-    this.drawMeters(s);
-    if (this.hotbarDirty || s.inventory.selected !== this.lastSelected) this.drawHotbar(s);
-    this.updateToasts(time);
+    this.drawMeters(s, dt);
+    const rising = time - this.selAt < 120;
+    if (this.hotbarDirty || rising || s.inventory.selected !== this.lastSelected)
+      this.drawHotbar(s);
+    this.updateToasts(time, dt);
   }
 
   // ---- goal tracker ----
@@ -301,15 +307,36 @@ export class Hud {
   }
 
   // ---- energy & water ----
-  private drawMeters(s: GameState): void {
-    const key = `${s.energy}|${s.water}|${maxEnergy(s)}|${waterCapacity(s)}`;
-    if (key === this.meterKey) return; // only redraw when a value changed
+  /**
+   * Energy and water bars. The fills tick toward their new length a whole pixel at a time instead of jumping
+   * (frame-rate independent, about a fifth of a second for a big change).
+   */
+  private drawMeters(s: GameState, dt: number): void {
+    const maxE = maxEnergy(s);
+    const capW = waterCapacity(s);
+    const FILL = 78; // inner bar width in px
+    const wantE = Math.round((FILL * Math.max(0, Math.min(maxE, s.energy))) / maxE);
+    const wantW = Math.round((FILL * Math.max(0, Math.min(capW, s.water))) / capW);
+    if (this.shownEnergy < 0) this.shownEnergy = wantE;
+    if (this.shownWater < 0) this.shownWater = wantW;
+    this.shownEnergy = tickToward(this.shownEnergy, wantE, dt, 0.25);
+    this.shownWater = tickToward(this.shownWater, wantW, dt, 0.25);
+    const e = s.energy / maxE;
+    const key = `${this.shownEnergy}|${this.shownWater}|${e > 0.5 ? 2 : e > 0.2 ? 1 : 0}`;
+    if (key === this.meterKey) return; // only redraw when a shown value changed
     this.meterKey = key;
-    const e = s.energy / maxEnergy(s);
     const g = this.meters;
     g.clear();
-    drawBar(g, 17, 37, 80, 8, e, e > 0.5 ? CH.green : e > 0.2 ? CH.warn : CH.red);
-    drawBar(g, 114, 37, 80, 8, s.water / waterCapacity(s), CH.blue);
+    drawBar(
+      g,
+      17,
+      37,
+      80,
+      8,
+      this.shownEnergy / FILL,
+      e > 0.5 ? CH.green : e > 0.2 ? CH.warn : CH.red,
+    );
+    drawBar(g, 114, 37, 80, 8, this.shownWater / FILL, CH.blue);
   }
 
   // ---- hotbar ----
@@ -317,16 +344,25 @@ export class Hud {
     this.hotbarDirty = false;
     const g = this.hotbarGfx;
     g.clear();
+    const now = this.scene.time.now;
+    if (s.inventory.selected !== this.lastSelected && this.lastSelected >= 0) {
+      this.selAt = now;
+      this.selFrom = this.lastSelected;
+    }
+    // The selected slot rises 2 px in two whole steps; the one it left sinks the same way (Calm: at once).
+    const calm = this.getState().settings.reduceMotion;
+    const t = now - this.selAt;
+    const half = !calm && t < 60;
     for (let i = 0; i < game.hotbarSlots; i++) {
       const x = HOTBAR_X + i * (SLOT + SLOT_GAP);
       const sel = i === s.inventory.selected;
-      drawSlot(g, x, HOTBAR_Y - (sel ? 2 : 0), SLOT, sel, false, 'chrome');
+      const lift = sel ? (half ? 1 : 2) : i === this.selFrom && half ? 1 : 0;
+      drawSlot(g, x, HOTBAR_Y - lift, SLOT, sel, false, 'chrome');
       const stack = s.inventory.slots[i] ?? null;
       const icon = this.hotbarIcons[i]!;
       const qty = this.hotbarQty[i]!;
       const star = this.hotbarStars[i]!;
       const star2 = this.hotbarStars2[i]!;
-      const lift = sel ? 2 : 0;
       if (stack) {
         const ref = refOf(stack);
         icon
@@ -433,7 +469,7 @@ export class Hud {
     }
   }
 
-  private updateToasts(time: number): void {
+  private updateToasts(time: number, dt: number): void {
     this.toasts = this.toasts.filter((t) => {
       const age = time - t.born;
       if (age > 2800) {
@@ -442,7 +478,8 @@ export class Hud {
         t.lit?.destroy();
         return false;
       }
-      const a = age > 2200 ? 1 - (age - 2200) / 600 : 1;
+      // Eases in over 140 ms (fade, and a 4 px rise below), out over 600 ms.
+      const a = age > 2200 ? 1 - (age - 2200) / 600 : Math.min(1, age / 140);
       t.label.setAlpha(a);
       t.bg.setAlpha((SKIN === 'plum' ? 0.72 : 1) * a); // walnut: an opaque plate, never a grey veil
       t.lit?.setAlpha(a);
@@ -460,7 +497,10 @@ export class Hud {
       t.label.setDepth(sheet ? 232 : 80);
       t.bg.setDepth(sheet ? 231 : 79);
       t.lit?.setDepth(sheet ? 231.5 : 79.5);
-      t.label.y += (y - t.label.y) * (sheet ? 1 : 0.3);
+      const born = time - t.born < 140 && !sheet && !this.getState().settings.reduceMotion;
+      const target = born ? y + Math.round(4 * (1 - (time - t.born) / 140)) : y;
+      // Older toasts glide up as a new one arrives, a whole pixel at a time, never stalling short.
+      t.label.y = sheet ? target : tickToward(Math.round(t.label.y), target, dt, 0.3);
       t.bg
         .setPosition(t.label.x, t.label.y + t.label.textHeight / 2)
         .setSize(t.label.textWidth + 10, t.label.textHeight + 5);

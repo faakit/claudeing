@@ -3,6 +3,10 @@ import { PX_TEXTURE } from '../art/gameArt';
 import { ATLAS_FILES } from '../art/manifest';
 import { getState } from '../state/store';
 import { Label } from '../ui/font';
+import { popSize } from './feel';
+
+/** Calm mode (reduced motion): no particles, hops or swings; things appear and fade in place. */
+const calm = (): boolean => getState().settings.reduceMotion;
 
 interface Burst {
   count: number;
@@ -15,7 +19,11 @@ interface Burst {
   spread?: number;
 }
 
-/** Pooled particles, floating numbers and tool swings. Purely cosmetic. */
+/**
+ * Pooled particles, floating numbers and tool swings. Purely cosmetic. Everything moves and sizes in whole pixels
+ * (particles are 1 or 2 px squares, icons squash by whole pixels, swings turn in quarter turns), and Calm mode
+ * drops the motion.
+ */
 export class Effects {
   private pool: Phaser.GameObjects.Image[] = [];
 
@@ -27,13 +35,15 @@ export class Effects {
   }
 
   private burst(x: number, y: number, b: Burst): void {
+    if (calm()) return;
     const colors = Array.isArray(b.color) ? b.color : [b.color];
     for (let i = 0; i < b.count; i++) {
       const p = this.grab();
       const a = -Math.PI / 2 + (Math.random() - 0.5) * (b.spread ?? Math.PI * 2);
       const v = b.speed * (0.5 + Math.random() * 0.7);
       const life = b.life * (0.7 + Math.random() * 0.6);
-      const size = (b.size ?? 1) * (0.7 + Math.random() * 0.8);
+      // A particle is a 1 or 2 px square that steps down to 1 px as it fades (never a fractional size).
+      const size = Math.max(1, Math.round((b.size ?? 1) * (0.7 + Math.random() * 0.8)));
       p.setPosition(x, y)
         .setTint(colors[i % colors.length]!)
         .setScale(size);
@@ -45,9 +55,11 @@ export class Effects {
         x: x + dx,
         y: y + dy,
         alpha: 0,
-        scale: size * 0.3,
         duration: life,
         ease: 'Quad.easeOut',
+        onUpdate: (tw) => {
+          if (size > 1 && tw.progress > 0.5) p.setScale(1);
+        },
         onComplete: () => {
           p.setVisible(false).setActive(false);
           this.pool.push(p);
@@ -180,14 +192,19 @@ export class Effects {
 
   /** Rising, fading number or word above a point. */
   floatText(x: number, y: number, text: string, color = 0xf4ead2): void {
-    const label = new Label(this.scene, x, y, text, { color, align: 'center' }).setDepth(9500);
+    const label = new Label(this.scene, Math.round(x), Math.round(y), text, {
+      color,
+      align: 'center',
+    }).setDepth(9500);
+    const still = calm();
     this.scene.tweens.add({
       targets: label,
-      y: y - 16,
+      y: still ? y : y - 16,
       alpha: 0,
       duration: 950,
       ease: 'Sine.easeOut',
-      delay: 120,
+      delay: still ? 500 : 120,
+      onUpdate: () => label.setY(Math.round(label.y)),
       onComplete: () => label.destroy(),
     });
   }
@@ -197,8 +214,44 @@ export class Effects {
    * (never an in-between scale that drops pixel rows) and it moves on whole pixels (review 8).
    */
   itemPop(x: number, y: number, iconKey: string): void {
-    const img = this.scene.add.image(x, y, iconKey).setDepth(9400).setScale(0.5);
-    this.scene.time.delayedCall(90, () => img.active && img.setScale(1));
+    const img = this.scene.add.image(Math.round(x), Math.round(y), iconKey).setDepth(9400);
+    if (calm()) {
+      // Calm: the item shows where it was gathered and fades, no hop.
+      this.scene.tweens.add({
+        targets: img,
+        alpha: 0,
+        duration: 300,
+        delay: 450,
+        onComplete: () => img.destroy(),
+      });
+      return;
+    }
+    const drawn =
+      this.scene.textures.exists(`${iconKey}_pop_0`) &&
+      this.scene.textures.exists(`${iconKey}_pop_1`);
+    if (drawn) {
+      // The art's pop frames (round 4): stretch as it leaves, squash at the top of the hop, then the icon. They
+      // share the icon's bottom line, so the image is anchored at its bottom.
+      img
+        .setOrigin(0.5, 1)
+        .setY(img.y + 8)
+        .setTexture(`${iconKey}_pop_0`);
+      this.scene.time.delayedCall(60, () => img.active && img.setTexture(`${iconKey}_pop_1`));
+      this.scene.time.delayedCall(120, () => img.active && img.setTexture(iconKey));
+      y += 8;
+    } else {
+      // Squash on the launch, stretch on the way up, then its true size: whole-pixel display sizes.
+      const w = img.width;
+      const h = img.height;
+      const born = this.scene.time.now;
+      const squash = () => {
+        if (!img.active) return;
+        const s = popSize(this.scene.time.now - born, w, h);
+        img.setDisplaySize(s.w, s.h);
+        if (s.w !== w || s.h !== h) this.scene.time.delayedCall(16, squash);
+      };
+      squash();
+    }
     this.scene.tweens.add({
       targets: img,
       y: y - 18,
@@ -216,24 +269,46 @@ export class Effects {
     });
   }
 
-  /** A tool icon swings in an arc in front of the player. */
+  /**
+   * A tool icon swings in front of the player in three held steps, turning only in quarter turns (pixel-exact):
+   * raised behind (the wind-up, 50 ms), down on the tile (the impact, 100 ms), then a 1 px settle as it fades.
+   * Calm mode shows the impact step alone.
+   */
   swing(x: number, y: number, iconKey: string, dir: 'up' | 'down' | 'left' | 'right'): void {
     const side = dir === 'left' ? -1 : 1;
+    const flank = dir === 'left' || dir === 'right';
     const img = this.scene.add
-      .image(x + (dir === 'left' || dir === 'right' ? side * 8 : 0), y - 12, iconKey)
+      .image(0, 0, iconKey)
       .setDepth(9300)
-      .setOrigin(0.15, 0.9);
-    const start = dir === 'up' ? -50 : dir === 'down' ? -20 : -70 * side;
-    const end = dir === 'up' ? 40 : dir === 'down' ? 80 : 50 * side;
-    img.setAngle(start).setFlipX(dir === 'left');
-    if (dir === 'down') img.y += 8;
-    if (dir === 'up') img.y -= 6;
-    this.scene.tweens.add({ targets: img, angle: end, duration: 150, ease: 'Cubic.easeIn' });
+      .setFlipX(dir === 'left');
+    // [dx, dy, angle] for the wind-up and the impact, by facing.
+    const steps: [number, number, number][] = flank
+      ? [
+          [side * 2, -22, -90 * side],
+          [side * 10, -10, 0],
+        ]
+      : dir === 'down'
+        ? [
+            [6, -22, -90],
+            [2, -6, 0],
+          ]
+        : [
+            [-6, -18, 90],
+            [2, -26, 0],
+          ];
+    const put = ([dx, dy, a]: [number, number, number]) =>
+      img.active && img.setPosition(Math.round(x + dx), Math.round(y + dy)).setAngle(a);
+    if (calm()) put(steps[1]!);
+    else {
+      put(steps[0]!);
+      this.scene.time.delayedCall(50, () => put(steps[1]!));
+    }
+    this.scene.time.delayedCall(150, () => img.active && img.setY(img.y + 1));
     this.scene.tweens.add({
       targets: img,
       alpha: 0,
       duration: 90,
-      delay: 130,
+      delay: 170,
       onComplete: () => img.destroy(),
     });
   }

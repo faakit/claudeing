@@ -3,6 +3,9 @@ import { EVT_INTERACT_TARGET, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../con
 import { game, mapsData } from '../data';
 import { NightGlow } from '../fx/NightGlow';
 import { RainLayer } from '../fx/RainLayer';
+import { Wipe } from '../fx/Wipe';
+import { bakeGraphics } from '../fx/bake';
+import { WIPE_OPEN_MS } from '../fx/feel';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { controlsLog } from '../input/controlsLog';
@@ -63,6 +66,7 @@ import {
 import type { Modal } from '../ui/widgets';
 import { mapCacheKey } from './PreloadScene';
 import { WorldScene } from './WorldScene';
+import { preparseMap } from './mapCache';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
@@ -119,11 +123,22 @@ export const INTERACT_ICONS: Record<string, (g: Phaser.GameObjects.Graphics) => 
   npc: drawTalkIcon,
 };
 
+/** Interact icons drawn once into textures (fx/bake.ts), one per drawer, centred in 28x28. */
+const iconKeys = new Map<(g: Phaser.GameObjects.Graphics) => void, string>();
+function iconTexture(scene: Phaser.Scene, draw: (g: Phaser.GameObjects.Graphics) => void): string {
+  let key = iconKeys.get(draw);
+  if (!key) {
+    key = `fx_interact_icon_${iconKeys.size}`;
+    iconKeys.set(draw, key);
+  }
+  return bakeGraphics(scene, key, 28, 28, 14, 14, draw);
+}
+
 /** HUD overlay and flow controller: thumb controls, panels, day tint, sleep and results. */
 export class UIScene extends Phaser.Scene {
   private controls: TouchButton[] = [];
   private interactButton: TouchButton | null = null;
-  private interactIcon: Phaser.GameObjects.Graphics | null = null;
+  private interactIcon: Phaser.GameObjects.Image | null = null;
   private interactType: string | null = null;
   private worldTouch!: WorldTouch;
   private ring!: ToolRing;
@@ -165,6 +180,8 @@ export class UIScene extends Phaser.Scene {
   private dragHint: Phaser.GameObjects.Container | null = null;
   private sleeping = false;
   private coach!: CoachMarks;
+  /** The map-change wipe over the world view (fx/Wipe.ts); doors close it, the next map opens it. */
+  wipe!: Wipe;
   private cleanup: (() => void)[] = [];
 
   constructor() {
@@ -196,6 +213,14 @@ export class UIScene extends Phaser.Scene {
       .setAlpha(0);
 
     this.glow = new NightGlow(this, 1.5); // lights over the day tint, under the rain and the HUD
+    this.wipe = new Wipe(this, WORLD_VIEW, 40); // over the world and its weather, under the HUD and dock
+    if (Wipe.carry) {
+      // The title's wipe closed over the whole screen: open the game out of it.
+      Wipe.carry = false;
+      this.wipe.setRect({ x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
+      this.wipe.cover();
+      this.wipe.open(WIPE_OPEN_MS, getState().settings.reduceMotion);
+    }
     this.rain = new RainLayer(this, 2);
     this.hud = new Hud(this, getState);
     this.ring = new ToolRing(this, getState, (c) => {
@@ -268,6 +293,7 @@ export class UIScene extends Phaser.Scene {
       this.game.events.off(EVT_INTERACT_TARGET, this.setInteractTarget, this);
       this.hud.destroy();
       this.coach.destroy();
+      this.wipe.destroy();
       runtime.coaching = false;
       // Quitting to title must silence the world: rain and night music belong to the game scene.
       audio.setRain(0);
@@ -280,12 +306,16 @@ export class UIScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    this.wipe.update(delta);
+    if (!this.wipe.busy) this.wipe.setRect(WORLD_VIEW, 40);
     const s = getState();
     if (this.dragHint && (inputHub.direction !== null || tutorialOn(s))) {
       if (inputHub.direction !== null) addStat(s, 'moved', 1); // remembered: the hint never returns
       this.dragHint.destroy();
       this.dragHint = null;
     }
+    // The Interact icon rides with its button (its 2 px rise and 1 px press).
+    if (this.interactIcon && this.interactButton) this.interactIcon.y = this.interactButton.view.y;
     this.hud.update(time);
     this.updateHold();
     this.worldTouch.update();
@@ -376,7 +406,12 @@ export class UIScene extends Phaser.Scene {
     this.actionIcon = this.add
       .image(action.view.x, action.view.y, 'ui_coin')
       .setDepth(91)
-      .setScale(1.9);
+      .setScale(2); // a whole-number scale: every icon pixel is 2x2 (1.9 dropped rows)
+    action.onPressVisual = (down) => {
+      if (!this.actionIcon) return;
+      this.tweens.killTweensOf(this.actionIcon);
+      this.actionIcon.setY(this.layout.action.y + (down ? 1 : 0));
+    };
     this.actionIconKey = '';
     // Interact and Menu act on a clean release, and a drag that starts on them walks instead.
     this.interactButton = new TouchButton(this, {
@@ -401,9 +436,9 @@ export class UIScene extends Phaser.Scene {
     });
     this.controls.push(action, this.interactButton, menu);
 
-    this.interactIcon = this.add.graphics().setDepth(91);
+    this.interactIcon = this.add.image(0, 0, iconTexture(this, drawHandIcon)).setDepth(91);
     this.interactIcon.setPosition(this.interactButton.view.x, this.interactButton.view.y);
-    this.interactButton.view.setAlpha(0).setScale(0.8);
+    this.interactButton.view.setAlpha(0);
     this.interactButton.setEnabled(false);
     this.interactIcon.setAlpha(0);
     this.setInteractTarget(this.interactType);
@@ -477,7 +512,7 @@ export class UIScene extends Phaser.Scene {
     if (!icon) return;
     const x = this.layout.action.x;
     this.tweens.killTweensOf(icon);
-    icon.setX(x).setScale(1.9).setAlpha(1);
+    icon.setX(x).setY(this.layout.action.y).setScale(2).setAlpha(1);
     if (getState().settings.reduceMotion) {
       icon.setAlpha(0.45);
       this.tweens.add({ targets: icon, alpha: 1, duration: 180 });
@@ -496,9 +531,23 @@ export class UIScene extends Phaser.Scene {
   /** The Action icon pops (paint armed); skipped in Calm mode. */
   private pulseAction(): void {
     if (!this.actionIcon || getState().settings.reduceMotion) return;
-    this.tweens.killTweensOf(this.actionIcon);
-    this.actionIcon.setScale(2.4);
-    this.tweens.add({ targets: this.actionIcon, scale: 1.9, duration: 160, ease: 'Back.easeOut' });
+    this.hopActionIcon(3, 160);
+  }
+
+  /** The Action icon hops up `px` whole pixels and lands (no scale pop: the icon's pixels stay square). */
+  private hopActionIcon(px: number, ms: number): void {
+    const icon = this.actionIcon;
+    if (!icon) return;
+    const y0 = this.layout.action.y;
+    this.tweens.killTweensOf(icon);
+    icon.setY(y0 - px).setScale(2);
+    this.tweens.add({
+      targets: icon,
+      y: y0,
+      duration: ms,
+      ease: 'Bounce.easeOut',
+      onUpdate: () => icon.setY(Math.round(icon.y)),
+    });
   }
 
   /** First-run tip: after a few tool changes by swipe or hotbar, teach the tool ring (once). */
@@ -534,14 +583,7 @@ export class UIScene extends Phaser.Scene {
     if (key) this.actionIcon.setTexture(key);
     // A tool swap (yours or auto tool's) pops the icon, so the change is seen, not only felt.
     if (changed && key && !s.settings.reduceMotion) {
-      this.tweens.killTweensOf(this.actionIcon);
-      this.actionIcon.setScale(2.3);
-      this.tweens.add({
-        targets: this.actionIcon,
-        scale: 1.9,
-        duration: 140,
-        ease: 'Back.easeOut',
-      });
+      this.hopActionIcon(2, 140);
     }
   }
 
@@ -585,10 +627,8 @@ export class UIScene extends Phaser.Scene {
     if (!this.interactButton || !this.interactIcon) return;
     this.interactButton.setEnabled(type !== null);
     if (type !== null) {
-      this.interactIcon.clear();
-      (INTERACT_ICONS[type] ?? INTERACT_ICONS[type.split(':')[0] ?? ''] ?? drawHandIcon)(
-        this.interactIcon,
-      );
+      const draw = INTERACT_ICONS[type] ?? INTERACT_ICONS[type.split(':')[0] ?? ''] ?? drawHandIcon;
+      this.interactIcon.setTexture(iconTexture(this, draw));
     }
     this.tweens.add({ targets: this.interactIcon, alpha: type !== null ? 1 : 0, duration: 140 });
   }
@@ -696,6 +736,8 @@ export class UIScene extends Phaser.Scene {
     this.sleeping = true;
     runtime.busy = true;
     inputHub.clearHeld();
+    // The house map is parsed during the fade (scenes/mapCache.ts), so the rollover frame stays short.
+    this.time.delayedCall(100, () => preparseMap(this, mapsData.wake.map));
     await this.fadeBlackout(1, 650);
     audio.play('sleep');
 

@@ -273,3 +273,16 @@ describe('taps on solid art and multi-tile things (round 3, guided-start finding
     expect(Math.abs(stand.tx - r.target.tx) + Math.abs(stand.ty - r.target.ty)).toBe(1);
   });
 });
+
+describe('a tap on your own tile (coordinator, round 4)', () => {
+  it('uses the faced tile: a harmless act first, else Interact, never till or plant', async () => {
+    const { ownTileTap } = await import('../src/systems/tapIntent');
+    expect(ownTileTap('harvest', true)).toBe('act');
+    expect(ownTileTap('water', false)).toBe('act');
+    expect(ownTileTap(null, true)).toBe('interact');
+    expect(ownTileTap('till', true)).toBe('interact');
+    expect(ownTileTap('till', false)).toBe('none');
+    expect(ownTileTap('plant', false)).toBe('none');
+    expect(ownTileTap(null, false)).toBe('none');
+  });
+});

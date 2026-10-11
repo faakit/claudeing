@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CH } from '../ui/theme';
 import { GESTURE } from './gesture';
+import { bakeGraphics } from '../fx/bake';
 
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
 
@@ -35,11 +36,30 @@ export interface TouchButtonOptions {
   owns?: (x: number, y: number) => boolean;
 }
 
+/** The button's disc and its press light as textures (baked once per radius; the title prewarms them). */
+export function bakeButton(
+  scene: Phaser.Scene,
+  radius: number,
+): { bodyKey: string; glowKey: string; c: number } {
+  const size = (radius + 4) * 2;
+  const c = radius + 4;
+  const bodyKey = bakeGraphics(scene, `fx_button_${radius}`, size, size, c, c, (body) => {
+    body.fillStyle(CH.ink, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
+    body.fillStyle(CH.panel, 0.62).fillCircle(0, 0, radius);
+    body.lineStyle(2, CH.cream, 0.7).strokeCircle(0, 0, radius - 1);
+    body.lineStyle(1, CH.ink, 0.5).strokeCircle(0, 0, radius + 0.5);
+  });
+  const glowKey = bakeGraphics(scene, `fx_button_glow_${radius}`, size, size, c, c, (g) =>
+    g.fillStyle(CH.cream, 0.3).fillCircle(0, 0, radius - 2),
+  );
+  return { bodyKey, glowKey, c };
+}
+
 /** Round on-screen button with a generous hit area and press feedback. */
 export class TouchButton {
   readonly view: Phaser.GameObjects.Container;
   readonly zone: Phaser.GameObjects.Zone;
-  private readonly glow: Phaser.GameObjects.Graphics;
+  private readonly glow: Phaser.GameObjects.Image;
   private enabled = true;
   private pressed = false;
   private pointerId: number | null = null;
@@ -52,13 +72,10 @@ export class TouchButton {
     private readonly opts: TouchButtonOptions,
   ) {
     const { x, y, radius, icon } = opts;
-    const body = scene.add.graphics();
-    body.fillStyle(CH.ink, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
-    body.fillStyle(CH.panel, 0.62).fillCircle(0, 0, radius);
-    body.lineStyle(2, CH.cream, 0.7).strokeCircle(0, 0, radius - 1);
-    body.lineStyle(1, CH.ink, 0.5).strokeCircle(0, 0, radius + 0.5);
-    this.glow = scene.add.graphics().setAlpha(0);
-    this.glow.fillStyle(CH.cream, 0.3).fillCircle(0, 0, radius - 2);
+    // Drawn once into textures (fx/bake.ts): a live Graphics re-tessellates its circles every frame.
+    const { bodyKey, glowKey, c } = bakeButton(scene, radius);
+    const body = scene.add.image(-c, -c, bodyKey).setOrigin(0);
+    this.glow = scene.add.image(-c, -c, glowKey).setOrigin(0).setAlpha(0);
     const iconGfx = scene.add.graphics();
     icon(iconGfx);
 
@@ -129,14 +146,20 @@ export class TouchButton {
     this.opts.onRelease?.();
   }
 
+  /**
+   * Press-down state: on the very frame of the touch the button sinks 1 px and lights up (no tween, so it shows
+   * within a frame); on release it rises at once and the light fades. Whole pixels, no scaling.
+   */
   private press(down: boolean): void {
-    this.scene.tweens.add({
-      targets: this.view,
-      scale: down ? 0.92 : this.enabled ? 1 : 0.8,
-      duration: 70,
-    });
-    this.scene.tweens.add({ targets: this.glow, alpha: down ? 1 : 0, duration: down ? 40 : 160 });
+    this.scene.tweens.killTweensOf(this.glow);
+    this.view.y = this.opts.y + (down ? 1 : 0);
+    this.onPressVisual?.(down);
+    if (down) this.glow.setAlpha(1);
+    else this.scene.tweens.add({ targets: this.glow, alpha: 0, duration: 160 });
   }
+
+  /** Lets an icon drawn outside the button (the Action icon) sink with it. */
+  onPressVisual: ((down: boolean) => void) | null = null;
 
   get isEnabled(): boolean {
     return this.enabled;
@@ -155,12 +178,16 @@ export class TouchButton {
     this.enabled = enabled;
     if (this.zone.input) this.zone.input.enabled = enabled;
     if (!enabled) this.pressed = false;
+    // Shows and hides with a fade and a 2 px rise in whole pixels (no scale pop on drawn art).
+    this.scene.tweens.killTweensOf(this.view);
+    if (enabled) this.view.y = this.opts.y + 2;
     this.scene.tweens.add({
       targets: this.view,
       alpha: enabled ? 1 : 0,
-      scale: enabled ? 1 : 0.8,
+      y: this.opts.y,
       duration: 140,
-      ease: enabled ? 'Back.easeOut' : 'Sine.easeIn',
+      ease: enabled ? 'Quad.easeOut' : 'Sine.easeIn',
+      onUpdate: () => (this.view.y = Math.round(this.view.y)),
     });
   }
 }

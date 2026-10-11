@@ -984,6 +984,7 @@ try {
     const w = window.__farm.game.scene.getScene('Farm');
     w.ambient.emitter.timeScale = 0; // freeze the motes so only the camera moves
     w.cameras.main.stopFollow();
+    w.pcam.paused = true; // the pixel-locked follow (fx/PixelCamera.ts) lets go of the camera
   });
   await ap.waitForTimeout(200);
   const a0 = await anchor();

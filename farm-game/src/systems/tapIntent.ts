@@ -26,6 +26,21 @@ export const TAP_ACTS: ReadonlySet<string> = new Set([
   'cast',
 ]);
 
+/**
+ * A tap on the farmer's own tile: usually a slightly-off tap at the thing beside you (new-player critic: two
+ * naive runs stood by the mailbox for minutes tapping their own tile). It does what the faced tile offers, by
+ * the same rules as any tap: an obvious, harmless act (harvest, water...) first, else Interact (open, talk,
+ * collect). Never till or plant.
+ */
+export function ownTileTap(
+  facedAct: string | null,
+  interactable: boolean,
+): 'act' | 'interact' | 'none' {
+  if (facedAct && TAP_ACTS.has(facedAct)) return 'act';
+  if (interactable) return 'interact';
+  return 'none';
+}
+
 export interface TapWorld {
   tileSize: number;
   inMap(t: TileCoord): boolean;

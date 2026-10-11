@@ -935,3 +935,65 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   - *Ring:* the dead centre is judged on the raw finger (a rest 22-35 px out stays a rest on every phone); sticky
     taps use the slide rule (nearest item, clearly nearer than the next, within reach).
 
+## Game feel (feel agent, round 4, branch feel/smooth)
+
+- **Camera: pixel-locked follow (fx/PixelCamera.ts, fx/feel.ts).** Phaser's lerp follow with `roundPixels` floors
+  the lerped scroll each frame: the lerp stalls up to 8 px short in one direction, the farmer hopped 1 px back and
+  forth on screen walking right or down (125 reversals in 350 frames), and rested 8 px off centre depending on the
+  last direction. Now the camera is the farmer's own drawn pixel minus a smoothed lag, and only the lag is eased
+  (frame-rate independent, `1 - (1 - 0.12)^(dt / 16.7)`), with a 0.75 px hysteresis so frame-time noise cannot
+  flip it. Walking steadily the farmer stays on one screen pixel and the world scrolls in his pixel steps; after a
+  stop the lag eases out a whole pixel at a time; rest is always centred. Map edges have a soft 16 px knee (the
+  camera slows to a stop instead of hitting the bound at walking speed). A teleport (> 48 px in a frame) cuts.
+- **No acceleration ramp.** Stop precision is carried by settle-on-release (a decelerating glide to the tile
+  centre); an acceleration ramp would shorten the 120 ms nudge that is exactly one tile, and the walk cycle now
+  starts on a stride frame, which reads as the start of motion. Kept as is.
+- **Walk cycle by distance:** one frame per 8 px (4 frames) or 4 px (8 frames, when the art lands), footsteps on
+  the contact frames, so half speed, the settle glide and slow frames never slide the feet.
+- **Map changes: a 4x4 ordered-dither wipe** in the palette ink over the world view only (HUD and dock stay):
+  130 ms close (smoothstep), held 2 frames after the new map's first frame (its build hitch and the save happen
+  under cover), 150 ms open. Its clock takes at most a 30 Hz step, so a long frame cannot make it skip. The same
+  wipe closes over the title and the game opens out of it (no hard cut). Taps during the close are dropped on
+  purpose (they aim at the map that is leaving); the new map takes input from the first frame of the open.
+- **Tool swings with anticipation:** a 50 ms wind-up, then the impact (particles, sound and haptic together),
+  100 ms strike, 110 ms follow-through when the frames exist (agents/out/feel/frames-wanted.md). With today's art
+  the hoe's raised pose is the wind-up and the strike is a 1 px dip; the can and rod poses are already impacts and
+  show at once. Only a tool's own use poses (a harvest with the hoe selected no longer shows the hoe). The tool icon
+  swing turns in quarter turns only. Gameplay resolves on the press, as before; only the visual waits 50 ms.
+- **Root after a swing:** the stick walks again 120 ms after a use (was 200 ms, plus 100 ms of turn-in-place when
+  the push was in a new direction); a push held through the root walks the moment it ends. The 200 ms use lock
+  (the rhythm of held and painted work) is unchanged.
+- **Press-down states:** the dock buttons sink 1 px and light on the touch's own frame (no tween); the Action icon
+  sinks with them. Action still acts on a still press's lift (round 3 ruling); the press-in is the touch-down cue.
+- **Pixel integrity:** no fractional scales or free rotation on pixel art: the Action icon is 2x (was 1.9),
+  the HUD bolt and drop 1x (were 0.8), particles 1-2 px squares, pops are whole-pixel squash and stretch
+  (`popSize`), the tile marker's pulse is a flash, the tap ring is redrawn by radius, the tool ring fades in.
+  Remaining: static 0.8 / 0.62 scales of some placed objects and the coach marks' pulsing ring (onboarding's).
+- **Calm mode** now covers sheet slides, particles, item hops, floating text, crop and object pops, swings, the
+  hotbar rise, toast rise and hit-stop; fades stay (short).
+- **Sheets** close with a 150 ms slide down, but the world and the clock run again on the frame the close starts
+  and the sliding sheet takes no touches.
+- **A tap on your own tile** (coordinator, new-player critic: two naive runs stood by the mailbox for minutes) uses
+  the faced tile by the tap rules: an obvious harmless act first, else Interact; never till or plant
+  (`ownTileTap`).
+
+### Whole-pixel canvas scale (coordinator ruling, round 4)
+
+The canvas was fitted to the screen at any scale, so game pixels came out 5 or 6 device px wide on an iPhone 13
+and columns crawled as the world scrolled. Ruling: a whole number of device pixels per game pixel, floor-chosen,
+the margin filled with walnut (`#4c2c1c`, never black) and split top and bottom; where that gives up more than
+about 10% of the fitted size, or would take the tightest touch targets (24 game px apart, the hotbar) under
+the 38 CSS px bar on a phone that clears it at fit, keep the fit (a single nearest-neighbour step from the game's pixels; rendering at a
+higher integer multiple first gives the same column widths, so it was not added). Measured with
+`src/platform/displayFit.ts` (unit test `tests/display-fit.test.ts`), safe areas as in the bench profiles:
+
+| phone             | fit (dev px per game px) | uneven columns + rows at fit | floor | size given up | now                                  | uneven now | lost |
+| ----------------- | ------------------------ | ---------------------------- | ----- | ------------- | ------------------------------------ | ---------- | ---- |
+| iPhone 13/14      | 5.72                     | 166                          | 5     | 12.6%         | fit 5.72                             | 166        | 0%   |
+| Pixel 7           | 5.41                     | 245                          | 5     | 7.5%          | 5x                                   | 0          | 7.5% |
+| iPhone SE         | 3.23                     | 141                          | 3     | 7.3%          | fit 3.23 (3x: hotbar 36 CSS px < 38) | 141        | 0%   |
+| iPhone 15 Pro Max | 6.29                     | 176                          | 6     | 4.6%          | 6x                                   | 0          | 4.6% |
+| Galaxy Fold cover | 4.20                     | 120                          | 4     | 4.8%          | 4x                                   | 0          | 4.8% |
+
+Touch maps through the canvas bounds, so taps stay exact; hit areas grow to 44 CSS px from the live scale. The
+canvas sits on the device-pixel grid in both modes.

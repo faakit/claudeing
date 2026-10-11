@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { popWhole } from '../fx/pop';
 import { TILE_SIZE } from '../config';
 import { items, placeables, plots } from '../data';
 import { Label } from '../ui/font';
@@ -284,10 +285,7 @@ export class ObjectsRenderer {
           repeat: -1,
           delay: (tx * 131 + ty * 71) % 900,
         });
-      if (animate) {
-        sprite.setScale(0.3);
-        this.scene.tweens.add({ targets: sprite, scale, duration: 260, ease: 'Back.easeOut' });
-      }
+      if (animate) popWhole(this.scene, sprite); // whole pixels, never a fractional scale
       this.forage.set(key, { sprite, extra: [shadow, ring, twinkle], sig: item });
     }
     for (const [key, shown] of this.forage) {
@@ -398,10 +396,7 @@ export class ObjectsRenderer {
           extra.push(bubble);
         }
       }
-      if (animate && !shown) {
-        sprite.setScale(0.5);
-        this.scene.tweens.add({ targets: sprite, scale: 1, duration: 240, ease: 'Back.easeOut' });
-      }
+      if (animate && !shown) popWhole(this.scene, sprite); // whole pixels, never a fractional scale
       this.placed.set(obj.id, { sprite, extra, sig });
     }
     for (const [id, shown] of this.placed) {

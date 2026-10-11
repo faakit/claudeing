@@ -50,13 +50,16 @@ export interface Graph {
 export function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   const len = Math.floor(ctx.sampleRate * seconds);
   const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  // -60 dB over `seconds`, as a per-sample factor (one multiply instead of a pow per sample: the reverb is
+  // built inside the first tap, where a long frame is felt).
+  const step = Math.pow(10, -3 / (seconds * ctx.sampleRate));
   for (let c = 0; c < 2; c++) {
     const rnd = makeRng(1234 + c);
     const data = buf.getChannelData(c);
     let lp = 0;
-    for (let i = 0; i < len; i++) {
+    let decay = 1;
+    for (let i = 0; i < len; i++, decay *= step) {
       const t = i / ctx.sampleRate;
-      const decay = Math.pow(10, (-60 * t) / seconds / 20);
       const smooth = 0.15 + 0.8 * (t / seconds); // a one-pole low-pass that closes over time
       lp += (rnd() * 2 - 1 - lp) * (1 - smooth);
       data[i] = t < 0.012 ? 0 : lp * decay * 0.35;
@@ -87,7 +90,11 @@ function softClipper(ctx: BaseAudioContext): WaveShaperNode {
   return ws;
 }
 
-export function buildGraph(ctx: BaseAudioContext): Graph {
+/**
+ * `later` (live play only) builds the reverb's impulse after the current frame: the convolver is silent for that
+ * moment, and the tap that unlocked audio does not pay for it. Offline renders build it at once.
+ */
+export function buildGraph(ctx: BaseAudioContext, later?: (fn: () => void) => void): Graph {
   const master = ctx.createGain();
   // A safety limiter at the very end: many sounds at once must never clip a phone speaker.
   const limiter = ctx.createDynamicsCompressor();
@@ -120,7 +127,8 @@ export function buildGraph(ctx: BaseAudioContext): Graph {
   reverbIn.channelCount = 1;
   reverbIn.channelCountMode = 'explicit';
   const conv = ctx.createConvolver();
-  conv.buffer = impulse(ctx, REVERB_SECONDS);
+  if (later) later(() => (conv.buffer = impulse(ctx, REVERB_SECONDS)));
+  else conv.buffer = impulse(ctx, REVERB_SECONDS);
   reverbIn.connect(conv).connect(mk(musicBus, REVERB_RETURN));
   return {
     master,

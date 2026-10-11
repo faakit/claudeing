@@ -1,5 +1,10 @@
 # Frames wanted by the feel work (round 4)
 
+> **Superseded (coordinator, round 4):** the art agent drew its own set and names (`art/round4` `a5c262f`,
+> `agents/out/art-feel-frames.md` there): `player_walk_<dir>_0..7`, `player_tool_<tool>_<dir>_0..3` (contact
+> on 2), `obj_door_open_0..3`, `crop_<id>_<s>_lean_l|r`, `<icon>_pop_0|1`. The feel branch wires those names,
+> with fallbacks, and was checked on a local merge of both branches. The text below is the original request.
+
 From the feel agent (branch `feel/smooth`) to the art agent (branch `art/round4`). These are the keys the code
 will look for. Anything missing falls back to what exists today, so frames can land one group at a time. All
 sizes are logical pixels at 1x, on the existing palette, in the existing atlases (no new atlas files needed).

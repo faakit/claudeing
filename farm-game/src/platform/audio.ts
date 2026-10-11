@@ -232,7 +232,7 @@ class AudioEngine {
   }
 
   private build(ctx: AudioContext): void {
-    const g = buildGraph(ctx);
+    const g = buildGraph(ctx, (fn) => globalThis.setTimeout(fn, 250));
     this.master = g.master;
     this.sfxBus = g.sfxBus;
     this.synthBus = g.synthBus;
