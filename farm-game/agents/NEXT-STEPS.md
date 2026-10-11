@@ -117,8 +117,18 @@ Spring) and M4 (channels, save v18) are built on M2's map stages. Save version i
 - Finn's dry lines say the dryness is upstream because the town river still flows; M6 switches back to the "mud and
   a trickle" lines, keyed on the town's stage (coordinator ruling).
 - Wendhead is small on purpose; its gorge and the weir come with M6 (a `restored` stage and delta rects there).
+- The valley critic accepted M1-M4 at e5f07d6 with no blockers or majors (reviews 2-7 and `final.md` in
+  `C:/Users/andre/dev/tiny-acre/valley-critique/`). Still open from `final.md`:
+  - minor (R3-1): if M1+M2 ever shipped without M3, Ilse's gate would open onto an empty Wendhead. Moot while
+    `valley/m1` merges as a whole: keep M2 from merging alone.
+  - minor, routed: channel art (a dug ditch and water with banks) and dig juice (feel); the Old Spring's site sprites
+    and the other code placeholders (For art below).
+  - nit (R6-2): the `channels` intro could show a corner in its paint target (the 22-tile home route turns once).
+  - nit (R2-9), audio: the first-green jingle is the special-order fanfare (A1); the A2 creek loop is pending.
+  - owner question: left-handed digging reaches as far with an edge rest (1-2 s) instead of drawing the whole line;
+    the critic asked the owner whether that is acceptable.
 
-**Next:** M6 (the Weir: the town's `dry` and `river` stages, Wendhead `restored`, fish gated on the weir, the
+**Next:** **M6 is next** (the Weir: the town's `dry` and `river` stages, Wendhead `restored`, fish gated on the weir, the
 flow to 64), then M7 (towing; a lab spike first), M8 (the Seed House, using the v18 tag fields), M11.
 
 **For art:** the Old Spring's site in four stages (a 2x2 rockfall at the pool's mouth, lower each day, the mouth
