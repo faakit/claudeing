@@ -8,6 +8,7 @@ import { toast } from '../systems/events';
 import { registerPlaceableBehavior } from '../systems/placeables';
 import { rollQuality } from '../systems/quality';
 import { addXp } from '../systems/skills';
+import { t } from '../i18n';
 
 /** What a bee house holds (in the object's `data`, so it saves for free). */
 export interface HiveData {
@@ -60,7 +61,7 @@ registerPlaceableBehavior('beeHouse', {
     if (h.timer >= days) {
       h.timer = 0;
       h.ready = Math.min(cap, h.ready + 1);
-      ctx.notes.push('Honey is ready in a bee house.');
+      ctx.notes.push(t('bees.morningNote'));
     }
   },
   interact(state, obj, def) {
@@ -70,11 +71,11 @@ registerPlaceableBehavior('beeHouse', {
       const near = flowersNear(state, obj, Number(def.params['flowerRadius'] ?? 0));
       return {
         kind: 'message',
-        text: `Honey in ${left} day${left > 1 ? 's' : ''}.${near ? ' The bees love your flowers.' : ''}`,
+        text: t('bees.honeyIn', { count: left, flowers: near ? t('bees.flowers') : '' }),
       };
     }
     const take = Math.min(h.ready, roomFor(state, 'honey', h.ready));
-    if (take === 0) return { kind: 'message', text: 'Inventory full!' };
+    if (take === 0) return { kind: 'message', text: t('common.inventoryFull') };
     for (let i = 0; i < take; i++) {
       const q = rollQuality(state, 0, 'forageQuality');
       addItem(state, q > 0 ? { item: 'honey', q } : 'honey', 1);

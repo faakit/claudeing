@@ -11,6 +11,7 @@ import {
   rosaLetterDue,
   stageOf,
 } from '../systems/valley';
+import { t } from '../i18n';
 
 // The Dry Year's valley (docs/WORLD-PLAN.md, systems/valley.ts).
 
@@ -58,7 +59,7 @@ registerDayHook({
         sendLetter(state, {
           from: p.npc,
           title: items[item]?.name ?? item,
-          text: "Ilse's spade. Your hands were full at the spring, so here it is. Dig from the creek's bank.",
+          text: t('valley.spadeLetter'),
           gift: { item, qty: 1 },
         });
     }

@@ -23,7 +23,8 @@
     "allGoals": "All goals complete!"
   },
   "goals": {
-    "completeToast": "Goal complete! +{gold}"
+    "completeToast": "Goal complete! +{gold}",
+    "stallNote": "New goal: {next}. \"{waits}\" can wait in Menu > Goal."
   },
   "world": {
     "locked": "Locked."
@@ -33,25 +34,60 @@
     "nothingEquipped": "Nothing equipped.",
     "nothingToDo": "Nothing to do here.",
     "noSeed": "Pick seeds on the hotbar first.",
-    "somethingHere": "Something is already here."
+    "somethingHere": "Something is already here.",
+    "notYourLand": "Not your land yet. Buy it at a sign.",
+    "willStand": "The {name} will stand here.",
+    "glassSpent": {
+      "one": "{count} regrowing crop under glass was spent: they last one season.",
+      "other": "{count} regrowing crops under glass were spent: they last one season."
+    },
+    "seedsSoil": "Seeds need your farm's soil.",
+    "tillFirst": "Till the soil first.",
+    "growingHere": "Something is already growing here.",
+    "outOfSeason": "Won't grow in {season}. Plant in {when}.",
+    "tooLateSeason": "Won't ripen in time ({n} days). Save it for next season.",
+    "tooLateGlass": "Too late ({n} days). Regrowing crops last one season, even here.",
+    "fertSoil": "Fertilizer needs your farm's soil.",
+    "fertilized": "Already fertilized.",
+    "cantPlace": "Can't place that here.",
+    "cantPlaceCrop": "Can't place on a growing crop.",
+    "someoneStands": "Someone stands here every day. Try another spot.",
+    "willStandFund": "The {name} will stand here. Fund it at the town board.",
+    "onlyMax": "You can only have {n} of these.",
+    "nothingHappens": "Nothing happens.",
+    "tilled": "Already tilled.",
+    "cantTill": "Can't till here.",
+    "canFull": "The can is already full.",
+    "nothingToWater": "Nothing to water here.",
+    "watered": "Already watered.",
+    "canEmpty": "Can is empty. Refill at the pond.",
+    "nothingToCut": "Nothing to cut."
   },
   "almanac": {
     "pageDone": "Almanac page done: {page}! +{gold}"
   },
   "cart": {
     "greenhouse": "Greenhouse",
-    "seasonCrop": "{season} crop"
+    "seasonCrop": "{season} crop",
+    "morningNote": "The traveling cart is in town today."
   },
   "channels": {
     "creekBed": "The old creek bed. Best left clear.",
-    "startAtWater": "Start next to water."
+    "startAtWater": "Start next to water.",
+    "dryCut": "The water runs out before here.",
+    "farmOnly": "Channels belong on the farm.",
+    "cantDig": "Can't dig here."
   },
   "quality": {
     "silver": "Silver {name}",
     "gold": "Gold {name}"
   },
   "orders": {
-    "done": "Order done! +{gold}"
+    "done": "Order done! +{gold}",
+    "rivalFilled": "{name} filled {orders} on the board.",
+    "rivalCleared": "{name} cleared {orders} off the board: no point.",
+    "rivalCrate": "{name} shipped a crate from his own field: a point for him.",
+    "newNote": "New requests on the town board."
   },
   "move": {
     "tapAgainMove": "Tap again to move it.",
@@ -64,7 +100,10 @@
     "winter": "Winter"
   },
   "common": {
-    "and": " and "
+    "and": " and ",
+    "inventoryFull": "Inventory full!",
+    "backTomorrow": "Back tomorrow.",
+    "or": " or "
   },
   "mapName": {
     "farm": "farm",
@@ -80,19 +119,23 @@
     "placeToast": "{festival}: place {place}! +{gold}",
     "joinToast": "{festival}: thanks for joining! +{gold}",
     "castAnywhere": "Cast anywhere: pond, river or lake.",
-    "stocked": "{fish} stocked in the {maps} river today!"
+    "stocked": "{fish} stocked in the {maps} river today!",
+    "todayNote": "{festival} today! Visit the town board."
   },
   "fishing": {
     "gotAway": "It got away...",
     "fullReleased": "Inventory full! Released it.",
     "derbyBest": "Derby best! {fish}. Score {score}.",
-    "legend": "A legend! You caught the {fish}!"
+    "legend": "A legend! You caught the {fish}!",
+    "castAtWater": "Cast at the water.",
+    "nothingBites": "Nothing bites here right now."
   },
   "food": {
     "restoresNow": "Restores {n} now: dish {nth} today.",
     "restores": "Restores {n} energy.",
     "ateNth": "{item}: +{n} energy (dish {nth} today).",
-    "ate": "{item}: +{n} energy."
+    "ate": "{item}: +{n} energy.",
+    "notHungry": "You're not hungry enough."
   },
   "energy": {
     "tiredEat": "Too tired! Eat something or go to bed.",
@@ -107,30 +150,47 @@
     "reactLove": "I love {item}!!",
     "reactLike": "{item}, how nice!",
     "reactNeutral": "Oh. Thank you.",
-    "reactDislike": "Um... thanks, I guess."
+    "reactDislike": "Um... thanks, I guess.",
+    "birthdayNote": "It's {name}'s birthday today!"
   },
   "jobs": {
     "headerDouble": "TODAY'S JOBS: DOUBLE PAY",
     "headerFactor": "TODAY'S JOBS: {factor}x PAY",
     "header": "TODAY'S JOBS",
-    "done": "Job done! {job} +{gold}"
+    "done": "Job done! {job} +{gold}",
+    "newWelcome": "New jobs from {who}: {pay} pay while you settle in. See Menu > Goal.",
+    "double": "double",
+    "factor": "{factor}x",
+    "newNote": "New jobs from {who}. See Menu > Goal."
   },
   "mail": {
     "festTitle": "{festival} tomorrow",
     "festText": "The {festival} is tomorrow in town! {blurb} Bring your best and enter it at the town board.",
     "bdayTitle": "{name}'s birthday",
     "bdayText": "Psst! Tomorrow is {name}'s birthday.{fav} Gifts count triple on a birthday.",
-    "bdayFav": " I happen to know they love {item}."
+    "bdayFav": " I happen to know they love {item}.",
+    "newLetters": {
+      "one": "A new letter in the mailbox.",
+      "other": "{count} new letters in the mailbox."
+    }
   },
   "project": {
     "levelToast": "{name}: level {level}! {reward}",
     "fundedToast": "{name}: funded! {reward}",
     "finishedToast": "{name} is finished! {reward}",
     "landmarkLevel": "{name}, level {level}: funded by you!",
-    "landmark": "{name}: funded by you! {reward}"
+    "landmark": "{name}: funded by you! {reward}",
+    "couldFinish": "You could finish the {name} today. See the town board."
   },
   "silo": {
-    "hungry": "The {house} went hungry: the silo needs {n} {feed}."
+    "hungry": "The {house} went hungry: the silo needs {n} {feed}.",
+    "feed": "{n} feed",
+    "stored": "Stored {n} feed. Silo {have}/{cap}.",
+    "status": "Silo {have}/{cap} feed. Bring feed.",
+    "fedNote": {
+      "one": "The silo fed {count} animal house.",
+      "other": "The silo fed {count} animal houses."
+    }
   },
   "special": {
     "ranOut": "The special order ran out. {paid}",
@@ -193,7 +253,8 @@
     "rowOpensTomorrow": "opens tomorrow morning",
     "rowWorkedToday": "worked today ({n} of {of})",
     "rowWorkDay": "work day {n} of {of}",
-    "rowOpen": "open. {phrase}"
+    "rowOpen": "open. {phrase}",
+    "spadeLetter": "Ilse's spade. Your hands were full at the spring, so here it is. Dig from the creek's bank."
   },
   "tutorial": {
     "canNote": "Rosa filled your watering can.",
@@ -218,5 +279,69 @@
     "woods": "the woods",
     "mine": "the mine",
     "wendhead": "Wendhead"
+  },
+  "animals": {
+    "count": "{n} {name}{s}",
+    "waiting": "{n} {name}{s} waiting",
+    "morningNote": "Animal goods are waiting on the farm.",
+    "movedIn": "{n} {name}{s} moved in!",
+    "empty": "Empty. Bring a {name}.",
+    "fed": "Fed!",
+    "needs": "Needs {n} {feed}.",
+    "pat": "You gave them a pat. They look happier!",
+    "allFed": "All fed. {mood}",
+    "happy": "Happy!",
+    "roomForMore": "Room for more."
+  },
+  "bees": {
+    "morningNote": "Honey is ready in a bee house.",
+    "honeyIn": {
+      "one": "Honey in {count} day.{flowers}",
+      "other": "Honey in {count} days.{flowers}"
+    },
+    "flowers": " The bees love your flowers."
+  },
+  "crows": {
+    "ate": "A crow ate a {crop}. Scarecrows keep them off."
+  },
+  "decor": {
+    "sit": "You sit a while. +{n} energy.",
+    "rested": "Rested. Back tomorrow.",
+    "restedToday": "Rested today.",
+    "sitWhenTired": "Sit when tired (+{n})."
+  },
+  "seasonLower": {
+    "spring": "spring",
+    "summer": "summer",
+    "fall": "fall",
+    "winter": "winter"
+  },
+  "forage": {
+    "rainbow": "A rainbow after the storm: extra wild goods!",
+    "woodsNote": "Wild goods are growing in the woods.",
+    "sproutedNote": "Wild goods have sprouted."
+  },
+  "tree": {
+    "ripeNote": "Fruit is ripe on a tree.",
+    "stormNote": "The storm blew fruit off a tree.",
+    "growing": {
+      "one": "Still growing: {count} more day.",
+      "other": "Still growing: {count} more days."
+    },
+    "noFruit": "No fruit yet. Check back in a day or two.",
+    "onlyIn": "It only bears fruit in {season}."
+  },
+  "jar": {
+    "moreDays": {
+      "one": "{item}: {count} more day.",
+      "other": "{item}: {count} more days."
+    },
+    "nothingYet": "Nothing yet.",
+    "got": "Got {item}"
+  },
+  "mining": {
+    "nothing": "Nothing to mine here.",
+    "usePickaxe": "Break it with the pickaxe (swipe the Action button to switch).",
+    "freshNote": "Fresh ore in the mine."
   }
 }

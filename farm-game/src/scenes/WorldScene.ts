@@ -127,6 +127,7 @@ import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutor
 import type { CoachScreenWorld } from '../ui/CoachMarks';
 import { npcLocation } from '../systems/npcs';
 import { npcs as npcData } from '../data';
+import { t } from '../i18n';
 
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
 const CREEK_REVEAL_MS = 1800;
@@ -1442,7 +1443,7 @@ export abstract class WorldScene extends Phaser.Scene {
     else if (res.kind === 'pickup') {
       const got = pickUpPlaced(state, this.mapId, obj);
       if (got === 'busy') toast("It's busy. Wait until it's done.", 'warn');
-      else if (got === 'full') toast('Inventory full!', 'warn');
+      else if (got === 'full') toast(t('common.inventoryFull'), 'warn');
     }
     this.things?.sync(state, true);
   }

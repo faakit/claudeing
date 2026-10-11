@@ -1,6 +1,7 @@
 import { registerDayHook } from '../systems/dayHooks';
 import { orderLabel, refreshBoard } from '../systems/orders';
 import { rivalCrate, rivalName, settleRival, settleSeason } from '../systems/rival';
+import { t } from '../i18n';
 
 // The board is refreshed every morning (after the calendar has moved on, so seasons are right):
 // open requests stay until their last day, new ones fill the free places.
@@ -15,19 +16,27 @@ registerDayHook({
     const scored = took.filter((o) => !o.noPoint);
     const cleared = took.filter((o) => o.noPoint);
     if (scored.length)
-      ctx.notes.push(`${rivalName()} filled ${scored.map(orderLabel).join(' and ')} on the board.`);
+      ctx.notes.push(
+        t('orders.rivalFilled', {
+          name: rivalName(),
+          orders: scored.map(orderLabel).join(t('common.and')),
+        }),
+      );
     if (cleared.length)
       ctx.notes.push(
-        `${rivalName()} cleared ${cleared.map(orderLabel).join(' and ')} off the board: no point.`,
+        t('orders.rivalCleared', {
+          name: rivalName(),
+          orders: cleared.map(orderLabel).join(t('common.and')),
+        }),
       );
     if (rivalCrate(state))
-      ctx.notes.push(`${rivalName()} shipped a crate from his own field: a point for him.`);
+      ctx.notes.push(t('orders.rivalCrate', { name: rivalName() }));
     // A new season: the board's score for the last one is settled, after his last take that counts in it
     // (critique 9, F6).
     if (ctx.scratch['seasonChanged']) {
       const news = settleSeason(state);
       if (news) ctx.notes.push(news);
     }
-    if (refreshBoard(state) > 0) ctx.notes.push('New requests on the town board.');
+    if (refreshBoard(state) > 0) ctx.notes.push(t('orders.newNote'));
   },
 });

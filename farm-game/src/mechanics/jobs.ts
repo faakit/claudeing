@@ -3,6 +3,7 @@ import { registerStatWatcher } from '../systems/goals';
 import { npcs } from '../data';
 import { checkJobs, generateJobs, welcomeFactor } from '../systems/jobs';
 import { absoluteDay } from '../systems/time';
+import { t } from '../i18n';
 
 // Every morning villagers post a few small jobs. They give the hours after the chores a purpose and
 // point new players at fishing, the mine and the board.
@@ -18,8 +19,11 @@ registerDayHook({
     const pay = welcomeFactor(absoluteDay(state));
     ctx.notes.push(
       pay > 1
-        ? `New jobs from ${listOf(who)}: ${pay === 2 ? 'double' : `${pay}x`} pay while you settle in. See Menu > Goal.`
-        : `New jobs from ${listOf(who)}. See Menu > Goal.`,
+        ? t('jobs.newWelcome', {
+            who: listOf(who),
+            pay: pay === 2 ? t('jobs.double') : t('jobs.factor', { factor: pay }),
+          })
+        : t('jobs.newNote', { who: listOf(who) }),
     );
   },
 });
@@ -34,7 +38,7 @@ registerDayHook({
 
 function listOf(names: string[]): string {
   if (names.length <= 1) return names[0] ?? '';
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return `${names.slice(0, -1).join(', ')}${t('common.and')}${names[names.length - 1]}`;
 }
 
 registerStatWatcher('jobs', checkJobs);

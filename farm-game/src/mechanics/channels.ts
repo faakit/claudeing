@@ -19,12 +19,13 @@ import { tiredText } from '../systems/food';
 import { addStat } from '../systems/goals';
 import { channelFlow, creekSource } from '../systems/valley';
 import { runtime } from '../state/runtime';
+import { t } from '../i18n';
 
 // Channels: the Old Spring's verb (docs/WORLD-PLAN.md 3.1). Ilse's spade digs off the running creek; each morning
 // the water runs along the connected channels (up to the flow) and waters the soil beside them.
 
 /** Said when a cut lies past the spring's flow (WORLD-PLAN 3.1). */
-export const DRY_CUT = 'The water runs out before here.';
+export const dryCut = (): string => t('channels.dryCut');
 /**
  * Where a channel may go: open ground (grass, dirt, a patch of flowers) or across a path as a culvert under it (the
  * path keeps its look and stays a path), never a door, a building or anything solid.
@@ -39,8 +40,8 @@ export function landRefusal(state: GameState, tx: number, ty: number): string | 
   const plot = plotAtTile(tx, ty);
   if (!plot || ownsPlot(state, plot)) return null;
   return plots[plot]?.sign
-    ? 'Not your land yet. Buy it at a sign.'
-    : `The ${plots[plot]?.name} will stand here.`;
+    ? t('farm.notYourLand')
+    : t('farm.willStand', { name: plots[plot]?.name ?? plot });
 }
 
 /** Energy per tile dug or filled. */
@@ -52,7 +53,7 @@ registerActionHandler({
   priority: 45,
   plan({ state, tile, stack }) {
     if (stack?.item !== 'spade') return null;
-    if (!tile.farmland) return { refusal: 'Channels belong on the farm.' };
+    if (!tile.farmland) return { refusal: t('channels.farmOnly') };
     const source = creekSource(state);
     const here = state.farm.tiles[key(tile.tx, tile.ty)];
     if (isChannel(here)) {
@@ -76,7 +77,7 @@ registerActionHandler({
     // Channels go on any open farm ground (owner ruling): only an unbought plot says so, never ground no sign sells
     const land = landRefusal(state, tile.tx, tile.ty);
     if (land) return { refusal: land };
-    if (!diggable(tile)) return { refusal: "Can't dig here." };
+    if (!diggable(tile)) return { refusal: t('channels.cantDig') };
     const inDeltaFarm = (x: number, y: number) => source.inDelta(x, y);
     // Starting from the bank: the farmer's own tile beside the creek is cut too, so one drag from the bank digs a
     // channel that reaches the water.
@@ -85,7 +86,7 @@ registerActionHandler({
     let refusal = canDig(state, tile.tx, tile.ty, source.at, inDeltaFarm);
     let bank = false;
     if (
-      refusal === 'Start next to water.' &&
+      refusal === t('channels.startAtWater') &&
       Math.abs(me.tx - tile.tx) + Math.abs(me.ty - tile.ty) === 1 &&
       canDig(state, me.tx, me.ty, source.at, inDeltaFarm) === null &&
       !landRefusal(state, me.tx, me.ty) &&
@@ -115,7 +116,7 @@ registerActionHandler({
           // past the flow the cut stays dry, and says so (once a day, so a painted row does not repeat it)
           if (!wet && source.running && state.stats['channels.dryDay'] !== absoluteDay(state)) {
             state.stats['channels.dryDay'] = absoluteDay(state);
-            toast(DRY_CUT, 'info');
+            toast(dryCut(), 'info');
           }
           return { wet };
         },

@@ -11,6 +11,7 @@ import { countStack } from '../../systems/inventory';
 import { toast } from '../../systems/events';
 import { C } from '../theme';
 import { Modal } from '../widgets';
+import { t } from '../../i18n';
 
 const ROWS = 6;
 
@@ -119,7 +120,7 @@ export class JarPanel extends Modal {
       this.button(60, this.panelH - 52, 80, 20, 'Pick up', () => {
         const st = getState();
         if (pickUpPlaced(st, found.map, found.obj) === 'full')
-          return void toast('Inventory full!', 'warn');
+          return void toast(t('common.inventoryFull'), 'warn');
         gameEvents.emit('placedChanged', { map: found.map });
         this.close();
       });

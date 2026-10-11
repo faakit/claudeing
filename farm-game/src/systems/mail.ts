@@ -69,10 +69,10 @@ export function deliverDueLetters(state: GameState): number {
 /** Letters written from the calendar: a festival notice and a birthday hint the day before. */
 export function deliverCalendarLetters(state: GameState): number {
   let n = 0;
-  const t = state.time;
+  const now = state.time;
   for (const [id, f] of Object.entries(festivals)) {
-    if (f.season !== t.season || f.day !== t.day + 1) continue;
-    const key = `mail.fest.${id}.y${t.year}`;
+    if (f.season !== now.season || f.day !== now.day + 1) continue;
+    const key = `mail.fest.${id}.y${now.year}`;
     if (state.stats[key]) continue;
     state.stats[key] = 1;
     sendLetter(state, {
@@ -84,12 +84,12 @@ export function deliverCalendarLetters(state: GameState): number {
   }
   for (const [id, def] of Object.entries(npcs)) {
     const b = def.birthday;
-    if (!b || b.season !== t.season || b.day !== t.day + 1) continue;
-    const key = `mail.bday.${id}.y${t.year}`;
+    if (!b || b.season !== now.season || b.day !== now.day + 1) continue;
+    const key = `mail.bday.${id}.y${now.year}`;
     if (state.stats[key]) continue;
     state.stats[key] = 1;
     // A birthday letter gives away one favourite, so a gift tomorrow is never a guess.
-    const fav = items[def.loves[(t.year - 1) % Math.max(1, def.loves.length)] ?? '']?.name;
+    const fav = items[def.loves[(now.year - 1) % Math.max(1, def.loves.length)] ?? '']?.name;
     const writer = Object.keys(npcs).find((n) => n !== id) ?? id;
     sendLetter(state, {
       from: writer,

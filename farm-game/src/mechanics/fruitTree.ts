@@ -5,6 +5,8 @@ import { addStat } from '../systems/goals';
 import { registerPlaceableBehavior } from '../systems/placeables';
 import { addXp } from '../systems/skills';
 import { growTree, isGrown, pickFruit, treeDef, treeOf } from '../systems/trees';
+import { t } from '../i18n';
+import { seasonLower } from '../systems/time';
 
 /** Fruit trees: a sapling grows for ten mornings, then bears fruit every few days in its own season. */
 registerPlaceableBehavior('fruitTree', {
@@ -19,11 +21,11 @@ registerPlaceableBehavior('fruitTree', {
     return stage === 1 || !hasArt(`obj_sapling_${stage}`) ? 'obj_sapling' : `obj_sapling_${stage}`;
   },
   onMorning(state, obj, _def, ctx) {
-    if (growTree(obj, state.time.season)) ctx.notes.push('Fruit is ripe on a tree.');
+    if (growTree(obj, state.time.season)) ctx.notes.push(t('tree.ripeNote'));
     // A storm shakes ripe fruit to the ground. The forecast gives you a night to pick it first.
     if (state.weather === 'storm' && treeOf(obj).fruit > 0) {
       treeOf(obj).fruit = 0;
-      ctx.notes.push('The storm blew fruit off a tree.');
+      ctx.notes.push(t('tree.stormNote'));
     }
   },
   interact(state, obj) {
@@ -31,19 +33,18 @@ registerPlaceableBehavior('fruitTree', {
     if (!def) return { kind: 'none' };
     if (!isGrown(obj)) {
       const left = def.growDays - treeOf(obj).age;
-      return { kind: 'message', text: `Still growing: ${left} more day${left > 1 ? 's' : ''}.` };
+      return { kind: 'message', text: t('tree.growing', { count: left }) };
     }
-    const t = treeOf(obj);
-    if (t.fruit === 0)
+    if (treeOf(obj).fruit === 0)
       return {
         kind: 'message',
         text:
           state.time.season === def.season
-            ? 'No fruit yet. Check back in a day or two.'
-            : `It only bears fruit in ${def.season}.`,
+            ? t('tree.noFruit')
+            : t('tree.onlyIn', { season: seasonLower(def.season) }),
       };
     const took = pickFruit(state, obj);
-    if (took === 0) return { kind: 'message', text: 'Inventory full!' };
+    if (took === 0) return { kind: 'message', text: t('common.inventoryFull') };
     addStat(state, 'collected', took);
     addXp(state, 'farming', 3 * took);
     toast(`+${took} ${items[def.fruit]?.name}`, 'good');

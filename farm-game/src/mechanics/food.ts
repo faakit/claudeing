@@ -2,6 +2,7 @@ import { registerActionHandler } from '../systems/actionRegistry';
 import { maxEnergy } from '../systems/energy';
 import { eat, tooFullFor } from '../systems/food';
 import type { GameState } from '../state/GameState';
+import { t } from '../i18n';
 
 const stackItem = (state: GameState): string | undefined =>
   state.inventory.slots[state.inventory.selected]?.item;
@@ -16,7 +17,7 @@ registerActionHandler({
   plan({ state, tile, def }) {
     if (def?.type !== 'food') return null;
     if (state.energy >= maxEnergy(state) || tooFullFor(state, def && stackItem(state)))
-      return { refusal: "You're not hungry enough." };
+      return { refusal: t('food.notHungry') };
     return {
       plan: {
         kind: 'eat',

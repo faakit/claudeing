@@ -7,6 +7,7 @@ import { findPlaced, occupantsOf, pickUpPlaced } from '../../systems/placeables'
 import { C } from '../theme';
 import { Modal } from '../widgets';
 import { moveText } from './moveText';
+import { t } from '../../i18n';
 
 /**
  * Moving a building that has animals or stock: a sheet with a deliberate Move button, so a chore tap
@@ -53,7 +54,7 @@ export class MovePanel extends Modal {
     const res = pickUpPlaced(st, found.map, found.obj);
     if (res === 'full') {
       audio.play('error');
-      return void toast('Inventory full!', 'warn');
+      return void toast(t('common.inventoryFull'), 'warn');
     }
     if (res === 'busy') {
       audio.play('error');

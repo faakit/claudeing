@@ -7,12 +7,13 @@ import { addStat } from '../systems/goals';
 import { roomFor } from '../systems/inventory';
 import { mineNode, nodeAt, spawnNodes } from '../systems/mining';
 import { addXp } from '../systems/skills';
+import { t } from '../i18n';
 
 /** The pickaxe breaks the ore node in front of you. Nodes are solid, so you always face one to mine it. */
 registerToolAction('mine', ({ state, tile, tool }) => {
-  if (!nodeAt(state, tile.map, tile.tx, tile.ty)) return { refusal: 'Nothing to mine here.' };
+  if (!nodeAt(state, tile.map, tile.tx, tile.ty)) return { refusal: t('mining.nothing') };
   if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
-  if (roomFor(state, 'stone', 1) < 1) return { refusal: 'Inventory full!' };
+  if (roomFor(state, 'stone', 1) < 1) return { refusal: t('common.inventoryFull') };
   return {
     plan: {
       kind: 'mine',
@@ -36,7 +37,7 @@ registerActionHandler({
   priority: 96,
   plan({ state, tile, def }) {
     if (!nodeAt(state, tile.map, tile.tx, tile.ty) || def?.tool === 'pickaxe') return null;
-    return { refusal: 'Break it with the pickaxe (swipe the Action button to switch).' };
+    return { refusal: t('mining.usePickaxe') };
   },
 });
 
@@ -48,6 +49,6 @@ registerDayHook({
   run(state, ctx) {
     const made = spawnNodes(state, ctx.oreSpots ?? {});
     const total = Object.values(made).reduce((a, b) => a + b, 0);
-    if (total > 0 && mining.maps.length > 0) ctx.notes.push('Fresh ore in the mine.');
+    if (total > 0 && mining.maps.length > 0) ctx.notes.push(t('mining.freshNote'));
   },
 });

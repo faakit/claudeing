@@ -5,6 +5,7 @@ import { clearForage, collectForage, forageAt, spawnForage } from '../systems/fo
 import { roomFor } from '../systems/inventory';
 import { sellValue } from '../systems/itemRef';
 import { addXp } from '../systems/skills';
+import { t } from '../i18n';
 
 /** Wild goods lying on the ground are picked up with Action, whatever is equipped. */
 registerActionHandler({
@@ -13,7 +14,7 @@ registerActionHandler({
   plan({ state, tile }) {
     const item = forageAt(state, tile.map, tile.tx, tile.ty);
     if (!item) return null;
-    if (roomFor(state, item, 1) < 1) return { refusal: 'Inventory full!' };
+    if (roomFor(state, item, 1) < 1) return { refusal: t('common.inventoryFull') };
     return {
       plan: {
         kind: 'forage',
@@ -47,12 +48,12 @@ registerDayHook({
     if (ctx.scratch['prevWeather'] === 'storm') {
       const more = spawnForage(state, ctx.forageSpots);
       for (const [map, n] of Object.entries(more)) spawned[map] = (spawned[map] ?? 0) + n;
-      ctx.notes.push('A rainbow after the storm: extra wild goods!');
+      ctx.notes.push(t('forage.rainbow'));
     }
     const total = Object.values(spawned).reduce((a, b) => a + b, 0);
     if (total > 0)
       ctx.notes.push(
-        spawned['woods'] ? 'Wild goods are growing in the woods.' : 'Wild goods have sprouted.',
+        spawned['woods'] ? t('forage.woodsNote') : t('forage.sproutedNote'),
       );
   },
 });

@@ -9,6 +9,7 @@ import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
 import { cartBought, cartSub, CART_INTRO } from './cartText';
+import { t } from '../../i18n';
 
 /** The traveling cart's sheet: a few rows, one Buy button each, low on the screen. */
 export class CartPanel extends Modal {
@@ -50,7 +51,7 @@ export class CartPanel extends Modal {
                   res === 'no_money'
                     ? 'Not enough gold.'
                     : res === 'full'
-                      ? 'Inventory full!'
+                      ? t('common.inventoryFull')
                       : 'Sold out.',
                   'warn',
                 );

@@ -11,6 +11,7 @@ import {
 } from '../systems/projects';
 import { absoluteDay } from '../systems/time';
 import { registerPerkSource } from '../systems/skills';
+import { t } from '../i18n';
 
 // Finished town projects grant their perks for good, exactly like skill levels and hearts do.
 registerPerkSource('projects', projectPerk);
@@ -31,7 +32,7 @@ registerDayHook({
       if (said !== undefined && absoluteDay(state) - said < game.seasonLength) continue;
       if (gold <= state.money && goods) {
         state.stats[`projectNag.${id}`] = absoluteDay(state);
-        ctx.notes.push(`You could finish the ${p.name} today. See the town board.`);
+        ctx.notes.push(t('project.couldFinish', { name: p.name }));
         return;
       }
     }

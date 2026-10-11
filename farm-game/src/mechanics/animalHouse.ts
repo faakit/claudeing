@@ -14,6 +14,7 @@ import { addStat } from '../systems/goals';
 import { registerPlaceableBehavior } from '../systems/placeables';
 import { addXp } from '../systems/skills';
 import { isWet } from '../systems/weather';
+import { t } from '../i18n';
 
 /**
  * A coop or barn. One tap does the chores in order: move in animals you carry, collect what is
@@ -28,18 +29,19 @@ registerPlaceableBehavior('animalHouse', {
     const h = houseOf(obj);
     if (!sp || (h.n === 0 && h.ready === 0)) return null;
     const parts: string[] = [];
-    if (h.n > 0) parts.push(`${h.n} ${sp.name.toLowerCase()}${h.n > 1 ? 's' : ''}`);
+    if (h.n > 0)
+      parts.push(t('animals.count', { n: h.n, name: sp.name.toLowerCase(), s: h.n > 1 ? 's' : '' }));
     if (h.ready > 0) {
       const good = items[sp.product]?.name.toLowerCase() ?? sp.product;
       const plural = h.ready > 1 && !['milk', 'wool', 'honey'].includes(sp.product);
-      parts.push(`${h.ready} ${good}${plural ? 's' : ''} waiting`);
+      parts.push(t('animals.waiting', { n: h.ready, name: good, s: plural ? 's' : '' }));
     }
     return parts.join(', ');
   },
   onMorning(state, obj, _def, ctx) {
     // Today's weather is settled before placeables wake up, so pigs know whether they can dig.
     const outdoorOk = !isWet(state.weather) && state.time.season !== 'winter';
-    if (morning(obj, outdoorOk)) ctx.notes.push('Animal goods are waiting on the farm.');
+    if (morning(obj, outdoorOk)) ctx.notes.push(t('animals.morningNote'));
   },
   interact(state, obj) {
     const sp = speciesOf(obj);
@@ -49,7 +51,9 @@ registerPlaceableBehavior('animalHouse', {
     const moved = moveIn(state, obj);
     if (moved > 0) {
       addStat(state, 'animalsAdded', moved);
-      said.push(`${moved} ${sp.name.toLowerCase()}${moved > 1 ? 's' : ''} moved in!`);
+      said.push(
+        t('animals.movedIn', { n: moved, name: sp.name.toLowerCase(), s: moved > 1 ? 's' : '' }),
+      );
     }
     const got = collect(state, obj);
     if (got > 0) {
@@ -59,19 +63,22 @@ registerPlaceableBehavior('animalHouse', {
       said.push(`+${got} ${items[sp.product]?.name}`);
     }
     if (h.n === 0 && said.length === 0)
-      return { kind: 'message', text: `Empty. Bring a ${sp.name.toLowerCase()}.` };
+      return { kind: 'message', text: t('animals.empty', { name: sp.name.toLowerCase() }) };
     const fed = feed(state, obj);
-    if (fed === 'ok') said.push('Fed!');
+    if (fed === 'ok') said.push(t('animals.fed'));
     else if (fed === 'no_feed' && said.length === 0)
-      return { kind: 'message', text: `Needs ${h.n} ${items[sp.feed]?.name}.` };
+      return { kind: 'message', text: t('animals.needs', { n: h.n, feed: items[sp.feed]?.name ?? '' }) };
     else if (fed === 'fed' && said.length === 0) {
       if (pet(obj)) {
-        toast('You gave them a pat. They look happier!', 'good');
+        toast(t('animals.pat'), 'good');
         return { kind: 'message', text: '' };
       }
-      return { kind: 'message', text: `All fed. ${h.joy >= 3 ? 'Happy!' : 'Back tomorrow.'}` };
+      return {
+        kind: 'message',
+        text: t('animals.allFed', { mood: t(h.joy >= 3 ? 'animals.happy' : 'common.backTomorrow') }),
+      };
     }
-    if (!isFull(obj) && said.length > 0) said.push('Room for more.');
+    if (!isFull(obj) && said.length > 0) said.push(t('animals.roomForMore'));
     const text = said.join(' ');
     if (text) toast(text, 'good');
     return { kind: 'message', text: '' };

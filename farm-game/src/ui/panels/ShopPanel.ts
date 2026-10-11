@@ -21,6 +21,7 @@ import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
 import { SHOP_TABS, shopFacts, shopFactsRoom, shopTabOf, tooLate, type ShopTab } from './shopFacts';
 import Phaser from 'phaser';
+import { t } from '../../i18n';
 
 const ROWS = 5;
 
@@ -206,7 +207,7 @@ export class ShopPanel extends Modal {
         res === 'no_money'
           ? 'Not enough gold.'
           : res === 'full'
-            ? 'Inventory full!'
+            ? t('common.inventoryFull')
             : res === 'limit'
               ? 'You have as many as you can place.'
               : "Can't buy that now.",

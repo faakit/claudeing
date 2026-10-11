@@ -52,6 +52,8 @@ export function formatClock(minutes: number): string {
 
 /** The season's name in the current language ("Spring", "Primavera"). */
 export const seasonLabel = (s: Season): string => t(`season.${s}`);
+/** The season's name in lower case in both languages ("Won't grow in spring", "não cresce no verão"). */
+export const seasonLower = (s: Season): string => t(`seasonLower.${s}`);
 /** The season's name inside a sentence ("Spring", "primavera": Portuguese writes seasons in lower case). */
 export const seasonWord = (s: Season): string => t(`seasonWord.${s}`);
 

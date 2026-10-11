@@ -5,6 +5,7 @@ import { addXp } from '../systems/skills';
 import { registerPlaceableBehavior } from '../systems/placeables';
 import { collectJar, jarContents, jarReady, tickJar } from '../systems/preserves';
 import { toast } from '../systems/events';
+import { t } from '../i18n';
 
 /** A preserve jar turns fruit into jam and vegetables into pickles over a few mornings. */
 registerPlaceableBehavior('jar', {
@@ -17,15 +18,18 @@ registerPlaceableBehavior('jar', {
     if (!jarReady(obj))
       return {
         kind: 'message',
-        text: `${displayName(c.out)}: ${c.days} more day${c.days > 1 ? 's' : ''}.`,
+        text: t('jar.moreDays', { item: displayName(c.out), count: c.days }),
       };
     const res = collectJar(state, obj);
     if (typeof res === 'string')
-      return { kind: 'message', text: res === 'full' ? 'Inventory full!' : 'Nothing yet.' };
+      return {
+        kind: 'message',
+        text: res === 'full' ? t('common.inventoryFull') : t('jar.nothingYet'),
+      };
     addStat(state, 'preserved');
     addStat(state, `made.${obj.type}`);
     addXp(state, 'farming', machines[obj.type]?.xp ?? 8);
-    toast(`Got ${displayName(res)}`, 'good');
+    toast(t('jar.got', { item: displayName(res) }), 'good');
     return { kind: 'message', text: '' };
   },
 });

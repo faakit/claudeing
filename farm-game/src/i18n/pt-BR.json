@@ -23,7 +23,8 @@
     "allGoals": "Todas as metas cumpridas!"
   },
   "goals": {
-    "completeToast": "Meta cumprida! +{gold}"
+    "completeToast": "Meta cumprida! +{gold}",
+    "stallNote": "Nova meta: {next}. \"{waits}\" pode esperar em Menu > Metas."
   },
   "world": {
     "locked": "Trancado."
@@ -33,25 +34,60 @@
     "nothingEquipped": "Nada na mão.",
     "nothingToDo": "Nada a fazer aqui.",
     "noSeed": "Escolha sementes na barra primeiro.",
-    "somethingHere": "Já tem algo aqui."
+    "somethingHere": "Já tem algo aqui.",
+    "notYourLand": "Ainda não é sua terra. Compre numa placa.",
+    "willStand": "Aqui vai ficar: {name}.",
+    "glassSpent": {
+      "one": "{count} planta que rebrota na estufa se esgotou: elas duram uma estação.",
+      "other": "{count} plantas que rebrotam na estufa se esgotaram: elas duram uma estação."
+    },
+    "seedsSoil": "Sementes precisam da terra da sua fazenda.",
+    "tillFirst": "Prepare a terra primeiro.",
+    "growingHere": "Já tem algo crescendo aqui.",
+    "outOfSeason": "Não cresce no(a) {season}. Plante: {when}.",
+    "tooLateSeason": "Não amadurece a tempo ({n} dias). Guarde para a próxima estação.",
+    "tooLateGlass": "Tarde demais ({n} dias). Plantas que rebrotam duram uma estação, até aqui.",
+    "fertSoil": "Adubo precisa da terra da sua fazenda.",
+    "fertilized": "Já está adubado.",
+    "cantPlace": "Não dá para pôr isso aqui.",
+    "cantPlaceCrop": "Não dá para pôr em cima de uma planta.",
+    "someoneStands": "Alguém fica aqui todo dia. Tente outro lugar.",
+    "willStandFund": "Aqui vai ficar: {name}. Financie no mural da vila.",
+    "onlyMax": "Você só pode ter {n} destes.",
+    "nothingHappens": "Nada acontece.",
+    "tilled": "A terra já está preparada.",
+    "cantTill": "Não dá para lavrar aqui.",
+    "canFull": "O regador já está cheio.",
+    "nothingToWater": "Nada para regar aqui.",
+    "watered": "Já foi regado.",
+    "canEmpty": "Regador vazio. Encha no lago.",
+    "nothingToCut": "Nada para cortar."
   },
   "almanac": {
     "pageDone": "Página do almanaque completa: {page}! +{gold}"
   },
   "cart": {
     "greenhouse": "Estufa",
-    "seasonCrop": "Safra de {season}"
+    "seasonCrop": "Safra de {season}",
+    "morningNote": "A carroça ambulante está na vila hoje."
   },
   "channels": {
     "creekBed": "O leito do velho córrego. Melhor deixar livre.",
-    "startAtWater": "Comece junto da água."
+    "startAtWater": "Comece junto da água.",
+    "dryCut": "A água acaba antes daqui.",
+    "farmOnly": "Valas são coisa da fazenda.",
+    "cantDig": "Não dá para cavar aqui."
   },
   "quality": {
     "silver": "{name} de prata",
     "gold": "{name} de ouro"
   },
   "orders": {
-    "done": "Pedido entregue! +{gold}"
+    "done": "Pedido entregue! +{gold}",
+    "rivalFilled": "{name} atendeu {orders} no mural.",
+    "rivalCleared": "{name} tirou {orders} do mural: nenhum ponto.",
+    "rivalCrate": "{name} despachou um caixote da própria roça: um ponto para ele.",
+    "newNote": "Pedidos novos no mural da vila."
   },
   "move": {
     "tapAgainMove": "Toque de novo para mudar de lugar.",
@@ -64,7 +100,10 @@
     "winter": "inverno"
   },
   "common": {
-    "and": " e "
+    "and": " e ",
+    "inventoryFull": "Mochila cheia!",
+    "backTomorrow": "Volte amanhã.",
+    "or": " ou "
   },
   "mapName": {
     "farm": "fazenda",
@@ -80,19 +119,23 @@
     "placeToast": "{festival}: lugar {place}! +{gold}",
     "joinToast": "{festival}: obrigado por participar! +{gold}",
     "castAnywhere": "Pesque onde quiser: lago, rio ou lagoa.",
-    "stocked": "Hoje tem {fish} no rio ({maps})!"
+    "stocked": "Hoje tem {fish} no rio ({maps})!",
+    "todayNote": "Hoje tem {festival}! Passe no mural da vila."
   },
   "fishing": {
     "gotAway": "Escapou...",
     "fullReleased": "Mochila cheia! Você soltou o peixe.",
     "derbyBest": "Recorde no torneio! {fish}. Pontos: {score}.",
-    "legend": "Uma lenda! Você pescou o {fish}!"
+    "legend": "Uma lenda! Você pescou o {fish}!",
+    "castAtWater": "Jogue a linha na água.",
+    "nothingBites": "Nada está mordendo aqui agora."
   },
   "food": {
     "restoresNow": "Agora recupera {n}: prato {nth} de hoje.",
     "restores": "Recupera {n} de energia.",
     "ateNth": "{item}: +{n} de energia (prato {nth} de hoje).",
-    "ate": "{item}: +{n} de energia."
+    "ate": "{item}: +{n} de energia.",
+    "notHungry": "Você não está com tanta fome."
   },
   "energy": {
     "tiredEat": "Cansado demais! Coma algo ou vá dormir.",
@@ -107,30 +150,47 @@
     "reactLove": "Eu amo {item}!!",
     "reactLike": "{item}, que gentil!",
     "reactNeutral": "Ah. Que gentileza.",
-    "reactDislike": "Hum... valeu, eu acho."
+    "reactDislike": "Hum... valeu, eu acho.",
+    "birthdayNote": "Hoje é aniversário de {name}!"
   },
   "jobs": {
     "headerDouble": "BICOS DE HOJE: PAGA EM DOBRO",
     "headerFactor": "BICOS DE HOJE: PAGA {factor}x",
     "header": "BICOS DE HOJE",
-    "done": "Bico feito! {job} +{gold}"
+    "done": "Bico feito! {job} +{gold}",
+    "newWelcome": "Novos bicos de {who}: paga {pay} enquanto você se instala. Veja em Menu > Metas.",
+    "double": "em dobro",
+    "factor": "{factor}x",
+    "newNote": "Novos bicos de {who}. Veja em Menu > Metas."
   },
   "mail": {
     "festTitle": "{festival} amanhã",
     "festText": "{festival}: é amanhã na vila! {blurb} Traga o seu melhor e se inscreva no mural da vila.",
     "bdayTitle": "Aniversário de {name}",
     "bdayText": "Psiu! Amanhã é aniversário de {name}.{fav} Presente vale o triplo no aniversário.",
-    "bdayFav": " Por acaso eu sei que adora {item}."
+    "bdayFav": " Por acaso eu sei que adora {item}.",
+    "newLetters": {
+      "one": "Uma carta nova na caixa de correio.",
+      "other": "{count} cartas novas na caixa de correio."
+    }
   },
   "project": {
     "levelToast": "{name}: nível {level}! {reward}",
     "fundedToast": "{name}: financiado! {reward}",
     "finishedToast": "{name} está pronto! {reward}",
     "landmarkLevel": "{name}, nível {level}: financiado por você!",
-    "landmark": "{name}: financiado por você! {reward}"
+    "landmark": "{name}: financiado por você! {reward}",
+    "couldFinish": "Dá para terminar hoje: {name}. Veja o mural da vila."
   },
   "silo": {
-    "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}."
+    "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}.",
+    "feed": "{n} de ração",
+    "stored": "Guardou {n} de ração. Silo {have}/{cap}.",
+    "status": "Silo {have}/{cap} de ração. Traga ração.",
+    "fedNote": {
+      "one": "O silo alimentou {count} abrigo de bichos.",
+      "other": "O silo alimentou {count} abrigos de bichos."
+    }
   },
   "special": {
     "ranOut": "A encomenda especial acabou. {paid}",
@@ -193,7 +253,8 @@
     "rowOpensTomorrow": "reabre amanhã cedo",
     "rowWorkedToday": "obra feita hoje ({n} de {of})",
     "rowWorkDay": "dia de obra {n} de {of}",
-    "rowOpen": "reaberta. {phrase}"
+    "rowOpen": "reaberta. {phrase}",
+    "spadeLetter": "A pá da Ilse. Suas mãos estavam cheias na nascente, então aqui está. Cave a partir da margem do córrego."
   },
   "tutorial": {
     "canNote": "Rosa encheu seu regador.",
@@ -218,5 +279,69 @@
     "woods": "o bosque",
     "mine": "a mina",
     "wendhead": "Wendhead"
+  },
+  "animals": {
+    "count": "{name} x{n}",
+    "waiting": "{name} x{n} esperando",
+    "morningNote": "Tem produtos dos bichos esperando na fazenda.",
+    "movedIn": "Chegou: {name} x{n}!",
+    "empty": "Vazio. Traga: {name}.",
+    "fed": "Alimentados!",
+    "needs": "Precisa de {n} {feed}.",
+    "pat": "Você fez um carinho. Parecem mais felizes!",
+    "allFed": "Todos alimentados. {mood}",
+    "happy": "Felizes!",
+    "roomForMore": "Cabem mais."
+  },
+  "bees": {
+    "morningNote": "Tem mel pronto numa colmeia.",
+    "honeyIn": {
+      "one": "Mel em {count} dia.{flowers}",
+      "other": "Mel em {count} dias.{flowers}"
+    },
+    "flowers": " As abelhas adoram suas flores."
+  },
+  "crows": {
+    "ate": "Um corvo comeu: {crop}. Espantalhos afastam os corvos."
+  },
+  "decor": {
+    "sit": "Você senta um pouco. +{n} de energia.",
+    "rested": "Descansado. Volte amanhã.",
+    "restedToday": "Já descansou hoje.",
+    "sitWhenTired": "Sente quando cansar (+{n})."
+  },
+  "seasonLower": {
+    "spring": "primavera",
+    "summer": "verão",
+    "fall": "outono",
+    "winter": "inverno"
+  },
+  "forage": {
+    "rainbow": "Arco-íris depois da tempestade: mais coisas do mato!",
+    "woodsNote": "Tem coisas do mato crescendo no bosque.",
+    "sproutedNote": "Brotaram coisas do mato."
+  },
+  "tree": {
+    "ripeNote": "Tem fruta madura numa árvore.",
+    "stormNote": "A tempestade derrubou frutas de uma árvore.",
+    "growing": {
+      "one": "Ainda crescendo: falta {count} dia.",
+      "other": "Ainda crescendo: faltam {count} dias."
+    },
+    "noFruit": "Nada de fruta ainda. Volte em um ou dois dias.",
+    "onlyIn": "Ela só dá fruta no(a) {season}."
+  },
+  "jar": {
+    "moreDays": {
+      "one": "{item}: falta {count} dia.",
+      "other": "{item}: faltam {count} dias."
+    },
+    "nothingYet": "Nada ainda.",
+    "got": "Pegou: {item}"
+  },
+  "mining": {
+    "nothing": "Nada para minerar aqui.",
+    "usePickaxe": "Quebre com a picareta (deslize o botão de Ação para trocar).",
+    "freshNote": "Minério novo na mina."
   }
 }

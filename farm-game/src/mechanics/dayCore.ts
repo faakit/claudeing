@@ -9,6 +9,7 @@ import { perk } from '../systems/skills';
 import { ownsTile } from '../systems/plots';
 import { advanceCalendar } from '../systems/time';
 import { isWet, rollWeather, waterAllSoil } from '../systems/weather';
+import { t } from '../i18n';
 
 // The original rollover, expressed as hooks. Order inside the pipeline is what the design requires:
 // crops grow, shipped goods are paid, then the calendar moves on and the new day sets itself up.
@@ -65,7 +66,7 @@ registerDayHook({
     const spent = seasonChanged ? spentUnderGlass(state) : 0;
     if (spent > 0)
       ctx.notes.push(
-        `${spent} regrowing crop${spent > 1 ? 's' : ''} under glass ${spent > 1 ? 'were' : 'was'} spent: they last one season.`,
+        t('farm.glassSpent', { count: spent }),
       );
     ctx.summary.withered = seasonChanged ? killOutOfSeason(state) : 0;
   },
