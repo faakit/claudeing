@@ -270,6 +270,27 @@ try {
     };
     window.__farm.game.events.on('postrender', scan);
     window.__scan = scan;
+    // The gathered parsnip must never cover the farmer's face (his sprite's top 16 rows).
+    window.__face = 0;
+    window.__farm.game.events.on('postrender', () => {
+      const w = window.__farm.game.scene.getScene('Farm');
+      if (!w?.sys.isActive()) return;
+      const head = w.sprite.getBounds();
+      head.height = 16;
+      for (const o of w.children.list)
+        if (o.visible && o.texture?.key?.startsWith('item_parsnip')) {
+          const b = o.getBounds();
+          const over = o.depth > w.sprite.depth; // drawn over him, not passing behind
+          if (
+            over &&
+            b.x < head.right &&
+            b.right > head.x &&
+            b.y < head.bottom &&
+            b.bottom > head.y
+          )
+            window.__face++;
+        }
+    });
   });
   await page.keyboard.down('Space');
   await page.waitForTimeout(90);
@@ -288,6 +309,8 @@ try {
     bad.length === 0,
     bad.slice(0, 6).join(' | '),
   );
+  const face = await page.evaluate(() => window.__face);
+  check('harvest: the gathered item never covers the farmer face', face === 0, `${face} frames`);
   const hit = await page.evaluate(() => window.__farm.game.scene.getScene('Farm').tweens.timeScale);
   check('harvest: the hit-stop lets go (tweens run again)', hit === 1, `timeScale ${hit}`);
 

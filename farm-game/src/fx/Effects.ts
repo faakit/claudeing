@@ -273,6 +273,9 @@ export class Effects {
       this.scene.time.delayedCall(60, () => img.active && img.setTexture(`${iconKey}_pop_1`));
       this.scene.time.delayedCall(120, () => img.active && img.setTexture(iconKey));
     }
+    // In flight it passes just behind the farmer (drawn under his sprite), so it never covers his face; it comes
+    // to the front once it rests above his head. (The farmer's depth is 10 + feet y; head.y is feet - 42.)
+    if (head) img.setDepth(10 + head.y + 42 - 0.5);
     const from = { x: img.x, y: img.y };
     const arc = { t: 0 };
     this.scene.tweens.add({
@@ -281,14 +284,25 @@ export class Effects {
       duration: 280,
       ease: 'Cubic.easeOut',
       onUpdate: () => {
-        // A little higher than the end point mid-flight, settling onto it (a hop, not a slide).
-        const lift = Math.sin(arc.t * Math.PI) * 6;
+        // Up beside the farmer first (never across his face), then in over his head to rest; whole pixels.
+        // Without a head point it is a plain hop up from where it came out.
+        if (!head) {
+          img.setPosition(Math.round(from.x), Math.round(from.y + (end.y + 8 - from.y) * arc.t));
+          return;
+        }
+        const side = x >= end.x ? 1 : -1;
+        const t1 = Math.min(1, arc.t / 0.6);
+        const t2 = Math.max(0, (arc.t - 0.6) / 0.4);
+        const besideX = end.x + side * 18;
         img.setPosition(
-          Math.round(from.x + (end.x - from.x) * arc.t),
-          Math.round(from.y + (end.y + 8 - from.y) * arc.t - lift),
+          Math.round(from.x + (besideX - from.x) * t1 + (end.x - besideX) * t2),
+          Math.round(from.y + (end.y + 8 - from.y) * t1),
         );
       },
-      onComplete: () => fade(220),
+      onComplete: () => {
+        img.setDepth(9400);
+        fade(220);
+      },
     });
   }
 
