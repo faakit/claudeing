@@ -21,6 +21,33 @@ The owner chose this premise. It replaces the original MVP goal. Read these firs
 New work follows those docs. The areas below describe the game as it is now, which is the base the Dry Year
 builds on.
 
+## Pending merge: integration/dry-year-2 (written while the owner had all tests stopped)
+
+`integration/dry-year-2` = dry-year-core + `valley/m6` + `audio/dry-year` + `feel/dry-year` + the Weir beam's
+`logLand` cue. **Nothing on it has been run.** Still to do, in this order, on a quiet machine:
+
+1. Merge `art/dry-year` (4feb4fe). Its generated files conflict with M6's (`art-src/sprites/tiles.png`, the tilesets,
+   `tiles.json`, every `.tmj` header): take either side, then `npm run art:maps` (deterministic) and commit the result.
+   Keep art's `paintChannel` in `WorldScene`; point feel's `ChannelFx` tile source at art's `channelGid(tx, ty, look)`
+   and clip its foam to `CHANNEL_WATER_BAND` (see NEXT-STEPS-FEEL.md). Merge `fix/owner-bugs` (tree see-through,
+   tap-retarget smoothness, dry beds blocked like water) and `i18n/pt-br` when they hand over.
+2. Audio D3: creek layer 2 `body` 2.47 in `audio-src/recipes.json`, rebuild (`python -I audio-src/tools/build.py
+   <raw-dir>`), re-render `dy-creek-long`.
+3. Small code items: saves that saw "A secret spot" mark "The Heron" seen (no second catfish reward); old saves'
+   quiet weir **counts** toward later "places open" asks (e.g. the market's three places) but never toward goals or
+   rewards (coordinator ruling).
+4. Checks: `npm run verify` (alone), `npm run bench:thumb`, the valley critic's 14 paired onboarding runs
+   (`valley-critique/tools/onb/run14.mjs`, median <= 173 s), the farm-to-town door on `river-first-morning` at 1x
+   and 4x (<= 0.3 s, worst frame <= 34 ms at 4x; else build the overlay under the sleep fade), `e2e:controls` with
+   `E2E_CONTROLS_PARALLEL=1` (SE rows), perf against a baseline rerun alone, and listening to
+   `audio-renders/dry-year/LISTEN.md`.
+5. Then deploy (fast-forward `claude/repo-code-github-pages-3ukz7j`).
+
+Next round: the towing go/no-go needs feel's T1 fixed first (tapping the slip while the farmer walks to hook stalls
+the tow after the tug, 19/28 runs), a 10-20 tile lab lane with a turn, and the feel critic's probe at 1x and 4x
+(`feel-critique/final-dry-year.md`). Art items 2-7 carry over (Flow sources for the spring site, the Warm Pool, the
+icons and the letter paper are already in `flow-raw/`).
+
 ## How to work
 
 Build every feature scenario-first (see [AGENTS.md](AGENTS.md) and `docs/EXTENDING.md` section 0). Run
