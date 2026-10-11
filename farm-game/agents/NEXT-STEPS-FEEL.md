@@ -57,7 +57,7 @@ near-bank row, slip planks at (13,28) where the road meets the shore, the farmer
   `atSlip`, `atSlipBank`, `land`, `bankFor`, `hookStand`, `inReach`; constants `ROPE_PX` 48, `FOLLOW_RATE` 0.16,
   `HAUL_PX_S` 110, `TUGS` 1/2, `TIMBER` 1/3. Not yet: lanes chosen by day hash, the spur that turns a log, ice
   rims, saving while towing, logs turning into a vertical lane.
-- **Critic's verdict:** pending when this was written; the critic was asked to send the go/no-go to the coordinator.
+- **Critic's verdict:** not given yet; the go/no-go waits for the next round (owner order to stop testing).
 
 WorldScene gained small verb hooks for it (also usable by M7): `tapHook`, `actionHook`, `walkTo`, `walkGoal`,
 `stopWalk`, `walkable`, `farmerSprite`. The lab scene creates the spike when the stat `lab.towSpike` is set.
@@ -78,15 +78,33 @@ WorldScene gained small verb hooks for it (also usable by M7): `tapHook`, `actio
    sprite showing as it leaves, about 2.6 s in all. The spade day (no scenario yet: add `spring-site-work-3`)
    should reuse the channel clods and the foam-edged fill. The first-green dissolve (`valley-farm-green-reveal`)
    reads well. Doors must stay under 0.3 s.
-2. **Art merge:** the art lane's channel tiles are `chan:wet:<mask>`, `chan:dry:<mask>` (looked up by name, never by
-   gid) with a 6 px water band (rows 6-11). When they land, `WorldScene`'s ChannelFx `src` callback should look the
-   wet or dry tile up the way `paintChannel` does (two lines), and the foam line should be limited to the water band.
+2. **Art merge** (art/dry-year 0dd9a35 landed the channel tiles `chan:wet|dry:<mask>`): at integration, the ChannelFx
+   `src(tx, ty, look)` callback in `WorldScene.create` should use the art lane's `channelGid(tx, ty, look)` (null on a
+   path; `tileset.getTileTextureCoordinates(gid)`) in place of `CHANNEL_GID`, and the foam line in `ChannelFx.stepFills`
+   should be limited to `CHANNEL_WATER_BAND` ([6, 12], from `src/art/channelTiles.ts`; columns on a vertical run).
 3. **Audio:** the audio lane is adding `dig` (actionFx's dig case) and `logLand`; the spike already asks for
    `logHook`, `logKnock`, `logTug` and `logLand` and falls back to existing cues until they exist.
 4. Critic nit passed on (not feel): decor (a pebble, a bush, a canopy) is drawn over channel water.
 5. Towing after a go: a bench:thumb row, art (logs short and long, rope, slip), turn frames, the M7 rules above.
 
-## Unverified
+## Unverified, and what must run before the merge
+
+The owner stopped all tests before the full verify finished (the PC was needed). What did run on this branch:
+
+- `verify:fast` green at 281f5a4 and at dfaa633 (the unit suite's 2 ms pathfind timing test failed once at dfaa633
+  while the machine was loaded and passed when rerun alone).
+- `e2e:scenarios` full green at 281f5a4 plus the morning-run fixes (towing and morning blocks included).
+- `e2e:controls` before dfaa633's last edits: the new trembling-rest rows passed on i13, both hands; 7 SE rows
+  failed on harness lag (flicks, swipes, a rolled press) while verify:fast ran beside it. Not rerun alone.
+- The interrupted full `npm run verify` at dfaa633: typecheck, lint, build, e2e:onboarding, e2e:mobile, bundle and
+  lab-map ok; e2e and e2e:scenarios ok when rerun alone; **test failed** on `tests/sim.test.ts` (the board-race
+  balance sim, a 91 s run under load, most likely a timeout, not a logic change: nothing in this branch touches the
+  sim's rules); controls, feel and perf never ran.
+
+**Before merging, run** `npm run verify` on an idle machine and check in particular: `tests/sim.test.ts` alone,
+`npm run e2e:controls` (SE rows), `npm run e2e:feel`, and `npm run perf` (draws and frame pacing; the channel run
+and the dig add pooled images only). `npm run bench:thumb` was not run this round. The towing go/no-go waits for
+the next round (the critic has the spike at 281f5a4).
 
 No real phone or native build. Haptic timing, the rope's 1 px line and the clods on a real panel are judged from
 strips and emulated touches only.
