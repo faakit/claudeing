@@ -1,0 +1,30 @@
+{
+ "eat": {
+  "down": 4,
+  "right": 4,
+  "up": 4
+ },
+ "harvest": {
+  "down": 5,
+  "right": 5
+ },
+ "pet": {
+  "down": 5,
+  "right": 5,
+  "up": 5
+ },
+ "place": {
+  "down": 4,
+  "right": 4,
+  "up": 4
+ },
+ "plant": {
+  "down": 5,
+  "up": 5
+ },
+ "reel": {
+  "down": 3,
+  "right": 3,
+  "up": 3
+ }
+}

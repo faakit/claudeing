@@ -240,12 +240,13 @@ function canTill(state: GameState, t: TileInfo): boolean {
 }
 
 registerToolAction('till', ({ state, tile, tool }) => {
+  // the old creek bed answers first: it lies in no plot, so the land refusal below would claim it is for sale
+  const stageOnly = tile.farmland ? deltaRefusal(tile.map, tile.tx, tile.ty) : null;
+  if (stageOnly) return { refusal: stageOnly };
   if (tile.farmland && state.farm.tiles[tileKey(tile.tx, tile.ty)])
     return { refusal: 'Already tilled.' };
   if (tile.farmland && tile.owned === false)
     return { refusal: 'Not your land yet. Buy it at a sign.' };
-  const stageOnly = tile.farmland ? deltaRefusal(tile.map, tile.tx, tile.ty) : null;
-  if (stageOnly) return { refusal: stageOnly };
   if (!canTill(state, tile)) return { refusal: "Can't till here." };
   if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A better hoe breaks several tiles in a row for the same energy.

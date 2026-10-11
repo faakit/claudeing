@@ -320,7 +320,16 @@ function farmTile(farm, tx, ty) {
       const scene = window.__farm.game.scene.getScene('Farm');
       const layers = scene.children.list.filter((o) => o.type === 'TilemapLayer');
       const at = (name) => layers.find((l) => l.layer.name === name)?.getTileAt(x, y)?.index ?? 0;
-      return { ground: at('ground'), detail: at('detail') };
+      const gate = scene.objects.find((o) => o.props?.gateOpen);
+      return {
+        ground: at('ground'),
+        detail: at('detail'),
+        gate: gate
+          ? layers.find((l) => l.layer.name === 'props')?.getTileAt(gate.tx, gate.ty)?.index
+          : 0,
+        gateOpen: gate?.props.gateOpen,
+        gateShut: gate?.props.gateShut,
+      };
     },
     [tx, ty],
   );
@@ -338,6 +347,11 @@ async function stages() {
     check(
       `farm-variant-${v}: the creek bed shows its ${v} look (ground and baked art)`,
       t.ground === want[v] && t.detail > 0,
+      JSON.stringify(t),
+    );
+    check(
+      `farm-variant-${v}: Ilse's gate is drawn ${v === 'dry' ? 'shut' : 'open'}`,
+      t.gate === (v === 'dry' ? t.gateShut : t.gateOpen) && t.gate > 0,
       JSON.stringify(t),
     );
   }
@@ -359,18 +373,30 @@ async function stages() {
     said?.text === 'The old creek bed. Best left clear.' && !(s.placed.farm ?? []).length,
     JSON.stringify(said),
   );
+  await farm.select(0); // the hoe: the bed's own line, not the land-for-sale one (critic review 1, #2)
+  await farm.idle(); // the refusal's action lock runs out first
+  const tilled = await farm.event('toast', () => farm.press('Space'));
+  check(
+    'farm-creek-place: the hoe facing the old creek bed gets the same line',
+    tilled?.text === 'The old creek bed. Best left clear.',
+    JSON.stringify(tilled),
+  );
   await farm.eval(() => window.__farm.dev.goto('farm', 28, 3, 'right')); // resolves once the scene is up
   await farm.frames(3); // a fresh scene ignores input until a frame with nothing held
   const gate = await farm.event('toast', () => farm.press('KeyE'));
+  await farm.select(0); // the hoe in hand: Action facing the gate still reads the gate, not the hoe
+  const gateAct = await farm.event('toast', () => farm.press('Space'));
   await farm.page.keyboard.down('ArrowRight');
   await farm.frames(30); // half a second of walking into the shut gate
   await farm.page.keyboard.up('ArrowRight');
   await farm.frames(3);
   s = await farm.state();
   check(
-    "Ilse's gate: Interact reads that it is locked, and walking into it stays on the farm",
-    gate?.text === "Ilse's old gate. Locked." && s.player.map === 'farm',
-    JSON.stringify(gate),
+    "Ilse's gate: Interact and Action read that it is locked, and walking into it stays on the farm",
+    gate?.text === "Ilse's old gate. Locked." &&
+      gateAct?.text === gate?.text &&
+      s.player.map === 'farm',
+    JSON.stringify([gate, gateAct]),
   );
   check('stages: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();
@@ -761,10 +787,152 @@ async function channels() {
   await farm.close();
 }
 
+// Art round 5: the farmer's action animations (harvest, plant, eat, place, pet, reel) play on their events, never
+// block input, and stay off in Calm mode. A recorder notes every action frame the pose shows.
+async function actions() {
+  const farm = await openScenario(browser, url, 'ripe-plot', { profile: PROFILE });
+  await farm.eval(() => {
+    const sc = window.__farm.game.scene.getScene('Farm');
+    window.__acts = new Set();
+    sc.events.on('postupdate', () => {
+      const p = sc.pose;
+      if (p && p.visible && p.texture.key.startsWith('player_act_'))
+        window.__acts.add(p.texture.key);
+    });
+  });
+  const seen = () =>
+    farm.eval(() => {
+      const out = [...window.__acts];
+      window.__acts.clear();
+      return out;
+    });
+  const placeAt = (tx, ty, facing) =>
+    farm.mutate(
+      (s, _f, a) => {
+        s.player.x = a.tx * 16 + 8;
+        s.player.y = a.ty * 16 + 11;
+        s.player.facing = a.facing;
+      },
+      { tx, ty, facing },
+    );
+  // harvest, and the stick walks at once (moving cuts the pose short)
+  const a = await farm.act();
+  const y0 = (await farm.state()).player.y;
+  await farm.page.keyboard.down('ArrowUp');
+  const moved = await farm
+    .until(
+      (st, _w, y) => st.player.y < y - 2 && st.player.y,
+      y0,
+      'the farmer to walk after a harvest',
+    )
+    .catch(() => null);
+  await farm.page.keyboard.up('ArrowUp');
+  await farm.idle();
+  let got = await seen();
+  check(
+    'actions: a harvest plays the harvest frames',
+    a.ok && a.used.plan === 'harvest' && got.some((k) => k.startsWith('player_act_harvest_')),
+    JSON.stringify({ a: a.used, got }),
+  );
+  check('actions: input is not blocked: the farmer walks right after a harvest', moved !== null);
+  // plant on tilled soil away from the ripe rows (smart targeting would harvest them first)
+  await farm.mutate((s) => {
+    for (const t of Object.values(s.farm.tiles)) delete t.crop; // bare tilled soil, nothing ripe nearby
+    s.inventory.slots[5] = { item: 'parsnip_seed', qty: 5 };
+  });
+  await placeAt(10, 15, 'down');
+  await farm.select(5);
+  const pl = await farm.act();
+  await farm.idle(20);
+  got = await seen();
+  check(
+    'actions: planting plays the plant frames',
+    pl.ok && pl.used.plan === 'plant' && got.some((k) => k.startsWith('player_act_plant_')),
+    JSON.stringify({ pl: pl.used, got }),
+  );
+  // eat
+  await farm.mutate((s) => {
+    s.energy = 10;
+    s.inventory.slots[6] = { item: 'baked_potato', qty: 2 };
+  });
+  await farm.select(6);
+  const e = await farm.act();
+  await farm.idle(20);
+  got = await seen();
+  check(
+    'actions: eating plays the eat frames',
+    e.ok && e.used.plan === 'eat' && got.some((k) => k.startsWith('player_act_eat_')),
+    JSON.stringify({ e: e.used, got }),
+  );
+  // place (facing up, onto the grass above)
+  await placeAt(10, 15, 'up');
+  await farm.mutate((s) => (s.inventory.slots[7] = { item: 'sprinkler', qty: 1 }));
+  await farm.select(7);
+  const pc = await farm.act();
+  await farm.idle(20);
+  got = await seen();
+  check(
+    'actions: placing plays the place frames',
+    pc.ok && pc.used.plan === 'place' && got.some((k) => k.startsWith('player_act_place_')),
+    JSON.stringify({ pc: pc.used, got }),
+  );
+  // pet: a coop with a hen at home, faced from the right
+  await farm.mutate((s, f) => {
+    s.placed.farm = [
+      ...(s.placed.farm ?? []),
+      {
+        id: 900,
+        type: 'coop',
+        tx: 6,
+        ty: 13,
+        data: { house: { n: 1, fed: true, petted: false, joy: 0, ready: 0 } },
+      },
+    ];
+    s.nextPlacedId = 901;
+    f.gameEvents.emit('placedChanged', { map: 'farm' });
+  });
+  await placeAt(7, 13, 'left');
+  await farm.idle();
+  await farm.interact();
+  await farm.idle(20);
+  got = await seen();
+  const coop = (await farm.state()).placed.farm.find((o) => o.id === 900);
+  check(
+    'actions: the daily pat plays the pet frames',
+    coop?.data.house?.petted === true && got.some((k) => k.startsWith('player_act_pet_')),
+    JSON.stringify({ house: coop?.data.house, got }),
+  );
+  // reel: a landed fish plays it once the world runs again
+  await farm.eval(() => window.__farm.gameEvents.emit('fishCaught', undefined));
+  await farm.frames(60); // the whole reel (3 frames, under 400 ms)
+  got = await seen();
+  check(
+    'actions: a landed fish plays the reel frames',
+    got.some((k) => k.startsWith('player_act_reel_')),
+    JSON.stringify(got),
+  );
+  // Calm mode: no action frames, the action itself still happens
+  await farm.mutate((s) => (s.settings.reduceMotion = true));
+  await placeAt(10, 15, 'down');
+  await farm.select(2);
+  await farm.frames(5);
+  await seen();
+  const c = await farm.act();
+  await farm.idle(20);
+  got = await seen();
+  check(
+    'actions: Calm mode plays no action frames',
+    c.ok && got.length === 0,
+    JSON.stringify({ c: c.used, got }),
+  );
+  check('actions: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 try {
   const blocks = SMOKE
     ? [smoke]
-    : [smoke, everyScenario, mechanics, stages, ambient, valley, spring, channels];
+    : [smoke, everyScenario, mechanics, stages, ambient, actions, valley, spring, channels];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

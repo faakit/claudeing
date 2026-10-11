@@ -166,11 +166,13 @@ describe('delta rectangles', () => {
     expect(s.placed['farm']?.some((o) => o.tx === 25 && o.ty === 12)).toBe(true);
   });
 
-  it('tilling in the creek bed is refused with the same line', () => {
+  it('tilling in the creek bed is refused with the same line, before the land-for-sale one', () => {
     const s = newState();
     equip(s, 'hoe');
     const before = JSON.stringify(s);
-    expect(performAction(s, { ...grass(27, 20), kind: 'stone', tillable: false })).toEqual({
+    // as the scene builds it: the bed is stone, lies in no plot (owned: false) and is open in the dry stage
+    const bed = { ...grass(27, 20), kind: 'stone', tillable: false, owned: false };
+    expect(performAction(s, bed)).toEqual({
       ok: false,
       message: CREEK,
     });

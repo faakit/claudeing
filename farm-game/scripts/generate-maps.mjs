@@ -356,7 +356,7 @@ function farm(v) {
       door('house_door', 14, 7, 'house', 5, 7, 'up'),
       door('to_town_14', 14, h - 1, 'town', 11, 2, 'down'),
       door('to_town_15', 15, h - 1, 'town', 12, 2, 'down'),
-      // shut until the Old Spring is asked for (M3 opens it at the first green)
+      // Ilse's gate: shut until the first green (WORLD-PLAN section 1; the first-green letter carries the key)
       door(
         'to_wendhead',
         29,
@@ -365,7 +365,7 @@ function farm(v) {
         1,
         25,
         'right',
-        locked('place.spring', 1, "Ilse's old gate. Locked."),
+        locked('valley.farmGreen', 1, "Ilse's old gate. Locked."),
       ),
       ...deltaObjects('farm'),
     ],

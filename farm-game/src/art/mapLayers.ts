@@ -48,6 +48,7 @@ export const MAP_ART_LAYERS = [
 
 export class MapArt {
   private overhead: Phaser.Tilemaps.TilemapLayer | null = null;
+  private readonly layers = new Map<string, Phaser.Tilemaps.TilemapLayer>();
   private near = false;
   private last = '';
 
@@ -62,11 +63,20 @@ export class MapArt {
       const layer = map.createLayer(name, tileset);
       if (!layer) continue;
       layer.setDepth(depth);
+      this.layers.set(name, layer);
       if (name === 'overhead') {
         this.overhead = layer;
         if (overheadTint !== 0xffffff) layer.setTint(overheadTint);
       }
     }
+  }
+
+  /** Put one tile (a tileset gid) into an art layer, e.g. Ilse's gate opened; false without that layer. */
+  setTile(layer: string, tx: number, ty: number, gid: number): boolean {
+    const l = this.layers.get(layer);
+    if (!l || gid <= 0) return false;
+    l.putTileAt(gid, tx, ty); // a layer tile index is the gid (tileset firstgid 1)
+    return true;
   }
 
   /**

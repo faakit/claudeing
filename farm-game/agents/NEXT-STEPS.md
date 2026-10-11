@@ -65,12 +65,12 @@ except the footbridge row at y 6).
   `clearDeltaRegions` and `allMapLooks`. `scenes/mapCache.ts activeMapKey(map)` gives the cache key of the
   file in use. M3 drives the stage by setting `place.spring`, and M1 by setting `valley.farmGreen` (and fills in
   the `palette: "dry"` tileset swap).
-- Ilse's gate (29,3) leads to a fenced placeholder `wendhead` map and stays locked (`lockStat` `place.spring` 1)
-  until M3.
+- Ilse's gate (29,3) leads to a fenced placeholder `wendhead` map. It stays locked (`lockStat`
+  `valley.farmGreen` 1) until the first green, and is drawn open once it unlocks.
 - Scenarios: `farm-variant-dry`, `farm-variant-waking`, `farm-variant-restored`, `farm-creek-place` and
   `farm-creek-rescue`. The DEV tab lists each stage, and `__farm.dev.stage(map, variant)` switches to one.
 - How to add a stage: `docs/EXTENDING.md` section 11.
-- Tileset: 512x1088, +112 of the plan's 480 slots.
+- Tileset: 512x1072, +73 of the plan's 480 slots.
 
 **Open:** the creek art is drawn in code (`art-src/tools/valleytiles.py`, dead crowns in `crowns.py`) until the
 art lane paints it. The dry palette (`tiles_dry.png`) is M1's. Restored is only reachable from a scenario until
@@ -81,8 +81,7 @@ M3.
 1. M1: merge this branch. Set `valley.farmGreen`, and pass `valleyStage(...).palette` to `tilesetFor` (WorldScene
    reads the look at its build).
 2. M3: add `wendhead` stages to `valley.json` and draw the real map in `generate-maps.mjs` as `function
-wendhead(v)`. Set the gate's `lockStat` to `valley.farmGreen`. Budget its baked tiles: about 370 slots are
-   left for Wendhead, town and woods together.
+wendhead(v)`. Budget its baked tiles: about 400 slots are left for Wendhead, town and woods together.
 3. M6: town `dry`/`river` (D1 mud) the same way. Make the mud tiles periodic, like the creek bed.
 
 ### Game depth and economy

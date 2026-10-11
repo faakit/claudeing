@@ -36,6 +36,8 @@ export interface GameEvents {
   forageChanged: { map: string };
   /** Ask the UI to open a placed object's panel (jar picker...). */
   placedPanel: { panel: string; id: number };
+  /** A fish was landed (the farmer's reel animation plays when the sheet closes). */
+  fishCaught: undefined;
   /** Start the fishing mini-game; resolve with the outcome. */
   startFishing: { map: string; fish: string; bait: boolean };
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
