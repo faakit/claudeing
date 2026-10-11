@@ -14,7 +14,8 @@ export function ensureTexture(
 ): string {
   if (scene.textures.exists(key)) return key;
   const tall = shape === 'statue';
-  const t = scene.textures.createCanvas(key, 16, tall ? 32 : 16);
+  const wide = shape === 'site'; // a broken place's site covers 2x2 tiles
+  const t = scene.textures.createCanvas(key, wide ? 32 : 16, tall || wide ? 32 : 16);
   if (!t) return key;
   const ctx = t.getContext();
   const r = (x: number, y: number, w: number, h: number, c: string) => {
@@ -34,26 +35,34 @@ export function ensureTexture(
     return key;
   }
   if (shape === 'site') {
-    // a broken place by stage (`level` 0 untouched .. 3 restored): the spring's mouth under a rockfall that comes
-    // off a stone at a time, the water showing more each day (until the art lands)
+    // a broken place by stage (`level` 0 untouched .. 3 restored), 2x2 tiles: a rockfall heaped over the spring's
+    // mouth that comes down a stone a day, water showing more each day, and running out to the pool once it is
+    // clear (until the art lands)
     const lv = Math.min(3, Math.max(0, level));
-    r(1, 6, 14, 10, '#241a2a'); // the mouth: a ring of old stones
-    r(2, 7, 12, 8, '#7a7684');
-    r(4, 9, 8, 5, lv >= 1 ? '#2e4a7a' : '#4c2c1c'); // the hollow: dry earth, then water
-    if (lv >= 1) r(5, 9, Math.min(6, lv * 2), 1, '#72aadc');
-    if (lv >= 3) r(10, 13, 6, 2, '#3c74b4'); // the water runs off toward the creek
-    const fall = [
-      [3, 1],
-      [8, 2],
-      [5, 6],
-      [10, 6],
-      [2, 8],
-      [7, 9],
-    ].slice(0, [6, 4, 2, 0][lv]);
-    for (const [x, y] of fall) {
-      r(x!, y!, 6, 5, '#241a2a');
-      r(x! + 1, y! + 1, 4, 3, '#aeb0b4');
-      r(x! + 1, y! + 3, 4, 1, color);
+    r(6, 16, 20, 14, '#241a2a'); // the mouth: a dark hollow in the hillside
+    r(7, 17, 18, 12, '#4c2c1c');
+    // bottom stones first, the top ones last: each day the top comes off and the heap is visibly lower
+    const rocks: [number, number, number, number][] = [
+      [1, 22, 8, 8],
+      [8, 23, 9, 7],
+      [16, 22, 9, 8],
+      [4, 15, 10, 8],
+      [13, 14, 11, 9],
+      [22, 16, 8, 7],
+      [24, 23, 7, 7],
+      [9, 6, 11, 9],
+    ];
+    for (const [x, y, w, h] of rocks.slice(0, [8, 5, 3, 1][lv])) {
+      r(x, y, w, h, '#241a2a');
+      r(x + 1, y + 1, w - 2, h - 2, '#8a8694');
+      r(x + 1, y + 1, w - 2, 2, '#aeb0b4');
+      r(x + 2, y + h - 3, w - 4, 1, color);
+    }
+    if (lv >= 1) {
+      // water showing at the mouth's foot, more each day; once it is clear it runs out to the pool
+      const wet = [0, 6, 12, 24][lv]!;
+      r(32 - wet, 27, wet, 4, lv >= 3 ? '#3c74b4' : '#2e4a7a');
+      r(32 - wet, 27, wet, 1, '#72aadc');
     }
     t.refresh();
     return key;

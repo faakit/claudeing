@@ -7,7 +7,7 @@ import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
 import { items } from '../data';
 import { absoluteDay } from './time';
-import { openingLine, valleyHolds } from './valley';
+import { openingLine, openingScene, valleyHolds } from './valley';
 import { isWet } from './weather';
 
 export const POINTS_PER_HEART = 50;
@@ -210,6 +210,9 @@ const eventKey = (id: string, ev: string): string => `event.${id}.${ev}`;
 
 /** The next heart event this villager has for you (earned, not yet seen), if any. */
 export function pendingEvent(state: GameState, id: string): NpcEvent | null {
+  // a place's opening morning: its villager's three lines, as a scene (systems/valley.ts)
+  const opening = openingScene(state, id);
+  if (opening && !state.stats[eventKey(id, opening.id)]) return opening;
   const hearts = heartsOf(state, id);
   for (const ev of (npcs[id] as NpcDef).events ?? [])
     if (ev.hearts <= hearts && !state.stats[eventKey(id, ev.id)] && valleyHolds(state, ev.when))
@@ -235,7 +238,8 @@ export function completeEvent(state: GameState, id: string): EventResult {
     state.money += gold;
     gameEvents.emit('moneyChanged', { delta: gold });
   }
-  addStat(state, 'friendEvents');
+  // an opening scene is the place's, not a heart event (the heart-event goal never counts it)
+  if (!ev.id.startsWith('opening.')) addStat(state, 'friendEvents');
   toast(`${(npcs[id] as NpcDef).name}: ${ev.title}`, 'good');
   gameEvents.emit('friendsChanged', undefined);
   return { ok: true, gold, item: ev.reward.item ?? null, qty: ev.reward.item ? qty : 0 };

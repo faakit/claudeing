@@ -1351,3 +1351,18 @@ at Wendhead's south-west corner (1,25).
 - **Channels are drawn in the map's detail layer** (water where the flow reaches, dug earth past it), so they add no
   draw call; the rules still read the ground layer. With the placeholder tileset the soil sprites are tinted instead.
 - The flow cap says so where it bites: a cut past the flow says "The water runs out before here." once a day.
+
+### M3 after the critic's review 4
+
+- **A work day is a beat, still one tap.** The tap applies the day at once (energy, stats) and then plays about
+  3.3 s with the world held (`runtime.busy`): three pickaxe swings with chips and the heap's top stone rolling off,
+  or on the spade day two cuts beside the pool and the water running into the cut. The site's sprite is held until
+  the beat ends (`ObjectsRenderer.hold`), so the heap visibly drops when it finishes.
+- **The site is a 2x2 rockfall at the pool's mouth** (a 32x32 placeholder drawn from the site tile across the tile
+  east of it), losing its top stones first so it is visibly lower each day; the site's solid tile is unchanged.
+- **The opening lines are a scene in the villager sheet**, one a tap (a synthetic event `opening.<place>`, offered
+  that morning only); it gives nothing and never counts as a heart event.
+- **The creek's first morning** reuses the reveal: the waking stage (its dry bed) is drawn over the restored farm and
+  cut away from Ilse's gate down (1.8 s) with a THE CREEK RUNS banner, starting when the creek comes into view (the
+  overlay stays hidden until then, so it costs no draw call). Once (`valley.creekSeen`).
+- **Toasts:** at most two on screen; the "Goal complete!" toast is dropped since the GOAL COMPLETE banner says it.

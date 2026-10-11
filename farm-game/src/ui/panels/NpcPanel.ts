@@ -104,7 +104,8 @@ export class NpcPanel extends Modal {
       this.panelH - 62,
       this.panelW - 16,
       24,
-      last ? 'Accept' : 'Next',
+      // an opening scene (a place restored) gives nothing but the moment
+      last ? (ev.id.startsWith('opening.') ? 'Close' : 'Accept') : 'Next',
       () => {
         if (!last) {
           this.evLine += 1;
@@ -120,7 +121,11 @@ export class NpcPanel extends Modal {
         haptic('success');
         this.mode = 'talk';
         this.gained = 0;
-        this.reply = res.gold > 0 ? `Take this: ${res.gold} gold.` : 'I hope you like it!';
+        this.reply = ev.id.startsWith('opening.')
+          ? ''
+          : res.gold > 0
+            ? `Take this: ${res.gold} gold.`
+            : 'I hope you like it!';
         this.rebuild();
       },
       { textColor: C.green, rim: C.green },

@@ -31,5 +31,6 @@
       "qty": 20
     }
   ],
-  "letters": []
+  "letters": [],
+  "goal": "ship"
 }

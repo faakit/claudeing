@@ -41,6 +41,11 @@ interface Toast {
  * Always-on overlay. Top: clock, gold, weather, energy/water, goal (read-only, out of thumb reach
  * on purpose). Bottom: the dock background and hotbar. Reads state only.
  */
+/** Toasts on screen at once: a third pushes the oldest out (a tap's results never pile over the world). */
+export const MAX_TOASTS = 2;
+/** The goal toast that the GOAL COMPLETE banner replaces. */
+const GOAL_TOAST = /^Goal complete! \+/;
+
 export class Hud {
   private readonly dateLabel: Label;
   private readonly timeLabel: Label;
@@ -475,6 +480,8 @@ export class Hud {
   // ---- toasts ----
   toast(text: string, kind: 'info' | 'warn' | 'good' = 'info'): void {
     if (this.intercept?.(text, kind)) return;
+    // the goal banner already says it (critic, valley review 4: one tap stacked the banner and two toasts)
+    if (GOAL_TOAST.test(text)) return;
     const now = this.scene.time.now;
     const dup = this.toasts.find((t) => t.text === text && now - t.born < 1400);
     if (dup) {
@@ -523,7 +530,7 @@ export class Hud {
         .setDepth(79.5);
     }
     this.toasts.push({ label, bg, lit, text, born: now });
-    if (this.toasts.length > 3) {
+    if (this.toasts.length > MAX_TOASTS) {
       const old = this.toasts.shift();
       old?.label.destroy();
       old?.bg.destroy();

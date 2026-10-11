@@ -3,9 +3,23 @@
   "about": "The morning after the first green, waking in the house: step out and the farm is green (the moment plays once: banner and jingle); Rosa's letter waits in the mailbox with Ilse's seed tin and journal. No dry tileset is resident.",
   "version": 17,
   "tags": ["house", "valley", "mail"],
-  "at": { "map": "house", "tx": 3, "ty": 3, "facing": "down" },
-  "time": { "day": 6, "clock": "06:00" },
-  "stats": { "harvested": 8, "planted": 10, "shipped": 5, "slept": 5, "valley.farmGreen": 1 },
+  "at": {
+    "map": "house",
+    "tx": 3,
+    "ty": 3,
+    "facing": "down"
+  },
+  "time": {
+    "day": 6,
+    "clock": "06:00"
+  },
+  "stats": {
+    "harvested": 8,
+    "planted": 10,
+    "shipped": 5,
+    "slept": 5,
+    "valley.farmGreen": 1
+  },
   "letters": ["first_green"],
   "goal": "ship"
 }

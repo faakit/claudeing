@@ -18,8 +18,10 @@ import {
   valleyRows,
   valleyStep,
   workAt,
+  takeCreekMoment,
   workDone,
 } from '../src/systems/valley';
+import { completeEvent, pendingEvent } from '../src/systems/friendship';
 import { measureText } from '../src/ui/fontMetrics';
 import { valleyLines } from '../src/ui/panels/valleyText';
 import type { GameState } from '../src/state/GameState';
@@ -136,6 +138,27 @@ describe('the Old Spring: the restoration pattern', () => {
     expect(sack?.from).toBe('unsigned');
     expect(sack?.gift?.item).toBe('fertilizer');
     expect(valleyStep(s)).toBeNull();
+  });
+
+  it("the opening morning's lines are a scene in Rosa's sheet; it is not a heart event", () => {
+    const s = asked();
+    fund(s);
+    for (let d = 0; d < 3; d++) {
+      workAt(s, 'spring');
+      sleep(s);
+    }
+    const ev = pendingEvent(s, 'rosa');
+    expect(ev?.id).toBe('opening.spring');
+    expect(ev?.lines).toEqual(spring.opening.lines);
+    const before = s.stats['friendEvents'] ?? 0;
+    expect(completeEvent(s, 'rosa').ok).toBe(true);
+    expect(s.stats['friendEvents'] ?? 0).toBe(before);
+    expect(pendingEvent(s, 'rosa')?.id).not.toBe('opening.spring');
+    sleep(s); // the next day it is over
+    expect(pendingEvent(s, 'rosa')?.id ?? null).not.toBe('opening.spring');
+    // the creek's first morning plays once
+    expect(takeCreekMoment(s)).toBe(true);
+    expect(takeCreekMoment(s)).toBe(false);
   });
 
   it('a valley step with no progress for 3 days waits (off the HUD, still in THE VALLEY)', () => {

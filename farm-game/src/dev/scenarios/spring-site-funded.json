@@ -25,5 +25,6 @@
     "day": 7,
     "clock": "08:00"
   },
-  "letters": []
+  "letters": [],
+  "goal": "fish"
 }

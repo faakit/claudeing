@@ -676,12 +676,17 @@ async function spring() {
     await farm.frames(10); // a fresh scene ignores input until a frame with nothing held
     const e0 = (await farm.state()).energy;
     await farm.press('KeyE');
-    await farm.frames(5);
+    // the work day's beat plays (the world waits), then the site shows its new stage
+    await farm.until((_s, w) => w.runtime.busy, null, "the work day's beat to start", 3000);
+    if (process.env.SHOTS && day > 1)
+      await farm.strip(`spring-beat-day-${day}`, 6, 36, process.env.SHOTS);
+    await farm.until((_s, w) => !w.runtime.busy, null, "the work day's beat to end", 8000);
+    await farm.frames(3);
     s = await farm.state();
     sprites.push(await siteKey(farm, 'spring'));
     if (process.env.SHOTS) await farm.shot(`spring-work-day-${day}`, process.env.SHOTS);
     check(
-      `work day ${day}: one tap, 20 energy, and the site changes`,
+      `work day ${day}: one tap plays the day's work (20 energy), and the site changes after it`,
       s.stats['site.spring.work'] === day &&
         e0 - s.energy === 20 &&
         sprites[day] !== sprites[day - 1],
@@ -716,6 +721,39 @@ async function spring() {
     'farm-creek-running: the farm wakes to a running creek (water in the bed)',
     creek.ground === 5,
     JSON.stringify(creek),
+  );
+  // The opening scene: Rosa's three lines in her sheet, one a tap (not toasts)
+  await farm.load('spring-opened');
+  await farm.press('KeyE');
+  await farm.panel('npc');
+  const scene = await farm.eval(() => {
+    const ui = window.__farm.game.scene.getScene('UI');
+    return { mode: ui.npc.mode, id: ui.npc.id };
+  });
+  check(
+    "spring-opened: Interact at the site opens Rosa's opening scene in her sheet",
+    scene.mode === 'event' && scene.id === 'rosa',
+    JSON.stringify(scene),
+  );
+  await farm.press('Escape');
+  await farm.panelClosed();
+  // The creek's first morning: the water runs down the bed from the gate, once
+  await farm.load('farm-creek-first-morning');
+  const waiting = await farm.eval(
+    () => window.__farm.game.scene.getScene('Farm').creekReveal?.live ?? 0,
+  );
+  // it waits for the creek to come into view: walk the farmer over to the bank
+  await farm.eval(() => window.__farm.dev.goto('farm', 24, 12, 'right'));
+  await farm.frames(3);
+  const creekReveal = await farm.eval(
+    () => window.__farm.game.scene.getScene('Farm').reveal?.live ?? 0,
+  );
+  await farm.until((_s, w) => !w.runtime.valleyReveal, null, 'the creek reveal to end', 6000);
+  const seen = (await farm.state()).stats['valley.creekSeen'];
+  check(
+    'farm-creek-first-morning: the dry bed is drawn over the running creek, then cut away, once',
+    waiting > 0 && creekReveal > 0 && seen === 1,
+    JSON.stringify({ waiting, creekReveal, seen }),
   );
   check('spring: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();

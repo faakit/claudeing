@@ -90,16 +90,15 @@ export class ObjectsRenderer {
     for (const l of landmarksOn(state, this.mapId)) {
       const shown = this.landmarks.get(l.id);
       if (shown?.getData('sprite') === l.sprite) continue;
+      if (shown && (this.held.get(l.id) ?? 0) > this.scene.time.now) continue; // a work day's beat still playing
       shown?.destroy();
       const y = (l.ty + 1) * TILE_SIZE;
       const shape =
         l.kind === 'site' ? 'site' : l.kind === 'trophy' ? 'trophy' : l.level ? 'statue' : 'house';
+      // a site covers its tile and the one east of it (2x2 tiles), drawn from its tile's left edge
+      const x = l.kind === 'site' ? (l.tx + 1) * TILE_SIZE : l.tx * TILE_SIZE + TILE_SIZE / 2;
       const sprite = this.scene.add
-        .image(
-          l.tx * TILE_SIZE + TILE_SIZE / 2,
-          y,
-          ensureTexture(this.scene, l.sprite, l.color, shape, l.level),
-        )
+        .image(x, y, ensureTexture(this.scene, l.sprite, l.color, shape, l.level))
         .setOrigin(0.5, 1)
         .setDepth(10 + y - 3)
         .setData('sprite', l.sprite);
@@ -133,6 +132,12 @@ export class ObjectsRenderer {
       any ||= hide;
     }
     return any;
+  }
+
+  private held = new Map<string, number>();
+  /** Keep a landmark's sprite as it is for `ms` (a site during its work day's beat). */
+  hold(id: string, ms: number): void {
+    this.held.set(id, this.scene.time.now + ms);
   }
 
   /** Cheap per-frame check: a repeatable landmark went up a level (funding fires no map event after the first). */

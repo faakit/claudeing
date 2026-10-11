@@ -16,7 +16,8 @@
     "projectsDone": 1,
     "shipped": 20,
     "tut.channels": 1,
-    "valley.greenSeen": 1
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
   },
   "at": {
     "map": "farm",
@@ -48,5 +49,6 @@
       "rect": [19, 11, 6, 1]
     }
   ],
-  "plots": "all"
+  "plots": "all",
+  "goal": "craft"
 }

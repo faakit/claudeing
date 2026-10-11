@@ -23,8 +23,9 @@ const DEPTH: Record<string, number> = {
 };
 
 /**
- * The first green (systems/valley.ts takeFirstGreenMoment): the map drawn once more with the dry tileset on top of
- * the green one, then cut away in a circle that grows from the farmer with a dithered edge, so the farm turns from
+ * A stage reveal: the map's previous look drawn on top of its new one, then cut away. The first green (systems/
+ * valley.ts takeFirstGreenMoment) draws the same map with the dry tileset over the green one; the creek's first
+ * morning draws the farm's waking stage (its dry bed) over the restored one, cut from Ilse's gate down. The first green: then cut away in a circle that grows from the farmer with a dithered edge, so the farm turns from
  * straw to green around them. Calm mode crossfades instead. Pure visuals: the overlay goes when it is done.
  */
 export class GreenReveal {
@@ -44,6 +45,10 @@ export class GreenReveal {
     dryKey: string,
     private readonly from: { x: number; y: number },
     private readonly calm: boolean,
+    /** How long the cut takes to cross the view (the first green 1.2 s; the creek's water a little longer). */
+    private readonly ms = REVEAL_MS,
+    /** Draw nothing until `start` (the creek waits until it comes into view: hidden layers cost no draw call). */
+    hiddenUntilStart = false,
   ) {
     this.camera = scene.cameras.main;
     this.map = scene.make.tilemap({ key: mapKey });
@@ -61,6 +66,7 @@ export class GreenReveal {
       if (!layer) continue;
       layer.setDepth(DEPTH[name] ?? 0.25);
       if (!calm) layer.setMask(this.mask);
+      if (hiddenUntilStart) layer.setVisible(false);
       this.layers.push(layer);
     }
   }
@@ -68,6 +74,7 @@ export class GreenReveal {
   /** Start once the scene's door wipe has opened (the first frames show the straw). */
   start(): void {
     this.started = true;
+    for (const l of this.layers) l.setVisible(true);
   }
 
   /** The longest distance from the farmer to a corner of the view: the circle is done past it. */
@@ -81,8 +88,8 @@ export class GreenReveal {
 
   update(dt: number): void {
     if (this.done || !this.started) return;
-    this.t = Math.min(REVEAL_MS, this.t + dt);
-    const k = this.t / REVEAL_MS;
+    this.t = Math.min(this.ms, this.t + dt);
+    const k = this.t / this.ms;
     if (this.calm) {
       for (const l of this.layers) l.setAlpha(1 - k);
     } else {
@@ -91,7 +98,7 @@ export class GreenReveal {
       const r = e * (this.reach() + BAND);
       this.draw(r);
     }
-    if (this.t >= REVEAL_MS) this.destroy();
+    if (this.t >= this.ms) this.destroy();
   }
 
   /** The cut: a solid disc of radius r - BAND, and a checker of small cells in the band out to r. */

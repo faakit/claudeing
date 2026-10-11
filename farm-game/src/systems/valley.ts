@@ -613,3 +613,42 @@ export function channelFlow(s: StatsOnly): number {
 /** Does the bag hold this item? */
 export const owns = (s: GameState, item: string): boolean =>
   s.inventory.slots.some((x) => x?.item === item);
+
+/**
+ * The opening morning's scene: the place's villager says the three opening lines one tap at a time in the
+ * villager sheet, as a heart event does (friendship.ts `pendingEvent`), and it gives nothing but the moment.
+ */
+export function openingScene(
+  s: GameState,
+  npc: string,
+): {
+  hearts: number;
+  id: string;
+  title: string;
+  lines: string[];
+  reward: { gold?: number };
+} | null {
+  for (const id of placeIds()) {
+    const p = def(id);
+    if (p.npc !== npc || stageOf(s, id) < 3 || st(s, `place.${id}.opened`) !== absoluteDay(s))
+      continue;
+    return {
+      hearts: 0,
+      id: `opening.${id}`,
+      title: `The ${p.name}`,
+      lines: p.opening.lines,
+      reward: {},
+    };
+  }
+  return null;
+}
+
+/** The creek's first morning on the farm (the spring restored): its reveal plays once. True that once. */
+export const CREEK_SEEN = 'valley.creekSeen';
+export const creekMomentDue = (state: GameState): boolean =>
+  stageOf(state, 'spring') >= 3 && !state.stats[CREEK_SEEN];
+export function takeCreekMoment(state: GameState): boolean {
+  if (stageOf(state, 'spring') < 3 || state.stats[CREEK_SEEN]) return false;
+  state.stats[CREEK_SEEN] = 1;
+  return true;
+}

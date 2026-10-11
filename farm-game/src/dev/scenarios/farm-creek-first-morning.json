@@ -1,0 +1,31 @@
+{
+  "title": "The creek's first morning on the farm",
+  "about": "Spring 10, 07:00, just outside the farmhouse, the morning the Old Spring opened: the farm builds in its restored stage with the dry bed drawn over it, and the water runs down the creek from Ilse's gate (about 1.8 s; a crossfade in Calm mode) under a THE CREEK RUNS banner. Once only.",
+  "version": 18,
+  "tags": ["farm", "valley", "moment"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 9,
+    "facing": "down"
+  },
+  "time": {
+    "day": 10,
+    "clock": "07:00"
+  },
+  "goal": "craft"
+}

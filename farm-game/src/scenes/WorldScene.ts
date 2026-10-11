@@ -6,9 +6,13 @@ import {
   interactSite,
   paletteOf,
   placeWhere,
+  creekMomentDue,
+  takeCreekMoment,
   takeFirstGreenMoment,
+  valleyStage,
   valleyStep,
 } from '../systems/valley';
+import { lookCacheKey } from './PreloadScene';
 import { hasArt } from '../art/registry';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
@@ -122,6 +126,13 @@ import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutor
 import type { CoachScreenWorld } from '../ui/CoachMarks';
 import { npcLocation } from '../systems/npcs';
 import { npcs as npcData } from '../data';
+
+/** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
+const CREEK_REVEAL_MS = 1800;
+const CREEK_BANNER = "THE CREEK RUNS\nIlse's creek, full again.";
+
+/** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
+const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400 } as const;
 
 /** The tiles a channel shows in the detail layer until the art lands: plain water, and dug earth (tile gids). */
 const CHANNEL_GID = { wet: 5, dry: 2 } as const;
@@ -237,6 +248,10 @@ export abstract class WorldScene extends Phaser.Scene {
   private farmDirty = false;
   /** Built this frame (the first update is skipped). */
   private fresh = false;
+  /** The creek's first-morning reveal, waiting for the creek to come into view. */
+  creekReveal: GreenReveal | null = null;
+  /** A site's work-day beat is playing (the world waits for it). */
+  private siteBeat = false;
   /** The first green's straw-to-green dissolve while it plays (fx/GreenReveal.ts). */
   reveal: GreenReveal | null = null;
   private lastTile = { tx: -1, ty: -1 };
@@ -380,6 +395,22 @@ export abstract class WorldScene extends Phaser.Scene {
         this.reveal?.start();
         gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner });
       });
+    } else if (this.mapId === 'farm' && creekMomentDue(state)) {
+      // The creek's first morning: the dry bed drawn over the running one and cut away from Ilse's gate down, once
+      // the creek comes into view (update starts it; until then the overlay is hidden and costs nothing).
+      const before = lookCacheKey(
+        valleyStage({ stats: { ...state.stats, 'place.spring': 2 } }, 'farm'),
+      );
+      if (this.cache.tilemap.exists(before))
+        this.creekReveal = new GreenReveal(
+          this,
+          before,
+          look.key,
+          { x: 29 * TILE_SIZE, y: 3 * TILE_SIZE },
+          state.settings.reduceMotion,
+          CREEK_REVEAL_MS,
+          true,
+        );
     }
 
     this.npcs = new NpcRenderer(this, this.mapId);
@@ -476,12 +507,25 @@ export abstract class WorldScene extends Phaser.Scene {
       this.seeThrough = null;
       this.reveal?.destroy();
       this.reveal = null;
+      this.creekReveal?.destroy();
+      this.creekReveal = null;
       runtime.valleyReveal = false;
+      this.endSiteBeat();
     });
   }
 
   update(time: number, delta: number): void {
     runtime.paintWork = this.work !== null; // a painted row digs on, never fills (mechanics/channels.ts)
+    // the creek's first morning starts when the creek bed (x 26-27) comes into view
+    if (this.creekReveal && !this.reveal && this.cameras.main.worldView.right > 25 * TILE_SIZE) {
+      takeCreekMoment(getState());
+      this.reveal = this.creekReveal;
+      this.creekReveal = null;
+      this.reveal.start();
+      runtime.valleyReveal = true;
+      audio.play('water');
+      gameEvents.emit('valleyMoment', { text: CREEK_BANNER });
+    }
     if (this.reveal) {
       this.reveal.update(delta);
       if (this.reveal.done) {
@@ -1235,30 +1279,101 @@ export abstract class WorldScene extends Phaser.Scene {
     if (res.kind === 'say') return void toast(res.text, 'info');
     if (res.kind === 'fund' || res.kind === 'upgrade')
       return void gameEvents.emit('openProject', { id: res.project });
-    if (res.kind === 'lines') {
-      const name = npcData[res.npc]?.name ?? res.npc;
-      res.lines.forEach((l) => toast(`${name}: ${l}`, 'good'));
-      return;
-    }
-    // The work day: the taste plays where the farmer stands, the site's sprite changes on the spot.
-    const at = { ...state.player };
-    const sx = tile.tx * TILE_SIZE + TILE_SIZE / 2;
-    const sy = tile.ty * TILE_SIZE + TILE_SIZE / 2;
-    this.fx.swing(
-      at.x,
-      at.y,
-      res.work.taste === 'channel' ? 'item_spade' : 'item_pickaxe',
-      at.facing,
-    );
-    this.time.delayedCall(140, () => {
-      if (!this.sys.isActive()) return;
-      if (res.work.taste === 'channel') this.fx.splash(sx, sy);
-      else this.fx.dust(sx, sy);
-      audio.play(res.work.taste === 'channel' ? 'water' : 'swing');
-      haptic('medium');
-    });
+    // the opening morning: the villager's lines in the villager sheet, one a tap (their opening scene)
+    if (res.kind === 'lines') return void gameEvents.emit('talkTo', { id: res.npc });
+    // The work day: a few seconds of the place's verb, played out (critic, valley review 4), still one tap. The
+    // farmer swings at the rockfall and a stone rolls off its top; on the spade day a channel is cut from the pool
+    // and the water runs into it. The site's new sprite shows when the beat ends.
     gameEvents.emit('energyChanged', undefined);
-    toast(`${res.work.text} (${res.day} of ${res.of})`, 'good');
+    const channel = res.work.taste === 'channel';
+    const beat = channel ? SITE_BEAT_MS.channel : SITE_BEAT_MS.pickaxe;
+    this.things?.hold(`site.${id}`, beat);
+    runtime.busy = true;
+    this.siteBeat = true;
+    const at = { ...state.player };
+    const rockX = (tile.tx + 1) * TILE_SIZE; // the rockfall's middle (it covers this tile and the next)
+    const rockY = tile.ty * TILE_SIZE;
+    const live = () => this.sys.isActive();
+    const swings = channel ? [0, 650] : [0, 800, 1600];
+    swings.forEach((t, k) =>
+      this.time.delayedCall(t, () => {
+        if (!live()) return;
+        this.fx.swing(at.x, at.y, channel ? 'item_spade' : 'item_pickaxe', at.facing);
+        this.time.delayedCall(140, () => {
+          if (!live()) return;
+          if (channel) this.fx.dust((tile.tx + 0.5) * TILE_SIZE, (tile.ty + 1.5) * TILE_SIZE);
+          else this.fx.dust(rockX - 6 + k * 6, rockY + 4 - k * 3);
+          audio.play(channel ? 'till' : 'swing');
+          haptic('tick');
+        });
+      }),
+    );
+    if (!channel) {
+      // a stone comes off the top of the heap and rolls down beside it
+      this.time.delayedCall(2200, () => {
+        if (!live()) return;
+        const stone = this.add.graphics().setDepth(10 + rockY + 20);
+        stone.fillStyle(0x241a2a, 1).fillRect(-6, -5, 12, 10);
+        stone.fillStyle(0xaeb0b4, 1).fillRect(-5, -4, 10, 8);
+        stone.fillStyle(0x8a8694, 1).fillRect(-5, 1, 10, 3);
+        stone.setPosition(rockX, rockY - 14); // the top stone of the heap
+        this.tweens.add({
+          targets: stone,
+          x: rockX + 26,
+          y: rockY + 22,
+          duration: 700,
+          ease: 'Bounce.easeOut',
+          onComplete: () => {
+            audio.play('till');
+            this.tweens.add({
+              targets: stone,
+              alpha: 0,
+              delay: 500,
+              duration: 300,
+              onComplete: () => stone.destroy(),
+            });
+          },
+        });
+      });
+    } else {
+      // the cut: a strip of dug earth from the pool's edge, then the water runs into it from the pool side
+      const cx = tile.tx * TILE_SIZE;
+      const cy = (tile.ty + 1) * TILE_SIZE;
+      const cut = this.add.graphics().setDepth(0.45);
+      this.time.delayedCall(1100, () => {
+        if (!live()) return;
+        cut.fillStyle(0x4c2c1c, 1).fillRect(cx, cy + 4, TILE_SIZE, 8);
+        const flow = { w: 0 };
+        audio.play('water');
+        this.tweens.add({
+          targets: flow,
+          w: TILE_SIZE,
+          duration: 900,
+          ease: 'Sine.easeOut',
+          onUpdate: () => {
+            const w = Math.round(flow.w);
+            cut.clear();
+            cut.fillStyle(0x4c2c1c, 1).fillRect(cx, cy + 4, TILE_SIZE, 8);
+            cut.fillStyle(0x3c74b4, 1).fillRect(cx + TILE_SIZE - w, cy + 5, w, 6);
+            cut.fillStyle(0x72aadc, 1).fillRect(cx + TILE_SIZE - w, cy + 5, w, 1);
+          },
+          onComplete: () => live() && this.fx.splash(cx + 4, cy + 8),
+        });
+      });
+    }
+    this.time.delayedCall(beat, () => {
+      this.endSiteBeat();
+      if (!live()) return;
+      haptic('medium');
+      toast(`${res.work.text} (${res.day} of ${res.of})`, 'good');
+    });
+  }
+
+  /** The work day's beat is over (or the scene went): the world moves again. */
+  private endSiteBeat(): void {
+    if (!this.siteBeat) return;
+    this.siteBeat = false;
+    runtime.busy = false;
   }
 
   private onInteract(tile?: TileCoord): void {

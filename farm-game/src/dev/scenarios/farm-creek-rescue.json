@@ -21,6 +21,7 @@
     "clock": "10:00"
   },
   "stats": {
-    "valley.greenSeen": 1
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
   }
 }

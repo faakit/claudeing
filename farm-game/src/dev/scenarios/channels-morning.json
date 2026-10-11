@@ -16,7 +16,8 @@
     "projectsDone": 1,
     "shipped": 20,
     "tut.channels": 1,
-    "valley.greenSeen": 1
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
   },
   "at": {
     "map": "house",
@@ -89,5 +90,6 @@
       }
     }
   },
-  "plots": "all"
+  "plots": "all",
+  "goal": "craft"
 }
