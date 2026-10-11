@@ -62,6 +62,29 @@ near-bank row, slip planks at (13,28) where the road meets the shore, the farmer
 WorldScene gained small verb hooks for it (also usable by M7): `tapHook`, `actionHook`, `walkTo`, `walkGoal`,
 `stopWalk`, `walkable`, `farmerSprite`. The lab scene creates the spike when the stat `lab.towSpike` is set.
 
+## Owner bugs (branch `fix/owner-bugs`, from integration/dry-year-2 16f89eb)
+
+Three bugs the owner saw while playing, one commit each, **all untested** (owner order: the PC was needed, so no
+test, typecheck, lint, build, e2e, perf, bench or browser ran). Root causes and rulings are in `DECISIONS.md`,
+"Owner bugs".
+
+| bug | fix | where |
+|---|---|---|
+| 1. Walking behind a crown, it "faded" and the farmer showed whole | The see-through hole opens only when a crown covers the lower body (behind the trunk, never beside or in front), eases in and out over 150 ms with the checker rim, 9 px body circles; the target circle only behind or standing still | `fx/SeeThrough.ts`, `art/mapLayers.ts`, `game/ObjectsRenderer.ts`, `WorldScene.tick`; `tests/see-through.test.ts`; scenario `walk-behind-tree` |
+| 2. A tap while walking "flicks" | Re-plan from the tile ahead or behind, whichever is the shorter walk from the exact position (ahead wins ties and 4 px); no step back, no stop, no turn unless the target is behind; a held preview is not overwritten | `systems/pathfind.ts`, `WorldScene.planTap/onTap/walkTo/followRoute`; `tests/tapmove.test.ts`; e2e:controls row; scenario `tap-retarget-walk` |
+| 3. A bridge over a walkable dry bed | Coordinator ruling: dry beds block exactly where the water stage does (farm creek, town D1, Wendhead pool, creek head and gorge); data only, the dry look unchanged | `scripts/generate-maps.mjs`, six variant `.tmj` collision layers; `tests/maps.test.ts`, `tests/map-stages.test.ts`; scenario notes |
+
+**Before merging, run on an idle machine:** `npm run verify` (in particular the new `tests/see-through.test.ts`, the
+new rows in `tests/tapmove.test.ts`, `tests/maps.test.ts` and `tests/map-stages.test.ts`, the typecheck of
+`mapLayers.ts`'s alpha probe, and `tests/dev-scenarios.test.ts` for the two new scenarios); `npm run e2e:controls`
+(the new "a second tap ahead mid-step keeps walking" row, both phones and hands); `npm run e2e:feel`; `npm run perf`
+(the "behind a lone tree" and "behind a grown fruit tree" rows: the hole now redraws for 150 ms on each open and
+close, and reads tile alpha once per tile id); `npm run bench:thumb`; `npm run e2e:scenarios` (it loads every
+scenario, the new `walk-behind-tree` and `tap-retarget-walk` with them, and the creek and dry-town blocks); and
+`npm run e2e:onboarding`, comparing its median with the last run, in case a guided path used to cross a dry bed.
+Then open `?scenario=walk-behind-tree` and `?scenario=tap-retarget-walk` and judge them by eye: the hole's size and
+ease, and the walk through retargets, were never seen running.
+
 ## Other lanes' files touched
 
 `scenes/WorldScene.ts` (ChannelFx wiring, the spade swing, verb hooks, the creek reveal threshold),

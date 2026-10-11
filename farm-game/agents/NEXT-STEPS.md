@@ -136,10 +136,10 @@ wrap-up (see Open).
   the town has its river back: on the first step into town the dry town dissolves around the farmer under "THE RIVER
   IS BACK". Finn waits at the dock (16,32) beside the Heron all opening day (his opening lines there), and spends
   his afternoons there from then on. The Fish Ladder moves onto the weir's site sheet.
-- **The dry town (new games):** straw, the river's west four columns (D1, x 17-20, y 22-31) a walkable dry bed, a
-  two-tile trickle (20 fishable tiles) east of it, the Heron on the mud (solid), the north-east house boarded (a bare
-  wall and a cold chimney until art draws boards). Trout, salmon, the glimmer trout and the ice pike bite only with the
-  weir; the board never asks for them before. The Derby's catfish are at the woods lake while the river is dry.
+- **The dry town (new games):** straw, the river's west four columns (D1, x 17-20, y 22-31) a dry bed (solid like
+  the river, owner bug 3), a two-tile trickle (20 fishable tiles) east of it, the Heron on the mud (solid), the
+  north-east house boarded (a bare wall and a cold chimney until art draws boards). Trout, salmon, the glimmer trout
+  and the ice pike bite only with the weir; the board never asks for them before. The Derby's catfish are at the woods lake while the river is dry.
   Finn's lines follow the town's stage; "The Heron" replaces "A secret spot" (4 hearts, reward kept); Clay says
   "Didn't ask for help" once the river is back. The legends letter says the river legends wait for the river.
 - **Old saves keep their river** (coordinator ruling): a save without `valley.weirOn` gets the weir restored quietly in

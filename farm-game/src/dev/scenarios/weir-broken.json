@@ -1,6 +1,6 @@
 {
   "title": "The broken weir on the ask morning, facing its site",
-  "about": "Summer 15, 08:00, at Wendhead's gorge: the Old Spring is open, Finn is at 2 hearts and asked for the weir this morning (place.weir 1; the HUD reads \"Finn asked: the Weir\", his letter is in the mailbox). The gorge is a dry stony bed. 2,600g, 60 stone and Orin's sluice gate in the bag: Interact at the broken weir opens its fund, and Fund it takes all three in one tap.",
+  "about": "Summer 15, 08:00, at Wendhead's gorge: the Old Spring is open, Finn is at 2 hearts and asked for the weir this morning (place.weir 1; the HUD reads \"Finn asked: the Weir\", his letter is in the mailbox). The gorge is a dry stony bed, solid like the water it will hold (owner bug 3): the plank bridge at y 22 is the crossing. 2,600g, 60 stone and Orin's sluice gate in the bag: Interact at the broken weir opens its fund, and Fund it takes all three in one tap.",
   "version": 18,
   "tags": ["wendhead", "valley", "weir"],
   "valley": {

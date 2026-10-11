@@ -1,0 +1,10 @@
+{
+  "title": "Walk behind a lone tree (the see-through hole)",
+  "about": "Owner bug 1. Farm, 10:00, the farmer at (9,3) facing up, beside the lone tree whose trunk stands at (7,2) and whose crown hangs over (6-8,1). Walk up to (9,1), then left along row 1 behind the crown to (5,1) (or tap (7,1)): the farmer shows through a small hole that grows in about 150 ms with a checker rim and closes the same way on the far side; the crown keeps its mass around him and nothing pops or flickers. Then walk down past (8,2), beside the trunk, and stand at (7,3) in front of it: nothing is cut there, even with the crown over his hair. Standing still beside the trunk facing up into the crown cuts only the target tile after a moment.",
+  "version": 18,
+  "tags": ["farm", "art", "feel"],
+  "at": { "map": "farm", "tx": 9, "ty": 3, "facing": "up" },
+  "time": { "clock": "10:00" },
+  "tutorial": "off",
+  "hints": "off"
+}
