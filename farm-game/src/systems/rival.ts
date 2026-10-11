@@ -6,7 +6,7 @@ import { sendLetter } from './mail';
 import { absoluteDay, formatClock } from './time';
 import { gameEvents } from './events';
 import { parseKey } from './itemRef';
-import { fmtGold, t } from '../i18n';
+import { fmtGold, t, type Key } from '../i18n';
 
 /**
  * The rival farmer competes for the town board: once a day, at a set time, they fill one open request
@@ -45,7 +45,7 @@ export function rivalTakes(state: GameState): number {
 
 /** "one", "two", "three" in the current language (a bigger number stays a figure). */
 const numberWord = (n: number): string =>
-  n >= 1 && n <= 3 ? t(`rival.number${n as 1 | 2 | 3}`) : String(n);
+  n >= 1 && n <= 3 ? t(`rival.number${n}` as Key) : String(n);
 
 /** Goods of the farm (weighted up on the board, and the only rows the rival scores on). */
 export const FARM_TYPES = ['crop', 'preserve', 'product'];

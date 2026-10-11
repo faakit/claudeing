@@ -1,6 +1,6 @@
 import { crops, game, items, placeables, trees } from '../../data';
 import { measureText } from '../fontMetrics';
-import { fmtGold, t } from '../../i18n';
+import { fmtGold, t, type Key } from '../../i18n';
 import { seasonWord } from '../../systems/time';
 
 /** True when a seed could not ripen before the season ends (so buying it now is a mistake). */
@@ -93,7 +93,7 @@ const TABS_W = 184;
 
 /** Tabs with their labels and button widths (184 px in all, 2 px apart), in the current language. */
 export function shopTabs(): [ShopTab, string, number][] {
-  const labels = TAB_IDS.map((id) => t(`shop.tab.${id}`));
+  const labels = TAB_IDS.map((id) => t(`shop.tab.${id}` as Key));
   if (labels.every((l, i) => measureText(l) <= TAB_WIDTHS[i]! - 6))
     return TAB_IDS.map((id, i) => [id, labels[i]!, TAB_WIDTHS[i]!]);
   const need = labels.map((l) => measureText(l) + 6);

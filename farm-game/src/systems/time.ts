@@ -2,7 +2,7 @@ import { MS_PER_GAME_MINUTE } from '../config';
 import { game } from '../data';
 import type { GameState, Season } from '../state/GameState';
 import { SEASONS } from '../state/GameState';
-import { getLocale, t } from '../i18n';
+import { getLocale, t, type Key } from '../i18n';
 
 /**
  * Advance the clock by real elapsed ms. Never reads the wall clock, so changing the
@@ -51,11 +51,11 @@ export function formatClock(minutes: number): string {
 }
 
 /** The season's name in the current language ("Spring", "Primavera"). */
-export const seasonLabel = (s: Season): string => t(`season.${s}`);
+export const seasonLabel = (s: Season): string => t(`season.${s}` as Key);
 /** The season's name in lower case in both languages ("Won't grow in spring", "não cresce no verão"). */
-export const seasonLower = (s: Season): string => t(`seasonLower.${s}`);
+export const seasonLower = (s: Season): string => t(`seasonLower.${s}` as Key);
 /** The season's name inside a sentence ("Spring", "primavera": Portuguese writes seasons in lower case). */
-export const seasonWord = (s: Season): string => t(`seasonWord.${s}`);
+export const seasonWord = (s: Season): string => t(`seasonWord.${s}` as Key);
 
 /** A day number that keeps rising across seasons and years (1 = the first day). */
 export const absoluteDay = (state: GameState): number => {

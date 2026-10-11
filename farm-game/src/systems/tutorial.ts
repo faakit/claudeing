@@ -762,7 +762,7 @@ function doorToward(world: CoachWorld, map: string): CoachObject | null {
 function fill(text: string, s: GameState, world: CoachWorld, pointer: Pointer | null): string {
   let out = text;
   if (out.includes('{dir}'))
-    out = out.replace('{dir}', t(`dir.${pointer?.kind === 'paint' ? pointer.dir : 'down'}`));
+    out = out.replace('{dir}', t(`dir.${pointer?.kind === 'paint' ? pointer.dir : 'down'}` as Key));
   if (out.includes('{dry}')) {
     const n = soils(s).filter(([, t]) => !!t.crop && !t.watered && !isMature(t.crop)).length;
     out = out.replace('{dry}', String(n));
@@ -881,7 +881,7 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
     if (st.elseText) out.push(st.elseText);
     for (const a of st.alt ?? []) out.push(a.text);
   }
-  const dirs = (['up', 'down', 'left', 'right'] as const).map((d) => t(`dir.${d}`));
+  const dirs = (['up', 'down', 'left', 'right'] as const).map((d) => t(`dir.${d}` as Key));
   out.push(...Object.values(data().refusals ?? {}));
   for (const st of steps) out.push(...Object.values(st.refusals ?? {}));
   out.push(

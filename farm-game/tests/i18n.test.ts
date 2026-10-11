@@ -294,7 +294,7 @@ describe('Portuguese fits where English is measured', () => {
     inPt(() => {
       for (const season of ['spring', 'summer', 'fall', 'winter'] as const)
         expect(
-          measureText(t('hud.date', { season: t(`season.${season}`), day: 28, year: 10 })),
+          measureText(t('hud.date', { season: t(`season.${season}` as Key), day: 28, year: 10 })),
         ).toBeLessThanOrEqual(100);
       for (const w of ['hud.storm', 'hud.rainy', 'hud.sunny'] as const)
         expect(measureText(t(w)), w).toBeLessThanOrEqual(60);

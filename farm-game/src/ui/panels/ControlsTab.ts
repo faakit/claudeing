@@ -14,7 +14,7 @@ import {
 import { C } from '../theme';
 import { replayTutorial } from '../../systems/tutorial';
 import type { MenuTabContext } from './MenuPanel';
-import { t } from '../../i18n';
+import { t, type Key } from '../../i18n';
 import { onOff } from './onOff';
 
 const SIZE_KEY = { s: 'controls.sizeS', m: 'controls.sizeM', l: 'controls.sizeL' } as const;
@@ -125,8 +125,8 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
 export const HELP_ICONS = ['tap', 'paint', 'stick', 'ring'] as const;
 /** The card's two lines for each picture, in the current language. */
 export const helpLines = (icon: (typeof HELP_ICONS)[number]): [string, string] => [
-  t(`help.${icon}1`),
-  t(`help.${icon}2`),
+  t(`help.${icon}1` as Key),
+  t(`help.${icon}2` as Key),
 ];
 /** Kept for the tests that measure the card: the four pictures with their lines, now. */
 export const helpItems = (): { icon: (typeof HELP_ICONS)[number]; lines: [string, string] }[] =>

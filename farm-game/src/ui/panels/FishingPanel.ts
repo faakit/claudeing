@@ -181,17 +181,17 @@ export class FishingPanel extends Modal {
     const g = this.gfx;
     g.clear();
     const { x, y, w, h } = TRACK;
-    const t = this.scene.time.now / 1000;
+    const secs = this.scene.time.now / 1000;
     drawPanel(g, x - 4, y - 4, w + 8, h + 8, 0x1d3a52, C.blue);
     if (this.phase === 'wait' || this.phase === 'bite') {
       // Ripples and a bobber.
       const cx = x + w / 2;
       const cy = y + h / 2;
       for (const k of [0, 0.5]) {
-        const p = (t * 0.6 + k) % 1;
+        const p = (secs * 0.6 + k) % 1;
         g.lineStyle(1, 0xffffff, 0.5 * (1 - p)).strokeCircle(cx, cy, 4 + p * 10);
       }
-      const dip = this.phase === 'bite' ? 3 + Math.sin(t * 40) * 2 : Math.sin(t * 3) * 0.8;
+      const dip = this.phase === 'bite' ? 3 + Math.sin(secs * 40) * 2 : Math.sin(secs * 3) * 0.8;
       g.fillStyle(0xe0574a, 1).fillRect(cx - 2, cy - 4 + dip, 4, 4);
       g.fillStyle(0xf4ead2, 1).fillRect(cx - 2, cy + dip, 4, 3);
       this.fishIcon.setVisible(false);
