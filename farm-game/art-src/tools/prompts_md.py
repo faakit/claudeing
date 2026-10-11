@@ -9,6 +9,7 @@ pre = {
     "character": open(os.path.join(D, "preamble-character.txt")).read().strip(),
     "tinyacre": open(os.path.join(D, "preamble-tinyacre.txt")).read().strip(),
     "tinyacre-character": open(os.path.join(D, "preamble-tinyacre-character.txt")).read().strip(),
+    "tinyacre-ui": open(os.path.join(D, "preamble-tinyacre-ui.txt")).read().strip(),
 }
 out = [
     "# Google Flow prompts",

@@ -148,3 +148,26 @@ up near trees and roofs pay that cost on top.
 - Water: `fx.splash` and the bobber can use `fx_splash_*` and `fx_ripple_*`.
 - Harvest: `fx.itemPop` can step through `popFrames(icon)` instead of the scale tween.
 - Animals: `ObjectsRenderer` can loop `animalIdleFrames`.
+
+## Round 5: action animations (final after review 18; wired in this round by the art agent)
+
+**Final keys.** Tools stay on the round-4 code-drawn frames (`player_tool_*`, `player_swing_*`, `player_use_*`,
+unchanged). The new **actions** are `player_act_<anim>_<dir>_<i>`, 32 x 44, body at x 8..23, the feet on row 39
+(`ACT_FEET_ROW`), origin `(0.5, ACT_ORIGIN_Y)` = 40/44, contact on frame 2 (`ACT_CONTACT_FRAME`). Left is right
+flipped. Every frame holds the idle head pixel for pixel, plants a foot on row 39, and is one connected piece
+(all three are tested).
+
+| anim | source | facings (frames) | plays on |
+|---|---|---|---|
+| `harvest` | Flow (cleaned), frame 0 = idle | down 5, right 5 (left flips; up: none) | `harvest`, `forage` action results |
+| `plant` | Flow (cleaned), first and last = idle | down 5, up 5 (side: none) | `plant` |
+| `eat` | Flow (cleaned) | down 4, up 4, right 4 | `eat` |
+| `pet` | code (`codeacts.py`), last = idle | down 5, up 5, right 5 | the daily pat at an animal house |
+| `reel` | code: waiting, the bite, the pull (contact) | down 3, up 3, right 3 | `fishCaught`, played when the fishing sheet closes |
+| `place` | code, with the held item's icon at `ACT_ITEM_ANCHORS` | down 4, up 4 (item hidden), right 4 | `place` |
+
+Wiring (done): `PlayerFrames.act(anim, dir)` returns the frames and times (`ACT_MS`: 90, 70, 120, 100, then 140
+for the last). `WorldScene.playAct` shows them through the same pose path as the tool swings. The action's fx,
+sound and haptic land on the contact frame, so dust, soil and haptics stay in sync; moving cuts the pose short,
+so input is never blocked. Calm mode plays none. In `src/fx/actionFx.ts` nothing changed: it is the impact,
+delayed to the contact frame.

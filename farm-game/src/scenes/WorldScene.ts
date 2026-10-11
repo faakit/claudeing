@@ -17,6 +17,15 @@ import {
   WORLD_VIEW,
 } from '../config';
 import { items, mapsData } from '../data';
+import { houseOf, speciesOf } from '../systems/animals';
+import {
+  ACT_CONTACT_FRAME,
+  ACT_FEET_ROW,
+  ACT_FOR_KIND,
+  ACT_FRAME_H,
+  ACT_ITEM_ANCHORS,
+  ACT_ORIGIN_Y,
+} from '../art/manifest';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
@@ -158,6 +167,11 @@ export abstract class WorldScene extends Phaser.Scene {
   /** The pose frames in order, each shown from `at` (scene ms), until `poseUntil`. */
   private poseSeq: { f: FrameRef; at: number }[] = [];
   private poseUntil = 0;
+  /** An action animation waiting for the world to run again (the reel, after the fishing sheet). */
+  private pendingAct: string | null = null;
+  /** The held item drawn in the farmer's hands during `place` (art round 5), per pose frame. */
+  private held: Phaser.GameObjects.Image | null = null;
+  private heldSeq: { at: number; xy: [number, number] | null }[] = [];
   /** The farmer dips 1 px on a strike without a drawn strike frame (until this time). */
   private dipUntil = 0;
   /** The stick is held back until this many ms after a use (shorter than the use's lock). */
@@ -356,6 +370,8 @@ export abstract class WorldScene extends Phaser.Scene {
       inputHub.on('paintEnd', (p) => this.onPaintEnd(p.commit)),
       // Drawn on the next frame, or on a tool's strike frame: the tilled soil appears with its dust.
       gameEvents.on('farmChanged', () => (this.farmDirty = true)),
+      // art round 5: the reel plays once the fishing sheet has closed (the world is frozen while it is open)
+      gameEvents.on('fishCaught', () => (this.pendingAct = 'reel')),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
       gameEvents.on('heartUp', () => {
@@ -440,6 +456,12 @@ export abstract class WorldScene extends Phaser.Scene {
       this.actionLock = Math.max(0, this.actionLock - delta);
       this.updateHighlight(time);
       return;
+    }
+
+    if (this.pendingAct) {
+      const anim = this.pendingAct;
+      this.pendingAct = null;
+      this.playAct(anim);
     }
 
     if (tickTime(state, Math.min(delta, MAX_CLOCK_DT_MS)).passOut) {
@@ -712,10 +734,22 @@ export abstract class WorldScene extends Phaser.Scene {
           this.pose.setTexture(cur.texture, cur.frame);
           // Feet sit on row 31 of every tool frame; frames whose blade reaches below the feet are taller (the
           // hoe and pickaxe facing down are 36 px), so the origin comes from the frame's own height.
-          this.pose.setOrigin(0.5, 32 / this.pose.frame.height);
+          const h = this.pose.frame.height;
+          // action frames (art round 5) are 44 px with the feet on row 39
+          this.pose.setOrigin(0.5, h === ACT_FRAME_H ? ACT_ORIGIN_Y : 32 / h);
         }
         this.pose.setFlipX(cur.flipX);
       }
+    }
+    if (this.held) {
+      let xy: [number, number] | null = null;
+      for (const step of this.heldSeq) if (now >= step.at) xy = step.xy;
+      const show = posing && xy !== null;
+      this.held.setVisible(show);
+      if (show && xy)
+        this.held
+          .setPosition(p.x - 16 + xy[0], p.y - ACT_FEET_ROW - 1 + xy[1])
+          .setDepth(10 + p.y + 0.5);
     }
     this.shadow.setPosition(p.x, p.y - 2).setDepth(9 + p.y);
     const moved = Math.abs(p.x - this.lastPos.x) + Math.abs(p.y - this.lastPos.y);
@@ -787,6 +821,41 @@ export abstract class WorldScene extends Phaser.Scene {
     this.pose ??= this.add.image(0, 0, first.texture, first.frame).setOrigin(0.5, 1);
     this.syncSprite(false);
     return { delay, shown: true };
+  }
+
+  /**
+   * An action animation (art round 5: harvest, plant, eat, pet, reel, place), shown like a tool swing: returns how
+   * long after now its contact frame (index 2) lands, so the action's fx, sound and haptic wait for it, or null when
+   * it is not drawn or Calm mode is on (then the farmer simply stands and the fx play at once). Moving cuts it short
+   * (posing needs the farmer still), so it never blocks input. `item`: what `place` holds.
+   */
+  private playAct(anim: string, item?: string): number | null {
+    if (getState().settings.reduceMotion) return null;
+    const p = getState().player;
+    const drawn = this.frames.act(anim, p.facing);
+    if (!drawn) return null;
+    const now = this.time.now;
+    let at = now;
+    this.poseSeq = drawn.frames.map((f, i) => {
+      const step = { f, at };
+      at += drawn.ms[i]!;
+      return step;
+    });
+    this.poseUntil = at;
+    const anchors = ACT_ITEM_ANCHORS[anim]?.[p.facing === 'left' ? 'right' : p.facing];
+    const icon = item ? items[item]?.icon : undefined;
+    if (anchors && icon && this.textures.exists(icon)) {
+      this.held ??= this.add.image(0, 0, icon).setOrigin(0.5, 0.5);
+      this.held.setTexture(icon);
+      this.heldSeq = this.poseSeq.map((step, i) => {
+        const a = anchors[i] ?? null;
+        return { at: step.at, xy: a && p.facing === 'left' ? [32 - a[0], a[1]] : a };
+      });
+    } else this.heldSeq = [];
+    const first = this.poseSeq[0]!.f;
+    this.pose ??= this.add.image(0, 0, first.texture, first.frame).setOrigin(0.5, 1);
+    this.syncSprite(false);
+    return this.poseSeq[Math.min(ACT_CONTACT_FRAME, this.poseSeq.length - 1)]!.at - now;
   }
 
   /** Hold the frame for a moment on an impact (a harvest): tweens pause, input does not. */
@@ -934,6 +1003,8 @@ export abstract class WorldScene extends Phaser.Scene {
     // A held Action repeats only the kind of step it started with, and simply stops (no buzz) when there
     // is no more of it in reach: a hold that starts by tilling only tills.
     const repeating = !only && inputHub.actionHeld && this.holdUses > 0 && this.holdKind !== null;
+    // what the farmer holds before the action (placing the last one empties the slot): `place` shows it in his hands
+    const heldBefore = state.inventory.slots[state.inventory.selected]?.item;
     const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
@@ -963,6 +1034,14 @@ export abstract class WorldScene extends Phaser.Scene {
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
       const swing = this.toolSwing(stack?.item, res.kind);
+      if (!swing.shown && ACT_FOR_KIND[res.kind]) {
+        // art round 5: plant, harvest, forage, eat and place play the farmer's own action; the fx land on contact
+        const d = this.playAct(ACT_FOR_KIND[res.kind]!, heldBefore);
+        if (d !== null) {
+          swing.delay = d;
+          swing.shown = true;
+        }
+      }
       const at = { ...getState().player };
       const def = stack?.item ? items[stack.item] : undefined;
       if (!swing.shown && def?.type === 'tool' && TOOL_KINDS[stack!.item]?.includes(res.kind))
@@ -1044,7 +1123,9 @@ export abstract class WorldScene extends Phaser.Scene {
     const before = new Map<string, number>();
     for (const st of state.inventory.slots)
       if (st) before.set(st.item, (before.get(st.item) ?? 0) + st.qty);
+    const pettedBefore = speciesOf(obj) ? houseOf(obj).petted : true;
     const res = interactWith(state, obj);
+    if (!pettedBefore && houseOf(obj).petted) this.playAct('pet'); // art round 5: the daily pat
     const gained = state.inventory.slots.find(
       (st) => st && st.item !== obj.type && st.qty > (before.get(st.item) ?? 0),
     );

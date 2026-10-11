@@ -145,7 +145,60 @@ def gif(name: str, frames: list[Image.Image], path: str, scale: int) -> None:
     out[0].save(path, save_all=True, append_images=out[1:], duration=ms[: len(out)], loop=0)
 
 
+ACT_MS = [90, 60, 120, 100, 160]  # suggested ms per action frame: wind-up, swing, contact, follow-through, rest
+OLD_TOOL = {"hoe": "hoe", "pick": "pick", "scythe": "scythe", "rodcast": "rod", "can": "can"}
+
+
+def acts(out: str) -> None:
+    """Round 5: the Flow action frames (32 x 44, feet row 39): a strip, an onion skin and 1x/4x GIFs per animation
+    and facing, plus, for the tools, the round-4 code-drawn frames beside them (`<anim>_<dir>_vs_round4.png`)."""
+    import json  # noqa: PLC0415
+
+    counts = json.load(open(os.path.join(GAME, "src", "art", "actFrames.json")))
+    os.makedirs(out, exist_ok=True)
+    made = []
+    for anim, dirs in counts.items():
+        for d, n in dirs.items():
+            frames = [load(f"player_act_{anim}_{d}_{i}") for i in range(n)]
+            frames = [f for f in frames if f is not None]
+            if not frames:
+                continue
+            name = f"{anim}_{d}"
+            strip(frames, below=4).save(os.path.join(out, f"{name}_strip.png"))
+            onion(frames).save(os.path.join(out, f"{name}_onion.png"))
+            idle = load(f"player_idle_{d}_0")
+            loop = frames[:]
+            if idle is not None:  # settle on the idle frame, placed like the action frames (feet on row 39)
+                pad = Image.new("RGBA", (32, 44), (0, 0, 0, 0))
+                pad.alpha_composite(idle, (8, 8))
+                loop.append(pad)
+            for scale, tag in ((1, "1x"), (4, "4x")):
+                imgs = []
+                for f in loop:
+                    c = Image.new("RGBA", (32, 44), GRASS + (255,))
+                    c.alpha_composite(f, (0, 0))
+                    imgs.append(c.convert("RGB").resize((32 * scale, 44 * scale), Image.NEAREST))
+                ms = ACT_MS[: len(frames) - 1] + [ACT_MS[-1]] + [400]
+                imgs[0].save(os.path.join(out, f"{name}_{tag}.gif"), save_all=True, append_images=imgs[1:], duration=ms[: len(imgs)], loop=0)
+            old = OLD_TOOL.get(anim)
+            if old:
+                prev = [load(f"player_tool_{old}_{d}_{i}") for i in range(4)]
+                prev = [p for p in prev if p is not None]
+                if prev:  # round 4 (32 x 32 or 32 x 36, feet row 31) above, round 5 (32 x 44, feet row 39) below
+                    cw = 34
+                    im = Image.new("RGBA", (cw * max(len(prev), len(frames)), 46 * 2 + 4), GRASS + (255,))
+                    for i, p in enumerate(prev):
+                        im.alpha_composite(p, (i * cw + 1, 8 + 1))
+                    for i, f in enumerate(frames):
+                        im.alpha_composite(f, (i * cw + 1, 46 + 4))
+                    im.resize((im.width * 4, im.height * 4), Image.NEAREST).save(os.path.join(out, f"{name}_vs_round4.png"))
+            made.append(f"{name} ({len(frames)})")
+    print("acts:", ", ".join(made))
+
+
 def main() -> None:
+    if "--acts" in sys.argv:
+        return acts(os.path.join(GAME, "agents", "out", "art-shots", "round5", "tools"))
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(GAME, "agents", "out", "art-shots", "round4", "strips")
     os.makedirs(out, exist_ok=True)
     made = []

@@ -14,6 +14,7 @@ import {
   trees,
 } from '../data';
 import { DIRECTIONS } from '../systems/direction';
+import actFrameCounts from './actFrames.json';
 
 /**
  * Every texture key (and frame) the game draws, derived from data wherever the data names it, so new
@@ -139,6 +140,75 @@ export function toolAnimFrames(item: string, dir: string): string[] {
   const t = TOOL_ANIMS[item];
   if (!t || !t.dirs.includes(dir)) return [];
   return Array.from({ length: TOOL_ANIM_FRAMES }, (_, i) => toolAnimKey(t.tool, dir, i));
+}
+
+/**
+ * The menu sheet skin (art round 5): a parchment sheet in a walnut frame with brass corner caps, as 9-slice pieces
+ * in the ui atlas (art-src/tools/uisheet.py, Flow `ui1` b), composed by src/ui/sheetSkin.ts. Edges and the centre
+ * TILE, never stretch.
+ */
+export const SHEET_PIECES = ['tl', 't', 'tr', 'l', 'c', 'r', 'bl', 'b', 'br'] as const;
+export type SheetPiece = (typeof SHEET_PIECES)[number];
+export const sheetPieceKey = (p: SheetPiece): string => `ui_sheet_${p}`;
+/** Frame widths in px (the left and top include a 1 px paper shadow) and the safe content inset. */
+export const SHEET_SLICE = { left: 6, right: 5, top: 7, bottom: 5, inset: 8 } as const;
+/** Piece sizes [w, h], as the art pipeline builds them. */
+export const SHEET_PIECE_SIZES: Record<SheetPiece, [number, number]> = {
+  tl: [6, 7],
+  t: [16, 7],
+  tr: [5, 7],
+  l: [6, 16],
+  c: [16, 16],
+  r: [5, 16],
+  bl: [6, 5],
+  b: [16, 5],
+  br: [5, 5],
+};
+
+/**
+ * Player action animations (art round 5): harvest, plant and eat drawn by Google Flow from the player's own sheet,
+ * pet, reel and place drawn in code (review 18); all composed on the idle head (pixel-identical):
+ * `player_act_<anim>_<dir>_<i>`, 32 x 44, the body at x 8..23 and the feet on row 39
+ * (12 rows of headroom for raised tools, 4 below for a blade): origin (0.5, ACT_ORIGIN_Y). Facings: down, up and
+ * right; left is right flipped (setFlipX). Frames: wind-up, swing, contact (ACT_CONTACT_FRAME, index 2: spawn the
+ * dust, splash, sound and haptic here), follow-through, rest; some have 4 (or 3) frames, the last being the rest.
+ */
+export const ACT_FRAME_W = 32;
+export const ACT_FRAME_H = 44;
+export const ACT_FEET_ROW = 39;
+export const ACT_ORIGIN_Y = (ACT_FEET_ROW + 1) / ACT_FRAME_H;
+export const ACT_CONTACT_FRAME = 2;
+/** Frame counts per animation and facing (written by the art build). */
+export const ACT_FRAMES: Record<string, Record<string, number>> = actFrameCounts;
+/** Which action animation a tool item plays (the rod: `rodcast` to cast, `rodreel` on a bite). */
+/** Which action a successful action kind plays (pet and reel come from their own events). */
+export const ACT_FOR_KIND: Record<string, string> = {
+  plant: 'plant',
+  harvest: 'harvest',
+  forage: 'harvest',
+  eat: 'eat',
+  place: 'place',
+};
+/**
+ * Where the game draws the held item's icon during `place` (its centre in the 32 x 44 frame's pixels; null:
+ * hidden behind the farmer). Facing left mirrors x (32 - x).
+ */
+export const ACT_ITEM_ANCHORS: Record<string, Record<string, ([number, number] | null)[]>> = {
+  place: {
+    down: [[16, 28], [16, 33], [16, 38], null],
+    right: [[23, 28], [25, 33], [27, 38], null],
+    up: [null, null, null, null],
+  },
+};
+/** Suggested ms per action frame: wind-up, swing, contact, follow-through, rest. */
+export const ACT_MS = [90, 70, 120, 100, 140] as const;
+export const actKey = (anim: string, dir: string, i: number): string =>
+  `player_act_${anim}_${dir}_${i}`;
+/** The frames of one action for a facing ([] when it has none), and whether to flip them (left). */
+export function actFrames(anim: string, dir: string): { keys: string[]; flipX: boolean } {
+  const d = dir === 'left' ? 'right' : dir;
+  const n = ACT_FRAMES[anim]?.[d] ?? 0;
+  return { keys: Array.from({ length: n }, (_, i) => actKey(anim, d, i)), flipX: dir === 'left' };
 }
 
 /** UI glyphs and fx drawn in code (gameArt.drawGlyphs / placeholders). */
@@ -423,6 +493,18 @@ export function artManifest(): ArtEntry[] {
           from: 'art round 4 (toolanim.py)',
           optional: true,
         });
+  for (const [anim, dirs] of Object.entries(ACT_FRAMES))
+    for (const [d, n] of Object.entries(dirs))
+      for (let i = 0; i < n; i++)
+        add({
+          texture: actKey(anim, d, i),
+          w: ACT_FRAME_W,
+          h: ACT_FRAME_H,
+          group: 'chars',
+          kind: `player action ${anim} ${d}`,
+          from: 'art round 5 (flowanim.py, Flow anim_*)',
+          optional: true,
+        });
   // the feel agent's names (feel/smooth frames-wanted.md), atlas aliases of the frames above (build.py)
   for (const tool of ['hoe', 'can', 'scythe', 'pick', 'rod'])
     for (const d of tool === 'hoe' || tool === 'pick'
@@ -455,6 +537,19 @@ export function artManifest(): ArtEntry[] {
       group: 'world',
       kind: `house exit door ${i}`,
       from: 'art round 4 (motion.py)',
+      optional: true,
+    });
+  }
+  // the menu sheet's 9-slice pieces (art round 5, src/ui/sheetSkin.ts); without them sheets draw the old panel
+  for (const p of SHEET_PIECES) {
+    const [w, h] = SHEET_PIECE_SIZES[p];
+    add({
+      texture: sheetPieceKey(p),
+      w,
+      h,
+      group: 'ui',
+      kind: `menu sheet 9-slice ${p}`,
+      from: 'art round 5 (uisheet.py, Flow ui1)',
       optional: true,
     });
   }

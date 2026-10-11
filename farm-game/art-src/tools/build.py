@@ -184,6 +184,12 @@ def main() -> None:
     extra = authored.build(
         pal, outline, groups, specs, lambda sp: build_crop_sprite(sp, pal, pal_lab, outline), names
     )
+    if not tiles_only and "ui" in groups:  # the menu sheet's 9-slice pieces (round 5, uisheet.py)
+        import uisheet
+
+        sheet_idx = px.quantize(crop_native(uisheet.SRC), pal, pal_lab)
+        for k, v in uisheet.build(names, sheet_idx).items():
+            groups["ui"][k] = px.idx_to_rgba(v, pal)
     if tiles_only:
         groups = {}
     for g, sprites in groups.items():

@@ -14,7 +14,7 @@ import {
   stepReel,
   type Reel,
 } from '../../systems/fishing';
-import { toast } from '../../systems/events';
+import { gameEvents, toast } from '../../systems/events';
 import { displayName } from '../../systems/itemRef';
 import { random } from '../../systems/rng';
 import type { Label } from '../font';
@@ -165,6 +165,7 @@ export class FishingPanel extends Modal {
     if (res.ok) {
       audio.play('harvest');
       haptic('success');
+      gameEvents.emit('fishCaught', undefined);
       this.resultText = `${displayName({ item: this.fishId, q: res.q })}${out.perfect ? ' (perfect!)' : ''}`;
     } else {
       audio.play('error');
