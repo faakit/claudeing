@@ -26,6 +26,7 @@ import {
   FADE_MS,
   MAX_CLOCK_DT_MS,
   TURN_HOLD_MS,
+  PLAYER_HITBOX,
   PLAYER_SPEED,
   SEASON_TINT,
   tileKind,
@@ -63,7 +64,15 @@ import {
 import type { Wipe } from '../fx/Wipe';
 import { TileHighlight } from '../fx/TileHighlight';
 import { markerKind, type MarkerKind } from '../ui/targetMarker';
-import { findPath, pathToFace, pathToFaceAny, standTiles } from '../systems/pathfind';
+import {
+  findPath,
+  pathToFace,
+  pathToFaceAny,
+  replanFrom,
+  routeStarts,
+  standTiles,
+  type RouteStart,
+} from '../systems/pathfind';
 import { createWork, nextWork, type WorkQueue } from '../systems/workQueue';
 import {
   compensateTouch,
@@ -1716,18 +1725,35 @@ export abstract class WorldScene extends Phaser.Scene {
     // Your own tile: nothing to walk to, and stepping off just to work it would surprise.
     if (intent.target.tx === here.tx && intent.target.ty === here.ty)
       return { intent, path: null, face: null };
+    // Mid-step, plan from where the farmer really is, so a new tap never walks him back first (owner bug 2).
+    const starts = this.routeStarts();
     if (intent.kind === 'walk') {
-      return { intent, path: findPath(this.grid, here, [intent.target], { avoid }), face: null };
+      const r = replanFrom(
+        starts,
+        (from) => {
+          const path = findPath(this.grid, from, [intent.target], { avoid });
+          return path ? { path } : null;
+        },
+        TILE_SIZE,
+      );
+      return { intent, path: r?.path ?? null, face: null };
     }
     if (intent.kind === 'interact') {
       // A bed or a counter is reached from whichever side is open (its top half is often against a wall).
-      const r = pathToFaceAny(this.grid, here, this.footprint(intent.target, intent.type), {
-        avoid,
-      });
+      const cells = this.footprint(intent.target, intent.type);
+      const r = replanFrom(
+        starts,
+        (from) => pathToFaceAny(this.grid, from, cells, { avoid }),
+        TILE_SIZE,
+      );
       if (!r) return { intent, path: null, face: null };
       return { intent: { ...intent, target: r.target }, path: r.path, face: r.face };
     }
-    const r = pathToFace(this.grid, here, intent.target, { avoid });
+    const r = replanFrom(
+      starts,
+      (from) => pathToFace(this.grid, from, intent.target, { avoid }),
+      TILE_SIZE,
+    );
     return { intent, path: r?.path ?? null, face: r?.face ?? null };
   }
 
@@ -1794,8 +1820,21 @@ export abstract class WorldScene extends Phaser.Scene {
       detail: `${plan.intent.kind}@${plan.intent.target.tx},${plan.intent.target.ty} in ${plan.path.length - 1}`,
     });
     // Already there: act now, or, mid-swing, as soon as the swing ends (the route waits for the lock), so a
-    // quick second tap is buffered, never dropped.
-    if (plan.path.length === 1 && this.actionLock <= 0) this.arrive();
+    // quick second tap is buffered, never dropped. Mid-step, the route first finishes the step to that centre.
+    if (plan.path.length === 1 && this.actionLock <= 0 && this.onCentre(plan.path[0]!))
+      this.arrive();
+  }
+
+  /** Where a walk planned now may start (systems/pathfind routeStarts): mid-step, ahead first. */
+  private routeStarts(): RouteStart[] {
+    return routeStarts(getState().player, this.move, this.grid, PLAYER_HITBOX);
+  }
+
+  /** Is the farmer standing on this tile's centre? */
+  private onCentre(t: TileCoord): boolean {
+    const p = getState().player;
+    const c = spawnPosition(t.tx, t.ty);
+    return Math.abs(p.x - c.x) < 0.01 && Math.abs(p.y - c.y) < 0.01;
   }
 
   /** A tap on your own tile uses what you face (systems/tapIntent ownTileTap); true when it did something. */
@@ -1832,7 +1871,15 @@ export abstract class WorldScene extends Phaser.Scene {
       this.arrive();
       return false;
     }
-    this.highlight.showPlan(route.path, end.intent.target, this.intentMarker(end.intent), route.i);
+    // A finger held still on the world shows where the next tap leads: keep that preview up until it lifts, or the
+    // walk's own plan would replace it the next frame (a one-frame flash of dots, owner bug 2).
+    if (!this.preview)
+      this.highlight.showPlan(
+        route.path,
+        end.intent.target,
+        this.intentMarker(end.intent),
+        route.i,
+      );
     return true;
   }
 
@@ -1873,11 +1920,19 @@ export abstract class WorldScene extends Phaser.Scene {
    * `done`. False when there is no way there.
    */
   protected walkTo(t: TileCoord, face: Direction | null = null, done?: () => void): boolean {
-    const here = playerTile(getState().player);
+    // mid-step, from where the farmer really is (owner bug 2: a new walk never steps back first)
     const path =
-      here.tx === t.tx && here.ty === t.ty
-        ? [here]
-        : findPath(this.grid, here, [t], { avoid: (tx, ty) => this.isDoor(tx, ty) });
+      replanFrom(
+        this.routeStarts(),
+        (from) => {
+          const p =
+            from.tx === t.tx && from.ty === t.ty
+              ? [from]
+              : findPath(this.grid, from, [t], { avoid: (tx, ty) => this.isDoor(tx, ty) });
+          return p ? { path: p } : null;
+        },
+        TILE_SIZE,
+      )?.path ?? null;
     if (!path) return false;
     this.work = null;
     this.highlight.showPaint(null);
@@ -1885,7 +1940,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.routeEnd = { intent: { kind: 'none', target: t }, face };
     this.walkDone = done ?? null;
     this.highlight.showPlan(path, t, 'none');
-    if (path.length === 1 && this.actionLock <= 0) this.arrive();
+    if (path.length === 1 && this.actionLock <= 0 && this.onCentre(path[0]!)) this.arrive();
     return true;
   }
 

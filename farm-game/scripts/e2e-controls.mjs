@@ -376,6 +376,53 @@ async function runCombo(p, hand) {
         (await wet()).join(),
       );
 
+      // Owner bug 2 ("it kinda flicks"): a second tap further ahead mid-step keeps the walk going: the farmer never
+      // steps back toward the tile he just left and never faces away (unit model: tests/tapmove.test.ts).
+      await place(page, 10, 17, 'right');
+      await page.evaluate(() => window.__farm.dev.wait.idle(3));
+      await page.evaluate(() => {
+        const f = window.__farm;
+        const log = [];
+        window.__retargetLog = log;
+        const tick = () => {
+          const p = f.getState().player;
+          log.push([p.x, p.facing]);
+          if (log.length < 150) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      const r1 = await tileScreen(page, 18, 17);
+      await t.tap(r1.x, r1.y, 60);
+      // 6 px into the step from (12,17) to (13,17): the tile under the feet is still the one being left
+      await page.waitForFunction(() => window.__farm.getState().player.x >= 12 * 16 + 8 + 6, null, {
+        timeout: 5000,
+      });
+      const r2 = await tileScreen(page, 21, 17);
+      await t.tap(r2.x, r2.y, 60);
+      await page
+        .waitForFunction(
+          () => {
+            const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+            return w.route === null && window.__farm.getState().player.x >= 21 * 16 + 8 - 0.01;
+          },
+          null,
+          { timeout: 5000 },
+        )
+        .catch(() => undefined);
+      const rlog = await page.evaluate(() => window.__retargetLog);
+      let stepsBack = 0;
+      let facedAway = 0;
+      for (let i = 1; i < rlog.length; i++) {
+        if (rlog[i][0] < rlog[i - 1][0] - 0.01) stepsBack++;
+        if (rlog[i][0] > rlog[0][0] && rlog[i][1] !== 'right') facedAway++;
+      }
+      const rEnd = await player(page);
+      check(
+        `${tag}: a second tap ahead mid-step keeps walking: no step back, no turn (owner bug 2)`,
+        stepsBack === 0 && facedAway === 0 && rEnd.tx === 21 && rEnd.ty === 17,
+        `steps back ${stepsBack}, faced away ${facedAway}, at ${rEnd.tx},${rEnd.ty}`,
+      );
+
       // Grazes on the dock and hotbar never reach the world.
       await place(page, 10, 17, 'down');
       await sleep(300);

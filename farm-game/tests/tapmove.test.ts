@@ -7,7 +7,15 @@ import {
   stepRoute,
   type CollisionGrid,
 } from '../src/systems/movement';
-import { findPath, pathToFace, pathToFaceAny, standTiles } from '../src/systems/pathfind';
+import {
+  findPath,
+  pathToFace,
+  pathToFaceAny,
+  replanFrom,
+  routeStarts,
+  standTiles,
+} from '../src/systems/pathfind';
+import { playerTile } from '../src/systems/world';
 import { TAP_ACTS, tapIntent, type TapWorld } from '../src/systems/tapIntent';
 import type { TileCoord } from '../src/systems/world';
 
@@ -108,6 +116,125 @@ describe('walking a route', () => {
     for (let i = 0; i < 20 && res === 'moving'; i++)
       res = stepRoute(p, createMoveState(), route, 16, blocked);
     expect(res).toBe('blocked');
+  });
+});
+
+describe('a new tap while walking (owner bug 2: "it kinda flicks")', () => {
+  const HALL = gridFrom(['##########', '#........#', '#........#', '#........#', '##########']);
+  const FRAME = 16;
+  const SPEED_PER_FRAME = (64 * FRAME) / 1000;
+
+  /** Walk from (1,1) toward (5,1) until the farmer is `frac` of the way from (2,1) to (3,1). */
+  function midStep(frac: number) {
+    const p: PlayerState = { map: 't', ...spawnPosition(1, 1), facing: 'right' };
+    const ms = createMoveState();
+    const route = createRoute(findPath(HALL, { tx: 1, ty: 1 }, [{ tx: 5, ty: 1 }])!);
+    const stopAt = spawnPosition(2, 1).x + frac * TS;
+    while (p.x < stopAt) stepRoute(p, ms, route, FRAME, HALL);
+    return { p, ms };
+  }
+
+  /** Re-plan to `goal` the way a tap does now, then walk it out, recording every frame. */
+  function retarget(p: PlayerState, ms: ReturnType<typeof createMoveState>, goal: TileCoord) {
+    const starts = routeStarts(p, ms, HALL);
+    const plan = replanFrom(
+      starts,
+      (from) => {
+        const path = findPath(HALL, from, [goal]);
+        return path ? { path } : null;
+      },
+      TS,
+    )!;
+    const route = createRoute(plan.path);
+    const frames: { x: number; y: number; facing: string; moved: number }[] = [];
+    let res = 'moving';
+    for (let i = 0; i < 600 && res === 'moving'; i++) {
+      const before = { x: p.x, y: p.y };
+      res = stepRoute(p, ms, route, FRAME, HALL);
+      frames.push({
+        x: p.x,
+        y: p.y,
+        facing: p.facing,
+        moved: Math.abs(p.x - before.x) + Math.abs(p.y - before.y),
+      });
+    }
+    return { plan, frames, res };
+  }
+
+  it('the old re-plan (from the tile under the feet) stepped back first: the bug', () => {
+    const { p } = midStep(0.4);
+    const here = playerTile(p);
+    expect(here).toEqual({ tx: 2, ty: 1 }); // the tile just left, for the first half of the step
+    const old = findPath(HALL, here, [{ tx: 7, ty: 1 }])!;
+    expect(spawnPosition(old[0]!.tx, old[0]!.ty).x).toBeLessThan(p.x); // its first waypoint is behind
+  });
+
+  it('a target further ahead: keeps going, never a step back, no jump, no stop frame, no turn', () => {
+    for (const frac of [0.1, 0.4, 0.6, 0.9]) {
+      const { p, ms } = midStep(frac);
+      const x0 = p.x;
+      const { plan, frames, res } = retarget(p, ms, { tx: 7, ty: 1 });
+      expect(plan.path[0], `frac ${frac}`).toEqual({ tx: 3, ty: 1 });
+      expect(res).toBe('arrived');
+      let last = x0;
+      frames.forEach((f, i) => {
+        expect(f.x, `frac ${frac} frame ${i}`).toBeGreaterThanOrEqual(last - 1e-9);
+        expect(f.moved).toBeLessThanOrEqual(SPEED_PER_FRAME + 1e-9);
+        // every frame but the arriving one walks a full frame's distance: no stop, no slow-down
+        if (i < frames.length - 1) expect(f.moved).toBeCloseTo(SPEED_PER_FRAME, 4);
+        expect(f.facing).toBe('right');
+        last = f.x;
+      });
+      expect(p.x).toBeCloseTo(spawnPosition(7, 1).x, 6);
+    }
+  });
+
+  it('a target ahead and to the side: finishes the step it is on, then turns once', () => {
+    const { p, ms } = midStep(0.4);
+    const x0 = p.x;
+    const { plan, frames } = retarget(p, ms, { tx: 3, ty: 3 });
+    expect(plan.path[0]).toEqual({ tx: 3, ty: 1 });
+    for (const f of frames) expect(f.x).toBeGreaterThanOrEqual(x0 - 1e-9);
+    const turns = frames.filter((f, i) => i > 0 && f.facing !== frames[i - 1]!.facing).length;
+    expect(frames[0]!.facing).toBe('right');
+    expect(turns).toBe(1);
+  });
+
+  it('a target behind: turns back at once (the direction really changed), still without a jump', () => {
+    const { p, ms } = midStep(0.4);
+    const { plan, frames, res } = retarget(p, ms, { tx: 1, ty: 1 });
+    expect(plan.path[0]).toEqual({ tx: 2, ty: 1 });
+    expect(res).toBe('arrived');
+    expect(frames[0]!.facing).toBe('left');
+    for (const f of frames) {
+      expect(f.facing).toBe('left');
+      expect(f.moved).toBeLessThanOrEqual(SPEED_PER_FRAME + 1e-9);
+    }
+  });
+
+  it('standing on a centre, a walk starts from that tile, as before', () => {
+    const p: PlayerState = { map: 't', ...spawnPosition(4, 2), facing: 'down' };
+    expect(routeStarts(p, createMoveState(), HALL)).toEqual([{ tile: { tx: 4, ty: 2 }, dist: 0 }]);
+  });
+
+  it('between centres, the tile ahead comes first and a wall is never a start', () => {
+    const { p, ms } = midStep(0.4);
+    const starts = routeStarts(p, ms, HALL);
+    expect(starts.map((s) => s.tile)).toEqual([
+      { tx: 3, ty: 1 },
+      { tx: 2, ty: 1 },
+    ]);
+    expect(starts[0]!.dist).toBeCloseTo(spawnPosition(3, 1).x - p.x, 6);
+    // pressed 3 px toward a wall from a centre (the stick): only the open tile is a start
+    const q: PlayerState = {
+      map: 't',
+      x: spawnPosition(8, 1).x + 3,
+      y: spawnPosition(8, 1).y,
+      facing: 'right',
+    };
+    expect(routeStarts(q, { axis: 'x', sign: 1 }, HALL).map((s) => s.tile)).toEqual([
+      { tx: 8, ty: 1 },
+    ]);
   });
 });
 
