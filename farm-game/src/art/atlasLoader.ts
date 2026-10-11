@@ -5,6 +5,7 @@ import { atlasFrames, planArt, type AtlasFrame, type TexturePlan } from './artPl
 import { artKeys } from './registry';
 import { ATLAS_FILES, artManifest, manifestByTexture, TILESET_FILE } from './manifest';
 import { seasonTilesetKey } from './mapLayers';
+import { TILE_INDEX_KEY } from './dryTiles';
 
 /**
  * Packed art from `public/assets/` (built by `art-src/tools/`). `atlases.json` says which files exist, so a
@@ -21,6 +22,8 @@ export function queueArtLoads(scene: Phaser.Scene): void {
   }
   if (index.tileset) {
     scene.load.image(TILESET_KEY, TILESET_FILE);
+    // the tile names, so the dry palette (art/dryTiles.ts) remaps grass and crowns but never roofs or water
+    scene.load.json(TILE_INDEX_KEY, TILESET_FILE.replace('.png', '.json'));
     for (const season of index.seasons ?? [])
       scene.load.image(seasonTilesetKey(season), TILESET_FILE.replace('.png', `_${season}.png`));
   }

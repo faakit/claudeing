@@ -206,6 +206,8 @@ export class Hud {
           `${(npcs[h.id]?.name ?? h.id).toUpperCase()}: ${h.hearts} HEART${h.hearts > 1 ? 'S' : ''}!`,
         ),
       ),
+      // The first green: the banner with the special-order fanfare until audio gives it its own jingle.
+      gameEvents.on('valleyMoment', (m) => this.goalBanner(m.text, 'success', 'special')),
       gameEvents.on('levelUp', (e) =>
         this.goalBanner(`${e.skill.toUpperCase()} LEVEL ${e.level}!`, 'medium'),
       ),
@@ -282,8 +284,12 @@ export class Hud {
   }
 
   /** A level-up is a medium pulse (owner decision 6); goals and hearts keep the success pattern. */
-  private goalBanner(text: string, pulse: 'success' | 'medium' = 'success'): void {
-    audio.play('goal');
+  private goalBanner(
+    text: string,
+    pulse: 'success' | 'medium' = 'success',
+    cue: 'goal' | 'special' = 'goal',
+  ): void {
+    audio.play(cue);
     haptic(pulse);
     showBanner(2100); // world pickup lines keep clear of it (fx/hudBand.ts)
     // Rises in and out in whole pixels; Calm mode only fades it.

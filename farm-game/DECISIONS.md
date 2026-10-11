@@ -1190,3 +1190,52 @@ integer multiple with one smooth downscale.
   share the old tab row and Close row as one grid (`menuTabGrid`): four 48 px tabs above, two tabs and a wide Close
   below; Close sits on the thumb's side (the left end for the left hand) and the tabs keep their reading order. The
   content area and the Options help card are unchanged.
+
+## The Dry Year, M1 (depth lane, valley/m1)
+
+### The first green is a night check with a day floor, and old saves are told apart by a marker stat
+
+`valley.json` `farmGreen` (`shipped >= 5`, `minDay 4`) is checked in a `start` day hook, before the calendar moves:
+five goods shipped by the night of day 4 or later wake the farm green the next morning (day 5 at the earliest, never on
+a settling-in morning). `shipped` counts goods put in the bin, so the eve's bin counts. The plan's old-save default
+(`sanitize`: green when `shipped >= 5`) would also green a *new* save reloaded on day 2 with 5 shipped, so new games
+carry `valley.on = 1` from `createInitialState`; `sanitize` applies the default (and marks the moment seen) only to a
+save without it. No version bump.
+
+### Rosa's letter: title card, kept in the mailbox from day 3
+
+The letter is a parchment card under the logo on a first launch, New Game beneath it in the title's `buttons` (the
+critic's bot finds it unchanged; no tap to dismiss). It is put in the mailbox already read on the morning of day 3,
+not on New Game: the day-2 guide's mail step finishes on "some letter read", which a pre-read letter would satisfy.
+
+### Ilse's tin and journal: one letter, one gift, a `comesWith` item field
+
+A letter carries one gift in the save (`Letter.gift`), so the journal rides in the tin: items gain `comesWith`, and
+taking the tin takes the journal too, or nothing if the bag cannot hold both. Both are a new item type `key`
+(sell price 0, not giftable, not shippable). The gift line names both and may wrap to two rows (the mail test's
+comment already allowed two).
+
+### Conditioned lines and event variants
+
+A line is a string or `{ text, when }` (`stat` or `place`, `min`/`max`). The pool is today's group (rain on some wet
+days, else the hearts tier); a group with no line for today falls back to the tier below, down to the stranger tier,
+which must keep one plain line (validated). Events take an optional `when`; events sharing an id are variants of one
+scene (seeing one sees all). Rosa's 5-heart "Harvest thanks" has a dry variant (same reward) until the orchard, so
+its "whole valley is talking" line is unreachable while the orchard is unrestored, without losing the reward.
+Clay's day-7 letter keeps its rules (crates, 2 PM, 300g, trophy) in fewer words to fit 8 rows; it is titled
+"Nothing personal".
+
+### The dry palette is a runtime remap until the art lane bakes it
+
+The straw tileset is made in code (`art/dryPalette.ts`, the same per-category table approach as `seasons.py`, with
+categories from `tiles.json`): ground and baked grass transitions to parchment and sand, crowns to grey-green, never
+orange or gold (so it never reads as fall), water, roofs, props and flowers untouched. It is made under the title's
+wipe or the sleep blackout, resident only while an outdoor map is dry, released the first morning none is; the world
+scene makes it only as a safety net. When `tiles_dry.png` / `tiles_<season>_dry.png` ship, they load under the same
+keys (`tiles_placeholder[_<season>]_dry`).
+
+### The first-green moment and A1 ambience use existing cues
+
+Stepping onto the green farm the first time shows the HUD banner "FIRST GREEN" with the `special` fanfare (a jingle
+of its own is an audio-lane request). A dry outdoor map gets a thin wind bed and a fraction of the birdsong; the
+thinned music arrangement is left to the audio lane.

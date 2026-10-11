@@ -7,7 +7,7 @@ import { toast } from '../../systems/events';
 import { letterDate, readLetter, takeGift, unreadCount } from '../../systems/mail';
 import { C } from '../theme';
 import { Modal } from '../widgets';
-import { giftLine, letterSub, letterTitle } from './mailText';
+import { giftLine, giftWhat, letterSub, letterTitle } from './mailText';
 
 const ROWS = 5;
 
@@ -121,7 +121,7 @@ export class MailPanel extends Modal {
           if (res === 'ok') {
             audio.play('buy');
             haptic('success');
-            toast(`Got ${l.gift!.qty} ${items[l.gift!.item]?.name ?? ''}`, 'good');
+            toast(`Got ${giftWhat(l.gift!)}`, 'good');
           } else {
             audio.play('error');
             if (res === 'full') toast('Make room in your bag first.', 'warn');

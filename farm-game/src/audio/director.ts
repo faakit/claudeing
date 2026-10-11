@@ -15,6 +15,8 @@ export interface Scene {
   panel?: string | null;
   /** Game year (variation sections from year two). */
   year?: number;
+  /** The map is on the Dry Year's straw palette (systems/valley.ts mapLook): a dry wind bed, hardly a bird. */
+  dry?: boolean;
 }
 
 export interface MusicChoice {
@@ -59,6 +61,9 @@ export interface AmbienceTargets {
   shop: number;
 }
 
+/** On a dry map, birdsong is a lone bird now and then (a share of the usual level). */
+export const DRY_BIRDS = 0.15;
+
 export function chooseAmbience(s: Scene): AmbienceTargets {
   const none: AmbienceTargets = {
     birds: 0,
@@ -97,14 +102,18 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
   const winter = s.season === 'winter';
   return {
     // Birds sing by day (fewer in fall, none in winter or rain), fading out at dusk.
-    birds: wet || winter ? 0 : Math.max(0, day * 2 - 1) * (s.season === 'fall' ? 0.6 : 1),
+    birds:
+      wet || winter
+        ? 0
+        : Math.max(0, day * 2 - 1) * (s.season === 'fall' ? 0.6 : 1) * (s.dry ? DRY_BIRDS : 1),
     // Crickets from dusk, warm seasons only, quieter in spring.
     crickets:
       wet || winter
         ? 0
         : Math.min(1, Math.max(0, s.night * 1.4 - 0.3)) * (s.season === 'spring' ? 0.6 : 1),
-    // Winter always has a little wind, more at night; storms bring it in any season.
-    wind: storm ? 0.8 : winter ? 0.5 + 0.4 * s.night : 0,
+    // Winter always has a little wind, more at night; storms bring it in any season. A dry map has a thin dry
+    // wind all day instead of birdsong (birds scaled down below); the birds come back with the green.
+    wind: storm ? 0.8 : winter ? 0.5 + 0.4 * s.night : s.dry ? 0.35 : 0,
     cave: 0,
     drips: 0,
     thunder: storm ? 1 : 0,

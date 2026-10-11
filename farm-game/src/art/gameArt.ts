@@ -343,6 +343,20 @@ function drawIcon(ctx: Ctx, id: string): void {
     r(4, 3, 4, 1, '#8fd07a');
     r(10, 4, 1, 1, c);
     r(5, 5, 1, 1, c);
+  } else if (it.type === 'key' && id === 'ilse_journal') {
+    r(3, 3, 10, 11, c); // cloth-bound journal, a ribbon down the page edge
+    r(3, 3, 10, 1, lt);
+    r(3, 3, 1, 11, dk);
+    r(5, 5, 6, 1, '#f4e4bc');
+    r(5, 7, 5, 1, '#f4e4bc');
+    r(10, 12, 1, 3, '#cc3a2a');
+  } else if (it.type === 'key') {
+    r(2, 6, 12, 8, c); // a round-shouldered seed tin with a lid and a paper label
+    r(2, 6, 12, 1, lt);
+    r(1, 4, 14, 3, dk);
+    r(1, 4, 14, 1, lt);
+    r(5, 9, 6, 3, '#f4e4bc');
+    r(6, 10, 4, 1, '#4a8f3a');
   } else if (it.type === 'placeable') {
     drawPlaceable(ctx, id, c, dk, lt);
   } else if (it.type === 'forage') {

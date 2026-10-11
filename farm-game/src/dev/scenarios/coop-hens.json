@@ -35,5 +35,8 @@
       "qty": 10
     }
   ],
-  "goal": "eggs"
+  "goal": "eggs",
+  "stats": {
+    "valley.farmGreen": 1
+  }
 }

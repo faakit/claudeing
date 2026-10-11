@@ -27,6 +27,7 @@ import jobsRaw from './jobs.json';
 import mailRaw from './mail.json';
 import specialsRaw from './specials.json';
 import tutorialRaw from './tutorial.json';
+import valleyRaw from './valley.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -70,7 +71,9 @@ export type ItemType =
   | 'sapling'
   | 'feed'
   | 'product'
-  | 'food';
+  | 'food'
+  /** Key items (Ilse's seed tin, her journal): never sold, given or shipped. */
+  | 'key';
 export interface ItemDef {
   name: string;
   type: ItemType;
@@ -95,6 +98,8 @@ export interface ItemDef {
   nameTemplate?: string;
   /** Food: energy restored when eaten. */
   energy?: number;
+  /** Taken from a letter together with it (the journal tucked in the seed tin). */
+  comesWith?: { item: string; qty: number }[];
 }
 export interface CropDef {
   seasons: Season[];
@@ -215,8 +220,19 @@ export interface AnimalDef {
   /** Works outdoors (a pig digging truffles): nothing on wet days or in winter. */
   outdoor?: boolean;
 }
+/** A condition on the valley's state (lifetime stats). `place` is shorthand for the stat `place.<id>`. */
+export interface ValleyWhen {
+  stat?: string;
+  place?: string;
+  min?: number;
+  max?: number;
+}
+/** A villager line: plain text, or text that is only said while `when` holds. */
+export type NpcLine = string | { text: string; when: ValleyWhen };
 export interface NpcEvent {
   hearts: number;
+  /** Only offered while this holds (events sharing an id are variants of one scene: seeing one sees all). */
+  when?: ValleyWhen;
   id: string;
   title: string;
   /** Up to three short lines, shown one at a time. */
@@ -237,7 +253,7 @@ export interface NpcDef {
   likes: string[];
   dislikes: string[];
   /** Lines by friendship tier (stranger 0-1 hearts, friend 2-3, close 4-5) plus rainy-day lines. */
-  lines: Record<'stranger' | 'friend' | 'close' | 'rain', string[]>;
+  lines: Record<'stranger' | 'friend' | 'close' | 'rain', NpcLine[]>;
   /** Where they are through the day: from this minute on. Map "away" means at home (nowhere you can reach). Optional: no schedule means always at map/tx/ty. */
   schedule?: { from: number; map: string; tx: number; ty: number }[];
   birthday?: { season: Season; day: number };
@@ -348,6 +364,23 @@ export interface LetterDef {
   text: string;
   when: LetterWhen;
   gift?: { item: string; qty: number };
+}
+/** How a map looks for the valley's state: the first row whose `when` holds (the last row is the default). */
+export interface MapLookRow {
+  /** A variant file (`<map>@<variant>.tmj`; map variants arrive with M2). */
+  variant?: string;
+  /** A palette swap of the tileset (the straw-coloured dry tiles). */
+  palette?: 'dry';
+  when?: ValleyWhen;
+}
+export interface ValleyData {
+  /** Rosa's letter, shown on the title screen at a first launch and kept in the mailbox. */
+  letter: { from: string; title: string; text: string; sign: string; keepDay: number };
+  /** The first green: the morning after `min` of `stat`, never before the night of `minDay`. */
+  farmGreen: { stat: string; min: number; minDay: number; note: string; banner: string };
+  /** The broken places by id (the stat `place.<id>`: 0 untouched, 1 asked, 2 funded, 3 restored). */
+  places: Record<string, { name: string }>;
+  maps: Record<string, MapLookRow[]>;
 }
 export interface MailData {
   /** The farm's mailbox: a fixed, solid, one-tile fixture. */
@@ -625,6 +658,36 @@ export interface TutorialData {
 const DIRS = ['up', 'down', 'left', 'right'];
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
 
+/** A `when` names a stat or a place (by id in valley.json), and a bound. */
+export function validateValleyWhen(w: ValleyWhen | undefined, file: string, where: string): void {
+  if (!w || typeof w !== 'object') fail(file, `${where} needs a "when"`);
+  if ((w.stat === undefined) === (w.place === undefined))
+    fail(file, `${where}: "when" needs exactly one of "stat" or "place"`);
+  if (w.place !== undefined && !valley.places[w.place])
+    fail(file, `${where}: unknown place "${w.place}"`);
+  if (w.min === undefined && w.max === undefined)
+    fail(file, `${where}: "when" needs "min" or "max"`);
+}
+
+function validateValley(mapIds: string[]): void {
+  const v = valley;
+  if (!npcs[v.letter.from]) fail('valley', 'the letter is from an unknown villager');
+  if (!v.letter.text || !v.letter.sign || !(v.letter.keepDay >= 2))
+    fail('valley', 'the letter needs text, a signature and a keepDay of 2 or more');
+  if (!(v.farmGreen.min >= 1) || !(v.farmGreen.minDay >= 1) || !v.farmGreen.note)
+    fail('valley', '"farmGreen" needs min, minDay and a note');
+  for (const [map, rows] of Object.entries(v.maps)) {
+    if (!mapIds.includes(map)) fail('valley', `looks for unknown map "${map}"`);
+    if (rows.length === 0 || rows[rows.length - 1]?.when)
+      fail('valley', `"${map}" needs a last row with no "when" (the default)`);
+    for (const r of rows) {
+      if (r.when) validateValleyWhen(r.when, 'valley', `map "${map}"`);
+      if (r.palette !== undefined && r.palette !== 'dry')
+        fail('valley', `"${map}" has an unknown palette "${r.palette}"`);
+    }
+  }
+}
+
 function fail(file: string, msg: string): never {
   throw new Error(`${file}.json: ${msg}`);
 }
@@ -684,6 +747,7 @@ export const specials = specialsRaw as unknown as SpecialDef[];
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 export const tutorial = tutorialRaw as unknown as TutorialData;
+export const valley = valleyRaw as unknown as ValleyData;
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
@@ -700,6 +764,10 @@ export function validateContent(): void {
     if (it.type === 'seed' && typeof it.buyPrice !== 'number')
       fail('items', `seed "${id}" needs buyPrice`);
     if (it.type === 'food' && !((it.energy ?? 0) > 0)) fail('items', `food "${id}" needs energy`);
+    if (it.type === 'key' && (it.sellPrice !== 0 || it.buyPrice !== undefined))
+      fail('items', `key item "${id}" is never bought or sold (sellPrice 0)`);
+    for (const w of it.comesWith ?? [])
+      if (!items[w.item] || w.qty < 1) fail('items', `"${id}" comes with unknown item "${w.item}"`);
   }
   for (const [id, c] of Object.entries(crops)) {
     if (!items[c.harvestItem]) fail('crops', `"${id}" harvests unknown item "${c.harvestItem}"`);
@@ -797,6 +865,9 @@ export function validateContent(): void {
     )
       fail('npcs', `"${id}" schedule must start at minute 0 and increase`);
     for (const ev of n.events ?? []) {
+      if (ev.when) validateValleyWhen(ev.when, 'npcs', `"${id}" event "${ev.id}"`);
+      if ((n.events ?? []).some((o) => o !== ev && o.id === ev.id && (!o.when || !ev.when)))
+        fail('npcs', `"${id}" event "${ev.id}": variants sharing an id all need a "when"`);
       if (ev.hearts < 1 || ev.hearts > 5 || ev.lines.length === 0 || ev.lines.length > 3)
         fail('npcs', `"${id}" event "${ev.id}" needs 1-3 lines and hearts 1-5`);
       if (ev.reward.item && !items[ev.reward.item])
@@ -807,8 +878,17 @@ export function validateContent(): void {
     if (!/^#[0-9a-f]{6}$/i.test(n.tint)) fail('npcs', `"${id}" needs a #rrggbb tint`);
     for (const ref of [...n.loves, ...n.likes, ...n.dislikes, ...n.gifts.map((g) => g.item)])
       if (!items[ref]) fail('npcs', `"${id}" mentions unknown item "${ref}"`);
-    for (const tier of ['stranger', 'friend', 'close', 'rain'] as const)
+    for (const tier of ['stranger', 'friend', 'close', 'rain'] as const) {
       if (n.lines[tier].length === 0) fail('npcs', `"${id}" needs "${tier}" lines`);
+      for (const l of n.lines[tier])
+        if (typeof l !== 'string') {
+          if (!l.text) fail('npcs', `"${id}" has an empty "${tier}" line`);
+          validateValleyWhen(l.when, 'npcs', `"${id}" line "${l.text}"`);
+        }
+    }
+    // Whatever the valley's state, a stranger always has something to say.
+    if (!n.lines.stranger.some((l) => typeof l === 'string'))
+      fail('npcs', `"${id}" needs one "stranger" line with no "when"`);
     for (const lvl of Object.keys(n.perks))
       if (Number(lvl) < 1 || Number(lvl) > 5) fail('npcs', `"${id}" perk at invalid hearts ${lvl}`);
   }
@@ -913,6 +993,7 @@ export function validateContent(): void {
   if (!npcs[game.rival.npc] || npcs[game.rival.npc]?.role !== 'rival')
     fail('game', '"rival.npc" must be a villager with role "rival"');
   if (!mapIds.includes(mail.mailbox.map)) fail('mail', 'mailbox stands on an unknown map');
+  validateValley(mapIds);
   const letterIds = new Set<string>();
   for (const l of mail.letters) {
     if (!l.id || letterIds.has(l.id)) fail('mail', `letter "${l.id}" needs a unique id`);

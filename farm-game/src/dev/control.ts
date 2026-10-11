@@ -9,6 +9,7 @@ import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInf
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { endDay } from '../systems/day';
+import { syncDryTiles } from '../art/dryTiles';
 import { gameEvents } from '../systems/events';
 import { tickTime } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
@@ -212,6 +213,8 @@ export class DevControl {
     const world = this.game.scene.getScenes(true).find((sc) => 'coachWorld' in sc);
     if (key && world) {
       world.scene.stop();
+      // as the sleep fade does: the dry tileset made or released while no world draws with it
+      syncDryTiles(world, s);
       this.game.scene.start(key);
     }
   }

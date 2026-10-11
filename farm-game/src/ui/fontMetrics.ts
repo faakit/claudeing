@@ -163,3 +163,23 @@ export function fitRow(text: string, maxPx: number, scale = 1): string {
   }
   return fitText(t, maxPx, scale);
 }
+
+/**
+ * Word-wrap `text` into rows of at most `maxPx` (a word longer than a row gets a row of its own; a line break
+ * starts a new row). Pure, so a test can count the rows a card needs; join the rows with line breaks to draw them.
+ */
+export function wrapText(text: string, maxPx: number, scale = 1): string[] {
+  const rows: string[] = [];
+  for (const para of text.split('\n')) {
+    let row = '';
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      const next = row ? `${row} ${word}` : word;
+      if (row && measureText(next, scale) > maxPx) {
+        rows.push(row);
+        row = word;
+      } else row = next;
+    }
+    rows.push(row);
+  }
+  return rows;
+}

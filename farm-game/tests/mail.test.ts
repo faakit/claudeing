@@ -134,7 +134,7 @@ describe('mail', () => {
       // Title and gift line wrap to at most two lines; the body to at most nine.
       expect(measureText(letterTitle(l)), def.id).toBeLessThanOrEqual(184 * 2);
       expect(measureText(def.text), def.id).toBeLessThanOrEqual(184 * 8);
-      expect(measureText(giftLine(l)), def.id).toBeLessThanOrEqual(184);
+      expect(measureText(giftLine(l)), def.id).toBeLessThanOrEqual(184 * 2);
       expect(measureText(letterSub(l, 'Winter 28')), def.id).toBeLessThanOrEqual(120);
     }
     for (const n of Object.values(npcs)) expect(n.name.length).toBeGreaterThan(0);

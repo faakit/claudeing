@@ -1,0 +1,9 @@
+{
+  "title": "Town, day 4: Mara in a dry valley",
+  "about": "Spring 4 at noon, facing Mara at the store counter: her lines are the dry ones (the store lit for whoever comes back), never the thriving town's. No place is restored.",
+  "version": 17,
+  "tags": ["town", "villagers", "valley"],
+  "at": { "map": "town", "tx": 8, "ty": 11, "facing": "up" },
+  "time": { "day": 4, "clock": "12:00" },
+  "stats": { "harvested": 6, "planted": 8, "shipped": 4, "slept": 3 }
+}

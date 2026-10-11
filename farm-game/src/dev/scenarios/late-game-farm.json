@@ -129,7 +129,8 @@
     "harvested": 900,
     "shipped": 1200,
     "caught": 60,
-    "mined": 140
+    "mined": 140,
+    "valley.farmGreen": 1
   },
   "goal": "earn100k"
 }

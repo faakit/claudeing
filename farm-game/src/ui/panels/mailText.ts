@@ -9,7 +9,13 @@ export function letterSub(l: Letter, date: string): string {
 
 export const letterTitle = (l: Letter): string => `${npcs[l.from]?.name ?? l.from}: ${l.title}`;
 
+/** What a letter encloses: "3 Potato Seeds", or a key item by name with what comes with it. */
+export function giftWhat(gift: { item: string; qty: number }): string {
+  const def = items[gift.item];
+  return def?.type === 'key'
+    ? [def.name, ...(def.comesWith ?? []).map((w) => items[w.item]?.name ?? w.item)].join(' and ')
+    : `${gift.qty} ${def?.name ?? gift.item}`;
+}
+
 export const giftLine = (l: Letter): string =>
-  l.gift
-    ? `${l.taken ? 'Was enclosed' : 'Enclosed'}: ${l.gift.qty} ${items[l.gift.item]?.name ?? l.gift.item}`
-    : '';
+  l.gift ? `${l.taken ? 'Was enclosed' : 'Enclosed'}: ${giftWhat(l.gift)}` : '';

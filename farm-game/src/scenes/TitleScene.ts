@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { CROPS_TEXTURE, cropFrame } from '../art/gameArt';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config';
-import { crops, mapsData } from '../data';
+import { crops, mapsData, valley } from '../data';
 import { saveStore } from '../game/persistence';
 import { audio } from '../platform/audio';
 import { hideSplash } from '../platform/native';
@@ -13,11 +13,13 @@ import { hasNewerSave, loadGame } from '../systems/save';
 import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
-import { Button } from '../ui/widgets';
+import { Button, drawPanel } from '../ui/widgets';
+import { LETTER_CARD, LETTER_PAD, letterLayout } from '../ui/titleLetter';
 import { Wipe } from '../fx/Wipe';
 import { WIPE_CLOSE_MS } from '../fx/feel';
 import { prewarmTasks } from '../fx/prewarm';
 import { preparseMap } from './mapCache';
+import { syncDryTiles } from '../art/dryTiles';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */
 export class TitleScene extends Phaser.Scene {
@@ -38,6 +40,9 @@ export class TitleScene extends Phaser.Scene {
   /** The game to start once the title's wipe has covered the screen (and any leftover prewarm ran). */
   private coveredFor: GameState | null = null;
   private parsed = false;
+  private dried = false;
+  /** No save: Rosa's letter is on the title, with New Game beneath it. */
+  private firstLaunch = false;
 
   constructor() {
     super('Title');
@@ -49,6 +54,11 @@ export class TitleScene extends Phaser.Scene {
     this.starting = false;
     this.worldNext = null;
     this.warm = prewarmTasks(this, 'farm');
+    // A dry farm's tileset (art/dryTiles.ts) is made here too, while the player reads the title.
+    this.warm.push(() => {
+      if (!this.newerSave) syncDryTiles(this, this.loaded ?? createInitialState());
+    });
+    this.dried = false;
     this.warmIn = 150;
     this.coveredFor = null;
     this.parsed = false;
@@ -126,7 +136,7 @@ export class TitleScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
     }
-    new Label(this, GAME_WIDTH / 2, 150, 'a cozy little farming game', {
+    const subtitle = new Label(this, GAME_WIDTH / 2, 150, 'a cozy little farming game', {
       align: 'center',
       color: C.cream,
     });
@@ -148,6 +158,11 @@ export class TitleScene extends Phaser.Scene {
         this.note.setText('Your save is from a newer version. Update the game to continue it.');
       }
       if (res?.fromBackup) this.note.setText('Recovered from your backup save.');
+      this.firstLaunch = !this.loaded && !this.newerSave;
+      if (this.firstLaunch) {
+        subtitle.setVisible(false);
+        this.drawLetter();
+      }
       this.buildButtons();
     });
     this.input.once('pointerdown', () => audio.unlock());
@@ -163,7 +178,7 @@ export class TitleScene extends Phaser.Scene {
       : this.newerSave
         ? null
         : () => this.start(createInitialState());
-    let y = 200;
+    let y = this.firstLaunch ? letterLayout().buttonY : 200;
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;
     if (this.loaded) {
@@ -206,6 +221,40 @@ export class TitleScene extends Phaser.Scene {
     );
   }
 
+  /**
+   * Rosa's letter (valley.json), on parchment under the logo (ui/titleLetter.ts lays it out). The paper is the
+   * art lane's `ui_letter_paper` when it exists, else a content panel drawn here.
+   */
+  private drawLetter(): void {
+    const L = letterLayout();
+    const { x, y, w } = LETTER_CARD;
+    if (this.textures.exists('ui_letter_paper'))
+      this.add.image(x, y, 'ui_letter_paper').setOrigin(0).setDisplaySize(w, L.h).setDepth(3);
+    else {
+      const g = this.add.graphics().setDepth(3);
+      drawPanel(g, x, y, w, L.h);
+      // a folded-down corner, so it reads as a letter and not as a menu
+      g.fillStyle(INK.panelLight, 1).fillTriangle(
+        x + w - 9,
+        y + 2,
+        x + w - 2,
+        y + 9,
+        x + w - 9,
+        y + 9,
+      );
+      g.fillStyle(INK.rim, 1)
+        .fillRect(x + w - 9, y + 2, 1, 7)
+        .fillRect(x + w - 9, y + 9, 7, 1);
+    }
+    new Label(this, x + LETTER_PAD, y + LETTER_PAD, L.rows.join('\n'), {
+      color: INK.cream,
+    }).setDepth(4);
+    new Label(this, L.signX, L.signY, valley.letter.sign, {
+      color: INK.creamDim,
+      align: 'right',
+    }).setDepth(4);
+  }
+
   update(_time: number, delta: number): void {
     if (this.worldNext && this.scene.get('UI').sys.isActive()) {
       const key = this.worldNext;
@@ -217,7 +266,10 @@ export class TitleScene extends Phaser.Scene {
     // Covered and about to start: any prewarm not done yet runs now, one task a frame, under the wipe.
     if (this.coveredFor) {
       if (this.warm.length) this.warm.shift()!();
-      else if (!this.parsed) {
+      else if (!this.dried) {
+        this.dried = true;
+        syncDryTiles(this, this.coveredFor);
+      } else if (!this.parsed) {
         this.parsed = true;
         preparseMap(this, this.coveredFor.player.map);
       } else {

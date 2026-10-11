@@ -24,5 +24,8 @@
       "rect": [9, 16, 4, 2],
       "watered": true
     }
-  ]
+  ],
+  "stats": {
+    "valley.farmGreen": 1
+  }
 }

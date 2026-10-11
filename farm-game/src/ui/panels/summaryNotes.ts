@@ -7,6 +7,7 @@
  * a crowded morning never cuts them (critique 12, F3).
  */
 const HEADLINES: RegExp[] = [
+  /^The farm looks greener this morning/, // the first green (valley.json farmGreen.note)
   /board last season/,
   /^The board was quiet last season/,
   /^The special order ran out/,

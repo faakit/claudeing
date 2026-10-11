@@ -1059,5 +1059,29 @@
     "color": "#b8d8e8",
     "sellPrice": 450,
     "description": "Hunts under the winter ice."
+  },
+  "ilse_tin": {
+    "name": "Ilse's Seed Tin",
+    "type": "key",
+    "icon": "item_ilse_tin",
+    "color": "#7c8a96",
+    "sellPrice": 0,
+    "stackLimit": 1,
+    "description": "Your grandmother's seed tin. Three packets, labelled in her hand. Rosa says it opens at the Seed House.",
+    "comesWith": [
+      {
+        "item": "ilse_journal",
+        "qty": 1
+      }
+    ]
+  },
+  "ilse_journal": {
+    "name": "Ilse's Journal",
+    "type": "key",
+    "icon": "item_ilse_journal",
+    "color": "#4a6a8c",
+    "sellPrice": 0,
+    "stackLimit": 1,
+    "description": "Page 1: \"Where the water starts, the farm starts.\" A sketch of a spring, uphill of the farm."
   }
 }

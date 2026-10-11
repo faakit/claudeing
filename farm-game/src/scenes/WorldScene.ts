@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { MapArt, tilesetFor } from '../art/mapLayers';
+import { ensureDryTileset } from '../art/dryTiles';
+import { mapLook, takeFirstGreenMoment } from '../systems/valley';
 import { hasArt } from '../art/registry';
 import { PLAYER_H, PLAYER_TEXTURE, playerIdleFrame, SHADOW_TEXTURE } from '../art/placeholders';
 import {
@@ -16,7 +18,7 @@ import {
   VOID_COLOR,
   WORLD_VIEW,
 } from '../config';
-import { items, mapsData } from '../data';
+import { items, mapsData, valley } from '../data';
 import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
@@ -263,7 +265,10 @@ export abstract class WorldScene extends Phaser.Scene {
 
     const map = takeTilemap(this, this.mapId); // parsed ahead when the door was stepped on (mapCache.ts)
     const outdoor = !!mapsData.maps[this.mapId]?.outdoor;
-    const look = tilesetFor(this.textures, state.time.season, outdoor);
+    // The dry palette's tileset is made at the title or the sleep fade; making it here is only a safety net.
+    const palette = mapLook(state, this.mapId).palette;
+    if (outdoor && palette === 'dry') ensureDryTileset(this, state.time.season);
+    const look = tilesetFor(this.textures, state.time.season, outdoor, palette);
     const tileset = map.addTilesetImage('placeholder', look.key, TILE_SIZE, TILE_SIZE, 0, 0);
     if (!tileset) throw new Error('Tileset "placeholder" missing from map');
     const layer = map.createLayer('ground', tileset);
@@ -309,6 +314,11 @@ export abstract class WorldScene extends Phaser.Scene {
       this.farm = new FarmRenderer(this);
       this.farm.sync(state, false);
     }
+    // The first green (systems/valley.ts): the first time the farmer stands on the green farm, once the wipe opens.
+    if (this.mapId === 'farm' && takeFirstGreenMoment(state))
+      this.time.delayedCall(WIPE_OPEN_MS, () =>
+        gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner }),
+      );
 
     this.npcs = new NpcRenderer(this, this.mapId);
     this.npcs.sync(state, playerTile(state.player));

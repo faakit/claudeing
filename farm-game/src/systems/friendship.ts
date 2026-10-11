@@ -1,5 +1,5 @@
 import { npcs } from '../data';
-import type { NpcDef, NpcEvent } from '../data';
+import type { NpcDef, NpcEvent, NpcLine } from '../data';
 import type { Friendship, GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
 import { addStat, checkGoals } from './goals';
@@ -7,6 +7,7 @@ import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
 import { items } from '../data';
 import { absoluteDay } from './time';
+import { valleyHolds } from './valley';
 import { isWet } from './weather';
 
 export const POINTS_PER_HEART = 50;
@@ -59,19 +60,29 @@ function addPoints(state: GameState, id: string, delta: number): void {
   state.stats['maxHearts'] = best;
 }
 
-/** Same line all day, a different one tomorrow, without touching the random stream. */
+/** The text of a line, whether plain or conditioned. */
+export const lineText = (l: NpcLine): string => (typeof l === 'string' ? l : l.text);
+
+/** The lines of a group the valley's state allows today (plain lines always; conditioned ones while `when` holds). */
+export const linesNow = (state: GameState, group: readonly NpcLine[]): string[] =>
+  group.filter((l) => typeof l === 'string' || valleyHolds(state, l.when)).map(lineText);
+
+/**
+ * Same line all day, a different one tomorrow, without touching the random stream. The pool is the rain group on
+ * some wet days, else the friendship tier; a group with no line for today's valley falls back to the tier below
+ * (rain to the tier, close to friend to stranger), and a stranger always has a plain line (validated).
+ */
 export function lineFor(state: GameState, id: string): string {
   const def = npcs[id] as NpcDef;
   if (isBirthday(state, id)) return 'Today is my birthday! A gift would make it perfect.';
   const hearts = heartsOf(state, id);
-  const pool =
-    isWet(state.weather) && absoluteDay(state) % 3 === 0
-      ? def.lines.rain
-      : hearts >= 4
-        ? def.lines.close
-        : hearts >= 2
-          ? def.lines.friend
-          : def.lines.stranger;
+  const tiers: NpcLine[][] = [
+    ...(isWet(state.weather) && absoluteDay(state) % 3 === 0 ? [def.lines.rain] : []),
+    ...(hearts >= 4 ? [def.lines.close] : []),
+    ...(hearts >= 2 ? [def.lines.friend] : []),
+    def.lines.stranger,
+  ];
+  const pool = tiers.map((g) => linesNow(state, g)).find((p) => p.length > 0) ?? [''];
   const seed = absoluteDay(state) + id.length * 7;
   return pool[seed % pool.length] as string;
 }
@@ -101,10 +112,10 @@ export function knownReaction(state: GameState, id: string, ref: ItemRef): React
   return null;
 }
 
-/** Items that make sense as presents: anything but tools, animals and placed machines. */
+/** Items that make sense as presents: anything but tools, animals, placed machines and key items. */
 export const isGiftable = (ref: ItemRef): boolean => {
   const t = items[ref.item]?.type;
-  return t !== undefined && t !== 'tool' && t !== 'animal' && t !== 'placeable';
+  return t !== undefined && t !== 'tool' && t !== 'animal' && t !== 'placeable' && t !== 'key';
 };
 
 export interface ChatResult {
@@ -198,7 +209,8 @@ const eventKey = (id: string, ev: string): string => `event.${id}.${ev}`;
 export function pendingEvent(state: GameState, id: string): NpcEvent | null {
   const hearts = heartsOf(state, id);
   for (const ev of (npcs[id] as NpcDef).events ?? [])
-    if (ev.hearts <= hearts && !state.stats[eventKey(id, ev.id)]) return ev;
+    if (ev.hearts <= hearts && !state.stats[eventKey(id, ev.id)] && valleyHolds(state, ev.when))
+      return ev;
   return null;
 }
 

@@ -20,5 +20,8 @@
       "stage": 2,
       "rect": [9, 16, 4, 2]
     }
-  ]
+  ],
+  "stats": {
+    "valley.farmGreen": 1
+  }
 }

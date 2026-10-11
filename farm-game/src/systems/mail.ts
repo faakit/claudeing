@@ -5,7 +5,7 @@ import { SEASONS } from '../state/GameState';
 import { gameEvents } from './events';
 import { heartsOf } from './friendship';
 import { stat } from './goals';
-import { addItem, roomFor } from './inventory';
+import { addItem, removeStack, roomFor } from './inventory';
 import { absoluteDay, seasonLabel } from './time';
 
 /** The mailbox keeps this many letters; the oldest read ones go first. */
@@ -117,6 +117,17 @@ export function takeGift(state: GameState, id: number): 'ok' | 'none' | 'full' {
   if (!l?.gift || l.taken) return 'none';
   if (roomFor(state, l.gift.item, l.gift.qty) < l.gift.qty) return 'full';
   addItem(state, l.gift.item, l.gift.qty);
+  // What comes with it (the journal in Ilse's tin) goes in too, or nothing does.
+  const extras = items[l.gift.item]?.comesWith ?? [];
+  const added: { item: string; qty: number }[] = [{ item: l.gift.item, qty: l.gift.qty }];
+  for (const w of extras) {
+    if (roomFor(state, w.item, w.qty) < w.qty) {
+      for (const a of added) removeStack(state, { item: a.item }, a.qty);
+      return 'full';
+    }
+    addItem(state, w.item, w.qty);
+    added.push(w);
+  }
   l.taken = true;
   l.read = true;
   gameEvents.emit('mailChanged', undefined);

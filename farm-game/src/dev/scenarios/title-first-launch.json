@@ -1,0 +1,7 @@
+{
+  "title": "The title screen at a first launch",
+  "about": "No save: Rosa's letter on parchment under the logo, New Game beneath it (M1). Read it on an SE: it must fit without scrolling and New Game must be in thumb reach. With a save the title is unchanged.",
+  "version": 17,
+  "tags": ["title", "onboarding", "valley"],
+  "dev": { "title": "first-launch" }
+}

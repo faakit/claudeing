@@ -258,7 +258,8 @@ export function createInitialState(): GameState {
     farm: { tiles: {}, weeds: {} },
     shipping: {},
     player: { map, ...spawnPosition(tx, ty), facing },
-    stats: {},
+    // `valley.on`: this save knows the valley (systems/valley.ts); saves from before get their defaults once.
+    stats: { 'valley.on': 1 },
     goalIndex: 0,
     settings: {
       music: 0.6,

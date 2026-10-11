@@ -114,7 +114,7 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
     expect(s.farm.weeds).toEqual({});
     expect(s.upgrades.stamina).toBe(0);
     expect(s.settings.sfx).toBeGreaterThan(0);
-    expect(s.stats).toEqual({});
+    expect(s.stats).toEqual({ 'valley.on': 1 }); // an old save's valley defaults (systems/valley.ts)
     expect(s.shipping).toEqual({});
   });
 

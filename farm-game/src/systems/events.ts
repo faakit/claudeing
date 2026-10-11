@@ -51,6 +51,8 @@ export interface GameEvents {
   mailChanged: undefined;
   /** A setting that affects layout/behaviour changed (e.g. left-handed mode). */
   settingsChanged: undefined;
+  /** A moment the valley marks with the HUD banner and a jingle (the first green). */
+  valleyMoment: { text: string };
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;

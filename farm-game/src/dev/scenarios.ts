@@ -143,6 +143,11 @@ export interface ScenarioDef {
     clock?: 'paused' | 'running';
     /** Game-clock speed multiplier (1 = normal). */
     clockScale?: number;
+    /**
+     * "first-launch": stop on the title screen as a first launch shows it (no save in the sandbox: Rosa's letter
+     * and New Game). The scenario's state is not started.
+     */
+    title?: 'first-launch';
   };
 }
 
@@ -348,6 +353,8 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
   for (const s of d.shipping ?? []) itemOk(s.item, 'shipping');
   if (d.dev?.clock !== undefined && !['paused', 'running'].includes(d.dev.clock))
     p.push('dev.clock must be "paused" or "running"');
+  if (d.dev?.title !== undefined && d.dev.title !== 'first-launch')
+    p.push('dev.title must be "first-launch"');
   return p;
 }
 
@@ -516,11 +523,13 @@ export function scenarioRuntime(def: ScenarioDef): {
   seed: number;
   clock: 'paused' | 'running';
   clockScale: number;
+  title: 'first-launch' | null;
 } {
   return {
     seed: (def.dev?.seed ?? DEFAULT_SEED) >>> 0,
     clock: def.dev?.clock ?? 'running',
     clockScale: def.dev?.clockScale ?? 1,
+    title: def.dev?.title ?? null,
   };
 }
 

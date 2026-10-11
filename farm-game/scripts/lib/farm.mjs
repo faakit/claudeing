@@ -251,8 +251,14 @@ export class Farm {
   async load(name) {
     this.scenario = name;
     await this.eval((n) => window.__farm.dev.load(n), name);
+    if (await this.onTitle()) return; // a title scenario (dev.title) stops on the title screen
     // A scenario restarts the world scene behind the map-change wipe; input is ignored until it has opened.
     await this.eval(() => window.__farm.dev.wait.sceneReady());
+  }
+
+  /** The title screen is up (a `dev.title` scenario, such as title-first-launch, stops there). */
+  onTitle() {
+    return this.eval(() => window.__farm.game.scene.isActive('Title'));
   }
 
   close() {
@@ -306,6 +312,6 @@ export async function openScenario(browser, url, scenario, opts = {}) {
     });
   const geo = await geometry(page);
   const farm = new Farm({ ctx, page, cdp, geo, p, hand, errors, scenario });
-  await farm.ready();
+  if (!(await farm.onTitle())) await farm.ready();
   return farm;
 }

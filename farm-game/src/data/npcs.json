@@ -15,17 +15,51 @@
       "stranger": [
         "Welcome to the General Store!",
         "New face? Seeds are on the shelf.",
-        "Mind the step. Prices are fair here."
+        "Mind the step. Prices are fair here.",
+        {
+          "text": "I keep the lights on, so folk know where to come back to.",
+          "when": {
+            "place": "market",
+            "max": 2
+          }
+        },
+        {
+          "text": "Saturdays, that field was all stalls. You'd have loved it.",
+          "when": {
+            "place": "market",
+            "max": 2
+          }
+        }
       ],
       "friend": [
         "Good to see you again!",
-        "Your crops are the talk of town.",
-        "I saved the best seeds for you."
+        "Your crops are the first fresh things on my shelf in years.",
+        "I saved the best seeds for you.",
+        {
+          "text": "My sister Senna left with the mill. She writes every spring.",
+          "when": {
+            "place": "market",
+            "max": 2
+          }
+        }
       ],
       "close": [
         "You always brighten my day!",
         "Anything you need, just ask.",
-        "Best customer in the valley, honestly."
+        {
+          "text": "Best customer in the valley, honestly.",
+          "when": {
+            "place": "market",
+            "min": 3
+          }
+        },
+        {
+          "text": "Every family that left is in my ledger. I've crossed out nobody.",
+          "when": {
+            "place": "market",
+            "max": 2
+          }
+        }
       ],
       "rain": ["Rain means seed sales. Lovely!", "Wet boots? Wipe them on the mat."]
     },
@@ -91,9 +125,9 @@
         "id": "ledger",
         "title": "Mara's ledger",
         "lines": [
-          "Business is booming, thanks to farmers like you.",
-          "I started this store with one crate of turnips.",
-          "Here, a little something for your hard work."
+          "This is my ledger: every family that left the valley.",
+          "I haven't crossed out a single name. Not one.",
+          "Here. For staying. That's rarer than you'd think."
         ],
         "reward": {
           "gold": 400
@@ -131,17 +165,45 @@
       "stranger": [
         "Shh. You will scare the fish.",
         "Fishing is mostly waiting.",
-        "Nice lake, huh?"
+        "Nice lake, huh?",
+        {
+          "text": "The river ran right through town. Now it's mud and a trickle.",
+          "when": {
+            "place": "weir",
+            "max": 2
+          }
+        }
       ],
       "friend": [
         "Try tapping the second it dips.",
         "Bait helps. A lot.",
-        "The big ones bite in the rain."
+        "The big ones bite in the rain.",
+        {
+          "text": "My dad built the Heron. She's sat on the mud for seven years.",
+          "when": {
+            "place": "weir",
+            "max": 2
+          }
+        },
+        {
+          "text": "I still scrape her hull every spring. Habit.",
+          "when": {
+            "place": "weir",
+            "max": 2
+          }
+        }
       ],
       "close": [
         "Here, take some of my bait.",
         "You are getting good at this!",
-        "Best catches come at dusk, friend."
+        "Best catches come at dusk, friend.",
+        {
+          "text": "If the water ever comes back, you're first aboard the Heron.",
+          "when": {
+            "place": "weir",
+            "max": 2
+          }
+        }
       ],
       "rain": ["Perfect weather. Catfish love rain.", "Rain on the lake, my favourite."]
     },
@@ -256,20 +318,48 @@
     "lines": {
       "stranger": [
         "Oh, you are the new farmer!",
-        "Good soil here. Treat it kindly.",
-        "Welcome to the valley."
+        "The soil remembers. Treat it kindly.",
+        "Welcome to the valley.",
+        {
+          "text": "Ilse's fields went to straw. Give them a week.",
+          "when": {
+            "stat": "valley.farmGreen",
+            "max": 0
+          }
+        },
+        {
+          "text": "Two buckets a day, to my grandmother's last cherry tree.",
+          "when": {
+            "place": "orchard",
+            "max": 2
+          }
+        }
       ],
       "friend": [
         "Water early, sleep well.",
         "Fertilizer makes the pretty ones.",
-        "Sprinklers save so many mornings."
+        "Sprinklers save so many mornings.",
+        {
+          "text": "Ilse and I talked over that fence every morning for forty years.",
+          "when": {
+            "place": "orchard",
+            "max": 2
+          }
+        }
       ],
       "close": [
         "Take this, it will help your crops.",
         "I love watching your farm grow.",
-        "You have the touch. Truly."
+        "You have the touch. Truly.",
+        {
+          "text": "Grandmother's orchard died standing. The roots didn't. I check.",
+          "when": {
+            "place": "orchard",
+            "max": 2
+          }
+        }
       ],
-      "rain": ["Free watering today!", "Rain day. Rest your back."]
+      "rain": ["Rain! The valley drinks it all by noon.", "Rain day. Rest your back."]
     },
     "gifts": [
       {
@@ -328,9 +418,9 @@
         "id": "soil",
         "title": "Know your soil",
         "lines": [
-          "Most people rush the soil. Do not.",
-          "A little fertilizer in spring pays off by fall.",
-          "Here, a few sacks to get you started."
+          "Ilse used to say most people rush the soil.",
+          "Feed it in spring and it pays you back by fall.",
+          "Here, a few sacks. She'd want you to have them."
         ],
         "reward": {
           "item": "fertilizer",
@@ -354,6 +444,27 @@
       {
         "hearts": 5,
         "id": "harvest",
+        "when": {
+          "place": "orchard",
+          "max": 2
+        },
+        "title": "Harvest thanks",
+        "lines": [
+          "I have never seen a farm come back like yours.",
+          "Ilse would hardly know it. She'd be so proud.",
+          "This is for you. You have earned it."
+        ],
+        "reward": {
+          "gold": 900
+        }
+      },
+      {
+        "hearts": 5,
+        "id": "harvest",
+        "when": {
+          "place": "orchard",
+          "min": 3
+        },
         "title": "Harvest thanks",
         "lines": [
           "I have never seen a farm thrive like yours.",
@@ -384,21 +495,71 @@
     "dislikes": ["daffodil", "jam"],
     "lines": {
       "stranger": [
-        "Mind the sparks.",
+        {
+          "text": "Mind the sparks.",
+          "when": {
+            "place": "forge",
+            "min": 3
+          }
+        },
         "A good tool is half the harvest.",
-        "You need something mended?"
+        "You need something mended?",
+        {
+          "text": "Forge is cold. I mend hinges by hand now.",
+          "when": {
+            "place": "forge",
+            "max": 2
+          }
+        },
+        {
+          "text": "The bellows wheel ran on the mill race. No race, no wheel.",
+          "when": {
+            "place": "forge",
+            "max": 2
+          }
+        }
       ],
       "friend": [
         "Your hoe could use an upgrade.",
         "Iron takes patience.",
-        "I hear you are fishing more."
+        "I hear you are fishing more.",
+        {
+          "text": "Haven't heard the anvil ring in six years.",
+          "when": {
+            "place": "forge",
+            "max": 2
+          }
+        }
       ],
       "close": [
         "For you, I'll sharpen it free.",
         "A hardworking farmer, that's you.",
-        "Come by anytime, friend."
+        "Come by anytime, friend.",
+        {
+          "text": "Tobin trained here. Went to the city. Can't blame him.",
+          "when": {
+            "place": "forge",
+            "max": 2
+          }
+        }
       ],
-      "rain": ["Rain on the roof, forge nice and warm.", "Wet weather, slow business."]
+      "rain": [
+        {
+          "text": "Rain on the roof, forge nice and warm.",
+          "when": {
+            "place": "forge",
+            "min": 3
+          }
+        },
+        {
+          "text": "Rain on a cold forge. Sounds like a drum.",
+          "when": {
+            "place": "forge",
+            "max": 2
+          }
+        },
+        "Wet weather, slow business."
+      ]
     },
     "gifts": [
       {
@@ -445,7 +606,7 @@
         "title": "The forge",
         "lines": [
           "Heat, hammer, patience. That is all of it.",
-          "Iron remembers every strike.",
+          "I've had only the patience lately.",
           "Here, some stone for your furnace."
         ],
         "reward": {
@@ -499,17 +660,45 @@
       "stranger": [
         "Requests on that board? First come, first served.",
         "Leave a request to its last day and it is mine.",
-        "Nice hoe. Mine is better."
+        "Nice hoe. Mine is better.",
+        {
+          "text": "You'll last till the first dry summer. They all do.",
+          "when": {
+            "place": "seedhouse",
+            "max": 2
+          }
+        }
       ],
       "friend": [
         "Not bad, for a newcomer.",
         "Your melons are almost as good as mine.",
-        "I saw your field. Respect."
+        "I saw your field. Respect.",
+        {
+          "text": "Fed this town alone for seven years. Nobody noticed.",
+          "when": {
+            "place": "seedhouse",
+            "max": 2
+          }
+        },
+        {
+          "text": "My sister took her kids to the city. Smart, probably.",
+          "when": {
+            "place": "seedhouse",
+            "max": 2
+          }
+        }
       ],
       "close": [
         "Best rival a farmer could ask for.",
         "Race you to the Fair. Loser buys lunch.",
-        "Honestly? You made me a better farmer."
+        "Honestly? You made me a better farmer.",
+        {
+          "text": "Five generations of Holts on that farm. It'll outlast me. Has to.",
+          "when": {
+            "place": "seedhouse",
+            "max": 2
+          }
+        }
       ],
       "rain": ["Rain day. No excuses, though.", "Mud on my boots, gold in my pocket."]
     },

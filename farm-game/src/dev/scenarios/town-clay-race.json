@@ -25,5 +25,8 @@
     }
   ],
   "letters": ["clay_intro"],
-  "goal": "board1"
+  "goal": "board1",
+  "stats": {
+    "valley.farmGreen": 1
+  }
 }

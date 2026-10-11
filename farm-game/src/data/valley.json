@@ -1,0 +1,48 @@
+{
+  "letter": {
+    "from": "rosa",
+    "title": "The key is under the blue pot",
+    "text": "You won't remember me. I farmed beside your grandmother Ilse.\nThe river went east after the flood, and most folk went too.\nHer fields are dust now, but the soil remembers. So do I.\nOne more farmer, and the Wend might not be forgotten.\nThe key is under the blue pot.",
+    "sign": "Rosa",
+    "keepDay": 3
+  },
+  "farmGreen": {
+    "stat": "shipped",
+    "min": 5,
+    "minDay": 4,
+    "note": "The farm looks greener this morning.",
+    "banner": "FIRST GREEN"
+  },
+  "places": {
+    "spring": {
+      "name": "Old Spring"
+    },
+    "forge": {
+      "name": "Cold Forge"
+    },
+    "weir": {
+      "name": "Weir"
+    },
+    "seedhouse": {
+      "name": "Seed House"
+    },
+    "orchard": {
+      "name": "Bucket Orchard"
+    },
+    "market": {
+      "name": "Market Field"
+    }
+  },
+  "maps": {
+    "farm": [
+      {
+        "palette": "dry",
+        "when": {
+          "stat": "valley.farmGreen",
+          "max": 0
+        }
+      },
+      {}
+    ]
+  }
+}

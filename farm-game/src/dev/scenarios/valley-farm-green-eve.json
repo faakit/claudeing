@@ -1,0 +1,12 @@
+{
+  "title": "Day 5 evening on the dry farm, 5 goods shipped",
+  "about": "Spring 5, 20:00 by the bed: five parsnips in the bin, the farm still dry. Sleep: the farm wakes green on day 6 with the morning note, and Rosa's first-green letter brings Ilse's seed tin and journal.",
+  "version": 17,
+  "tags": ["house", "valley"],
+  "at": { "map": "house", "tx": 3, "ty": 3, "facing": "down" },
+  "time": { "day": 5, "clock": "20:00" },
+  "stats": { "harvested": 8, "planted": 10, "shipped": 5, "slept": 4 },
+  "shipping": [{ "item": "parsnip", "qty": 5 }],
+  "letters": [],
+  "goal": "ship"
+}

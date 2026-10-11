@@ -21,6 +21,7 @@ import { lifecycle } from '../platform/lifecycle';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { endDay } from '../systems/day';
+import { syncDryTiles } from '../art/dryTiles';
 import { gameEvents, type PanelType } from '../systems/events';
 import { addStat, currentGoal, stat, tipsHeldNow } from '../systems/goals';
 import { cycleSlot, selectSlot, selectedStack } from '../systems/inventory';
@@ -769,6 +770,8 @@ export class UIScene extends Phaser.Scene {
     this.worldScene()?.scene.start(mapsData.maps[wake.map]?.scene ?? 'House');
 
     await this.delay(500);
+    // Under the blackout, with the house up: make or release the dry tileset (never at a door).
+    syncDryTiles(this, state);
     await this.summary.present(summary);
     if (summary.yearEnd) await this.yearEnd.present();
     this.hud.toast(

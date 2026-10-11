@@ -90,6 +90,7 @@ async function everyScenario() {
   for (const name of names) {
     try {
       await farm.load(name);
+      if (await farm.onTitle()) continue; // a title scenario stops on the title screen
       const s = await farm.state();
       const def = await farm.eval((n) => window.__farm.dev.build(n), name);
       if (s.player.map !== def.player.map) bad.push(`${name}: on ${s.player.map}`);
@@ -360,8 +361,157 @@ async function ambient() {
   await farm.close();
 }
 
+/** The world scene's ground tileset texture key (the dry palette's is `tiles_placeholder[_<season>]_dry`). */
+const groundKey = (farm) =>
+  farm.eval(() => {
+    const w = window.__farm.game.scene.getScenes(true).find((x) => 'coachWorld' in x);
+    const t = w?.ground?.tileset;
+    return (Array.isArray(t) ? t[0] : t)?.image?.key ?? null;
+  });
+const dryResident = (farm) =>
+  farm.eval(() =>
+    Object.keys(window.__farm.game.textures.list).filter((k) =>
+      /^tiles_.*_dry$|^tiles_placeholder_dry$/.test(k),
+    ),
+  );
+
+// The Dry Year, M1 (docs/MILESTONES.md): Rosa's letter on the title, the straw-coloured day 1, the first green.
+async function valley() {
+  const farm = await openScenario(browser, url, 'title-first-launch', { profile: PROFILE });
+  const title = await farm.eval(() => {
+    const t = window.__farm.game.scene.getScene('Title');
+    const texts = [];
+    const walk = (n) => {
+      if (typeof n.text === 'string') texts.push(n.text);
+      (n.list ?? []).forEach(walk);
+    };
+    t.children.list.forEach(walk);
+    const r = window.__farm.game.canvas.getBoundingClientRect();
+    return {
+      active: window.__farm.game.scene.isActive('Title'),
+      texts,
+      buttons: t.buttons.map((b) => {
+        const bd = b.getBounds();
+        return { x: bd.centerX, y: bd.centerY, h: bd.height };
+      }),
+      rect: { left: r.left, top: r.top, k: r.width / 200 },
+    };
+  });
+  check(
+    "title-first-launch: Rosa's letter is on the title, with one button (New Game) under it",
+    title.active &&
+      title.texts.some((t) => t.startsWith("You won't remember me.")) &&
+      title.texts.includes('Rosa') &&
+      title.texts.includes('New Game') &&
+      !title.texts.includes('Continue') &&
+      title.buttons.length === 1 &&
+      title.buttons[0].y > 250 &&
+      title.buttons[0].y < 340,
+    JSON.stringify(title.buttons),
+  );
+  // New Game by a real tap: the farm opens straw-coloured, the dry tileset made under the wipe
+  const b = title.buttons[0];
+  await farm.during('sceneReady', ['Farm'], () =>
+    farm.page.touchscreen.tap(
+      title.rect.left + b.x * title.rect.k,
+      title.rect.top + b.y * title.rect.k,
+    ),
+  );
+  let s = await farm.state();
+  check(
+    'New Game: day 1 on the dry farm (the dry tileset in use), the guide unchanged',
+    (await groundKey(farm)) === 'tiles_placeholder_dry' &&
+      s.time.day === 1 &&
+      s.stats['valley.on'] === 1 &&
+      !s.stats['valley.farmGreen'],
+    String(await groundKey(farm)),
+  );
+
+  // Draws: the dry farm costs what the green one does (the palette is a texture choice).
+  await farm.load('valley-farm-dry');
+  await farm.idle();
+  await farm.frames(10);
+  const dryDraws = await farm.eval(() => window.__farm.dev.frameStats().draws);
+  await farm.mutate((st) => (st.stats['valley.farmGreen'] = 1));
+  await farm.eval(() => window.__farm.dev.goto('house'));
+  await farm.eval(() => window.__farm.dev.goto('farm', 12, 14, 'down'));
+  await farm.idle();
+  await farm.frames(10);
+  const greenDraws = await farm.eval(() => window.__farm.dev.frameStats().draws);
+  check(
+    "valley-farm-dry: draws equal the green farm's",
+    dryDraws > 0 && dryDraws <= greenDraws,
+    `dry ${dryDraws}, green ${greenDraws}`,
+  );
+
+  // The eve: sleep through the real sleep flow and wake to the first green.
+  await farm.load('valley-farm-green-eve');
+  check('valley-farm-green-eve: the farm is still dry', (await dryResident(farm)).length === 1);
+  await farm.during('panelOpen', [], () =>
+    farm.eval(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false })),
+  );
+  await farm.press('Enter');
+  await farm.until((st, w) => st.time.day === 6 && !w.runtime.busy, null, 'the morning of day 6');
+  s = await farm.state();
+  const letter = s.mail.list.find((l) => l.title === 'First green');
+  check(
+    'first green: day 6 wakes green, the letter brings the tin, no dry tileset stays resident',
+    s.stats['valley.farmGreen'] === 1 &&
+      letter?.gift?.item === 'ilse_tin' &&
+      !letter.read &&
+      (await dryResident(farm)).length === 0,
+    JSON.stringify({ letter, dry: await dryResident(farm) }),
+  );
+
+  // The morning: step out onto the green farm; the moment plays once.
+  await farm.load('valley-farm-green');
+  check('valley-farm-green: no dry tileset is loaded', (await dryResident(farm)).length === 0);
+  const moment = await farm.event('valleyMoment', () =>
+    farm.eval(() => window.__farm.dev.goto('farm', 12, 14, 'down')),
+  );
+  check(
+    'valley-farm-green: stepping out plays the first-green moment on the normal tileset',
+    moment?.text === 'FIRST GREEN' && (await groundKey(farm)) === 'tiles_placeholder',
+    JSON.stringify(moment),
+  );
+  // Rosa's letter: take the gift, both key items arrive
+  await farm.mutate((st) => {
+    const l = st.mail.list.find((x) => x.title === 'First green');
+    l.read = true;
+  });
+  const took = await farm.eval(() => {
+    const st = window.__farm.getState();
+    const l = st.mail.list.find((x) => x.title === 'First green');
+    return l ? l.id : null;
+  });
+  check('valley-farm-green: the first-green letter is in the mailbox', took !== null);
+
+  // Mara in a dry town says a dry line, never a thriving one.
+  await farm.load('talk-dry-mara');
+  await farm.press('KeyE');
+  await farm.panel('npc');
+  const said = await farm.eval(() => {
+    const ui = window.__farm.game.scene.getScene('UI');
+    const texts = [];
+    const walk = (n) => {
+      if (typeof n.text === 'string') texts.push(n.text);
+      (n.list ?? []).forEach(walk);
+    };
+    ui.children.list.forEach(walk);
+    return texts.join(' | ');
+  });
+  check(
+    'talk-dry-mara: Mara talks, and nothing calls the town thriving',
+    /General Store|Seeds|step|lights on|Saturdays/.test(said) &&
+      !/booming|talk of town/i.test(said),
+    said.slice(0, 300),
+  );
+  check('valley: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 try {
-  const blocks = SMOKE ? [smoke] : [smoke, everyScenario, mechanics, ambient];
+  const blocks = SMOKE ? [smoke] : [smoke, everyScenario, mechanics, ambient, valley];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

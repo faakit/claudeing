@@ -1,3 +1,4 @@
+import { valleyDefaults } from './valley';
 import {
   crops,
   game,
@@ -467,6 +468,7 @@ export function sanitize(raw: Raw): GameState {
   const stats: Record<string, number> = {};
   for (const [k, v] of Object.entries(obj(raw['stats'])))
     if (isFiniteNum(v) && v >= 0) stats[k] = v;
+  valleyDefaults(stats);
 
   const st = obj(raw['settings']);
   const settings = {

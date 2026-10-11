@@ -39,5 +39,8 @@
       "ready": true
     }
   ],
-  "goal": "preserve"
+  "goal": "preserve",
+  "stats": {
+    "valley.farmGreen": 1
+  }
 }

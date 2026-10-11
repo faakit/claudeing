@@ -6,15 +6,25 @@ import { holeCircles, holeTiles } from '../fx/SeeThrough';
 /** Texture key of a season's tileset (palette swaps of the spring tiles, built by art-src/tools/seasons.py). */
 export const seasonTilesetKey = (season: string): string => `${TILESET_KEY}_${season}`;
 
+/** Texture key of a season's dry tileset (art/dryTiles.ts; `tiles_<season>_dry.png` once the art lane bakes it). */
+export const dryTilesetKey = (season: string): string =>
+  season === 'spring' ? `${TILESET_KEY}_dry` : `${seasonTilesetKey(season)}_dry`;
+
 /**
  * The tileset texture for a map: outdoors, the season's own tileset when it was built and loaded (then no colour
- * tint is needed); otherwise the spring one. `tinted` says whether the old full-screen season tint still applies.
+ * tint is needed); otherwise the spring one. On the dry palette, the season's dry tileset when it is resident
+ * (art/dryTiles.ts makes it). `tinted` says whether the old full-screen season tint still applies.
  */
 export function tilesetFor(
   textures: { exists(key: string): boolean },
   season: string,
   outdoor: boolean,
+  palette: 'dry' | null = null,
 ): { key: string; tinted: boolean } {
+  if (outdoor && palette === 'dry') {
+    const dry = dryTilesetKey(season);
+    if (textures.exists(dry)) return { key: dry, tinted: false };
+  }
   if (!outdoor || season === 'spring') return { key: TILESET_KEY, tinted: false };
   const key = seasonTilesetKey(season);
   return textures.exists(key) ? { key, tinted: false } : { key: TILESET_KEY, tinted: true };

@@ -145,7 +145,8 @@ describe('villagers', () => {
     for (const [id, def] of Object.entries(npcs)) {
       expect(absoluteDay(s)).toBeGreaterThan(0);
       for (const lines of Object.values(def.lines))
-        for (const l of lines) {
+        for (const line of lines) {
+          const l = typeof line === 'string' ? line : line.text;
           // The sheet wraps at 184px and has room for four lines.
           expect(measureText(`"${l}"`), `${id}: ${l}`).toBeLessThanOrEqual(184 * 3);
         }

@@ -80,10 +80,10 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
   const readyPromise = new Promise<void>((r) => (resolveReady = r));
 
   /** From the first scenario on, saves go to memory: the developer's real save is never overwritten. */
+  let mem = new MemoryStore();
   const sandbox = (): void => {
     if (sandboxed) return;
     sandboxed = true;
-    const mem = new MemoryStore();
     const store = saveStore as unknown as Loose;
     store['read'] = (k: string) => mem.read(k);
     store['write'] = (k: string, v: string) => mem.write(k, v);
@@ -92,8 +92,8 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
 
   const titleActive = () => game.scene.isActive('Title');
 
-  /** Start a state through the title screen's own start (exactly what Continue does). */
-  const startFromTitle = async (state: GameState): Promise<void> => {
+  /** Back to the title screen (as Quit does from a game), waiting until it has built its buttons. */
+  const toTitle = async (): Promise<void> => {
     if (!titleActive()) {
       const ui = game.scene.getScene('UI') as unknown as Loose | null;
       if (game.scene.isActive('UI') && ui && typeof ui['quitToTitle'] === 'function')
@@ -105,6 +105,11 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
       const t = game.scene.getScene('Title') as unknown as Loose;
       return titleActive() && ((t['buttons'] as unknown[])?.length ?? 0) > 0;
     }, 'the title screen');
+  };
+
+  /** Start a state through the title screen's own start (exactly what Continue does). */
+  const startFromTitle = async (state: GameState): Promise<void> => {
+    await toTitle();
     const title = game.scene.getScene('Title') as unknown as Loose;
     (title['start'] as (s: GameState) => void).call(title, state);
   };
@@ -117,6 +122,19 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
     const opts = scenarioRuntime(def);
     sandbox();
     current = name;
+    if (opts.title === 'first-launch') {
+      // A first launch: an empty sandbox (no save), then the title rebuilt from scratch so it looks for none.
+      mem = new MemoryStore();
+      inputHub.clearHeld();
+      await toTitle();
+      game.scene.getScene('Title').scene.restart();
+      await waits.frames(2);
+      await toTitle();
+      const url = new URL(location.href);
+      url.searchParams.set('scenario', name);
+      history.replaceState(null, '', url);
+      return;
+    }
     inputHub.clearHeld();
     standVillagersInLab(state.player.map === LAB_MAP);
     control.resumeLoop();

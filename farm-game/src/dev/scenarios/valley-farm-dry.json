@@ -1,0 +1,8 @@
+{
+  "title": "Day 1 on the dry farm, guided start running",
+  "about": "A brand-new game (as day1-fresh): the farm is straw-coloured from fence to fence (valley.json maps.farm, the dry palette), Rosa's three ripe parsnips the only green. The guided start runs unchanged. Compare its draws with day1-fresh; check crops, the target marker, tilled and watered soil and the path keep contrast.",
+  "version": 17,
+  "tags": ["farm", "onboarding", "valley"],
+  "tutorial": "fresh",
+  "hints": "on"
+}
