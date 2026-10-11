@@ -143,6 +143,8 @@ wrap-up (see Open).
   obstacles) and the mill wheel (x 21-22, y 30-31).
 - Placeholders (For art below): the weir's site sprites `obj_site_weir_0..4`, the sluice gate icon, the boarded
   house, the Heron aground and afloat.
+- From the feel critic: decor (a pebble, a bush, a tree canopy) is drawn on top of channel water. A map/data job:
+  keep that decor in the objects layer, or clear it from the art layers when a tile is dug.
 - Still open from M1-M4 (`final.md`): R3-1 (keep M2 from merging alone), channel art and dig juice, the first-green
   jingle, and the owner's left-hand edge-hold question.
 - `src/art/dryPalette.ts` (art lane) now remaps the baked creek bed and water banks too; `src/dev/devtools.ts`
