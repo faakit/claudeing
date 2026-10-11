@@ -29,6 +29,8 @@ export class FarmRenderer {
   private weeds = new Map<string, Phaser.GameObjects.Image>();
   /** Crops leaning from a brush right now. */
   private leaning = new Set<Phaser.GameObjects.Image>();
+  /** Tiles shown as before the water came (fx/ChannelFx.ts): channels dug dry, soil unwatered, until released. */
+  private held = new Set<string>();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -45,8 +47,9 @@ export class FarmRenderer {
       const [tx, ty] = parseKey(key);
       const cx = tx * TILE_SIZE + TILE_SIZE / 2;
       let cell = this.cells.get(key);
-      const channel = soil.channel ? (reached.has(key) ? 'wet' : 'dry') : '';
-      const wet = channel ? channel === 'wet' : soil.watered;
+      const dry = this.held.has(key);
+      const channel = soil.channel ? (reached.has(key) && !dry ? 'wet' : 'dry') : '';
+      const wet = channel ? channel === 'wet' : soil.watered && !dry;
       const texture = wet ? SOIL_TEXTURE.watered : SOIL_TEXTURE.tilled;
       if (!cell) {
         const img = this.scene.add.image(cx, ty * TILE_SIZE + TILE_SIZE / 2, texture).setDepth(0.5);
@@ -149,6 +152,18 @@ export class FarmRenderer {
       if (c.active) c.setX(x0);
       done();
     });
+  }
+
+  /** Hold tiles at their look before the water (the channels' juice); they redraw now, or at the next sync. */
+  holdDry(keys: Iterable<string>, redraw = true): void {
+    for (const k of keys) this.held.add(k);
+    if (redraw) this.sync(getState(), false);
+  }
+
+  /** Let held tiles show their real look again. */
+  release(keys: Iterable<string>): void {
+    for (const k of keys) this.held.delete(k);
+    this.sync(getState(), false);
   }
 
   /** World-space center of a tile, for effects. */

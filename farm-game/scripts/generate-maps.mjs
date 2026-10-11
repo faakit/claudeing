@@ -245,12 +245,26 @@ function flush() {
     });
     const tmj = toTmj(map, objects, art);
     written[name] = { base, tmj };
-    const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
-    writeFileSync(out, JSON.stringify(tmj, null, 1) + '\n');
     console.log(
       `wrote ${name}.tmj ${map.w}x${map.h}` +
         (art ? ` (+${art.solid.size} solid props, ${art.lights.length} lights)` : ''),
     );
+  }
+  // Coordinator ruling (owner bug 3, 2026-10-11): a dry bed is a sunken bed below its banks, not a floor. Inside the
+  // delta rects every variant blocks wherever the map's final (water) stage blocks, so the bridges are the crossings
+  // in every stage, routes and spawns are the same in all of them, and nobody stands where the water comes back.
+  // The ground (and so the dry look) is unchanged.
+  for (const [name, { base, tmj }] of Object.entries(written)) {
+    if (name === base || !written[base]) continue;
+    const col = tmj.layers.find((l) => l.name === 'collision').data;
+    const fin = written[base].tmj.layers.find((l) => l.name === 'collision').data;
+    col.forEach((c, i) => {
+      if (!c && fin[i] && inDelta(base, i % tmj.width, Math.floor(i / tmj.width))) col[i] = fin[i];
+    });
+  }
+  for (const [name, { tmj }] of Object.entries(written)) {
+    const out = new URL(`../public/assets/maps/${name}.tmj`, import.meta.url);
+    writeFileSync(out, JSON.stringify(tmj, null, 1) + '\n');
   }
   // WORLD-PLAN 4.2.1: outside the delta rects, ground and collision are identical in every variant
   for (const [name, { base, tmj }] of Object.entries(written)) {
@@ -375,8 +389,10 @@ function farm(v) {
 for (const v of VARIANTS('farm')) farm(v);
 
 // ---- Wendhead 24x28: the valley's head, above Ilse's gate (the way back at the south-west corner) ----
-// West half: the Old Spring under its rockfall (the site, 6,8), its pool and the head of the farm creek. East half:
-// the dry gorge and the broken weir (M6). Stages: dry (the pool and the creek bed stone), spring (both run).
+// West half: the Old Spring under its rockfall (the site, 6,15), its pool and the head of the farm creek. East half:
+// the gorge the Wend comes down (x 19-21, top to bottom) and the broken weir on its west bank (the site, 17,11), a
+// plank bridge over it at y 22. Stages: the pool and the creek head run once the spring is restored, the gorge once
+// the weir is (`dry` neither, `gorge` the gorge only (an old save, M6), `spring` the pool only, `restored` both).
 function wendhead(v) {
   nextId = 1;
   const m = makeMap(24, 28, T.grass);
@@ -384,15 +400,17 @@ function wendhead(v) {
   border(m, T.fence);
   rect(5, 14, 1, 1, T.bush); // ferns over the spring's mouth
   rect(7, 14, 1, 1, T.bush);
-  const wet = v === 'spring' ? T.water : T.stone;
-  rect(7, 16, 5, 3, wet); // the pool
-  rect(10, 19, 2, h - 19, wet); // the creek head, out of the map toward the farm
+  const pool = v === 'spring' || v === 'restored' ? T.water : T.stone;
+  const gorge = v === 'gorge' || v === 'restored' ? T.water : T.stone;
+  rect(7, 16, 5, 3, pool); // the pool
+  rect(10, 19, 2, h - 19, pool); // the creek head, out of the map toward the farm
   rect(10, 22, 2, 1, T.path); // a plank bridge (the same in every stage)
   rect(0, 25, 1, 1, T.path); // the gate from the farm
   rect(1, 25, 5, 1, T.path);
   rect(5, 15, 1, 10, T.path); // up to the spring: the site is east of its top
-  rect(6, 22, 4, 1, T.path); // east over the bridge, toward the gorge (the weir, M6)
-  rect(12, 22, 4, 1, T.path);
+  rect(6, 22, 4, 1, T.path); // east over the bridge, toward the gorge
+  rect(12, 22, 7, 1, T.path);
+  rect(17, 12, 1, 10, T.path); // up the gorge's west bank to the weir: the site is at its top
   for (const [x, y] of [
     [2, 5],
     [12, 4],
@@ -401,12 +419,15 @@ function wendhead(v) {
     [2, 19],
     [8, 9],
     [14, 25],
-    [19, 6],
-    [21, 17],
-    [17, 11],
+    [15, 6],
+    [14, 18],
+    [15, 10],
   ])
     rect(x, y, 1, 1, T.bush);
   scatter(m, T.flower, 18, 9, (x, y) => !inDelta('wendhead', x, y));
+  rect(19, 0, 3, h, gorge); // the gorge, from the hills down out of the valley
+  rect(19, 22, 3, 1, T.path); // a plank bridge over it (the same in every stage)
+  rect(22, 22, 1, 1, T.path);
   write(
     'wendhead',
     m,
@@ -434,7 +455,10 @@ for (const v of VARIANTS('wendhead')) wendhead(v);
 }
 
 // ---- Town 24x34: north gate to the farm, shop + board on the road, river east, woods west ----
-{
+// Stages (M6): `dry` (the weir broken: the river's west four columns, D1 x 17-20, y 22-31, are a bed of mud, solid
+// like the river (owner bug 3);
+// the two east columns a trickle), `river` (the weir restored: today's water, the final file).
+function town(v) {
   nextId = 1;
   const m = makeMap(24, 34, T.grass);
   const { h, rect } = m;
@@ -463,6 +487,8 @@ for (const v of VARIANTS('wendhead')) wendhead(v);
     rect(x, y, 1, 1, T.tree);
   scatter(m, T.flower, 40, 11, () => true);
   scatter(m, T.tree, 8, 3, (x) => x < 9 || x > 14);
+  // the dry stage: the river's bed laid bare (drawn after the scatter, so the rest of the town is as it always was)
+  if (v === 'dry') rect(17, 22, 4, 10, T.stone);
   const objects = [
     obj('shop', 'general_store', 4, 9, 3, 1),
     obj('board', 'orders_board', 14, 11, 1, 1),
@@ -472,9 +498,11 @@ for (const v of VARIANTS('wendhead')) wendhead(v);
     door('to_farm_12', 12, 0, 'farm', 15, 42, 'up'),
     door('to_woods_24', 0, 24, 'woods', 18, 14, 'left'),
     door('to_woods_25', 0, 25, 'woods', 18, 15, 'left'),
+    ...deltaObjects('town'),
   ];
-  write('town', m, objects);
+  write('town', m, objects, v);
 }
+for (const v of VARIANTS('town')) town(v);
 
 // ---- Woods 20x30: a clearing to forage, a lake to fish; one gate east back to town ----
 {

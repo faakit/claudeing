@@ -173,7 +173,7 @@
     "placeToast": "{festival}: place {place}! +{gold}",
     "joinToast": "{festival}: thanks for joining! +{gold}",
     "castAnywhere": "Cast anywhere: pond, river or lake.",
-    "stocked": "{fish} stocked in the {maps} river today!",
+    "stocked": "{fish} stocked in the {where} today!",
     "todayNote": "{festival} today! Visit the town board.",
     "place": "place {place}",
     "noPodium": "no podium",
@@ -260,7 +260,11 @@
     "replyLove": "This is my favourite thing ever!",
     "replyLike": "How thoughtful, thank you!",
     "replyNeutral": "Oh! Thank you.",
-    "replyDislike": "Um... thanks, I suppose."
+    "replyDislike": "Um... thanks, I suppose.",
+    "partOffer": "The weir wants a {part}. I can make you one.",
+    "partNoGold": "Not enough gold: {gold}.",
+    "partBagFull": "Your bag is full.",
+    "partBought": "{part} in your bag. Take it to the site."
   },
   "jobs": {
     "headerDouble": "TODAY'S JOBS: DOUBLE PAY",
@@ -399,7 +403,8 @@
     "creekLine": "Ilse's creek, full again.",
     "siteLabel": "{name} site",
     "workBeat": "{text} ({n} of {of})",
-    "openingTitle": "The {name}"
+    "openingTitle": "The {name}",
+    "riverTitle": "THE RIVER IS BACK"
   },
   "tutorial": {
     "canNote": "Rosa filled your watering can.",
@@ -811,5 +816,10 @@
     "fiber": "+1 Fiber",
     "goldQuality": "Gold quality!",
     "silverQuality": "Silver quality!"
+  },
+  "water": {
+    "town": "town river",
+    "woods": "woods lake",
+    "farm": "farm pond"
   }
 }

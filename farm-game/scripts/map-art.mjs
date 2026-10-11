@@ -215,6 +215,21 @@ const COMPOSITION = {
       [18, 3],
     ],
     boats: [[18, 29]],
+    // map stages (M6): the dry town's river bed is the stone ground in D1 (the farm creek's bed, dry); the Heron sits
+    // on the mud (solid there); the north-east house is boarded up (its facade's `_boarded` tiles once the art lane
+    // draws them, a bare wall until then) and its chimney cold
+    variants: {
+      dry: {
+        creek: { bridge: [], stages: { dry: { bed: 'dry' } } },
+        boats: [[19, 25]],
+        boarded: [
+          [15, 6],
+          [16, 6],
+          [18, 6],
+        ],
+        cold: [[18, 3]],
+      },
+    },
 
     cobble: [10, 9, 4, 4],
     trees: ['oak', 'birch', 'oak', 'pine'],
@@ -232,6 +247,9 @@ const COMPOSITION = {
       bridge: [
         [10, 22],
         [11, 22],
+        [19, 22],
+        [20, 22],
+        [21, 22],
       ],
       stages: { dry: { bed: 'dry' } },
     },
@@ -421,7 +439,11 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
     return out;
   };
   const has = (n) => tiles[n] !== undefined;
-  const C = COMPOSITION[name] ?? { props: [], trees: [], bushes: [], blooms: 0 };
+  const base = COMPOSITION[name] ?? { props: [], trees: [], bushes: [], blooms: 0 };
+  // a stage may override parts of the map's composition (the dry town: its bed, the Heron aground, a boarded house)
+  const C = { ...base, ...(base.variants?.[opts.variant] ?? {}) };
+  const boarded = new Set((C.boarded ?? []).map(([x, y]) => `${x},${y}`));
+  const cold = new Set((C.cold ?? []).map(([x, y]) => `${x},${y}`));
   const { w, h } = m;
   // The art reads a copy of the ground with its additions (groves, rock bays) applied below.
   const G = m.ground.map((row) => row.slice());
@@ -1111,6 +1133,7 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
           }
     }
   for (const [x, y] of C.chimney ?? []) {
+    if (cold.has(`${x},${y}`)) continue; // nobody home: no chimney, no smoke
     const b = blocks.find((q) => q.top === y && q.cells.some(([a, c]) => a === x && c === y));
     if (!b) {
       console.warn(`map-art: ${name}: a chimney needs a roof's top row at ${x},${y}`);
@@ -1121,7 +1144,10 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
     if (y > 0) set('overhead', x, y - 1, `chimney_top_${b.style}`);
     lights.push({ type: 'chimney', tx: x, ty: y - 1 });
   }
-  for (const [x, y, n] of C.facade ?? []) {
+  for (const [x, y, n0] of C.facade ?? []) {
+    // a boarded-up house: its facade's `_boarded` tiles once they exist, a bare wall until then (and no light)
+    const n = boarded.has(`${x},${y}`) ? (has(`${n0}_boarded`) ? `${n0}_boarded` : null) : n0;
+    if (!n) continue;
     const k = kind(x, y);
     if (!BUILDING[k] || k === 'door' || k === 'shopdoor') {
       console.warn(`map-art: ${name}: no facade at ${x},${y}`);
@@ -1143,10 +1169,14 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
   }
 
   for (const [x, y] of C.boats ?? []) {
-    if (kind(x, y) !== 'water' || kind(x, y + 1) !== 'water') continue;
-    set('props', x, y, 'boat_t');
-    set('props', x, y + 1, 'boat_b');
+    // a boat afloat, or (the Heron on the dry town's mud) aground on a bed, where it is solid
+    const aground = isBed(x, y) && isBed(x, y + 1);
+    if (!aground && (kind(x, y) !== 'water' || kind(x, y + 1) !== 'water')) continue;
+    const top = aground && has('heron_aground_t') ? 'heron_aground' : 'boat';
+    set('props', x, y, `${top}_t`);
+    set('props', x, y + 1, `${top}_b`);
     L.shade[y * w + x] = L.shade[(y + 1) * w + x] = 0;
+    if (aground) solid.add(y * w + x).add((y + 1) * w + x);
   }
   for (const [x, y] of C.vane ?? []) {
     const b = blocks.find(

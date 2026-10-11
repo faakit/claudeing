@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
-import { CH } from '../ui/theme';
+import { CH, SKIN } from '../ui/theme';
+import { PLATE_LIP } from '../ui/layout';
 import { GESTURE } from './gesture';
 import { bakeGraphics } from '../fx/bake';
 import { getState } from '../state/store';
+
+/** How far a pressed button's face sinks (walnut: onto its lip; px). Icons drawn outside the button sink with it. */
+export const PRESS_SINK = SKIN === 'plum' ? 1 : PLATE_LIP;
 
 export type IconDrawer = (g: Phaser.GameObjects.Graphics) => void;
 
@@ -37,21 +41,44 @@ export interface TouchButtonOptions {
   owns?: (x: number, y: number) => boolean;
 }
 
-/** The button's disc and its press light as textures (baked once per radius; the title prewarms them). */
+/**
+ * The button's plate and its pressed look as textures (baked once per radius; the title prewarms them).
+ *
+ * Walnut: a floating plate that reads over any ground (grass, straw, water, the dark mine) with no see-through
+ * pixel: a solid 2 px ink outline, a 2 px wood ring inside it, a walnut face, and a solid 2 px soil lip under the
+ * face (`bodyKey`). Pressed (`glowKey`), the face is drawn without its lip and a step lighter (soil); the button
+ * moves down `PRESS_SINK` px as it shows, so the face lands on its lip, and back up as it hides. No alpha anywhere,
+ * so the fractional scales of the iPhone 13 and SE never blend a pixel. Plum keeps its old translucent disc.
+ */
 export function bakeButton(
   scene: Phaser.Scene,
   radius: number,
 ): { bodyKey: string; glowKey: string; c: number } {
   const size = (radius + 4) * 2;
   const c = radius + 4;
-  const bodyKey = bakeGraphics(scene, `fx_button_${radius}`, size, size, c, c, (body) => {
-    body.fillStyle(CH.ink, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
-    body.fillStyle(CH.panel, 0.62).fillCircle(0, 0, radius);
-    body.lineStyle(2, CH.cream, 0.7).strokeCircle(0, 0, radius - 1);
-    body.lineStyle(1, CH.ink, 0.5).strokeCircle(0, 0, radius + 0.5);
+  if (SKIN === 'plum') {
+    const bodyKey = bakeGraphics(scene, `fx_button_${radius}`, size, size, c, c, (body) => {
+      body.fillStyle(CH.ink, 0.38).fillCircle(0, 1.5, radius + 1); // soft drop shadow
+      body.fillStyle(CH.panel, 0.62).fillCircle(0, 0, radius);
+      body.lineStyle(2, CH.cream, 0.7).strokeCircle(0, 0, radius - 1);
+      body.lineStyle(1, CH.ink, 0.5).strokeCircle(0, 0, radius + 0.5);
+    });
+    const glowKey = bakeGraphics(scene, `fx_button_glow_${radius}`, size, size, c, c, (g) =>
+      g.fillStyle(CH.cream, 0.3).fillCircle(0, 0, radius - 2),
+    );
+    return { bodyKey, glowKey, c };
+  }
+  const face = (g: Phaser.GameObjects.Graphics, fill: number) => {
+    g.fillStyle(CH.ink, 1).fillCircle(0, 0, radius);
+    g.fillStyle(CH.rim, 1).fillCircle(0, 0, radius - 2);
+    g.fillStyle(fill, 1).fillCircle(0, 0, radius - 4);
+  };
+  const bodyKey = bakeGraphics(scene, `fx_plate_${radius}`, size, size, c, c, (g) => {
+    g.fillStyle(CH.panelLight, 1).fillCircle(0, PLATE_LIP, radius); // the soil lip, under the face
+    face(g, CH.panel);
   });
-  const glowKey = bakeGraphics(scene, `fx_button_glow_${radius}`, size, size, c, c, (g) =>
-    g.fillStyle(CH.cream, 0.3).fillCircle(0, 0, radius - 2),
+  const glowKey = bakeGraphics(scene, `fx_plate_down_${radius}`, size, size, c, c, (g) =>
+    face(g, CH.panelLight),
   );
   return { bodyKey, glowKey, c };
 }
@@ -60,6 +87,7 @@ export function bakeButton(
 export class TouchButton {
   readonly view: Phaser.GameObjects.Container;
   readonly zone: Phaser.GameObjects.Zone;
+  private readonly body: Phaser.GameObjects.Image;
   private readonly glow: Phaser.GameObjects.Image;
   private enabled = true;
   private pressed = false;
@@ -75,12 +103,12 @@ export class TouchButton {
     const { x, y, radius, icon } = opts;
     // Drawn once into textures (fx/bake.ts): a live Graphics re-tessellates its circles every frame.
     const { bodyKey, glowKey, c } = bakeButton(scene, radius);
-    const body = scene.add.image(-c, -c, bodyKey).setOrigin(0);
+    this.body = scene.add.image(-c, -c, bodyKey).setOrigin(0);
     this.glow = scene.add.image(-c, -c, glowKey).setOrigin(0).setAlpha(0);
     const iconGfx = scene.add.graphics();
     icon(iconGfx);
 
-    this.view = scene.add.container(x, y, [body, this.glow, iconGfx]).setDepth(90);
+    this.view = scene.add.container(x, y, [this.body, this.glow, iconGfx]).setDepth(90);
 
     const hit = opts.hit ?? radius + 8; // finger-friendly margin beyond the drawn circle
     this.zone = scene.add.zone(x, y, hit * 2, hit * 2).setDepth(90);
@@ -148,13 +176,20 @@ export class TouchButton {
   }
 
   /**
-   * Press-down state: on the very frame of the touch the button sinks 1 px and lights up (no tween, so it shows
-   * within a frame); on release it rises at once and the light fades. Whole pixels, no scaling.
+   * Press-down state: on the very frame of the touch the button sinks and lights up (no tween, so it shows within a
+   * frame); on release it rises at once. Whole pixels, no scaling. Walnut: the face sinks `PRESS_SINK` px onto its
+   * lip (the pressed face has no lip) and swaps back in one frame, never through a see-through fade; plum's light
+   * fades as before.
    */
   private press(down: boolean): void {
     this.scene.tweens.killTweensOf(this.glow);
-    this.view.y = this.opts.y + (down ? 1 : 0);
+    this.view.y = this.opts.y + (down ? PRESS_SINK : 0);
     this.onPressVisual?.(down);
+    if (SKIN !== 'plum') {
+      this.glow.setAlpha(down ? 1 : 0);
+      this.body.setVisible(!down);
+      return;
+    }
     if (down) this.glow.setAlpha(1);
     else this.scene.tweens.add({ targets: this.glow, alpha: 0, duration: 160 });
   }

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { popWhole } from '../fx/pop';
+import { behindBox, boxCoversTile, type HoleWant } from '../fx/SeeThrough';
 import { TILE_SIZE } from '../config';
 import { items, placeables, plots } from '../data';
 import { Label } from '../ui/font';
@@ -108,31 +109,39 @@ export class ObjectsRenderer {
   }
 
   /**
-   * Tall, wide placed things (grown fruit trees, the bigger houses) get the see-through hole while the player or
-   * their target stands behind them. Posts, lamps and signs (under 20 px wide) hide nothing and are left alone.
-   * Returns whether any sprite uses the hole.
+   * Tall, wide placed things (grown fruit trees, the bigger houses) get the see-through hole while the player stands
+   * behind them (`behindBox`: never when beside their base or in front), or while one covers the target tile and the
+   * player is behind it or standing still. Posts, lamps and signs (under 20 px wide) hide nothing and are left alone.
+   * A sprite keeps the mask while the hole is still `open` (closing), so it never pops back whole. Returns which
+   * parts of the hole the sprites want.
    */
   seeThrough(
     px: number,
     py: number,
     target: { tx: number; ty: number },
     hole: Phaser.Display.Masks.GeometryMask,
-  ): boolean {
-    const tx = target.tx * TILE_SIZE + TILE_SIZE / 2;
-    const ty = target.ty * TILE_SIZE + TILE_SIZE / 2;
-    let any = false;
+    open: boolean,
+    still: boolean,
+  ): HoleWant {
+    let body = false;
+    let tgt = false;
     for (const { sprite } of this.placed.values()) {
       if (sprite.height <= 24 || sprite.width < 20) continue;
-      const half = sprite.width / 2;
-      const top = sprite.y - sprite.height;
-      const covers = (x: number, y: number): boolean =>
-        x > sprite.x - half - 2 && x < sprite.x + half + 2 && y > top - 2 && y < sprite.y - 4;
-      const hide = covers(px, py - 6) || covers(px, py - 20) || covers(tx, ty);
+      const box = {
+        x: sprite.x,
+        bottom: sprite.y,
+        half: sprite.width / 2,
+        top: sprite.y - sprite.height,
+      };
+      const behind = behindBox(box, px, py);
+      const covers = boxCoversTile(box, target);
+      const hide = behind || covers;
       if (hide && !sprite.mask) sprite.setMask(hole);
-      else if (!hide && sprite.mask) sprite.clearMask();
-      any ||= hide;
+      else if (!hide && !open && sprite.mask) sprite.clearMask();
+      body ||= behind;
+      tgt ||= covers;
     }
-    return any;
+    return { body, target: tgt && (body || still) };
   }
 
   private held = new Map<string, number>();

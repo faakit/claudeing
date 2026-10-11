@@ -19,7 +19,7 @@ import { DevControl } from './control';
 import { DevMenu } from './devMenu';
 import { FrameMeter } from './frameStats';
 import { installLab, standVillagersInLab } from './lab';
-import { LAB_MAP, labMap } from './labDef';
+import { LAB_MAP, LAB_SCENE, labMap } from './labDef';
 import { SCENARIOS } from './scenarioIndex';
 import { buildScenarioState, mapInfoFromTiled, scenarioRuntime, type MapInfoFn } from './scenarios';
 import { DevWaits } from './waits';
@@ -236,6 +236,9 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
         game.scene.start(key);
       }
       await waits.sceneReady(key);
+      // the last map's stop lands a step later: wait for it, so a goto straight after never finds it half shut
+      if (world && world.scene.key !== key)
+        await waits.until(() => !world.sys.isActive(), `the ${world.scene.key} scene to stop`);
     },
     wait: {
       until: (pred, what, o) => waits.until(pred, what, o),
@@ -281,6 +284,14 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
       },
     },
     frameStats: () => meter.stats(),
+    tow: () => {
+      const lab = game.scene.getScene(LAB_SCENE) as unknown as {
+        tow?: { metrics: unknown };
+      } | null;
+      return game.scene.isActive(LAB_SCENE) && lab?.tow
+        ? (JSON.parse(JSON.stringify(lab.tow.metrics)) as ReturnType<FarmDevApi['tow']>)
+        : null;
+    },
   };
   (window as unknown as { __farm?: Loose }).__farm ??= {};
   (window as unknown as { __farm: Loose }).__farm['dev'] = api;

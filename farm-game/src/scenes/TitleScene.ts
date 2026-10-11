@@ -330,7 +330,7 @@ export class TitleScene extends Phaser.Scene {
     runtime.inGame = true;
     runtime.busy = false;
     runtime.modals = 0;
-    // The HUD and dock are built on one frame and the world on the next, both under the wipe, so neither build
+    // The HUD and controls are built on one frame and the world on the next, both under the wipe, so neither build
     // makes a frame long enough to see (or to feel, if a touch lands on it).
     this.scene.launch('UI');
     this.worldNext = mapsData.maps[state.player.map]?.scene ?? 'Farm';

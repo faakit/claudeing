@@ -11,6 +11,8 @@ import { gameEvents } from '../systems/events';
 import { FarmRenderer } from '../game/FarmRenderer';
 import { mapCacheKey } from '../scenes/PreloadScene';
 import { WorldScene } from '../scenes/WorldScene';
+import { runtime } from '../state/runtime';
+import { TowSpike } from './towSpike';
 import { LAB_MAP, LAB_SCENE, labMap, labVillagers, registerLabMapDef } from './labDef';
 
 /** The lab is a WorldScene like any map, plus its own soil renderer (soil state is shared with the farm). */
@@ -19,15 +21,53 @@ export class LabScene extends WorldScene {
     super(LAB_SCENE, LAB_MAP);
   }
 
+  /** The towing spike, when the scenario asks for it (stat `lab.towSpike`). */
+  tow: TowSpike | null = null;
+
   create(): void {
     super.create();
     const soil = new FarmRenderer(this);
     soil.sync(getState(), false);
     const off = gameEvents.on('farmChanged', () => soil.sync(getState(), true));
+    const stats = getState().stats;
+    if (stats['lab.towSpike']) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      const scene = this;
+      this.tow = new TowSpike(
+        {
+          scene: this,
+          fx: this.fx,
+          walkTo: (t, face, done) => this.walkTo(t, face, done),
+          stopWalk: () => this.stopWalk(),
+          get walking() {
+            return scene.walking;
+          },
+          get walkGoal() {
+            return scene.walkGoal;
+          },
+          walkable: (tx, ty) => this.walkable(tx, ty),
+          get farmer() {
+            return scene.farmerSprite;
+          },
+        },
+        !!stats['lab.towLong'],
+      );
+      this.tapHook = (wx, wy) => this.tow?.onTap(wx, wy) ?? false;
+      this.actionHook = () => this.tow?.onAction() ?? false;
+    }
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       off();
       soil.destroy();
+      this.tow?.destroy();
+      this.tow = null;
+      this.tapHook = null;
+      this.actionHook = null;
     });
+  }
+
+  update(time: number, delta: number): void {
+    super.update(time, delta);
+    if (!runtime.blocked) this.tow?.update(delta);
   }
 }
 

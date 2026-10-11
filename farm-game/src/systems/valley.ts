@@ -17,6 +17,7 @@ import {
   placeables,
   valley,
   projects,
+  type AskWhen,
   type MapStageDef,
   type PlaceDef,
   type StageWhen,
@@ -48,11 +49,22 @@ export interface MapLook {
 
 type StatsOnly = Pick<GameState, 'stats'>;
 
-/** Does a stage condition hold? `place: "spring"` reads the stat `place.spring`; a missing stat is 0. */
+/**
+ * Does a stage condition hold? `place: "spring"` reads the stat `place.spring`; a missing stat is 0. `all` and `any`
+ * nest conditions (Wendhead's dry stage: the spring and the weir both unrestored).
+ */
 export function stageWhenHolds(state: StatsOnly, when: StageWhen): boolean {
+  if (when.all) return when.all.every((w) => stageWhenHolds(state, w));
+  if (when.any) return when.any.some((w) => stageWhenHolds(state, w));
   const key = when.place !== undefined ? `place.${when.place}` : (when.stat ?? '');
   const v = state.stats[key] ?? 0;
   return (when.min === undefined || v >= when.min) && (when.max === undefined || v <= when.max);
+}
+
+/** The stat keys a condition reads (nested ones included). */
+export function whenKeys(when: StageWhen): string[] {
+  if (when.all ?? when.any) return (when.all ?? when.any)!.flatMap(whenKeys);
+  return [when.place !== undefined ? `place.${when.place}` : (when.stat ?? '')];
 }
 
 /** The variant names of a map, first to last (empty for a map with one look). */
@@ -132,7 +144,9 @@ export const valleyStatKey = (key: string): string =>
 export function valleyKeys(): string[] {
   const out = new Set<string>(['farmGreen']);
   for (const m of Object.values(valley.maps))
-    for (const v of m.variants) if (v.when?.place) out.add(v.when.place);
+    for (const v of m.variants)
+      for (const k of v.when ? whenKeys(v.when) : [])
+        if (k.startsWith('place.')) out.add(k.slice(6));
   return [...out];
 }
 
@@ -240,15 +254,48 @@ export function pinStage(
   if (!stages || i < 0) return null;
   const out = { ...base };
   const key = (w: StageWhen) => (w.place !== undefined ? `place.${w.place}` : (w.stat ?? ''));
-  for (const v of stages.slice(0, i)) {
-    const w = v.when!;
-    if (!stageWhenHolds({ stats: out }, w)) continue;
-    out[key(w)] = w.max !== undefined ? w.max + 1 : (w.min ?? 1) - 1;
+  const simple = (w: StageWhen | undefined) => !w || (!w.all && !w.any);
+  if (stages.every((v) => simple(v.when))) {
+    for (const v of stages.slice(0, i)) {
+      const w = v.when!;
+      if (!stageWhenHolds({ stats: out }, w)) continue;
+      out[key(w)] = w.max !== undefined ? w.max + 1 : (w.min ?? 1) - 1;
+    }
+    const own = stages[i]!.when;
+    if (own && !stageWhenHolds({ stats: out }, own))
+      out[key(own)] = own.min !== undefined ? own.min : (own.max ?? 0);
+    return valleyStage({ stats: out }, map).variant === variant ? out : null;
   }
-  const own = stages[i]!.when;
-  if (own && !stageWhenHolds({ stats: out }, own))
-    out[key(own)] = own.min !== undefined ? own.min : (own.max ?? 0);
-  return valleyStage({ stats: out }, map).variant === variant ? out : null;
+  // nested conditions: try the values the table's bounds suggest for the stats it reads, fewest changes first
+  const keys = [...new Set(stages.flatMap((v) => (v.when ? whenKeys(v.when) : [])))];
+  const bounds = (k: string): number[] => {
+    const vals = new Set<number>([out[k] ?? 0]);
+    const walk = (w: StageWhen): void => {
+      if (w.all ?? w.any) return void (w.all ?? w.any)!.forEach(walk);
+      if (key(w) !== k) return;
+      if (w.min !== undefined) [w.min, w.min - 1].forEach((n) => vals.add(n));
+      if (w.max !== undefined) [w.max, w.max + 1].forEach((n) => vals.add(n));
+    };
+    stages.forEach((v) => v.when && walk(v.when));
+    return [...vals].filter((n) => n >= 0);
+  };
+  let best: Record<string, number> | null = null;
+  let bestChanges = Infinity;
+  const tryAll = (j: number, cur: Record<string, number>, changes: number): void => {
+    if (changes >= bestChanges) return;
+    if (j === keys.length) {
+      if (valleyStage({ stats: cur }, map).variant === variant) {
+        best = { ...cur };
+        bestChanges = changes;
+      }
+      return;
+    }
+    const k = keys[j]!;
+    for (const n of bounds(k))
+      tryAll(j + 1, { ...cur, [k]: n }, changes + (n === (out[k] ?? 0) ? 0 : 1));
+  };
+  tryAll(0, out, 0);
+  return best;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -341,11 +388,27 @@ const setStage = (s: GameState, id: string, stage: number): void => {
   s.stats[`place.${id}.since`] = absoluteDay(s);
 };
 
+/** Friendship points per heart (systems/friendship.ts POINTS_PER_HEART; not imported, which would be a cycle). */
+export const HEART_POINTS = 50;
+
+/**
+ * Does a place's ask hold? A stat condition, a villager's hearts (`npc` + `hearts`), an absolute day (`day`, on or
+ * after), nested with `all` / `any`.
+ */
+export function askHolds(s: Pick<GameState, 'stats' | 'friends' | 'time'>, w: AskWhen): boolean {
+  if (w.all) return w.all.every((x) => askHolds(s, x));
+  if (w.any) return w.any.some((x) => askHolds(s, x));
+  if (w.npc !== undefined)
+    return Math.floor((s.friends[w.npc]?.points ?? 0) / HEART_POINTS) >= (w.hearts ?? 1);
+  if (w.day !== undefined) return absoluteDay(s as GameState) >= w.day;
+  return stageWhenHolds(s, w);
+}
+
 /** The morning's asks: every untouched place whose `ask` holds is asked for today. Returns their ids. */
 export function askPlaces(s: GameState): string[] {
   const out: string[] = [];
   for (const id of placeIds())
-    if (stageOf(s, id) === 0 && valleyHolds(s, def(id).ask)) {
+    if (stageOf(s, id) === 0 && askHolds(s, def(id).ask)) {
       setStage(s, id, 1);
       out.push(id);
     }
@@ -465,7 +528,8 @@ export function interactSite(s: GameState, id: string): SiteAnswer {
     if (r.reason === 'today') return { kind: 'say', text: t('valley.workToday') };
     return { kind: 'say', text: t('valley.workTired', { n: p.energy }) };
   }
-  if (st(s, `place.${id}.opened`) === absoluteDay(s))
+  // the opening morning: the villager's lines, when they wait at the site (Finn waits in the Heron, in town)
+  if (st(s, `place.${id}.opened`) === absoluteDay(s) && !p.opening.at)
     return { kind: 'lines', npc: p.npc, lines: p.opening.lines };
   const up = Object.entries(projects).find(([, r]) => r.site === id);
   if (up && !st(s, `project.${up[0]}`)) {
@@ -535,7 +599,10 @@ export function valleyRows(s: GameState): { place: string; name: string; next: s
       const left = fundLeft(s, id);
       const parts = [
         ...(left.gold > 0 ? [fmtGold(left.gold)] : []),
-        ...left.items.map((n) => `${n.qty} ${(items[n.item]?.name ?? n.item).toLowerCase()}`),
+        ...left.items.map((n) => {
+          const name = (items[n.item]?.name ?? n.item).toLowerCase();
+          return n.qty === 1 ? name : `${n.qty} ${name}`; // "60 stone, sluice gate"
+        }),
       ];
       next = t('valley.rowFund', { parts: parts.join(', ') });
     } else if (stage === 2) {
@@ -570,10 +637,17 @@ export function siteVisit(
     const p = def(id);
     if (p.npc !== npc || !p.map || !p.site || stageOf(s as GameState, id) < 3) continue;
     if (st(s as GameState, `place.${id}.opened`) !== absoluteDay(s as GameState)) continue;
+    if (p.opening.at) return { ...p.opening.at };
     return { map: p.map, tx: p.site[0] + 1, ty: p.site[1] }; // beside it, the farmer on the other side
   }
   return null;
 }
+
+/** Maps where a villager may wait on an opening morning (beside a site, or the place's `opening.at`). */
+export const openingMaps = (npc: string): string[] =>
+  Object.values(valley.places)
+    .filter((p) => p.npc === npc && p.map)
+    .map((p) => p.opening.at?.map ?? p.map!);
 
 /** On a place's opening day, its villager's first opening line (the rest are said at the site). */
 export function openingLine(s: GameState, npc: string): string | null {
@@ -590,7 +664,7 @@ export function openingLine(s: GameState, npc: string): string | null {
  * into green around them (critic, M1 review 2; released at the next sleep).
  */
 export const revealPending = (s: StatsOnly): boolean =>
-  (s.stats[FARM_GREEN] ?? 0) >= 1 && !s.stats[GREEN_SEEN];
+  ((s.stats[FARM_GREEN] ?? 0) >= 1 && !s.stats[GREEN_SEEN]) || riverMomentDue(s);
 
 /**
  * The farm creek as the channels see it (systems/channels.ts): it runs in the farm's final stage (the spring
@@ -646,6 +720,71 @@ export function openingScene(
     };
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The Weir (M6). The town river is mud and a trickle until `place.weir` is 3.
+
+/**
+ * `valley.weirOn` 1 on every save made since the Weir existed (M6). A save without it (made before) keeps the town
+ * river it always had: the weir is quietly restored once in `sanitize` (coordinator ruling), with no opening, no
+ * moment and no count in `placesDone`/`projectsDone`, so only games started since play the dry town.
+ */
+export const WEIR_ON = 'valley.weirOn';
+export const RIVER_SEEN = 'valley.riverSeen';
+
+/** Old saves keep their river (see WEIR_ON). Mutates and returns `stats` (called from `sanitize`). */
+export function weirDefaults(stats: Record<string, number>): Record<string, number> {
+  if (stats[WEIR_ON]) return stats;
+  stats[WEIR_ON] = 1;
+  if ((stats['place.weir'] ?? 0) < 3) {
+    stats['place.weir'] = 3;
+    stats[RIVER_SEEN] = 1;
+  }
+  return stats;
+}
+
+/** Is the town river back (the weir restored)? */
+export const riverBack = (s: StatsOnly): boolean => (s.stats['place.weir'] ?? 0) >= 3;
+
+/**
+ * The river's first morning in town: on the first step into town after the weir opens, the dry town (its mud and
+ * its straw) is drawn over the river town and cut away. Once (`valley.riverSeen`); the dry tileset is held for it.
+ */
+export const riverMomentDue = (s: StatsOnly): boolean => riverBack(s) && !s.stats[RIVER_SEEN];
+export function takeRiverMoment(state: GameState): boolean {
+  if (!riverMomentDue(state)) return false;
+  state.stats[RIVER_SEEN] = 1;
+  return true;
+}
+
+/**
+ * A part an asked place's fund still needs and the bag does not hold, sold by this villager (valley.json `parts`:
+ * the sluice gate from Orin, until the forge is lit). Null when there is nothing to offer.
+ */
+export function partOffer(s: GameState, npc: string): { item: string; price: number } | null {
+  for (const [item, part] of Object.entries(valley.parts ?? {})) {
+    if (part.npc !== npc || owns(s, item)) continue;
+    const needed = placeIds().some(
+      (id) => stageOf(s, id) === 1 && fundLeft(s, id).items.some((n) => n.item === item),
+    );
+    if (needed) return { item, price: part.price };
+  }
+  return null;
+}
+
+/** Buy an offered part (nothing changes on a refusal). */
+export function buyPart(
+  s: GameState,
+  npc: string,
+): { ok: true; item: string } | { ok: false; reason: 'none' | 'gold' | 'bag' } {
+  const offer = partOffer(s, npc);
+  if (!offer) return { ok: false, reason: 'none' };
+  if (s.money < offer.price) return { ok: false, reason: 'gold' };
+  if (roomFor(s, offer.item, 1) < 1) return { ok: false, reason: 'bag' };
+  s.money -= offer.price;
+  addItem(s, offer.item, 1);
+  return { ok: true, item: offer.item };
 }
 
 /** The creek's first morning on the farm (the spring restored): its reveal plays once. True that once. */

@@ -60,7 +60,7 @@ describe('valleyStage: which variant a map shows', () => {
   });
 
   it('maps without stages have one look: their own file, no variant', () => {
-    for (const map of ['house', 'town', 'woods', 'mine'])
+    for (const map of ['house', 'woods', 'mine'])
       expect(valleyStage(stats({ 'place.spring': 3 }), map)).toEqual({
         map,
         variant: null,
@@ -89,6 +89,51 @@ describe('valleyStage: which variant a map shows', () => {
     expect(stageWhenHolds(stats({ 'place.weir': 3 }), { place: 'weir', max: 2 })).toBe(false);
   });
 
+  it('conditions nest: all of them, or any of them', () => {
+    const both = {
+      all: [
+        { place: 'spring', max: 2 },
+        { place: 'weir', max: 2 },
+      ],
+    };
+    expect(stageWhenHolds(stats({}), both)).toBe(true);
+    expect(stageWhenHolds(stats({ 'place.weir': 3 }), both)).toBe(false);
+    const either = {
+      any: [
+        { place: 'spring', min: 3 },
+        { place: 'weir', min: 3 },
+      ],
+    };
+    expect(stageWhenHolds(stats({}), either)).toBe(false);
+    expect(stageWhenHolds(stats({ 'place.weir': 3 }), either)).toBe(true);
+  });
+
+  it("the town is dry until the weir is restored, then its river (today's town.tmj)", () => {
+    expect(mapVariants('town')).toEqual(['dry', 'river']);
+    for (const weir of [0, 1, 2])
+      expect(mapLook(stats({ 'place.weir': weir }), 'town')).toEqual({
+        file: 'assets/maps/town@dry.tmj',
+        palette: 'dry',
+      });
+    expect(mapLook(stats({ 'place.weir': 3 }), 'town')).toEqual({ file: 'assets/maps/town.tmj' });
+  });
+
+  it("Wendhead's pool follows the spring and its gorge the weir, either first (an old save's weir)", () => {
+    const at = (spring: number, weir: number) =>
+      valleyStage(stats({ 'place.spring': spring, 'place.weir': weir }), 'wendhead');
+    expect(at(0, 0).variant).toBe('dry');
+    expect(at(0, 3).variant).toBe('gorge');
+    expect(at(3, 0).variant).toBe('spring');
+    expect(at(3, 3).variant).toBe('restored');
+    expect(at(3, 3).file).toBe('assets/maps/wendhead.tmj');
+    // straw until the spring opens, whatever the gorge does
+    expect([at(0, 0).palette, at(0, 3).palette, at(3, 0).palette]).toEqual([
+      'dry',
+      'dry',
+      undefined,
+    ]);
+  });
+
   it('lists one file per variant, the last keeping the map name', () => {
     expect(mapVariants('farm')).toEqual(['dry', 'waking', 'restored']);
     expect(variantFile('farm', 'restored')).toBe('assets/maps/farm.tmj');
@@ -97,9 +142,10 @@ describe('valleyStage: which variant a map shows', () => {
     const files = allMapLooks().map((l) => l.file);
     expect(new Set(files).size).toBe(files.length);
     expect(files).toContain('assets/maps/farm@dry.tmj');
-    // the farm's dry and waking files, and Wendhead's dry one (M3)
-    expect(files.length).toBe(Object.keys(mapsData.maps).length + 3);
-    expect(files).toContain('assets/maps/wendhead@dry.tmj');
+    // the farm's dry and waking files, Wendhead's dry (M3), gorge and spring ones, the town's dry one (M6)
+    expect(files.length).toBe(Object.keys(mapsData.maps).length + 6);
+    for (const f of ['wendhead@dry', 'wendhead@gorge', 'wendhead@spring', 'town@dry'])
+      expect(files).toContain(`assets/maps/${f}.tmj`);
   });
 
   it('pinStage finds the stats that show a stage (the dev menu and __farm.dev.stage)', () => {
@@ -114,13 +160,30 @@ describe('valleyStage: which variant a map shows', () => {
       'place.spring': 2,
     });
     expect(pinStage('farm', 'nope')).toBeNull();
-    expect(pinStage('town', 'dry')).toBeNull();
+    expect(pinStage('woods', 'dry')).toBeNull();
+    expect(pinStage('town', 'river')).toEqual({ 'place.weir': 3 });
+    expect(pinStage('town', 'dry', { 'place.weir': 3 })).toEqual({ 'place.weir': 2 });
+    // nested conditions: the fewest changes that show the stage
+    for (const v of ['dry', 'gorge', 'spring', 'restored'])
+      for (const base of <Record<string, number>[]>[
+        {},
+        { 'place.spring': 3 },
+        { 'place.weir': 3 },
+        { 'place.spring': 3, 'place.weir': 3 },
+      ]) {
+        const pinned = pinStage('wendhead', v, base)!;
+        expect(
+          valleyStage(stats(pinned), 'wendhead').variant,
+          `${v} from ${JSON.stringify(base)}`,
+        ).toBe(v);
+      }
+    expect(pinStage('wendhead', 'gorge', {})).toEqual({ 'place.spring': 0, 'place.weir': 3 });
   });
 
   it('the scenario valley key names farmGreen and the places the stage tables read', () => {
     expect(valleyStatKey('farmGreen')).toBe('valley.farmGreen');
     expect(valleyStatKey('spring')).toBe('place.spring');
-    expect(valleyKeys().sort()).toEqual(['farmGreen', 'spring']);
+    expect(valleyKeys().sort()).toEqual(['farmGreen', 'spring', 'weir']);
   });
 
   it('refuses a broken stage table at load', () => {
@@ -156,7 +219,10 @@ describe('delta rectangles', () => {
     s.inventory.slots[5] = { item: 'sprinkler', qty: 2 };
     equip(s, 'sprinkler');
     const before = JSON.stringify(s);
-    expect(performAction(s, { ...grass(26, 12), kind: 'stone', tillable: false })).toEqual({
+    // as the scene builds it: stone, and solid in every stage (owner bug 3: dry beds are not walkable)
+    expect(
+      performAction(s, { ...grass(26, 12), kind: 'stone', tillable: false, blocked: true }),
+    ).toEqual({
       ok: false,
       message: CREEK,
     });
@@ -170,8 +236,9 @@ describe('delta rectangles', () => {
     const s = newState();
     equip(s, 'hoe');
     const before = JSON.stringify(s);
-    // as the scene builds it: the bed is stone, lies in no plot (owned: false) and is open in the dry stage
-    const bed = { ...grass(27, 20), kind: 'stone', tillable: false, owned: false };
+    // as the scene builds it: the bed is stone, lies in no plot (owned: false) and is solid in every stage
+    // (owner bug 3, coordinator ruling: a dry bed is a sunken bed, not a floor)
+    const bed = { ...grass(27, 20), kind: 'stone', tillable: false, owned: false, blocked: true };
     expect(performAction(s, bed)).toEqual({
       ok: false,
       message: CREEK,

@@ -1,0 +1,27 @@
+{
+  "title": "A save from before the Weir keeps its river",
+  "about": "A raw save without the M6 marker (valley.weirOn), fall 3 of year one, the spring never restored: sanitize quietly restores the weir (no opening, no moment, no count), so the town shows today's river and Wendhead its running gorge beside the dry pool. Only games started since M6 play the dry town.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "saves"],
+  "stats": {
+    "valley.weirOn": 0,
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "shipped": 40,
+    "harvested": 60,
+    "slept": 58,
+    "projectsDone": 1
+  },
+  "at": {
+    "map": "town",
+    "tx": 15,
+    "ty": 26,
+    "facing": "right"
+  },
+  "time": {
+    "season": "fall",
+    "day": 3,
+    "clock": "10:00"
+  },
+  "goal": "tree"
+}

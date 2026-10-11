@@ -9,11 +9,16 @@ import { WIPE_OPEN_MS } from '../fx/feel';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { controlsLog } from '../input/controlsLog';
-import { ActionPress, PAINT_EDGE_CSS, type ActionEvent } from '../input/gesture';
+import {
+  ActionPress,
+  PAINT_EDGE_CSS,
+  PAINT_EDGE_EXIT_CSS,
+  type ActionEvent,
+} from '../input/gesture';
 import { cssPerLogical } from '../ui/hit';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
-import { TouchButton } from '../input/TouchButton';
+import { PRESS_SINK, TouchButton } from '../input/TouchButton';
 import { VirtualJoystick } from '../input/VirtualJoystick';
 import { WorldTouch } from '../input/WorldTouch';
 import { audio } from '../platform/audio';
@@ -74,34 +79,36 @@ import { onLocaleChange, t } from '../i18n';
 const IDLE_HINT_MS = 40_000;
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
+// The Interact icons below are solid (no alpha): they sit on the floating plates, and a semi-alpha pixel at the iPhone
+// 13's and SE's fractional scales blends unevenly (DECISIONS.md "Floating controls").
 
 function drawHandIcon(g: Phaser.GameObjects.Graphics): void {
-  g.fillStyle(INK, 0.6).fillCircle(0, 0, 10);
+  g.fillStyle(INK, 1).fillCircle(0, 0, 10);
   g.fillStyle(CREAM, 1).fillCircle(0, 0, 8);
-  g.fillStyle(INK, 0.9);
+  g.fillStyle(INK, 1);
   for (const x of [-4, 0, 4]) g.fillCircle(x, 0, 1.4);
 }
 
 function drawBedIcon(g: Phaser.GameObjects.Graphics): void {
-  g.fillStyle(INK, 0.6).fillRect(-11, -6, 22, 14);
+  g.fillStyle(INK, 1).fillRect(-11, -6, 22, 14);
   g.fillStyle(CREAM, 1).fillRect(-10, -1, 20, 8);
   g.fillStyle(0x4a7fc1, 1).fillRect(-4, -1, 14, 8);
   g.fillStyle(CREAM, 1).fillRect(-9, -5, 6, 5);
-  g.fillStyle(INK, 0.6).fillRect(-11, 4, 2, 6).fillRect(9, 4, 2, 6);
+  g.fillStyle(INK, 1).fillRect(-11, 4, 2, 6).fillRect(9, 4, 2, 6);
 }
 
 function drawBoardIcon(g: Phaser.GameObjects.Graphics): void {
-  g.fillStyle(INK, 0.6).fillRect(-11, -10, 22, 18);
+  g.fillStyle(INK, 1).fillRect(-11, -10, 22, 18);
   g.fillStyle(0xb98a52, 1).fillRect(-10, -9, 20, 16);
   g.fillStyle(CREAM, 1).fillRect(-7, -6, 6, 7).fillRect(1, -6, 6, 5);
-  g.fillStyle(INK, 0.5).fillRect(-6, -4, 4, 1).fillRect(2, -4, 4, 1);
-  g.fillStyle(INK, 0.6).fillRect(-9, 7, 2, 4).fillRect(7, 7, 2, 4);
+  g.fillStyle(INK, 1).fillRect(-6, -4, 4, 1).fillRect(2, -4, 4, 1);
+  g.fillStyle(INK, 1).fillRect(-9, 7, 2, 4).fillRect(7, 7, 2, 4);
 }
 
 function drawTalkIcon(g: Phaser.GameObjects.Graphics): void {
-  g.fillStyle(INK, 0.6).fillRect(-11, -9, 22, 15).fillRect(-6, 5, 5, 5);
+  g.fillStyle(INK, 1).fillRect(-11, -9, 22, 15).fillRect(-6, 5, 5, 5);
   g.fillStyle(CREAM, 1).fillRect(-10, -8, 20, 13).fillRect(-5, 5, 4, 4);
-  g.fillStyle(INK, 0.9);
+  g.fillStyle(INK, 1);
   for (const x of [-5, 0, 5]) g.fillRect(x - 1, -3, 2, 2);
 }
 
@@ -112,9 +119,9 @@ function drawMenuIcon(g: Phaser.GameObjects.Graphics): void {
 
 /** Interact-button icon by the kind of thing in reach. Mechanics add an entry for their objects. */
 function drawMailIcon(g: Phaser.GameObjects.Graphics): void {
-  g.fillStyle(INK, 0.6).fillRect(-11, -8, 22, 16);
+  g.fillStyle(INK, 1).fillRect(-11, -8, 22, 16);
   g.fillStyle(CREAM, 1).fillRect(-10, -7, 20, 14);
-  g.fillStyle(INK, 0.8).fillTriangle(-10, -7, 10, -7, 0, 1);
+  g.fillStyle(INK, 1).fillTriangle(-10, -7, 10, -7, 0, 1);
   g.fillStyle(CREAM, 1).fillTriangle(-8, -7, 8, -7, 0, -1);
 }
 
@@ -148,7 +155,7 @@ export class UIScene extends Phaser.Scene {
   /** The last selection change came from the ring (it does not count toward the ring tip). */
   private ringPicked = false;
   private joystick!: VirtualJoystick;
-  /** Current dock geometry (mirrored in left-handed mode). */
+  /** Current geometry of the floating thumb controls (mirrored in left-handed mode). */
   layout: DockLayout = dockLayout(false);
   private hud!: Hud;
   private tint!: Phaser.GameObjects.Rectangle;
@@ -215,7 +222,7 @@ export class UIScene extends Phaser.Scene {
       .setAlpha(0);
 
     this.glow = new NightGlow(this, 1.5); // lights over the day tint, under the rain and the HUD
-    this.wipe = new Wipe(this, WORLD_VIEW, 40); // over the world and its weather, under the HUD and dock
+    this.wipe = new Wipe(this, WORLD_VIEW, 40); // over the world and its weather, under the HUD and controls
     if (Wipe.carry) {
       // The title's wipe closed over the whole screen: open the game out of it.
       Wipe.carry = false;
@@ -380,7 +387,10 @@ export class UIScene extends Phaser.Scene {
 
   // ---- thumb controls ----
 
-  /** (Re)build the dock controls. Right-handed puts Action under the right thumb; left-handed mirrors. */
+  /**
+   * (Re)build the floating thumb controls, each on its own solid plate over the world (no band behind them).
+   * Right-handed puts Action under the right thumb; left-handed mirrors.
+   */
   private buildControls(): void {
     this.controls.forEach((c) => c.destroy());
     this.controls = [];
@@ -423,7 +433,7 @@ export class UIScene extends Phaser.Scene {
     action.onPressVisual = (down) => {
       if (!this.actionIcon) return;
       this.tweens.killTweensOf(this.actionIcon);
-      this.actionIcon.setY(this.layout.action.y + (down ? 1 : 0));
+      this.actionIcon.setY(this.layout.action.y + (down ? PRESS_SINK : 0));
     };
     this.actionIconKey = '';
     // Interact and Menu act on a clean release, and a drag that starts on them walks instead.
@@ -472,12 +482,17 @@ export class UIScene extends Phaser.Scene {
     if (this.actionPress.armed && this.actionPointer !== null) {
       const ptr = this.input.manager.pointers.find((p) => p.id === this.actionPointer && p.isDown);
       if (ptr) {
-        const band = PAINT_EDGE_CSS / cssPerLogical(this);
-        const edge = {
-          x: ptr.x <= band ? -1 : ptr.x >= GAME_WIDTH - band ? 1 : 0,
-          y: ptr.y <= band ? -1 : ptr.y >= GAME_HEIGHT - band ? 1 : 0,
+        const at = (css: number) => {
+          const band = css / cssPerLogical(this);
+          return {
+            x: ptr.x <= band ? -1 : ptr.x >= GAME_WIDTH - band ? 1 : 0,
+            y: ptr.y <= band ? -1 : ptr.y >= GAME_HEIGHT - band ? 1 : 0,
+          };
         };
-        this.actionEvents(this.actionPress.hold(edge, this.time.now));
+        // enter at 36 CSS px, leave at 52 (a resting thumb's tremor never retracts the row)
+        this.actionEvents(
+          this.actionPress.hold(at(PAINT_EDGE_CSS), this.time.now, at(PAINT_EDGE_EXIT_CSS)),
+        );
       }
     }
   }

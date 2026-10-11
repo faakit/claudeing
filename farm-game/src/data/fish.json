@@ -25,7 +25,8 @@
     "maps": ["town"],
     "seasons": ["spring", "fall"],
     "weight": 3,
-    "difficulty": 0.45
+    "difficulty": 0.45,
+    "place": "weir"
   },
   {
     "item": "catfish",
@@ -40,7 +41,8 @@
     "maps": ["town"],
     "seasons": ["fall"],
     "weight": 2,
-    "difficulty": 0.7
+    "difficulty": 0.7,
+    "place": "weir"
   },
   {
     "item": "glimmer_trout",
@@ -49,7 +51,8 @@
     "weight": 0.4,
     "difficulty": 0.85,
     "legend": true,
-    "weather": "rain"
+    "weather": "rain",
+    "place": "weir"
   },
   {
     "item": "sun_carp",
@@ -74,6 +77,7 @@
     "seasons": ["winter"],
     "weight": 0.4,
     "difficulty": 0.85,
-    "legend": true
+    "legend": true,
+    "place": "weir"
   }
 ]

@@ -66,6 +66,30 @@ describe('paint edge hold (coordinator ruling, valley round 6)', () => {
     expect(p.up()).toEqual([{ type: 'cancel' }]);
   });
 
+  it('a thumb trembling across the band line keeps the growth; leaving the wider exit band drops it (D3)', () => {
+    const p = armed(-30);
+    const start = tiles(p);
+    let t = 1000;
+    // the finger rests at about 34-40 CSS px from the left edge: inside the entry band (36) on some frames, always
+    // inside the exit band (52)
+    const inEntry = { x: -1, y: 0 };
+    const outEntry = { x: 0, y: 0 };
+    const inExit = { x: -1, y: 0 };
+    let last = start;
+    for (let k = 0; k < 24; k++) {
+      p.hold(k % 3 === 2 ? outEntry : inEntry, (t += PAINT_EDGE_HOLD_MS / 2), inExit);
+      expect(tiles(p)).toBeGreaterThanOrEqual(last); // never goes down while it rests
+      last = tiles(p);
+    }
+    expect(tiles(p)).toBeGreaterThan(start + 3);
+    // a move back past 52 CSS px (out of the exit band) takes the growth back
+    p.hold(outEntry, (t += 16), outEntry);
+    expect(tiles(p)).toBe(start);
+    // out of the entry band, the hold never starts on the exit band alone
+    for (let k = 0; k < 6; k++) p.hold(outEntry, (t += PAINT_EDGE_HOLD_MS), inExit);
+    expect(tiles(p)).toBe(start);
+  });
+
   it('a right-handed eastward row and a downward row grow the same way', () => {
     const r = armed(30);
     let t = 1000;

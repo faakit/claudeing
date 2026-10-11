@@ -53,12 +53,28 @@ export interface MapsData {
   maps: Record<string, MapDef>;
 }
 
-/** A stat condition (`stat`, or `place` as shorthand for the stat `place.<id>`), true when min <= value <= max. */
+/**
+ * A stat condition (`stat`, or `place` as shorthand for the stat `place.<id>`), true when min <= value <= max; or
+ * `all` (every one holds) / `any` (at least one holds) of nested conditions.
+ */
 export interface StageWhen {
   stat?: string;
   place?: string;
   min?: number;
   max?: number;
+  all?: StageWhen[];
+  any?: StageWhen[];
+}
+/**
+ * When a place is asked for: a stat condition, or a villager's hearts (`npc` + `hearts`), or an absolute day on or
+ * after `day`; nested with `all` / `any` (the weir: the spring open, the forge lit or summer 15, Finn at 2 hearts).
+ */
+export interface AskWhen extends StageWhen {
+  all?: AskWhen[];
+  any?: AskWhen[];
+  npc?: string;
+  hearts?: number;
+  day?: number;
 }
 /** One stage of a map: its variant file (`<map>@<variant>.tmj`; the last stage keeps the map's own file). */
 export interface MapStageDef {
@@ -87,6 +103,11 @@ export interface ValleyData {
   /** Places designed but not built yet (id -> name): lines may already wait on them (`when.place`). */
   planned: Record<string, string>;
   maps: Record<string, MapStagesDef>;
+  /**
+   * Parts a place's fund needs, bought from a villager for gold until the forge exists (the sluice gate from Orin).
+   * Offered in that villager's sheet while an asked place's fund still needs one and the bag holds none.
+   */
+  parts?: Record<string, { npc: string; price: number }>;
 }
 
 export type ItemType =
@@ -233,6 +254,8 @@ export interface FishDef {
   difficulty: number;
   /** A legendary fish: bites until you catch it once, never asked for on the board. */
   legend?: boolean;
+  /** Only bites once this place is restored (the river's fish come back with the weir). */
+  place?: string;
 }
 export interface OrdersDef {
   perDay: number;
@@ -286,8 +309,12 @@ export interface NpcDef {
   dislikes: string[];
   /** Lines by friendship tier (stranger 0-1 hearts, friend 2-3, close 4-5) plus rainy-day lines. */
   lines: Record<'stranger' | 'friend' | 'close' | 'rain', NpcLine[]>;
-  /** Where they are through the day: from this minute on. Map "away" means at home (nowhere you can reach). Optional: no schedule means always at map/tx/ty. */
-  schedule?: { from: number; map: string; tx: number; ty: number }[];
+  /**
+   * Where they are through the day: from this minute on. Map "away" means at home (nowhere you can reach). Optional:
+   * no schedule means always at map/tx/ty. A row with `when` is skipped while it does not hold (Finn's afternoon at
+   * the dock once the river is back); a row sharing the minute of the row before it needs a `when`.
+   */
+  schedule?: { from: number; map: string; tx: number; ty: number; when?: ValleyWhen }[];
   birthday?: { season: Season; day: number };
   /** Short scenes that play once when friendship first reaches `hearts`, ending in a reward. */
   events?: NpcEvent[];
@@ -320,8 +347,11 @@ export interface FestivalDef {
    * its own kind, named after the item. Each kind beyond the first adds `VARIETY_BONUS` to the score.
    */
   kinds?: { name: string; types?: string[]; families?: string[]; items?: string[] }[];
-  /** Derby day: this fish bites on these maps whatever the weather ("the river is stocked"). */
-  stocked?: { fish: string; maps: string[] };
+  /**
+   * Derby day: this fish bites on these maps whatever the weather ("the river is stocked"); on `dryMaps` instead
+   * while the town river is dry (the weir not restored: "Finn's lake derby").
+   */
+  stocked?: { fish: string; maps: string[]; dryMaps?: string[] };
 }
 export interface NodeDef {
   name: string;
@@ -401,8 +431,11 @@ export interface LetterDef {
 }
 /** One work day at a site: a ten-second taste of the place's verb, and what it says. */
 export interface WorkDayDef {
-  /** What the farmer does: a pickaxe swing at the rockfall, the spade's first channel tile... */
-  taste: 'pickaxe' | 'channel';
+  /**
+   * What the farmer does: a pickaxe swing at the rockfall, the spade's first channel tile, or the weir's last day
+   * (scripted until towing: the water comes through and lifts a beam into the gap).
+   */
+  taste: 'pickaxe' | 'channel' | 'beam';
   text: string;
   /** Handed over that day (Ilse's spade on the spring's last work day). */
   gives?: string;
@@ -418,7 +451,7 @@ export interface PlaceDef {
   /** Who lost it, asks for it and waits at the site on the opening morning. */
   npc: string;
   /** When it is asked for (`place.<id>` goes 0 -> 1 that morning). */
-  ask: ValleyWhen;
+  ask: AskWhen;
   /** The `projects.json` row holding the fund (`"place": "<id>"`). */
   project: string;
   workDays: number;
@@ -433,8 +466,18 @@ export interface PlaceDef {
   sprites: string[];
   /** Placeholder colour of the site sprites until the art lands. */
   color: string;
-  /** The opening morning: its note, the villager's three lines at the site, and what is handed over. */
-  opening: { note: string; lines: string[]; item?: string };
+  /**
+   * The opening morning: its note, the villager's three lines, and what is handed over. The villager waits beside
+   * the site, or at `at` (Finn in the Heron at the town dock) until the evening.
+   */
+  opening: {
+    note: string;
+    lines: string[];
+    item?: string;
+    at?: { map: string; tx: number; ty: number };
+  };
+  /** The banner of its first morning on the map it changes most (the weir: the town), title and line. */
+  banner?: string;
   /** What the place does for the valley, said on the year-end and THE VALLEY ("The creek runs."). */
   phrase: string;
   /** The spring's channels: tiles the water reaches each morning, before and after the weir. */
@@ -722,9 +765,37 @@ export interface TutorialData {
 const DIRS = ['up', 'down', 'left', 'right'];
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
 
-/** A `when` names a stat or a place (by id in valley.json), and a bound. */
-export function validateValleyWhen(w: ValleyWhen | undefined, file: string, where: string): void {
+/**
+ * A `when` names a stat or a place (by id in valley.json), and a bound; or nests conditions in `all` / `any`. An
+ * ask (`asks`) may also name a villager's hearts (`npc` + `hearts`) or a day (`day`, on or after that absolute day).
+ */
+export function validateValleyWhen(
+  w: AskWhen | undefined,
+  file: string,
+  where: string,
+  asks = false,
+): void {
   if (!w || typeof w !== 'object') fail(file, `${where} needs a "when"`);
+  const nested = w.all ?? w.any;
+  if (w.all && w.any) fail(file, `${where}: "when" has both "all" and "any"`);
+  if (nested) {
+    if (!Array.isArray(nested) || nested.length === 0)
+      fail(file, `${where}: "all"/"any" needs a list of conditions`);
+    if (w.stat !== undefined || w.place !== undefined || w.npc !== undefined || w.day !== undefined)
+      fail(file, `${where}: "all"/"any" stands alone`);
+    nested.forEach((x, i) => validateValleyWhen(x, file, `${where}[${i}]`, asks));
+    return;
+  }
+  if (asks && w.npc !== undefined) {
+    if (!npcs[w.npc]) fail(file, `${where}: unknown villager "${w.npc}"`);
+    if (!(Number(w.hearts) >= 1 && Number(w.hearts) <= 5))
+      fail(file, `${where}: "npc" needs "hearts" 1-5`);
+    return;
+  }
+  if (asks && w.day !== undefined) {
+    if (!Number.isInteger(w.day) || w.day < 1) fail(file, `${where}: "day" is an absolute day`);
+    return;
+  }
   if ((w.stat === undefined) === (w.place === undefined))
     fail(file, `${where}: "when" needs exactly one of "stat" or "place"`);
   if (w.place !== undefined && !valley.places[w.place] && !valley.planned[w.place])
@@ -744,7 +815,7 @@ function validateValleyContent(mapIds: string[]): void {
     const at = `place "${id}"`;
     if (v.planned[id]) fail('valley', `${at} is built and planned`);
     if (!npcs[p.npc]) fail('valley', `${at} is asked by an unknown villager`);
-    validateValleyWhen(p.ask, 'valley', `${at} ask`);
+    validateValleyWhen(p.ask, 'valley', `${at} ask`, true);
     if (projects[p.project]?.place !== id)
       fail('valley', `${at} needs a projects.json row "${p.project}" with "place": "${id}"`);
     if (!(p.workDays >= 1) || p.work.length !== p.workDays)
@@ -760,6 +831,13 @@ function validateValleyContent(mapIds: string[]): void {
       if (!mapIds.includes(m)) fail('valley', `${at} points the way on unknown map "${m}"`);
     if (p.opening.item && !items[p.opening.item])
       fail('valley', `${at} hands over unknown item "${p.opening.item}"`);
+    if (p.opening.at && !mapIds.includes(p.opening.at.map))
+      fail('valley', `${at} opens with its villager on unknown map "${p.opening.at.map}"`);
+  }
+  for (const [item, part] of Object.entries(v.parts ?? {})) {
+    if (!items[item]) fail('valley', `part "${item}" is not an item`);
+    if (!npcs[part.npc]) fail('valley', `part "${item}" is sold by an unknown villager`);
+    if (!(part.price > 0)) fail('valley', `part "${item}" needs a price`);
   }
   for (const [id, r] of Object.entries(projects)) {
     if (r.place !== undefined && v.places[r.place]?.project !== id)
@@ -811,15 +889,22 @@ export function validateValley(data: unknown, maps: Record<string, MapDef>): Val
       if (last && v.when)
         bad(`maps.${id}: the last variant ("${v.variant}") is the default, no "when"`);
       if (!last && !v.when) bad(`maps.${id}: variant "${v.variant}" needs a "when"`);
-      if (v.when) {
-        const w = v.when;
+      const check = (w: StageWhen): void => {
+        const nested = w.all ?? w.any;
+        if (nested) {
+          if (!Array.isArray(nested) || nested.length === 0 || w.stat || w.place)
+            bad(`maps.${id}.${v.variant}: "all"/"any" is a list of conditions, on its own`);
+          nested.forEach(check);
+          return;
+        }
         if (!!w.stat === !!w.place) bad(`maps.${id}.${v.variant}: "when" needs a stat or a place`);
         if (w.min === undefined && w.max === undefined)
           bad(`maps.${id}.${v.variant}: "when" needs min or max`);
         for (const n of [w.min, w.max])
           if (n !== undefined && !Number.isInteger(n))
             bad(`maps.${id}.${v.variant}: integer min/max`);
-      }
+      };
+      if (v.when) check(v.when);
       if (v.palette !== undefined && !/^[a-z]+$/.test(v.palette))
         bad(`maps.${id}.${v.variant}: palette "${v.palette}"`);
     });
@@ -967,6 +1052,8 @@ export function validateContent(): void {
     if (items[f.item]?.type !== 'fish') fail('fish', `"${f.item}" is not a fish item`);
     if (f.difficulty < 0 || f.difficulty > 1) fail('fish', `"${f.item}" difficulty must be 0..1`);
     for (const m of f.maps) if (!mapIds.includes(m)) fail('fish', `unknown map "${m}"`);
+    if (f.place !== undefined && !valley.places[f.place])
+      fail('fish', `"${f.item}" waits on unknown place "${f.place}"`);
   }
   if (orders.tiers.length === 0 || orders.perDay < 1) fail('orders', 'needs tiers and perDay >= 1');
   for (const [id, a] of Object.entries(animals)) {
@@ -984,12 +1071,18 @@ export function validateContent(): void {
       if (w.map !== 'away' && !mapIds.includes(w.map))
         fail('npcs', `"${id}" schedule uses unknown map "${w.map}"`);
     }
+    // rows sharing a minute are alternatives: every one after the first needs a "when" (the last that holds wins)
     if (
       n.schedule &&
       (n.schedule[0]?.from !== 0 ||
-        n.schedule.some((w, i) => i > 0 && w.from <= (n.schedule?.[i - 1]?.from ?? 0)))
+        n.schedule.some((w, i) => {
+          const prev = n.schedule?.[i - 1];
+          return i > 0 && (w.from < prev!.from || (w.from === prev!.from && !w.when));
+        }))
     )
       fail('npcs', `"${id}" schedule must start at minute 0 and increase`);
+    for (const w of n.schedule ?? [])
+      if (w.when) validateValleyWhen(w.when, 'npcs', `"${id}" schedule at ${w.from}`);
     for (const ev of n.events ?? []) {
       if (ev.when) validateValleyWhen(ev.when, 'npcs', `"${id}" event "${ev.id}"`);
       if ((n.events ?? []).some((o) => o !== ev && o.id === ev.id && (!o.when || !ev.when)))
@@ -1045,6 +1138,8 @@ export function validateContent(): void {
         if (!items[i]) fail('festivals', `"${id}" kind "${k.name}" lists unknown item "${i}"`);
     if (f.stocked && !fish.some((x) => x.item === f.stocked?.fish))
       fail('festivals', `"${id}" stocks unknown fish "${f.stocked.fish}"`);
+    for (const m of [...(f.stocked?.maps ?? []), ...(f.stocked?.dryMaps ?? [])])
+      if (!mapIds.includes(m)) fail('festivals', `"${id}" stocks unknown map "${m}"`);
   }
   for (const e of cart.stock) {
     if (!items[e.item]) fail('cart', `sells unknown item "${e.item}"`);

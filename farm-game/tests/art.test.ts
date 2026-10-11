@@ -200,7 +200,8 @@ describe('map art layers', () => {
         if (solidGround || coll[i] === 0) return;
         const tx = i % m.width;
         const ty = Math.floor(i / m.width);
-        for (const o of objects) {
+        // a stage's own solid (the Heron aground in the dry town) may sit in a delta rect: tiles there differ by stage
+        for (const o of objects.filter((x) => x.type !== 'delta')) {
           const inside =
             tx >= o.x / 16 &&
             tx < (o.x + o.width) / 16 &&

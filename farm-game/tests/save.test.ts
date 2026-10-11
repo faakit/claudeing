@@ -114,7 +114,13 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
     expect(s.farm.weeds).toEqual({});
     expect(s.upgrades.stamina).toBe(0);
     expect(s.settings.sfx).toBeGreaterThan(0);
-    expect(s.stats).toEqual({ 'valley.on': 1 }); // an old save's valley defaults (systems/valley.ts)
+    // an old save's valley marker, and its river kept (the weir quietly restored, M6)
+    expect(s.stats).toEqual({
+      'valley.on': 1,
+      'valley.weirOn': 1,
+      'place.weir': 3,
+      'valley.riverSeen': 1,
+    });
     expect(s.shipping).toEqual({});
   });
 

@@ -588,7 +588,7 @@ async function valley() {
     farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
   );
   check(
-    'valley-farm-green-reveal: the next morning the farm is done with straw (only Wendhead keeps it, until the spring)',
+    'valley-farm-green-reveal: the next morning the farm is done with straw (Wendhead and the town keep it, until the spring and the weir)',
     (await dryResident(farm)).length === 1 &&
       (await farm.eval(() => !window.__farm.getState().stats['valley.greenSeen'] === false)),
   );
@@ -646,6 +646,258 @@ async function tapSheetButton(farm, re) {
   if (!t) return false;
   await farm.thumb.tap(t.cx, t.cy, 70);
   return true;
+}
+
+/** A tile of a running world scene's ground layer, and whether its collision grid blocks it. */
+const sceneTile = (farm, key, tx, ty) =>
+  farm.eval(
+    ([k, x, y]) => {
+      const scene = window.__farm.game.scene.getScene(k);
+      const layers = scene.children.list.filter((o) => o.type === 'TilemapLayer');
+      const at = (name) => layers.find((l) => l.layer.name === name)?.getTileAt(x, y)?.index ?? 0;
+      return { ground: at('ground') };
+    },
+    [key, tx, ty],
+  );
+/** Every text the UI scene shows now, joined (sheet lines, buttons). */
+const uiText = (farm) =>
+  farm.eval(() => {
+    const texts = [];
+    const walk = (n) => {
+      if (typeof n.text === 'string' && n.visible !== false) texts.push(n.text);
+      (n.list ?? []).forEach(walk);
+    };
+    window.__farm.game.scene.getScene('UI').children.list.forEach(walk);
+    return texts.join(' | ');
+  });
+/** Draws per frame after the view settles. */
+async function settledDraws(farm) {
+  await farm.idle();
+  await farm.frames(10);
+  return farm.eval(() => window.__farm.dev.frameStats().draws);
+}
+/** Step through the farm's south gate into town: ms from the step to a clear view (the feel suite's measure). */
+const gateToTown = (farm) =>
+  farm.eval(
+    () =>
+      new Promise((resolve) => {
+        const f = window.__farm;
+        const ui = f.game.scene.getScene('UI');
+        const t0 = performance.now();
+        const s = f.getState();
+        s.player.x = 14 * 16 + 8;
+        s.player.y = 43 * 16 + 11; // onto the south gate
+        const fn = () => {
+          const town = f.game.scene.getScene('Town');
+          if (town.sys.isActive() && !ui.wipe.busy) {
+            f.game.events.off('postrender', fn);
+            resolve(performance.now() - t0);
+          }
+        };
+        f.game.events.on('postrender', fn);
+        setTimeout(() => resolve(-1), 4000);
+      }),
+  );
+
+// The Weir (M6): Orin's gate, the fund, four work days (the last the scripted beam), the river's first morning in
+// town, Finn at the dock, the Derby's venue, an old save's river, draws and the farm-to-town door on a dry town.
+async function weir() {
+  // Orin sells the sluice gate while the asked weir's fund needs it
+  const farm = await openScenario(browser, url, 'weir-gate', { profile: PROFILE });
+  await farm.press('KeyE');
+  await farm.panel('npc');
+  const offer = await uiText(farm);
+  const bought = await tapSheetButton(farm, /^Sluice Gate 500g$/);
+  await farm.frames(3);
+  let s = await farm.state();
+  check(
+    "weir-gate: Orin's sheet says the weir wants a gate and sells it for 500g in one tap",
+    /sluice gate/.test(offer) &&
+      bought &&
+      s.money === 100 &&
+      s.inventory.slots.some((x) => x?.item === 'sluice_gate'),
+    JSON.stringify({ offer: offer.slice(0, 160), money: s.money }),
+  );
+  check(
+    'weir-gate: with the gate in the bag the offer is gone',
+    !/Sluice Gate 500g/.test(await uiText(farm)),
+  );
+  await farm.press('Escape');
+  await farm.panelClosed();
+
+  // The ask morning at the broken weir: fund it in one tap
+  await farm.load('weir-broken');
+  check(
+    'weir-broken: the HUD line is the ask; the gorge is a dry stony bed',
+    (await hudLine(farm)) === 'Finn asked: the Weir' &&
+      (await sceneTile(farm, 'Wendhead', 20, 12)).ground === 20,
+    await hudLine(farm),
+  );
+  const sprites = [await siteKey(farm, 'weir')];
+  await farm.press('KeyE');
+  await farm.panel('projects');
+  await farm.during('panelClosed', [], () => tapSheetButton(farm, /^Fund it$/));
+  s = await farm.state();
+  check(
+    'weir-broken: Fund it takes 2,500g, 60 stone and the gate in one tap',
+    s.stats['place.weir'] === 2 &&
+      s.money === 100 &&
+      !s.inventory.slots.some((x) => x?.item === 'sluice_gate' || x?.item === 'stone'),
+    JSON.stringify({ stage: s.stats['place.weir'], money: s.money }),
+  );
+  for (let day = 1; day <= 4; day++) {
+    await farm.frames(10);
+    await farm.press('KeyE');
+    await farm.until((_s, w) => w.runtime.busy, null, "the work day's beat to start", 3000);
+    if (process.env.SHOTS && day === 4) await farm.strip('weir-beam', 8, 14, process.env.SHOTS);
+    await farm.until((_s, w) => !w.runtime.busy, null, "the work day's beat to end", 8000);
+    await farm.frames(3);
+    s = await farm.state();
+    sprites.push(await siteKey(farm, 'weir'));
+    check(
+      `weir work day ${day}: one tap plays the day, and the site changes after it`,
+      s.stats['site.weir.work'] === day && sprites[day] !== sprites[day - 1],
+      JSON.stringify({ work: s.stats['site.weir.work'], sprites }),
+    );
+    await farm.during('sceneReady', [], () =>
+      farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
+    );
+  }
+  s = await farm.state();
+  check(
+    'the morning after the fourth work day: the weir is open, the gorge runs',
+    s.stats['place.weir'] === 3 &&
+      (await hudLine(farm)) === 'The Weir is open!' &&
+      (await sceneTile(farm, 'Wendhead', 20, 12)).ground === 5,
+    JSON.stringify({ stage: s.stats['place.weir'], hud: await hudLine(farm) }),
+  );
+  // the river's first morning: into town, the dry town dissolves around the farmer, once
+  const dryBefore = (await dryResident(farm)).length;
+  const moment = await farm.event('valleyMoment', () =>
+    farm.eval(() => window.__farm.dev.goto('town', 11, 2, 'down')),
+  );
+  const live = await farm.eval(() => window.__farm.game.scene.getScene('Town').reveal?.live ?? 0);
+  check(
+    'river-first-morning: the dry town is drawn over the river town and cut away, under THE RIVER IS BACK',
+    moment?.text?.startsWith('THE RIVER IS BACK') && live > 0 && dryBefore === 1,
+    JSON.stringify({ moment, live, dryBefore }),
+  );
+  await farm.until((_s, w) => !w.runtime.valleyReveal, null, 'the river reveal to end', 6000);
+  await farm.eval(() => window.__farm.dev.goto('town', 15, 30, 'right'));
+  await farm.idle();
+  check(
+    'weir-opened-town: a full river (water where the mud was), Finn at the dock on the opening morning',
+    (await sceneTile(farm, 'Town', 18, 25)).ground === 5 &&
+      (await farm.eval(() => window.__farm.game.scene.getScene('Town').npcs.at(16, 32))) ===
+        'finn' &&
+      (await farm.state()).stats['valley.riverSeen'] === 1,
+    JSON.stringify(await sceneTile(farm, 'Town', 18, 25)),
+  );
+  await farm.eval(() => window.__farm.dev.goto('house'));
+  await farm.eval(() => window.__farm.dev.goto('town', 11, 2, 'down'));
+  await farm.idle();
+  check(
+    'river-first-morning: the moment plays once',
+    (await farm.eval(() => window.__farm.game.scene.getScene('Town').reveal ?? null)) === null,
+  );
+
+  // The opening scene: Finn's three lines in his sheet
+  await farm.load('weir-opened-town');
+  await farm.press('KeyE');
+  await farm.panel('npc');
+  const sc = await farm.eval(() => {
+    const ui = window.__farm.game.scene.getScene('UI');
+    return { mode: ui.npc.mode, id: ui.npc.id };
+  });
+  check(
+    'weir-opened-town: talking to Finn at the dock opens his opening scene',
+    sc.mode === 'event' && sc.id === 'finn',
+    JSON.stringify(sc),
+  );
+  await farm.press('Escape');
+  await farm.panelClosed();
+  if (process.env.SHOTS) await farm.shot('weir-opened-town', process.env.SHOTS);
+
+  // Draws: every town stage costs what today's town does (same layers, the palette a texture choice). Dry first:
+  // the dry tileset is made at the load, never by a world scene.
+  await farm.load('weir-gate');
+  await farm.eval(() => window.__farm.dev.goto('town', 15, 32, 'right'));
+  const dryDraws = await settledDraws(farm);
+  check(
+    'town@dry: the dry stage on the dry tileset (mud where the river was)',
+    (await sceneTile(farm, 'Town', 18, 25)).ground === 20 &&
+      String(await groundKey(farm)).endsWith('_dry'),
+    String(await groundKey(farm)),
+  );
+  await farm.mutate((st) => {
+    st.stats['place.weir'] = 3;
+    st.stats['valley.riverSeen'] = 1;
+  });
+  await farm.eval(() => window.__farm.dev.goto('house'));
+  await farm.eval(() => window.__farm.dev.goto('town', 15, 32, 'right'));
+  const riverDraws = await settledDraws(farm);
+  check(
+    "town@dry: draws equal the river town's",
+    dryDraws > 0 && dryDraws <= riverDraws,
+    `dry ${dryDraws}, river ${riverDraws}`,
+  );
+
+  // The Derby follows the water
+  for (const [name, where] of [
+    ['derby-lake', 'woods lake'],
+    ['derby-river', 'town river'],
+  ]) {
+    await farm.load(name);
+    await farm.during('panelOpen', [], () =>
+      farm.eval(() => window.__farm.gameEvents.emit('openPanel', { type: 'festival' })),
+    );
+    const text = await uiText(farm);
+    check(
+      `${name}: the Derby's catfish are stocked in the ${where}`,
+      text.includes(`Catfish stocked in the ${where} today!`),
+      text.slice(0, 240),
+    );
+    await farm.press('Escape');
+    await farm.panelClosed();
+  }
+
+  // A save from before the Weir keeps its river, with no moment
+  await farm.load('old-save-weir-default');
+  s = await farm.state();
+  check(
+    'old-save-weir-default: the town shows its river, quietly (no moment, nothing counted)',
+    s.stats['place.weir'] === 3 &&
+      s.stats['valley.riverSeen'] === 1 &&
+      s.stats['projectsDone'] === 1 &&
+      (await sceneTile(farm, 'Town', 18, 25)).ground === 5 &&
+      (await farm.eval(() => window.__farm.game.scene.getScene('Town').reveal ?? null)) === null,
+    JSON.stringify({ weir: s.stats['place.weir'] }),
+  );
+
+  // The farm-to-town door with the farm green and the town dry: the dry tileset already resident, under the bar
+  await farm.load('farm-creek-running');
+  await farm.idle();
+  const resident = (await dryResident(farm)).length;
+  const dryMs = await gateToTown(farm);
+  const afterDry = (await dryResident(farm)).length;
+  const dryFile = String(await groundKey(farm));
+  await farm.mutate((st) => (st.stats['place.weir'] = 3));
+  await farm.eval(() => window.__farm.dev.goto('farm', 14, 41, 'down'));
+  await farm.idle();
+  const riverMs = await gateToTown(farm);
+  check(
+    'door farm -> dry town: the dry tileset resident before the door, the door as quick as to the river town',
+    resident === 1 &&
+      afterDry === 1 &&
+      dryFile.endsWith('_dry') &&
+      dryMs > 0 &&
+      dryMs < 450 &&
+      dryMs <= riverMs + 60,
+    `dry ${dryMs.toFixed(0)} ms (${dryFile}), river ${riverMs.toFixed(0)} ms`,
+  );
+  console.log(`  door farm -> town: dry ${dryMs.toFixed(0)} ms, river ${riverMs.toFixed(0)} ms`);
+  check('weir: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
 }
 
 // The Old Spring (M3): ask, fund in one tap, three work days (one tap each), the opening morning, the creek runs.
@@ -811,6 +1063,13 @@ async function channels() {
     }),
   );
   await farm.load('channels-flow-cap');
+  // the morning's run holds the water back until it passes (fx/ChannelFx.ts)
+  await farm.until(
+    (_s, w) => !w.game.scene.getScene('Farm').channels.running,
+    null,
+    'the morning run to finish',
+    8000,
+  );
   const look = await farm.eval(() => {
     const f = window.__farm.game.scene.getScene('Farm').farm;
     const tint = (k) => f.cells.get(k)?.channel ?? null;
@@ -883,6 +1142,128 @@ async function channels() {
 
 // Art round 5: the farmer's action animations (harvest, plant, eat, place, pet, reel) play on their events, never
 // block input, and stay off in Calm mode. A recorder notes every action frame the pose shows.
+// The morning run and the house doors by real taps (feel critic C1-1): from the house, a tap on the front door goes
+// out; the morning's run waits until its entry is on screen (never spent on a sliver at the view's edge), then
+// starts with its first tiles in view. Back at the farmhouse, a tap on the door drawn above its warp tile goes in.
+async function morning() {
+  const farm = await openScenario(browser, url, 'channels-morning', { profile: PROFILE });
+  await farm.frames(5);
+  // a low thumb: the middle of the void tile just under the front door (5,8)
+  await farm.during('sceneReady', ['Farm'], () => farm.tapTile(5, 9));
+  check(
+    'house: a tap just under the front door goes out',
+    (await farm.state()).player.map === 'farm',
+  );
+  const fx = () =>
+    farm.eval(() => {
+      const c = window.__farm.game.scene.getScene('Farm').channels;
+      return { started: c.started, running: c.running };
+    });
+  await farm.frames(40);
+  const early = await fx();
+  // walk east along the field until the channel's head is on screen
+  await farm.tapTile(19, 8);
+  const started = await farm.until(
+    (_s, w) => w.game.scene.getScene('Farm').channels.started,
+    null,
+    'the morning run to start',
+    15000,
+  );
+  const inside = ([tx, ty]) =>
+    tx * 16 >= started.view.x &&
+    (tx + 1) * 16 <= started.view.x + started.view.width &&
+    ty * 16 >= started.view.y &&
+    (ty + 1) * 16 <= started.view.y + started.view.height;
+  // the critic's rule: its entry and next two tiles on screen, or half the run or more
+  const inView = started.head.every(inside) || started.seen * 2 >= started.of;
+  check(
+    'channels-morning: the run waits off screen, then starts with its head (or half of it) in view',
+    early.started === null && early.running && inView,
+    JSON.stringify({ early, started }),
+  );
+  await farm.until(
+    (_s, w) => !w.game.scene.getScene('Farm').channels.running,
+    null,
+    'run end',
+    8000,
+  );
+  const s = await farm.state();
+  check(
+    'channels-morning: after the run the soil beside the channel shows watered',
+    [19, 20, 21, 22, 23, 24].every((x) => s.farm.tiles[`${x},11`]?.watered),
+  );
+  await farm.idle();
+  await farm.during('sceneReady', ['House'], () => farm.tapTile(14, 6));
+  check(
+    'farm: a tap on the farmhouse door drawn above its warp tile goes in',
+    (await farm.state()).player.map === 'house',
+  );
+  check('morning: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
+// The towing spike (M7 "spike first", feel lane): by real taps only, a drifting log is hooked, towed along the
+// bank, tugged off the snag and landed at the slip, in under 20 s and a handful of taps, never leaving the water;
+// a long log takes two tugs (here by Action, with the left hand).
+async function towing() {
+  for (const [name, hand, tugBy] of [
+    ['tow-spike', 'right', 'tap'],
+    ['tow-spike-long', 'left', 'action'],
+  ]) {
+    const farm = await openScenario(browser, url, name, { profile: PROFILE, hand });
+    await farm.frames(5);
+    // every frame until it lands: the log's centre stays on a water tile while it floats
+    const watch = farm.eval(async () => {
+      const d = window.__farm.dev;
+      const lab = window.__farm.game.scene.getScene('Lab');
+      const off = [];
+      for (let i = 0; i < 60 * 60; i++) {
+        await d.wait.frames(1);
+        const t = d.tow();
+        if (!t) continue;
+        if (t.landed) break;
+        if (['drift', 'hooking', 'towing', 'hauling'].includes(t.phase)) {
+          const tx = Math.floor(t.log.x / 16);
+          const ty = Math.floor(t.log.y / 16);
+          if (!lab.tow.world.water(tx, ty)) off.push([t.phase, tx, ty]);
+        }
+      }
+      return off.slice(0, 5);
+    });
+    const tow = () => farm.eval(() => window.__farm.dev.tow());
+    const tapLog = async () => {
+      const t = await tow();
+      await farm.tapTile(Math.floor(t.log.x / 16), Math.floor(t.log.y / 16));
+    };
+    await tapLog();
+    await farm.until((_s, w) => w.dev.tow()?.log.hooked, null, `${name}: hooked`, 15000);
+    await farm.tapTile(13, 28); // the slip
+    await farm.until((_s, w) => w.dev.tow()?.log.snagged, null, `${name}: the snag`, 15000);
+    const snagged = await tow();
+    for (let i = 0; i < (name.includes('long') ? 2 : 1); i++) {
+      if (tugBy === 'action') await farm.tapButton('ACTION');
+      else await tapLog();
+      await farm.frames(6);
+    }
+    await farm.until((_s, w) => w.dev.tow()?.landed > 0, null, `${name}: landed`, 20000);
+    const t = await tow();
+    const off = await watch;
+    check(
+      `${name} (${hand}): hooked, towed, tugged free and landed by taps in under 20 s`,
+      t.ms !== null && t.ms < 20000 && t.taps + t.actions <= 6,
+      JSON.stringify(t),
+    );
+    check(
+      `${name}: the snag stops the log, the tugs free it (${name.includes('long') ? 2 : 1})`,
+      snagged.log.snagged && t.tugs === (name.includes('long') ? 2 : 1),
+      JSON.stringify({ snagged: snagged.log, tugs: t.tugs }),
+    );
+    check(`${name}: the log never leaves the water`, off.length === 0, JSON.stringify(off));
+    check(`${name}: no console errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
 async function actions() {
   const farm = await openScenario(browser, url, 'ripe-plot', { profile: PROFILE });
   await farm.eval(() => {
@@ -1247,7 +1628,21 @@ async function lang() {
 try {
   const blocks = SMOKE
     ? [smoke]
-    : [smoke, everyScenario, mechanics, stages, ambient, actions, valley, spring, channels, lang];
+    : [
+        smoke,
+        everyScenario,
+        mechanics,
+        stages,
+        ambient,
+        actions,
+        valley,
+        spring,
+        channels,
+        weir,
+        morning,
+        towing,
+        lang,
+      ];
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
     blocks.map((b) =>

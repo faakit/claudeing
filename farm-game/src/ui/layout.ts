@@ -1,9 +1,11 @@
 /**
- * Dock geometry, pure (no Phaser): where the thumb controls sit and which one a touch belongs to.
- * Right-handed is the reference; left-handed mirrors x. Tests prove reach (see `reach.ts`) and that
- * hit areas never steal from each other.
+ * Thumb-control geometry, pure (no Phaser): where the floating controls sit and which one a touch belongs to.
+ * "Dock" in the names is historical: there is no band behind the controls any more, each floats on its own solid
+ * plate over the world (DECISIONS.md "Floating controls"). Right-handed is the reference; left-handed mirrors x.
+ * Tests prove reach (see `reach.ts`), that hit areas never steal from each other, and that no control's touch
+ * circle reaches the hotbar's touch row.
  */
-import { DOCK_Y, GAME_WIDTH } from '../config';
+import { CONTROLS_Y, GAME_HEIGHT, GAME_WIDTH } from '../config';
 
 export type DockId = 'action' | 'interact' | 'menu';
 
@@ -24,7 +26,7 @@ export interface DockLayout {
   action: DockSpot;
   interact: DockSpot;
   menu: DockSpot;
-  /** A natural place to start a joystick drag in the dock (open space, no button). */
+  /** A natural place to start a joystick drag (open world between the controls, no button). */
   stickHome: { x: number; y: number };
   /** Where the first-run "drag to walk" hint sits (in the world view, inside the joystick zone). */
   dragHint: { x: number; y: number };
@@ -34,17 +36,47 @@ export interface DockLayout {
 export const HIT_MARGIN = 8;
 
 /**
- * Right-handed reference positions. Action rests where the thumb lands, 12 px in from the right edge so
- * its disc stays clear of Android's edge-swipe "back" strip. Interact is a short slide down-left, far enough
- * that Action owns its whole touch circle without covering any of Interact's disc. Menu sits in the open dock beyond Interact: inside the comfortable
- * arc (owner decision 4), away from the Action thumb's resting arc, and it acts only on a clean release.
+ * The solid soil lip under every floating plate (round buttons and hotbar slots), in px below the face: the face
+ * sinks onto it when pressed. Inside the touch circle, so it never changes what a touch hits.
+ */
+export const PLATE_LIP = 2;
+
+/**
+ * The floating hotbar: a slim row of solid slot frames hugging the bottom edge, no band behind it. The pitch is the
+ * touch floor (24 game px is 38.8 CSS px on the SE and 45.8 on the iPhone 13 at their fitted scales), so the row
+ * cannot be narrower; the faces are 2 px narrower than the pitch so the world shows between them.
+ */
+export const HOTBAR = {
+  /** Drawn face, square. */
+  slot: 22,
+  /** Slot to slot (and the width of each slot's touch zone, so the zones meet and no tap falls between them). */
+  pitch: 24,
+  /** Px left free under the lip, above the canvas's bottom edge. */
+  bottom: 2,
+} as const;
+/** Top of the slot faces (374): the face, its lip, then `HOTBAR.bottom` px to the edge. */
+export const HOTBAR_Y = GAME_HEIGHT - HOTBAR.bottom - PLATE_LIP - HOTBAR.slot;
+/** Top of the slots' touch zones: they run from here to the canvas's bottom edge (the selected face rises 2 px). */
+export const HOTBAR_HIT_Y = HOTBAR_Y - 1;
+/** Left edge of slot `i`'s face, for a row of `n` slots centred on the canvas. */
+export const hotbarSlotX = (i: number, n: number): number =>
+  Math.round((GAME_WIDTH - (n * HOTBAR.pitch - (HOTBAR.pitch - HOTBAR.slot))) / 2) +
+  i * HOTBAR.pitch;
+
+/**
+ * Right-handed reference positions, where the thumbs already were with the old dock (floating controls kept them
+ * to the pixel). Action rests where the thumb lands, 12 px in from the right edge so its disc stays clear of
+ * Android's edge-swipe "back" strip. Interact is a short slide down-left, far enough that Action owns its whole
+ * touch circle without covering any of Interact's disc. Menu sits beyond Interact: inside the comfortable arc (owner
+ * decision 4), away from the Action thumb's resting arc, and it acts only on a clean release. Every touch circle
+ * ends above the hotbar's touch row (unit test).
  */
 const REF = {
-  action: { x: 160, y: DOCK_Y + 36, r: 28 },
-  interact: { x: 98, y: DOCK_Y + 54, r: 20 },
-  menu: { x: 58, y: DOCK_Y + 18, r: 16 },
-  stickHome: { x: 56, y: DOCK_Y + 58 },
-  dragHint: { x: 60, y: DOCK_Y - 40 },
+  action: { x: 160, y: CONTROLS_Y + 36, r: 28 },
+  interact: { x: 98, y: CONTROLS_Y + 54, r: 20 },
+  menu: { x: 58, y: CONTROLS_Y + 18, r: 16 },
+  stickHome: { x: 56, y: CONTROLS_Y + 58 },
+  dragHint: { x: 60, y: CONTROLS_Y - 40 },
 } as const;
 
 export function dockLayout(leftHanded: boolean): DockLayout {
@@ -67,7 +99,7 @@ export function dockLayout(leftHanded: boolean): DockLayout {
 }
 
 /**
- * Which dock button owns a touch at (x, y). A point on a button's drawn disc always belongs to that
+ * Which round control owns a touch at (x, y). A point on a button's drawn disc always belongs to that
  * button; in the margins where touch circles overlap, the higher priority wins (Action), then the button
  * whose edge is relatively nearer (distance divided by drawn radius).
  */

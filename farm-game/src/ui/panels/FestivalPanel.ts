@@ -130,7 +130,7 @@ export class FestivalPanel extends Modal {
     this.label(
       8,
       64 + slots * 12 + 20,
-      t('festival.handInBeforeBed', { hint: derbyHint(today.def) }),
+      t('festival.handInBeforeBed', { hint: derbyHint(s, today.def) }),
       C.creamDim,
       1,
       'left',

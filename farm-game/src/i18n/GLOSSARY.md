@@ -2,7 +2,7 @@
 
 The words Tiny Acre uses in Portuguese, so every screen, line and letter says the same thing the same way. Add a
 term here before using a new one in `pt-BR.json` or `data/pt-BR/*.json`. Choices marked **owner** are open: the
-owner may prefer another word.
+owner may prefer another word (the coordinator's provisional call keeps all four as written).
 
 ## Tone
 
@@ -49,6 +49,9 @@ text uses the bare name.
 | Ilse's gate               | porteira da Ilse          | a farm gate is a "porteira"                                  |
 | Old Whiskers              | Velho Bigodes             | the legendary catfish                                        |
 | Speed-Gro                 | Cresce-Já                 |                                                              |
+| Sluice Gate               | Comporta                  | the weir's gate (feminine: "uma comporta")                  |
+| THE RIVER IS BACK         | O RIO VOLTOU              | the weir's banner                                            |
+| gorge                     | desfiladeiro              |                                                              |
 | FIRST GREEN / THE CREEK RUNS | PRIMEIRO VERDE / O CÓRREGO VOLTOU | the two valley banners                             |
 
 ## Game words

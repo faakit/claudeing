@@ -66,7 +66,14 @@ export type TapIntent =
 export function tapIntent(w: TapWorld, x: number, y: number): TapIntent {
   const ts = w.tileSize;
   const tapped = { tx: Math.floor(x / ts), ty: Math.floor(y / ts) };
-  if (!w.inMap(tapped)) return { kind: 'none', target: tapped };
+  if (!w.inMap(tapped)) {
+    // the void just under a door on a map's bottom edge (the house's front door), about half a tile: a low thumb
+    // meant the door (feel critic nit)
+    const up = { tx: tapped.tx, ty: tapped.ty - 1 };
+    if (y - tapped.ty * ts < ts * 0.6 && w.inMap(up) && w.door?.(up))
+      return { kind: 'walk', target: up, door: true };
+    return { kind: 'none', target: tapped };
+  }
   const type = w.interactable(tapped);
   if (type) return { kind: 'interact', target: tapped, type, snapped: false };
   const sprite = w.spriteTarget?.(x, y);

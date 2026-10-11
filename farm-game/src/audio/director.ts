@@ -17,6 +17,10 @@ export interface Scene {
   year?: number;
   /** The map is on the Dry Year's straw palette (systems/valley.ts mapLook): a dry wind bed, hardly a bird. */
   dry?: boolean;
+  /** The map stage plays the season piece thinned (src/audio/stages.json; outdoors only). */
+  thin?: boolean;
+  /** Water beds running on this map stage, 0..1 each (positional levels from src/audio/stages.ts). */
+  water?: { creek: number; river: number };
 }
 
 export interface MusicChoice {
@@ -26,6 +30,8 @@ export interface MusicChoice {
   /** Rain or storm outside: the season piece's rainy-day arrangement. */
   rain: boolean;
   year: number;
+  /** The Dry Year's thinned arrangement of the season piece (a dry map stage, outdoors). */
+  thin: boolean;
 }
 
 /** Night amount from which the house plays the lullaby instead of the season piece. */
@@ -34,7 +40,11 @@ export const LULLABY_NIGHT = 0.6;
 const SEASONS = new Set(['spring', 'summer', 'fall', 'winter']);
 
 export function chooseMusic(s: Scene): MusicChoice {
-  const mood = { rain: s.weather === 'rain' || s.weather === 'storm', year: s.year ?? 1 };
+  const mood = {
+    rain: s.weather === 'rain' || s.weather === 'storm',
+    year: s.year ?? 1,
+    thin: false,
+  };
   if (!s.inGame) return { slot: 'title', indoor: false, ...mood, rain: false };
   if (s.panel === 'shop') return { slot: 'shop', indoor: true, ...mood };
   if (s.map === 'mine') return { slot: 'mine', indoor: true, ...mood };
@@ -43,7 +53,7 @@ export function chooseMusic(s: Scene): MusicChoice {
   if (s.map === 'house' && s.night >= LULLABY_NIGHT)
     return { slot: 'lullaby', indoor: true, ...mood };
   const season = (SEASONS.has(s.season) ? s.season : 'spring') as MusicSlot;
-  return { slot: season, indoor: !s.outdoor, ...mood };
+  return { slot: season, indoor: !s.outdoor, ...mood, thin: !!s.thin && s.outdoor };
 }
 
 /** Target intensities (0..1) for the ambience beds and one-shot pools. Rain is driven separately. */
@@ -59,10 +69,20 @@ export interface AmbienceTargets {
   forge: number;
   anvil: number;
   shop: number;
+  /** Running water (the Dry Year's restored places): the creek bed with its burbles, the river bed. */
+  creek: number;
+  burble: number;
+  river: number;
 }
 
 /** On a dry map, birdsong is a lone bird now and then (a share of the usual level). */
 export const DRY_BIRDS = 0.15;
+
+/** The dry wind bed on a dry map: about 10 dB under the thinned piece, so a phone still carries it. */
+export const DRY_WIND = 0.6;
+
+/** Water beds under a storm: the rain and wind cover most of them anyway. */
+export const STORM_WATER = 0.4;
 
 export function chooseAmbience(s: Scene): AmbienceTargets {
   const none: AmbienceTargets = {
@@ -76,6 +96,9 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     forge: 0,
     anvil: 0,
     shop: 0,
+    creek: 0,
+    burble: 0,
+    river: 0,
   };
   if (!s.inGame) return none;
   // The General Store with the smithy next door: creaks and pages, the forge, now and then the anvil.
@@ -100,6 +123,9 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
   const storm = s.weather === 'storm';
   const day = 1 - s.night;
   const winter = s.season === 'winter';
+  // Water runs day and night in every season; a storm's rain and wind cover most of it.
+  const wet2 = storm ? STORM_WATER : 1;
+  const creek = (s.water?.creek ?? 0) * wet2;
   return {
     // Birds sing by day (fewer in fall, none in winter or rain), fading out at dusk.
     birds:
@@ -113,7 +139,7 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
         : Math.min(1, Math.max(0, s.night * 1.4 - 0.3)) * (s.season === 'spring' ? 0.6 : 1),
     // Winter always has a little wind, more at night; storms bring it in any season. A dry map has a thin dry
     // wind all day instead of birdsong (birds scaled down below); the birds come back with the green.
-    wind: storm ? 0.8 : winter ? 0.5 + 0.4 * s.night : s.dry ? 0.35 : 0,
+    wind: storm ? 0.8 : winter ? 0.5 + 0.4 * s.night : s.dry ? DRY_WIND : 0,
     cave: 0,
     drips: 0,
     thunder: storm ? 1 : 0,
@@ -121,6 +147,10 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     forge: 0,
     anvil: 0,
     shop: 0,
+    creek,
+    // the creek's burbles: a pool of single gurgles over its bed (the bed alone would repeat audibly)
+    burble: creek,
+    river: (s.water?.river ?? 0) * wet2,
   };
 }
 

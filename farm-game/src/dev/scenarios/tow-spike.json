@@ -1,0 +1,20 @@
+{
+  "title": "Towing spike: hook a drifting log, tow it along the bank, tug it off the snag, land it at the slip",
+  "about": "The M7 spike on the lab's south shore (debug only). A placeholder log drifts west down the water from the east edge of the view (x 19, y 30). Tap the log: the farmer walks to the bank in reach and hooks it (3-tile rope). Tap the slip (the planks where the road meets the shore, 13,28) or the water near it: he walks along the bank and the log follows. It catches on the rock at (17,29): it stops, tilts and bobs, the rope goes taut and he stops; Action or a tap on the log tugs it free and the walk resumes. At the slip it lands by itself (+1 Timber). Another log comes after. `__farm.dev.tow()` reads the taps and the time from the first input to the landing.",
+  "version": 18,
+  "tags": ["lab", "towing", "feel"],
+  "at": {
+    "map": "lab",
+    "tx": 13,
+    "ty": 27,
+    "facing": "down"
+  },
+  "time": {
+    "day": 5,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "stats": {
+    "lab.towSpike": 1
+  }
+}

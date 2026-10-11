@@ -254,15 +254,22 @@ describe('festival minigames', () => {
     s.weather = 'sunny';
     // Three plain bluegill from the pond take third place.
     expect(placeFor(s, def, 3 * 35)).toBe(3);
-    // Catfish bite in town on derby day whatever the weather, and three silver ones win.
-    expect(fishFor(s, 'town').map((f) => f.item)).toContain('catfish');
-    expect(fishFor(s, 'farm').map((f) => f.item)).not.toContain('catfish');
+    // Catfish are stocked whatever the weather, and three silver ones win: at the woods lake while the town river
+    // is dry (Finn's lake derby, M6), in the town river once the weir is restored.
+    const caught = (map: string) => fishFor(s, map).map((f) => f.item);
+    expect(caught('woods')).toContain('catfish');
+    expect(caught('town')).not.toContain('catfish');
+    expect(derbyHint(s, def)).toBe('Catfish stocked in the woods lake today!');
+    s.stats['place.weir'] = 3;
+    expect(caught('town')).toContain('catfish');
+    expect(caught('farm')).not.toContain('catfish');
+    expect(derbyHint(s, def)).toBe('Catfish stocked in the town river today!');
     expect(placeFor(s, def, 3 * 100)).toBe(1);
     const other = newState();
     other.time.season = 'summer';
     other.weather = 'sunny';
+    other.stats['place.weir'] = 3;
     expect(fishFor(other, 'town').map((f) => f.item)).not.toContain('catfish');
-    expect(derbyHint(def)).toContain('Catfish');
   });
 
   it('catching a fish on derby day counts it', async () => {

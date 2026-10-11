@@ -41,7 +41,14 @@ import { POINTS_PER_HEART } from '../systems/friendship';
 import { addItem, bagSize } from '../systems/inventory';
 import { letterDue } from '../systems/mail';
 import { migrate } from '../systems/save';
-import { inDelta, valleyKeys, valleyStage, valleyStatKey } from '../systems/valley';
+import {
+  inDelta,
+  valleyKeys,
+  valleyStage,
+  valleyStatKey,
+  WEIR_ON,
+  weirDefaults,
+} from '../systems/valley';
 import { applyLabPreset, LAB_MAP, readyPlacedData, registerLabMapDef } from './labDef';
 
 export const DEFAULT_SEED = 12345;
@@ -260,6 +267,8 @@ function scenarioStats(d: ScenarioDef): Record<string, number> {
     isObj(d.state) && isObj(d.state['stats']) ? (d.state['stats'] as Record<string, number>) : {};
   const out: Record<string, number> = { ...raw, ...(d.stats ?? {}) };
   for (const [k, v] of Object.entries(d.valley ?? {})) out[valleyStatKey(k)] = v;
+  // a save from before the Weir (its marker written 0) keeps its river, as `sanitize` decides on load
+  if (out[WEIR_ON] === 0) weirDefaults(out);
   return out;
 }
 

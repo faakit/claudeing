@@ -13,6 +13,24 @@
     "reward": "Three work days, then the creek runs.",
     "place": "spring"
   },
+  "place_weir": {
+    "name": "Weir",
+    "blurb": "Clear the weir's gap and set a gate in it, so the Wend comes home.",
+    "gold": 2500,
+    "items": [
+      {
+        "item": "stone",
+        "qty": 60
+      },
+      {
+        "item": "sluice_gate",
+        "qty": 1
+      }
+    ],
+    "perks": {},
+    "reward": "Four work days, then the river returns.",
+    "place": "weir"
+  },
   "canopy": {
     "name": "Board Canopy",
     "blurb": "A roof over the town board, so more folks post their requests.",
@@ -85,7 +103,8 @@
       "ty": 21,
       "sprite": "obj_landmark_fishladder",
       "color": "#6fa3e0"
-    }
+    },
+    "site": "weir"
   },
   "library": {
     "name": "Town Library",

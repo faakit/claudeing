@@ -1,0 +1,23 @@
+{
+  "_doc": "Audio per map stage (systems/valley.ts valleyStage variant; 'default' = a map with one look). arrangement 'thin' plays the season piece thinned (music_src.py piece 'thin') over the dry wind with a bird now and then; a stage on the dry palette is thin unless it says 'full'. water: beds that run on this stage; 'near' rects [x, y, w, h] (tiles) make it positional (louder near the water, never under 'floor' of its level), none = the same everywhere; 'gain' scales the bed; 'wait' names a stat that must be set first (the reveal that shows the water sets it).",
+  "farm": {
+    "dry": { "arrangement": "thin" },
+    "restored": {
+      "water": [{ "bed": "creek", "near": [[26, 3, 2, 29]], "wait": "valley.creekSeen" }]
+    }
+  },
+  "wendhead": {
+    "dry": { "arrangement": "thin" },
+    "gorge": { "arrangement": "thin", "water": [{ "bed": "river", "gain": 0.6 }] },
+    "spring": { "water": [{ "bed": "creek" }] },
+    "restored": { "water": [{ "bed": "creek" }, { "bed": "river", "gain": 0.6 }] }
+  },
+  "town": {
+    "dry": {
+      "arrangement": "thin",
+      "water": [{ "bed": "creek", "gain": 0.35, "near": [[21, 22, 2, 10]] }]
+    },
+    "river": { "water": [{ "bed": "river", "near": [[17, 22, 6, 10]] }] },
+    "default": { "water": [{ "bed": "river", "near": [[17, 22, 6, 10]] }] }
+  }
+}

@@ -1,5 +1,5 @@
 // Controls e2e: real CDP touches on phone profiles (iPhone 13 and SE, right and left hand) against the production
-// build. Checks the one-thumb rules that unit tests cannot see end to end: dock hit ownership, release-acting
+// build. Checks the one-thumb rules that unit tests cannot see end to end: control hit ownership, release-acting
 // Menu, tap vs stick, hold under a rolling pad, swipes, the target marker, silent taps, haptics and latency.
 // Run `npm run build` first. Headless emulation only: it proves the rules, not how a real hand feels.
 import {
@@ -376,15 +376,63 @@ async function runCombo(p, hand) {
         (await wet()).join(),
       );
 
-      // Grazes on the dock and hotbar never reach the world.
+      // Owner bug 2 ("it kinda flicks"): a second tap further ahead mid-step keeps the walk going: the farmer never
+      // steps back toward the tile he just left and never faces away (unit model: tests/tapmove.test.ts).
+      await place(page, 10, 17, 'right');
+      await page.evaluate(() => window.__farm.dev.wait.idle(3));
+      await page.evaluate(() => {
+        const f = window.__farm;
+        const log = [];
+        window.__retargetLog = log;
+        const tick = () => {
+          const p = f.getState().player;
+          log.push([p.x, p.facing]);
+          if (log.length < 150) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      const r1 = await tileScreen(page, 18, 17);
+      await t.tap(r1.x, r1.y, 60);
+      // 6 px into the step from (12,17) to (13,17): the tile under the feet is still the one being left
+      await page.waitForFunction(() => window.__farm.getState().player.x >= 12 * 16 + 8 + 6, null, {
+        timeout: 5000,
+      });
+      const r2 = await tileScreen(page, 21, 17);
+      await t.tap(r2.x, r2.y, 60);
+      await page
+        .waitForFunction(
+          () => {
+            const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+            return w.route === null && window.__farm.getState().player.x >= 21 * 16 + 8 - 0.01;
+          },
+          null,
+          { timeout: 5000 },
+        )
+        .catch(() => undefined);
+      const rlog = await page.evaluate(() => window.__retargetLog);
+      let stepsBack = 0;
+      let facedAway = 0;
+      for (let i = 1; i < rlog.length; i++) {
+        if (rlog[i][0] < rlog[i - 1][0] - 0.01) stepsBack++;
+        if (rlog[i][0] > rlog[0][0] && rlog[i][1] !== 'right') facedAway++;
+      }
+      const rEnd = await player(page);
+      check(
+        `${tag}: a second tap ahead mid-step keeps walking: no step back, no turn (owner bug 2)`,
+        stepsBack === 0 && facedAway === 0 && rEnd.tx === 21 && rEnd.ty === 17,
+        `steps back ${stepsBack}, faced away ${facedAway}, at ${rEnd.tx},${rEnd.ty}`,
+      );
+
+      // Floating controls (no dock band): taps on the hotbar row (a face, the gap between two faces, a lip, the 2 px
+      // under the lips) never reach the world...
       await place(page, 10, 17, 'down');
       await sleep(300);
       const before = await player(page);
       for (const [gx, gy] of [
-        [L.stickHome.x, 300],
-        [100, 366],
-        [L.action.x - 40, 360],
-        [30, 395],
+        [16, 377],
+        [100, 397],
+        [190, 399],
+        [28, 386],
       ]) {
         await t.tap(gx, gy, 70);
         await sleep(150);
@@ -392,9 +440,39 @@ async function runCombo(p, hand) {
       await sleep(500);
       const after = await player(page);
       check(
-        `${tag}: taps on the dock and hotbar never walk the farmer`,
+        `${tag}: taps on the floating hotbar never walk the farmer`,
         after.tx === before.tx && after.ty === before.ty && (await soil(page)) === 0,
         `${before.tx},${before.ty} -> ${after.tx},${after.ty}`,
+      );
+      // ...and a tap on the world between the controls (the stick's home, where the dock's wood was) walks there.
+      await place(page, 10, 17, 'down');
+      await sleep(300);
+      const start = await player(page);
+      await t.tap(L.stickHome.x, L.stickHome.y, 70);
+      await page
+        .waitForFunction(
+          (p0) => {
+            const p = window.__farm.getState().player;
+            const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+            return (
+              w.route !== null || Math.floor(p.y / 16) !== p0.ty || Math.floor(p.x / 16) !== p0.tx
+            );
+          },
+          start,
+          { timeout: 2000, polling: 50 },
+        )
+        .catch(() => undefined);
+      const walked = await page.evaluate((p0) => {
+        const p = window.__farm.getState().player;
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        return w.route !== null || Math.floor(p.y / 16) !== p0.ty || Math.floor(p.x / 16) !== p0.tx;
+      }, start);
+      check(`${tag}: a tap on the world between the floating controls walks the farmer`, walked);
+      await page.evaluate(() =>
+        window.__farm.game.scene
+          .getScenes(true)
+          .find((s) => s.grid)
+          ?.stopWalk?.(),
       );
 
       // Tap accuracy, in the page's real camera: Gaussian thumbs (1.5 and 2.5 mm, 1.5 mm toward the thumb
@@ -817,6 +895,54 @@ async function runCombo(p, hand) {
           `${tag}: a row toward the thumb's edge grows to 10 tiles while the finger rests there, and dragging back cancels`,
           grown && painted.length >= 10 && dirOk && edgeActs === 0,
           `painted ${painted.length}, straight ${dirOk}, acts after cancel ${edgeActs}`,
+        );
+      }
+
+      // Edge hold hysteresis (feel critic D3): a thumb resting about 34 CSS px from its edge (just inside the 36 px
+      // band) and trembling (sigma 4 CSS px) for 2 s: the row only ever grows (the hold leaves at 52 px, not 36).
+      {
+        const toEdge = hand === 'left' ? -1 : 1;
+        await place(page, hand === 'left' ? 20 : 4, 20, hand === 'left' ? 'left' : 'right');
+        await page.evaluate(() => window.__farm.controls.clear());
+        await t.down(L.action.x, L.action.y);
+        await page.waitForFunction(
+          () => window.__farm.game.scene.getScene('UI').actionPress?.armed,
+          null,
+          { timeout: 3000, polling: 16 },
+        );
+        const k = t.geo.k; // CSS px per logical px
+        const restX = toEdge < 0 ? 34 / k : 200 - 34 / k;
+        for (let j = 1; j <= 6; j++) {
+          await t.move(L.action.x + ((restX - L.action.x) * j) / 6, L.action.y);
+          await sleep(30);
+        }
+        let seed = 7;
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+        const gauss = () => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
+        const lengths = [];
+        const t0 = Date.now();
+        while (Date.now() - t0 < 2000) {
+          await t.move(restX + (gauss() * 4) / k, L.action.y + (gauss() * 4) / k);
+          lengths.push(
+            await page.evaluate(
+              () =>
+                window.__farm.game.scene.getScenes(true).find((sc) => sc.grid)?.painting?.length ??
+                0,
+            ),
+          );
+          await sleep(16);
+        }
+        const drops = lengths.filter((n, i) => i > 0 && n < lengths[i - 1]).length;
+        for (let j = 5; j >= 0; j--) {
+          await t.move(L.action.x + ((restX - L.action.x) * j) / 6, L.action.y);
+          await sleep(30);
+        }
+        await t.up();
+        await paintDone();
+        check(
+          `${tag}: a trembling rest just inside the edge band never shortens the row (edge-hold hysteresis)`,
+          drops === 0 && Math.max(...lengths) >= 6,
+          `drops ${drops}, lengths ${[...new Set(lengths)].join(',')}`,
         );
       }
 

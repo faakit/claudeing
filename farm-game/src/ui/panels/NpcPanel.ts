@@ -22,12 +22,13 @@ import {
 import { keyOf, displayName, iconKey, refOf, sellValue, type ItemRef } from '../../systems/itemRef';
 import { countStack } from '../../systems/inventory';
 import { gameEvents, toast } from '../../systems/events';
+import { buyPart, partOffer } from '../../systems/valley';
 import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
 import { giftNote, giftSub } from './giftText';
-import { fmtNum, t } from '../../i18n';
+import { fmtGold, fmtNum, t } from '../../i18n';
 
 const ROWS = 5;
 
@@ -136,7 +137,11 @@ export class NpcPanel extends Modal {
   private buildTalk(hearts: number): void {
     const s = getState();
     const def = npcs[this.id]!;
-    this.label(8, 42, `"${this.reply || this.line}"`, C.cream, 1, 'left', 184);
+    // a part an asked place's fund needs (the sluice gate from Orin, until the forge is lit): said, and sold here
+    const offer = partOffer(s, this.id);
+    const offerName = offer ? (items[offer.item]?.name ?? offer.item) : '';
+    const say = this.reply || (offer ? t('npc.partOffer', { part: offerName.toLowerCase() }) : this.line);
+    this.label(8, 42, `"${say}"`, C.cream, 1, 'left', 184);
     if (this.gained > 0) this.label(8, 88, t('npc.friendship', { n: this.gained }), C.green);
     const next = nextPerk(s, this.id);
     this.label(
@@ -172,6 +177,26 @@ export class NpcPanel extends Modal {
         this.close();
         gameEvents.emit('openPanel', { type: 'shop' });
       });
+    if (offer) {
+      this.button(104, y, 88, 24, `${offerName} ${fmtGold(offer.price)}`, () => {
+        const res = buyPart(getState(), this.id);
+        if (!res.ok) {
+          audio.play('error');
+          return void toast(
+            res.reason === 'gold'
+              ? t('npc.partNoGold', { gold: fmtGold(offer.price) })
+              : t('npc.partBagFull'),
+            'warn',
+          );
+        }
+        audio.play('coin');
+        haptic('success');
+        toast(t('npc.partBought', { part: offerName }), 'good');
+        gameEvents.emit('moneyChanged', { delta: -offer.price });
+        this.rebuild();
+      }).setEnabled(s.money >= offer.price);
+      return;
+    }
     // Beside a Shop button there is less room (critique 6, F8: "1 gift a day." ran off the edge).
     const x = def.role === 'shop' ? 136 : 104;
     this.label(

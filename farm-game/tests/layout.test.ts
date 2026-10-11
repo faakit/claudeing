@@ -6,20 +6,23 @@ import { LOCALES, setLocale } from '../src/i18n';
 import { menuTabGrid } from '../src/ui/layout';
 import { shopFacts } from '../src/ui/panels/shopFacts';
 import { formatClock } from '../src/systems/time';
-import { HUD_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../src/config';
+import { CONTROLS_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H, WORLD_CLEAR, WORLD_VIEW } from '../src/config';
 
 /** Text boxes in the 200px portrait UI. If a string does not fit, these tests say which one. */
 describe('portrait layout', () => {
-  it('screen zones add up to the whole canvas', () => {
+  it('screen zones add up to the whole canvas: the world runs from under the HUD to the bottom edge', () => {
     expect(WORLD_VIEW.y).toBe(HUD_H);
-    expect(WORLD_VIEW.y + WORLD_VIEW.h).toBe(DOCK_Y);
-    expect(DOCK_Y).toBeLessThan(GAME_HEIGHT);
+    expect(WORLD_VIEW.y + WORLD_VIEW.h).toBe(GAME_HEIGHT); // no dock band: the controls float over the world
+    expect(WORLD_CLEAR.y).toBe(HUD_H);
+    expect(WORLD_CLEAR.y + WORLD_CLEAR.h).toBe(CONTROLS_Y);
+    expect(CONTROLS_Y).toBeLessThan(GAME_HEIGHT);
     expect(GAME_HEIGHT / GAME_WIDTH).toBe(2);
   });
 
-  it('the world view shows at least 12 tiles across and 12 down', () => {
+  it('the world view shows at least 12 tiles across and 12 down above the controls (20 down in all)', () => {
     expect(WORLD_VIEW.w / 16).toBeGreaterThanOrEqual(12);
-    expect(WORLD_VIEW.h / 16).toBeGreaterThanOrEqual(12);
+    expect(WORLD_CLEAR.h / 16).toBeGreaterThanOrEqual(12);
+    expect(WORLD_VIEW.h / 16).toBeGreaterThanOrEqual(20);
   });
 
   it('every goal fits on the one-line goal tracker', () => {

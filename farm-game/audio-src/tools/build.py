@@ -353,7 +353,7 @@ def build_sfx(raw: str, recipes: dict) -> dict:
         # closes the gap measured on renders of the real mix (audio-src/tools/sfxlevels.py).
         out[cue] = {"files": files, "gain": round(float(dsp.undb(r.get("trim", 0))), 4), "pitch": r["pitch"],
                     "vol": r["vol"], "voices": r["voices"]}
-        for k in ("repeatDb", "minGap", "masks", "maskFor"):
+        for k in ("repeatDb", "repeatWindow", "minGap", "masks", "maskFor"):
             if k in r:
                 out[cue][k] = r[k]
     report.append("")
@@ -369,18 +369,39 @@ def build_ambience(raw: str, recipes: dict) -> dict:
     report.append("|---|---|---|---|---|---|---|---|---|")
     for name, r in recipes["ambience"].items():
         if r["mode"] == "loop":
-            x = dsp.highpass(load_src(raw, r["src"]), r["hp"])
             # Several layers of different lengths play together, so the combined pattern repeats
-            # only after their least common multiple (each layer alone is a seamless loop).
+            # only after their least common multiple (each layer alone is a seamless loop). A layer may
+            # take its own source, a pitch shift (tape speed: lower and longer), a gain and a low-pass.
             layers = r["layers"] if "layers" in r else [{"from": r["from"], "body": r["body"]}]
-            level = r["level"] - 10 * np.log10(len(layers))
             files = []
             for li, lay in enumerate(layers):
+                x = dsp.highpass(load_src(raw, lay.get("src", r.get("src"))), r["hp"])
+                x = resample_shift(x, lay.get("shift", 0))
+                if lay.get("lp", r.get("lp")):
+                    x = dsp.lowpass(x, lay.get("lp", r.get("lp")))
+                level = r["level"] - 10 * np.log10(len(layers)) + lay.get("gain", 0)
                 body = int(round(lay["body"] * SR))
                 assert abs(lay["body"] * 300 - round(lay["body"] * 300)) < 1e-6, "loop body must be a multiple of 1/300 s"
                 xfade = int(min(1.0, lay["body"] / 4) * SR)
                 pre = max(xfade, int(0.5 * SR))
                 start = int(lay["from"] * SR) - pre
+                if lay.get("search"):
+                    # Slide the loop start (body fixed) up to `search` s later, to where the level either side of
+                    # the wrap matches best (400 ms windows): a level step at the wrap repeats every period.
+                    w4 = int(0.4 * SR)
+
+                    tq = np.linspace(0, np.pi / 2, xfade)[-w4:]
+
+                    def wrap_step(st: int) -> float:
+                        # exactly what the loop will hold either side of its wrap (equal-power crossfade tail)
+                        e0 = st + pre + body
+                        tail = x[e0 - w4 : e0] * np.cos(tq) + x[st + pre - w4 : st + pre] * np.sin(tq)
+                        head = x[st + pre : st + pre + w4]
+                        return abs(dsp.db(np.sqrt(np.mean(head**2)) / (np.sqrt(np.mean(tail**2)) + 1e-12)))
+
+                    last = len(x) - (pre + body + int(0.1 * SR))
+                    cands = [st for st in range(start, start + int(lay["search"] * SR), int(0.01 * SR)) if st <= last]
+                    start = min(cands, key=wrap_step)
                 assert start >= 0, f"{name}: 'from' must leave {pre / SR:.2f} s of pre-roll for the crossfade"
                 seg = x[start : start + pre + body + int(0.1 * SR)].copy()
                 assert len(seg) == pre + body + int(0.1 * SR), f"{name}: source too short for this layer"

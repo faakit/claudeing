@@ -1,8 +1,8 @@
 /**
  * The coach-mark layer of the guided start (rules in systems/tutorial.ts, steps in data/tutorial.json).
  *
- * One line at the top of the world view (never under the thumb or the dock), a pulsing ring and a hand on
- * exactly one target (a world tile, a dock button, a hotbar slot, a button in an open sheet), and at most one
+ * One line at the top of the world view (never under the thumb or the floating controls), a pulsing ring and a hand
+ * on exactly one target (a world tile, a thumb control, a hotbar slot, a button in an open sheet), and at most one
  * HUD tag. Nothing here is modal and nothing blocks input: the only touch targets are the line itself (tap it
  * for Skip / Next) and the welcome strip's two buttons. Left-handed mirrors the hand; Calm stills every mark.
  *
@@ -12,7 +12,7 @@
  * `ui_coach_bubble_tail` (7x4) under it, toward what the line is about.
  */
 import Phaser from 'phaser';
-import { GAME_WIDTH, HUD_H, WORLD_VIEW } from '../config';
+import { GAME_WIDTH, HUD_H, WORLD_CLEAR, WORLD_VIEW } from '../config';
 import { npcFrame, npcTexture } from '../art/manifest';
 import { audio } from '../platform/audio';
 import { haptic } from '../platform/haptics';
@@ -44,7 +44,8 @@ import {
 import type { TutorialHud } from '../data';
 import { edgePoint } from './coachGeometry';
 import { fitText, Label } from './font';
-import { HOTBAR_X, HOTBAR_Y, SLOT } from './Hud';
+import { HOTBAR_X, HOTBAR_Y, SLOT, SLOT_PITCH } from './Hud';
+import { PLATE_LIP } from './layout';
 import type { DockLayout } from './layout';
 import { C, CH, SKIN } from './theme';
 import { Button, drawPanel, type Modal } from './widgets';
@@ -100,11 +101,12 @@ const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number;
     energy: { x: 4, y: 34, w: 95, h: 13, label: 'coach.tagEnergy' },
     water: { x: 101, y: 34, w: 95, h: 13, label: 'coach.tagWater' },
     goal: { x: 3, y: 48, w: 194, h: 25, label: 'coach.tagGoal' },
+    // the eight floating slots, their lips and the selected one's rise
     hotbar: {
       x: HOTBAR_X - 1,
       y: HOTBAR_Y - 3,
-      w: 8 * (SLOT + 1) + 1,
-      h: SLOT + 5,
+      w: 7 * SLOT_PITCH + SLOT + 2,
+      h: SLOT + PLATE_LIP + 4,
       label: 'coach.tagHotbar',
     },
   };
@@ -422,7 +424,7 @@ export class CoachMarks {
     const clear =
       !sc ||
       (sc.y > y + WELCOME_H + BAR_H + 12 &&
-        sc.y < WORLD_VIEW.y + WORLD_VIEW.h &&
+        sc.y < WORLD_CLEAR.y + WORLD_CLEAR.h &&
         sc.x > 0 &&
         sc.x < GAME_WIDTH);
     const welcomeOn = this.welcomeVisible() && clear && !sheet;
@@ -433,13 +435,14 @@ export class CoachMarks {
       this.placeWelcome(y);
       y += WELCOME_H + 2;
     }
-    // The coach line: at the top of the world, or at its bottom while the target sits right under the top.
+    // The coach line: at the top of the world, or at the bottom of the part above the floating controls while the
+    // target sits right under the top.
     const top = y;
     if (sc && sc.x > 0 && sc.x < GAME_WIDTH) {
       if (sc.y < top + BAR_H + 14 && sc.y > WORLD_VIEW.y) this.barLow = true;
       else if (sc.y > top + BAR_H + 30 || sc.y < WORLD_VIEW.y) this.barLow = false;
     } else this.barLow = false;
-    if (this.barLow) y = WORLD_VIEW.y + WORLD_VIEW.h - BAR_H - 4;
+    if (this.barLow) y = WORLD_CLEAR.y + WORLD_CLEAR.h - BAR_H - 4;
     if (this.menuOpen) {
       this.bubble?.setVisible(false);
       this.tail.setVisible(false);
@@ -477,7 +480,7 @@ export class CoachMarks {
       calm,
       left,
       this.barLow ? top : y + BAR_H + 4,
-      this.barLow ? y - 4 : WORLD_VIEW.y + WORLD_VIEW.h - 8,
+      this.barLow ? y - 4 : WORLD_CLEAR.y + WORLD_CLEAR.h - 8,
     );
     this.placeTail(y);
   }
@@ -554,7 +557,7 @@ export class CoachMarks {
       }
       this.aim = { x: spot.x, y: spot.y, kind: 'tap' };
     } else if (p.kind === 'slot') {
-      at = { x: HOTBAR_X + p.slot * (SLOT + 1) + SLOT / 2, y: HOTBAR_Y + SLOT / 2 };
+      at = { x: HOTBAR_X + p.slot * SLOT_PITCH + SLOT / 2, y: HOTBAR_Y + SLOT / 2 };
       r = 13;
       this.aim = { x: Math.round(at.x), y: Math.round(at.y), kind: 'tap' };
     } else if (p.kind === 'button') {
@@ -576,7 +579,7 @@ export class CoachMarks {
       this.hand.setVisible(false);
       return;
     } else if (p.kind === 'stick') {
-      // A drag anywhere off the buttons steers: the hand drags from the open dock the way to go.
+      // A drag anywhere off the buttons steers: the hand drags from the stick's home (open world) the way to go.
       const home = L.stickHome;
       const d = VEC[p.dir];
       const cycle = calm ? 0.6 : (time % 1600) / 1600;

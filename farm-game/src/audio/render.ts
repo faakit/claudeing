@@ -28,6 +28,10 @@ export interface RenderOptions {
   /** Rainy-day arrangement and game year (variation sections from year two). */
   rain?: boolean;
   year?: number;
+  /** The Dry Year's thinned arrangement (a dry map stage). */
+  thin?: boolean;
+  /** Changes during the render (a reveal: the arrangement fills back in, the birds return). */
+  changes?: { at: number; thin?: boolean; rain?: boolean; ambience?: Partial<AmbienceTargets> }[];
   sampleRate?: number;
 }
 
@@ -90,9 +94,14 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
   for (const i of jingleInstruments())
     for (const z of instrumentFiles(i)) loads.push(bank.load(ctx, z.file, z.onset));
   await Promise.all(loads);
-  music.setMood({ rain: o.rain, year: o.year }, 0);
+  music.setMood({ rain: o.rain, year: o.year, thin: o.thin }, 0);
   if (o.slot) music.setSlot(o.slot, !!o.indoor, 0);
   for (const [k, v] of Object.entries(o.ambience ?? {})) amb.set(k, v ?? 0);
+  const changes = [...(o.changes ?? [])].sort((a, b) => a.at - b.at);
+  for (const c of changes)
+    for (const k of Object.keys(c.ambience ?? {})) loads.push(amb.preload(k));
+  await Promise.all(loads);
+  let mood = { rain: o.rain, year: o.year, thin: o.thin };
   const cues = [...(o.cues ?? [])].sort((a, b) => a.at - b.at);
   const quantum = 128 / sr;
   for (let t = 0; t < o.seconds - TICK; t += TICK) {
@@ -100,6 +109,16 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
     void ctx.suspend(at).then(() => {
       const now = ctx.currentTime;
       music.tick(now, { enabled: true, day: night < 0.99, night: night > 0.01 });
+      while (changes.length && changes[0]!.at <= now + 1e-6) {
+        const c = changes.shift()!;
+        mood = {
+          ...mood,
+          ...(c.thin !== undefined ? { thin: c.thin } : {}),
+          ...(c.rain !== undefined ? { rain: c.rain } : {}),
+        };
+        music.setMood(mood, now);
+        for (const [k, v] of Object.entries(c.ambience ?? {})) amb.set(k, v ?? 0);
+      }
       amb.tick(now, true);
       while (cues.length && cues[0]!.at <= now + 1e-6) {
         const c = cues.shift()!;

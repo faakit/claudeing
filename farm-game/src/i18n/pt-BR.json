@@ -173,7 +173,7 @@
     "placeToast": "{festival}: lugar {place}! +{gold}",
     "joinToast": "{festival}: obrigado por participar! +{gold}",
     "castAnywhere": "Pesque onde quiser: lago, rio ou lagoa.",
-    "stocked": "Hoje tem {fish} no rio ({maps})!",
+    "stocked": "Hoje tem {fish} {where}!",
     "todayNote": "Hoje tem {festival}! Passe no mural da vila.",
     "place": "lugar {place}",
     "noPodium": "sem pódio",
@@ -260,7 +260,11 @@
     "replyLove": "É a coisa que eu mais gosto no mundo!",
     "replyLike": "Que gentileza, valeu!",
     "replyNeutral": "Ah! Que gentileza.",
-    "replyDislike": "Hum... valeu, eu acho."
+    "replyDislike": "Hum... valeu, eu acho.",
+    "partOffer": "O açude precisa de uma {part}. Eu faço uma para você.",
+    "partNoGold": "Ouro insuficiente: {gold}.",
+    "partBagFull": "Sua mochila está cheia.",
+    "partBought": "{part} na mochila. Leve até a obra."
   },
   "jobs": {
     "headerDouble": "BICOS DE HOJE: PAGA EM DOBRO",
@@ -399,7 +403,8 @@
     "creekLine": "O córrego da Ilse, cheio de novo.",
     "siteLabel": "Obra: {name}",
     "workBeat": "{text} ({n} de {of})",
-    "openingTitle": "{name}"
+    "openingTitle": "{name}",
+    "riverTitle": "O RIO VOLTOU"
   },
   "tutorial": {
     "canNote": "Rosa encheu seu regador.",
@@ -811,5 +816,10 @@
     "fiber": "+1 Fibra",
     "goldQuality": "Qualidade ouro!",
     "silverQuality": "Qualidade prata!"
+  },
+  "water": {
+    "town": "no rio da vila",
+    "woods": "na lagoa do bosque",
+    "farm": "no lago da fazenda"
   }
 }

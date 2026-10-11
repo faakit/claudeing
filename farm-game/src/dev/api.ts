@@ -134,4 +134,6 @@ export interface FarmDevApi {
   overlay: { fps(on?: boolean): boolean; tiles(on?: boolean): boolean };
   /** FPS, frame time, JS ms and draw calls (measured while the dev tools run). */
   frameStats(): FrameStats;
+  /** The towing spike's taps and times for the current log (scenario `tow-spike`), or null off the spike. */
+  tow(): import('./towSpike').TowMetrics | null;
 }

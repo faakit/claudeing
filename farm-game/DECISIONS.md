@@ -1427,3 +1427,201 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   requests") and the Options autosave note is now two short lines.
 - **Built blind.** The owner stopped all test runs during this round: the code was written by reading and editing
   only. Nothing was compiled or run; see NEXT-STEPS for the checks that must pass before a merge.
+## The Dry Year, M6: the Weir (depth lane, valley/m6)
+
+- **Old saves keep their river (coordinator ruling).** New games carry `valley.weirOn` from `createInitialState`; a
+  save without it gets `place.weir` 3 and `valley.riverSeen` 1 once, in `sanitize` (`weirDefaults`): no opening, no
+  moment, no Finn letter, and **no count** in `placesDone` or `projectsDone` (the player did not restore it, and a free
+  `projectsDone` would complete project goals). This covers saves started on the Dry Year core deploy too: only games
+  started since M6 play the dry town. No version bump. A scenario writes the marker as 0 to load as an old save.
+- **Wendhead has four stages**, because an old save can have the weir restored before the spring: `dry` (both beds
+  stone), `gorge` (the gorge runs, the pool waits; only an old save reaches it), `spring` (the pool runs, the gorge
+  waits), `restored` (both; `wendhead.tmj`). Stage conditions nest (`all`/`any`); `pinStage` searches the bounds the
+  table names when a condition nests (fewest changes first). The gorge is x 19-21, top to bottom, with a plank bridge
+  at y 22 outside its delta rects; the weir's site is on its west bank (17,11), reached up a path at x 17.
+- **The town's dry stage changes only D1** (x 17-20, y 22-31): stone ground baked as the farm creek's dry bed, so the
+  dry tileset's 64 new slots are bed and bank tiles only (512x1120 -> 512x1152). `town.tmj` stays today's file tile for
+  tile (a fixture test, `tests/fixtures/town-before-m6.json`); the trickle is the river's two east columns (20 water
+  tiles). The Heron sits on the mud at 19,25-26 as `boat_t`/`boat_b` (`heron_aground_*` once art draws it), solid there
+  (stage collision inside a delta rect only). The north-east house is boarded: its facade's `<tile>_boarded` once the
+  art lane draws them, a bare wall and a cold chimney until then. Reeds, rock spurs and the mill wheel are left to art.
+- **The sluice gate is bought in Orin's sheet**, not a shop row: Orin has no shop, and a one-off part does not justify
+  a second shop panel. `valley.json parts` names the seller and price (500g); his sheet says the weir wants one and
+  offers it while an asked place's fund needs it and the bag holds none. M5 replaces it with forging. Restoration gold
+  for year one: 300 + 2,500 + 500 = 3,300g (under the 10,000g guard rail; tested).
+- **The weir is asked on the morning its ask holds**, by a Finn letter that waits on `place.weir.since` (so an old
+  save's default sends nothing): the spring open, the forge lit or summer 15 (absolute day 43), Finn at 2 hearts. Asks
+  take hearts and days (`askHolds`); `HEART_POINTS` mirrors `POINTS_PER_HEART` (an import would be a cycle; tested).
+- **The opening waits in town.** Finn spends the opening morning at the dock (16,32) beside the Heron, not at the
+  site (`opening.at`); his opening lines are his scene there, and the site only says its phrase (and the Fish Ladder,
+  its upgrade, after the canopy as before). His afternoons are at the dock from then on (a schedule row with `when`;
+  rows sharing a minute are alternatives, the last that holds wins). The dock is 16,32 because a villager spot
+  reserves its neighbours from props, and 17,32 would have moved Finn's bucket off today's town.
+- **The last work day is scripted** (`taste: "beam"`, 3.6 s): the water comes through the gap and floats the last beam
+  in. Placeholder shapes in `WorldScene.beamBeat` until the feel lane's pass; M7's towing replaces it.
+- **The river's first morning** dissolves the dry town (its straw and mud, `town@dry` on the dry tileset) around the
+  farmer on the first step into town, under "THE RIVER IS BACK" (`valley.places.weir.banner`), once
+  (`valley.riverSeen`). The dry tileset is held overnight for it (`revealPending`) and released at the next sleep.
+- **Fish follow the water.** `fish.json` rows take `place`; trout, salmon, the glimmer trout and the ice pike bite
+  only with the weir (catfish, carp and perch stay in the trickle). Board requests never ask for a fish the valley
+  cannot give (`fishOpen`). The Derby's catfish are stocked in the woods lake while the river is dry (`dryMaps`); its
+  sheet names the water ("Catfish stocked in the woods lake today!"). The Derby is still entered at the board.
+- **Finn's lines follow the town's stage**: "a trickle in town, mud where the river ran" while dry (the R2-2 ruling's
+  switch back), the river's lines after. "The Heron" (4 hearts, two variants: on the mud, afloat) replaces "A secret
+  spot" with its reward kept, under a new id, so a save that saw the old scene sees the Heron's story once.
+- **The dry palette takes the baked creek bed and water banks** (`creekbed:`, `creekwater:` prefixes in
+  `art/dryPalette.ts`, an art-lane file, two words): the dry town's river bed showed a green grass bank on straw.
+- **`dev.goto` waits for the last map to stop.** A goto straight after another one found the old scene half shut down
+  and the new one never readied.
+- Not done in M6 (wrap-up): the R6-2 channels intro corner; Clay's `rivalLate` switch at the weir's opening (only his
+  line ships); the art for the weir's site sprites, the boarded house, the Heron aground and afloat, reeds, rock spurs
+  and the mill wheel.
+
+## The Dry Year, audio (audio lane, 2026-10-11)
+
+- **One jingle for every valley moment.** `green` plays for the first green, the creek's first morning and later
+  place mornings: one recognisable "the valley comes back" motif, weeks apart, instead of a new jingle each time.
+  It has priority 3, so a level, goal, heart or order within a second gives way. The dawn flourish is spent on a
+  reveal morning.
+- **Audio follows the map stage, by data** (`src/audio/stages.json`), and a dry-palette stage is thin by default, so
+  a new dry stage needs no audio edit. Today's town (no variants yet) keeps its river bed because its map shows the
+  river; M6's `dry` variant makes it thin, with a trickle.
+- **Rain wins over thin:** the rainy arrangement is already sparse, and both together sank below -30 LUFS.
+- **Water beds are positional** by tile distance (full within 1.5 tiles, down to a quarter over 12 more), flat on
+  Wendhead; a storm takes them to 0.4.
+- **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
+
+
+## The Dry Year, feel lane (feel/dry-year)
+
+- **Channel juice is drawn over the map, never in a new layer.** The water into a cut and the morning's run crop the
+  real wet tile out of the map's tileset and grow it from the side the water enters, so the art lane's
+  `chan:wet:<mask>` tiles drop in through the same path; clods, drops and foam are pooled 1-2 px images (no
+  Graphics), so the batch holds (at most 3 draws in the probes).
+- **The morning run plays every day, once, on first sight**, not only for newly reached tiles: it is the day's
+  "your channels watered the crops" moment that replaces the can, and it is short (65 ms a tile, at most 1.5 s).
+  It waits until its first 3 tiles or half its tiles are inside the view inset by 16 px (feel critic C1-1), and it
+  is keyed to the state object and day in memory only (nothing saved).
+- **Edge hold: band and interval unchanged, exit hysteresis added** (feel critic ruling): enter at 36 CSS px,
+  leave at 52 along the leg's axis. A faster interval was rejected because edge-grown tiles can't be trimmed one at
+  a time (leaving the band takes them all back), so a 220 ms reaction would overshoot by 2 tiles at 120 ms.
+- **The creek's first-morning reveal waits for the bed to be wholly in view** (it started as the view's edge passed
+  x 25, with the bed still off screen).
+- **Towing spike (M7):** tow by walking, with taps as the primary input (feel critic): a tap on the log walks over
+  and hooks it, a tap on the water means the bank beside it, a snag holds the farmer where it caught and any tap or
+  Action tugs, the cut walk resumes after a tug, and standing at the slip hauls the log in and lands it. A walk to
+  the slip stops beside it so the log never lands on the farmer. Rules in `systems/towing.ts` (pure); the
+  controller and placeholder art are debug-only (`src/dev/towSpike.ts`, stat `lab.towSpike`).
+
+## Owner bugs (feel lane, fix/owner-bugs, 2026-10-11)
+
+- **Dry beds are not walkable (coordinator ruling, owner bug 3: "there is a bridge, but this bridge is above a
+  walkable area").** A dry bed is a sunken bed below its banks, not a floor. Inside the delta rects every earlier
+  stage blocks exactly where the map's final (water) stage blocks: the farm creek (both delta rects, the mouth tile
+  included), the town's river bed (D1) and Wendhead's pool, creek head and gorge. The footbridge (farm y 6) and the
+  plank bridges (Wendhead y 22) are the crossings in every stage, as they will be when the water returns. This
+  replaces "walkable" in the M2 entry (the dry creek bed as `stone`) and the M6 entry (D1 "a walkable bed of mud").
+  - Done in the data: `generate-maps.mjs` copies the final stage's collision into each earlier variant inside the
+    delta rects (the ground, and so the dry look and the dry art, are unchanged), and the six variant files were
+    patched the same way without regenerating (farm@dry, farm@waking: 55 tiles each; town@dry: 38, the Heron's two
+    were solid already; wendhead@dry 112, @gorge 31, @spring 81). No variant had a solid tile its final stage lacks.
+  - What it settles: villager routes, forage and weed spawns, onboarding paths and the day-2 walk are the same in
+    every stage (stage walkability is now identical, `tests/maps.test.ts`), and nobody can stand on a tile that turns
+    to water on load (the M6 critic's risk); a save already standing in a dry bed is moved to the nearest door spawn
+    by the existing rescue (`farm-creek-rescue`).
+  - Nothing relied on walking in a bed: no scenario, villager spot, zone or spawn is in a delta rect (already
+    tested); the creek reveal waits for the bed to be in view, not for a step into it; channels are dug from the
+    bank; placing and tilling in a bed still answer with the bed's own line (it is checked before "blocked"). A tap
+    on a dry bed now answers "Can't get there.", as a tap on the water does.
+- **The see-through hole eases, and opens only behind a crown (owner bug 1: "the tree faded and the character
+  appeared fully, in a strange way").** Root cause: the hole was switched on at full size the frame any overhead tile
+  came within 13 px of the body or the target circle, so it popped in and out, bit a disc out of a crown the farmer
+  only passed beside (his head reaches 16 px into the tile row above), and its 11 px circles erased about 55% of a
+  lone crown. Now (`fx/SeeThrough.ts`, pure and unit-tested):
+  - it opens when overhead art covers the farmer's lower body, the 10 x 12 px above his feet: his own tile row, where
+    the generator puts a crown only when its trunk stands further south, so behind a tree it opens and beside or in
+    front it never does (the crown may then overlap his hair, which reads as standing beside a tree). Coverage is
+    counted from the tiles' real alpha (read once per tile id from the tileset image; an unreadable one counts as
+    opaque), with hysteresis (open at 36 px, close under 10) so a ragged crown edge cannot flicker it;
+  - it grows from nothing and shrinks back over 150 ms (smoothstep, whole-pixel radii, the 2 px checker rim at every
+    size, the checker fixed in world pixels). Still a stencil: no semi-transparent pixels (review 9 stands);
+  - the body circles are 9 px (was 11): about 40% of a lone crown when fully open instead of 55%;
+  - the target circle opens only when a crown covers the target tile's centre and the farmer is behind the crown or
+    has stood still 250 ms facing it, never while walking past;
+  - tall placed sprites follow the same rule (`behindBox`: feet north of the sprite's base row), and the layer or
+    sprite keeps the mask until the hole has closed, so nothing pops back whole.
+- **A tap while walking re-plans from where the farmer is (owner bug 2: "it kinda flicks").** Root cause: the new
+  route started at the tile under the feet (`playerTile`, a floor), which for the first half of every step is the tile
+  just left, so the farmer walked back to its centre facing backwards for a few frames and then turned again; and a
+  held tap's path preview was overwritten by the walk's own plan the next frame (a one-frame flash of dots). Now
+  (`systems/pathfind.ts` `routeStarts`/`replanFrom`): between two centres the walk is planned from the tile ahead on
+  the axis walked and from the tile behind, and the shorter walk from the exact sub-tile position wins, ties and
+  anything within 4 px going ahead. The speed, facing and walk cycle carry on (the route simply continues to the
+  centre ahead); he turns back only when the new target really is behind him. A one-tile route mid-step finishes the
+  step before it acts (it used to act from mid-tile), `walkTo` (the verb hook) uses the same planning, and the
+  preview stays up until the finger lifts.
+
+## Floating controls (UI lane, ui/float-controls, 2026-10-11)
+
+The owner: "I want to remove the wooden dock at the bottom of the screen, it still feels big." The 112 px walnut band
+is gone; the world runs from under the HUD to the bottom edge and the controls float over it. Nothing here was run
+(owner order: no tests); every number below is arithmetic from the code.
+
+- **Controls stay where the thumbs are, to the pixel.** Action (160, 324) r 28, Interact (98, 342) r 20, Menu
+  (58, 306) r 16, the stick's home (56, 346), all mirrored for the left hand, measured from `CONTROLS_Y` (288, the
+  old dock top, renamed). Reach, ownership, the ring, bench geometry and e2e coordinates are unchanged. The names
+  `dockLayout`/`DockSpot` stay (historical) to keep the diff out of other lanes' files.
+- **Plates, not a band.** Each round control is one baked texture: a solid 2 px ink outline, a 2 px wood ring, a
+  walnut face and a solid 2 px soil lip under the face (`bakeButton`, walnut skin; plum keeps its old disc). The ink
+  carries it over grass, straw and water; the wood ring carries it over the dark mine. Pressed, the face sinks 2 px
+  onto its lip and turns soil in one frame (the old 30% cream glow and its fade were see-through). The Interact icons
+  lost their alpha too. No semi-transparent pixel in any control at rest or pressed; only the show/hide fades of
+  Interact, toasts and the joystick are transient. Draws: the same two textures per radius as before (body and
+  pressed), so the batch is unchanged; the hotbar's lips go into the hotbar's existing Graphics.
+- **Hotbar: the full 8-slot row, slimmed, not compacted.** 22 px faces on the 24 px pitch (2 px of world between
+  faces), each on a 2 px soil lip, 2 px off the bottom edge: the whole row is 26 px tall (27 with its touch zones)
+  against the 112 px band. The pitch is the touch floor (24 px = 38.8 CSS px on the SE, 45.8 on the iPhone 13), so the
+  row cannot get narrower, and at 192 px it already fits the canvas; nothing needed compacting, and every slot keeps
+  its one-tap access (the tool ring and swipes still work too). Compacting to "current tool + ring" would have broken
+  the guided start's hotbar steps, the e2e and bench slot taps, and made the far slots two gestures away; a 7-slot
+  hotbar remains the way to whole-pixel scales on the iPhone 13 and SE (ruling round 5). The selected slot keeps the
+  gold ring, notches and ledge and now stands on 4 px of lip. The face keeps the bag's accepted slot frame (1 px ink +
+  1 px rim, art round 5).
+- **Slot touch zones meet.** Each zone is the whole pitch wide (it grew to 23.07 px on the iPhone 13 before, leaving
+  0.9 px slivers between zones that would now fall through to the world) and runs from 1 px above the faces to the
+  bottom edge: 24 x 27 px, 45.8 x 51.5 CSS px on the iPhone 13 and 38.8 x 43.7 on the SE.
+- **The camera keeps exactly the old scrolls.** The viewport is 200 x 326 (was 214). `PixelCamera` takes the controls'
+  band (112 px) as an inset: the follow centres the farmer in the 214 px above it, a small room is centred there, and
+  the bottom bound lets a map's last row scroll up to `CONTROLS_Y` (the void shows behind the controls there, as the
+  old view's edge did). So the farmer is never under a thumb, and a tile's screen position is the same as before at
+  every scroll (unit test over every 8 px on four map sizes), which kept tap accuracy, coach geometry and e2e tile
+  coordinates valid.
+- **What "in view" means.** `WORLD_CLEAR` (74..288) is the view above the controls. The coach line's low position,
+  its arrows and `inView`, the goal arrow's clamp, the channel morning run's "seen" test and the dev overlay's
+  status strip use it, so nothing that must be read or tapped first sits under a thumb. The rain keeps its density
+  over the taller view (90 -> 137 drops); ambient petals keep their count and spread over the whole view (about a
+  third sparser).
+- **Toasts and the item name.** Toasts stack from just above the controls (as before). The selected item's name
+  moved from over Interact into the bottom of the toast lane on a solid walnut plate, hidden in one step after 1.5 s;
+  toasts stack above it while it shows.
+- **Taps between the controls reach the world.** `WORLD_VIEW` runs to the bottom, so `WorldTouch` treats a touch on
+  no control as a world touch: a still one taps (walk or act), a moving one is the stick. A touch inside a control's
+  touch circle or a slot zone is the control's (Phaser hit test, unchanged); a hidden Interact gives its area to the
+  world. The stick's home is now open world: a still tap there walks, a drag steers. No plate marks it: the stick
+  floats under the thumb anywhere below the HUD, and a plate there would only cover more world.
+- **Safe areas.** The canvas already sits inside `env(safe-area-inset-*)` (`#frame` padding) with the hotbar flush
+  on the bottom safe area (`displayFit`). Under it, the home-indicator strip is now ink (`#safe-bottom`, the
+  theme colour) instead of the walnut margin, so no wood band shows under the world on an iPhone 13 (34 CSS px; zero
+  on the SE and Android). The world does not extend under the home indicator: that would change the fitted scale and
+  every touch target. Action and its mirror keep 12 px from the side edges (Android back swipe); the hotbar is taps
+  only, which the edge gestures ignore.
+
+**World gained.** The view is 12.5 x 20.4 tiles (was 12.5 x 13.4): +112 px of rows, +52% of area. The plates cover
+about 9,000 px² of the old 22,400 px² band (Action 2,600, Interact 1,340 when shown, Menu 870, hotbar 4,220), so
+60% of the band shows world (66% with Interact hidden): about +31% visible world in all, all of it below the farmer.
+
+**To re-measure before merging:** `npm run perf` (12 draws, 3.5 ms at 1x: the tilemap layers now cull and draw a
+52% taller view, and rain draws 137 drops), `e2e:controls` (the graze check now covers the hotbar row only, plus a new
+"tap between the controls walks" check), `e2e:mobile` (new ink-strip check; slot zones are 24 x 27),
+`e2e:onboarding` (coach geometry should be identical), `bench:thumb` against its baseline. `bench-thresholds.json`
+is unchanged: no control moved and the camera scrolls are identical.

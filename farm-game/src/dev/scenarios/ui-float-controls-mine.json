@@ -1,0 +1,34 @@
+{
+  "title": "Floating controls over the dark mine",
+  "about": "In the mine, mid-floor: the dark rock floor runs behind every control. Check the wood ring inside each plate's ink outline carries it on the dark ground, and the hotbar's soil lips still read.",
+  "version": 18,
+  "tags": ["mine", "controls", "ui", "art"],
+  "at": {
+    "map": "mine",
+    "tx": 9,
+    "ty": 14,
+    "facing": "down"
+  },
+  "time": {
+    "day": 10,
+    "clock": "11:00"
+  },
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1
+  },
+  "items": [
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 2,
+      "slot": 6
+    },
+    {
+      "item": "egg",
+      "qty": 12,
+      "slot": 7
+    }
+  ],
+  "select": 3
+}

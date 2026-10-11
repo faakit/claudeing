@@ -620,6 +620,8 @@ function fundProjects(s: GameState): number {
   // A farmer this far along has restored the Old Spring (300g and three days): its site upgrade (the warm pool)
   // is funded like a board project. Restoring places on schedule is the second sim run's job (WORLD-PLAN 9.2).
   s.stats['place.spring'] = Math.max(3, s.stats['place.spring'] ?? 0);
+  // and the Weir (2,500g, four days): its site upgrade is the Fish Ladder, which the Fair Hall follows
+  s.stats['place.weir'] = Math.max(3, s.stats['place.weir'] ?? 0);
   const ids = [
     ...visibleProjects(s),
     ...Object.keys(projects).filter((id) => projects[id]?.site && isProjectOpen(s, id)),

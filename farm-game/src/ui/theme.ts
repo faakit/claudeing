@@ -1,7 +1,7 @@
 /**
  * UI colour tokens. Two skins:
  * - `plum`: the original dark plum UI (still available with `?skin=plum`).
- * - `walnut` (default): on the art palette (public/assets/palette.gpl). Chrome (HUD plates, dock, controls) is walnut wood
+ * - `walnut` (default): on the art palette (public/assets/palette.gpl). Chrome (HUD plates, control plates) is walnut wood
  *   with parchment text; content sheets (bag, shop, menus, dialogs) are parchment paper with ink text.
  * `C` is for content sheets, `CH` for chrome. In the plum skin they are the same.
  * The skin can be previewed with `?skin=walnut` (or `?skin=plum`) in the URL.
@@ -96,12 +96,12 @@ function readSkin(): Skin {
 export const SKIN: Skin = readSkin();
 /** Content sheets: bag, shop, menus, dialogs. */
 export const C: Tokens = SKIN === 'walnut' ? WALNUT_CONTENT : PLUM;
-/** Chrome: HUD plates, dock, toasts, on-screen controls. */
+/** Chrome: HUD plates, toasts, the floating on-screen controls. */
 export const CH: Tokens = SKIN === 'walnut' ? WALNUT_CHROME : PLUM;
 /** Wood-grain lines on walnut chrome (null in the plum skin). Plates behind text are flat (critic R1-1); only
  * the dock's plank seams use this. */
 export const GRAIN: number | null = SKIN === 'walnut' ? P.plumShadow : null;
-/** Ink and wood highlight of the walnut dock's plank seams. */
+/** Ink, soil and plum shadow of walnut chrome (the old dock's plank seams; `lit` is the buttons' soil lip). */
 export const SEAM = { ink: P.ink, lit: P.soil, knot: P.plumShadow };
 
 export const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;

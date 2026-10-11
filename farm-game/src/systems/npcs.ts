@@ -1,7 +1,7 @@
-import { npcs, valley } from '../data';
+import { npcs } from '../data';
 import type { NpcDef } from '../data';
 import type { GameState } from '../state/GameState';
-import { siteVisit } from './valley';
+import { openingMaps, siteVisit, stageWhenHolds } from './valley';
 
 export interface NpcSpot {
   map: string;
@@ -21,8 +21,11 @@ export function npcLocation(
   const visit = state ? siteVisit(state, id, minutes) : null;
   if (visit) return visit;
   if (!def.schedule) return { map: def.map, tx: def.tx, ty: def.ty };
+  // the last row begun by now whose `when` holds (Finn's afternoon at the dock once the river is back)
+  const stats = state?.stats ?? {};
   let spot = def.schedule[0];
-  for (const w of def.schedule) if (w.from <= minutes) spot = w;
+  for (const w of def.schedule)
+    if (w.from <= minutes && (!w.when || stageWhenHolds({ stats }, w.when))) spot = w;
   if (!spot || spot.map === 'away') return null;
   return { map: spot.map, tx: spot.tx, ty: spot.ty };
 }
@@ -40,10 +43,8 @@ export function villagerSpot(map: string, tx: number, ty: number): boolean {
 export const npcMaps = (id: string): string[] => {
   const def = npcs[id];
   if (!def) return [];
-  // the sites of the places this villager opens (they wait there on the opening morning)
-  const sites = Object.values(valley.places)
-    .filter((p) => p.npc === id && p.map)
-    .map((p) => p.map!);
+  // where they wait on the opening mornings of the places they open (beside the site, or the place's `opening.at`)
+  const sites = openingMaps(id);
   const own = def.schedule ? def.schedule.map((w) => w.map) : [def.map];
   return [...new Set([...own, ...sites].filter((m) => m !== 'away'))];
 };

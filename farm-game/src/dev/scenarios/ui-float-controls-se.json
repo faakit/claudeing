@@ -1,0 +1,34 @@
+{
+  "title": "Floating controls for the iPhone SE check",
+  "about": "As ui-float-controls, staged for the smallest phone: open it on the SE profile (375x667 @2, PROFILES=se), where the game scale is 3.23 device px per game px and every 1 px line would render unevenly. Check the 2 px outlines and lips stay even, the slot zones reach 38 CSS px and the item name plate fits between the controls and the HUD.",
+  "version": 18,
+  "tags": ["farm", "controls", "ui", "se"],
+  "at": {
+    "map": "farm",
+    "tx": 12,
+    "ty": 10,
+    "facing": "up"
+  },
+  "valley": {
+    "farmGreen": 0
+  },
+  "time": {
+    "day": 3,
+    "clock": "08:00"
+  },
+  "weather": "sunny",
+  "items": [
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 2,
+      "slot": 6
+    },
+    {
+      "item": "egg",
+      "qty": 12,
+      "slot": 7
+    }
+  ],
+  "select": "parsnip_seed"
+}

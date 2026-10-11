@@ -13,7 +13,12 @@ import { serviceWorkerSource } from '../scripts/sw-plugin.mjs';
 const SCOPE = 'https://farm.test/game/';
 
 type Res = { ok: boolean; status: number; body: string; clone(): Res };
-const response = (body: string): Res => ({ ok: true, status: 200, body, clone: () => response(body) });
+const response = (body: string): Res => ({
+  ok: true,
+  status: 200,
+  body,
+  clone: () => response(body),
+});
 
 class FakeCache {
   entries = new Map<string, Res>();
@@ -31,7 +36,8 @@ class FakeCache {
     return this.entries.delete(key.url);
   }
   async addAll(urls: string[]) {
-    for (const u of urls) this.entries.set(new URL(u, SCOPE).href, await this.fetchFn(new URL(u, SCOPE).href));
+    for (const u of urls)
+      this.entries.set(new URL(u, SCOPE).href, await this.fetchFn(new URL(u, SCOPE).href));
   }
 }
 
@@ -71,10 +77,23 @@ function boot(source: string, browser: ReturnType<typeof makeBrowser>) {
     skipWaiting: async () => undefined,
     clients: { claim: async () => undefined },
   };
-  runInNewContext(source, { self, caches: browser.caches, fetch: browser.fetchFn, URL, Response: {}, Promise, Set, Object });
+  runInNewContext(source, {
+    self,
+    caches: browser.caches,
+    fetch: browser.fetchFn,
+    URL,
+    Response: {},
+    Promise,
+    Set,
+    Object,
+  });
   const fire = async (type: string, extra: Record<string, unknown> = {}) => {
     let p: Promise<unknown> = Promise.resolve();
-    handlers[type]!({ ...extra, waitUntil: (x: Promise<unknown>) => (p = x), respondWith: (x: Promise<unknown>) => (p = x) });
+    handlers[type]!({
+      ...extra,
+      waitUntil: (x: Promise<unknown>) => (p = x),
+      respondWith: (x: Promise<unknown>) => (p = x),
+    });
     return p;
   };
   return { fire };
@@ -114,7 +133,11 @@ describe('service worker audio cache', () => {
     browser.fetched.length = 0;
     const sw2 = boot(v2, browser);
     await sw2.fire('install');
-    expect(audioFetches().map((u) => u.replace(SCOPE, '')).sort()).toEqual(['assets/audio/sfx/b.mp3', 'assets/audio/sfx/d.mp3']);
+    expect(
+      audioFetches()
+        .map((u) => u.replace(SCOPE, ''))
+        .sort(),
+    ).toEqual(['assets/audio/sfx/b.mp3', 'assets/audio/sfx/d.mp3']);
     await sw2.fire('activate');
     const audio = browser.store.get('tiny-acre-audio')!;
     expect(audio.entries.size).toBe(4); // a, b (new version only), c, d

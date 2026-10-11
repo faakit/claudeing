@@ -38,7 +38,7 @@ export function playActionFx(
     case 'dig':
       // a cut in the ground; where it meets running water, the water follows it at once
       fx.dust(x, y);
-      audio.play('till');
+      audio.play('dig');
       if (res['wet']) {
         fx.splash(x, y);
         fx.ripple(x, y + 3);
