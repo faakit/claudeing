@@ -1381,3 +1381,13 @@ at Wendhead's south-west corner (1,25).
 - **Wendhead's dry stage takes the straw palette** like the dry farm (palette only). The dry tileset therefore stays
   resident from the first green until the spring opens (one map is still dry), which the M1 rule already allows.
 - Fall's crowns go dusty brown on a dry map (the fall tileset's orange and gold are remapped too).
+
+### Paint edge hold (coordinator ruling after the valley critic's round 6)
+
+A paint row grows one tile per 16 logical px of thumb travel, so a row drawn toward the thumb's own screen edge
+(west for the left hand, whose Action sits 40 px from the edge; east for the right hand; down for either) had room for
+only 1-5 tiles. Now, while the finger rests in the 36 CSS px (about 6 mm) edge band that the newest leg points at,
+the leg keeps growing one tile per 180 ms with the usual tick, up to the 16-tile limit, for every paint gesture
+(tilling, watering, planting, digging). Leaving the band takes the growth back, so a drift never extends a row and
+dragging back to the start still cancels; a drift into another edge does nothing. The controls e2e checks a
+left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone 13 and the SE.

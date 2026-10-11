@@ -767,6 +767,59 @@ async function runCombo(p, hand) {
         `tiles ${(await tiles()).join(' ')}, acts ${cancelActs}`,
       );
 
+      // Edge hold (coordinator ruling, valley round 6): a row drawn toward the thumb's own screen edge (west for the
+      // left hand, east for the right) keeps growing while the finger rests at the edge, to 10 tiles and more, as
+      // far as a row drawn toward the middle; dragging back to the start still cancels it.
+      {
+        const toEdge = hand === 'left' ? -1 : 1;
+        await place(page, hand === 'left' ? 20 : 4, 20, hand === 'left' ? 'left' : 'right');
+        await page.evaluate(() => window.__farm.controls.clear());
+        await t.down(L.action.x, L.action.y);
+        await page.waitForFunction(
+          () => window.__farm.game.scene.getScene('UI').actionPress?.armed,
+          null,
+          { timeout: 3000, polling: 16 },
+        );
+        const edgeX = toEdge < 0 ? 1 : 199;
+        for (let k = 1; k <= 6; k++) {
+          await t.move(L.action.x + ((edgeX - L.action.x) * k) / 6, L.action.y);
+          await sleep(30);
+        }
+        const grown = await page
+          .waitForFunction(
+            () =>
+              (window.__farm.game.scene.getScenes(true).find((sc) => sc.grid)?.painting?.length ??
+                0) >= 10,
+            null,
+            { timeout: 5000, polling: 50 },
+          )
+          .then(() => true)
+          .catch(() => false);
+        const painted = await page.evaluate(
+          () => window.__farm.game.scene.getScenes(true).find((sc) => sc.grid)?.painting ?? [],
+        );
+        const dirOk = painted.every((tt, i) =>
+          i === 0
+            ? true
+            : Math.sign(tt.tx - painted[i - 1].tx) === toEdge && tt.ty === painted[0].ty,
+        );
+        // back to the start: the growth goes, and the row cancels
+        for (let k = 5; k >= 0; k--) {
+          await t.move(L.action.x + ((edgeX - L.action.x) * k) / 6, L.action.y);
+          await sleep(30);
+        }
+        await t.up();
+        await paintDone();
+        const edgeActs = await page.evaluate(
+          () => window.__farm.controls.entries.filter((e) => e.kind === 'act').length,
+        );
+        check(
+          `${tag}: a row toward the thumb's edge grows to 10 tiles while the finger rests there, and dragging back cancels`,
+          grown && painted.length >= 10 && dirOk && edgeActs === 0,
+          `painted ${painted.length}, straight ${dirOk}, acts after cancel ${edgeActs}`,
+        );
+      }
+
       // World touches never paint or till by duration: slow taps on grass and rest-then-steer just walk.
       let slowWorked = 0;
       for (const ms of [240, 350, 600]) {

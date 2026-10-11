@@ -9,7 +9,8 @@ import { WIPE_OPEN_MS } from '../fx/feel';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
 import { controlsLog } from '../input/controlsLog';
-import { ActionPress, type ActionEvent } from '../input/gesture';
+import { ActionPress, PAINT_EDGE_CSS, type ActionEvent } from '../input/gesture';
+import { cssPerLogical } from '../ui/hit';
 import { inputHub } from '../input/InputHub';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { TouchButton } from '../input/TouchButton';
@@ -457,7 +458,20 @@ export class UIScene extends Phaser.Scene {
 
   /** Each frame: the paint arm (held still 300 ms). */
   private updateHold(): void {
-    if (this.actionPress) this.actionEvents(this.actionPress.update(this.time.now));
+    if (!this.actionPress) return;
+    this.actionEvents(this.actionPress.update(this.time.now));
+    // edge hold: the finger resting in the screen's edge band the row points at keeps it growing (input/gesture.ts)
+    if (this.actionPress.armed && this.actionPointer !== null) {
+      const ptr = this.input.manager.pointers.find((p) => p.id === this.actionPointer && p.isDown);
+      if (ptr) {
+        const band = PAINT_EDGE_CSS / cssPerLogical(this);
+        const edge = {
+          x: ptr.x <= band ? -1 : ptr.x >= GAME_WIDTH - band ? 1 : 0,
+          y: ptr.y <= band ? -1 : ptr.y >= GAME_HEIGHT - band ? 1 : 0,
+        };
+        this.actionEvents(this.actionPress.hold(edge, this.time.now));
+      }
+    }
   }
 
   private releaseAction(): void {

@@ -127,6 +127,10 @@ dry palette baked by `seasons.py` (the table is `art/dryPalette.ts`: parchment g
 crowns, never orange or gold crowns); channel tiles (a dug ditch, dry and with water, with banks); Wendhead's look
 (the pool, ferns, the gorge for M6); the Warm Pool landmark at Wendhead.
 
+**Controls:** paint rows have an edge hold (`PAINT_EDGE_HOLD_MS` 180, band `PAINT_EDGE_CSS` 36): resting at the
+screen edge the row points at keeps it growing, so left-handed westward rows reach as far as right-handed ones (a
+real-phone pass should tune the band and the interval).
+
 **For feel:** the dig (a cut that reads as a verb: earth thrown, the cut appearing tile by tile along a painted
 row) and the water arriving down a new channel (today a splash and a ripple at the cut, then the morning's water);
 the work-day beats at the site (three swings and a stone, or the spade's cut and the water: timings in

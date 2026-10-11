@@ -59,6 +59,15 @@ export const PAINT_DEADZONE = 8;
 export const PAINT_STEP_PX = 16;
 /** Longest painted path, in tiles (a 4 x 4 plot). */
 export const PAINT_MAX_TILES = 16;
+/**
+ * Edge hold (coordinator ruling, valley round 6): while the finger rests in the edge band of the screen that the
+ * newest leg points at, the leg keeps growing one tile per this many ms (the usual tick each), up to the path
+ * limit. It stops when the finger leaves the band (and what it added goes, so dragging back still cancels) or
+ * lifts. A left-handed westward row (Action 40 px from the edge) reaches as far as a right-handed one.
+ */
+export const PAINT_EDGE_HOLD_MS = 180;
+/** The edge band, in CSS px (about 6 mm on a phone). */
+export const PAINT_EDGE_CSS = 36;
 /** Direction hysteresis of the first leg: the other axis must be this many times stronger to switch lines. */
 export const PAINT_BIAS = 1.6;
 /**
@@ -188,6 +197,10 @@ export class ActionPress {
   /** Recent finger positions while painting (arm-relative). */
   private trail: { x: number; y: number }[] = [];
   private emitted = '|';
+  /** Edge hold: px added along the newest leg while the finger rests in the edge band it points at. */
+  private boost = 0;
+  private boostDir: PaintDir | null = null;
+  private boostAt = 0;
 
   constructor(private readonly t0: number) {}
 
@@ -252,6 +265,38 @@ export class ActionPress {
     return this.maxTravel < GESTURE.swipeStep && dwelt ? [{ type: 'tap' }] : [{ type: 'reject' }];
   }
 
+  /**
+   * Each frame while painting: which edge bands the finger is in (x: -1 left, 1 right; y: -1 top, 1 bottom; 0 none).
+   * In the band the newest leg points at, the leg grows a tile every PAINT_EDGE_HOLD_MS; out of it, the growth is
+   * taken back (the path is the finger's own again), so a drift never extends a row and dragging back cancels.
+   */
+  hold(edge: { x: number; y: number }, t: number): ActionEvent[] {
+    if (this.phase !== 'armed' || this.legs.length === 0) return [];
+    const leg = this.legs[this.legs.length - 1]!;
+    const v = VEC[leg.dir];
+    const inBand = (v.x !== 0 && edge.x === v.x) || (v.y !== 0 && edge.y === v.y);
+    const px = this.last.x - this.armAt.x;
+    const py = this.last.y - this.armAt.y;
+    if (!inBand || (this.boostDir !== null && this.boostDir !== leg.dir)) {
+      if (this.boost === 0 && this.boostDir === null) return [];
+      this.boost = 0;
+      this.boostDir = null;
+      this.walkLegs(px, py);
+      return this.emit();
+    }
+    if (this.boostDir === null) {
+      this.boostDir = leg.dir;
+      this.boostAt = t; // the first tile comes one interval after the finger reached the band
+      return [];
+    }
+    if (t - this.boostAt < PAINT_EDGE_HOLD_MS) return [];
+    if (this.cells(this.legs.length).n >= PAINT_MAX_TILES) return [];
+    this.boostAt = t;
+    this.boost += PAINT_STEP_PX;
+    this.walkLegs(px + this.boost * v.x, py + this.boost * v.y);
+    return this.emit();
+  }
+
   /** The finger's displacement over its last `len` px of travel. */
   private recent(len: number): { x: number; y: number } {
     const h = this.trail;
@@ -273,8 +318,9 @@ export class ActionPress {
     const leg = this.legs[i];
     if (!leg) return;
     const v = VEC[leg.dir];
-    const px = this.last.x - this.armAt.x;
-    const py = this.last.y - this.armAt.y;
+    const boost = this.boostDir === leg.dir ? this.boost : 0; // a lift in the edge band keeps what it grew
+    const px = this.last.x - this.armAt.x + boost * v.x;
+    const py = this.last.y - this.armAt.y + boost * v.y;
     const along = (px - leg.ox) * v.x + (py - leg.oy) * v.y;
     leg.tiles = Math.max(leg.tiles, this.room(i, along));
   }
@@ -286,7 +332,12 @@ export class ActionPress {
     if (this.trail.length > 64) this.trail.shift();
     if (Math.hypot(px, py) >= PAINT_DEADZONE) this.drew = true;
     if (!this.locked()) this.firstLeg(px, py);
-    if (this.legs.length) this.walkLegs(px, py);
+    if (this.legs.length) {
+      // while an edge hold is growing this leg, the finger's small moves inside the band keep what it grew
+      const last = this.legs[this.legs.length - 1]!;
+      const b = this.boostDir === last.dir ? this.boost : 0;
+      this.walkLegs(px + b * VEC[last.dir].x, py + b * VEC[last.dir].y);
+    }
     return this.emit();
   }
 
