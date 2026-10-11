@@ -311,6 +311,15 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     tall3("t_streetlamp", "items6a/decor_street_lamp", (13, 0.45, 0.9))
     tall3("t_lanternpole", "land1a/decor_lantern_pole", (16, 0.45, 0.9))
     tall("t_well", "world1b/obj_well", (16, 22))
+    # round 4: the well as a three-tile-wide prop (24 x 32, drawn in drawn.WELL: gabled roof, winch and crank, rope
+    # and bucket, a coursed stone ring), on its one solid base tile; the base row's side tiles are walkable overhang
+    # and the row above goes overhead
+    import drawn
+
+    well = drawn.grid(P.names, drawn.WELL, 48, 32)
+    for j, row in enumerate(("top", "base")):
+        for i, col in enumerate("lcr"):
+            out[f"m_well_{col}_{row}"] = well[j * T : (j + 1) * T, i * T : (i + 1) * T]
     tall("t_beams", "land1a/decor_mine_beams", (16, 26))
     tall3("t_scarecrow", "items5a/decor_scarecrow", (11, 0.62, 0.95))
     # standalone trees: transparent bases (R2-3), canopy top drawn overhead

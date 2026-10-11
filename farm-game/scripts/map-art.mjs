@@ -81,7 +81,8 @@ function noise(x, y, cell, seed) {
 
 /**
  * Per-map composition. Coordinates are tile coords. Props: `t_*` has its base here and its top on the tile above
- * (overhead); `w_*` spans this tile and the one east. `facade` decorates a building's front (bottom) row;
+ * (overhead); `m_*` is three tiles wide (solid base here, walkable overhang beside it, its top row overhead);
+ * `w_*` spans this tile and the one east. `facade` decorates a building's front (bottom) row;
  * `chimney` sits on a roof's top row. `flat` is walkable decor in the shade layer.
  */
 const COMPOSITION = {
@@ -90,7 +91,7 @@ const COMPOSITION = {
       // two yard vignettes with air between them: water (well, bucket, wash tub) and firewood (logs, the
       // split pile, a stump for a chopping block); tools and stores by the east wall; the lamp where the path
       // leaves the door
-      ['t_well', 3, 4],
+      ['t_well', 3, 4], // the yard is crowded (seasonal clumps beside it, crowns above): the small well stays
       ['p_bucket', 4, 5],
       ['p_trough', 2, 5],
       ['p_logs', 7, 5],
@@ -145,7 +146,7 @@ const COMPOSITION = {
       ['p_crates', 9, 7],
       ['p_crates', 1, 6],
       // the well and a bench: the square
-      ['t_well', 9, 12],
+      ['m_well', 9, 12],
       ['p_bench', 8, 13],
       // Orin's smithy
       ['p_coal', 2, 19],
@@ -1118,6 +1119,32 @@ export function artLayers(name, m, objects, extraReserved = []) {
       const top = LIGHT_OF[n] ? 'lamps' : 'overhead';
       if (ok) set(top, x, y - 1, `${n}_top`);
       if (ok && has(`${n}_top2`) && y >= 2) set(top, x, y - 2, `${n}_top2`);
+    } else if (n.startsWith('m_')) {
+      // three tiles wide, two tall (round 4: the well): the base tile is solid as before; the overhang beside it is
+      // walkable (props layer, under the player) and the row above goes overhead. Collision is unchanged.
+      ok = place(`${n}_c_base`, x, y, on);
+      if (ok) {
+        for (const [dx, col] of [
+          [-1, 'l'],
+          [1, 'r'],
+        ]) {
+          const i = y * w + x + dx;
+          if (!has(`${n}_${col}_base`)) continue;
+          if (L.props[i] === 0 && kind(x + dx, y) !== 'water')
+            set('props', x + dx, y, `${n}_${col}_base`);
+          else console.warn(`map-art: ${name}: ${n} overhang at ${x + dx},${y} skipped (occupied)`);
+        }
+        for (const [dx, col] of [
+          [-1, 'l'],
+          [0, 'c'],
+          [1, 'r'],
+        ]) {
+          const i = (y - 1) * w + x + dx;
+          if (!has(`${n}_${col}_top`)) continue;
+          if (L.overhead[i] === 0) set('overhead', x + dx, y - 1, `${n}_${col}_top`);
+          else console.warn(`map-art: ${name}: ${n} roof at ${x + dx},${y - 1} skipped (occupied)`);
+        }
+      }
     } else if (n.startsWith('w_')) {
       if (open(x, y, on) && open(x + 1, y, on)) {
         ok = place(`${n}_l`, x, y, on) && place(`${n}_r`, x + 1, y, on);

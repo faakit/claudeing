@@ -68,6 +68,69 @@ export const npcTexture = (id: string): string => `npc_${id}`;
 export const npcFrame = (id: string, dir: string, i: number): string => `npc_${id}_${dir}_${i}`;
 /** Second idle frame of an animal (the first is the plain sprite key). */
 export const animalIdleKey = (sprite: string): string => `${sprite}_1`;
+/**
+ * An animal's idle frames (art round 4): the plain key, `_1` (its round-2 second pose), `_2` a breath (the back
+ * rises 1 px) and `_3` a head dip. `_2` and `_3` are optional.
+ */
+export const animalIdleFrames = (sprite: string): string[] => [
+  sprite,
+  `${sprite}_1`,
+  `${sprite}_2`,
+  `${sprite}_3`,
+];
+/**
+ * Villager idle (art round 4), 4 frames per direction: 0 rest (hold it long), 1 breathe in (chest +1 px, head
+ * rises 1 px, feet planted), 2 blink (from behind: same as 0), 3 the villager's own beat (Mara nods, Finn lifts his
+ * hat, Orin shifts his weight, Rosa lifts and tips her hat, Clay tilts his head).
+ */
+export const NPC_IDLE_FRAMES = 4;
+/** [frame, ms] of one villager idle loop (about 7.5 s): rest is held, the beat comes once. */
+export const NPC_IDLE_SEQUENCE: [number, number][] = [
+  [0, 1800],
+  [1, 500],
+  [0, 1500],
+  [2, 110],
+  [0, 1700],
+  [3, 700],
+  [0, 700],
+  [1, 500],
+];
+/** Crop lean frames (art round 4) for grown stages (2 and up): the top half leans 1 px; the base stays. */
+export const cropLeanFrame = (frame: string, side: 'l' | 'r'): string => `${frame}_lean_${side}`;
+export const CROP_LEAN_FROM_STAGE = 2;
+/** Harvest pop (art round 4): `_pop_0` stretch 14 x 18, `_pop_1` squash 18 x 14, then the 16 x 16 icon. */
+export const popFrames = (icon: string): string[] => [`${icon}_pop_0`, `${icon}_pop_1`, icon];
+/** Door opening over a tall facade door (16 x 32) or its ground tile only (16 x 16): 0 closed .. 3 open. */
+export const DOOR_OPEN_FRAMES = 4;
+export const doorOpenKey = (i: number, lowOnly = false): string =>
+  lowOnly ? `obj_door_open_low_${i}` : `obj_door_open_${i}`;
+
+/** Player walk cycle (art round 4): 8 frames, contact, down, passing, up, then the same on the other foot. */
+export const PLAYER_WALK_FRAMES = 8;
+/**
+ * Tool-use frames (art round 4): 32 x 32 single-image keys `player_tool_<tool>_<dir>_<i>`, i = 0 wind-up,
+ * 1 swing, 2 contact (the tool meets the tile: spawn dust or splash here), 3 follow-through. Left mirrors right.
+ * Facing up only the hoe and pickaxe have frames (the rest keep the walk sprite, as before).
+ */
+export const TOOL_ANIM_FRAMES = 4;
+export const TOOL_CONTACT_FRAME = 2;
+const SIDES = ['down', 'right', 'left'] as const;
+const ALL_DIRS = ['down', 'up', 'right', 'left'] as const;
+export const TOOL_ANIMS: Record<string, { tool: string; dirs: readonly string[] }> = {
+  hoe: { tool: 'hoe', dirs: ALL_DIRS },
+  pickaxe: { tool: 'pick', dirs: ALL_DIRS },
+  watering_can: { tool: 'can', dirs: SIDES },
+  scythe: { tool: 'scythe', dirs: SIDES },
+  fishing_rod: { tool: 'rod', dirs: SIDES },
+};
+export const toolAnimKey = (tool: string, dir: string, i: number): string =>
+  `player_tool_${tool}_${dir}_${i}`;
+/** The frame keys of one tool-use sequence (by tool item id), or [] when that facing has none. */
+export function toolAnimFrames(item: string, dir: string): string[] {
+  const t = TOOL_ANIMS[item];
+  if (!t || !t.dirs.includes(dir)) return [];
+  return Array.from({ length: TOOL_ANIM_FRAMES }, (_, i) => toolAnimKey(t.tool, dir, i));
+}
 
 /** UI glyphs and fx drawn in code (gameArt.drawGlyphs / placeholders). */
 /** Small effect and ambient sprites (ui atlas): drawn only when the art exists, no generated fallback. */
@@ -90,10 +153,14 @@ export const FX_SPRITES: [string, number, number][] = [
   ['fx_dust_1', 8, 7],
   ['fx_dust_2', 10, 9],
   ['fx_dust_3', 11, 10],
+  // art round 4: the splash redrawn as a crown of droplets on foam, and a ripple flipbook (stepped rings)
   ['fx_splash_0', 9, 4],
-  ['fx_splash_1', 10, 8],
-  ['fx_splash_2', 12, 11],
-  ['fx_splash_3', 12, 11],
+  ['fx_splash_1', 11, 7],
+  ['fx_splash_2', 13, 10],
+  ['fx_splash_3', 13, 8],
+  ['fx_ripple_0', 5, 3],
+  ['fx_ripple_1', 9, 5],
+  ['fx_ripple_2', 12, 7],
   ['fx_ember', 4, 5],
   ['fx_glint', 7, 7],
 ];
@@ -176,6 +243,19 @@ export function artManifest(): ArtEntry[] {
         from: 'crops.json',
         exact: false,
       });
+    for (let s = CROP_LEAN_FROM_STAGE; s <= c.stageDays.length; s++)
+      for (const side of ['l', 'r'] as const)
+        add({
+          texture: CROPS_KEY,
+          frame: cropLeanFrame(`crop_${id}_${s}`, side),
+          w: 16,
+          h: 16,
+          group: 'world',
+          kind: `crop ${id} stage ${s} lean ${side}`,
+          from: 'art round 4 (motion.py)',
+          exact: false,
+          optional: true,
+        });
   }
   for (const [id, p] of Object.entries(placeables)) {
     add({
@@ -259,7 +339,29 @@ export function artManifest(): ArtEntry[] {
       from: 'animals.json',
       exact: false,
     });
+    for (const texture of animalIdleFrames(a.sprite).slice(2))
+      add({
+        texture,
+        w: 16,
+        h: 16,
+        group: 'world',
+        kind: `animal ${id} idle (round 4)`,
+        from: 'art round 4 (motion.py)',
+        exact: false,
+        optional: true,
+      });
   }
+  for (let i = 0; i < DOOR_OPEN_FRAMES; i++)
+    for (const low of [false, true])
+      add({
+        texture: doorOpenKey(i, low),
+        w: 16,
+        h: low ? 16 : 32,
+        group: 'world',
+        kind: `door opening ${i}${low ? ' (ground tile)' : ''}`,
+        from: 'art round 4 (motion.py)',
+        optional: true,
+      });
 
   for (const [id, it] of Object.entries(items))
     add({
@@ -270,6 +372,21 @@ export function artManifest(): ArtEntry[] {
       kind: `item ${id} (${it.type})`,
       from: 'items.json',
     });
+  for (const it of Object.values(items))
+    if (it.type === 'crop' || it.type === 'forage' || it.type === 'product')
+      popFrames(it.icon)
+        .slice(0, 2)
+        .forEach((texture, i) =>
+          add({
+            texture,
+            w: i ? 18 : 14,
+            h: i ? 14 : 18,
+            group: 'ui',
+            kind: `harvest pop ${i ? 'squash' : 'stretch'} ${it.icon}`,
+            from: 'art round 4 (motion.py)',
+            optional: true,
+          }),
+        );
   for (const [id, t] of Object.entries(tools))
     add({ texture: t.icon, w: 16, h: 16, group: 'ui', kind: `tool ${id}`, from: 'tools.json' });
   for (const [k, w, h] of UI_GLYPHS)
@@ -285,6 +402,18 @@ export function artManifest(): ArtEntry[] {
       from: 'WorldScene',
       optional: true,
     });
+  for (const item of Object.keys(TOOL_ANIMS))
+    for (const d of TOOL_ANIMS[item]!.dirs)
+      for (const texture of toolAnimFrames(item, d))
+        add({
+          texture,
+          w: 32,
+          h: 32,
+          group: 'chars',
+          kind: `player tool use ${item} ${d}`,
+          from: 'art round 4 (toolanim.py)',
+          optional: true,
+        });
   for (const [k, w, h] of FX_SPRITES)
     add({ texture: k, w, h, group: 'ui', kind: 'fx / ambient', from: 'fx/*', optional: true });
   // Ground items at world scale, drawn at 1x (review 8: the 16 px icon at 0.8 dropped pixel rows)
@@ -319,7 +448,7 @@ export function artManifest(): ArtEntry[] {
       kind: `player idle ${d}`,
       from: 'placeholders.ts',
     });
-    for (let i = 0; i < 4; i++)
+    for (let i = 0; i < PLAYER_WALK_FRAMES; i++)
       add({
         texture: PLAYER_KEY,
         frame: `player_walk_${d}_${i}`,
@@ -332,7 +461,7 @@ export function artManifest(): ArtEntry[] {
   }
   for (const id of Object.keys(npcs))
     for (const d of DIRECTIONS)
-      for (let i = 0; i < 2; i++)
+      for (let i = 0; i < NPC_IDLE_FRAMES; i++)
         add({
           texture: npcTexture(id),
           frame: npcFrame(id, d, i),

@@ -83,6 +83,15 @@ def build_crop_sprite(spec: dict, pal, pal_lab, outline: int) -> np.ndarray:
         h0 = idx.shape[0]
         rows = sorted(int(h0 * a + (h0 * (b - a)) * (k + 0.5) / n) for k in range(n))
         idx = np.insert(idx, rows, idx[rows], axis=0)
+    trim = spec.get("trim")
+    if trim:  # shrink on the native grid: drop rows spread over a band, then columns over the middle (the well)
+        nrows, a, b, ncols = trim
+        h0 = idx.shape[0]
+        rows = sorted({int(h0 * a + h0 * (b - a) * (k + 0.5) / nrows) for k in range(nrows)})
+        idx = np.delete(idx, rows, axis=0)
+        w0 = idx.shape[1]
+        cols = sorted({int(w0 * 0.3 + w0 * 0.4 * (k + 0.5) / ncols) for k in range(ncols)})
+        idx = np.delete(idx, cols, axis=1)
     if not spec.get("noscale"):
         idx = px.downscale_idx(idx, fit[0], fit[1], outline)
     else:  # keep the native scale (consistent animation frames); trim the sides to the frame width
