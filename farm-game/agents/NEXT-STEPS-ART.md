@@ -4,8 +4,12 @@ Branch `art/round5` (from `integration/round4-2026-10-11`). `npm run verify:fast
 full `npm run verify` before the hand-off. Perf stays at 2-5 draws. Atlases: world 512x256, ui 512x128, chars
 **512x1024** (the action frames filled it; the limit is 1024, so the next big batch needs a second chars atlas).
 Everything was judged from **headless renders only**. Reviews: `C:/Users/andre/dev/tiny-acre/art-critique/
-review-16.md` and `review-17.md` (the menu sheet, accepted); the action animations go to the critic with this
-hand-off.
+review-16.md` to `review-19.md`: the menu sheet accepted (16-17), the actions settled (18) and round 5 closed
+(19; its nit R19-1, the reel pull's rod across the face, is fixed in the last commit).
+- **Perf note:** the full `verify` on this machine (other agents running) failed perf 4x/6x on single frame-pacing
+  spikes in different scenes on each run (a sleep, a Woods door, a Town door). Perf alone passed draws and JS
+  every time (2-5 draws; holding Action 1.2-1.3 ms), and the critic's frozen copy had pacing within budget.
+  Rerun perf on a quiet machine before the merge.
 
 ## Shipped this round
 
