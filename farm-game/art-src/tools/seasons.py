@@ -74,8 +74,10 @@ def category(name: str) -> str | None:
         return "flora"
     if name.startswith(AQUATIC_PREFIX):
         return "aquatic"
-    if name.startswith(("shore:", "creekwater:")):
-        return "shore"
+    if name.startswith(("shore:", "creekwater:", "chan:wet:", "chanmouth:")):
+        return "shore"  # water with a bank: the ground's remap, and an ice rim in winter
+    if name.startswith("chan:dry:"):
+        return "ground"
     if name.startswith(BOX_PREFIX):
         return "box"
     if name.startswith(("lush_", "gv_")):

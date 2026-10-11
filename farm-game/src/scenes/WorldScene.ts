@@ -1,6 +1,18 @@
 import Phaser from 'phaser';
 import { MapArt, tilesetFor } from '../art/mapLayers';
-import { DRY_SAFETY_NET, dryTilesetKey, ensureDryTileset } from '../art/dryTiles';
+import { DRY_SAFETY_NET, dryTilesetKey, ensureDryTileset, TILE_INDEX_KEY } from '../art/dryTiles';
+import {
+  channelMask,
+  channelTileName,
+  culvertTileName,
+  isGroundDecal,
+  mouthTileName,
+  namesBySlot,
+  OPPOSITE,
+  SIDES as CHANNEL_SIDES,
+  tileGid,
+  type TileIndex,
+} from '../art/channelTiles';
 import { GreenReveal } from '../fx/GreenReveal';
 import {
   interactSite,
@@ -138,7 +150,7 @@ const CREEK_BANK = [25, 14] as const;
 /** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
 const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400 } as const;
 
-/** The tiles a channel shows in the detail layer until the art lands: plain water, and dug earth (tile gids). */
+/** A channel's fallback tiles when the tileset has no channel art (placeholder tiles): plain water, dug earth. */
 const CHANNEL_GID = { wet: 5, dry: 2 } as const;
 
 /** Tool-use poses by tool item (chars atlas, from the Flow sheet npcs4). */
@@ -189,6 +201,13 @@ export abstract class WorldScene extends Phaser.Scene {
   private tilemap!: Phaser.Tilemaps.Tilemap;
   /** Detail-layer tiles a channel drew over, to put back when it is filled in. */
   private channelUnder = new Map<string, number>();
+  /** Shade-layer tiles under channel overlays (hidden decals, culverts, creek mouths), by cell. */
+  private channelShadeUnder = new Map<string, number>();
+  /** Creek cell -> the channel cell whose mouth is drawn on it. */
+  private channelMouths = new Map<string, string>();
+  /** Painted channel cells and their look. */
+  private channelLook = new Map<string, 'wet' | 'dry'>();
+  private channelSlotNames: Map<number, string> | undefined;
   private farm: FarmRenderer | null = null;
   private mapArt: MapArt | null = null;
   private ambient: Ambient | null = null;
@@ -330,11 +349,24 @@ export abstract class WorldScene extends Phaser.Scene {
     const look = tilesetFor(this.textures, state.time.season, outdoor, palette);
     const tileset = map.addTilesetImage('placeholder', look.key, TILE_SIZE, TILE_SIZE, 0, 0);
     if (!tileset) throw new Error('Tileset "placeholder" missing from map');
+    // The tileset image can be taller than the .tmj says (the channel tiles sit at its end, painted at runtime):
+    // setImage recounted the tiles, so index the new gids too, or putTileAt cannot place them.
+    for (let t = map.tiles.length, n = tileset.firstgid + tileset.total; t < n; t++) {
+      const i = t - tileset.firstgid;
+      map.tiles[t] = [
+        (i % tileset.columns) * TILE_SIZE,
+        Math.floor(i / tileset.columns) * TILE_SIZE,
+        0,
+      ];
+    }
     const layer = map.createLayer('ground', tileset);
     if (!layer) throw new Error('Map has no "ground" layer');
     this.ground = layer.setDepth(0);
     this.tilemap = map;
     this.channelUnder = new Map();
+    this.channelShadeUnder = new Map();
+    this.channelMouths = new Map();
+    this.channelLook = new Map();
     publishGlow(
       this.mapId,
       outdoor,
@@ -1036,28 +1068,115 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /**
-   * A channel (systems/channels.ts) drawn in the map's detail layer, so it costs no draw call: water where the flow
-   * reaches it, a dug earth ditch where it does not, and the old tile back when it is filled in. Purely visual: the
-   * ground layer (what the rules read) is untouched. False when the map has no detail layer (placeholder tiles).
+   * A channel (systems/channels.ts) drawn in the map's detail layer, so it costs no draw call: the ditch autotiled by
+   * its neighbours (art/channelTiles.ts), with water where the flow reaches it and a dry bed where it does not, and
+   * the old tile back when it is filled in. Under a path it is a culvert (stone headwalls in the shade layer, the
+   * path keeps its look); beside the creek a mouth is cut through the creek's bank. Ground decals (flowers, tufts)
+   * on the cell are hidden while it is a channel. Purely visual: the ground layer (what the rules read) is
+   * untouched. A new or filled channel repaints its painted neighbours, whose masks change. False when the map has
+   * no detail layer (placeholder tiles).
    */
   private paintChannel(tx: number, ty: number, look: 'wet' | 'dry' | null): boolean {
-    // under a path the channel is a culvert: the path keeps its look (nothing drawn, no soil sprite)
-    if (tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) === 'path') return true;
-    const layer = this.tilemap?.getLayer('detail')?.tilemapLayer;
-    if (!layer) return false;
+    const detail = this.tilemap?.getLayer('detail')?.tilemapLayer;
+    const path = tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) === 'path';
+    if (!detail && !path) return false;
     const key = `${tx},${ty}`;
-    if (look === null) {
-      const under = this.channelUnder.get(key);
-      this.channelUnder.delete(key);
-      if (under === undefined) return true;
+    if (look === null) this.channelLook.delete(key);
+    else this.channelLook.set(key, look);
+    this.drawChannelCell(tx, ty);
+    for (const s of CHANNEL_SIDES)
+      if (this.channelLook.has(`${tx + s.dx},${ty + s.dy}`))
+        this.drawChannelCell(tx + s.dx, ty + s.dy);
+    return true;
+  }
+
+  /** The channel tile a cell shows for a look, as a gid (for fx that copy it), or null on a path or without art. */
+  channelGid(tx: number, ty: number, look: 'wet' | 'dry'): number | null {
+    if (tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) === 'path') return null;
+    const state = getState();
+    const creek = creekSource(state);
+    const mask = channelMask(tx, ty, (x, y) => !!state.farm.tiles[`${x},${y}`]?.channel, creek.at);
+    const index = this.cache.json.get(TILE_INDEX_KEY) as TileIndex | undefined;
+    return tileGid(index, channelTileName(look, mask)) ?? CHANNEL_GID[look];
+  }
+
+  /** Draw (or undraw) one cell from `channelLook` and the state's channels. */
+  private drawChannelCell(tx: number, ty: number): void {
+    const key = `${tx},${ty}`;
+    const look = this.channelLook.get(key);
+    const detail = this.tilemap?.getLayer('detail')?.tilemapLayer;
+    const shade = this.tilemap?.getLayer('shade')?.tilemapLayer;
+    const index = this.cache.json.get(TILE_INDEX_KEY) as TileIndex | undefined;
+    const state = getState();
+    const isChannel = (x: number, y: number) => !!state.farm.tiles[`${x},${y}`]?.channel;
+    const creek = creekSource(state);
+    const path = tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) === 'path';
+    const keep = (layer: Phaser.Tilemaps.TilemapLayer, store: Map<string, number>) => {
+      if (!store.has(key)) store.set(key, layer.getTileAt(tx, ty)?.index ?? -1);
+    };
+    const restore = (
+      layer: Phaser.Tilemaps.TilemapLayer | undefined,
+      store: Map<string, number>,
+    ) => {
+      const under = store.get(key);
+      store.delete(key);
+      if (!layer || under === undefined) return;
       if (under > 0) layer.putTileAt(under, tx, ty);
       else layer.removeTileAt(tx, ty);
-      return true;
+    };
+    // mouths this cell cut into the creek: cleared, then redrawn below if it is still a channel
+    for (const s of CHANNEL_SIDES) {
+      const ck = `${tx + s.dx},${ty + s.dy}`;
+      if (this.channelMouths.get(ck) === key) {
+        this.channelMouths.delete(ck);
+        const under = this.channelShadeUnder.get(ck);
+        this.channelShadeUnder.delete(ck);
+        if (shade && under !== undefined) {
+          if (under > 0) shade.putTileAt(under, tx + s.dx, ty + s.dy);
+          else shade.removeTileAt(tx + s.dx, ty + s.dy);
+        }
+      }
     }
-    if (!this.channelUnder.has(key))
-      this.channelUnder.set(key, layer.getTileAt(tx, ty)?.index ?? -1);
-    layer.putTileAt(look === 'wet' ? CHANNEL_GID.wet : CHANNEL_GID.dry, tx, ty);
-    return true;
+    if (!look) {
+      restore(detail, this.channelUnder);
+      restore(shade, this.channelShadeUnder);
+      return;
+    }
+    if (path) {
+      // a culvert: the path keeps its look; headwalls where an open channel meets it (none between two culverts)
+      const open = (x: number, y: number) =>
+        isChannel(x, y) && tileKind(this.ground.getTileAt(x, y)?.index ?? 0) !== 'path';
+      const gid = tileGid(index, culvertTileName(tx, ty, open) ?? '');
+      if (shade && gid) {
+        keep(shade, this.channelShadeUnder);
+        shade.putTileAt(gid, tx, ty);
+      } else restore(shade, this.channelShadeUnder);
+      return;
+    }
+    if (!detail) return;
+    keep(detail, this.channelUnder);
+    detail.putTileAt(this.channelGid(tx, ty, look) ?? CHANNEL_GID[look], tx, ty);
+    // flowers and tufts on the cell go while it is a channel (the critic's ruling, review 20); crowns stay
+    if (shade) {
+      const names = (this.channelSlotNames ??= namesBySlot(index));
+      const here = shade.getTileAt(tx, ty)?.index ?? -1;
+      if (here > 0 && isGroundDecal(names.get(here))) {
+        keep(shade, this.channelShadeUnder);
+        shade.removeTileAt(tx, ty);
+      }
+      // the mouth: cut through the creek's bank where the channel opens into it (only on a free shade cell)
+      for (const s of CHANNEL_SIDES) {
+        const cx = tx + s.dx;
+        const cy = ty + s.dy;
+        const ck = `${cx},${cy}`;
+        if (!creek.at(cx, cy) || this.channelMouths.has(ck)) continue;
+        const gid = tileGid(index, mouthTileName(OPPOSITE[s.side]));
+        if (!gid || (shade.getTileAt(cx, cy)?.index ?? -1) > 0) continue;
+        this.channelShadeUnder.set(ck, -1);
+        this.channelMouths.set(ck, key);
+        shade.putTileAt(gid, cx, cy);
+      }
+    }
   }
 
   /** Placed objects block movement when solid, so the collision grid is the map plus those. */
