@@ -22,6 +22,7 @@ renders at the iPhone 13 and SE sizes; nobody has looked at it on a real phone.
      - `chanmouth:<n|e|s|w>`: the cut through the creek bank.
 
      The mask is N1 E2 S4 W8. A bit is set where that neighbour is a channel or creek water.
+
    - **Shape:** the cut is 10 px wide, with a 3 px shadowed north face, a 2 px west face, and a 2 px lit lip on the
      south and east sides.
      - Dry bed: earth dark with clods and pebbles.
