@@ -96,3 +96,19 @@ retry was read as hold-then-drag twice).
 3. On Pixel 7, Pro Max and Fold-size phones the game is drawn 5-8% smaller so every pixel is the same size
    (walnut bands above and below). Keep that, or prefer filling the screen with uneven pixels?
 4. Tool swings: the hoe's dust lands about 100 ms after you lift your thumb (wind-up first). Snappier?
+
+## Round 5 (branch `feel/round5`, from `integration/round4-2026-10-11`)
+
+- **Blocker fixed: the camera froze during a floating-stick walk** (owner, real phone). The hold that stops a tap
+  from drifting compared the farmer's position with the one `syncSprite` had just stored, so with a finger down it
+  always read "still". It now compares before and after the frame's tick (`shouldHoldCamera`). New `e2e:joystick`
+  (scenario `joystick-walk`): real touches hold a stick drag over 3 s across the farm and a town street, iPhone 13
+  and SE, both hands; the farmer stays within 12 px of centre every frame (201 px off before). The host's rAF runs
+  at 144 Hz; the follow maths is unit-tested at 30, 60 and 144 Hz.
+- **Dock flush with the bottom safe area:** all leftover walnut goes above the HUD (Pixel 7 was 64.7 px up, Fold 60,
+  Pro Max 19.7; iPhone 13 and SE were already flush). Table in DECISIONS.md.
+- **iPhone 13 and SE stay at the fitted scale** (ruling a): whole 5x / 3x would put the hotbar at 40 / 36 CSS px,
+  under the 43 / 38 floors, with no layout that fits 8 slots. Recorded in DECISIONS.md.
+- **Sheets stop under the HUD** (326 px cap); **menu tabs and Close share two rows** (48 px tabs, Close on the
+  thumb's side, reading order kept).
+- Slot recess and bar highlight drawn solid. `bench:thumb` 90/90 on five phones, gestures unchanged; full verify green.
