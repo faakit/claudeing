@@ -21,7 +21,7 @@
       body {
         margin: 0;
         height: 100%;
-        /* walnut (the dock's wood): the margin around a whole-pixel canvas is never black */
+        /* walnut (the HUD's wood): the margin around a whole-pixel canvas is never black */
         background: #4c2c1c;
         overflow: hidden;
         touch-action: none;
@@ -64,10 +64,23 @@
         width: 100%;
         height: 100%;
       }
+      /* Under the canvas, the bottom safe area (the iPhone home indicator) is ink, not walnut: the world runs to the
+         canvas's bottom edge with the controls floating over it, so a wood strip there would read as the old dock.
+         Zero tall where there is no inset (the SE, Android). */
+      #safe-bottom {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: env(safe-area-inset-bottom);
+        background: #2a1a24;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
     <div id="frame"><div id="game"></div></div>
+    <div id="safe-bottom"></div>
     <div id="rotate">Please turn your phone upright to play Tiny Acre.</div>
     <script type="module" src="/src/main.ts"></script>
   </body>

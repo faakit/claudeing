@@ -1,5 +1,5 @@
 // Controls e2e: real CDP touches on phone profiles (iPhone 13 and SE, right and left hand) against the production
-// build. Checks the one-thumb rules that unit tests cannot see end to end: dock hit ownership, release-acting
+// build. Checks the one-thumb rules that unit tests cannot see end to end: control hit ownership, release-acting
 // Menu, tap vs stick, hold under a rolling pad, swipes, the target marker, silent taps, haptics and latency.
 // Run `npm run build` first. Headless emulation only: it proves the rules, not how a real hand feels.
 import {
@@ -423,15 +423,16 @@ async function runCombo(p, hand) {
         `steps back ${stepsBack}, faced away ${facedAway}, at ${rEnd.tx},${rEnd.ty}`,
       );
 
-      // Grazes on the dock and hotbar never reach the world.
+      // Floating controls (no dock band): taps on the hotbar row (a face, the gap between two faces, a lip, the 2 px
+      // under the lips) never reach the world...
       await place(page, 10, 17, 'down');
       await sleep(300);
       const before = await player(page);
       for (const [gx, gy] of [
-        [L.stickHome.x, 300],
-        [100, 366],
-        [L.action.x - 40, 360],
-        [30, 395],
+        [16, 377],
+        [100, 397],
+        [190, 399],
+        [28, 386],
       ]) {
         await t.tap(gx, gy, 70);
         await sleep(150);
@@ -439,9 +440,39 @@ async function runCombo(p, hand) {
       await sleep(500);
       const after = await player(page);
       check(
-        `${tag}: taps on the dock and hotbar never walk the farmer`,
+        `${tag}: taps on the floating hotbar never walk the farmer`,
         after.tx === before.tx && after.ty === before.ty && (await soil(page)) === 0,
         `${before.tx},${before.ty} -> ${after.tx},${after.ty}`,
+      );
+      // ...and a tap on the world between the controls (the stick's home, where the dock's wood was) walks there.
+      await place(page, 10, 17, 'down');
+      await sleep(300);
+      const start = await player(page);
+      await t.tap(L.stickHome.x, L.stickHome.y, 70);
+      await page
+        .waitForFunction(
+          (p0) => {
+            const p = window.__farm.getState().player;
+            const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+            return (
+              w.route !== null || Math.floor(p.y / 16) !== p0.ty || Math.floor(p.x / 16) !== p0.tx
+            );
+          },
+          start,
+          { timeout: 2000, polling: 50 },
+        )
+        .catch(() => undefined);
+      const walked = await page.evaluate((p0) => {
+        const p = window.__farm.getState().player;
+        const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+        return w.route !== null || Math.floor(p.y / 16) !== p0.ty || Math.floor(p.x / 16) !== p0.tx;
+      }, start);
+      check(`${tag}: a tap on the world between the floating controls walks the farmer`, walked);
+      await page.evaluate(() =>
+        window.__farm.game.scene
+          .getScenes(true)
+          .find((s) => s.grid)
+          ?.stopWalk?.(),
       );
 
       // Tap accuracy, in the page's real camera: Gaussian thumbs (1.5 and 2.5 mm, 1.5 mm toward the thumb

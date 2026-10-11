@@ -8,7 +8,7 @@
  * The tab shows in dev builds and with `?scenario=` or `?devmenu` (plain `?debug` pages, i.e. the older e2e
  * suites, never see it); `__farm.dev.menu.open()` works everywhere.
  */
-import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, WORLD_VIEW } from '../config';
+import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, WORLD_CLEAR, WORLD_VIEW } from '../config';
 import { mapsData } from '../data';
 import { mapVariants } from '../systems/valley';
 import { getState } from '../state/store';
@@ -388,14 +388,14 @@ export class DevMenu {
     if (this.lastTouch) box(this.lastTouch.tx, this.lastTouch.ty, '#6fa3e0');
     x.restore();
     x.fillStyle = 'rgba(20,16,31,.8)';
-    x.fillRect(0, WORLD_VIEW.y + WORLD_VIEW.h - 11, GAME_WIDTH, 11);
+    x.fillRect(0, WORLD_CLEAR.y + WORLD_CLEAR.h - 11, GAME_WIDTH, 11); // above the floating controls
     x.fillStyle = '#f4ead2';
     x.font = '8px ui-monospace,monospace';
     const t = this.lastTouch;
     x.fillText(
       `${p.map} you ${me.tx},${me.ty} ${p.facing}${t ? `  touch ${t.tx},${t.ty}` : ''}`,
       3,
-      WORLD_VIEW.y + WORLD_VIEW.h - 3,
+      WORLD_CLEAR.y + WORLD_CLEAR.h - 3,
     );
   }
 

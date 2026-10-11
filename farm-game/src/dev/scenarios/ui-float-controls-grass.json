@@ -1,0 +1,39 @@
+{
+  "title": "Floating controls over grass",
+  "about": "The restored farm (green), standing in the open south-west corner: grass and two trees behind the controls. Check the ink outlines separate every plate from the green.",
+  "version": 18,
+  "tags": ["farm", "controls", "ui", "art"],
+  "at": {
+    "map": "farm",
+    "tx": 7,
+    "ty": 30,
+    "facing": "down"
+  },
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
+  },
+  "time": {
+    "season": "summer",
+    "day": 2,
+    "clock": "10:00"
+  },
+  "items": [
+    {
+      "item": "cauliflower",
+      "qty": 3,
+      "q": 2,
+      "slot": 6
+    },
+    {
+      "item": "egg",
+      "qty": 12,
+      "slot": 7
+    }
+  ],
+  "select": 0
+}

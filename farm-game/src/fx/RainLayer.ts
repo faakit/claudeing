@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { WORLD_VIEW } from '../config';
+import { WORLD_CLEAR, WORLD_VIEW } from '../config';
 
-const DROPS = 90;
+/** 90 drops over the part of the view above the controls (the old dock-bound view), the same density to the bottom. */
+const DROPS = Math.round((90 * WORLD_VIEW.h) / WORLD_CLEAR.h);
 
 /** Screen-space rain streaks. Cosmetic only; fades in and out with `setIntensity`. */
 export class RainLayer {

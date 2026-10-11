@@ -131,3 +131,35 @@ the next round (the critic has the spike at 281f5a4).
 
 No real phone or native build. Haptic timing, the rope's 1 px line and the clods on a real panel are judged from
 strips and emulated touches only.
+
+## Floating controls (branch `ui/float-controls`, 2026-10-11): no dock band
+
+The owner asked for the wooden dock to go ("it still feels big"). Now true (DECISIONS.md "Floating controls"):
+
+- **Layout.** HUD 0-74, then world to the bottom edge (camera viewport 200 x 326, was 214). Action, Interact and Menu
+  float at their old positions (`ui/layout.ts`, from `CONTROLS_Y` 288) on solid walnut plates: 2 px ink outline,
+  2 px wood ring, 2 px soil lip, no alpha; pressed, the face sinks onto its lip in one frame. The hotbar is 8 slot
+  plates (22 px faces, 24 px pitch, 2 px lips) 2 px off the bottom edge; its touch zones are 24 x 27 and meet.
+- **Camera.** `PixelCamera` gets the 112 px controls band as an inset: the farmer sits where he did, a small room is
+  centred above the controls, a map's last row can scroll up above them, and every scroll equals the old view's.
+- **Above the controls (`WORLD_CLEAR`, 74-288):** toasts, the item name (now a plate at the bottom of the toast lane),
+  the coach line and arrows, the goal arrow, the channel run's "in view".
+- **Taps:** anywhere below the HUD that is not a control is world (tap walks or acts, drag is the stick), including
+  the stick's home; taps on a control or a slot zone never reach the world.
+- **Safe area:** the canvas still sits inside the safe area; the home-indicator strip under it is ink, not walnut.
+- **Scenarios:** `ui-float-controls` (straw, Interact showing, full hotbar), `ui-float-controls-left`,
+  `ui-float-controls-se`, `ui-float-controls-grass`, `ui-float-controls-water`, `ui-float-controls-mine`.
+
+**Nothing was run** (owner order: no tests, no browser). Before merging, on an idle machine:
+
+1. `npm run verify` (new `tests/float-controls.test.ts`; `tests/layout.test.ts` and the scenario loader cover the
+   rest).
+2. `E2E_CONTROLS_PARALLEL=1 npm run e2e:controls` (the graze check now taps the hotbar row only; a new check taps the
+   stick's home and expects a walk), then `npm run bench:thumb` against its baseline (no control or scroll moved,
+   so it should match; `scripts/bench-thresholds.json` is unchanged).
+3. `npm run e2e:mobile` (new check: the bottom safe-area strip is ink), `npm run e2e:onboarding` (coach geometry
+   should be identical) and `npm run perf` (12 draws, 3.5 ms JS at 1x: the tilemap now draws a 52% taller view and
+   rain has 137 drops).
+4. Screenshots of `ui-float-controls` on the iPhone 13 and the SE, both hands (`-left`), over straw (the base),
+   grass, water and the mine (`-grass`, `-water`, `-mine`): every plate solid and even at the fractional scales, the
+   selected slot obvious, the farmer above the controls, the name plate and toasts clear of them.

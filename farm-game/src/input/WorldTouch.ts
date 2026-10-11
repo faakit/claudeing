@@ -11,7 +11,7 @@ interface Touch {
   track: PressTrack;
   /** Scene time at touch-down. */
   at: number;
-  /** Started inside the world view (not the dock, not the HUD). */
+  /** Started inside the world view (anywhere below the HUD that is not a control). */
   world: boolean;
   previewed: boolean;
 }
@@ -20,7 +20,9 @@ interface Touch {
  * Every touch that does not start on a button (ruling 2026-10-09: world touches never paint or till by
  * duration). On the world, a still touch is a tap however long it lasts (preview after 100 ms, commit on
  * release, read where the finger landed); a touch that reaches the 9 px deadzone is the floating stick
- * (VirtualJoystick) and is never a tap. Touches that start in the dock never reach the world.
+ * (VirtualJoystick) and is never a tap. The world runs to the bottom edge behind the floating controls, so a touch
+ * between them is a world touch like any other; a touch on a control (its touch circle, a hotbar slot's zone) never
+ * reaches the world.
  */
 export class WorldTouch {
   private touches = new Map<number, Touch>();
