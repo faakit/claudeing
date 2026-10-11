@@ -141,6 +141,8 @@ export interface GoalDef {
   hint: string;
   /** Where to look, per map id ([tx, ty]); an arrow points there when the player stalls. */
   where?: Record<string, [number, number]>;
+  /** The chain does not wait for it (a legendary fish): the next goal shows while it stays open. */
+  aside?: boolean;
 }
 export interface TipDef {
   id: string;
@@ -444,6 +446,11 @@ export interface GameData {
   stormChance: Record<Season, number>;
   /** Sunny days guaranteed at the very start of a new game. */
   calmDays: number;
+  /**
+   * Settling-in pay (owner, round 4): jobs posted on absolute days `from`..`to` pay `factor` times, so the
+   * days before the first harvest earn something.
+   */
+  welcomeJobs?: { from: number; to: number; factor: number };
   /**
    * The rival farmer takes one open board request a day at `minute`, from absolute day `startDay`. From year
    * two he takes `perYear` more each year (at most `maxTakes`), unless he likes you (`calmHearts`).

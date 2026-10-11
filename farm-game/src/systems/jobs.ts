@@ -1,4 +1,4 @@
-import { jobs as jobDefs, npcs } from '../data';
+import { game, jobs as jobDefs, npcs } from '../data';
 import { isMature } from './farming';
 import { isShippable } from './economy';
 import { haveFor } from './orders';
@@ -47,6 +47,20 @@ export const jobCandidates = (state: GameState): JobDef[] =>
 export const jobReward = (def: JobDef, n: number, year: number): number =>
   Math.round((def.base + def.perUnit * n) * (1 + 0.25 * (year - 1)));
 
+/** Pay multiplier for jobs posted on absolute `day` (the settling-in days before the first harvest). */
+export function welcomeFactor(day: number): number {
+  const w = game.welcomeJobs;
+  return w && day >= w.from && day <= w.to ? w.factor : 1;
+}
+
+/** The Goal tab's jobs header; on the settling-in days it says the pay is raised. */
+export const welcomeJobsHeader = (factor: number): string =>
+  factor === 2
+    ? "TODAY'S JOBS: DOUBLE PAY"
+    : factor > 1
+      ? `TODAY'S JOBS: ${factor}x PAY`
+      : "TODAY'S JOBS";
+
 /** Pick today's jobs: any intro job for today first, then a weighted draw without repeats. */
 export function generateJobs(state: GameState): Job[] {
   const day = absoluteDay(state);
@@ -71,7 +85,7 @@ export function generateJobs(state: GameState): Job[] {
       stat: def.stat,
       base: stat(state, def.stat),
       n,
-      reward: jobReward(def, n, state.time.year),
+      reward: jobReward(def, n, state.time.year) * welcomeFactor(day),
       done: false,
     };
   });

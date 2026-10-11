@@ -553,7 +553,7 @@ try {
   await pp.waitForTimeout(120);
   await pp.keyboard.up('KeyE');
   await pp.waitForTimeout(500);
-  const ui = (fn) => pp.evaluate(fn);
+  const ui = (fn, arg) => pp.evaluate(fn, arg);
   check(
     'Interact at the town board opens the requests board',
     await ui(() => window.__farm.game.scene.getScene('UI').panels.get('board').isOpen),
@@ -801,6 +801,39 @@ try {
     f.game.scene.getScene('UI').panels.get('bin').close();
     s.orders.list = s.orders.list.filter((o) => o.id !== 99);
   });
+  // Round 4: the Goal tab shows the settling-in pay on day 3, and the goal after an open legend goal.
+  const savedTime = await ui(() => {
+    const f = window.__farm;
+    const s = f.getState();
+    const was = { ...s.time, goalIndex: s.goalIndex, jobs: s.jobs };
+    Object.assign(s.time, { year: 1, season: 'spring', day: 3 });
+    s.jobs = {
+      day: 3,
+      list: [{ id: 'fish', giver: 'finn', stat: 'caught', base: 0, n: 2, reward: 72, done: false }],
+    };
+    s.goalIndex = 54; // "Catch a legendary fish"
+    f.gameEvents.emit('openPanel', { type: 'menu' });
+    f.game.scene.getScene('UI').panels.get('menu').openTab('goals');
+    return was;
+  });
+  await pp.waitForTimeout(400);
+  texts = await uiTexts();
+  check(
+    'Goal tab: day-3 jobs say double pay; the goal after a legend is current, the legend is also open',
+    texts.includes("TODAY'S JOBS: DOUBLE PAY") &&
+      texts.includes('Beat Clay on the board') &&
+      texts.includes('ALSO OPEN') &&
+      texts.includes('Catch a legendary fish'),
+    texts.join(' | '),
+  );
+  await ui((was) => {
+    const f = window.__farm;
+    const s = f.getState();
+    f.game.scene.getScene('UI').panels.get('menu').close();
+    s.goalIndex = was.goalIndex;
+    s.jobs = was.jobs;
+    Object.assign(s.time, { year: was.year, season: was.season, day: was.day });
+  }, savedTime);
 
   await ui(() => {
     const f = window.__farm;

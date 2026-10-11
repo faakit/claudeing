@@ -5,7 +5,7 @@ import { haptic } from '../../platform/haptics';
 import type { DaySummary } from '../../state/GameState';
 import { getState } from '../../state/store';
 import { rankTitle } from '../../systems/day';
-import { stat } from '../../systems/goals';
+import { goalsDone, stat } from '../../systems/goals';
 import { displayName, parseKey } from '../../systems/itemRef';
 import { seasonLabel } from '../../systems/time';
 import { C } from '../theme';
@@ -202,7 +202,7 @@ export class YearEndPanel extends WaitModal {
       ['Gold earned', `${fmt(earned)}g`],
       ['Crops harvested', fmt(stat(s, 'harvested'))],
       ['Seeds planted', fmt(stat(s, 'planted'))],
-      ['Goals completed', `${s.goalIndex}/${goals.length}`],
+      ['Goals completed', `${goalsDone(s)}/${goals.length}`],
     ];
     rows.forEach(([k, v], i) => {
       this.label(10, 50 + i * 13, k);

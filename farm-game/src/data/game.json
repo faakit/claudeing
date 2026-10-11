@@ -44,6 +44,7 @@
     "winter": 0
   },
   "calmDays": 2,
+  "welcomeJobs": { "from": 3, "to": 4, "factor": 2 },
   "qualityMultipliers": [1, 1.25, 1.5],
   "stormChance": {
     "spring": 0.0,

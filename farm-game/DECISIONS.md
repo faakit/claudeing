@@ -602,6 +602,28 @@ sim) and wrote `agents/critiques/critique-10.md`: no blocker, one major. Fixed:
   11 it is bounded at under twice the pinned median (one farmer is too chaotic a yardstick: seed 7's fisher made
   2.1 times its farmer).
 
+## The first week and the goal chain (owner defaults, depth round 4)
+
+- **The sim bot was the spike.** Round 3's "500g on day 7 lifts the human-paced year by 18% to 76%" came from a
+  bot that kept its ten starting parsnip seeds and spent its 500g on six cauliflower seeds: no income until day
+  11, 1.5k earned by day 14, where a played farmer had 3.6k. The bot now plants what it carries first and, while
+  gold cannot fill its free tiles with the best crop per tile, buys what pays back fastest per gold (parsnips
+  early). It earns 3.3k by day 14, fills more spring crop rows (as in play), and the tireless median moved
+  213,730 -> 261,631 (+22%, repinned; five seeds 226k to 273k, a narrower spread). Measured on 12 seeds, the
+  same 500g on day 7 now moves the human-paced year by +4% on average (per seed -18% to +40%: year one stays
+  chaotic, but it no longer compounds).
+- **Settling-in pay (`game.json welcomeJobs`):** nothing ripens before day 5, so days 2 to 4 earned only the
+  usual jobs (about 75g a day). Jobs posted on days 3 and 4 now pay double; the morning note and the Goal tab
+  say so. Measured on the human-paced bot that does its jobs (5 seeds): days 3-4 earn 130-180g -> 260-360g,
+  day 7 about 1.9k -> 2.0k, first plot day 14 -> 12, a 500g lump on day 7 moves the year by a median 0.8%.
+  Chosen over a cheaper first plot (500g: first plot day 23 -> 17 for the bot that does no jobs, the same
+  sensitivity) because it gives the empty days something to do and earn rather than handing out land.
+  `tests/sim.test.ts` 'balance: the first week' bounds it (under 400g extra; days 1-4 under half the week).
+- **Aside goals:** a goal marked `aside` (the two legendary-fish goals) no longer holds up the chain. The HUD
+  shows the next goal; the Goal tab lists the open aside goal under "Also open". A goal finished past an open
+  aside goal is remembered as the stat `goal.<id>` until `goalIndex` reaches it, so no save change; goals are
+  still an append-only index and are not reordered. Goals beyond the current one never complete early.
+
 ## One-thumb controls (PLAN-CONTROLS.md, owner decisions 2026-10-08)
 
 Owner decisions: tap-to-move and auto tool on by default (both can be turned off; the floating stick always
