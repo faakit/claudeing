@@ -945,6 +945,15 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
   flip it. Walking steadily the farmer stays on one screen pixel and the world scrolls in his pixel steps; after a
   stop the lag eases out a whole pixel at a time; rest is always centred. Map edges have a soft 16 px knee (the
   camera slows to a stop instead of hitting the bound at walking speed). A teleport (> 48 px in a frame) cuts.
+- **Camera at rest:** once the farmer stands still the lag catches up at 0.2 per frame, a pixel a frame at most,
+  so the camera finishes centring about 200 ms after a stop (at 0.12 with the hysteresis it crept the last pixels
+  for half a second). The bench's `settleCamera` waits for this, which adds 0.4-0.7 s to plot3x3 on i13 against
+  the round-3 tree; the game is not slower (a painted 3-tile row takes 1710 ms on both), the old camera simply
+  stopped up to 8 px short at once.
+- **Walk timing (art critic, round 4):** 16 fps for the 8-frame walk at walking speed, scaled with the speed
+  actually walked and held to 10-20 fps (planted feet would need about 37 fps, too busy for a cozy walk).
+- **Tool timing:** the art suggested 90/50/110/80 ms for the hoe; the wind-up is shortened to 60/40/110/80 (the
+  impact about 100 ms after the press, since a still press already acts on its lift).
 - **No acceleration ramp.** Stop precision is carried by settle-on-release (a decelerating glide to the tile
   centre); an acceleration ramp would shorten the 120 ms nudge that is exactly one tile, and the walk cycle now
   starts on a stride frame, which reads as the start of motion. Kept as is.
