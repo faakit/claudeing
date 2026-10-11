@@ -59,6 +59,7 @@ may only go down. The lab shares the farm's soil (`state.farm.tiles`).
 `waking` (the spring at stage 2 or below) and `restored` (spring 3). Each has its own file (`farm@dry.tmj`,
 `farm@waking.tmj`, `farm.tmj`), and they differ only inside the delta rects over the creek bed (x 26-27, y 3-31,
 except the footbridge row at y 6).
+
 - API, all in `systems/valley.ts` and pure: `valleyStage(state, map)` gives the variant, stage, file and
   palette, and `mapLook` gives the file and palette. Also `inDelta`, `deltaRefusal`, `pinStage`,
   `clearDeltaRegions` and `allMapLooks`. `scenes/mapCache.ts activeMapKey(map)` gives the cache key of the
@@ -80,7 +81,7 @@ M3.
 1. M1: merge this branch. Set `valley.farmGreen`, and pass `valleyStage(...).palette` to `tilesetFor` (WorldScene
    reads the look at its build).
 2. M3: add `wendhead` stages to `valley.json` and draw the real map in `generate-maps.mjs` as `function
-   wendhead(v)`. Set the gate's `lockStat` to `valley.farmGreen`. Budget its baked tiles: about 370 slots are
+wendhead(v)`. Set the gate's `lockStat` to `valley.farmGreen`. Budget its baked tiles: about 370 slots are
    left for Wendhead, town and woods together.
 3. M6: town `dry`/`river` (D1 mud) the same way. Make the mud tiles periodic, like the creek bed.
 

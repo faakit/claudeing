@@ -331,7 +331,7 @@ the creek runs). Scenarios: `farm-variant-dry`, `farm-variant-waking`, `farm-var
    reproducible) and check `public/assets/tilesets/tiles.png`'s height.
 6. **Nothing else to wire.** Every stage file is preloaded, the tilemap cache is keyed by file
    (`scenes/mapCache.ts activeMapKey`), and the scene picks the stage when it builds (`systems/valley.ts
-   valleyStage`), never at a door: mornings start in the house, so a change made overnight shows on stepping out.
+valleyStage`), never at a door: mornings start in the house, so a change made overnight shows on stepping out.
    A load standing on a tile that is solid in the new stage goes to the nearest door spawn. Every night the delta
    rects are cleared of soil, crops (seeds back), weeds and placed things (moved to free ground), so old saves are
    safe when a tile turns to water.
