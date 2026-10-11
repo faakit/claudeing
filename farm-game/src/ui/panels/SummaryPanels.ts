@@ -1,3 +1,4 @@
+import { GAME_HEIGHT } from '../../config';
 import Phaser from 'phaser';
 import { goals } from '../../data';
 import { audio } from '../../platform/audio';
@@ -53,6 +54,8 @@ export class SummaryPanel extends WaitModal {
 
   constructor(scene: Phaser.Scene) {
     super(scene, 260);
+    // Shown under the night's blackout, over a hidden HUD: it keeps the taller cap it was laid out for.
+    this.maxHeight = GAME_HEIGHT - 60;
   }
 
   present(summary: DaySummary): Promise<void> {

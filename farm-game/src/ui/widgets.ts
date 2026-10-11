@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
 import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
@@ -298,7 +298,7 @@ export abstract class Modal {
     protected readonly scene: Phaser.Scene,
     panelH: number,
   ) {
-    this.panelH = panelH;
+    this.panelH = Math.min(panelH, GAME_HEIGHT - HUD_H);
     this.dim = scene.add
       .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, C.ink, 0.6)
       .setOrigin(0)
@@ -332,8 +332,14 @@ export abstract class Modal {
 
   /** Change the sheet height from inside build(); the sheet stays glued to the bottom edge. */
   protected setHeight(h: number): void {
-    this.panelH = Math.min(h, GAME_HEIGHT - 60);
+    this.panelH = Math.min(h, this.maxHeight);
   }
+
+  /**
+   * The tallest a sheet may be: up to the bottom of the HUD, so a tall sheet (the bag, Options) never cuts
+   * through the goal plate (round 5). The morning summary, shown under the night's blackout, keeps its old cap.
+   */
+  protected maxHeight = GAME_HEIGHT - HUD_H;
 
   /** Left-handed mode: sheet rows put their buttons on the left (`rowLayout`). */
   protected get leftHanded(): boolean {

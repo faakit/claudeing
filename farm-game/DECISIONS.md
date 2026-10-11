@@ -1146,3 +1146,23 @@ from `displayFit` with the bench profiles' safe areas:
 
 The iPhone 13 and SE keep the fitted scale, which is height-bound on both, so their docks already sat on the safe
 area. The 0.3 px is device-pixel rounding.
+
+### iPhone 13 and SE stay at the fitted scale (coordinator ruling, round 5)
+
+The owner's "menu looks buggy" came from fractional scaling (iPhone 13 5.72x, SE 3.24x: 1 px lines render
+unevenly). Whole pixels there would break the touch floors: at 5x on the iPhone 13 a game px is 1.667 CSS px, so the
+hotbar pitch (24 game px, 8 slots across 200 px) is 40 CSS px against the 43 px floor for phones 390+ px wide
+(45.8 at the fit); at 3x on the SE it is 36 against 38 (38.8 at the fit). Keeping 8 slots over the floor would need
+a 26 game px pitch at 5x (208 px) or 25.3 at 3x (203 px), wider than the canvas, so no gap or padding tweak helps.
+Ruling (a): both keep the fitted scale and the floors stay (one-handed comfort outranks crispness); the art side
+moves frame and UI lines to 2 px and drops the 1 px stripe patterns. Revisit with a 7-slot hotbar, or rendering at an
+integer multiple with one smooth downscale.
+
+### Sheets stop under the HUD; the menu's tabs and Close share two rows (round 5)
+
+- A sheet is at most `GAME_HEIGHT - HUD_H` (326 px) tall, so the bag and Options no longer cut through the goal plate
+  (the menu was 330). The morning summary keeps its old 340 cap: it shows under the night's blackout.
+- The six 30 px tabs crowded "Make", "Skill" and "Opts" inside their 4 px frames (0 px to spare). Tabs and Close now
+  share the old tab row and Close row as one grid (`menuTabGrid`): four 48 px tabs above, two tabs and a wide Close
+  below; Close sits on the thumb's side (the left end for the left hand) and the tabs keep their reading order. The
+  content area and the Options help card are unchanged.
