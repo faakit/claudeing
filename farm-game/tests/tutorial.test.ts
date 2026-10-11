@@ -908,3 +908,67 @@ describe('guided start: depth round 4 introductions', () => {
     }
   });
 });
+
+describe('guided start: review 7', () => {
+  const afterGuide = (): GameState => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    s.stats['foraged'] = 3;
+    s.stats['tut.forage'] = 1;
+    return s;
+  };
+
+  it('late at night in town, the way home is pointed at (gate, then door, then bed)', () => {
+    const s = afterGuide();
+    s.time.day = 2;
+    s.time.minutes = 23 * 60;
+    const town = world(s, {
+      map: 'town',
+      objects: [{ type: 'door', tx: 11, ty: 0, w: 1, h: 1, to: 'farm' }],
+    });
+    const cur = advance(s, town, NO_SHEET).current!;
+    expect(cur.id).toBe('late');
+    let v = coachView(s, town, NO_SHEET, cur);
+    expect(v.text).toBe("It's late! Head home to sleep.");
+    expect(v.pointer).toMatchObject({ kind: 'tile', tx: 11, ty: 0 });
+    v = coachView(s, world(s), NO_SHEET, cur);
+    expect(v.text).toBe("It's late! Tap the door, then bed.");
+    expect(v.pointer).toMatchObject({ kind: 'tile', tx: 14, ty: 7 });
+  });
+
+  it('waking indoors on the first dry morning points at the door, and leaving the farm ends it', () => {
+    const s = afterGuide();
+    for (const k of Object.keys(s.farm.tiles)) delete s.farm.tiles[k];
+    s.farm.tiles['10,17'] = {
+      watered: false,
+      crop: { cropId: 'parsnip', stage: 1, daysInStage: 0, regrow: false },
+    };
+    s.time.day = 3;
+    const house = world(s, {
+      map: 'house',
+      objects: [{ type: 'door', tx: 5, ty: 8, w: 1, h: 1, to: 'farm' }],
+    });
+    const cur = advance(s, house, NO_SHEET).current!;
+    expect(cur.id).toBe('waterDaily');
+    const v = coachView(s, house, NO_SHEET, cur);
+    expect(v.pointer).toMatchObject({ kind: 'tile', tx: 5, ty: 8 });
+    expect(v.away).toBe(true);
+    step(s, world(s, { map: 'town', objects: [] }));
+    expect(stepDone(s, 'waterDaily')).toBe(true);
+  });
+
+  it('the shop line stays for every purchase while the goal is to buy', () => {
+    const s = afterGuide();
+    s.stats['tut.townHello'] = 1;
+    s.stats['tut.buySeeds'] = 1;
+    s.goalIndex = goals.findIndex((g) => g.id === 'buy');
+    s.time.day = 2;
+    const shop: CoachFacts = { panel: 'shop', tab: null };
+    const town = world(s, { map: 'town', objects: [] });
+    expect(step(s, town, shop)).toBe('shop');
+    s.stats['bought'] = (s.stats['bought'] ?? 0) + 1;
+    expect(step(s, town, shop)).toBe('shop');
+    s.goalIndex += 1;
+    expect(step(s, town, shop)).not.toBe('shop');
+  });
+});

@@ -653,9 +653,10 @@
       "when": {
         "minute": 1320
       },
-      "text": "It's late! Sleep before 2 AM.",
+      "text": "It's late! Tap the bed to sleep.",
       "target": {
-        "hud": "clock"
+        "object": "bed",
+        "map": "house"
       },
       "done": [
         {
@@ -664,7 +665,38 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "alt": [
+        {
+          "when": {
+            "panel": "sleep"
+          },
+          "text": "Tap Sleep before 2 AM.",
+          "target": {
+            "button": "^Sleep"
+          }
+        },
+        {
+          "when": {
+            "map": "farm"
+          },
+          "text": "It's late! Tap the door, then bed.",
+          "target": {
+            "door": "house"
+          }
+        },
+        {
+          "when": {
+            "not": {
+              "map": "house"
+            }
+          },
+          "text": "It's late! Head home to sleep.",
+          "target": {
+            "door": "farm"
+          }
+        }
+      ]
     },
     {
       "id": "tired",
@@ -725,7 +757,14 @@
             "day": 3
           },
           {
-            "map": "farm"
+            "any": [
+              {
+                "map": "farm"
+              },
+              {
+                "map": "house"
+              }
+            ]
           },
           {
             "some": "dry"
@@ -895,8 +934,17 @@
       },
       "done": [
         {
-          "min": 1,
-          "fresh": "bought"
+          "all": [
+            {
+              "min": 1,
+              "fresh": "bought"
+            },
+            {
+              "not": {
+                "goal": "buy"
+              }
+            }
+          ]
         }
       ],
       "leave": true,

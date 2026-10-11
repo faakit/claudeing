@@ -76,6 +76,11 @@ wrong taps, wandering, reopening and players who never paint a row. `npm run ver
     land.
   - "Can't get there." now reads "Can't get there. Follow the ring." The ring may be on a button, not a tile.
   - The bag hint is fixed by controls ("hold Action, then drag, to work a whole plot").
+- **Review 7 (after the guided days):**
+  - The late-night intro points the way home: "It's late! Head home to sleep." at the gate, then "Tap the door,
+    then bed.", then the bed and Sleep. It used to only outline the clock (120 s to bed from town at 11 PM).
+  - `waterDaily` also runs indoors (it points at the door), so waking on day 3 is never unpointed.
+  - "Tap a price to buy seeds." stays for every purchase while the goal is Buy.
 - **e2e-onboarding** gained:
   - an SE-left never-paint run (it presses Action under the row tip);
   - a check that the tip never shows after 2 refusals in a row;
@@ -94,7 +99,9 @@ reopen), on a frozen build.
 | New Game to town on day 2       | median 254 s (203-309 s, the 7 that arrived)  | median 168 s (143-226 s) |
 | Row tip offered during watering | rows of grass to till (17 commits in one run) | dry crops only           |
 
-The critic's round 6 on milestone 1 (94cb9c3): 14/14 reach town on day 2. Never-paint 4/4 with 0 refusal loops,
+The critic's round 7 on milestone 2 (c031793): 16/16 reach town on day 2 (12 seeds, 2 never-paint, 2 house
+wanders). Waking to town 28-50 s, New Game to town 142-214 s, the house wander's arrow after 5.5 s, `waterDaily`
+2/2 done in 11-12 s. Round 6 on milestone 1 (94cb9c3): 14/14 reach town on day 2. Never-paint 4/4 with 0 refusal loops,
 mail 0 stalls, waking to town 28-50 s, New Game to waking 111-166 s, no clean-run step over 45 s.
 
 ## How it works (from round 1, still true)
@@ -153,8 +160,8 @@ Round 1 (still in place):
    The coach's box only goes with an `interact` pointer, and the layer clears every frame. Left as is.
 2. **Review 6, item 5 ("+1 Wild Leek" over the "GOAL COMPLETE" banner):** this is Hud and FX (the feel and controls
    lanes), not the guide.
-3. **The day-3 `waterDaily` intro** is unit-tested and probed: 5 crops watered in about 11 s by taps. It is not
-   yet replayed by the critic, who plans a run to day 3.
+3. **The day-3 `waterDaily` intro** passed the critic's day-3 runs (2/2, 11-12 s). Review 7's three minors are
+   fixed after that round and await its final replay.
 4. **The evening `sleep` step and the bed offer's 40-minute expiry** are unit-tested only; an e2e would need
    about 6 real minutes.
 5. **The stick demo draws its hand over the hotbar** (the stick home is just above it). This was cosmetic in
