@@ -21,7 +21,7 @@ When you close an item, delete it. When you add one, cite the scenario that show
   player grows (`systems/orders.ts`). A possible fix: a seasonal crop request posted on day 1 for a crop that was
   planted.
 - **minor. The bin row says "Board 16"**, which adds the 5 board requests and Rosa's 11 into one number. Split it
-  ("Board 5  Rosa 11") if it fits.
+  ("Board 5 Rosa 11") if it fits.
 - **unverified. The race with Clay after the round-4 fixes.** A careful keeper won 15 to 12 when it was replayed. A
   careless player was not replayed after the fix (critique 12 had that player losing 0 to 12), and neither was
   year two. This is the first job for critique 13.

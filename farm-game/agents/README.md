@@ -1,22 +1,27 @@
 # agents/
 
-Everything needed to develop Tiny Acre autonomously with a coding agent: the operating rules, the loop that was
-followed, the prompts that steered it, the tools it used, and the probes that let it _see_ the game.
+Everything an agent needs to work on Tiny Acre: the rules, the loop, the tools, the current state and the open
+findings. Start with [AGENTS.md](AGENTS.md), which sends you to `docs/VISION.md` first.
 
-| File                           | What it is                                                              |
-| ------------------------------ | ----------------------------------------------------------------------- |
-| [AGENTS.md](AGENTS.md)         | Standing rules an agent must follow in this repo (read this first)      |
-| [PLAYBOOK.md](PLAYBOOK.md)     | The autonomous loop, phase by phase, with the verification gates        |
-| [TOOLING.md](TOOLING.md)       | Tools, skills, sandbox quirks and fixes that were needed                |
-| [PUBLISHING.md](PUBLISHING.md) | How the playable build is produced and republished                      |
-| [prompts/](prompts/)           | The goals given to the agent, and reusable prompt templates             |
-| [probes/](probes/)             | Headless-browser scripts that screenshot and poke the real running game |
+| File                                     | What it is                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| [AGENTS.md](AGENTS.md)                   | The standing rules: product, architecture, definition of done, lanes, handover |
+| [PLAYBOOK.md](PLAYBOOK.md)               | The development loop, step by step, and how an agent sees the game             |
+| [TOOLING.md](TOOLING.md)                 | Windows setup, gates, ports, the dev sandbox and the other tools               |
+| [PUBLISHING.md](PUBLISHING.md)           | How to deploy to GitHub Pages                                                  |
+| [NEXT-STEPS.md](NEXT-STEPS.md)           | The direction, and each area's current state, open items and next tasks        |
+| [NEXT-STEPS-FEEL.md](NEXT-STEPS-FEEL.md) | The game-feel lane's handover                                                  |
+| [NEXT-STEPS-ART.md](NEXT-STEPS-ART.md)   | The art lane's handover                                                        |
+| [OPEN-FINDINGS.md](OPEN-FINDINGS.md)     | Every critic finding still open, and the real-phone checklist                  |
+| [HISTORY.md](HISTORY.md)                 | What the docs cleanup removed, and how to get it back from git                 |
+| [probes/](probes/README.md)              | Headless-browser scripts that drive the running game                           |
+| `out/`                                   | Git-ignored scratch for screenshots and benchmarks                             |
 
-Quick start for an agent:
+Quick start:
 
-```
-cd farm-game && npm install
-npm run dev                                   # keep running (restart if it dies)
-URL=http://localhost:5173/ OUT=agents/out/ node agents/probes/panels.mjs
-npm run verify                                # the gate before every commit
+```sh
+cd farm-game && npm ci
+export CHROMIUM_PATH=...                      # see TOOLING.md
+npm run dev                                   # then open http://localhost:5173/?scenario=lab
+npm run verify:fast                           # for each commit; npm run verify before a merge
 ```

@@ -1,23 +1,34 @@
-# Publishing a playable build
+# Publishing
 
-The game is a static site, so any static host works. The default is a claude.ai Artifact.
+The game is published on GitHub Pages at **https://faakit.github.io/claudeing/farm/**. The repo root holds an
+unrelated app, which is served at `/`.
 
-## Artifact (what was used)
+## How it deploys
 
-1. `npm run build` (typecheck + Vite build into `dist/`).
-2. List live files: `Artifact action=list scope=files url=<artifact url>`.
-3. Publish `dist/index.html` to the same `url` with `files` mapping every other file in `dist/`:
-   - published path is relative (`assets/index-XXXX.js`), source is `dist/...`
-   - **`.tmj` maps must be sent with `contentType: "text/plain"`**
-   - set stale hashed files from the previous version to `null` so they are removed
-   - build the map from `find dist -type f`, never from memory (hashes change every build)
-4. Open the URL on a phone-sized viewport; check the title screen loads and a new game starts.
+`.github/workflows/pages.yml` runs on every push to `claude/repo-code-github-pages-3ukz7j`, and can also be started
+by hand (`workflow_dispatch`). It runs `npm ci`, `npm run lint`, `npm test` and `npm run build` in `farm-game/`,
+copies `farm-game/dist/` to `/farm/`, and deploys the site.
 
-## GitHub Pages (alternative)
+The `github-pages` environment only allows the branch **`claude/repo-code-github-pages-3ukz7j`**. A run from any
+other branch (including `main`, which the workflow also lists) fails at the deploy step.
 
-`.github/workflows/pages.yml` deploys to `/farm/`; it is manual (`workflow_dispatch`) so work-in-progress branches do
-not reach production.
+## Deploy a new build
 
-## Before publishing
+1. Make sure `npm run verify` is green on the latest integration branch.
+2. Fast-forward the Pages branch to it:
 
-`npm run verify` green. Mention anything unverified (devices, native builds) in the hand-off message.
+   ```sh
+   git fetch origin
+   git push origin origin/integration/round4-2026-10-11:claude/repo-code-github-pages-3ukz7j
+   ```
+
+   Use the latest integration branch's name. The push only succeeds as a fast-forward, which is what you want.
+   If it is refused, the Pages branch has commits the integration branch lacks: merge those into the integration
+   branch first. Never force-push the Pages branch.
+
+3. Watch the run (`gh run watch`, or the Actions tab). Then open `/farm/` on a phone-sized viewport, check that the
+   title screen loads, and start a new game.
+
+The service worker serves the game cache-first and swaps in the new build in the background, so a returning
+player sees it after one more reload.
+If you mention the release anywhere, say what was not verified (real phones, native builds).

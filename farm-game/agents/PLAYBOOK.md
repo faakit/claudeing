@@ -1,75 +1,58 @@
-# The autonomous development loop
+# The development loop
 
-How the game went from a plan document to a playable, extensible mobile-first farming sim without a human
-in the loop between milestones.
+This is how a feature gets built, checked and merged without a human in the loop between milestones. The rules it
+follows are in [AGENTS.md](AGENTS.md).
 
-## 0. Frame
+## A round
 
-1. Read the plan/goal. Write `GOAL.md` (definition of done, self-check question) and keep it short.
-2. Create a task list (one task per milestone). Keep exactly one `in_progress`.
-3. Decide structure up front: pure `systems/`, data-driven `src/data`, thin scenes. This is what makes
-   later autonomy cheap, because behaviour can be tested without a browser.
+1. The owner sets the direction (`docs/VISION.md`), and the design lane turns it into milestones
+   (`docs/MILESTONES.md`).
+2. Lanes work in parallel, each on its own branch and worktree, cut from the latest `integration/<round>-<date>`
+   branch. Some lanes pair with a critic.
+3. At the end, a coordinator merges the lanes into a new integration branch, runs `npm run verify`, and deploys it
+   (see [PUBLISHING.md](PUBLISHING.md)). Each lane rewrites its section of [NEXT-STEPS.md](NEXT-STEPS.md).
 
-## 1. Build a vertical slice, then widen
+## The inner loop (for each feature)
 
-Order that worked: engine and input -> one complete loop (till, plant, water, sleep, harvest, ship, shop) ->
-persistence -> juice (sound, particles, day/night) -> phone hardening -> portrait pivot -> new mechanics.
-Never start the next layer while the current one is red.
+0. **Stage it.** Add the scenario(s) where the feature happens (`src/dev/scenarios/<name>.json`, on the lab or a
+   real map; see `docs/EXTENDING.md` section 0). Every step below opens it with `?scenario=<name>`.
+1. **Design in data first.** Add the JSON rows and types, and extend `validateContent` for new references.
+2. **Write the rules.** Pure functions in `systems/` that emit events instead of calling Phaser.
+3. **Wire it.** A `mechanics/*` module that registers into the registries, plus one import line.
+4. **Test it.** Unit tests beside the rules, including failure paths and "nothing changes on a refusal".
+5. **Render it.** Scene and UI code come last. Reuse `Modal`, `row()` and the menu tabs.
+6. **Look at it.** Open the scenario (the DEV tab steps frames and shows the frame graph), or run a probe built on
+   `scripts/lib/farm.mjs` and read the screenshots. Fix overlaps, clipping and readability.
+7. **Check it.** Write e2e checks that open the scenario and wait on game events (`farm.act()`,
+   `farm.panel('bin')`, `farm.idle()`), never on fixed timeouts. Run `npm run verify:fast` while iterating.
+8. **Review it.** The critic gets the scenario names and cites one in every finding.
+9. **Gate it.** `npm run verify`.
+10. **Record it.** Update DECISIONS.md and the docs, then commit and push.
 
-## 2. The inner loop (repeat per feature)
+## How an agent sees the game
 
-0. **Stage it**: add the scenario(s) where the feature happens (`src/dev/scenarios/<name>.json`, lab or real map;
-   `docs/EXTENDING.md` section 0). Everything below is done by opening it: `?scenario=<name>`.
-1. **Design in data first**: add JSON rows and types; extend `validateContent` for new references.
-2. **Rules next**: pure functions in `systems/`, events instead of Phaser calls.
-3. **Wire**: a `mechanics/*` module registering into the registries + one import line.
-4. **Test**: unit tests beside the rules (include failure paths and "no change on refusal").
-5. **Render**: scene/UI code last. Reuse `Modal`, `row()`, menu tabs.
-6. **See it**: open the scenario (dev server, `?scenario=<name>`; the DEV tab steps frames and shows the frame
-   graph), or run a probe built on `scripts/lib/farm.mjs` (`agents/probes/scenario-template.mjs`) and look at the
-   screenshots. Fix overlaps, clipping, readability.
-7. **Check it**: e2e checks that open the scenario and wait on game events (`farm.act()`, `farm.panel('bin')`,
-   `farm.idle()`), never on fixed timeouts. `npm run verify:fast` while iterating.
-8. **Review it**: the critic gets the scenario names and cites one in every finding.
-9. **Gate**: `npm run verify`.
-10. **Record**: DECISIONS.md, docs, goals; commit; push.
+There is no human to look. Headless Chromium (playwright-core) drives the real build through `window.__farm`
+(enabled by `?debug`), and screenshots are read back as images and judged the way a reviewer would.
 
-## 3. How the agent sees the game
+- **Start from a scenario,** not from New Game plus teleports, with `openScenario(browser, url, 'coop-hens', opts)`
+  (`opts` picks the phone profile and hand). Need a new situation? Add a scenario file.
+- **Wait on the game:** `farm.act()` resolves on the Action result, `farm.panel('npc')` when the sheet has
+  settled, `farm.idle()` when nothing moves, and `farm.ready()` after a door.
+- **Freeze time for exact pictures:** `farm.strip(name, n, every)` steps the engine frame by frame, and
+  `__farm.dev.clock.pause()` holds the light and the hour still.
+- Quick taps can start and end between two frames, so record presses in event handlers rather than by polling.
 
-There is no human to look. Headless Chromium (Playwright) drives the real build through `window.__farm`
-(enabled by `?debug`). Screenshots are read back as images and judged like a reviewer would.
+## Debugging discipline
 
-- **Start from a scenario**, not from New Game plus teleports: `openScenario(browser, url, 'coop-hens', { profile:
-'se', hand: 'left' })` (`scripts/lib/farm.mjs`). Need a new situation? Add a scenario file: one JSON file.
-- **Wait on the game**: `farm.act()` resolves on the Action result, `farm.panel('npc')` when the sheet has settled,
-  `farm.idle()` when nothing moves, `farm.ready()` after a door. Never `waitForTimeout`.
-- **Freeze time for exact pictures**: `farm.strip(name, n, every)` steps the engine frame by frame
-  (`__farm.dev.loop.step`); `__farm.dev.clock.pause()` keeps the light and the hour still.
-- Quick taps can start and end between frames: record presses in event handlers, not by polling (the dev API's
-  `actionDone` does).
+- Reproduce the bug with a minimal probe (`agents/probes/debug-template.mjs`) or a scenario before changing code.
+- Fix root causes. For example, targeting once picked the nearest actionable tile instead of the most valuable
+  one, so plans now carry the handler priority.
+- When a test fails after an unrelated change, ask whether the test encoded an accident (a random stream, an
+  order) before touching the code. Say so in DECISIONS.md when a threshold moves.
+- Measure performance; don't guess. Use hardware-independent budgets (draws, JS ms per frame), not headless FPS.
 
-## 4. Debugging discipline
+## Phone realism without a phone
 
-- Reproduce with a minimal probe before changing code (`probes/debug-template.mjs`).
-- Fix root causes: e.g. targeting picked the nearest actionable tile instead of the most valuable, so plans now
-  carry the handler priority.
-- When a test fails after an unrelated change, ask whether the _test_ encoded an accident (random stream, order)
-  before touching the code. Say so in DECISIONS.md when a threshold moves.
-- Measure, do not guess, for performance: hardware-independent budgets (draws, JS ms), not headless FPS.
-
-## 5. Phone realism without a phone
-
-CDP safe-area insets, device-pixel ratios, touch emulation, orientation overlay, offline service worker test,
-touch-target size assertions (`scripts/e2e-mobile.mjs`). Anything that needs hardware goes on a manual checklist
-(`docs/MOBILE.md`) and is reported as unverified.
-
-## 6. Release
-
-Build, republish the artifact (see PUBLISHING.md), commit, push, summarise honestly: what changed, what was
-verified, what was not.
-
-## 7. Milestone history (for orientation)
-
-M0-M6 core loop and content; M7-lite procedural audio, particles, pixel font; M8 phone hardening (lifecycle,
-haptics, PWA, Capacitor); P1-P2 portrait one-handed pivot; P3 extensibility core; P4 foraging, quality,
-crafting, jars, orders, fishing, skills; V1-V3 animals and villagers. See `ROADMAP.md` for what is next.
+`scripts/e2e-mobile.mjs` emulates safe-area insets, device-pixel ratios, touch, the landscape overlay, offline
+mode and touch-target sizes on five phone profiles. Whatever needs hardware goes on the manual checklists
+(`docs/MOBILE.md` and [OPEN-FINDINGS.md](OPEN-FINDINGS.md)) and is reported as unverified.
