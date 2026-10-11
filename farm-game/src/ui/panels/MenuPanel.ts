@@ -29,6 +29,7 @@ import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from
 import { fmt } from './format';
 import { buildAlmanac } from './AlmanacTab';
 import { TAB_LABELS } from './tabLabels';
+import { menuTabGrid } from '../layout';
 import { buildCraft } from './CraftTab';
 import { buildSkills } from './SkillsTab';
 import { buildControlsPage, controlsPage, drawHelpCard } from './ControlsTab';
@@ -82,7 +83,8 @@ export function registerMenuTab(tab: MenuTab): void {
   else menuTabs.push(tab);
 }
 
-const SHEET_H = 330;
+/** Up to the bottom of the HUD (the sheet height cap in ui/widgets): never over the goal plate. */
+const SHEET_H = 326;
 
 export class MenuPanel extends Modal {
   private tab = 'bag';
@@ -107,15 +109,22 @@ export class MenuPanel extends Modal {
   protected build(): void {
     this.panel();
     const tabs = menuTabs;
-    const w = Math.floor((this.panelW - 8) / tabs.length);
+    // Tabs and Close share a two-row grid at the bottom (the thumb's resting place on a tall phone): 48 px tabs
+    // instead of six crowded 30 px ones, Close on the thumb's side of the bottom row (ui/layout menuTabGrid).
+    const grid = menuTabGrid(tabs.length, this.leftHanded, this.panelW, [
+      this.panelH - 58,
+      this.panelH - 28,
+    ]);
     tabs.forEach((t, i) => {
       const active = t.id === this.tab;
-      // Tabs sit at the bottom, right above Close: the thumb's resting place on a tall phone.
-      this.button(4 + i * w, this.panelH - 58, w - 2, 22, t.label, () => this.openTab(t.id), {
+      const r = grid.tabs[i]!;
+      this.button(r.x, r.y, r.w, r.h, t.label, () => this.openTab(t.id), {
         rim: active ? C.select : C.creamDim,
         textColor: active ? C.gold : C.cream,
       });
     });
+    const cr = grid.close;
+    this.button(cr.x, cr.y, cr.w, cr.h, 'Close', () => this.close(), { textColor: C.warn });
     const ctx: MenuTabContext = {
       width: this.panelW,
       height: this.panelH,
@@ -133,7 +142,6 @@ export class MenuPanel extends Modal {
       close: () => this.close(),
     };
     (tabs.find((t) => t.id === this.tab) ?? tabs[0])?.build(ctx);
-    this.closeButton();
   }
 
   // The remaining state the Options tab needs lives here so the tab functions below stay stateless.

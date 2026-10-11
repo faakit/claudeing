@@ -13,7 +13,7 @@
 // Env: VERIFY_JOBS (jobs at once in phase 1, default 4), VERIFY_SUITE_PARALLEL (onboarding runs at once, default 5),
 // E2E_ONBOARDING_PARALLEL / E2E_CONTROLS_PARALLEL (win over the defaults), the suites' own ports (E2E_PORT,
 // E2E_MOBILE_PORT, PERF_PORT and PERF_PORT+41/+42 for the 4x and 6x runs, E2E_CONTROLS_PORT, E2E_ONBOARDING_PORT,
-// E2E_SCENARIOS_PORT), CHROMIUM_PATH. A suite marked retryAlone that fails beside others runs once more alone; if
+// E2E_SCENARIOS_PORT, E2E_JOYSTICK_PORT), CHROMIUM_PATH. A suite marked retryAlone that fails beside others runs once more alone; if
 // it then passes the summary says FLAKY and lists the first failures. Each job's output prints in one piece.
 import { spawn } from 'node:child_process';
 
@@ -60,6 +60,15 @@ const ALL = [
     deps: ['build'],
     full: true,
     // Frame-timing and transition checks: like the controls gestures, measured with nothing beside them.
+    quiet: 'feel',
+    retryAlone: true,
+  },
+  {
+    name: 'e2e:joystick',
+    cmd: node('scripts/e2e-joystick.mjs'),
+    deps: ['build'],
+    full: true,
+    // A held stick walk timed in real frames (the camera must follow it): measured beside e2e:feel only.
     quiet: 'feel',
     retryAlone: true,
   },

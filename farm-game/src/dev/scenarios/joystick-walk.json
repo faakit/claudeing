@@ -1,0 +1,17 @@
+{
+  "title": "A long walk with the floating stick",
+  "about": "Farm, 08:00, standing on an open row facing east, away from the map edges, nothing in hand to work with: for holding a joystick drag across the farm (the camera must keep the farmer centred). Town has a long open street too.",
+  "version": 17,
+  "tags": ["farm", "camera", "controls"],
+  "at": {
+    "map": "farm",
+    "tx": 9,
+    "ty": 22,
+    "facing": "right"
+  },
+  "time": {
+    "clock": "08:00"
+  },
+  "tutorial": "off",
+  "hints": "off"
+}

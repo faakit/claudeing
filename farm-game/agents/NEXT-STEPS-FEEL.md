@@ -25,7 +25,7 @@ canvas scale". Frame strips (every rendered frame of a moment, `scripts/frame-st
 | Juice | 2 px view nudges on level-ups and completed goals only; crops lean when walked through (the art's lean frames); pops hop 1 px (the art's stretch and squash frames for gathered items, which rest above the farmer's head); ripples on a cast; animal idles loop the art's breath and head-dip frames. | `fx/Effects.ts`, `game/FarmRenderer.ts`, `game/ObjectsRenderer.ts` |
 | Pixel integrity | No fractional scales or free rotation on pixel art: Action icon 2x, HUD bolt and drop 1x, particles 1-2 px squares, the marker pulse is a flash, the tap ring is redrawn by radius, tool icons turn in quarter turns, the tool ring fades in. | various |
 | Calm | Sheet slides, particles, item hops, floating text, pops, swings, hit-stop, hotbar rise, toast and banner rise, drag-hint pulse, crop lean. | various |
-| Canvas | Whole device pixels per game pixel where that costs at most 10% and keeps the hotbar over 38 CSS px (coordinator ruling): Pixel 7 5x, Pro Max 6x, Fold 4x; iPhone 13 and SE keep the fit. Walnut margins split top and bottom. | `platform/displayFit.ts`, `main.ts`, `index.html` |
+| Canvas | Whole device pixels per game pixel where that costs at most 10% and keeps the hotbar over 38 CSS px (coordinator ruling): Pixel 7 5x, Pro Max 6x, Fold 4x; iPhone 13 and SE keep the fit. Walnut margins, all above the HUD so the dock sits on the bottom safe area (round 5). | `platform/displayFit.ts`, `main.ts`, `index.html` |
 | Input | A tap on your own tile uses the faced tile (Interact or a harmless act, never till or plant): the mailbox case from the new-player critic. | `systems/tapIntent.ownTileTap` |
 | Perf | Dock buttons and Interact icons baked to textures (live Graphics circles were re-tessellated by earcut every frame, about a quarter of the frame's JS). | `fx/bake.ts` |
 | Tooling | Frame pacing in `perf` (per-frame p50/p95/p99/max across real play at 1x, 4x and 6x, budgets set against the baseline with the critic); `e2e:feel`; `scripts/frame-strip.mjs`. | `scripts/` |
@@ -96,3 +96,19 @@ retry was read as hold-then-drag twice).
 3. On Pixel 7, Pro Max and Fold-size phones the game is drawn 5-8% smaller so every pixel is the same size
    (walnut bands above and below). Keep that, or prefer filling the screen with uneven pixels?
 4. Tool swings: the hoe's dust lands about 100 ms after you lift your thumb (wind-up first). Snappier?
+
+## Round 5 (branch `feel/round5`, from `integration/round4-2026-10-11`)
+
+- **Blocker fixed: the camera froze during a floating-stick walk** (owner, real phone). The hold that stops a tap
+  from drifting compared the farmer's position with the one `syncSprite` had just stored, so with a finger down it
+  always read "still". It now compares before and after the frame's tick (`shouldHoldCamera`). New `e2e:joystick`
+  (scenario `joystick-walk`): real touches hold a stick drag over 3 s across the farm and a town street, iPhone 13
+  and SE, both hands; the farmer stays within 12 px of centre every frame (201 px off before). The host's rAF runs
+  at 144 Hz; the follow maths is unit-tested at 30, 60 and 144 Hz.
+- **Dock flush with the bottom safe area:** all leftover walnut goes above the HUD (Pixel 7 was 64.7 px up, Fold 60,
+  Pro Max 19.7; iPhone 13 and SE were already flush). Table in DECISIONS.md.
+- **iPhone 13 and SE stay at the fitted scale** (ruling a): whole 5x / 3x would put the hotbar at 40 / 36 CSS px,
+  under the 43 / 38 floors, with no layout that fits 8 slots. Recorded in DECISIONS.md.
+- **Sheets stop under the HUD** (326 px cap); **menu tabs and Close share two rows** (48 px tabs, Close on the
+  thumb's side, reading order kept).
+- Slot recess and bar highlight drawn solid. `bench:thumb` 90/90 on five phones, gestures unchanged; full verify green.

@@ -213,3 +213,45 @@ export function ringPick(dx: number, dy: number, n: number, leftHanded: boolean)
   if (d1 > RING_REACH || d2 - d1 < RING_GAP * spacing) return null;
   return best;
 }
+
+/** A button's place in a sheet, sheet-local logical px. */
+export interface SheetRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/**
+ * The menu's tab strip and its Close button as one two-row grid at the bottom of the sheet (round 5: six 30 px
+ * tabs in one row crowded "Make", "Skill" and "Opts"). The tabs fill the rows left to right and Close takes the
+ * cells left on the bottom row, on the thumb's side (the left end for the left hand). With six tabs every cell is
+ * 48 px wide. The tabs keep their reading order for either hand. `rowsY` are the top edges of the two rows (the
+ * old tab row and the old Close row).
+ */
+export function menuTabGrid(
+  tabs: number,
+  leftHanded: boolean,
+  width = GAME_WIDTH,
+  rowsY: [number, number] = [0, 30],
+  margin = 2,
+  gap = 1,
+  h = 22,
+): { tabs: SheetRect[]; close: SheetRect } {
+  const cols = Math.max(2, Math.ceil((tabs + 2) / 2));
+  const cell = (width - 2 * margin - (cols - 1) * gap) / cols;
+  const rect = (row: number, col: number, span = 1): SheetRect => {
+    const x0 = Math.round(margin + col * (cell + gap));
+    const x1 = Math.round(margin + (col + span) * (cell + gap) - gap);
+    return { x: x0, y: rowsY[row]!, w: x1 - x0, h };
+  };
+  // The tabs keep their reading order for either hand; only Close moves to the thumb's side of the bottom row.
+  const bottomTabs = Math.max(0, tabs - cols);
+  const span = cols - bottomTabs;
+  const out: SheetRect[] = [];
+  for (let i = 0; i < tabs; i++) {
+    if (i < cols) out.push(rect(0, i));
+    else out.push(rect(1, i - cols + (leftHanded ? span : 0)));
+  }
+  return { tabs: out, close: rect(1, leftHanded ? 0 : bottomTabs, span) };
+}

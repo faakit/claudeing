@@ -36,7 +36,7 @@ describe('whole-pixel canvas scale (DECISIONS.md "Whole-pixel canvas scale")', (
         expect(Math.abs(v * p.dpr - Math.round(v * p.dpr))).toBeLessThan(1e-6);
       expect(f.cssLeft + f.cssW).toBeLessThanOrEqual(p.w + 1e-6);
       expect(f.cssTop + f.cssH).toBeLessThanOrEqual(p.h + 1e-6);
-      expect(Math.abs(f.cssTop - (p.h - f.cssTop - f.cssH))).toBeLessThanOrEqual(1); // split top and bottom
+      expect(p.h - f.cssTop - f.cssH).toBeLessThan(1 / p.dpr + 1e-6); // flush with the bottom (the dock)
     }
   });
   it('never scales below one device pixel per game pixel', () => {

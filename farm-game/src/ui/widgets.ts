@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
 import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
@@ -7,6 +7,7 @@ import { fitRow, Label } from './font';
 import { rowLayout } from './layout';
 import { getState } from '../state/store';
 import { C, CH, SKIN } from './theme';
+import { mixColor } from './color';
 
 /**
  * Notched pixel-art panel drawn at (x, y). Plum skin: ink outline, cream rim, soft shadow. Walnut skin: a
@@ -76,7 +77,8 @@ export function drawSlot(
   const rimC = selected ? t.select : marked ? t.blue : t.slotRim;
   g.fillStyle(rimC, 1).fillRect(x + 1, y + 1, size - 2, size - 2);
   g.fillStyle(t.slot, 1).fillRect(x + 2, y + 2, size - 4, size - 4);
-  g.fillStyle(t.ink, 0.25).fillRect(x + 2, y + 2, size - 4, 1); // recessed: shadow under the top edge
+  // recessed: a solid shadow row under the top edge (the slot colour a quarter of the way to ink, no alpha)
+  g.fillStyle(mixColor(t.slot, t.ink, 0.25), 1).fillRect(x + 2, y + 2, size - 4, 1);
   if (selected) drawSelection(g, x, y, size, t.select, t.ink);
 }
 
@@ -127,11 +129,11 @@ export function drawBar(
   if (vertical) {
     const fh = Math.round((h - 2) * r);
     g.fillStyle(color, 1).fillRect(x + 1, y + h - 1 - fh, w - 2, fh);
-    g.fillStyle(0xffffff, 0.25).fillRect(x + 1, y + h - 1 - fh, 1, fh);
+    g.fillStyle(mixColor(color, 0xffffff, 0.25), 1).fillRect(x + 1, y + h - 1 - fh, 1, fh);
   } else {
     const fw = Math.round((w - 2) * r);
     g.fillStyle(color, 1).fillRect(x + 1, y + 1, fw, h - 2);
-    g.fillStyle(0xffffff, 0.25).fillRect(x + 1, y + 1, fw, 1);
+    g.fillStyle(mixColor(color, 0xffffff, 0.25), 1).fillRect(x + 1, y + 1, fw, 1); // solid highlight row
   }
 }
 
@@ -298,7 +300,7 @@ export abstract class Modal {
     protected readonly scene: Phaser.Scene,
     panelH: number,
   ) {
-    this.panelH = panelH;
+    this.panelH = Math.min(panelH, GAME_HEIGHT - HUD_H);
     this.dim = scene.add
       .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, C.ink, 0.6)
       .setOrigin(0)
@@ -332,8 +334,14 @@ export abstract class Modal {
 
   /** Change the sheet height from inside build(); the sheet stays glued to the bottom edge. */
   protected setHeight(h: number): void {
-    this.panelH = Math.min(h, GAME_HEIGHT - 60);
+    this.panelH = Math.min(h, this.maxHeight);
   }
+
+  /**
+   * The tallest a sheet may be: up to the bottom of the HUD, so a tall sheet (the bag, Options) never cuts
+   * through the goal plate (round 5). The morning summary, shown under the night's blackout, keeps its old cap.
+   */
+  protected maxHeight = GAME_HEIGHT - HUD_H;
 
   /** Left-handed mode: sheet rows put their buttons on the left (`rowLayout`). */
   protected get leftHanded(): boolean {

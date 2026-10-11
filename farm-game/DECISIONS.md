@@ -1110,7 +1110,8 @@ This replaces the M5 world long-press and the review-3 fixes above (rest band, s
 
 The canvas was fitted to the screen at any scale, so game pixels came out 5 or 6 device px wide on an iPhone 13
 and columns crawled as the world scrolled. Ruling: a whole number of device pixels per game pixel, floor-chosen,
-the margin filled with walnut (`#4c2c1c`, never black) and split top and bottom; where that gives up more than
+the margin filled with walnut (`#4c2c1c`, never black) and split top and bottom (round 5: all at the top, see
+below); where that gives up more than
 about 10% of the fitted size, or would take the tightest touch targets (24 game px apart, the hotbar) under
 the 38 CSS px bar on a phone that clears it at fit, keep the fit (a single nearest-neighbour step from the game's pixels; rendering at a
 higher integer multiple first gives the same column widths, so it was not added). Measured with
@@ -1126,3 +1127,42 @@ higher integer multiple first gives the same column widths, so it was not added)
 
 Touch maps through the canvas bounds, so taps stay exact; hit areas grow to 44 CSS px from the live scale. The
 canvas sits on the device-pixel grid in both modes.
+
+### The dock sits on the bottom safe area (owner, round 5)
+
+On a real phone the dock felt too high: the whole-pixel ruling had split the leftover walnut band top and bottom,
+so on the phones that scale by whole pixels the dock floated above the bottom safe area. Now all of the leftover goes
+above the HUD and the canvas's bottom (the dock) sits on the bottom safe area on every profile; the scale, and so
+every touch target, is unchanged. Dock top y (CSS px from the top of the screen) and the gap left under the dock,
+from `displayFit` with the bench profiles' safe areas:
+
+| phone | scale | dock top before | dock top now | gap under the dock before | now |
+|---|---|---|---|---|---|
+| iPhone 13/14 | fit 5.72 | 596.1 | 596.1 | 0.3 | 0.3 |
+| Pixel 7 | 5x | 637.0 | 701.3 | 64.7 | 0.3 |
+| iPhone SE | fit 3.23 | 485.8 | 485.8 | 0.0 | 0.0 |
+| iPhone 15 Pro Max | 6x | 654.3 | 674.0 | 19.7 | 0.0 |
+| Galaxy Fold cover | 4x | 443.7 | 503.7 | 60.0 | 0.0 |
+
+The iPhone 13 and SE keep the fitted scale, which is height-bound on both, so their docks already sat on the safe
+area. The 0.3 px is device-pixel rounding.
+
+### iPhone 13 and SE stay at the fitted scale (coordinator ruling, round 5)
+
+The owner's "menu looks buggy" came from fractional scaling (iPhone 13 5.72x, SE 3.24x: 1 px lines render
+unevenly). Whole pixels there would break the touch floors: at 5x on the iPhone 13 a game px is 1.667 CSS px, so the
+hotbar pitch (24 game px, 8 slots across 200 px) is 40 CSS px against the 43 px floor for phones 390+ px wide
+(45.8 at the fit); at 3x on the SE it is 36 against 38 (38.8 at the fit). Keeping 8 slots over the floor would need
+a 26 game px pitch at 5x (208 px) or 25.3 at 3x (203 px), wider than the canvas, so no gap or padding tweak helps.
+Ruling (a): both keep the fitted scale and the floors stay (one-handed comfort outranks crispness); the art side
+moves frame and UI lines to 2 px and drops the 1 px stripe patterns. Revisit with a 7-slot hotbar, or rendering at an
+integer multiple with one smooth downscale.
+
+### Sheets stop under the HUD; the menu's tabs and Close share two rows (round 5)
+
+- A sheet is at most `GAME_HEIGHT - HUD_H` (326 px) tall, so the bag and Options no longer cut through the goal plate
+  (the menu was 330). The morning summary keeps its old 340 cap: it shows under the night's blackout.
+- The six 30 px tabs crowded "Make", "Skill" and "Opts" inside their 4 px frames (0 px to spare). Tabs and Close now
+  share the old tab row and Close row as one grid (`menuTabGrid`): four 48 px tabs above, two tabs and a wide Close
+  below; Close sits on the thumb's side (the left end for the left hand) and the tabs keep their reading order. The
+  content area and the Options help card are unchanged.

@@ -1,0 +1,2962 @@
+[
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 5,
+  "holds": 0,
+  "drags": 2,
+  "gestures": 7,
+  "contactMm": 106,
+  "airMm": 151,
+  "travelMm": 257,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "10,18 left",
+   "travelThereMm": 25,
+   "plotTravelMm": 232,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 23.572
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 30,
+  "travelMm": 30,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 25,
+  "airMm": 80,
+  "travelMm": 106,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 70,
+  "travelMm": 70,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 150,
+  "travelMm": 150,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 34,
+  "travelMm": 34,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 3,
+  "drags": 2,
+  "gestures": 8,
+  "contactMm": 55,
+  "airMm": 58,
+  "travelMm": 113,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 8,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 5.473
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 17,
+  "airMm": 0,
+  "travelMm": 17,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.003,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 4,
+  "holds": 0,
+  "drags": 3,
+  "gestures": 7,
+  "contactMm": 128,
+  "airMm": 148,
+  "travelMm": 276,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "11,17 down",
+   "travelThereMm": 45,
+   "plotTravelMm": 231,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 25.474
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 30,
+  "travelMm": 30,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 25,
+  "airMm": 58,
+  "travelMm": 83,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 64,
+  "travelMm": 64,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 136,
+  "travelMm": 136,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 52,
+  "travelMm": 52,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 5,
+  "holds": 2,
+  "drags": 2,
+  "gestures": 9,
+  "contactMm": 55,
+  "airMm": 58,
+  "travelMm": 113,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 9,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 9.75
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "i13",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 17,
+  "airMm": 0,
+  "travelMm": 17,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.004,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 5,
+  "holds": 0,
+  "drags": 2,
+  "gestures": 7,
+  "contactMm": 103,
+  "airMm": 145,
+  "travelMm": 248,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "10,18 left",
+   "travelThereMm": 24,
+   "plotTravelMm": 224,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 23.646
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 29,
+  "travelMm": 29,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 24,
+  "airMm": 78,
+  "travelMm": 102,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 68,
+  "travelMm": 68,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 145,
+  "travelMm": 145,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 33,
+  "travelMm": 33,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 4,
+  "drags": 2,
+  "gestures": 9,
+  "contactMm": 53,
+  "airMm": 57,
+  "travelMm": 109,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 9,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 9.712
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 16,
+  "airMm": 0,
+  "travelMm": 16,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 21,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 8.995,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 4,
+  "holds": 0,
+  "drags": 3,
+  "gestures": 7,
+  "contactMm": 124,
+  "airMm": 143,
+  "travelMm": 267,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "11,17 down",
+   "travelThereMm": 44,
+   "plotTravelMm": 223,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 25.524
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 5,
+  "airMm": 0,
+  "travelMm": 5,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 29,
+  "travelMm": 29,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 24,
+  "airMm": 56,
+  "travelMm": 80,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 62,
+  "travelMm": 62,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 131,
+  "travelMm": 131,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 51,
+  "travelMm": 51,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 6,
+  "drags": 2,
+  "gestures": 11,
+  "contactMm": 53,
+  "airMm": 57,
+  "travelMm": 109,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 11,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 14.2
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "pixel7",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 16,
+  "airMm": 0,
+  "travelMm": 16,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 8.99,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 5,
+  "holds": 0,
+  "drags": 2,
+  "gestures": 7,
+  "contactMm": 85,
+  "airMm": 120,
+  "travelMm": 205,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "10,18 left",
+   "travelThereMm": 20,
+   "plotTravelMm": 185,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 23.633
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 4,
+  "airMm": 0,
+  "travelMm": 4,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 24,
+  "travelMm": 24,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 20,
+  "airMm": 64,
+  "travelMm": 84,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 56,
+  "travelMm": 56,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 120,
+  "travelMm": 120,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 27,
+  "travelMm": 27,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 8,
+  "drags": 2,
+  "gestures": 13,
+  "contactMm": 44,
+  "airMm": 47,
+  "travelMm": 90,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 13,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 17.036
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 14,
+  "airMm": 0,
+  "travelMm": 14,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 8.999,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 4,
+  "holds": 0,
+  "drags": 3,
+  "gestures": 7,
+  "contactMm": 103,
+  "airMm": 118,
+  "travelMm": 221,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 7,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "11,17 down",
+   "travelThereMm": 36,
+   "plotTravelMm": 185,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 25.485
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 4,
+  "airMm": 0,
+  "travelMm": 4,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 24,
+  "travelMm": 24,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 20,
+  "airMm": 46,
+  "travelMm": 66,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 51,
+  "travelMm": 51,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 108,
+  "travelMm": 108,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 42,
+  "travelMm": 42,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 3,
+  "drags": 2,
+  "gestures": 8,
+  "contactMm": 44,
+  "airMm": 47,
+  "travelMm": 90,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 8,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 4.993
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "se",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 14,
+  "airMm": 0,
+  "travelMm": 14,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.007,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 5,
+  "holds": 0,
+  "drags": 2,
+  "gestures": 7,
+  "contactMm": 111,
+  "airMm": 158,
+  "travelMm": 269,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 6,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "10,18 left",
+   "travelThereMm": 26,
+   "plotTravelMm": 243,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 23.674
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 6,
+  "airMm": 0,
+  "travelMm": 6,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 32,
+  "travelMm": 32,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 26,
+  "airMm": 84,
+  "travelMm": 111,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 73,
+  "travelMm": 73,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 157,
+  "travelMm": 157,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 35,
+  "travelMm": 35,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 1,
+  "drags": 2,
+  "gestures": 6,
+  "contactMm": 57,
+  "airMm": 61,
+  "travelMm": 119,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 6,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 7.006
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 18,
+  "airMm": 0,
+  "travelMm": 18,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.008,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 4,
+  "holds": 0,
+  "drags": 3,
+  "gestures": 7,
+  "contactMm": 135,
+  "airMm": 155,
+  "travelMm": 290,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 6,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "11,17 down",
+   "travelThereMm": 48,
+   "plotTravelMm": 242,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 25.586
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 6,
+  "airMm": 0,
+  "travelMm": 6,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 32,
+  "travelMm": 32,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 26,
+  "airMm": 60,
+  "travelMm": 87,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 67,
+  "travelMm": 67,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 142,
+  "travelMm": 142,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 55,
+  "travelMm": 55,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 4,
+  "drags": 2,
+  "gestures": 9,
+  "contactMm": 57,
+  "airMm": 61,
+  "travelMm": 119,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 9,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 6.109
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "promax",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 18,
+  "airMm": 0,
+  "travelMm": 18,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.009,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 5,
+  "holds": 0,
+  "drags": 2,
+  "gestures": 7,
+  "contactMm": 88,
+  "airMm": 125,
+  "travelMm": 213,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 5,
+   "stretch": 2,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "10,18 left",
+   "travelThereMm": 21,
+   "plotTravelMm": 192,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 23.658
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 4,
+  "airMm": 0,
+  "travelMm": 4,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 0,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 25,
+  "travelMm": 25,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 21,
+  "airMm": 67,
+  "travelMm": 88,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 2,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 58,
+  "travelMm": 58,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 125,
+  "travelMm": 125,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 28,
+  "travelMm": 28,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 3,
+  "holds": 2,
+  "drags": 2,
+  "gestures": 7,
+  "contactMm": 45,
+  "airMm": 49,
+  "travelMm": 94,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 6,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 5.759
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "right",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 14,
+  "airMm": 0,
+  "travelMm": 14,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 9.013,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "plot3x3",
+  "taps": 4,
+  "holds": 0,
+  "drags": 3,
+  "gestures": 7,
+  "contactMm": 107,
+  "airMm": 123,
+  "travelMm": 230,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 4,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "mode": "serpentine",
+   "after1": "11,17 down",
+   "travelThereMm": 38,
+   "plotTravelMm": 192,
+   "tilled": 9,
+   "planted": 9,
+   "watered": 9,
+   "harvested": 9,
+   "seconds": 25.446
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchSwipe",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 4,
+  "airMm": 0,
+  "travelMm": 4,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 0,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "switchHotbar",
+  "taps": 2,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 2,
+  "contactMm": 0,
+  "airMm": 25,
+  "travelMm": 25,
+  "corrections": 0,
+  "toolChanges": 2,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 2,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "selected": 5
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "bagUse",
+  "taps": 4,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 5,
+  "contactMm": 21,
+  "airMm": 48,
+  "travelMm": 69,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 2,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "placed": true
+  },
+  "acts": 1,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "sell",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 53,
+  "travelMm": 53,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "shipped": 14
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "villager",
+  "taps": 4,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 4,
+  "contactMm": 0,
+  "airMm": 113,
+  "travelMm": 113,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 4,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "friendship": {
+    "points": 25,
+    "talkedDay": 1,
+    "giftedDay": 1
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "machine",
+  "taps": 3,
+  "holds": 0,
+  "drags": 0,
+  "gestures": 3,
+  "contactMm": 0,
+  "airMm": 44,
+  "travelMm": 44,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": null,
+  "touchZones": {
+   "comfort": 3,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "loaded": {
+    "jar": {
+     "out": {
+      "item": "pickles",
+      "of": "parsnip"
+     },
+     "days": 3
+    }
+   }
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "fish",
+  "taps": 5,
+  "holds": 2,
+  "drags": 2,
+  "gestures": 9,
+  "contactMm": 45,
+  "airMm": 49,
+  "travelMm": 94,
+  "corrections": 0,
+  "toolChanges": 1,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 8,
+   "stretch": 1,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "water": [
+    19,
+    29
+   ],
+   "caught": 1,
+   "seconds": 5.645
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ },
+ {
+  "profile": "fold",
+  "hand": "left",
+  "reactionMs": 0,
+  "stop": "center",
+  "task": "toTown",
+  "taps": 0,
+  "holds": 0,
+  "drags": 1,
+  "gestures": 1,
+  "contactMm": 14,
+  "airMm": 0,
+  "travelMm": 14,
+  "corrections": 0,
+  "toolChanges": 0,
+  "retries": 0,
+  "releaseMs": 20,
+  "touchZones": {
+   "comfort": 1,
+   "stretch": 0,
+   "hard": 0
+  },
+  "detail": {
+   "ok": true,
+   "seconds": 8.997,
+   "map": "town"
+  },
+  "acts": 0,
+  "markMismatches": 0,
+  "fails": []
+ }
+]

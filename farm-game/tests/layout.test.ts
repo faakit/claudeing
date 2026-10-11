@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { game, goals, items, shops, tips } from '../src/data';
 import { fitText, measureText } from '../src/ui/fontMetrics';
 import { TAB_LABELS } from '../src/ui/panels/tabLabels';
+import { menuTabGrid } from '../src/ui/layout';
 import { shopFacts } from '../src/ui/panels/shopFacts';
 import { formatClock } from '../src/systems/time';
 import { HUD_H, DOCK_Y, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../src/config';
@@ -78,10 +79,35 @@ describe('shop rows never truncate', () => {
 });
 
 describe('menu tabs', () => {
-  it('every tab label fits its button with room to spare', () => {
+  it('every tab label fits its button with room to spare (inside the 4 px frame, 6 px either side)', () => {
     const labels = Object.entries(TAB_LABELS);
-    const w = Math.floor((GAME_WIDTH - 8) / labels.length) - 2;
-    for (const [id, label] of labels) expect(measureText(label), id).toBeLessThanOrEqual(w - 4);
+    const { tabs } = menuTabGrid(labels.length, false);
+    labels.forEach(([id, label], i) =>
+      expect(measureText(label), id).toBeLessThanOrEqual(tabs[i]!.w - 8 - 12),
+    );
+  });
+  it('tabs and Close share two rows; Close sits on the thumb side and mirrors for the left hand', () => {
+    const right = menuTabGrid(6, false, GAME_WIDTH, [0, 30]);
+    const left = menuTabGrid(6, true, GAME_WIDTH, [0, 30]);
+    expect(right.tabs.filter((t) => t.y === 0)).toHaveLength(4);
+    expect(right.tabs.filter((t) => t.y === 30)).toHaveLength(2);
+    expect(right.close.y).toBe(30);
+    expect(right.close.x + right.close.w).toBeGreaterThan(GAME_WIDTH - 4); // right edge
+    expect(left.close.x).toBeLessThan(4); // left edge
+    for (const t of right.tabs) expect(t.w).toBeGreaterThanOrEqual(46);
+    // nothing overlaps, everything inside the sheet
+    const all = [...right.tabs, right.close];
+    for (const a of all) {
+      expect(a.x).toBeGreaterThanOrEqual(0);
+      expect(a.x + a.w).toBeLessThanOrEqual(GAME_WIDTH);
+      for (const b of all)
+        if (a !== b && a.y === b.y) expect(a.x + a.w <= b.x || b.x + b.w <= a.x).toBe(true);
+    }
+  });
+  it('more tabs from a mechanic still fit two rows with Close', () => {
+    const g = menuTabGrid(8, false);
+    expect(g.tabs).toHaveLength(8);
+    expect(g.close.w).toBeGreaterThanOrEqual(g.tabs[0]!.w);
   });
 });
 

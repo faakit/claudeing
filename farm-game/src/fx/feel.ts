@@ -70,6 +70,18 @@ export function stepFollowAxis(a: FollowAxis, pos: number, dtMs: number, rate: n
 }
 
 /**
+ * Hold the camera this frame? Only while a finger is down and the farmer did not move this frame (from before the
+ * frame's tick to after it), so a tap is read where it came down but a held stick walk is always followed.
+ */
+export const shouldHoldCamera = (
+  touching: boolean,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): boolean => touching && x0 === x1 && y0 === y1;
+
+/**
  * Clamp a camera scroll to [min, max] with a soft knee: within `knee` px of an edge the camera slows to a stop
  * instead of hitting the bound at full speed. Never returns a value outside the bounds. Rounded to whole pixels.
  */

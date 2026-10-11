@@ -27,6 +27,7 @@ import { DoorFx } from '../fx/DoorFx';
 import { PlayerFrames, showFrame, TOOL_CONTACT_FRAME, type FrameRef } from '../fx/playerFrames';
 import {
   breathFrame,
+  shouldHoldCamera,
   HIT_STOP_MS,
   isContactFrame,
   walkFps,
@@ -412,12 +413,16 @@ export abstract class WorldScene extends Phaser.Scene {
       this.fresh = false;
       return;
     }
-    this.tick(time, delta);
     const p = getState().player;
-    // While a finger rests on the screen and the farmer stands still, the camera does not finish centring: a tap
-    // is read through the camera at its lift, so it must not drift under the finger (feel critic, review 1).
+    const x0 = p.x;
+    const y0 = p.y;
+    this.tick(time, delta);
+    // While a finger rests on the screen and the farmer stood still this frame, the camera does not finish
+    // centring: a tap is read through the camera at its lift, so it must not drift under the finger (feel critic,
+    // review 1). "Still" is measured across this frame's tick. (Round 5 blocker: it was measured against the
+    // position syncSprite had just stored, which always matched, so a held stick drag froze the camera.)
     const touching = this.input.manager.pointers.some((ptr) => ptr.isDown);
-    this.pcam.hold = touching && p.x === this.lastPos.x && p.y === this.lastPos.y;
+    this.pcam.hold = shouldHoldCamera(touching, x0, y0, p.x, p.y);
     this.pcam.update(p.x, p.y, delta, time);
   }
 

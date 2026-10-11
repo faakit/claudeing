@@ -102,10 +102,6 @@ async function runPacing(rate) {
     await page.keyboard.up(key);
   };
 
-  // 0. Standing still on the farm (the breathing idle, ambient life, the clock).
-  await place(8, 19, 'down');
-  await rec('idle: standing on the farm', () => page.waitForTimeout(2500));
-
   // 1. Walking: a loop with the keys (the stick's path through the same code), turns and stops included.
   await place(8, 19, 'right');
   await page.waitForTimeout(300);
@@ -151,6 +147,11 @@ async function runPacing(rate) {
     });
     await page.waitForTimeout(5500);
   });
+
+  // 3b. Standing still on the farm (the breathing idle, ambient life, the clock), once the game's first seconds of
+  // background loading (sound files decoding one by one) are over.
+  await place(8, 19, 'down');
+  await rec('idle: standing on the farm', () => page.waitForTimeout(3000));
 
   // 4. Sheets: the bag (menu), the shop, the bin, the board and the mail, opened and closed one after another.
   await rec('sheets: bag, shop, bin, board, mail', async () => {
