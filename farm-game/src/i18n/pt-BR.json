@@ -485,8 +485,8 @@
     "got": "Pegou: {item}",
     "machine": "Máquina",
     "ready": {
-      "one": "Fica pronto {count} manhã depois de carregar.",
-      "other": "Fica pronto {count} manhãs depois de carregar."
+      "one": "Fica pronto em {count} manhã.",
+      "other": "Fica pronto em {count} manhãs."
     },
     "gone": "Sumiu?",
     "bring": "Traga frutas para geleia, ou legumes para conserva.",
@@ -513,7 +513,7 @@
     "cantGetThere": "Não dá para chegar lá."
   },
   "title": {
-    "subtitle": "um joguinho aconchegante de fazenda",
+    "subtitle": "um joguinho de roça aconchegante",
     "version": "protótipo v0.2",
     "newerSave": "Seu jogo salvo é de uma versão mais nova. Atualize o jogo para continuar.",
     "recovered": "Recuperado do seu jogo salvo reserva.",
@@ -769,8 +769,8 @@
       "other": "{count} plantas murcharam com a nova estação."
     },
     "now": "Agora: {season} {day}. Ouro: {gold}",
-    "storm": "Tempestade! As plantas estão regadas.",
-    "rain": "Está chovendo. As plantas estão regadas!",
+    "storm": "Tempestade! Plantas regadas.",
+    "rain": "Chuva! As plantas estão regadas.",
     "sun": "Hoje tem sol.",
     "tip": "Dica: {tip}"
   },
@@ -779,7 +779,7 @@
     "results": "Resultados do ano {year}",
     "goals": "Metas cumpridas",
     "rank": "Seu título",
-    "newSpring": "Uma nova primavera espera. Continue plantando!",
+    "newSpring": "A primavera volta. Siga plantando!",
     "keepPlaying": "Continuar jogando"
   },
   "forecast": {

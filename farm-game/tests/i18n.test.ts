@@ -23,7 +23,7 @@ import {
   type Key,
 } from '../src/i18n';
 import { applyDataLocale, dataStrings, overlayFor, relocalize } from '../src/i18n/dataText';
-import { goals, items, tips, tutorial, valley } from '../src/data';
+import { game, goals, items, tips, tutorial, valley } from '../src/data';
 import { hasGlyph, measureText, wrapText } from '../src/ui/fontMetrics';
 import { scanSource } from './i18nScan';
 
@@ -269,6 +269,25 @@ describe('Portuguese fits where English is measured', () => {
       expect(measureText(t('sleep.title'), 2)).toBeLessThanOrEqual(184);
       expect(measureText(t('yearEnd.title'), 2)).toBeLessThanOrEqual(184);
       expect(measureText(t('opts.music'))).toBeLessThanOrEqual(36);
+    }));
+
+  it('single-line texts of the title, the morning summary and the year end fit the sheet', () =>
+    inPt(() => {
+      expect(measureText(t('title.subtitle'))).toBeLessThanOrEqual(196);
+      for (const k of [
+        'summary.storm',
+        'summary.rain',
+        'summary.sun',
+        'summary.passedOut',
+        'summary.slept',
+        'yearEnd.newSpring',
+        'fishing.keepGreen',
+        'fishing.waiting',
+        'ui.lateWarning',
+      ] as const)
+        expect(measureText(t(k)), k).toBeLessThanOrEqual(184);
+      for (const r of game.ranks)
+        expect(measureText(r.title.toUpperCase(), 2), r.title).toBeLessThanOrEqual(190);
     }));
 
   it('the HUD date and weather lines fit their boxes', () =>
