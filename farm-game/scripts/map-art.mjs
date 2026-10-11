@@ -1141,7 +1141,10 @@ export function artLayers(name, m, objects, extraReserved = []) {
         ]) {
           const i = (y - 1) * w + x + dx;
           if (!has(`${n}_${col}_top`)) continue;
-          if (L.overhead[i] === 0) set('overhead', x + dx, y - 1, `${n}_${col}_top`);
+          // the side pieces are a 4 px eave: on the never-cut 'lamps' layer, so standing beside the well does not
+          // switch the see-through mask on (review 13: town at night went from 4 to 7 draws)
+          const top = dx ? 'lamps' : 'overhead';
+          if (L.overhead[i] === 0 && L.lamps[i] === 0) set(top, x + dx, y - 1, `${n}_${col}_top`);
           else console.warn(`map-art: ${name}: ${n} roof at ${x + dx},${y - 1} skipped (occupied)`);
         }
       }

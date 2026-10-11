@@ -203,6 +203,12 @@ def main() -> None:
         if not sprites:
             continue
         sheet, frames = pack(sprites)
+        # alias frame names: a second name for an existing frame, same rect, no extra pixels (motion.ALIASES)
+        import motion
+
+        for alias, src in motion.aliases().items():
+            if src in frames and alias not in frames:
+                frames[alias] = dict(frames[src])
         save_png(sheet, os.path.join(PUB, "sprites", f"{g}.png"))
         meta = {
             "app": "art-src/tools/build.py",

@@ -101,22 +101,22 @@ def fix_edges(img: np.ndarray, x0: int = 0, x1: int | None = None, y0: int = 0, 
 # ---------------------------------------------------------------- the walk, front and back views
 
 def _arm_len(img: np.ndarray, cols: range, top: int, bottom: int, d: int) -> None:
-    """Lengthen (d=+1) or shorten (d=-1) an arm hanging in `cols`, rows top..bottom (sleeve row `top`,
-    bottom outline row `bottom`): the shoulder stays put and the hand moves by d."""
+    """Lengthen (d > 0) or shorten (d < 0) by |d| px an arm hanging in `cols`, rows top..bottom (sleeve row `top`,
+    bottom outline row `bottom`): the shoulder stays put and the hand moves by d. Lengthening repeats the sleeve
+    row; shortening takes rows out of the forearm, so the sleeve stays."""
     xs = list(cols)
     strip = img[top : bottom + 1, xs[0] : xs[-1] + 1].copy()
     if d > 0:
-        new = np.vstack([strip[:1], strip])  # repeat the sleeve row
+        new = np.vstack([strip[:1]] * d + [strip])
     else:
-        new = strip[1:]
-    # clear the old arm, then write the new one (over whatever was below: pants or air)
+        new = np.vstack([strip[:1], strip[1 - d :]])
     for j in range(strip.shape[0]):
         for i, x in enumerate(xs):
             if strip[j, i] >= 0:
                 img[top + j, x] = -1
     for j in range(new.shape[0]):
         for i, x in enumerate(xs):
-            if new[j, i] >= 0:
+            if new[j, i] >= 0 and top + j < img.shape[0]:
                 img[top + j, x] = new[j, i]
 
 
@@ -132,17 +132,17 @@ def _lift_leg(img: np.ndarray, cols: range, top: int, n: int) -> None:
 
 
 # Front/back cycle: (body_dy, lift viewer-left leg, lift viewer-right leg, arm viewer-left, arm viewer-right).
-# Arms: +1 = swung forward (looks longer in front view), -1 = swung back. The body bobs 1 px down on the "down"
+# Arms: +n = swung forward n px (looks longer in front view), -n = swung back; a 2 px swing at contact (review 13). The body bobs 1 px down on the "down"
 # frames only; the planted foot never leaves row 31.
 FRONT_CYCLE = [
-    (0, 0, 0, -1, +1),  # 0 contact
+    (0, 0, 0, -2, +2),  # 0 contact: arms at full swing (2 px)
     (1, 0, 0, -1, +1),  # 1 down
-    (0, 0, 2, 0, 0),  # 2 passing (right leg lifted)
-    (0, 0, 1, 0, 0),  # 3 up
-    (0, 0, 0, +1, -1),  # 4 contact
+    (0, 0, 2, 0, 0),  # 2 passing (right leg lifted), arms passing the hips
+    (0, 0, 1, +1, -1),  # 3 up
+    (0, 0, 0, +2, -2),  # 4 contact
     (1, 0, 0, +1, -1),  # 5 down
     (0, 2, 0, 0, 0),  # 6 passing (left leg lifted)
-    (0, 1, 0, 0, 0),  # 7 up
+    (0, 1, 0, -1, +1),  # 7 up
 ]
 
 
@@ -187,10 +187,10 @@ SIDE_FRAMES = [
         "....KWWWWK......",
         "...KWWWWWWK.....",
         "..KWWKWWWWK.....",
-        "..KmmKWWWWK.....",
-        ".KkkKWWWWWK.....",
-        ".KkkKKEEEEK.....",
-        "..KKKDDDDDK.....",
+        "..KWmKWWWWK.....",
+        "..KkkKWWWWK.....",
+        "..KkkKEEEEK.....",
+        "...KKDDDDDK.....",
         "....KNNKDDDK....",
         "...KNNK.KDDDK...",
         "..KEEK...KoooK..",
@@ -204,7 +204,7 @@ SIDE_FRAMES = [
         "....KWWWWK......",
         "...KWWWWWWK.....",
         "...KWKWWWWK.....",
-        "..KmmKWWWWK.....",
+        "..KWmKWWWWK.....",
         "..KkkKWWWWK.....",
         "..KkkKEEEEK.....",
         "...KKDDDDDK.....",
@@ -306,7 +306,7 @@ SIDE_FRAMES = [
         "....KWWWWK......",
         "...KWWWWWWK.....",
         "...KWKWWWWK.....",
-        "..KmmKWWWWK.....",
+        "..KWmKWWWWK.....",
         "..KkkKWWWWK.....",
         "..KkkKEEEEK.....",
         "...KKDDDDDK.....",

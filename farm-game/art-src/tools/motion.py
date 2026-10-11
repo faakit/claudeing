@@ -15,6 +15,9 @@ All new frame names; existing keys keep their art except where noted:
   npc_<id>_<dir>_3                each villager's own beat: Mara nods, Finn lifts his hat, Orin shifts his weight,
                                   Rosa lifts and tips her hat, Clay tilts his head (smug)
   animal_<a>_2, animal_<a>_3      breathe (the back rises 1 px) and a head dip
+  player_idle_<dir>_1             exhale: the head and shoulders sink 1 px (a torso row goes); the feet stay
+  obj_door_house_<0..2>           the house's exit door tile (16 x 16, the `door` tile): closed, ajar, open
+Alias frame names (the feel agent's names for frames above; same atlas rect, no extra pixels): see aliases().
 """
 from __future__ import annotations
 
@@ -48,20 +51,20 @@ def _door_open(names, leaf: int) -> np.ndarray:
     rows = [list(r) for r in _door_closed()]
     if leaf >= 10:
         return grid(names, ["".join(r) for r in rows])
-    for y in range(7, 29):  # the opening: x 3..12 (between the jambs)
-        for x in range(3, 13):
-            inside = "N" if y < 10 else ("P" if y < 26 else "E")
-            rows[y][x] = inside
-    rows[8][2] = rows[8][13] = "P"  # the arch's inner corners are in the shadow too
-    # the leaf: hinge column x 3, planks foreshortened to `leaf` columns, a dark edge where it turns away
+    # the opening follows the closed leaf's own arch: row 7 x 4..11, rows 8..27 x 3..12. The outline, the jamb
+    # (`E` columns), the arch's wooden shoulders (row 8, x 2 and 13) and the step stay pixel-identical.
+    def inside(y: int) -> range:
+        return range(4, 12) if y == 7 else range(3, 13)
+
+    for y in range(7, 28):
+        for x in inside(y):
+            rows[y][x] = "N" if y < 10 else ("P" if y < 26 else "E")
+    # the leaf: hinged at x 3, planks foreshortened to `leaf` columns, a dark edge where it turns away
     cols = "woowwowwoo"
-    for y in range(8, 29):
+    for y in range(8, 28):
         for i in range(leaf):
             x = 3 + i
-            if i == leaf - 1:
-                rows[y][x] = "K"
-            else:
-                rows[y][x] = "E" if y in (8, 28) else cols[int(i * 10 / max(1, leaf - 1)) % 10]
+            rows[y][x] = "K" if i == leaf - 1 else ("E" if y == 8 else cols[int(i * 10 / max(1, leaf - 1)) % 10])
     if leaf >= 4:  # the knob, at the leaf's free edge
         rows[21][3 + leaf - 2] = "Y"
     return grid(names, ["".join(r) for r in rows])
@@ -341,9 +344,76 @@ def build(names, groups: dict, to_idx, to_rgba) -> None:
         if len(base) == 3:
             for k, idx in villager_idles(names, base, npc).items():
                 chars[k] = to_rgba(idx)
+    for d in ("down", "up", "right"):
+        k = f"player_idle_{d}_0"
+        if k in chars:
+            chars[f"player_idle_{d}_1"] = to_rgba(player_breath(to_idx(chars[k])))
+    if "player_idle_right_1" in chars:
+        chars["player_idle_left_1"] = chars["player_idle_right_1"][:, ::-1].copy()
+    # the house's exit door, from the shipped tileset's `door` and `wall` tiles (placeholder row: stable slots)
+    tdir = os.path.normpath(os.path.join(HERE, "..", "..", "public", "assets", "tilesets"))
+    if os.path.exists(os.path.join(tdir, "tiles.json")):
+        from PIL import Image
+
+        meta = json.load(open(os.path.join(tdir, "tiles.json")))
+        sheet = np.asarray(Image.open(os.path.join(tdir, "tiles.png")).convert("RGBA"))
+        cols = meta["columns"]
+
+        def tile(name: str) -> np.ndarray:
+            k = meta["tiles"][name]
+            y, x = divmod(k, cols)
+            return to_idx(sheet[y * 16 : (y + 1) * 16, x * 16 : (x + 1) * 16].copy())
+
+        for i, f in enumerate(house_door(names, tile("door"), tile("wall"))):
+            world[f"obj_door_house_{i}"] = to_rgba(f)
     for a in ("chicken", "cow", "sheep", "pig"):
         key = f"animal_{a}"
         if key in world:
             b, d = animal_idles(to_idx(world[key]))
             world[f"{key}_2"] = to_rgba(b)
             world[f"{key}_3"] = to_rgba(d)
+
+
+# ---------------------------------------------------------------- the feel agent's names (atlas aliases)
+
+def aliases() -> dict[str, str]:
+    """alias frame name -> existing frame name, added to the atlas JSON by build.py (same rect)."""
+    out = {}
+    for tool in ("hoe", "can", "scythe", "pick", "rod"):
+        dirs = ("down", "left", "right", "up") if tool in ("hoe", "pick") else ("down", "left", "right")
+        for d in dirs:  # 3-frame swing: anticipation, impact (the contact frame), follow-through
+            for i, src in enumerate((0, 2, 3)):
+                out[f"player_swing_{tool}_{d}_{i}"] = f"player_tool_{tool}_{d}_{src}"
+    for i, src in enumerate((0, 1, 3)):  # the farmhouse's tall door: closed, ajar, open
+        out[f"obj_door_farmhouse_{i}"] = f"obj_door_open_{src}"
+    return out
+
+
+def player_breath(f: np.ndarray) -> np.ndarray:
+    """Exhale: one torso row (row 21, under the shoulders) goes, so the head and shoulders sink 1 px."""
+    return squash_down(f, 21)
+
+
+def house_door(names, door: np.ndarray, wall: np.ndarray) -> list[np.ndarray]:
+    """The `door` tile opening: the leaf is the wooden part where the door tile differs from the wall. Closed is the tile
+    itself; ajar keeps the leaf's hinge half; open leaves a 2 px edge. Inside: a dark room."""
+    woodish = {names.index(n) for n in ("wood", "soil", "earth dark", "gold", "sand")}
+    leaf = (door != wall) & np.isin(door, list(woodish))
+    ys, xs = np.where(leaf)
+    y0, y1, x0, x1 = int(ys.min()), int(ys.max()), int(xs.min()), int(xs.max())
+    ix0, ix1, iy0, iy1 = x0 + 1, x1 - 1, y0 + 1, y1  # inside the wooden frame (its 1 px border stays)
+    out = [door.copy()]
+    nav, plum = names.index("night navy"), names.index("plum shadow")
+    for keep in (max(3, (ix1 - ix0 + 1) * 2 // 3), 2):
+        f = door.copy()
+        inner = door[iy0 : iy1 + 1, ix0 : ix1 + 1].copy()
+        for y in range(iy0, iy1 + 1):
+            for x in range(ix0, ix1 + 1):
+                f[y, x] = nav if y < iy0 + 2 else plum
+        w = ix1 - ix0 + 1
+        for y in range(iy0, iy1 + 1):
+            for i in range(keep):
+                src = inner[y - iy0, int(i * w / keep)]
+                f[y, ix0 + i] = INK if i == keep - 1 else src
+        out.append(f)
+    return out

@@ -159,17 +159,17 @@ describe('animation frames (art round 4)', () => {
       }
   });
 
-  it('draws the tool-use head where the idle head is (32 px canvas, body at x 8..23)', () => {
-    for (const [d, dirs] of [
-      ['down', 'down'],
-      ['right', 'right'],
-    ] as const) {
-      const idle = frame(`player_idle_${dirs}_0`);
+  it('draws the tool-use head where the idle head is (32 px canvas, body at x 8..23; the body may sink 1 px)', () => {
+    for (const d of ['down', 'right'] as const) {
+      const idle = frame(`player_idle_${d}_0`);
       const k = `player_tool_scythe_${d}_2`;
       const f = frame(k);
-      // the face rows (8..14) are untouched by the scythe's contact pose
-      for (let y = 8; y < 15; y++)
-        expect(f[y]!.slice(8, 24).join('|'), `${k} row ${y}`).toBe(idle[y]!.join('|'));
+      // the face rows (8..14) are untouched by the scythe's contact pose, moved down 0 or 1 px with the body
+      const at = (dy: number) =>
+        [8, 9, 10, 11, 12, 13, 14].every(
+          (y) => f[y + dy]!.slice(8, 24).join('|') === idle[y]!.join('|'),
+        );
+      expect(at(0) || at(1), k).toBe(true);
     }
   });
 

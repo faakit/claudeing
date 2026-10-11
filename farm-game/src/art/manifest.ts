@@ -123,6 +123,9 @@ export const TOOL_ANIMS: Record<string, { tool: string; dirs: readonly string[] 
   scythe: { tool: 'scythe', dirs: SIDES },
   fishing_rod: { tool: 'rod', dirs: SIDES },
 };
+/** The feel agent's 3-frame swing names: anticipation, impact (= contact frame 2), follow-through. */
+export const swingKey = (tool: string, dir: string, i: number): string =>
+  `player_swing_${tool}_${dir}_${i}`;
 export const toolAnimKey = (tool: string, dir: string, i: number): string =>
   `player_tool_${tool}_${dir}_${i}`;
 /** The frame keys of one tool-use sequence (by tool item id), or [] when that facing has none. */
@@ -414,6 +417,41 @@ export function artManifest(): ArtEntry[] {
           from: 'art round 4 (toolanim.py)',
           optional: true,
         });
+  // the feel agent's names (feel/smooth frames-wanted.md), atlas aliases of the frames above (build.py)
+  for (const tool of ['hoe', 'can', 'scythe', 'pick', 'rod'])
+    for (const d of tool === 'hoe' || tool === 'pick'
+      ? ALL_DIRS
+      : (['down', 'left', 'right'] as const))
+      for (let i = 0; i < 3; i++)
+        add({
+          texture: swingKey(tool, d, i),
+          w: 32,
+          h: 32,
+          group: 'chars',
+          kind: `player swing ${tool} ${d} (alias)`,
+          from: 'art round 4 (alias of player_tool_*)',
+          optional: true,
+        });
+  for (let i = 0; i < 3; i++) {
+    add({
+      texture: `obj_door_farmhouse_${i}`,
+      w: 16,
+      h: 32,
+      group: 'world',
+      kind: `farmhouse door ${i} (alias)`,
+      from: 'art round 4 (alias of obj_door_open_*)',
+      optional: true,
+    });
+    add({
+      texture: `obj_door_house_${i}`,
+      w: 16,
+      h: 16,
+      group: 'world',
+      kind: `house exit door ${i}`,
+      from: 'art round 4 (motion.py)',
+      optional: true,
+    });
+  }
   for (const [k, w, h] of FX_SPRITES)
     add({ texture: k, w, h, group: 'ui', kind: 'fx / ambient', from: 'fx/*', optional: true });
   // Ground items at world scale, drawn at 1x (review 8: the 16 px icon at 0.8 dropped pixel rows)
@@ -447,6 +485,16 @@ export function artManifest(): ArtEntry[] {
       group: 'chars',
       kind: `player idle ${d}`,
       from: 'placeholders.ts',
+    });
+    add({
+      texture: PLAYER_KEY,
+      frame: `player_idle_${d}_1`,
+      w: 16,
+      h: 32,
+      group: 'chars',
+      kind: `player idle ${d} exhale`,
+      from: 'art round 4 (motion.py)',
+      optional: true,
     });
     for (let i = 0; i < PLAYER_WALK_FRAMES; i++)
       add({
