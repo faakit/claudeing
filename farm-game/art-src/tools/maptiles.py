@@ -6,7 +6,7 @@ Autotiles use an 8-bit neighbour mask (a set bit = that neighbour is the *other*
 and are reduced to the 46 canonical non-zero masks of the classic blob set by `canon()` (a corner bit only
 counts when both sides next to it are clear). scripts/map-art.mjs uses the same reduction.
 
-Rules from the art critic (agents/critiques/art-critic/): terrain transitions use leaf-dark/teal shade lips,
+Rules from the art critic (reviews in git history, agents/HISTORY.md): terrain transitions use leaf-dark/teal shade lips,
 never ink; ink outlines only on objects; shadows fall down-right (light top-left) as dithered teal/plum shade;
 ground flora has no outline so it sits in the ground and never out-shouts crops, forage or interactables.
 """

@@ -1,41 +1,43 @@
 # Mobile: build, verify, ship
 
 Tiny Acre ships three ways from one codebase: the web (GitHub Pages), an installable PWA, and
-Capacitor apps for Android and iOS. Everything below was done in a Linux sandbox with no phone,
-so this page separates **verified in emulation** from **needs a real device**.
+Capacitor apps for Android and iOS. Everything below was done without a phone, so this page
+separates **verified in emulation** from **needs a real device**.
 
 ## What is verified automatically
 
-Run `npm run verify` (lint, typecheck, 140+ unit tests, build, three e2e suites, perf budgets).
+Run `npm run verify` (lint, typecheck, about 880 unit tests, build, the e2e suites for the core loop, phones,
+scenarios, controls, feel and the guided start, and perf budgets).
 
-| Area                              | How it is checked                                                                                                                       | Command              |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| Core loop on the production build | headless Chromium plays new game, till, plant, water, sleep, reload, continue                                                           | `npm run e2e`        |
-| Background / foreground           | `visibilitychange` freezes the clock, drops held input, resumes cleanly                                                                 | `npm run e2e`        |
-| Offline (airplane mode)           | service worker installs, network is cut, reload + new game still work                                                                   | `npm run e2e`        |
-| Installability                    | manifest is fullscreen + portrait, all icons load, maskable icon present                                                                | `npm run e2e`        |
-| Notches / safe areas              | 5 phone profiles with injected `safe-area-inset-*` (iPhone 13/15 Pro Max, Pixel 7, punch-hole, SE): canvas never enters the unsafe area | `npm run e2e:mobile` |
-| Touch targets                     | real hit-area sizes measured per profile; every control >= 44 CSS px on phones >= 800px wide (smallest measured: 46)                    | `npm run e2e:mobile` |
-| Landscape                         | "turn upright" overlay appears                                                                                                          | `npm run e2e:mobile` |
-| Native bridge                     | Capacitor plugins mocked: app state -> lifecycle, Android back button, haptics driver, Preferences save store, splash                   | `npm test`           |
-| Render cost                       | GL draw calls per frame and JS ms per frame, worst case = fully planted field. Budgets: <= 12 draws, <= 3.5 ms JS                       | `npm run perf`       |
+| Area                              | How it is checked                                                                                                                                                           | Command              |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| Core loop on the production build | headless Chromium plays new game, till, plant, water, sleep, reload, continue                                                                                               | `npm run e2e`        |
+| Background / foreground           | `visibilitychange` freezes the clock, drops held input, resumes cleanly                                                                                                     | `npm run e2e`        |
+| Offline (airplane mode)           | service worker installs, network is cut, reload + new game still work                                                                                                       | `npm run e2e`        |
+| Installability                    | manifest is fullscreen + portrait, all icons load, maskable icon present                                                                                                    | `npm run e2e`        |
+| Notches / safe areas              | 6 phone profiles with injected `safe-area-inset-*` (iPhone 13, iPhone 15 Pro Max, Pixel 7, punch-hole, SE, Galaxy Fold): canvas never enters the unsafe area                | `npm run e2e:mobile` |
+| Touch targets                     | real hit-area sizes measured per profile; every control >= 44 CSS px (1 px rounding slack) on phones 390 CSS px wide or more, >= 38 on 360-389, narrower ones reported only | `npm run e2e:mobile` |
+| Landscape                         | "turn upright" overlay appears                                                                                                                                              | `npm run e2e:mobile` |
+| Native bridge                     | Capacitor plugins mocked: app state -> lifecycle, Android back button, haptics driver, Preferences save store, splash                                                       | `npm test`           |
+| Render cost                       | GL draw calls per frame and JS ms per frame, worst case = fully planted field. Budgets: <= 12 draws, <= 3.5 ms JS                                                           | `npm run perf`       |
+| Frame pacing                      | per-frame times in real play (walk, doors, sheets, sleep, new game) at 1x, 4x and 6x CPU throttle, against budgets                                                          | `npm run perf`       |
 
-Measured on the last run: **2-3 draw calls and ~1.3-1.8 ms of JavaScript per frame**, including a
+Measured in round 4: **2-5 draw calls and at most about 1.8 ms of JavaScript per frame**, including a
 198-tile planted field with 24 weeds and particles. The game is nowhere near CPU- or draw-call-bound;
 the remaining risk on real hardware is GPU fill on very old devices, which only a device can show.
 
 ## What needs a real device (the M8 acceptance list)
 
-None of these can be proven in the sandbox. Run them on one mid-range Android phone (about four
+None of these can be proven in emulation. Run them on one mid-range Android phone (about four
 years old) and one iPhone, once per release:
 
 - [ ] **30 FPS or better** for 10 minutes of play (Android: `adb shell dumpsys gfxinfo app.tinyacre.farm`; iOS: Xcode FPS gauge). Try battery-saver mode too.
 - [ ] **Kill the app mid-day**, relaunch, Continue: progress is there (saves happen on background, sleep, map change, and every minute).
 - [ ] **Audio resumes** after a phone call, Siri, and app switching. iOS: also test with the silent switch on (the PWA is muted by it, the native app should not be: see Known issues).
 - [ ] **Notch / punch-hole / rounded corners**: no control is hidden. Check portrait with the notch at the top and at the bottom (home indicator).
-- [ ] **Two-thumb play** for 10 minutes: joystick + Action + Interact, no missed or stuck inputs.
+- [ ] **One-thumb play** for 10 minutes, right hand then left: taps, Action, painted rows, the tool ring, Interact; no missed or stuck inputs. The detailed controls checklist is in `agents/OPEN-FINDINGS.md`.
 - [ ] **Airplane mode**: native app works fully (it has no network use at all).
-- [ ] **Haptics** feel right (light tick on tool use, double pulse on harvest/sale, buzz on errors) and the Options toggle turns them off.
+- [ ] **Haptics** feel right (a light tick on a tile action, a tool change and each painted tile; a stronger pulse on a ripe harvest or a level-up; a double pulse on a refusal) and the Options toggle turns them off.
 - [ ] **Android back button** closes dialogs, then opens the menu, then exits from the title screen.
 - [ ] **Splash**: no white flash between launch and the title screen.
 - [ ] Low storage / blocked storage: the game still plays and says "Saving is unavailable" instead of claiming "Saved!".
@@ -46,7 +48,7 @@ Prerequisites: Node 22, plus Android Studio (any OS) and/or Xcode 16+ on a Mac.
 
 ```bash
 npm install
-npm run cap:sync          # builds the web app and copies it into android/ and ios/
+npm run cap:sync          # builds the store web app (no dev tools) and copies it into android/ and ios/
 npm run cap:android       # opens Android Studio  (Run > Run 'app' on a device or emulator)
 npm run cap:ios           # opens Xcode           (select a team under Signing, then Run)
 ```
@@ -80,7 +82,7 @@ be changed afterwards. Update it in three places, then `npm run cap:sync`:
 
 ## Store checklist
 
-Prepare early (see the plan, "Packaging and store release"):
+Prepare early:
 
 - App icon 1024x1024 (`resources/icon.png`), feature graphic (Google Play), 4-8 screenshots per device class, short + long description.
 - **Privacy policy URL**: the game collects no data; say exactly that. Data safety form (Play) and privacy labels (App Store): "no data collected".
@@ -90,8 +92,8 @@ Prepare early (see the plan, "Packaging and store release"):
 
 ## Known issues and risks
 
-- **iOS silent switch** mutes Web Audio in a browser/PWA (an iOS rule, no web fix). The native iOS app sets the `playback` audio session in `AppDelegate.swift`, so it plays regardless of the switch (and mixes with the player's music). That Swift change is untested: I could not compile it here.
+- **iOS silent switch** mutes Web Audio in a browser/PWA (an iOS rule, no web fix). The native iOS app sets the `playback` audio session in `AppDelegate.swift`, so it plays regardless of the switch (and mixes with the player's music). That Swift change is untested: it has not been compiled yet.
 - **Audio unlock** needs one tap on iOS/Android. The title screen's Continue/New Game provides it; the first tap anywhere also unlocks.
 - **Very small phones** (below ~640 CSS px wide): the UI keeps its layout, so controls fall just under 44 CSS px (43 on a 667px-wide SE). Tiny text (`5x7` pixel font) is about 8-10 CSS px on typical phones; a "larger text" option is a good follow-up.
 - **iPhone Safari (web)** has no fullscreen API; the Options menu tells players to "Add to Home Screen", which gives the fullscreen PWA.
-- I could not compile the native projects here (no Android SDK or Xcode in the sandbox), so a first `assembleDebug` / Xcode build may surface a small config issue. The generated projects and `cap sync` are clean.
+- The native projects have never been compiled (no Android SDK or Xcode was used), so a first `assembleDebug` / Xcode build may surface a small config issue. The generated projects and `cap sync` are clean.

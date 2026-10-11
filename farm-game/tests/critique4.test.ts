@@ -10,7 +10,7 @@ import { ARM_MS, interactWith, placeObject, setPickupClock } from '../src/system
 import { migrate } from '../src/systems/save';
 import { equip, grass, newState } from './helpers';
 
-/** Fixes for critique 4 (agents/critiques/critique-4.md). */
+/** Fixes for critique 4 (the report is in git history: agents/HISTORY.md). */
 describe('critique 4 fixes', () => {
   afterEach(() => setPickupClock(() => Date.now()));
 

@@ -1,6 +1,6 @@
 {
   "M0": {
-    "_note": "Before the controls work (PLAN-CONTROLS.md, bench.json): a perfect bot on iPhone 13.",
+    "_note": "Before the controls work (the M0 bench, in git history: agents/HISTORY.md): a perfect bot on iPhone 13.",
     "plot3x3": {
       "gestures": 26,
       "travelMm": 1150,

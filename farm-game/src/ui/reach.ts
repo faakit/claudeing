@@ -1,7 +1,8 @@
 /**
  * One-handed thumb reach model, pure (no Phaser). Used by layout tests to prove that the controls the thumb
  * works with sit in the comfortable zone on the phones we target. The same maths drives the one-thumb
- * benchmark (`scripts/thumb-lib.mjs`); see PLAN-CONTROLS.md "The reach model" for sources and limits.
+ * benchmark (`scripts/thumb-lib.mjs`); its sources and limits are in the controls plan's "The reach model"
+ * (PLAN-CONTROLS.md, now in git history: agents/HISTORY.md).
  *
  * It is a geometric model built from published studies, not a measurement of anyone's hand.
  */

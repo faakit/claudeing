@@ -1,5 +1,5 @@
 /**
- * Debug instrumentation for controls (PLAN-CONTROLS.md section 5): a short log of what touches and actions did,
+ * Debug instrumentation for controls (DECISIONS.md "One-thumb controls"): a short log of what touches and actions did,
  * exposed as `window.__farm.controls` with `?debug`. Never saved; capped so it cannot grow.
  */
 import { RING } from '../ui/layout';

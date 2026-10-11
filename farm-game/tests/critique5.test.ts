@@ -37,7 +37,7 @@ function rivalDay(): GameState {
   return s;
 }
 
-/** Fixes for critique 5 (agents/critiques/critique-5.md). */
+/** Fixes for critique 5 (the report is in git history: agents/HISTORY.md). */
 describe('critique 5 fixes', () => {
   afterEach(() => setPickupClock(() => Date.now()));
 

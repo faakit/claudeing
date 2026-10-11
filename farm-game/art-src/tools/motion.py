@@ -235,7 +235,7 @@ def chin_row(f: np.ndarray) -> int:
 
 
 # Eye boxes (x0, x1, y) of each eye's pupil row, by villager and view (left mirrors right). Read off 14x crops of
-# the frames (agents/out/art-shots/round4/faces.png). Blink: the eye pixels go to skin, a 2 px lid line stays.
+# the frames (strips.py renders them). Blink: the eye pixels go to skin, a 2 px lid line stays.
 EYES = {
     "mara": {"down": [(5, 6, 14), (11, 12, 14)], "right": [(14, 15, 14)]},
     "finn": {"down": [(6, 7, 13), (11, 12, 13)], "right": [(12, 13, 12)]},
