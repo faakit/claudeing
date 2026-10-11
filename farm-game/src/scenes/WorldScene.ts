@@ -47,7 +47,7 @@ import { Effects } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient, parseBlooms } from '../fx/Ambient';
-import { SeeThrough } from '../fx/SeeThrough';
+import { NO_HOLE, SeeThrough } from '../fx/SeeThrough';
 import { PixelCamera } from '../fx/PixelCamera';
 import { DoorFx } from '../fx/DoorFx';
 import { PlayerFrames, showFrame, TOOL_CONTACT_FRAME, type FrameRef } from '../fx/playerFrames';
@@ -170,6 +170,8 @@ let fxWarmed = false;
 const SWING = { windup: 50 } as const;
 /** After a swing the stick may walk again this soon, even while the next use still waits for the lock. */
 const MOVE_ROOT_MS = 120;
+/** Standing still this long facing a tile under a crown cuts the target part of the see-through hole. */
+const HOLE_STILL_MS = 250;
 
 /** Palette slot 0 (ink): the outline colour, also the void around indoor maps. */
 const INK_HEX = '#2a1a24';
@@ -707,13 +709,23 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     this.lastTile = here;
     const facing = facingTile(player);
+    // The see-through hole eases in and out (owner bug: it popped, and cut crowns the farmer only passed beside).
     this.seeThrough ??= new SeeThrough(this);
-    const holeMap =
-      this.mapArt?.follow(here.tx, here.ty, facing, this.seeThrough.mask, player.x, player.y) ??
-      false;
+    const still = !moving && this.stillMs >= HOLE_STILL_MS;
+    const holeOpen = this.seeThrough.isOpen;
+    const holeMap = this.mapArt?.want(player.x, player.y, facing, still) ?? NO_HOLE;
     const holeObj =
-      this.things?.seeThrough(player.x, player.y, facing, this.seeThrough.mask) ?? false;
-    if (holeMap || holeObj) this.seeThrough.update(player.x, player.y, facing);
+      this.things?.seeThrough(player.x, player.y, facing, this.seeThrough.mask, holeOpen, still) ??
+      NO_HOLE;
+    if (holeOpen || holeMap.body || holeMap.target || holeObj.body || holeObj.target)
+      this.seeThrough.update(
+        player.x,
+        player.y,
+        facing,
+        { body: holeMap.body || holeObj.body, target: holeMap.target || holeObj.target },
+        delta,
+      );
+    this.mapArt?.hole(this.seeThrough.mask, this.seeThrough.isOpen);
     const door = objectAt(this.objects, here.tx, here.ty, 'door');
     if (door && !doorLocked(getState(), door)) {
       this.useDoor(door);

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { TILESET_KEY } from '../config';
 import index from './atlases.json';
-import { holeCircles, holeTiles } from '../fx/SeeThrough';
+import { NO_HOLE, wantHole, type HoleWant } from '../fx/SeeThrough';
 
 /** Texture key of a season's tileset (palette swaps of the spring tiles, built by art-src/tools/seasons.py). */
 export const seasonTilesetKey = (season: string): string => `${TILESET_KEY}_${season}`;
@@ -49,12 +49,15 @@ export const MAP_ART_LAYERS = [
 export class MapArt {
   private overhead: Phaser.Tilemaps.TilemapLayer | null = null;
   private readonly layers = new Map<string, Phaser.Tilemaps.TilemapLayer>();
-  private near = false;
+  private wanted: HoleWant = NO_HOLE;
+  private masked = false;
   private last = '';
+  private readonly alpha = new Map<number, Uint8Array | null>();
+  private probe: CanvasRenderingContext2D | null = null;
 
   constructor(
     map: Phaser.Tilemaps.Tilemap,
-    tileset: Phaser.Tilemaps.Tileset,
+    private readonly tileset: Phaser.Tilemaps.Tileset,
     overheadTint = 0xffffff,
   ) {
     if (!index.tileset) return;
@@ -80,28 +83,83 @@ export class MapArt {
   }
 
   /**
-   * Call when the player moves or turns. While an overhead tile (a crown, an eave) stands near them or their target,
-   * the overhead layer gets the see-through hole (`src/fx/SeeThrough.ts`); otherwise it is drawn whole. Returns
-   * whether the hole is in use. The tiles themselves always stay fully opaque (review 9: no translucent disc).
+   * Call every frame. Says which parts of the see-through hole (`src/fx/SeeThrough.ts`) the overhead layer wants:
+   * the body part only while a crown or an eave covers the player's lower body (they are behind it), the target
+   * part while one covers the target tile's centre (see `wantHole`). Recomputed only when the player's pixel, the
+   * target or `still` changes. The tiles themselves always stay fully opaque (review 9: no translucent disc).
    */
-  follow(
-    tx: number,
-    ty: number,
+  want(
+    px: number,
+    py: number,
     target: { tx: number; ty: number } | undefined,
-    hole: Phaser.Display.Masks.GeometryMask | null,
-    px = tx * 16 + 8,
-    py = ty * 16 + 11,
-  ): boolean {
-    if (!this.overhead) return false;
-    const key = `${Math.round(px)},${Math.round(py)},${target?.tx},${target?.ty}`;
+    still: boolean,
+  ): HoleWant {
+    if (!this.overhead) return NO_HOLE;
+    const key = `${Math.round(px)},${Math.round(py)},${target?.tx},${target?.ty},${still}`;
     if (key !== this.last) {
       this.last = key;
-      const layer = this.overhead;
-      // only tiles the hole itself would touch count, so a well roof or an eave nearby costs nothing
-      this.near = holeTiles(holeCircles(px, py, target)).some(([x, y]) => !!layer.getTileAt(x, y));
-      if (this.near && hole) layer.setMask(hole);
-      else layer.clearMask();
+      this.wanted = wantHole(this.wanted, px, py, target, this.opaque, still);
     }
-    return this.near;
+    return this.wanted;
+  }
+
+  /**
+   * Put the hole on the overhead layer while this layer wants it, and keep it there while the hole is still
+   * open (closing), so a crown never pops back whole; clear it once the hole has closed.
+   */
+  hole(mask: Phaser.Display.Masks.GeometryMask, open: boolean): void {
+    const layer = this.overhead;
+    if (!layer) return;
+    const want = this.wanted.body || this.wanted.target;
+    if (want && !this.masked) {
+      layer.setMask(mask);
+      this.masked = true;
+    } else if (!want && !open && this.masked) {
+      layer.clearMask();
+      this.masked = false;
+    }
+  }
+
+  /** Is the overhead art opaque at this world pixel? Tiles' alpha is read once per tile id. */
+  private readonly opaque = (x: number, y: number): boolean => {
+    const tile = this.overhead?.getTileAt(Math.floor(x / 16), Math.floor(y / 16));
+    if (!tile || tile.index <= 0) return false;
+    const a = this.alphaOf(tile);
+    if (!a) return true;
+    const lx = tile.flipX ? 15 - (x & 15) : x & 15;
+    const ly = tile.flipY ? 15 - (y & 15) : y & 15;
+    return a[ly * 16 + lx] === 1;
+  };
+
+  /** A tile's 16 x 16 opacity (1 where its pixel is not clear), or null when it cannot be read (then: opaque). */
+  private alphaOf(tile: Phaser.Tilemaps.Tile): Uint8Array | null {
+    const known = this.alpha.get(tile.index);
+    if (known !== undefined) return known;
+    let a: Uint8Array | null = null;
+    try {
+      const set = (tile.tileset as Phaser.Tilemaps.Tileset | null) ?? this.tileset;
+      const xy = set.getTileTextureCoordinates(tile.index) as { x: number; y: number } | null;
+      const src = set.image?.getSourceImage() as CanvasImageSource | undefined;
+      if (xy && src && typeof document !== 'undefined') {
+        if (!this.probe) {
+          const c = document.createElement('canvas');
+          c.width = 16;
+          c.height = 16;
+          this.probe = c.getContext('2d', { willReadFrequently: true });
+        }
+        const ctx = this.probe;
+        if (ctx) {
+          ctx.clearRect(0, 0, 16, 16);
+          ctx.drawImage(src, xy.x, xy.y, 16, 16, 0, 0, 16, 16);
+          const d = ctx.getImageData(0, 0, 16, 16).data;
+          a = new Uint8Array(256);
+          for (let i = 0; i < 256; i++) a[i] = d[i * 4 + 3]! > 0 ? 1 : 0;
+        }
+      }
+    } catch {
+      a = null;
+    }
+    this.alpha.set(tile.index, a);
+    return a;
   }
 }
