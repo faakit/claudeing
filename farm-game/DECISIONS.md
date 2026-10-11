@@ -1498,3 +1498,30 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
     tested); the creek reveal waits for the bed to be in view, not for a step into it; channels are dug from the
     bank; placing and tilling in a bed still answer with the bed's own line (it is checked before "blocked"). A tap
     on a dry bed now answers "Can't get there.", as a tap on the water does.
+- **The see-through hole eases, and opens only behind a crown (owner bug 1: "the tree faded and the character
+  appeared fully, in a strange way").** Root cause: the hole was switched on at full size the frame any overhead tile
+  came within 13 px of the body or the target circle, so it popped in and out, bit a disc out of a crown the farmer
+  only passed beside (his head reaches 16 px into the tile row above), and its 11 px circles erased about 55% of a
+  lone crown. Now (`fx/SeeThrough.ts`, pure and unit-tested):
+  - it opens when overhead art covers the farmer's lower body, the 10 x 12 px above his feet: his own tile row, where
+    the generator puts a crown only when its trunk stands further south, so behind a tree it opens and beside or in
+    front it never does (the crown may then overlap his hair, which reads as standing beside a tree). Coverage is
+    counted from the tiles' real alpha (read once per tile id from the tileset image; an unreadable one counts as
+    opaque), with hysteresis (open at 36 px, close under 10) so a ragged crown edge cannot flicker it;
+  - it grows from nothing and shrinks back over 150 ms (smoothstep, whole-pixel radii, the 2 px checker rim at every
+    size, the checker fixed in world pixels). Still a stencil: no semi-transparent pixels (review 9 stands);
+  - the body circles are 9 px (was 11): about 40% of a lone crown when fully open instead of 55%;
+  - the target circle opens only when a crown covers the target tile's centre and the farmer is behind the crown or
+    has stood still 250 ms facing it, never while walking past;
+  - tall placed sprites follow the same rule (`behindBox`: feet north of the sprite's base row), and the layer or
+    sprite keeps the mask until the hole has closed, so nothing pops back whole.
+- **A tap while walking re-plans from where the farmer is (owner bug 2: "it kinda flicks").** Root cause: the new
+  route started at the tile under the feet (`playerTile`, a floor), which for the first half of every step is the tile
+  just left, so the farmer walked back to its centre facing backwards for a few frames and then turned again; and a
+  held tap's path preview was overwritten by the walk's own plan the next frame (a one-frame flash of dots). Now
+  (`systems/pathfind.ts` `routeStarts`/`replanFrom`): between two centres the walk is planned from the tile ahead on
+  the axis walked and from the tile behind, and the shorter walk from the exact sub-tile position wins, ties and
+  anything within 4 px going ahead. The speed, facing and walk cycle carry on (the route simply continues to the
+  centre ahead); he turns back only when the new target really is behind him. A one-tile route mid-step finishes the
+  step before it acts (it used to act from mid-tile), `walkTo` (the verb hook) uses the same planning, and the
+  preview stays up until the finger lifts.
