@@ -588,8 +588,9 @@ async function valley() {
     farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
   );
   check(
-    'valley-farm-green-reveal: the next morning no dry tileset is resident',
-    (await dryResident(farm)).length === 0,
+    'valley-farm-green-reveal: the next morning the farm is done with straw (only Wendhead keeps it, until the spring)',
+    (await dryResident(farm)).length === 1 &&
+      (await farm.eval(() => !window.__farm.getState().stats['valley.greenSeen'] === false)),
   );
   // Rosa's letter: take the gift, both key items arrive
   await farm.mutate((st) => {
@@ -820,6 +821,61 @@ async function channels() {
     'channels-flow-cap: the water reaches the first 24 tiles; past them the channel shows dry',
     look.first === 'wet' && look.past === 'dry',
     JSON.stringify(look),
+  );
+  // A home-plot-only farm (owner ruling): from the creek's open bank along y 14 (a culvert under the road), then
+  // down x 13 beside the home plot; the next morning its east column is watered without the can.
+  await farm.load('channels-home-only');
+  const act2 = (await liveTargets(farm.page)).find((t) => t.text === 'ACTION');
+  await farm.frames(10);
+  await farm.thumb.down(act2.cx, act2.cy);
+  await farm.until((_s, w) => w.game.scene.getScene('UI').actionPress?.armed, null, 'paint to arm');
+  for (let i = 1; i <= 10; i++) {
+    await farm.thumb.move(act2.cx - i * 14, act2.cy);
+    await farm.frames(3);
+  }
+  const said = farm.event('toast');
+  await farm.thumb.up();
+  await farm.until(
+    (_s, w) => {
+      const sc = w.game.scene.getScene('Farm');
+      return sc.work === null && sc.route === null && sc.painting === null;
+    },
+    null,
+    'the first row to be dug',
+    20000,
+  );
+  const rowToast = await said;
+  // the rest of the run by single Actions, the farmer stepping along it
+  const along = [];
+  for (let x = 24; x >= 13; x--) along.push([x, 14, x + 1, 14, 'left']);
+  for (let y = 15; y <= 23; y++) along.push([13, y, 13, y - 1, 'down']);
+  for (const [tx, ty, px, py, face] of along) {
+    if ((await farm.state()).farm.tiles[`${tx},${ty}`]?.channel) continue;
+    await farm.eval((a) => window.__farm.dev.goto('farm', a[0], a[1], a[2]), [px, py, face]);
+    await farm.frames(3);
+    await farm.act();
+  }
+  s = await farm.state();
+  const run = Object.keys(s.farm.tiles).filter((k) => s.farm.tiles[k].channel);
+  check(
+    'channels-home-only: on unplotted ground, a channel runs from the bank under the road to the home plot',
+    run.includes('25,14') && run.includes('14,14') && run.includes('13,23') && run.length >= 21,
+    JSON.stringify({ n: run.length, rowToast }),
+  );
+  check(
+    'a dug row says what it dug (not that tiles had nothing left to do)',
+    /^Channel dug: \d+ tiles?\.$/.test(rowToast?.text ?? ''),
+    JSON.stringify(rowToast),
+  );
+  await farm.during('sceneReady', [], () =>
+    farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false })),
+  );
+  s = await farm.state();
+  const home = [16, 17, 18, 19, 20, 21, 22, 23].map((y) => s.farm.tiles[`12,${y}`]?.watered);
+  check(
+    'the next morning the home plot beside the channel is watered from the creek',
+    home.every(Boolean),
+    JSON.stringify({ home, weather: s.weather }),
   );
   check('channels: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();

@@ -1247,9 +1247,11 @@
           },
           "text": "Hold Action, drag: dig a channel.",
           "target": {
-            "gesture": "paint",
-            "map": "farm",
-            "work": ["dig"]
+            "action": ["dig"],
+            "else": {
+              "object": "creek",
+              "map": "farm"
+            }
           }
         }
       ]

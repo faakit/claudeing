@@ -14,6 +14,8 @@ export interface WorkQueue {
   skipped: number;
   /** Extra uses on the current tile so far (a tile is worked until it is done for today). */
   tileUses: number;
+  /** Channel tiles a dig row cut (it reports them instead of the tiles it skipped). */
+  dug?: number;
 }
 
 export const createWork = (tiles: TileCoord[]): WorkQueue => ({

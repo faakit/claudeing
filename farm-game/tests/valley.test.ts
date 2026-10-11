@@ -59,10 +59,12 @@ describe('the valley: how maps look', () => {
     const s = newState();
     expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@dry.tmj', palette: 'dry' });
     expect(paletteOf(s, 'farm')).toBe('dry');
-    expect(dryMaps(s)).toEqual(['farm']); // Wendhead's dry stage is its stone bed, not the palette
+    expect(dryMaps(s)).toEqual(['farm', 'wendhead']);
     s.stats[FARM_GREEN] = 1;
     expect(mapLook(s, 'farm')).toEqual({ file: 'assets/maps/farm@waking.tmj' });
     expect(paletteOf(s, 'farm')).toBeNull();
+    expect(dryMaps(s)).toEqual(['wendhead']); // straw until the spring opens (coordinator ruling)
+    s.stats['place.spring'] = 3;
     expect(dryMaps(s)).toEqual([]);
   });
 

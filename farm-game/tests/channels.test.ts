@@ -15,6 +15,7 @@ import { actOn, chooseAction } from '../src/systems/autoTool';
 import { endDay } from '../src/systems/day';
 import { migrate } from '../src/systems/save';
 import { runtime } from '../src/state/runtime';
+import { diggable, landRefusal } from '../src/mechanics/channels';
 
 // A creek down x = 26 (as the farm's restored variant), nothing else wet.
 const creek = (x: number): boolean => x === 26;
@@ -107,7 +108,7 @@ describe('channels', () => {
 
 describe('channels in play (mechanics/channels.ts)', () => {
   /** The spring restored, the spade on the hotbar, standing on the creek's west bank at (25, y). */
-  function restored(y = 12): GameState {
+  function restored(y = 14): GameState {
     const s = newState();
     s.stats['valley.farmGreen'] = 1;
     s.stats['place.spring'] = 3;
@@ -124,9 +125,9 @@ describe('channels in play (mechanics/channels.ts)', () => {
   it('one dig from the bank cuts the bank tile too, and the water reaches the new cut', () => {
     const s = restored();
     s.inventory.selected = 6;
-    const res = actOn(s, [grassAt(24, 12)]);
+    const res = actOn(s, [grassAt(24, 14)]);
     expect(res.ok && res.kind).toBe('dig');
-    expect(channelKeys(s).sort()).toEqual(['24,12', '25,12']);
+    expect(channelKeys(s).sort()).toEqual(['24,14', '25,14']);
     expect(res.ok && (res as { wet?: boolean }).wet).toBe(true);
   });
 
@@ -134,14 +135,30 @@ describe('channels in play (mechanics/channels.ts)', () => {
     const s = restored();
     s.inventory.selected = 6;
     for (let x = 24; x >= 19; x--) {
-      const r = actOn(s, [grassAt(x, 12)]);
+      const r = actOn(s, [grassAt(x, 14)]);
       expect(r.ok, `dig ${x}`).toBe(true);
     }
-    for (let x = 19; x <= 24; x++) till(s, x, 13);
+    for (let x = 19; x <= 24; x++) till(s, x, 15);
     endDay(s, { passedOut: false, weedCandidates: [] });
     if (s.weather === 'sunny')
-      for (let x = 19; x <= 24; x++) expect(s.farm.tiles[`${x},13`]!.watered).toBe(true);
+      for (let x = 19; x <= 24; x++) expect(s.farm.tiles[`${x},15`]!.watered).toBe(true);
     expect(channelKeys(s)).toHaveLength(7);
+  });
+
+  it('channels go on any open farm ground; an unbought plot, a door or a wall refuses; a path takes a culvert', () => {
+    const s = restored();
+    s.inventory.selected = 6;
+    digChannel(s, 25, 12);
+    // (24, 12) is the Hilltop, for sale: refused with the sign's line
+    const hill = actOn(s, [grassAt(24, 12)]);
+    expect(hill.ok).toBe(false);
+    expect(landRefusal(s, 24, 12)).toBe('Not your land yet. Buy it at a sign.');
+    // the Greenhouse plot has no sign: it says what will stand there
+    expect(landRefusal(s, 18, 27)).toBe('The Greenhouse will stand here.');
+    expect(landRefusal(s, 25, 14)).toBeNull(); // unplotted ground
+    expect(diggable({ ...grass(14, 20), kind: 'path', tillable: false })).toBe(true);
+    expect(diggable({ ...grass(29, 3), kind: 'path', tillable: false, door: true })).toBe(false);
+    expect(diggable({ ...grass(12, 5), kind: 'wall', tillable: false, blocked: true })).toBe(false);
   });
 
   it('nothing runs before the spring is restored; refusals change nothing', () => {
@@ -149,7 +166,7 @@ describe('channels in play (mechanics/channels.ts)', () => {
     s.stats['place.spring'] = 2;
     s.inventory.selected = 6;
     const before = JSON.stringify(s.farm.tiles);
-    const r = actOn(s, [grassAt(24, 12)]);
+    const r = actOn(s, [grassAt(24, 14)]);
     expect(r.ok).toBe(false);
     expect(JSON.stringify(s.farm.tiles)).toBe(before);
   });
@@ -157,33 +174,33 @@ describe('channels in play (mechanics/channels.ts)', () => {
   it('Action on a channel fills it in (never while a painted row is being worked)', () => {
     const s = restored();
     s.inventory.selected = 6;
-    actOn(s, [grassAt(24, 12)]);
+    actOn(s, [grassAt(24, 14)]);
     runtime.paintWork = true;
-    expect(actOn(s, [grassAt(24, 12)]).ok).toBe(false);
+    expect(actOn(s, [grassAt(24, 14)]).ok).toBe(false);
     runtime.paintWork = false;
-    const r = actOn(s, [grassAt(24, 12)]);
+    const r = actOn(s, [grassAt(24, 14)]);
     expect(r.ok && r.kind).toBe('fill');
-    expect(channelKeys(s)).toEqual(['25,12']);
+    expect(channelKeys(s)).toEqual(['25,14']);
   });
 
   it('the auto tool never picks the spade; nothing grows in a channel', () => {
     const s = restored();
-    digChannel(s, 25, 12);
+    digChannel(s, 25, 14);
     s.inventory.selected = 0; // the hoe in hand, auto tool on
-    const c = chooseAction(s, [grassAt(24, 12)]);
+    const c = chooseAction(s, [grassAt(24, 14)]);
     expect(c?.plan.kind).not.toBe('dig');
     s.inventory.slots[7] = { item: 'parsnip_seed', qty: 5 };
     s.inventory.selected = 7;
-    expect(actOn(s, [grassAt(25, 12)]).ok).toBe(false);
-    expect(s.farm.tiles['25,12']!.crop).toBeNull();
+    expect(actOn(s, [grassAt(25, 14)]).ok).toBe(false);
+    expect(s.farm.tiles['25,14']!.crop).toBeNull();
   });
 
   it('balance: a channel field waters at most 2 x flow tiles, what six quality sprinklers cover', () => {
     const s = restored();
     for (let x = 0; x <= 25; x++) {
-      digChannel(s, x, 12);
+      digChannel(s, x, 14);
       till(s, x, 11);
-      till(s, x, 13);
+      till(s, x, 15);
     }
     const n = waterFromChannels(s, creek, 24);
     expect(n).toBeLessThanOrEqual(48);

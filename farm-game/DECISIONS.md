@@ -1366,3 +1366,18 @@ at Wendhead's south-west corner (1,25).
   cut away from Ilse's gate down (1.8 s) with a THE CREEK RUNS banner, starting when the creek comes into view (the
   overlay stays hidden until then, so it costs no draw call). Once (`valley.creekSeen`).
 - **Toasts:** at most two on screen; the "Goal complete!" toast is dropped since the GOAL COMPLETE banner says it.
+
+### M4 after the critic's review 5 (coordinator rulings)
+
+- **Channels go on any open farm ground**, not just bought plots, so the verb works the day the spring opens: grass,
+  dirt or flowers that no plot covers, or an owned plot. An unbought plot still refuses ("Not your land yet. Buy it at
+  a sign."; a project's plot says what will stand there), and so do the creek bed, doors, buildings and anything
+  solid. **A channel may cross a path as a culvert**: the path keeps its look and stays a path (nothing is drawn
+  there), because the farm's main road splits the farm and a home-plot-only farm could never reach its crops from
+  the creek otherwise. The first run is about 22 tiles (the bank along y 14, under the road, down x 13), inside the
+  flow of 24, and waters the home plot's east column. Scenario `channels-home-only`, with an e2e.
+- A dug row says "Channel dug: N tiles." instead of the tiles it skipped. The channels intro points at the creek's
+  open bank (25,14) once the spade is in hand, then at the dig itself.
+- **Wendhead's dry stage takes the straw palette** like the dry farm (palette only). The dry tileset therefore stays
+  resident from the first green until the spring opens (one map is still dry), which the M1 rule already allows.
+- Fall's crowns go dusty brown on a dry map (the fall tileset's orange and gold are remapped too).

@@ -1,4 +1,7 @@
-import { valley } from '../data';
+import { plots, valley } from '../data';
+import type { TileInfo } from '../systems/actionTypes';
+import { ownsPlot, plotAtTile } from '../systems/plots';
+import type { GameState } from '../state/GameState';
 import { registerActionHandler } from '../systems/actionRegistry';
 import {
   canDig,
@@ -22,6 +25,24 @@ import { runtime } from '../state/runtime';
 
 /** Said when a cut lies past the spring's flow (WORLD-PLAN 3.1). */
 export const DRY_CUT = 'The water runs out before here.';
+/**
+ * Where a channel may go: open ground (grass, dirt, a patch of flowers) or across a path as a culvert under it (the
+ * path keeps its look and stays a path), never a door, a building or anything solid.
+ */
+export function diggable(t: TileInfo | null): boolean {
+  if (!t || t.blocked || t.door || !t.farmland) return false;
+  return t.tillable || t.kind === 'flower' || t.kind === 'path';
+}
+
+/** Unbought land: a plot for sale ("Buy it at a sign"), or a project's plot. Unplotted farm ground is free. */
+export function landRefusal(state: GameState, tx: number, ty: number): string | null {
+  const plot = plotAtTile(tx, ty);
+  if (!plot || ownsPlot(state, plot)) return null;
+  return plots[plot]?.sign
+    ? 'Not your land yet. Buy it at a sign.'
+    : `The ${plots[plot]?.name} will stand here.`;
+}
+
 /** Energy per tile dug or filled. */
 export const SPADE_ENERGY = 2;
 const key = (x: number, y: number): string => `${x},${y}`;
@@ -52,8 +73,10 @@ registerActionHandler({
         },
       };
     }
-    if (tile.owned === false) return { refusal: 'Not your land yet. Buy it at a sign.' };
-    if (!tile.tillable || tile.blocked) return { refusal: "Can't dig here." };
+    // Channels go on any open farm ground (owner ruling): only an unbought plot says so, never ground no sign sells
+    const land = landRefusal(state, tile.tx, tile.ty);
+    if (land) return { refusal: land };
+    if (!diggable(tile)) return { refusal: "Can't dig here." };
     const inDeltaFarm = (x: number, y: number) => source.inDelta(x, y);
     // Starting from the bank: the farmer's own tile beside the creek is cut too, so one drag from the bank digs a
     // channel that reaches the water.
@@ -65,7 +88,8 @@ registerActionHandler({
       refusal === 'Start next to water.' &&
       Math.abs(me.tx - tile.tx) + Math.abs(me.ty - tile.ty) === 1 &&
       canDig(state, me.tx, me.ty, source.at, inDeltaFarm) === null &&
-      (tile.at?.(me.tx, me.ty)?.tillable ?? true)
+      !landRefusal(state, me.tx, me.ty) &&
+      (tile.at ? diggable(tile.at(me.tx, me.ty)) : true)
     ) {
       refusal = null;
       bank = true;

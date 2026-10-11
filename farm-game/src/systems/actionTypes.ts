@@ -18,6 +18,8 @@ export interface TileInfo {
    * (other maps, unit tests), which counts as allowed.
    */
   owned?: boolean;
+  /** A door stands on this tile (nothing may be dug or built on it). */
+  door?: boolean;
   /** Describe another tile of the same map (for area tools). Absent in unit tests: tools then act on one tile. */
   at?: (tx: number, ty: number) => TileInfo | null;
 }

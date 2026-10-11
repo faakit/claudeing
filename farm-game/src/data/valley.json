@@ -105,6 +105,7 @@
       "variants": [
         {
           "variant": "dry",
+          "palette": "dry",
           "when": {
             "place": "spring",
             "max": 2

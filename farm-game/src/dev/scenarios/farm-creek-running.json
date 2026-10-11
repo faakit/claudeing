@@ -29,5 +29,11 @@
     "clock": "07:00"
   },
   "letters": [],
-  "goal": "craft"
+  "goal": "craft",
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ]
 }

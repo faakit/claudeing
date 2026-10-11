@@ -1186,7 +1186,7 @@ const TUT_KINDS = [
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
-const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site'];
+const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site', 'creek'];
 const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot', 'spadeSlot'];
 const TUT_COND_KEYS = new Set([
   'stat',

@@ -7,6 +7,7 @@ import {
   paletteOf,
   placeWhere,
   creekMomentDue,
+  creekSource,
   takeCreekMoment,
   takeFirstGreenMoment,
   valleyStage,
@@ -130,6 +131,9 @@ import { npcs as npcData } from '../data';
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
 const CREEK_REVEAL_MS = 1800;
 const CREEK_BANNER = "THE CREEK RUNS\nIlse's creek, full again.";
+
+/** A bank tile where a first channel can start on any farm (open ground beside the creek, no plot). */
+const CREEK_BANK = [25, 14] as const;
 
 /** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
 const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400 } as const;
@@ -746,6 +750,9 @@ export abstract class WorldScene extends Phaser.Scene {
     for (const pl of Object.values(valley.places))
       if (pl.map === this.mapId && pl.site)
         objects.push({ type: 'site', tx: pl.site[0], ty: pl.site[1], w: 1, h: 1 });
+    // where channels start: the running creek's bank on open ground (the channels intro points here)
+    if (this.mapId === 'farm' && creekSource(state).running)
+      objects.push({ type: 'creek', tx: CREEK_BANK[0], ty: CREEK_BANK[1], w: 1, h: 1 });
     const npcs: { id: string; tx: number; ty: number }[] = [];
     for (const id of Object.keys(npcData)) {
       const at = npcLocation(id, state.time.minutes, state);
@@ -1007,6 +1014,7 @@ export abstract class WorldScene extends Phaser.Scene {
       blocked: isTileBlocked(this.grid, t.tx, t.ty),
       farmland,
       owned: farmland ? ownsTile(getState(), t.tx, t.ty) : undefined,
+      door: !!objectAt(this.objects, t.tx, t.ty, 'door'),
       at: (tx, ty) => (this.inMap({ tx, ty }) ? this.tileInfo({ tx, ty }) : null),
     };
   }
@@ -1033,6 +1041,8 @@ export abstract class WorldScene extends Phaser.Scene {
    * ground layer (what the rules read) is untouched. False when the map has no detail layer (placeholder tiles).
    */
   private paintChannel(tx: number, ty: number, look: 'wet' | 'dry' | null): boolean {
+    // under a path the channel is a culvert: the path keeps its look (nothing drawn, no soil sprite)
+    if (tileKind(this.ground.getTileAt(tx, ty)?.index ?? 0) === 'path') return true;
     const layer = this.tilemap?.getLayer('detail')?.tilemapLayer;
     if (!layer) return false;
     const key = `${tx},${ty}`;
@@ -1207,6 +1217,7 @@ export abstract class WorldScene extends Phaser.Scene {
       });
     this.highlight.pulse();
     if (res.ok) {
+      if (this.work && res.kind === 'dig') this.work.dug = (this.work.dug ?? 0) + 1;
       this.actionLock = ACTION_LOCK_MS.ok;
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
@@ -1743,6 +1754,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.work = null;
       this.highlight.showPaint(null);
       if (next.stop) toast(next.stop, 'warn');
+      // a dug row says what it dug, never that tiles "had nothing left to do" (critic, valley review 5)
+      else if (w.dug) toast(`Channel dug: ${w.dug} tile${w.dug > 1 ? 's' : ''}.`, 'good');
       else if (w.skipped > 0)
         toast(`${w.skipped} tile${w.skipped > 1 ? 's' : ''} had nothing left to do.`, 'info');
       return;

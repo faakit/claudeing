@@ -1,0 +1,48 @@
+{
+  "title": "The spring's first day of channels on a home-plot-only farm",
+  "about": "Spring 12, 09:00: only the home plot is bought (x 9-12, y 16-23; parsnips sown on its east column, dry). The creek runs; the spade is selected on the creek's open bank at (25,14). Channels go on any open farm ground: dig west along the corridor at y 14 (a culvert under the main road), then down x 13 beside the home plot: about 22 tiles, inside the flow of 24, and the home plot's east column is watered the next morning. Bought-plot edges still say \"Not your land yet\".",
+  "version": 18,
+  "tags": ["farm", "valley", "channels"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "tut.channels": 1,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 25,
+    "ty": 14,
+    "facing": "left"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ],
+  "select": "spade",
+  "energy": "max",
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": "seed",
+      "rect": [12, 16, 1, 8]
+    }
+  ],
+  "goal": "craft"
+}
