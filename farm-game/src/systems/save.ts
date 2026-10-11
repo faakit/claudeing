@@ -362,12 +362,13 @@ function validateState(raw: Raw): GameState {
   const time = raw['time'];
   if (!isObj(time) || !SEASON_IDS.includes(time['season'] as string)) bad('time');
   if (!isFiniteNum((time as Raw)['day']) || !isFiniteNum((time as Raw)['minutes']))
-    bad('time values');
+    bad('time values'); // i18n-ok: an error message
   if (!isFiniteNum(raw['money']) || (raw['money'] as number) < 0) bad('money');
   const inv = raw['inventory'];
   if (!isObj(inv) || !Array.isArray(inv['slots'])) bad('inventory');
   if (!isObj(raw['farm']) || !isObj((raw['farm'] as Raw)['tiles'])) bad('farm');
   const p = raw['player'];
+  // i18n-ok: an error message
   if (!isObj(p) || typeof p['map'] !== 'string' || !mapsData.maps[p['map']]) bad('player map');
   return sanitize(raw);
 }

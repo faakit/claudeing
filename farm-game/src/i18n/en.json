@@ -82,7 +82,8 @@
   },
   "almanac": {
     "pageDone": "Almanac page done: {page}! +{gold}",
-    "complete": "Complete!"
+    "complete": "Complete!",
+    "legends": "Legends {n}/{of}"
   },
   "cart": {
     "greenhouse": "Greenhouse",
@@ -318,7 +319,8 @@
     "fund": "Fund it",
     "notEnough": "Not enough yet",
     "allGold": "All the gold is in!",
-    "giveGoods": "Give goods"
+    "giveGoods": "Give goods",
+    "need": "{item} {given}/{need} (have {have})"
   },
   "silo": {
     "hungry": "The {house} went hungry: the silo needs {n} {feed}.",
@@ -394,7 +396,10 @@
     "rowOpen": "open. {phrase}",
     "spadeLetter": "Ilse's spade. Your hands were full at the spring, so here it is. Dig from the creek's bank.",
     "creekTitle": "THE CREEK RUNS",
-    "creekLine": "Ilse's creek, full again."
+    "creekLine": "Ilse's creek, full again.",
+    "siteLabel": "{name} site",
+    "workBeat": "{text} ({n} of {of})",
+    "openingTitle": "The {name}"
   },
   "tutorial": {
     "canNote": "Rosa filled your watering can.",
@@ -650,7 +655,9 @@
     "needsLevel": "{skill} Lv {level} (you: {have})",
     "title": "WORKBENCH",
     "make": "Make",
-    "fiber": "You carry {n} fiber. Cut weeds with the scythe."
+    "fiber": "You carry {n} fiber. Cut weeds with the scythe.",
+    "made": "Made {n} {item}",
+    "madeOne": "Made {item}"
   },
   "gift": {
     "loves": "Loves it!",
@@ -735,7 +742,8 @@
     "max": " MAX",
     "nextPerk": "{level}: {perks}",
     "allPerks": "All perks unlocked!",
-    "energyBonus": "Skills give you {n} extra energy so far."
+    "energyBonus": "Skills give you {n} extra energy so far.",
+    "xp": "{have}/{need} XP"
   },
   "sleep": {
     "title": "Go to bed?",
@@ -797,5 +805,11 @@
     "wither": "Crops left in the field when the season changes will wither.",
     "bin": "The shipping bin pays the next morning, so ship before bed.",
     "jobs": "Villagers post small jobs each morning. They pay on the spot."
+  },
+  "fx": {
+    "refilled": "Refilled!",
+    "fiber": "+1 Fiber",
+    "goldQuality": "Gold quality!",
+    "silverQuality": "Silver quality!"
   }
 }

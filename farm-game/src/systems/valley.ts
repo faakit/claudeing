@@ -640,7 +640,7 @@ export function openingScene(
     return {
       hearts: 0,
       id: `opening.${id}`,
-      title: `The ${p.name}`,
+      title: t('valley.openingTitle', { name: p.name }),
       lines: p.opening.lines,
       reward: {},
     };

@@ -82,7 +82,8 @@
   },
   "almanac": {
     "pageDone": "Página do almanaque completa: {page}! +{gold}",
-    "complete": "Completo!"
+    "complete": "Completo!",
+    "legends": "Lendas {n}/{of}"
   },
   "cart": {
     "greenhouse": "Estufa",
@@ -318,7 +319,8 @@
     "fund": "Financiar",
     "notEnough": "Ainda não dá",
     "allGold": "Todo o ouro está aqui!",
-    "giveGoods": "Dar produtos"
+    "giveGoods": "Dar produtos",
+    "need": "{item} {given}/{need} (tem {have})"
   },
   "silo": {
     "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}.",
@@ -394,7 +396,10 @@
     "rowOpen": "reaberta. {phrase}",
     "spadeLetter": "A pá da Ilse. Suas mãos estavam cheias na nascente, então aqui está. Cave a partir da margem do córrego.",
     "creekTitle": "O CÓRREGO VOLTOU",
-    "creekLine": "O córrego da Ilse, cheio de novo."
+    "creekLine": "O córrego da Ilse, cheio de novo.",
+    "siteLabel": "Obra: {name}",
+    "workBeat": "{text} ({n} de {of})",
+    "openingTitle": "{name}"
   },
   "tutorial": {
     "canNote": "Rosa encheu seu regador.",
@@ -650,7 +655,9 @@
     "needsLevel": "{skill} nv {level} (você: {have})",
     "title": "BANCADA",
     "make": "Fazer",
-    "fiber": "Você tem {n} de fibra. Corte o mato com a foice."
+    "fiber": "Você tem {n} de fibra. Corte o mato com a foice.",
+    "made": "Fez {n} {item}",
+    "madeOne": "Fez {item}"
   },
   "gift": {
     "loves": "Adora!",
@@ -735,7 +742,8 @@
     "max": " MÁX",
     "nextPerk": "{level}: {perks}",
     "allPerks": "Todas as vantagens liberadas!",
-    "energyBonus": "Seus níveis já dão {n} de energia extra."
+    "energyBonus": "Seus níveis já dão {n} de energia extra.",
+    "xp": "{have}/{need} XP"
   },
   "sleep": {
     "title": "Ir dormir?",
@@ -797,5 +805,11 @@
     "wither": "O que ficar na roça quando a estação muda vai murchar.",
     "bin": "A caixa de envio paga na manhã seguinte: envie antes de dormir.",
     "jobs": "Os vizinhos postam bicos toda manhã. Pagam na hora."
+  },
+  "fx": {
+    "refilled": "Cheio!",
+    "fiber": "+1 Fibra",
+    "goldQuality": "Qualidade ouro!",
+    "silverQuality": "Qualidade prata!"
   }
 }

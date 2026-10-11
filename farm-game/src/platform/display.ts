@@ -12,7 +12,7 @@ export const isIosSafari = (): boolean =>
   !('standalone' in navigator && (navigator as { standalone?: boolean }).standalone);
 
 export const isStandalone = (): boolean =>
-  window.matchMedia('(display-mode: standalone)').matches ||
+  window.matchMedia('(display-mode: standalone)' /* i18n-ok */).matches ||
   (navigator as { standalone?: boolean }).standalone === true;
 
 /** Enter fullscreen and lock to portrait (Android Chrome allows the lock only in fullscreen). */

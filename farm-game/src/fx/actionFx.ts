@@ -4,6 +4,7 @@ import type { PlayerState } from '../state/GameState';
 import type { ActionResult } from '../systems/actions';
 import { FarmRenderer } from '../game/FarmRenderer';
 import type { Effects } from './Effects';
+import { t } from '../i18n';
 
 type Success = Extract<ActionResult, { ok: true }>;
 
@@ -50,12 +51,12 @@ export function playActionFx(
       break;
     case 'refill':
       fx.splash(x, y);
-      fx.floatText(player.x, above, 'Refilled!', 0x6fa3e0);
+      fx.floatText(player.x, above, t('fx.refilled'), 0x6fa3e0);
       audio.play('refill');
       break;
     case 'clear':
       fx.leaves(x, y);
-      fx.floatText(player.x, above, '+1 Fiber', 0x7fc96b);
+      fx.floatText(player.x, above, t('fx.fiber'), 0x7fc96b);
       audio.play('cut');
       break;
     case 'plant':
@@ -90,7 +91,7 @@ export function playActionFx(
         fx.floatText(
           player.x,
           above - 37,
-          gold ? 'Gold quality!' : 'Silver quality!',
+          gold ? t('fx.goldQuality') : t('fx.silverQuality'),
           gold ? 0xf4d35e : 0xc9d3e4,
         );
       }

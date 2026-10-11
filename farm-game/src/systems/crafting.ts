@@ -5,6 +5,7 @@ import { gameEvents, toast } from './events';
 import { addStat } from './goals';
 import { addItem, countItem, countStack, removeItem, roomFor } from './inventory';
 import { isRecipeUnlocked } from './skills';
+import { t } from '../i18n';
 
 export type CraftBlock = 'locked' | 'no_gold' | 'no_items' | 'full';
 
@@ -41,7 +42,7 @@ export function craftBatch(state: GameState, id: string, n: number): number {
   while (made < times && craft(state, id, true) === 'ok') made += 1;
   const r = recipes[id];
   if (made > 0 && r)
-    toast(`Made ${made * r.output.qty} ${items[r.output.item]?.name ?? id}`, 'good');
+    toast(t('craft.made', { n: made * r.output.qty, item: items[r.output.item]?.name ?? id }), 'good');
   return made;
 }
 
@@ -60,7 +61,9 @@ export function craft(state: GameState, id: string, quiet = false): CraftBlock |
   if (r.kitchen) addStat(state, 'cooked');
   if (!quiet)
     toast(
-      `Made ${r.output.qty > 1 ? `${r.output.qty} ` : ''}${items[r.output.item]?.name ?? id}`,
+      r.output.qty > 1
+        ? t('craft.made', { n: r.output.qty, item: items[r.output.item]?.name ?? id })
+        : t('craft.madeOne', { item: items[r.output.item]?.name ?? id }),
       'good',
     );
   return 'ok';

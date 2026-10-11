@@ -1378,7 +1378,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.endSiteBeat();
       if (!live()) return;
       haptic('medium');
-      toast(`${res.work.text} (${res.day} of ${res.of})`, 'good');
+      toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
     });
   }
 
@@ -1609,6 +1609,7 @@ export abstract class WorldScene extends Phaser.Scene {
     controlsLog.push({
       kind: 'route',
       t: this.time.now,
+      // i18n-ok: a controls-log detail for checks, never shown
       detail: `${plan.intent.kind}@${plan.intent.target.tx},${plan.intent.target.ty} in ${plan.path.length - 1}`,
     });
     // Already there: act now, or, mid-swing, as soon as the swing ends (the route waits for the lock), so a
@@ -1738,7 +1739,7 @@ export abstract class WorldScene extends Phaser.Scene {
       controlsLog.push({ kind: 'paint', t: this.time.now, detail: 'cancel' });
       return;
     }
-    controlsLog.push({ kind: 'paint', t: this.time.now, detail: `work ${tiles.length}` });
+    controlsLog.push({ kind: 'paint', t: this.time.now, detail: `work ${tiles.length}` }); // i18n-ok
     this.work = createWork(tiles);
     this.highlight.showPaint(this.paintMarks(tiles));
   }

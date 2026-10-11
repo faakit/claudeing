@@ -286,7 +286,7 @@ export class Ambient {
           frequency: plan.every,
           quantity: 1,
           maxAliveParticles: plan.max,
-          alpha: { start: 1, end: 0, ease: 'Stepped', steps: 3 },
+          alpha: { start: 1, end: 0, ease: 'Stepped', steps: 3 }, // i18n-ok: an ease name
           emitZone: {
             type: 'random',
             source: this.area,

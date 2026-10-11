@@ -27,7 +27,8 @@ export function buildSkills(c: MenuTabContext): void {
     const g = c.scene.add.graphics();
     drawBar(g, 8, y + 12, 184, 6, prog ? prog.have / prog.need : 1, C.green);
     c.add(g);
-    if (prog) c.label(8, y + 21, `${fmt(prog.have)}/${fmt(prog.need)} XP`, C.creamDim);
+    if (prog)
+      c.label(8, y + 21, t('skills.xp', { have: fmt(prog.have), need: fmt(prog.need) }), C.creamDim);
     const next = Object.entries(def.perks)
       .map(([l, p]) => [Number(l), p] as const)
       .filter(([l]) => l > lvl)

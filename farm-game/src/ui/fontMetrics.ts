@@ -4,6 +4,8 @@
  *
  * Each glyph is 9 rows of 5 bits (bit 4 = leftmost); rows 7-8 hold descenders (g j p q y).
  */
+import { getLocale, type Locale } from '../i18n';
+
 export const GLYPHS: Record<string, string> = {
   A: '0e 11 11 1f 11 11 11',
   B: '1e 11 11 1e 11 11 1e',
@@ -193,21 +195,35 @@ export function fitText(text: string, maxPx: number, scale = 1): string {
   return `${t}..`;
 }
 
-/** Ordered, meaning-preserving shortenings tried before a row of text is cut off with "..". */
-const SHORTER: [RegExp, string][] = [
-  [/\(have (\d+)\)/, 'x$1'],
-  [/^Makes /, '> '],
-  [/ Seeds$/, ''],
-  [/ Sapling$/, ' Sap.'],
-  [/^Silver /, 'Si. '],
-  [/^Gold /, 'Au. '],
-  [/\bhave (\d+)/, 'x$1'],
-];
+/**
+ * Ordered, meaning-preserving shortenings tried before a row of text is cut off with "..", per language (each
+ * rewrites that language's own words).
+ */
+const SHORTER: Record<Locale, [RegExp, string][]> = {
+  en: [
+    [/\(have (\d+)\)/, 'x$1'],
+    [/^Makes /, '> '],
+    [/ Seeds$/, ''],
+    [/ Sapling$/, ' Sap.'], // i18n-ok: an abbreviation
+    [/^Silver /, 'Si. '], // i18n-ok: an abbreviation
+    [/^Gold /, 'Au. '], // i18n-ok: an abbreviation
+    [/\bhave (\d+)/, 'x$1'],
+  ],
+  'pt-BR': [
+    [/\(tem (\d+)\)/, 'x$1'],
+    [/^Faz /, '> '],
+    [/^Sementes de /, 'Sem. '], // i18n-ok: an abbreviation
+    [/^Muda de /, 'Muda '], // i18n-ok: an abbreviation
+    [/ de prata$/, ' (p)'], // i18n-ok: an abbreviation
+    [/ de ouro$/, ' (o)'], // i18n-ok: an abbreviation
+    [/\btem (\d+)/, 'x$1'],
+  ],
+};
 
 /** Like fitText, but first applies friendlier abbreviations so list rows keep their facts. */
 export function fitRow(text: string, maxPx: number, scale = 1): string {
   let t = text;
-  for (const [re, to] of SHORTER) {
+  for (const [re, to] of SHORTER[getLocale()]) {
     if (measureText(t, scale) <= maxPx) return t;
     t = t.replace(re, to);
   }

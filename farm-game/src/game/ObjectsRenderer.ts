@@ -14,6 +14,7 @@ import { ownsPlot, signVisible } from '../systems/plots';
 import { unreadCount } from '../systems/mail';
 import { mail } from '../data';
 import { ensureTexture } from './fallbackTexture';
+import { t } from '../i18n';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -201,7 +202,7 @@ export class ObjectsRenderer {
               this.scene,
               (x + w / 2) * TILE_SIZE,
               (y + h / 2) * TILE_SIZE - 4,
-              `${p.name} site`,
+              t('valley.siteLabel', { name: p.name }),
               {
                 align: 'center',
                 color: 0xf4ead2,

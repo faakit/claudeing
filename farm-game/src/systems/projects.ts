@@ -257,4 +257,9 @@ export const landmarkAt = (state: GameState, map: string, tx: number, ty: number
 
 /** "2 Copper Bar" style line for a need, with what the player carries. */
 export const needLabel = (state: GameState, n: ItemNeed): string =>
-  `${items[n.item]?.name ?? n.item} ${n.given}/${n.need} (have ${countItem(state, n.item)})`;
+  t('project.need', {
+    item: items[n.item]?.name ?? n.item,
+    given: n.given,
+    need: n.need,
+    have: countItem(state, n.item),
+  });
