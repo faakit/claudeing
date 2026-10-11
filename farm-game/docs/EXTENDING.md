@@ -27,7 +27,7 @@ with one URL, instead of playing up to the moment or hand-building state in a sc
    `time`, `items`, `crops`, `placed` with `ready`, `friends`, `goal`, `letters`, `tutorial`, `settings`); use the raw
    `state` patch only for what they do not cover. The format is documented on `ScenarioDef` in
    `src/dev/scenarios.ts`.
-2. **Develop and tune in it.** `npm run dev`, open `http://localhost:5195/?scenario=<name>` (a build needs
+2. **Develop and tune in it.** `npm run dev`, open `http://localhost:5173/?scenario=<name>` (a build needs
    `?debug&scenario=<name>`). The DEV tab (top-left) jumps to any scenario or map, pauses or speeds the clock,
    freezes and steps frames, and shows the frame graph and tile coordinates. `window.__farm.dev` is the same as a
    typed API (`src/dev/api.ts`): `clock.pause()`, `loop.step(n)`, `seed(n)`, `time.set({ clock: '18:30' })`,
@@ -46,7 +46,7 @@ transitionDone / idle / frames / event`.
    run (valid references, walkable tiles, a state that survives a save round trip). A map change that blocks a
    scenario's tile fails there with the scenario's name: move the scenario, do not delete it.
 
-`npm run verify:fast` (lint, typecheck, unit tests, build, bundle check, scenario smoke e2e; about two minutes) is
+`npm run verify:fast` (lint, typecheck, unit tests, build, bundle check, scenario smoke e2e; about 30 seconds) is
 the inner-loop gate; `npm run verify` (everything, suites in parallel) gates every commit.
 
 ## 1. What does Action do? (action handlers)
@@ -98,7 +98,9 @@ later hooks). Example: `mechanics/orders.ts` rewrites the town board in `morning
 1. Add the item to `items.json` with `"placeable": true`.
 2. Add an entry to `placeables.json`: `{ name, behavior, solid, sprite, params }`.
 3. `registerPlaceableBehavior('name', { beforeGrowth?, onMorning?, interact?, canPickUp? })`.
-4. Add the sprite texture in `art/gameArt.ts` (the world renderer draws every placed object from state).
+4. Name its texture key in `sprite`. Until the art lane packs real art into an atlas (`src/art/manifest.ts`
+   lists every key), `art/gameArt.ts` draws a placeholder from the item's colour. The world renderer draws every
+   placed object from state.
 
 Per-object state lives in `obj.data` (plain JSON, saved automatically). `interact` returns `pickup`,
 `message`, or `panel` (open a sheet; see below). See `mechanics/sprinkler.ts` and `mechanics/jar.ts`.
@@ -249,10 +251,12 @@ Game code only calls `audio.play('<cue>')` with an id from the `Sfx` union in `s
   | `ringClose` | the tool ring closes without a choice                              |
   | `confirm`   | a tool picked in the ring, or a painted row committed              |
 
-  Haptics policy (so a tap never gets both a click and a buzz on every action): frequent events (tile
-  ticks, target previews, steps) are sound only; a haptic pulse goes with rare, deliberate events only
-  (ring open, tool picked, row committed, error), at most one per 150 ms. With haptics off nothing in the
-  audio changes. `render.mjs` jobs `tap-dry-<id>` / `tap-rapid-<id>` render ten taps a second for 5 s.
+  Haptics (`src/platform/haptics.ts`; DECISIONS.md, "Haptics (owner decision 6)"): light and on by default. `tick` goes with a
+  successful tile action, a tool or slot change and each tile added to a painted row; `medium` with a ripe
+  harvest or a level-up; `error` (a double pulse) with a refusal. Each kind is throttled (a tick at most every
+  120 ms), so a held action never buzzes, and every pulse has a visible twin on screen (iOS Safari cannot
+  vibrate). With haptics off nothing in the audio changes. `render.mjs` jobs `tap-dry-<id>` / `tap-rapid-<id>`
+  render ten taps a second for 5 s.
 
 - **Music** lives in `audio-src/tools/music_src.py` (regenerate `src/audio/music.json` with it): chords
   per section, accompaniment patterns, composed phrase pools. Which piece plays is decided in
