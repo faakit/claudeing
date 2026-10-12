@@ -12,6 +12,7 @@ import {
   projects,
   tools,
   trees,
+  valley,
 } from '../data';
 import { DIRECTIONS } from '../systems/direction';
 import actFrameCounts from './actFrames.json';
@@ -648,6 +649,21 @@ export function artManifest(): ArtEntry[] {
       }),
     );
   }
+  // The broken places' sites (valley.json): one 32x32 sprite per stage over a 2x2-tile footprint
+  // (art-src/tools/sites.py). Optional: game/fallbackTexture.ts draws a placeholder for a missing stage.
+  for (const [id, pl] of Object.entries(valley.places))
+    pl.sprites.forEach((texture, i) =>
+      add({
+        texture,
+        w: 32,
+        h: 32,
+        group: 'world',
+        kind: `site ${id} stage ${i}`,
+        from: 'valley.json',
+        exact: false,
+        optional: true,
+      }),
+    );
   for (const t of game.trophies ?? [])
     add({
       texture: t.sprite,

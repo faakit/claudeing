@@ -3382,15 +3382,6 @@
   ],
   "group": "world"
  },
- "obj_landmark_bathhouse": {
-  "src": "town3a/bathhouse",
-  "size": [
-   32,
-   42
-  ],
-  "group": "world",
-  "noscale": true
- },
  "obj_landmark_fairhall": {
   "src": "town4b/bandstand",
   "size": [

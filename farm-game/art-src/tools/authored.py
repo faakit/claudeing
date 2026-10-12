@@ -476,6 +476,10 @@ def sprites_only(P: Pal, pal, groups, specs) -> dict:
 
     if groups.get("ui") is not None and groups.get("chars"):
         drawn.build(P, groups, pal, P.names)
+    import sites  # the broken places' sites by stage (Dry Year): the Old Spring
+
+    for key, idx in sites.build(P.names).items():
+        groups["world"][key] = px.idx_to_rgba(idx, pal)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(soil(P, False), pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(soil(P, True), pal)
     return {}

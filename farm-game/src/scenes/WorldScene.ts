@@ -1310,7 +1310,10 @@ export abstract class WorldScene extends Phaser.Scene {
     };
     this.npcs?.tiles().forEach(block);
     nodeTiles(getState(), this.mapId).forEach(block);
-    landmarksOn(getState(), this.mapId).forEach((l) => block([l.tx, l.ty]));
+    landmarksOn(getState(), this.mapId).forEach((l) => {
+      block([l.tx, l.ty]);
+      if (l.kind === 'site') block([l.tx + 1, l.ty]); // a site's sprite covers its tile and the one east of it
+    });
     if (mail.mailbox.map === this.mapId) block([mail.mailbox.tx, mail.mailbox.ty]);
     if (this.mapId === 'farm') signTiles(getState()).forEach(block);
   }

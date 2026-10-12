@@ -1,0 +1,34 @@
+{
+  "title": "The Warm Pool at Wendhead, built",
+  "about": "Spring 20, 10:00, at Wendhead beside the Old Spring (opened on day 10): the Warm Pool project is finished, so its landmark stands at 3,17 west of the spring's site. For judging the landmark next to the restored site (art).",
+  "version": 17,
+  "tags": ["wendhead", "valley", "spring", "art"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "project.bathhouse": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 2,
+    "shipped": 5,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
+  },
+  "at": {
+    "map": "wendhead",
+    "tx": 5,
+    "ty": 17,
+    "facing": "left"
+  },
+  "time": {
+    "day": 20,
+    "clock": "10:00"
+  },
+  "letters": []
+}

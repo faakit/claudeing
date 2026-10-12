@@ -644,7 +644,8 @@ export function siteVisit(
     if (p.npc !== npc || !p.map || !p.site || stageOf(s as GameState, id) < 3) continue;
     if (st(s as GameState, `place.${id}.opened`) !== absoluteDay(s as GameState)) continue;
     if (p.opening.at) return { ...p.opening.at };
-    return { map: p.map, tx: p.site[0] + 1, ty: p.site[1] }; // beside it, the farmer on the other side
+    // beside it (the site's sprite covers its tile and the one east of it), the farmer on the other side
+    return { map: p.map, tx: p.site[0] + 2, ty: p.site[1] };
   }
   return null;
 }
