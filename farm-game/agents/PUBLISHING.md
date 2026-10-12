@@ -55,8 +55,9 @@ with that lane turned on.
 | Personal info > User IDs                     | The Play Games gamer identity, collected by the Play Games SDK (the game shows the gamer name on the phone and never sends or stores it)                                                                                 | Yes       | No     | Yes: as above                                | App functionality, Account management | cloud save |
 | App info and performance > Diagnostics       | The Play Games SDK's own diagnostics and analytics                                                                                                                                                                       | Yes       | No     | Yes: as above                                | Analytics                             | cloud save |
 
-Analytics collects none of: name, email, user ids, precise location, contacts, photos, messages, free
-text, purchase history, health, financial data, web history, crash logs or the advertising ID.
+Analytics does not collect (cloud save has its own rows above): name, email, user ids, precise location, contacts,
+photos, messages, free text, purchase history, health, financial data, web history, crash logs or the advertising
+ID.
 
 Data deletion: the player can turn analytics off in Options; that stops collection, empties the local queue and
 resets Firebase's app-instance ID on the device. Nothing links Analytics data to a person, so there is no per-user
