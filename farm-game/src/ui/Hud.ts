@@ -94,6 +94,8 @@ export class Hud {
   /** The valley's own moments (the first green): two lines, a slot apart from goal and heart banners. */
   private readonly moment: Label;
   private readonly momentTitle: Label;
+  /** The solid walnut plate behind a valley moment's banner (drawn per moment, it fits the text). */
+  private readonly momentPlate: Phaser.GameObjects.Graphics;
   private cleanup: (() => void)[] = [];
 
   constructor(
@@ -195,6 +197,10 @@ export class Hud {
     })
       .setDepth(depth + 5)
       .setAlpha(0);
+    this.momentPlate = scene.add
+      .graphics()
+      .setDepth(depth + 4)
+      .setAlpha(0);
     this.momentTitle = new Label(scene, GAME_WIDTH / 2, HUD_H + 34, '', {
       color: CH.gold,
       align: 'center',
@@ -224,7 +230,7 @@ export class Hud {
         ),
       ),
       // The first green: the banner with the special-order fanfare until audio gives it its own jingle.
-      gameEvents.on('valleyMoment', (m) => this.valleyMoment(m.text)),
+      gameEvents.on('valleyMoment', (m) => this.valleyMoment(m.text, m.farmerY)),
       gameEvents.on('levelUp', (e) =>
         this.goalBanner(
           t('hud.levelUp', {
@@ -318,7 +324,13 @@ export class Hud {
    * The first green: a big gold title and a line under it, in their own slot (never the goal banner's), held about
    * three seconds while the straw dissolves. Every valley moment plays the same jingle: the valley coming back.
    */
-  private valleyMoment(text: string): void {
+  /**
+   * A valley moment's banner (THE CREEK RUNS...): the gold title and its parchment line on a solid walnut plate with
+   * a 2 px ink edge, so it reads over straw and sand as well as green (owner feedback, art round dry-year-2). Its slot
+   * is HUD_H + 30; when the farmer (`farmerY`, their feet in screen px) stands in that band, as at the town's clamped
+   * north edge, the banner drops below them instead (critic, round 22). Opaque at rest; the group fades in and out.
+   */
+  private valleyMoment(text: string, farmerY?: number): void {
     const [title, line] = text.split('\n');
     audio.play('green');
     haptic('success');
@@ -326,15 +338,34 @@ export class Hud {
     const calm = this.getState().settings.reduceMotion;
     this.momentTitle.setText(title ?? '');
     this.moment.setText(line ?? '');
-    for (const [l, y] of [
-      [this.momentTitle, HUD_H + 34],
-      [this.moment, HUD_H + 56],
+    const w = Math.min(
+      GAME_WIDTH - 8,
+      Math.max(this.momentTitle.textWidth, this.moment.textWidth) + 16,
+    );
+    const h = line ? 40 : 26;
+    let top = HUD_H + 30;
+    if (farmerY !== undefined && farmerY + 8 > top && farmerY - 30 - 8 < top + h)
+      top = Math.min(Math.round(farmerY) + 6, CONTROLS_Y - h - 4);
+    const x = Math.round((GAME_WIDTH - w) / 2);
+    const g = this.momentPlate.clear();
+    // a 2 px ink edge with notched corners, the walnut fill, a 2 px lit top (all solid)
+    g.fillStyle(CH.ink, 1)
+      .fillRect(x + 2, top, w - 4, h)
+      .fillRect(x, top + 2, w, h - 4)
+      .fillRect(x + 1, top + 1, w - 2, h - 2);
+    g.fillStyle(CH.panel, 1).fillRect(x + 2, top + 2, w - 4, h - 4);
+    g.fillStyle(CH.panelLight, 1).fillRect(x + 4, top + 2, w - 8, 2);
+    const rise = calm ? 0 : 6;
+    for (const [o, y] of [
+      [this.momentPlate, 0],
+      [this.momentTitle, top + 5],
+      [this.moment, top + 27],
     ] as const) {
-      this.scene.tweens.killTweensOf(l);
-      l.setAlpha(0).setY(y + (calm ? 0 : 6));
-      const round = () => l.setY(Math.round(l.y));
-      this.scene.tweens.add({ targets: l, alpha: 1, y, duration: 400, onUpdate: round });
-      this.scene.tweens.add({ targets: l, alpha: 0, duration: 500, delay: 2900 });
+      this.scene.tweens.killTweensOf(o);
+      o.setAlpha(0).setY(y + rise);
+      const round = () => o.setY(Math.round(o.y));
+      this.scene.tweens.add({ targets: o, alpha: 1, y, duration: 400, onUpdate: round });
+      this.scene.tweens.add({ targets: o, alpha: 0, duration: 500, delay: 2900 });
     }
   }
 

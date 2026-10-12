@@ -56,7 +56,8 @@ export interface GameEvents {
   /** A setting that affects layout/behaviour changed (e.g. left-handed mode). */
   settingsChanged: undefined;
   /** A moment the valley marks with the HUD banner and a jingle (the first green). */
-  valleyMoment: { text: string };
+  /** `farmerY`: the farmer's feet in screen px, so the banner can keep off them. */
+  valleyMoment: { text: string; farmerY?: number };
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;

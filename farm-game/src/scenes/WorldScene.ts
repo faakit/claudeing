@@ -480,7 +480,7 @@ export abstract class WorldScene extends Phaser.Scene {
       }
       this.time.delayedCall(WIPE_OPEN_MS, () => {
         this.reveal?.start();
-        gameEvents.emit('valleyMoment', { text: valley.farmGreen.banner });
+        this.valleyMoment(valley.farmGreen.banner);
       });
     } else if (this.mapId === 'town' && riverMomentDue(state)) {
       // The river's first morning: the dry town (its straw and its mud) drawn over the river town, cut away around
@@ -504,7 +504,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.time.delayedCall(WIPE_OPEN_MS, () => {
         this.reveal?.start();
         audio.play('water');
-        gameEvents.emit('valleyMoment', { text: riverBanner() });
+        this.valleyMoment(riverBanner());
       });
     } else if (this.mapId === 'farm' && !creekMomentDue(state)) {
       // the morning's water runs down the channels the first time they come into view today
@@ -645,7 +645,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.reveal.start();
       runtime.valleyReveal = true;
       audio.play('water');
-      gameEvents.emit('valleyMoment', { text: creekBanner() });
+      this.valleyMoment(creekBanner());
     }
     if (this.reveal) {
       this.reveal.update(delta);
@@ -1644,6 +1644,16 @@ export abstract class WorldScene extends Phaser.Scene {
       if (!live()) return;
       haptic('medium');
       toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
+    });
+  }
+
+  /** A valley moment's banner (HUD), told where the farmer stands on screen so it can keep off them. */
+  private valleyMoment(text: string): void {
+    const cam = this.cameras.main;
+    const p = getState().player;
+    gameEvents.emit('valleyMoment', {
+      text,
+      farmerY: cam.y + (p.y - cam.worldView.y) * cam.zoom,
     });
   }
 
