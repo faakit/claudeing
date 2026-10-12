@@ -1,6 +1,6 @@
 {
   "title": "A log waiting caught on the rock spur: the snag reads (tilt, foam crest), one tug frees it",
-  "about": "Summer 24, 10:00, on the west bank with the hook: a short log drifts down the middle lane onto the first rock spur (19,26) and waits there, caught: tilted toward the rock, a 2 px foam crest where it presses. Hook it (a ripple and the taut rope while it holds), one tug pops it past the spur on your side, and he walks it down to the slip by himself: +1 Timber. The art critic's R30-3 check: the caught log draws above the rock.",
+  "about": "Summer 24, 10:00, coming down the west bank from the north with the hook: a short log drifts down the middle lane onto the first rock spur (19,26) and waits there, caught: tilted toward the rock, a 2 px foam crest where it presses. Hook it (a ripple and the taut rope while it holds), one tug pops it past the spur on your side, and he walks it down to the slip by himself: +1 Timber. The art critic's R30-3 check: the caught log draws above the rock.",
   "version": 18,
   "tags": ["town", "valley", "weir", "towing"],
   "valley": {
@@ -38,8 +38,8 @@
   "at": {
     "map": "town",
     "tx": 16,
-    "ty": 24,
-    "facing": "right"
+    "ty": 20,
+    "facing": "down"
   },
   "time": {
     "season": "summer",
