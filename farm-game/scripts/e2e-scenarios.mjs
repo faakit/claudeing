@@ -975,14 +975,25 @@ async function weir() {
   // The farm-to-town door with the farm green and the town dry: the dry tileset already resident, under the bar
   await farm.load('farm-creek-running');
   await farm.idle();
+  // Each door is timed twice and the quicker run kept: the door itself takes the same time every run (about 290 ms
+  // here), while one frame starved by the suites beside this one (a verify runs five phones at once) added 50-60 ms
+  // to a single run. A dry tileset made at the door (the safety net) would slow both runs, and fails the console
+  // check besides.
+  const backToGate = async () => {
+    await farm.eval(() => window.__farm.dev.goto('farm', 14, 41, 'down'));
+    await farm.idle();
+  };
   const resident = (await dryResident(farm)).length;
-  const dryMs = await gateToTown(farm);
+  let dryMs = await gateToTown(farm);
   const afterDry = (await dryResident(farm)).length;
   const dryFile = String(await groundKey(farm));
+  await backToGate();
+  dryMs = Math.min(dryMs, await gateToTown(farm));
   await farm.mutate((st) => (st.stats['place.weir'] = 3));
-  await farm.eval(() => window.__farm.dev.goto('farm', 14, 41, 'down'));
-  await farm.idle();
-  const riverMs = await gateToTown(farm);
+  await backToGate();
+  let riverMs = await gateToTown(farm);
+  await backToGate();
+  riverMs = Math.min(riverMs, await gateToTown(farm));
   check(
     'door farm -> dry town: the dry tileset resident before the door, the door as quick as to the river town',
     resident === 1 &&
