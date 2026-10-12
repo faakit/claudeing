@@ -40,6 +40,7 @@ import { onOff } from './onOff';
 import { cloudSync } from '../../game/cloudWiring';
 import { buildCloudPage, cloudPage } from './CloudTab';
 import { cloudStatusLine } from './cloudText';
+import { analytics } from '../../platform/analytics';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -131,7 +132,9 @@ export class MenuPanel extends Modal {
       });
     });
     const cr = grid.close;
-    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), { textColor: C.warn });
+    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), {
+      textColor: C.warn,
+    });
     const ctx: MenuTabContext = {
       width: this.panelW,
       height: this.panelH,
@@ -213,7 +216,11 @@ export function installMenuTabs(menu: MenuPanel): void {
   registerMenuTab({ id: 'craft', label: () => tabLabel('craft'), build: buildCraft });
   registerMenuTab({ id: 'skills', label: () => tabLabel('skills'), build: buildSkills });
   registerMenuTab({ id: 'book', label: () => tabLabel('book'), build: buildAlmanac });
-  registerMenuTab({ id: 'opts', label: () => tabLabel('opts'), build: (c) => buildOptions(c, menu) });
+  registerMenuTab({
+    id: 'opts',
+    label: () => tabLabel('opts'),
+    build: (c) => buildOptions(c, menu),
+  });
 }
 
 function buildBag(c: MenuTabContext, menu: MenuPanel): void {
@@ -304,15 +311,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       c.label(8, dy + 64, t('bag.costs', { gold: fmtGold(def.buyPrice) }), C.creamDim);
   } else {
     c.label(8, dy + 2, t('bag.title'), C.gold);
-    c.label(
-      8,
-      dy + 16,
-      t('bag.help'),
-      C.creamDim,
-      1,
-      'left',
-      184,
-    );
+    c.label(8, dy + 16, t('bag.help'), C.creamDim, 1, 'left', 184);
   }
   const ly = c.top + 84;
   c.label(
@@ -328,15 +327,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   );
   c.label(8, ly + 12, t('bag.gold', { gold: fmt(s.money) }), C.gold);
   // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
-  c.label(
-    8,
-    ly + 24,
-    t('bag.tip'),
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
+  c.label(8, ly + 24, t('bag.tip'), C.creamDim, 1, 'left', 184);
 }
 
 function buildGoals(c: MenuTabContext): void {
@@ -546,9 +537,20 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
         c.rebuild();
       },
     ],
-    fullscreenSupported() ? [t('opts.fullscreen'), () => void toggleFullscreen()] : undefined,
+    // With analytics in the build (none by default), its opt-out takes this cell and Fullscreen moves to Controls...
+    analytics.enabled
+      ? [
+          t('privacy.toggle', { state: onOff(analytics.consent === 'granted') }),
+          () => {
+            analytics.setConsent(analytics.consent !== 'granted');
+            c.rebuild();
+          },
+        ]
+      : fullscreenSupported()
+        ? [t('opts.fullscreen'), () => void toggleFullscreen()]
+        : undefined,
   );
-  if (!fullscreenSupported() && isIosSafari()) {
+  if (!analytics.enabled && !fullscreenSupported() && isIosSafari()) {
     c.label(farX, y + 2, t('opts.addHome1'), C.creamDim);
     c.label(farX, y + 12, t('opts.addHome2'), C.creamDim);
   }

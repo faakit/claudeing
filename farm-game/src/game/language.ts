@@ -1,13 +1,7 @@
-import {
-  deviceLocale,
-  getLocale,
-  LOCALES,
-  parseLocale,
-  setLocale,
-  type Locale,
-} from '../i18n';
+import { deviceLocale, getLocale, LOCALES, parseLocale, setLocale, type Locale } from '../i18n';
 import { installDataText } from '../i18n/dataText';
 import { saveStore } from './persistence';
+import { gameEvents } from '../systems/events';
 
 /**
  * The language: settings, not game state, so it lives under its own key in the save store (IndexedDB on the web,
@@ -45,6 +39,7 @@ export function initLanguage(): Promise<void> {
 /** The player picked a language (Menu > Opts, or the title): switch now and remember it (resolves once stored). */
 export function chooseLanguage(l: Locale): Promise<void> {
   setLocale(l);
+  gameEvents.emit('languageChosen', { lang: l });
   if (sandbox()) return Promise.resolve();
   return saveStore.write(LANG_KEY, l).catch(() => undefined);
 }

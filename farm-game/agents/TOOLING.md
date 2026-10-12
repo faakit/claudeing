@@ -42,7 +42,7 @@ longer than a foreground command may. On a loaded machine, use `VERIFY_JOBS=2`, 
 summary then says FLAKY.
 
 Single suites: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run e2e`, `e2e:mobile`,
-`e2e:scenarios`, `e2e:controls`, `e2e:feel`, `e2e:onboarding`, `perf`, `check:bundle`, `format:check`. The browser
+`e2e:scenarios`, `e2e:controls`, `e2e:feel`, `e2e:onboarding`, `e2e:analytics`, `perf`, `check:bundle`, `format:check`. The browser
 suites run against `dist/`, so run `npm run build` first.
 
 ## Ports
@@ -56,6 +56,7 @@ suites run against `dist/`, so run `npm run build` first.
 | `e2e:mobile`                                 | 4178                                    | `E2E_MOBILE_PORT`                                           |
 | `perf` (1x; 4x and 6x at + 41, + 42)         | 4174                                    | `PERF_PORT`                                                 |
 | `bench:thumb`                                | 5180                                    | `BENCH_PORT`                                                |
+| `e2e:analytics`                              | `E2E_PORT` + 35                         | `E2E_ANALYTICS_PORT`                                        |
 
 A second worktree running suites at the same time moves all of them at once:
 
@@ -84,6 +85,10 @@ panelClosed / actionDone / idle`.
 - **The DEV tab** (top left): always on in `npm run dev`, and on with `?scenario=` or `?devmenu`. The backquote
   key toggles it. It offers scenarios, maps, clock speed, frame stepping, the frame graph (fps, ms, JS ms, draws),
   the tile grid and "next day". It is plain HTML, so it costs no draw call.
+- **Analytics** (`?debug&analytics=dev`, the default in `npm run dev`; `?analytics=0` turns it off): the dev
+  provider keeps every event in the page, and the DEV tab's Analytics page shows the install's retention and churn,
+  the queue and the last events, with consent, offline and flush switches. `&consent=ask` makes the title ask as a
+  production build does. `window.__farm.analytics.log()` returns what was delivered. See agents/PUBLISHING.md.
 - **`scripts/lib/farm.mjs`**: `serve(port)` (or `URL=` for a running dev server), `launch()`,
   `openScenario(browser, url, name, { profile, hand })`, then `farm.act()`, `interact()`, `tapTile()`,
   `tapButton()`, `panel(name)`, `idle()`, `shot(name)`, `strip(name, n, every)` and `checker()`. Screenshots go to

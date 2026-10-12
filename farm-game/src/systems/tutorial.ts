@@ -183,11 +183,15 @@ export function startTutorial(s: GameState, opts: { on: boolean; gift: boolean }
 export function skipTutorial(s: GameState): void {
   s.stats['tut.off'] = 1;
   s.stats['tut.on'] = 1;
+  gameEvents.emit('tutorialSkipped', undefined);
 }
 
 /** Skip just this step (offered after a long stall on an optional step). */
 export function skipStep(s: GameState, id: string): void {
+  if (stepDone(s, id)) return;
   s.stats[`tut.${id}`] = 1;
+  const st = tutorialStep(id);
+  if (st) gameEvents.emit('tutorialStep', { id, track: st.track, skipped: true });
 }
 
 /**
@@ -401,7 +405,12 @@ function markSeen(s: GameState, st: TutorialStep): boolean {
 function finish(s: GameState, st: TutorialStep, out: string[]): void {
   s.stats[`tut.${st.id}`] = 1;
   out.push(st.id);
+  gameEvents.emit('tutorialStep', { id: st.id, track: st.track, skipped: false });
 }
+
+/** The guided steps (the day-1 and day-2 tracks, not the one-off intros) in order: the tutorial funnel. */
+export const guidedStepIds = (steps: readonly TutorialStep[] = data().steps): string[] =>
+  steps.filter((st) => st.track !== 'intro').map((st) => st.id);
 
 /** Mark finished steps done; return the step to show now (null: nothing to coach) and what finished. */
 export function advance(

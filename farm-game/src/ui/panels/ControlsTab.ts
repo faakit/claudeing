@@ -16,6 +16,8 @@ import { replayTutorial } from '../../systems/tutorial';
 import type { MenuTabContext } from './MenuPanel';
 import { t, type Key } from '../../i18n';
 import { onOff } from './onOff';
+import { analytics } from '../../platform/analytics';
+import { fullscreenSupported, toggleFullscreen } from '../../platform/display';
 
 const SIZE_KEY = { s: 'controls.sizeS', m: 'controls.sizeM', l: 'controls.sizeL' } as const;
 
@@ -27,7 +29,9 @@ type GameStateT = ReturnType<typeof getState>;
 interface ControlItem {
   id: string;
   label: (s: GameStateT) => string;
-  run: (s: GameStateT) => 'settings' | 'haptics';
+  run: (s: GameStateT) => 'settings' | 'haptics' | 'none';
+  /** Shown only when this holds (default: always). */
+  show?: () => boolean;
 }
 
 /** Every switch on the page, in order (only the ones shipped so far are listed). */
@@ -54,8 +58,7 @@ const ITEMS: ControlItem[] = [
   },
   {
     id: 'stickSize',
-    label: (s) =>
-      t('controls.stickSize', { size: t(SIZE_KEY[s.settings.controls.stickSize]) }),
+    label: (s) => t('controls.stickSize', { size: t(SIZE_KEY[s.settings.controls.stickSize]) }),
     run: (s) => (cycleStickSize(s), 'settings'),
   },
   {
@@ -68,6 +71,13 @@ const ITEMS: ControlItem[] = [
     label: (s) => t('opts.vibrate', { state: onOff(s.settings.vibrate) }),
     run: (s) => (setHapticsEnabled(toggleVibration(s)), 'haptics'),
   },
+  {
+    // Only in a build with analytics (none by default): its opt-out takes Fullscreen's cell on the Opts page.
+    id: 'fullscreen',
+    label: () => t('opts.fullscreen'),
+    run: () => (void toggleFullscreen(), 'none'),
+    show: () => analytics.enabled && fullscreenSupported(),
+  },
 ];
 
 /** Button labels (also measured by tests so they always fit a half-width button). */
@@ -76,49 +86,52 @@ export const controlLabels = (s: GameStateT): string[] => ITEMS.map((it) => it.l
 export function buildControlsPage(c: MenuTabContext, back: () => void): void {
   const s = getState();
   const half = 92;
-  // Rows from the bottom of the tab area up: Back lowest, then the switches, two per row.
+  const items = ITEMS.filter((it) => it.show?.() ?? true);
+  const replay = (x: number, y: number) =>
+    // Replay the guided start from its first step that applies.
+    c.button(
+      x,
+      y,
+      half,
+      22,
+      t('controls.replayGuide'),
+      () => {
+        replayTutorial(getState());
+        controlsPage.open = false;
+        c.close();
+      },
+      { textColor: C.gold },
+    );
+  // Rows from the bottom of the tab area up: Back lowest, then the switches, two per row. Replay guide takes the
+  // free half of the last row; with an even count of switches (the analytics one, in a build with analytics) it
+  // shares Back's row instead (Back on the thumb's side), so the help text above keeps its room.
+  const replayByBack = items.length % 2 === 0;
   let y = c.bottom - 26;
-  c.button(8, y, c.width - 16, 22, t('common.back'), back, { textColor: C.creamDim });
-  const rows = Math.ceil(ITEMS.length / 2);
+  if (replayByBack) {
+    const thumbX = s.settings.leftHanded ? 8 : 100;
+    c.button(thumbX, y, half, 22, t('common.back'), back, { textColor: C.creamDim });
+    replay(s.settings.leftHanded ? 100 : 8, y);
+  } else c.button(8, y, c.width - 16, 22, t('common.back'), back, { textColor: C.creamDim });
+  const rows = Math.ceil(items.length / 2);
   for (let row = rows - 1; row >= 0; row--) {
     y -= 26;
     for (let col = 0; col < 2; col++) {
-      const it = ITEMS[row * 2 + col];
+      const it = items[row * 2 + col];
       if (!it) {
-        // The free half of the last row: replay the guided start from its first step that applies.
-        c.button(
-          8 + col * 92,
-          y,
-          half,
-          22,
-          t('controls.replayGuide'),
-          () => {
-            replayTutorial(getState());
-            controlsPage.open = false;
-            c.close();
-          },
-          { textColor: C.gold },
-        );
+        replay(8 + col * 92, y);
         continue;
       }
       c.button(8 + col * 92, y, half, 22, it.label(s), () => {
-        if (it.run(s) === 'haptics') haptic('tick');
-        else gameEvents.emit('settingsChanged', undefined);
+        const kind = it.run(s);
+        if (kind === 'haptics') haptic('tick');
+        else if (kind === 'settings') gameEvents.emit('settingsChanged', undefined);
         c.rebuild();
       });
     }
   }
   y -= 16;
   c.label(8, y, t('controls.title'), C.gold);
-  c.label(
-    8,
-    c.top + 4,
-    t('controls.help'),
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
+  c.label(8, c.top + 4, t('controls.help'), C.creamDim, 1, 'left', 184);
 }
 
 /** The four one-thumb gestures, for the help card: a picture and two short lines each (tests measure them). */

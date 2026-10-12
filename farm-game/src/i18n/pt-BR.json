@@ -901,5 +901,11 @@
     "keepPhone": "Ficar com este celular",
     "useCloud": "Usar o save da nuvem",
     "later": "Decidir depois"
+  },
+  "privacy": {
+    "ask": "Compartilhar estatísticas de jogo para melhorar o jogo? Sem nomes, sem anúncios. Dá para mudar em Opções.",
+    "yes": "Compartilhar",
+    "no": "Não, obrigado",
+    "toggle": "Estatística: {state}"
   }
 }

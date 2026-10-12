@@ -901,5 +901,11 @@
     "keepPhone": "Keep this phone's",
     "useCloud": "Use the cloud save",
     "later": "Decide later"
+  },
+  "privacy": {
+    "ask": "Share play stats to help improve the game? No names, no ads. You can change it in Options.",
+    "yes": "Share",
+    "no": "No thanks",
+    "toggle": "Share stats: {state}"
   }
 }

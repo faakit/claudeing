@@ -5,7 +5,7 @@
 //
 // Env: PROFILES=i13,se  HANDS=right,left  SHOTS=<dir> (a screenshot per step)  E2E_ONBOARDING_PORT
 // Headless emulation only: it proves the guide never dead-ends, not that a person finds it pleasant.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import {
   PROFILES,
   Thumb,
@@ -16,6 +16,10 @@ import {
   startPreview,
 } from './thumb-lib.mjs';
 
+// The tutorial funnel's steps, in order (the day-1 and day-2 tracks; analytics `tutorial_step`).
+const GUIDED = JSON.parse(readFileSync('src/data/tutorial.json', 'utf8'))
+  .steps.filter((st) => st.track !== 'intro')
+  .map((st) => st.id);
 const PORT = Number(process.env.E2E_ONBOARDING_PORT ?? Number(process.env.E2E_PORT ?? 4173) + 20);
 const which = (process.env.PROFILES ?? 'i13,se').split(',');
 const hands = (process.env.HANDS ?? 'right,left').split(',');
@@ -50,7 +54,8 @@ async function run(p, hand, deviant = false) {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: p.insets });
-  await page.goto(`${url}?debug`);
+  // The dev analytics provider records the tutorial funnel in the page (nothing is sent anywhere).
+  await page.goto(`${url}?debug&analytics=dev`);
   await page.waitForFunction(
     () => window.__farm?.game?.scene?.getScene('Title')?.sys.isActive(),
     null,
@@ -423,6 +428,52 @@ async function run(p, hand, deviant = false) {
   check(`${tag}: day-1 free play followed the goals' own arrows`, freeTaps > 0, `${freeTaps}`);
   await shot('20-town');
   check(`${tag}: the row tip yields after two refusals in a row`, tipYieldOk, '');
+  // The tutorial funnel (analytics, dev provider): every guided step once, in order, then the completion once.
+  const funnel = await page
+    .waitForFunction(
+      async () => {
+        const a = window.__farm.analytics;
+        await a.flush();
+        const log = a.log();
+        return log.some((e) => e.name === 'tutorial_complete') ? log : null;
+      },
+      null,
+      { timeout: 15000, polling: 250 },
+    )
+    .then((h) => h.jsonValue())
+    .catch(() => page.evaluate(() => window.__farm.analytics.log()));
+  const fNames = funnel.map((e) => e.name);
+  const steps = funnel.filter((e) => e.name === 'tutorial_step');
+  check(
+    `${tag}: funnel: every guided step reported once, in order`,
+    JSON.stringify(steps.map((e) => e.params.id)) === JSON.stringify(GUIDED) &&
+      steps.every((e, i) => e.params.index === i && e.params.skipped === 0),
+    JSON.stringify(steps.map((e) => e.params.id)),
+  );
+  check(
+    `${tag}: funnel: tutorial_complete once, after the last step`,
+    fNames.filter((n) => n === 'tutorial_complete').length === 1 &&
+      fNames.lastIndexOf('tutorial_step') < fNames.indexOf('tutorial_complete'),
+    JSON.stringify(fNames),
+  );
+  check(
+    `${tag}: funnel: first_open and session_start once each, first`,
+    fNames[0] === 'first_open' &&
+      fNames[1] === 'session_start' &&
+      fNames.filter((n) => n === 'first_open' || n === 'session_start').length === 2,
+    JSON.stringify(fNames.slice(0, 4)),
+  );
+  check(
+    `${tag}: funnel: day_start for days 1 and 2, and the first harvest and sale once`,
+    JSON.stringify(funnel.filter((e) => e.name === 'day_start').map((e) => e.params.game_day)) ===
+      '[1,2]' &&
+      fNames.filter((n) => n === 'first_harvest').length === 1 &&
+      fNames.filter((n) => n === 'first_sale').length === 1 &&
+      !fNames.includes('tutorial_skip'),
+    JSON.stringify(fNames),
+  );
+  const rejected = await page.evaluate(() => window.__farm.analytics.summary()?.rejected);
+  check(`${tag}: funnel: no event failed the schema`, rejected === 0, String(rejected));
   check(`${tag}: no console errors`, errors.length === 0, errors.join(' | '));
   const r = {
     profile: p.id,

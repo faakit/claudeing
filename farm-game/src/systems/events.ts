@@ -65,6 +65,14 @@ export interface GameEvents {
   cloudChanged: undefined;
   /** A sync found a cloud save further along than, or diverged from, this phone's: the player must choose. */
   cloudConflict: undefined;
+  /** A game was entered from the title (New Game, Continue or a scenario): the state is set, the world opening. */
+  gameEntered: undefined;
+  /** A guided-start step was finished or passed (systems/tutorial.ts); `skipped` when the player skipped it. */
+  tutorialStep: { id: string; track: string; skipped: boolean };
+  /** The player skipped the whole guided start (the coach line's menu). */
+  tutorialSkipped: undefined;
+  /** The player picked a language (Menu > Opts or the title), not the boot-time choice. */
+  languageChosen: { lang: string };
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;

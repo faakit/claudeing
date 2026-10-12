@@ -13,7 +13,7 @@
 // Env: VERIFY_JOBS (jobs at once in phase 1, default 4), VERIFY_SUITE_PARALLEL (onboarding runs at once, default 5),
 // E2E_ONBOARDING_PARALLEL / E2E_CONTROLS_PARALLEL (win over the defaults), the suites' own ports (E2E_PORT,
 // E2E_MOBILE_PORT, PERF_PORT and PERF_PORT+41/+42 for the 4x and 6x runs, E2E_CONTROLS_PORT, E2E_ONBOARDING_PORT,
-// E2E_SCENARIOS_PORT, E2E_JOYSTICK_PORT), CHROMIUM_PATH. A suite marked retryAlone that fails beside others runs once more alone; if
+// E2E_SCENARIOS_PORT, E2E_JOYSTICK_PORT, E2E_ANALYTICS_PORT), CHROMIUM_PATH. A suite marked retryAlone that fails beside others runs once more alone; if
 // it then passes the summary says FLAKY and lists the first failures. Each job's output prints in one piece.
 import { spawn } from 'node:child_process';
 
@@ -76,6 +76,14 @@ const ALL = [
   // Browser suites that wait on real frames: a failure beside other suites reruns once alone (owner ruling: a pass
   // alone counts, and the summary says FLAKY).
   { name: 'e2e', cmd: node('scripts/e2e.mjs'), deps: ['build'], full: true, retryAlone: true },
+  // Analytics on the dev provider: consent on the title, the opt-out switch, off by default (E2E_PORT + 35).
+  {
+    name: 'e2e:analytics',
+    cmd: node('scripts/e2e-analytics.mjs'),
+    deps: ['build'],
+    full: true,
+    retryAlone: true,
+  },
   {
     name: 'e2e:mobile',
     cmd: node('scripts/e2e-mobile.mjs'),

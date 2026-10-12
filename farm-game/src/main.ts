@@ -27,6 +27,7 @@ import { chooseLanguage, initLanguage } from './game/language';
 import { getLocale } from './i18n';
 import { saveNow } from './game/persistence';
 import { wireCloudSave } from './game/cloudWiring';
+import { analyticsDebug, wireAnalytics } from './game/analyticsWiring';
 
 suppressBrowserGestures();
 audio.installAutoUnlock();
@@ -116,6 +117,7 @@ wireAudio(game);
 installWebLifecycle(lifecycle, document, window);
 initNative(lifecycle, { beforeExit: () => saveNow(true) });
 wireCloudSave();
+wireAnalytics(); // no-op unless a provider is configured (game/analyticsWiring.ts)
 
 // Debug/test hook for automated checks and tinkering. Enabled in dev builds, or with ?debug in the URL.
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
@@ -131,6 +133,8 @@ if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
     runtime,
     // The language: read it, or pick one as Menu > Opts does (remembered outside a scenario sandbox).
     i18n: { getLocale, choose: chooseLanguage },
+    // Analytics: the provider, consent, the queue and (dev provider) every event delivered.
+    analytics: analyticsDebug,
   };
   // Dev tools (?scenario=, the lab map, clock and frame control, the dev menu: src/dev): a lazy chunk fetched
   // only here, never part of what a player loads. `npm run build:store` leaves it out of the build entirely.
