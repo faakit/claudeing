@@ -50,6 +50,17 @@ Left open (low): the drag hint's looping tween is never killed; the landmark lis
 `toEnglish` of a pt-BR price of 1,000 or more misses the tutorial's price pattern; the `mechanics` e2e block timed out
 "waiting for an Action result" 3 times in about 20 runs.
 
+### In progress: M7 (towing and the first homecoming), branch `valley/m7` (not merged, not deployed)
+
+`origin/valley/m7` @ f9ee7b2 holds M7 part 1 (towing on the town river, the timber hook, the Marls' house, Senna,
+Clay's late start below 2 hearts) with `audio/m7` (accepted) and `art/m7` (accepted) merged in. Its own NEXT-STEPS
+section is rewritten for M7. Stopped by a usage limit before its full verify and before the valley critic reviewed
+it. To finish: resume the builder (or a new one) on `valley/m7`, run `npm run verify` alone, send the valley critic a
+checkpoint (`valley-critique/ledger.md` has the M7 checklist and three risks), then check in game the art critic's
+post-merge items (the town's real slip in `tow-first-log`/`tow-snag`, R30-3 the log above the rock, the house stages
+and Senna in `tow-house-marls`/`marls-arrive`, the wheel still in Calm) and the audio hooks firing once each. Then
+merge into the integration branch and deploy.
+
 ## How to work
 
 Build every feature scenario-first (see [AGENTS.md](AGENTS.md) and `docs/EXTENDING.md` section 0). Run
