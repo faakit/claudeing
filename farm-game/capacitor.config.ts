@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.tinyacre.farm',
+  appId: 'com.quietspiritstudio.tinyacre',
   appName: 'Tiny Acre',
   webDir: 'dist',
   backgroundColor: '#1b1530',

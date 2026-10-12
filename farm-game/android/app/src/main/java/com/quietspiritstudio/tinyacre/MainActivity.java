@@ -1,4 +1,4 @@
-package app.tinyacre.farm;
+package com.quietspiritstudio.tinyacre;
 
 import android.os.Bundle;
 import androidx.core.view.WindowCompat;

@@ -103,7 +103,7 @@ index yet.
 - **Native saves use Capacitor Preferences, not IndexedDB:** the OS can evict WebView storage; Preferences is durable and in Android auto-backup.
 - **Vibration is a saved setting (default on):** native haptic engine in the apps, `navigator.vibrate` on Android web, nothing on iOS web.
 - **Screen stays awake in the Android app; iOS plays audio regardless of the silent switch:** both small native changes that could not be compiled here (documented in docs/MOBILE.md).
-- **App id `app.tinyacre.farm` is a placeholder to be changed before the first store listing** (procedure in docs/MOBILE.md).
+- **App id `app.tinyacre.farm` is a placeholder to be changed before the first store listing** (procedure in docs/MOBILE.md). Changed to `com.quietspiritstudio.tinyacre` (developer Quiet Spirit Studio, owner decision, 2026-10-12).
 - **Not done / needs a device:** the native projects were generated and synced but not compiled (no Android SDK or Xcode in the sandbox; `dl.google.com` is blocked), and real-phone FPS, audio interruptions and haptics feel are on the manual checklist.
 
 ## Portrait pivot and mechanics layer
@@ -1827,7 +1827,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   need no change: they already fit inside `#frame`, and Action keeps 12 px from the side edges (back-swipe strip).
 - **Release signing only from outside the repo** (`android/keystore.properties` or `TINY_ACRE_UPLOAD_*` env, both
   gitignored). Without them `bundleRelease` is unsigned. No keystore is created or committed by agents.
-- **Native plugin seams.** Custom Java lives in `android/app/src/main/java/app/tinyacre/farm/plugins/`, registered
+- **Native plugin seams.** Custom Java lives in `android/app/src/main/java/com/quietspiritstudio/tinyacre/plugins/`, registered
   with one line each in `LanePlugins.java` before the bridge starts. All of `android/`, Gradle and
   `capacitor.config.ts` stay on this lane's branch. Cloud save owns the content of `PlayGamesSavesPlugin.java`, its
   `play-services-games-v2` dependency and the `game_services_project_id` resValue, and changes reach android/ only
@@ -1973,3 +1973,11 @@ is unchanged: no control moved and the camera scrolls are identical.
   (the question and a `gameEntered` event), `ControlsTab`, `systems/tutorial.ts` and `systems/events.ts` (the
   events above), `game/language.ts` (`languageChosen`), `src/dev/devMenu.ts` (the Analytics page),
   `scripts/e2e-onboarding.mjs` (funnel checks) and `scripts/verify.mjs`.
+
+## The permanent app id and the developer name (owner decision, 2026-10-12)
+
+- **App id `com.quietspiritstudio.tinyacre`**, developer **Quiet Spirit Studio**, replacing the placeholder
+  `app.tinyacre.farm` everywhere: `capacitor.config.ts`, Android `namespace` and `applicationId`, the Java package
+  (`android/app/src/main/java/com/quietspiritstudio/tinyacre/`, with `MainActivity`, `LanePlugins` and
+  `plugins/PlayGamesSavesPlugin`), `strings.xml`, the iOS bundle id, and the docs. It is permanent from the first Play
+  upload, and Play Games and Firebase are registered against it. `package.json` names the author.

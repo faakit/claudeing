@@ -31,7 +31,7 @@ the remaining risk on real hardware is GPU fill on very old devices, which only 
 None of these can be proven in emulation. Run them on one mid-range Android phone (about four
 years old) and one iPhone, once per release:
 
-- [ ] **30 FPS or better** for 10 minutes of play (Android: `adb shell dumpsys gfxinfo app.tinyacre.farm`; iOS: Xcode FPS gauge). Try battery-saver mode too.
+- [ ] **30 FPS or better** for 10 minutes of play (Android: `adb shell dumpsys gfxinfo com.quietspiritstudio.tinyacre`; iOS: Xcode FPS gauge). Try battery-saver mode too.
 - [ ] **Kill the app mid-day**, relaunch, Continue: progress is there (saves happen on background, sleep, map change, and every minute).
 - [ ] **Audio resumes** after a phone call, Siri, and app switching. iOS: also test with the silent switch on (the PWA is muted by it, the native app should not be: see Known issues).
 - [ ] **Notch / punch-hole / rounded corners**: no control is hidden. Check portrait with the notch at the top and at the bottom (home indicator).
@@ -61,13 +61,13 @@ Icons and splash come from `scripts/make-icons.mjs` (pixel art drawn in code) vi
 in that script (or drop your own `resources/icon.png`, `icon-foreground.png`, `icon-background.png`,
 `splash.png`) and re-run.
 
-### Before the first store submission: pick the app id
+### The app id
 
-`app.tinyacre.farm` is the configured id. It becomes permanent with the first Play upload, so change it only
-before that. Update it in three places, then `npm run cap:sync`:
+`com.quietspiritstudio.tinyacre` (developer Quiet Spirit Studio; owner decision, replacing the placeholder `app.tinyacre.farm`). It
+becomes permanent with the first Play upload. It lives in three places (keep them in step, then `npm run cap:sync`):
 
 1. `capacitor.config.ts` (`appId`)
-2. Android: `android/app/build.gradle` (`namespace`, `applicationId`) and move `MainActivity.java` to the matching package folder
+2. Android: `android/app/build.gradle` (`namespace`, `applicationId`) and the Java package folder (`android/app/src/main/java/com/quietspiritstudio/tinyacre/`)
 3. iOS: `PRODUCT_BUNDLE_IDENTIFIER` in Xcode (target App, Signing & Capabilities)
 
 ## How the native shells are configured

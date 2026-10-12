@@ -1,6 +1,6 @@
-package app.tinyacre.farm;
+package com.quietspiritstudio.tinyacre;
 
-import app.tinyacre.farm.plugins.PlayGamesSavesPlugin;
+import com.quietspiritstudio.tinyacre.plugins.PlayGamesSavesPlugin;
 import com.getcapacitor.BridgeActivity;
 
 /**

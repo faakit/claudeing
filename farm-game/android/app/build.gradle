@@ -42,14 +42,14 @@ def hasUploadKey = uploadStoreFile && signingValue('storePassword', 'TINY_ACRE_U
         signingValue('keyAlias', 'TINY_ACRE_UPLOAD_KEY_ALIAS') && signingValue('keyPassword', 'TINY_ACRE_UPLOAD_KEY_PASSWORD')
 
 android {
-    namespace = "app.tinyacre.farm"
+    namespace = "com.quietspiritstudio.tinyacre"
     compileSdk = rootProject.ext.compileSdkVersion
     // resValue below (the Play Games project id) needs generated resources switched on.
     buildFeatures {
         resValues = true
     }
     defaultConfig {
-        applicationId "app.tinyacre.farm"
+        applicationId "com.quietspiritstudio.tinyacre"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode

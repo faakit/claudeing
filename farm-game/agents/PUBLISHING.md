@@ -58,8 +58,8 @@ stores only the farm's save there.
 Cloud save stays off until these steps are done. Nothing here goes into git: there are no secrets and no client ids
 in the repo, and the Android flow needs no client id in the app at all.
 
-1. **Settle the app id first.** Play Games is bound to the package name (`app.tinyacre.farm` is still the placeholder,
-   see docs/MOBILE.md) and to the signing keys' SHA-1. Changing either later means redoing steps 3-5.
+1. **The app id is settled:** `com.quietspiritstudio.tinyacre` (owner decision). Play Games is bound to the package name and to the
+   signing keys' SHA-1. Changing either later means redoing steps 3-5.
 2. **Play Console > the app > Grow users > Play Games Services > Setup and management > Configuration:** create a
    Play Games Services project. Choose "No, my game doesn't use Google APIs", which creates a Google Cloud project for
    it. Turn **Saved games on** in the configuration's properties.
@@ -146,8 +146,8 @@ The script checks the synced web app carries no dev code, and sets `JAVA_HOME`/`
 minutes since 2020. Build a newer commit for every upload (Play refuses a code it has seen). Override once with
 `TINY_ACRE_VERSION_CODE` / `TINY_ACRE_VERSION_NAME`.
 
-**App id** `app.tinyacre.farm`, name "Tiny Acre", as already configured. It is permanent from the first Play
-upload; change it only before that (docs/MOBILE.md lists the three places).
+**App id** `com.quietspiritstudio.tinyacre`, name "Tiny Acre", developer **Quiet Spirit Studio** (owner decision). It is permanent from the
+first Play upload.
 
 ## Try it on an emulator (owner)
 
@@ -175,7 +175,7 @@ A real phone works the same way over USB (USB debugging on).
 - Kill from recents mid-day, relaunch, Continue: progress is there.
 - Airplane mode: everything works (the app makes no network requests).
 - Haptics: a light tick on a tile action; Options > vibration off silences it.
-- `adb shell dumpsys package app.tinyacre.farm | grep -E "targetSdk|versionName|AD_ID"`: targetSdk=36, the build
+- `adb shell dumpsys package com.quietspiritstudio.tinyacre | grep -E "targetSdk|versionName|AD_ID"`: targetSdk=36, the build
   label, no AD_ID.
 - With analytics on: `adb logcat -s FA FA-SVC` shows no events before the title's consent answer.
 
@@ -242,7 +242,7 @@ support can reset it).
 
 - `android/`, every Gradle file and `capacitor.config.ts` live on release/android; other lanes send native changes
   there, so the merges never collide.
-- Custom Java goes in `android/app/src/main/java/app/tinyacre/farm/plugins/<Name>Plugin.java`, registered with one
+- Custom Java goes in `android/app/src/main/java/com/quietspiritstudio/tinyacre/plugins/<Name>Plugin.java`, registered with one
   line in `LanePlugins.java` (before the bridge starts). JS reaches it through `registerPlugin('<Name>')` from
   `@capacitor/core`, so the web bundle carries no native code.
 - **Cloud save** (release/cloud-save): `PlayGamesSavesPlugin.java` is on release/android byte for byte, with cloud
@@ -315,7 +315,7 @@ Cloud save deletion: through the player's Play Games profile or Google Account. 
 
 #### Turning analytics on (owner only; never commit the files below)
 
-1. In the Firebase console, create a project (or use one), add an Android app with package `app.tinyacre.farm`, and
+1. In the Firebase console, create a project (or use one), add an Android app with package `com.quietspiritstudio.tinyacre`, and
    download `google-services.json` into `farm-game/android/app/` (gitignored there and in `farm-game/`).
 2. In `farm-game/`: `npm i @capacitor-firebase/analytics@^8` (no `firebase` web SDK is needed: the game calls the
    native plugin only).
@@ -323,7 +323,7 @@ Cloud save deletion: through the player's Play Games profile or Google Account. 
 4. `npm run cap:sync`, then build as usual. The google-services Gradle plugin applies itself when the json exists.
 5. Apply the GA settings above, then check on a test phone: `adb logcat -s FA FA-SVC` shows nothing before the
    title's question; after Share, Firebase DebugView (`adb shell setprop debug.firebase.analytics.app
-app.tinyacre.farm`) shows `ta_first_open`, `ta_session_start`, `day_start` and the `tutorial_step` events.
+com.quietspiritstudio.tinyacre`) shows `ta_first_open`, `ta_session_start`, `day_start` and the `tutorial_step` events.
 6. Update the Data safety form and the privacy policy with the rows and text in this section.
 
 To remove it again: delete the `.env.local` line (the build goes back to no analytics); the plugin can stay.

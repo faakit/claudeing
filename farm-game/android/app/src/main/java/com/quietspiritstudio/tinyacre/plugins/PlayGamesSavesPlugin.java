@@ -1,4 +1,4 @@
-package app.tinyacre.farm.plugins;
+package com.quietspiritstudio.tinyacre.plugins;
 
 import android.content.Context;
 import com.getcapacitor.JSObject;

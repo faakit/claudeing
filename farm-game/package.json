@@ -2,6 +2,7 @@
   "name": "farm-game",
   "version": "0.0.0",
   "private": true,
+  "author": "Quiet Spirit Studio",
   "type": "module",
   "scripts": {
     "dev": "vite",

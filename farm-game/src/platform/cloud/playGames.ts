@@ -1,6 +1,6 @@
 /**
  * Play Games Services v2 Saved Games (Android), through the app's own thin native plugin `PlayGamesSaves`
- * (android/app/src/main/java/app/tinyacre/farm/plugins/PlayGamesSavesPlugin.java, in the Android lane). One
+ * (android/app/src/main/java/com/quietspiritstudio/tinyacre/plugins/PlayGamesSavesPlugin.java, in the Android lane). One
  * snapshot named "farm" holds the save's JSON.
  *
  * Sign-in is Play Games' automatic sign-in (a Google account under the hood); `signIn()` is its manual retry.

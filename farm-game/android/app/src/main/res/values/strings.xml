@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Tiny Acre</string>
     <string name="title_activity_main">Tiny Acre</string>
-    <string name="package_name">app.tinyacre.farm</string>
-    <string name="custom_url_scheme">app.tinyacre.farm</string>
+    <string name="package_name">com.quietspiritstudio.tinyacre</string>
+    <string name="custom_url_scheme">com.quietspiritstudio.tinyacre</string>
 </resources>
