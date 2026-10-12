@@ -2216,7 +2216,6 @@ try {
         smoke,
         everyScenario,
         mechanics,
-        actionSlowFrame,
         stages,
         ambient,
         actions,
@@ -2234,14 +2233,14 @@ try {
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');
+  const run = (b) =>
+    b().catch((e) => check(`${b.name}: block finished`, false, String(e?.stack ?? e)));
   // Blocks are independent pages: run them side by side (each has its own browser context).
-  await Promise.all(
-    blocks
-      .filter((b) => !only || only.includes(b.name))
-      .map((b) =>
-        b().catch((e) => check(`${b.name}: block finished`, false, String(e?.stack ?? e))),
-      ),
-  );
+  await Promise.all(blocks.filter((b) => !only || only.includes(b.name)).map(run));
+  // Timing blocks run after, with no other page beside them: actionSlowFrame stalls frames on purpose, and the
+  // other blocks' load turned its stalls into a 10 s timeout (twice in full verifies; never alone).
+  const alone = SMOKE ? [] : [actionSlowFrame];
+  for (const b of alone.filter((b) => !only || only.includes(b.name))) await run(b);
 } finally {
   await browser.close();
   stop();
