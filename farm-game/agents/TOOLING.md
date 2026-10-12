@@ -37,8 +37,8 @@ suites at the same time must use different ports (see below).
 | `npm run verify:serial` | the same suites one after another, for a busy machine                                                                                                                                                                           | ~15 min |
 
 Run `verify:fast` for each commit and `verify` before a merge. Run `verify` in the background, because it takes
-longer than a foreground command may. On a loaded machine, use `VERIFY_JOBS=2`, `VERIFY_SUITE_PARALLEL=2` or
-`E2E_CONTROLS_PARALLEL=2`. A suite marked `retryAlone` that fails beside others runs once more alone, and the
+longer than a foreground command may. On a loaded machine, use `VERIFY_JOBS=2`, `VERIFY_SUITE_PARALLEL=2`,
+`E2E_CONTROLS_PARALLEL=2` or `SCENARIO_PARALLEL=4` (`e2e:scenarios` runs 8 blocks at once by default). A suite marked `retryAlone` that fails beside others runs once more alone, and the
 summary then says FLAKY.
 
 Single suites: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run e2e`, `e2e:mobile`,

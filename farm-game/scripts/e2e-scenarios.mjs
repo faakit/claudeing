@@ -5,6 +5,7 @@
 //   default      smoke + every scenario starts + the mechanics and ambient blocks moved here from e2e.mjs
 //   E2E_SCENARIOS_PORT (default E2E_PORT + 30), PROFILE (default i13), SHOTS=<dir> to keep a screenshot per scenario,
 //   BLOCKS=towing,towingLane to run only the named blocks
+//   SCENARIO_PARALLEL=n blocks at once (default 8; each block is a software-GL page, see the pool below)
 import { checker, launch, liveTargets, openScenario, serve } from './lib/farm.mjs';
 import { playTow, towBar } from './lib/tow.mjs';
 
@@ -1092,7 +1093,13 @@ async function spring() {
       (await hudLine(farm)) === 'The Old Spring is open!' &&
       (await farm.eval(() => window.__farm.game.scene.getScene('Wendhead').npcs.at(8, 15))) ===
         'rosa', // two tiles east: the site's sprite covers 6-7
-    JSON.stringify({ stage: s.stats['place.spring'], hud: await hudLine(farm) }),
+    JSON.stringify({
+      stage: s.stats['place.spring'],
+      opened: s.stats['place.spring.opened'],
+      time: s.time,
+      work: s.stats['site.spring.work'],
+      hud: await hudLine(farm),
+    }),
   );
   if (process.env.SHOTS) await farm.shot('spring-opened', process.env.SHOTS);
   await farm.eval(() => window.__farm.dev.goto('farm', 25, 12, 'right'));
@@ -3744,8 +3751,27 @@ try {
   const only = process.env.BLOCKS?.split(',');
   const run = (b) =>
     b().catch((e) => check(`${b.name}: block finished`, false, String(e?.stack ?? e)));
-  // Blocks are independent pages: run them side by side (each has its own browser context).
-  await Promise.all(blocks.filter((b) => !only || only.includes(b.name)).map(run));
+  // Blocks are independent pages: run them side by side (each has its own browser context), but at most
+  // SCENARIO_PARALLEL at once. Every page renders with software GL; with all 27 blocks started together (the launch
+  // merge added nine), pages went many frames without a step, and checks that read straight after a scene change
+  // or wait on an Action result failed in turn (mechanics, actions, spring, weir, bait, fish-cast, tow-spike), and
+  // once the browser itself went down. A pool keeps the machine busy without starving any page.
+  const PARALLEL = Math.max(1, Number(process.env.SCENARIO_PARALLEL ?? 8));
+  // the longest blocks (50-70 s alone) go first, so none of them starts last and holds up the end
+  const LONG = ['weirTow', 'guidedDepth', 'towingLane', 'everyScenario', 'towing'];
+  const rank = (b) => (LONG.includes(b.name) ? LONG.indexOf(b.name) : LONG.length);
+  const queue = blocks
+    .filter((b) => !only || only.includes(b.name))
+    .sort((x, y) => rank(x) - rank(y));
+  const worker = async () => {
+    for (let b = queue.shift(); b; b = queue.shift()) {
+      const tb = Date.now();
+      await run(b);
+      if (process.env.BLOCK_TIMES)
+        console.log(`  block ${b.name}: ${((Date.now() - tb) / 1000).toFixed(1)} s`);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(PARALLEL, queue.length) }, worker));
   // Timing blocks run after, with no other page beside them: actionSlowFrame stalls frames on purpose, and the
   // other blocks' load turned its stalls into a 10 s timeout (twice in full verifies; never alone).
   // The text guard and the sheet taps open many pages of their own (four and three at once): beside the parallel
