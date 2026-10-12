@@ -1396,6 +1396,55 @@ async function seeThrough() {
   }
 }
 
+// World text never sits under a floating control plate (integration review: the Menu plate covered a plot sign's
+// price on the SE). Every world label on screen is checked against the live plates, on the iPhone 13 and the SE.
+async function worldText() {
+  for (const profile of ['i13', 'se'])
+    for (const name of ['tap-retarget-walk', 'ui-float-controls', 'ui-float-controls-left']) {
+      const farm = await openScenario(browser, url, name, { profile });
+      await farm.idle(5);
+      await farm.frames(2);
+      const r = await farm.eval(() => {
+        const w = window.__farm.game.scene.getScenes(true).find((sc) => sc.grid);
+        const plates = window.__farm.game.scene.getScene('UI').plates();
+        const cam = w.cameras.main;
+        const labels = w.children.list.filter(
+          (o) =>
+            o.type === 'Container' && o.visible && o.list?.some((c) => c.type === 'BitmapText'),
+        );
+        const under = [];
+        let seen = 0;
+        for (const o of labels) {
+          if (w.tweens.isTweening(o)) continue;
+          const b = o.getBounds();
+          const x0 = b.x - cam.scrollX + cam.x;
+          const y0 = b.y - cam.scrollY + cam.y;
+          const x1 = x0 + b.width;
+          const y1 = y0 + b.height;
+          if (x1 < 0 || x0 > 200 || y1 < cam.y || y0 > 400) continue; // off screen
+          seen++;
+          const text = o.list.find((c) => c.type === 'BitmapText').text;
+          for (const p of plates) {
+            const hit =
+              p.kind === 'box'
+                ? x1 > p.x0 && x0 < p.x1 && y1 > p.y0 && y0 < p.y1
+                : Math.hypot(Math.max(x0 - p.x, 0, p.x - x1), Math.max(y0 - p.y, 0, p.y - y1)) <
+                  p.r;
+            if (hit) under.push(`${text} [${Math.round(x0)},${Math.round(y0)}]`);
+          }
+        }
+        return { seen, under };
+      });
+      if (process.env.SHOTS) await farm.shot(`world-text-${name}-${profile}`, process.env.SHOTS);
+      check(
+        `${name} (${profile}): no world label sits under a control plate`,
+        r.under.length === 0,
+        JSON.stringify(r),
+      );
+      await farm.close();
+    }
+}
+
 async function actions() {
   const farm = await openScenario(browser, url, 'ripe-plot', { profile: PROFILE });
   await farm.eval(() => {
@@ -1780,6 +1829,7 @@ try {
         ambient,
         actions,
         seeThrough,
+        worldText,
         valley,
         spring,
         channels,

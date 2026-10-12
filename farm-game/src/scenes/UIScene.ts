@@ -50,7 +50,14 @@ import {
   tutorialOn,
   type CoachFacts,
 } from '../systems/tutorial';
-import { dockLayout, resolveTouch, type DockLayout, type DockSpot } from '../ui/layout';
+import {
+  controlPlates,
+  dockLayout,
+  resolveTouch,
+  type DockLayout,
+  type DockSpot,
+  type Plate,
+} from '../ui/layout';
 import {
   BinPanel,
   BoardPanel,
@@ -472,6 +479,11 @@ export class UIScene extends Phaser.Scene {
   private pressAction(): void {
     this.actionPress = new ActionPress(this.time.now);
     this.paintTiles = 0;
+  }
+
+  /** The floating controls' plates over the world right now (world text keeps clear of them: WorldScene). */
+  plates(): Plate[] {
+    return controlPlates(this.layout, this.interactButton?.isEnabled ?? false);
   }
 
   /** Each frame: the paint arm (held still 300 ms). */

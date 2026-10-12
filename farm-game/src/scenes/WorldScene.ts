@@ -62,6 +62,8 @@ import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient, parseBlooms } from '../fx/Ambient';
 import { NO_HOLE, SeeThrough } from '../fx/SeeThrough';
+import { Label } from '../ui/font';
+import { liftClear, type Plate } from '../ui/layout';
 import { PixelCamera } from '../fx/PixelCamera';
 import { DoorFx } from '../fx/DoorFx';
 import { PlayerFrames, showFrame, TOOL_CONTACT_FRAME, type FrameRef } from '../fx/playerFrames';
@@ -795,6 +797,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.updateTarget();
     this.updateHighlight(time);
     this.updateGuide(time, delta);
+    this.keepLabelsClear();
   }
 
   /** Villagers move on their schedule: check once per game minute and re-block tiles when someone moved. */
@@ -1961,6 +1964,39 @@ export abstract class WorldScene extends Phaser.Scene {
     // quick second tap is buffered, never dropped. Mid-step, the route first finishes the step to that centre.
     if (plan.path.length === 1 && this.actionLock <= 0 && this.onCentre(plan.path[0]!))
       this.arrive();
+  }
+
+  /** Where each world label was put by its owner, and where it was last lifted to (keepLabelsClear). */
+  private labelLift = new WeakMap<Label, { base: number; set: number }>();
+
+  /**
+   * World text never sits under a floating control plate (the world runs under the controls): a label (a plot
+   * sign's price, a site's name, a villager's "!") that would be covered rises just above the plate, and settles
+   * back once it is clear. Its owner may move it any frame: a y it did not get from here is its new resting place.
+   * Labels in a tween (rising "+1" lines) are left alone.
+   */
+  private keepLabelsClear(): void {
+    const ui = this.scene.get('UI') as unknown as { plates?: () => Plate[] } | null;
+    const plates = ui?.plates?.();
+    if (!plates) return;
+    const cam = this.cameras.main;
+    for (const o of this.children.list) {
+      if (!(o instanceof Label) || !o.visible || this.tweens.isTweening(o)) continue;
+      let lift = this.labelLift.get(o);
+      if (!lift || o.y !== lift.set) lift = { base: o.y, set: o.y };
+      o.y = lift.base;
+      const b = o.getBounds();
+      const sx = cam.x - cam.scrollX;
+      const sy = cam.y - cam.scrollY;
+      const dy = liftClear(
+        { x0: b.x + sx, y0: b.y + sy, x1: b.right + sx, y1: b.bottom + sy },
+        plates,
+        WORLD_VIEW.y,
+      );
+      o.y = lift.base - dy;
+      lift.set = o.y;
+      this.labelLift.set(o, lift);
+    }
   }
 
   /** Where a walk planned now may start (systems/pathfind routeStarts): mid-step, ahead first. */

@@ -287,3 +287,64 @@ export function menuTabGrid(
   }
   return { tabs: out, close: rect(1, leftHanded ? 0 : bottomTabs, span) };
 }
+
+/** A floating control's solid plate, in logical screen px: a round button's disc (with its lip) or a box. */
+export type Plate =
+  | { kind: 'disc'; x: number; y: number; r: number }
+  | { kind: 'box'; x0: number; y0: number; x1: number; y1: number };
+
+/**
+ * Every plate the floating controls draw over the world: Action, Menu, Interact while it shows, and the hotbar row
+ * (its raised selected face included). World text must not sit under one (`liftClear`).
+ */
+export function controlPlates(L: DockLayout, interactShown: boolean, slots = 8): Plate[] {
+  const disc = (s: DockSpot): Plate => ({
+    kind: 'disc',
+    x: s.x,
+    y: s.y + PLATE_LIP / 2,
+    r: s.r + 1,
+  });
+  const out = [disc(L.action), disc(L.menu)];
+  if (interactShown) out.push(disc(L.interact));
+  out.push({
+    kind: 'box',
+    x0: hotbarSlotX(0, slots),
+    y0: HOTBAR_Y - 2,
+    x1: hotbarSlotX(slots - 1, slots) + HOTBAR.slot,
+    y1: GAME_HEIGHT,
+  });
+  return out;
+}
+
+/**
+ * How far up (px, >= 0) a box of world text must move so no plate covers any of it, or 0 if it is clear. It moves
+ * only up, and never above `top` (the HUD's edge): a box that cannot clear by then stays where it is. Pure.
+ */
+export function liftClear(
+  box: { x0: number; y0: number; x1: number; y1: number },
+  plates: readonly Plate[],
+  top: number,
+): number {
+  let dy = 0;
+  for (let guard = 0; guard < 8; guard++) {
+    const y0 = box.y0 - dy;
+    const y1 = box.y1 - dy;
+    let need = 0;
+    for (const p of plates) {
+      if (p.kind === 'box') {
+        if (box.x1 > p.x0 && box.x0 < p.x1 && y1 > p.y0 && y0 < p.y1)
+          need = Math.max(need, y1 - p.y0);
+        continue;
+      }
+      // the disc's top over the box's columns: the box's bottom must end above it
+      const dx = Math.max(box.x0 - p.x, 0, p.x - box.x1);
+      if (dx >= p.r) continue;
+      const half = Math.sqrt(p.r * p.r - dx * dx);
+      if (y1 > p.y - half && y0 < p.y + half) need = Math.max(need, y1 - (p.y - half));
+    }
+    if (need <= 0) return dy;
+    dy += Math.ceil(need);
+    if (box.y0 - dy < top) return 0;
+  }
+  return 0;
+}
