@@ -74,7 +74,15 @@ const run = (cmd, args, opts = {}) => {
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
 
-if (!process.argv.includes('--no-sync')) run('npm', ['run', 'cap:sync']);
+// npm through node and npm's own CLI script when npm launched us (npm_execpath): the Windows npm shim breaks when quoted
+// under Git Bash; otherwise plain `npm` via the shell.
+const npmCli = process.env.npm_execpath;
+if (!process.argv.includes('--no-sync')) {
+  if (npmCli) {
+    const r = spawnSync(process.execPath, [npmCli, 'run', 'cap:sync'], { stdio: 'inherit' });
+    if (r.status !== 0) process.exit(r.status ?? 1);
+  } else run('npm', ['run', 'cap:sync']);
+}
 
 // The synced web app must be the store build: no dev tools, no lab map.
 const pub = join('android', 'app', 'src', 'main', 'assets', 'public');
