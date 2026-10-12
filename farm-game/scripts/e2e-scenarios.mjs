@@ -1084,6 +1084,13 @@ async function channels() {
   // Channel art (art lane): the serpentine's cells show the autotiled ditch for their neighbours, wet where the
   // flow reaches and dry past it; a culvert's headwalls stand on the path; the flowers on a channel are gone.
   await farm.load('channels-serpentine');
+  // the morning's run (feel lane) shows the reached channels dug dry until the water passes them
+  await farm.until(
+    (_s, w) => !w.game.scene.getScene('Farm').channels.running,
+    null,
+    'the serpentine morning run to finish',
+    8000,
+  );
   const art = await farm.eval(() => {
     const scene = window.__farm.game.scene.getScene('Farm');
     const idx = scene.cache.json.get('tiles_index').tiles;
@@ -1442,8 +1449,10 @@ function overflowIn(sceneKey) {
         const on = shown && n.visible !== false && n.alpha !== 0;
         if (on && n.type === 'BitmapText' && n.text) {
           const b = n.getBounds();
-          if (b.left < -0.5 || b.right > 200.5) bad.push(`${n.text} [${b.left | 0}..${b.right | 0}]`);
-          if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text)) bad.push(`raw: ${n.text}`);
+          if (b.left < -0.5 || b.right > 200.5)
+            bad.push(`${n.text} [${b.left | 0}..${b.right | 0}]`);
+          if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text))
+            bad.push(`raw: ${n.text}`);
         }
         (n.list ?? []).forEach((c) => walk(c, on));
       };
@@ -1474,7 +1483,9 @@ const closeSheet = (farm) =>
   farm.during('panelClosed', [], () =>
     farm.eval(() => {
       const ui = window.__farm.game.scene.getScene('UI');
-      ui.allModals().find((m) => m.isOpen)?.close();
+      ui.allModals()
+        .find((m) => m.isOpen)
+        ?.close();
     }),
   );
 
@@ -1491,7 +1502,11 @@ async function lang() {
     JSON.stringify(texts),
   );
   const fit = await titleOverflow(farm);
-  check('lang-pt-title (SE): every title text stays on the canvas', fit.length === 0, fit.join(' | '));
+  check(
+    'lang-pt-title (SE): every title text stays on the canvas',
+    fit.length === 0,
+    fit.join(' | '),
+  );
   // One tap on the language button: the title redraws in English.
   const langBtn = await farm.eval(() => {
     const t = window.__farm.game.scene.getScene('Title');
@@ -1552,7 +1567,11 @@ async function lang() {
     JSON.stringify(hud),
   );
   let over = await uiOverflow(farm);
-  check('lang-pt-farm-hud (SE): no HUD text leaves the canvas', over.length === 0, over.join(' | '));
+  check(
+    'lang-pt-farm-hud (SE): no HUD text leaves the canvas',
+    over.length === 0,
+    over.join(' | '),
+  );
   // Menu > Opts: the language switch, one tap, applies at once and the open menu redraws.
   await openSheet(farm, 'menu');
   await farm.eval(() => window.__farm.game.scene.getScene('UI').menu.openTab('opts'));
