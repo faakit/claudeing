@@ -2003,7 +2003,9 @@ export abstract class WorldScene extends Phaser.Scene {
 
   /** Where a walk planned now may start (systems/pathfind routeStarts): mid-step, ahead first. */
   private routeStarts(): RouteStart[] {
-    return routeStarts(getState().player, this.move, this.grid, PLAYER_HITBOX);
+    return routeStarts(getState().player, this.move, this.grid, PLAYER_HITBOX, (tx, ty) =>
+      this.isDoor(tx, ty),
+    );
   }
 
   /** Is the farmer standing on this tile's centre? */

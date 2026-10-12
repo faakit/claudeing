@@ -125,13 +125,15 @@ export interface RouteStart {
 
 /**
  * Where a re-planned walk may start, best first: the tile whose centre the farmer stands on, or, between two
- * centres, the open tile ahead along `axis`/`sign` (the way he walks), then the open tile behind. Pure.
+ * centres, the open tile ahead along `axis`/`sign` (the way he walks), then the open tile behind. A tile `avoid`
+ * names (a door) is never a start: a walk begun on it would step onto it and fire the door. Pure.
  */
 export function routeStarts(
   pos: { x: number; y: number },
   walking: { axis: 'x' | 'y' | null; sign: number },
   grid: CollisionGrid,
   hb: { h: number } = { h: 6 },
+  avoid?: (tx: number, ty: number) => boolean,
 ): RouteStart[] {
   const ts = grid.tileSize;
   // continuous tile coordinates of the farmer's feet, where whole numbers are tile centres
@@ -158,7 +160,7 @@ export function routeStarts(
   const out: RouteStart[] = [];
   for (const c of sign > 0 ? [hi, lo] : [lo, hi]) {
     const tile = axis === 'x' ? { tx: c, ty: here.ty } : { tx: here.tx, ty: c };
-    if (isTileBlocked(grid, tile.tx, tile.ty)) continue;
+    if (isTileBlocked(grid, tile.tx, tile.ty) || avoid?.(tile.tx, tile.ty)) continue;
     out.push({ tile, dist: Math.abs(along - c) * ts + cross });
   }
   if (!out.length) out.push({ tile: here, dist: offX + offY });
