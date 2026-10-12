@@ -57,11 +57,11 @@ describe('proportions (art round 3, review 8)', () => {
     const runs = holeRuns(holeCircles(100, 200, { tx: 6, ty: 13 }));
     const on = new Set<string>();
     for (const [x, y, w] of runs) for (let i = 0; i < w; i++) on.add(`${x + i},${y}`);
-    // the chest, the head and the target tile's centre are fully clear
+    // the chest, the head (to the hair, 23 px up) and the target tile's centre are fully clear; the legs are not cut
     for (const [x, y] of [
       [100, 194],
       [100, 182],
-      [104, 200],
+      [100, 177],
       [104, 216],
     ])
       expect(on.has(`${x},${y}`), `${x},${y}`).toBe(true);
@@ -70,5 +70,6 @@ describe('proportions (art round 3, review 8)', () => {
     const edge = 100 + HOLE.body + 1;
     expect(on.has(`${edge},${rimY}`)).not.toBe(on.has(`${edge + 1},${rimY}`));
     expect(on.has(`${100 + HOLE.body + HOLE.rim + 2},${rimY}`)).toBe(false);
+    expect(on.has('100,199')).toBe(false);
   });
 });

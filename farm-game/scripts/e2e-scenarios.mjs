@@ -1302,6 +1302,64 @@ async function towing() {
   }
 }
 
+// The see-through hole behind a lone crown (owner bug 1, integration review): tap the tile behind the crown, as the
+// scenario says; once the hole is fully open, the crown keeps at least 60% of its opaque pixels, the farmer's head
+// shows, and the target tile under the same crown is not cut. On the iPhone 13 and the SE.
+async function seeThrough() {
+  for (const profile of ['i13', 'se']) {
+    const farm = await openScenario(browser, url, 'walk-behind-tree', { profile });
+    await farm.tapTile(7, 1);
+    await farm.idle(5);
+    const m = await farm.until(
+      (s, w) => {
+        const sc = w.game.scene.getScene('Farm');
+        const st = sc.seeThrough;
+        if (!st || st.open.body < 1) return null;
+        const p = s.player;
+        const tiles = sc.mapArt.crownUnderBody(p.x, p.y);
+        const on = new Set();
+        for (const [x, y, n] of st.runs)
+          for (let i = 0; i < n; i++) on.add((y + 64) * 4096 + x + i);
+        let all = 0;
+        let cut = 0;
+        for (const k of tiles) {
+          const tx = k % 100000;
+          const ty = (k - tx) / 100000;
+          for (let y = ty * 16; y < ty * 16 + 16; y++)
+            for (let x = tx * 16; x < tx * 16 + 16; x++)
+              if (sc.mapArt.opaque(x, y)) {
+                all++;
+                if (on.has((y + 64) * 4096 + x)) cut++;
+              }
+        }
+        const head = on.has((Math.round(p.y) - 20 + 64) * 4096 + Math.round(p.x));
+        return {
+          at: [Math.floor(p.x / 16), Math.floor((p.y - 3) / 16)],
+          all,
+          cut,
+          head,
+          target: st.open.target,
+        };
+      },
+      null,
+      'the see-through hole to open fully',
+      5000,
+    );
+    if (process.env.SHOTS) await farm.shot(`walk-behind-tree-hole-${profile}`, process.env.SHOTS);
+    check(
+      `walk-behind-tree (${profile}): behind the lone crown the farmer's head shows and the crown keeps 60% or more`,
+      m.at.join() === '7,1' && m.head && m.target === 0 && m.all > 200 && 1 - m.cut / m.all >= 0.6,
+      JSON.stringify({ ...m, kept: +(1 - m.cut / m.all).toFixed(2) }),
+    );
+    check(
+      `walk-behind-tree (${profile}): no console errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+}
+
 async function actions() {
   const farm = await openScenario(browser, url, 'ripe-plot', { profile: PROFILE });
   await farm.eval(() => {
@@ -1685,6 +1743,7 @@ try {
         stages,
         ambient,
         actions,
+        seeThrough,
         valley,
         spring,
         channels,

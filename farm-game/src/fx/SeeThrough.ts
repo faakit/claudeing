@@ -16,11 +16,20 @@ import type Phaser from 'phaser';
  *   crown does only when the player is behind its trunk; beside or in front, the crown may overlap the hair and
  *   nothing is cut (`wantHole`, with hysteresis so it cannot flicker on a crown's ragged edge);
  * - it grows from nothing and shrinks back in `HOLE_EASE_MS` (whole-pixel radii, the checker rim at every size);
- * - the body hole is 9 px, so a crown keeps most of its mass around the farmer;
+ * - the body hole is a 5 px capsule over the head and torso (`HOLE_BODY_Y`), so a crown keeps most of its mass;
  * - the target tile is cut only when the crown covers its centre and the player is behind the crown or standing
- *   still facing it, never while walking past.
+ *   still facing it, never while walking past, and never while the player is behind that same crown (the target
+ *   then sits under the crown he is already seen through: cutting it too erased a lone crown).
  */
-export const HOLE = { body: 9, target: 10, rim: 2 } as const;
+export const HOLE = { body: 5, target: 10, rim: 2 } as const;
+
+/**
+ * Where the body hole's circles sit, in px above the feet: a capsule over the head and torso only (the sprite's
+ * hair reaches 26 px up). Coordinator ruling after the integration review: the lone crown on walk-behind-tree is
+ * about 30 px across, and the old two 9 px circles plus the target tile's circle took 29 px of it; a crown must
+ * keep at least about 60% of itself around the farmer.
+ */
+export const HOLE_BODY_Y = [8, 14, 20] as const;
 
 /** Time for the hole to open fully, or to close (ms). */
 export const HOLE_EASE_MS = 150;
@@ -90,11 +99,14 @@ export function wantHole(
   target: { tx: number; ty: number } | undefined,
   opaque: Opaque,
   still: boolean,
+  sameCrown: (t: { tx: number; ty: number }) => boolean = () => false,
 ): HoleWant {
   const body = bodyCover(px, py, opaque) >= (prev.body ? COVER.body.off : COVER.body.on);
   const covered =
     !!target && tileCover(target, opaque) >= (prev.target ? COVER.target.off : COVER.target.on);
-  return { body, target: covered && (body || still || prev.target) };
+  // behind a crown, a target under that same crown stays drawn (the body hole already shows the farmer)
+  const shared = body && !!target && sameCrown(target);
+  return { body, target: covered && !shared && (body || still || prev.target) };
 }
 
 /** One frame of the hole's ease toward open (want) or closed. Pure. */
@@ -111,8 +123,8 @@ export function holeRadius(r: number, open: number): number {
 }
 
 /**
- * The hole's circles: two along the player's body (feet at px, py) and one on the target tile, each at its ease
- * amount (full size by default). Circles eased to nothing are left out. Pure.
+ * The hole's circles: a capsule over the player's head and torso (feet at px, py; `HOLE_BODY_Y`) and one on the
+ * target tile, each at its ease amount (full size by default). Circles eased to nothing are left out. Pure.
  */
 export function holeCircles(
   px: number,
@@ -123,10 +135,7 @@ export function holeCircles(
   const out: Circle[] = [];
   const rb = holeRadius(HOLE.body, open.body);
   if (rb > 0)
-    out.push(
-      { x: Math.round(px), y: Math.round(py) - 6, r: rb },
-      { x: Math.round(px), y: Math.round(py) - 18, r: rb },
-    );
+    for (const dy of HOLE_BODY_Y) out.push({ x: Math.round(px), y: Math.round(py) - dy, r: rb });
   const rt = holeRadius(HOLE.target, open.target);
   if (target && rt > 0) out.push({ x: target.tx * 16 + 8, y: target.ty * 16 + 8, r: rt });
   return out;
@@ -208,6 +217,8 @@ export class SeeThrough {
   private key = '';
   private readonly open: HoleOpen = { body: 0, target: 0 };
   private target: { tx: number; ty: number } | undefined;
+  /** The hole's pixel runs as last drawn (for the e2e that measures how much of a crown stays). */
+  runs: [number, number, number][] = [];
 
   constructor(scene: Phaser.Scene) {
     this.g = scene.make.graphics({}, false);
@@ -242,8 +253,8 @@ export class SeeThrough {
     this.key = key;
     this.g.clear();
     this.g.fillStyle(0xffffff, 1);
-    for (const [x, y, w] of holeRuns(holeCircles(px, py, t, this.open)))
-      this.g.fillRect(x, y, w, 1);
+    this.runs = holeRuns(holeCircles(px, py, t, this.open));
+    for (const [x, y, w] of this.runs) this.g.fillRect(x, y, w, 1);
   }
 
   destroy(): void {

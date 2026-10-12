@@ -98,7 +98,9 @@ export class MapArt {
     const key = `${Math.round(px)},${Math.round(py)},${target?.tx},${target?.ty},${still}`;
     if (key !== this.last) {
       this.last = key;
-      this.wanted = wantHole(this.wanted, px, py, target, this.opaque, still);
+      this.wanted = wantHole(this.wanted, px, py, target, this.opaque, still, (t) =>
+        this.crownUnderBody(px, py).has(t.ty * 100000 + t.tx),
+      );
     }
     return this.wanted;
   }
@@ -118,6 +120,44 @@ export class MapArt {
       layer.clearMask();
       this.masked = false;
     }
+  }
+
+  /**
+   * The overhead tiles of the crown (or crowns) over the player's lower body (the `bodyCover` box): every drawn
+   * overhead tile 4-connected to one under that box, as `ty * 100000 + tx` keys (at most 256 tiles; a forest's
+   * canopy counts as one crown).
+   */
+  crownUnderBody(px: number, py: number): Set<number> {
+    const out = new Set<number>();
+    const layer = this.overhead;
+    if (!layer) return out;
+    const drawn = (tx: number, ty: number) => (layer.getTileAt(tx, ty)?.index ?? -1) > 0;
+    const queue: [number, number][] = [];
+    const x0 = Math.floor((Math.round(px) - 5) / 16);
+    const x1 = Math.floor((Math.round(px) + 4) / 16);
+    const y0 = Math.floor((Math.round(py) - 12) / 16);
+    const y1 = Math.floor((Math.round(py) - 1) / 16);
+    for (let ty = y0; ty <= y1; ty++)
+      for (let tx = x0; tx <= x1; tx++)
+        if (drawn(tx, ty) && !out.has(ty * 100000 + tx)) {
+          out.add(ty * 100000 + tx);
+          queue.push([tx, ty]);
+        }
+    while (queue.length && out.size < 256) {
+      const [tx, ty] = queue.shift()!;
+      for (const [nx, ny] of [
+        [tx + 1, ty],
+        [tx - 1, ty],
+        [tx, ty + 1],
+        [tx, ty - 1],
+      ] as const) {
+        const k = ny * 100000 + nx;
+        if (out.has(k) || !drawn(nx, ny)) continue;
+        out.add(k);
+        queue.push([nx, ny]);
+      }
+    }
+    return out;
   }
 
   /** Is the overhead art opaque at this world pixel? Tiles' alpha is read once per tile id. */

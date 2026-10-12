@@ -218,9 +218,10 @@ describe('map art layers', () => {
     const t = holeTiles(holeCircles(5 * 16 + 8, 5 * 16 + 11, { tx: 5, ty: 6 })).map(
       ([x, y]) => `${x},${y}`,
     );
-    expect(t).toContain('5,4');
-    expect(t).toContain('5,3');
-    expect(t).toContain('5,6');
+    expect(t).toContain('5,4'); // the head and torso (feet on row 5)
+    expect(t).toContain('5,5');
+    expect(t).toContain('5,6'); // the target
+    expect(t).not.toContain('5,3');
     expect(t).not.toContain('5,8');
   });
 });

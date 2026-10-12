@@ -115,6 +115,73 @@ describe('see-through hole: when it opens (owner bug 1)', () => {
   });
 });
 
+describe('see-through hole: the crown keeps its mass (integration review, coordinator ruling)', () => {
+  /** A crown of radius r over the trunk at TRUNK, overhead only north of the trunk row (as `lone`). */
+  const disc =
+    (r: number): Opaque =>
+    (x, y) =>
+      Math.floor(y / 16) < TRUNK.ty && Math.hypot(x + 0.5 - crown.cx, y + 0.5 - crown.cy) <= r;
+  const sameTree = (t: { tx: number; ty: number }) =>
+    Math.abs(t.tx - TRUNK.tx) <= 1 && t.ty < TRUNK.ty && t.ty >= TRUNK.ty - 3;
+  /** Share of the crown's opaque pixels still drawn with the hole fully open. */
+  const kept = (art: Opaque, circles: ReturnType<typeof holeCircles>) => {
+    const on = new Set<string>();
+    for (const [x, y, w] of holeRuns(circles)) for (let i = 0; i < w; i++) on.add(`${x + i},${y}`);
+    let all = 0;
+    let cut = 0;
+    for (let y = 0; y < TRUNK.ty * 16; y++)
+      for (let x = 0; x < 16 * 16; x++)
+        if (art(x, y)) {
+          all++;
+          if (on.has(`${x},${y}`)) cut++;
+        }
+    return 1 - cut / all;
+  };
+
+  it('behind a crown, a target under the same crown is not cut; one under another crown still is', () => {
+    const { px, py } = feet(TRUNK.tx, TRUNK.ty - 1);
+    const west = { tx: TRUNK.tx - 1, ty: TRUNK.ty - 1 };
+    expect(wantHole(NO_HOLE, px, py, west, lone, true, sameTree)).toEqual({
+      body: true,
+      target: false,
+    });
+    expect(wantHole(NO_HOLE, px, py, west, lone, true, () => false)).toEqual({
+      body: true,
+      target: true,
+    });
+    // beside the trunk (not behind), standing still facing into the crown: the target still opens
+    const side = feet(TRUNK.tx + 1, TRUNK.ty);
+    expect(
+      wantHole(NO_HOLE, side.px, side.py, { tx: TRUNK.tx, ty: TRUNK.ty - 1 }, lone, true, sameTree),
+    ).toEqual({ body: false, target: true });
+  });
+
+  it('keeps at least 60% of a lone crown, 30 px across (walk-behind-tree) or 44 px, around the farmer', () => {
+    for (const tx of [TRUNK.tx - 1, TRUNK.tx, TRUNK.tx + 1]) {
+      const { px, py } = feet(tx, TRUNK.ty - 1);
+      for (const r of [15, 22]) {
+        const art = disc(r);
+        const want = wantHole(
+          NO_HOLE,
+          px,
+          py,
+          { tx: tx - 1, ty: TRUNK.ty - 1 },
+          art,
+          true,
+          sameTree,
+        );
+        if (!want.body) continue; // walking past its edge: nothing is cut
+        const circles = holeCircles(
+          px,
+          py,
+          want.target ? { tx: tx - 1, ty: TRUNK.ty - 1 } : undefined,
+        );
+        expect(kept(art, circles), `crown r ${r}, farmer at ${tx}`).toBeGreaterThanOrEqual(0.6);
+      }
+    }
+  });
+});
+
 describe('see-through hole: how it opens', () => {
   it('eases open over about 150 ms and back, a whole pixel of radius at a time, without a pop', () => {
     const frame = 1000 / 60;
