@@ -1534,7 +1534,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
-      const swing = this.toolSwing(stack?.item, res.kind);
+      // a cast is the rod's whatever is in hand (a bait in hand casts too: depth lane, baits)
+      const swing = this.toolSwing(res.kind === 'cast' ? 'fishing_rod' : stack?.item, res.kind);
       if (res.kind === 'cast') this.startCastHold(swing.shown);
       if (!swing.shown && ACT_FOR_KIND[res.kind]) {
         // art round 5: plant, harvest, forage, eat and place play the farmer's own action; the fx land on contact
