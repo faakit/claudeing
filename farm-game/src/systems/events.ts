@@ -39,7 +39,8 @@ export interface GameEvents {
   /** A fish was landed (the farmer's reel animation plays when the sheet closes). */
   fishCaught: undefined;
   /** Start the fishing mini-game; resolve with the outcome. */
-  startFishing: { map: string; fish: string; bait: boolean };
+  /** `bait`: the bait item on this cast (every cast uses one). */
+  startFishing: { map: string; fish: string; bait: string };
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
   sleepRequest: { passedOut: boolean };
   /** A villager's friendship reached a new heart (for a flourish). */

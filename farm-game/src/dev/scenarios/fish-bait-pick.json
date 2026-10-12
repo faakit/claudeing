@@ -1,0 +1,41 @@
+{
+  "title": "Picking a bait on the hotbar",
+  "about": "Summer 10, 17:00, on the farm pond bank facing the water, carrying all four baits: worms and Bait Mix on the hotbar beside the Glow Grub in hand, Fish Chum in the bag. Action casts with the Glow Grub (the Sun Carp legend bites four times as often with it); switch to the rod afterwards and the next cast still uses Glow Grub, the bait used last. Tap another bait on the hotbar to change it, or the fishing sheet's \"Next bait\" button after a catch.",
+  "version": 18,
+  "tags": ["farm", "fishing", "bait"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "season": "summer",
+    "day": 10,
+    "clock": "17:00"
+  },
+  "weather": "sunny",
+  "items": [
+    {
+      "item": "bait",
+      "qty": 5,
+      "slot": 5
+    },
+    {
+      "item": "glow_grub",
+      "qty": 3,
+      "slot": 7
+    },
+    {
+      "item": "chum",
+      "qty": 5
+    }
+  ],
+  "select": "glow_grub",
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "caught": 12
+  },
+  "goal": "fish20"
+}

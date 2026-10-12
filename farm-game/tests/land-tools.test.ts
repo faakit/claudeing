@@ -203,9 +203,9 @@ describe('tool upgrades in the shop and on the water', () => {
 
   it('a better rod widens the catch zone and shortens the wait', () => {
     const s = newState();
-    const base = reelSize(s, 0.5, false);
+    const base = reelSize(s, 0.5, 'worms');
     s.upgrades.rod = 3;
-    expect(reelSize(s, 0.5, false)).toBeGreaterThan(base);
-    expect(biteDelay(0.5, false, 3)).toBeLessThan(biteDelay(0.5, false, 0));
+    expect(reelSize(s, 0.5, 'worms')).toBeGreaterThan(base);
+    expect(biteDelay(0.5, 'worms', 3)).toBeLessThan(biteDelay(0.5, 'worms', 0));
   });
 });

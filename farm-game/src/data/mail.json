@@ -251,6 +251,30 @@
         "stat": "house.marls",
         "min": 3
       }
+    },
+    {
+      "id": "bait_old",
+      "from": "finn",
+      "title": "Picky fish",
+      "text": "The fish won't take a bare hook any more: every cast needs bait now. I put 10 worms in your bag. The hoe digs up more, and Mara sells Bait Mix.",
+      "when": {
+        "stat": "bait.oldSave",
+        "min": 1
+      }
+    },
+    {
+      "id": "bait_owed",
+      "from": "finn",
+      "title": "Worms for you",
+      "text": "Your bag was too full for the worms I meant to give you, so here they are. Every cast takes one bait.",
+      "when": {
+        "stat": "bait.owed",
+        "min": 1
+      },
+      "gift": {
+        "item": "worms",
+        "qty": 10
+      }
     }
   ]
 }

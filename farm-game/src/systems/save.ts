@@ -1,4 +1,5 @@
 import { driftDefaults } from './drift';
+import { baitDefaults } from './fishing';
 import { valleyDefaults, weirDefaults } from './valley';
 import {
   crops,
@@ -714,6 +715,7 @@ export function sanitize(raw: Raw): GameState {
   // once the rest of the state is rebuilt. Clamping to the tonic level alone used to drop perks on load.
   const cap = maxEnergyOf(out);
   out.energy = int(raw['energy'], cap, 0, cap);
+  baitDefaults(out);
   return out;
 }
 

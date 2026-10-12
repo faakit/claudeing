@@ -36,7 +36,7 @@ import { buyPlot, ownsPlot, ownsTile } from '../src/systems/plots';
 import { jarContents, loadJar, preserveOf } from '../src/systems/preserves';
 import { createInitialState, type GameState } from '../src/state/GameState';
 import { gameEvents } from '../src/systems/events';
-import { resolveCatch } from '../src/systems/fishing';
+import { hasBait, resolveCatch } from '../src/systems/fishing';
 import { random } from '../src/systems/rng';
 
 const STORE = 'town_general_store';
@@ -134,12 +134,14 @@ const FISHER_CASTS = 4;
  * four (a fair player at the reel). The cast is a real Action; the reel is skipped.
  */
 function fishEvening(s: GameState): void {
-  const bite: { fish: string | null } = { fish: null };
-  const off = gameEvents.on('startFishing', ({ fish }) => (bite.fish = fish));
+  const bite: { fish: string | null; bait: string | null } = { fish: null, bait: null };
+  const off = gameEvents.on('startFishing', ({ fish, bait }) => Object.assign(bite, { fish, bait }));
   for (let i = 0; i < FISHER_CASTS && s.energy > 20; i++) {
     bite.fish = null;
+    // Every cast takes a bait (bait round): beyond the worms the hoe digs up, a fisher buys Bait Mix at 6g.
+    if (!hasBait(s) && buyItem(s, STORE, 'bait', 10) !== 'ok') break;
     if (!equipItem(s, 'fishing_rod') || !act(s, POND).ok || !bite.fish) break;
-    resolveCatch(s, bite.fish, { caught: random(s) < 0.75, perfect: false });
+    resolveCatch(s, bite.fish, { caught: random(s) < 0.75, perfect: false }, bite.bait);
   }
   off();
 }

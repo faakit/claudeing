@@ -15,7 +15,7 @@
     "unlock": null
   },
   "bait": {
-    "name": "Bait",
+    "name": "Bait Mix",
     "output": {
       "item": "bait",
       "qty": 5
@@ -24,6 +24,25 @@
       {
         "item": "fiber",
         "qty": 3
+      }
+    ],
+    "gold": 0,
+    "unlock": null
+  },
+  "chum": {
+    "name": "Fish Chum",
+    "output": {
+      "item": "chum",
+      "qty": 5
+    },
+    "ingredients": [
+      {
+        "item": "carp",
+        "qty": 1
+      },
+      {
+        "item": "fiber",
+        "qty": 1
       }
     ],
     "gold": 0,

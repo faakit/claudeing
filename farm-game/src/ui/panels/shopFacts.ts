@@ -69,7 +69,6 @@ export function shopFacts(
   } else if (def.type === 'feed') base = t('shop.dailyFood');
   else if (def.type === 'fertilizer')
     base = (def.fertilizer?.growth ?? 0) > 0 ? t('shop.growsFast') : t('shop.finerCrops');
-  else if (def.type === 'bait') base = t('shop.fasterBites');
   else if (def.type === 'material') base = t('shop.forCrafting');
   else if (placeables[itemId]?.behavior === 'decor')
     // For decorations `own` counts placed ones too, against the cap: "Decor 1/1".

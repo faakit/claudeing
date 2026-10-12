@@ -1,5 +1,5 @@
 import { fish as fishTable, items } from '../data';
-import type { FishDef } from '../data';
+import type { BaitDef, FishDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { toast } from './events';
 import { addStat } from './goals';
@@ -8,6 +8,7 @@ import { addItem, countItem, removeItem, roomFor } from './inventory';
 import { displayName } from './itemRef';
 import { rollQuality } from './quality';
 import { isWet } from './weather';
+import { absoluteDay } from './time';
 import { random } from './rng';
 import { addXp, perk } from './skills';
 import { t } from '../i18n';
@@ -35,10 +36,126 @@ export function fishFor(state: GameState, map: string): FishDef[] {
   );
 }
 
-export function pickFish(state: GameState, map: string): FishDef | null {
+/** A bait's effect, or null when the item is not a bait. */
+export const baitOf = (item: string | null | undefined): BaitDef | null =>
+  (item && items[item]?.bait) || null;
+
+/** Every bait item, plainest (lowest code) first. */
+export const baitItems = (): string[] =>
+  Object.keys(items)
+    .filter((id) => items[id]?.bait)
+    .sort((a, b) => baitOf(a)!.code - baitOf(b)!.code);
+
+const baitByCode = (code: number): string | undefined =>
+  baitItems().find((id) => baitOf(id)!.code === code);
+
+/** The stat that remembers the bait last chosen (its `code`): one cast picks it, the next keeps it. */
+export const BAIT_PICK = 'bait.pick';
+
+/**
+ * The bait the next cast uses: a bait in hand, else the one used last while some is left, else the plainest you
+ * carry. Null: no bait at all, so the cast is refused (fishing needs bait; owner, bait round).
+ */
+export function currentBait(state: GameState): string | null {
+  const held = state.inventory.slots[state.inventory.selected]?.item;
+  if (baitOf(held)) return held!;
+  return currentBaitOnRod(state);
+}
+
+/** Worms a new game starts with, and an old save is given once (fishing needs bait since the bait round). */
+export const STARTER_BAIT = { item: 'worms', qty: 10 } as const;
+/** This save knows that fishing needs bait (new games carry it; saves from before get their stack once). */
+export const BAIT_ON = 'bait.on';
+
+/**
+ * Saves from before the bait round fished without bait, so they get the starter stack once (no version bump, the
+ * M6/M7 pattern): in the bag, or, with a full bag, by Finn's letter (`bait.owed`). `bait.oldSave` sends his note.
+ */
+export function baitDefaults(state: GameState): GameState {
+  if (state.stats[BAIT_ON]) return state;
+  state.stats[BAIT_ON] = 1;
+  state.stats['bait.oldSave'] = 1;
+  if (roomFor(state, STARTER_BAIT.item, STARTER_BAIT.qty) >= STARTER_BAIT.qty)
+    addItem(state, STARTER_BAIT.item, STARTER_BAIT.qty);
+  else state.stats['bait.owed'] = 1;
+  return state;
+}
+
+/**
+ * The free bait: one tile in `WORM_ODDS` the hoe tills or the scythe clears turns up worms (one in half that on a
+ * wet day), from day 3 (days 1 and 2 are the guided start, kept quiet: the onboarding gate). Decided by a hash of the running count, not the
+ * RNG, so the sims' random paths do not move. Returns how many were found (and put in the bag, room allowing).
+ */
+export const WORM_ODDS = 6;
+const DIG_STATS = ['tilled', 'cleared'] as const;
+export function digWorms(state: GameState): number {
+  let found = 0;
+  for (const name of DIG_STATS) {
+    const now = state.stats[name] ?? 0;
+    const seenKey = `bait.seen.${name}`;
+    const seen = state.stats[seenKey];
+    state.stats[seenKey] = now;
+    if (seen === undefined || now <= seen || absoluteDay(state) < 3) continue;
+    const odds = isWet(state.weather) ? WORM_ODDS / 2 : WORM_ODDS;
+    for (let n = seen + 1; n <= now; n++)
+      if (
+        (Math.imul(n, 2654435761) ^ (name === 'tilled' ? 0x5bd1e995 : 0x1b873593)) >>> 0 <
+        0x100000000 / odds
+      )
+        found += 1;
+  }
+  if (found === 0) return 0;
+  const room = Math.min(found, roomFor(state, STARTER_BAIT.item, found));
+  if (room > 0) addItem(state, STARTER_BAIT.item, room);
+  return room;
+}
+
+/**
+ * The fishing sheet's one-tap switch: the next bait you carry (by code, wrapping round) becomes the one the next
+ * cast uses, as if it had been cast last. Null when you carry fewer than two kinds (nothing to switch to).
+ */
+export function nextBait(state: GameState): string | null {
+  const owned = baitItems().filter((id) => countItem(state, id) > 0);
+  if (owned.length < 2) return null;
+  const now = currentBaitOnRod(state);
+  const next = owned[(owned.indexOf(now ?? '') + 1) % owned.length]!;
+  state.stats[BAIT_PICK] = baitOf(next)!.code;
+  return next;
+}
+
+/** The bait the rod would use (the remembered one, else the plainest), whatever is in hand. */
+export function currentBaitOnRod(state: GameState): string | null {
+  const picked = baitByCode(state.stats[BAIT_PICK] ?? 0);
+  if (picked && countItem(state, picked) > 0) return picked;
+  return baitItems().find((id) => countItem(state, id) > 0) ?? null;
+}
+
+/** Any bait in the bag at all. */
+export const hasBait = (state: GameState): boolean => currentBait(state) !== null;
+
+/** Take one bait for a cast and remember it as the bait to use next. False if none is carried. */
+export function useBait(state: GameState, item: string): boolean {
+  const def = baitOf(item);
+  if (!def || !removeItem(state, item, 1)) return false;
+  state.stats[BAIT_PICK] = def.code;
+  return true;
+}
+
+/** A fish's weight in the draw with this bait: harder fish rise with `rare`, legends with `legend`. */
+export function baitWeight(f: FishDef, bait: BaitDef | null): number {
+  if (!bait) return f.weight;
+  return f.legend ? f.weight * bait.legend : f.weight * (1 + bait.rare * f.difficulty * 3);
+}
+
+export function pickFish(
+  state: GameState,
+  map: string,
+  bait: string | null = null,
+): FishDef | null {
   const pool = fishFor(state, map);
+  const b = baitOf(bait);
   // Storms stir the water: fish that only bite in wet weather bite far more often.
-  const w = (f: FishDef) => f.weight * (state.weather === 'storm' && f.weather ? 3 : 1);
+  const w = (f: FishDef) => baitWeight(f, b) * (state.weather === 'storm' && f.weather ? 3 : 1);
   const total = pool.reduce((n, f) => n + w(f), 0);
   if (total <= 0) return null;
   let r = random(state) * total;
@@ -49,11 +166,18 @@ export function pickFish(state: GameState, map: string): FishDef | null {
   return pool[pool.length - 1] ?? null;
 }
 
-export const hasBait = (state: GameState): boolean => countItem(state, 'bait') > 0;
+/** Each fish's chance (0..1) on this map today with this bait, for the tests and the Book. */
+export function fishOdds(state: GameState, map: string, bait: string | null): Map<string, number> {
+  const pool = fishFor(state, map);
+  const b = baitOf(bait);
+  const w = (f: FishDef) => baitWeight(f, b) * (state.weather === 'storm' && f.weather ? 3 : 1);
+  const total = pool.reduce((n, f) => n + w(f), 0);
+  return new Map(pool.map((f) => [f.item, total > 0 ? w(f) / total : 0]));
+}
 
-/** Seconds until the fish bites. Bait halves the wait. */
-export const biteDelay = (rnd: number, bait: boolean, rodTier = 0): number =>
-  (1.2 + rnd * 2.2) * (bait ? 0.55 : 1) * (1 - 0.12 * rodTier);
+/** Seconds until the fish bites: the bait's `wait` times the base wait, shorter with a better rod. */
+export const biteDelay = (rnd: number, bait: string | null, rodTier = 0): number =>
+  (1.2 + rnd * 2.2) * (baitOf(bait)?.wait ?? 1) * (1 - 0.12 * rodTier);
 
 /** The window (s) in which a tap hooks the fish. */
 export const HOOK_WINDOW = 1.5;
@@ -76,8 +200,8 @@ export interface Reel {
 
 export const REEL_TIMEOUT = 24;
 
-/** Size of the catch bar: wider with fishing level and bait, narrower for tougher fish. */
-export const reelSize = (state: GameState, difficulty: number, bait: boolean): number =>
+/** Size of the catch bar: wider with fishing level and some baits, narrower for tougher fish. */
+export const reelSize = (state: GameState, difficulty: number, bait: string | null): number =>
   Math.min(
     0.6,
     Math.max(
@@ -85,7 +209,7 @@ export const reelSize = (state: GameState, difficulty: number, bait: boolean): n
       0.3 +
         perk(state, 'fishWindow') +
         state.upgrades.rod * 0.05 +
-        (bait ? 0.06 : 0) -
+        (baitOf(bait)?.reel ?? 0) -
         difficulty * 0.12,
     ),
   );
@@ -155,11 +279,12 @@ export const outcomeOf = (r: Reel): CatchOutcome => ({
   perfect: r.result === 'caught' && r.elapsed > 0 && r.inside / r.elapsed >= PERFECT_RATIO,
 });
 
-/** Pay out a fight: the fish (quality rolled, perfect catches roll better), XP and stats. */
+/** Pay out a fight: the fish (quality rolled, perfect catches and finer baits roll better), XP and stats. */
 export function resolveCatch(
   state: GameState,
   fishId: string,
   outcome: CatchOutcome,
+  bait: string | null = null,
 ): { ok: boolean; q: number } {
   const def = fishTable.find((f) => f.item === fishId);
   if (!def || !outcome.caught) {
@@ -170,7 +295,7 @@ export function resolveCatch(
     toast(t('fishing.fullReleased'), 'warn');
     return { ok: false, q: 0 };
   }
-  const q = rollQuality(state, outcome.perfect ? 0.15 : 0);
+  const q = rollQuality(state, (outcome.perfect ? 0.15 : 0) + (baitOf(bait)?.quality ?? 0));
   addItem(state, q > 0 ? { item: fishId, q } : fishId, 1);
   // The Fishing Derby counts the day's best catches; say so when this one improves the score.
   if (recordCatch(state, { item: fishId, q }))
@@ -193,8 +318,4 @@ export function resolveCatch(
     Math.round((items[fishId]?.sellPrice ?? 20) * 0.2 * (outcome.perfect ? 1.5 : 1)),
   );
   return { ok: true, q };
-}
-
-export function useBait(state: GameState): boolean {
-  return removeItem(state, 'bait', 1);
 }

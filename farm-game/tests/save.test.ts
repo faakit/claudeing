@@ -122,6 +122,11 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
       'valley.weirOn': 1,
       'place.weir': 3,
       'valley.riverSeen': 1,
+      // ...and its starter worms, given once (fishing needs bait since the bait round)
+      'bait.on': 1,
+      'bait.oldSave': 1,
+      'got.worms': 1,
+      discoveries: 1,
     });
     expect(s.shipping).toEqual({});
   });

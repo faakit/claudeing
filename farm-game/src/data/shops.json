@@ -71,6 +71,10 @@
         "seasons": ["spring", "summer", "fall", "winter"]
       },
       {
+        "item": "glow_grub",
+        "seasons": ["spring", "summer", "fall", "winter"]
+      },
+      {
         "item": "speed_gro",
         "seasons": ["spring", "summer", "fall", "winter"]
       },

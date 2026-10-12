@@ -6,7 +6,9 @@ import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import {
   biteDelay,
+  currentBaitOnRod,
   HOOK_WINDOW,
+  nextBait,
   newReel,
   outcomeOf,
   reelSize,
@@ -17,6 +19,7 @@ import {
 import { gameEvents, toast } from '../../systems/events';
 import { displayName } from '../../systems/itemRef';
 import { random } from '../../systems/rng';
+import { countItem } from '../../systems/inventory';
 import type { Label } from '../font';
 import { C } from '../theme';
 import { drawBar, drawPanel, Modal } from '../widgets';
@@ -35,7 +38,8 @@ export class FishingPanel extends Modal {
   private clock = 0;
   private delay = 0;
   private fishId = 'carp';
-  private bait = false;
+  /** The bait on this cast (shown top right; it sets the bite wait, the odds and the catch bar). */
+  private bait = 'worms';
   private reel: Reel = newReel(0.3, 0.3);
   private pointerDown = false;
   private wasHolding = false;
@@ -52,7 +56,7 @@ export class FishingPanel extends Modal {
     scene.events.on(Phaser.Scenes.Events.UPDATE, (_t: number, dt: number) => this.tick(dt / 1000));
   }
 
-  start(fishId: string, bait: boolean): void {
+  start(fishId: string, bait: string): void {
     this.fishId = fishId;
     this.bait = bait;
     this.phase = 'wait';
@@ -70,14 +74,7 @@ export class FishingPanel extends Modal {
   protected build(): void {
     this.panel();
     this.label(8, 8, t('fishing.title'), C.gold);
-    this.label(
-      192,
-      8,
-      this.bait ? t('fishing.baitOn') : t('fishing.noBait'),
-      this.bait ? C.green : C.creamDim,
-      1,
-      'right',
-    );
+    this.label(192, 8, items[this.bait]?.name ?? this.bait, C.green, 1, 'right');
     this.status = this.label(100, 22, '', C.cream, 1, 'center');
     this.gfx = this.scene.add.graphics();
     this.content.add(this.gfx);
@@ -100,6 +97,32 @@ export class FishingPanel extends Modal {
     zone.on('pointerout', () => (this.pointerDown = false));
     this.content.add(zone);
     this.hint = this.label(100, this.panelH - 44, '', C.creamDim, 1, 'center', 190);
+    // After the fight, the bottom button switches the next cast's bait in one tap (when you carry two kinds or
+    // more): no screen before a cast, and the bait in hand or on the hotbar still wins (bait round).
+    const next = currentBaitOnRod(getState());
+    const kinds = new Set(
+      getState()
+        .inventory.slots.filter((st) => st && items[st.item]?.bait)
+        .map((st) => st!.item),
+    );
+    if (this.phase === 'done' && next && kinds.size >= 2) {
+      this.button(
+        8,
+        this.panelH - 28,
+        this.panelW - 16,
+        22,
+        t('fishing.nextBait', { bait: items[next]?.name ?? next, n: countItem(getState(), next) }),
+        () => {
+          nextBait(getState());
+          audio.play('select');
+          this.clock = 0; // the tap that switched never also closes the sheet
+          this.rebuild();
+        },
+        { textColor: C.green },
+      );
+      this.draw();
+      return;
+    }
     this.button(
       8,
       this.panelH - 28,
@@ -162,7 +185,7 @@ export class FishingPanel extends Modal {
     }
     this.phase = 'done';
     this.clock = 0;
-    const res = resolveCatch(getState(), this.fishId, out);
+    const res = resolveCatch(getState(), this.fishId, out, this.bait);
     if (res.ok) {
       audio.play('harvest');
       haptic('success');
@@ -172,6 +195,7 @@ export class FishingPanel extends Modal {
       audio.play('error');
       this.resultText = t('fishing.gotAway');
     }
+    this.rebuild(); // the bottom button becomes the next-bait switch
   }
 
   private resultText = '';

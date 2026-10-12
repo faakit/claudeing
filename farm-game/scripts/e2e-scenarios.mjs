@@ -2012,6 +2012,50 @@ const closeSheet = (farm) =>
     }),
   );
 
+/** Bait (bait round): no cast without one, each cast uses one, the bait in hand or used last goes on. */
+async function bait() {
+  let farm = await openScenario(browser, url, 'fish-no-bait', { profile: PROFILE });
+  let before = await farm.state();
+  let res = await farm.act();
+  let m = await farm.state();
+  let shown = await uiText(farm);
+  check(
+    'fish-no-bait: Action refuses in one line and casts nothing',
+    !res.ok &&
+      shown.includes("No bait: dig worms or buy at Mara's.") &&
+      m.energy === before.energy &&
+      (await farm.openSheet()) !== 'fishing',
+    `${JSON.stringify(res)} :: ${shown}`,
+  );
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'fish-bait-worms', { profile: PROFILE });
+  await farm.during('panelOpen', ['fishing'], () => farm.press('Space'));
+  m = await farm.state();
+  shown = await uiText(farm);
+  const count = (st, id) =>
+    st.inventory.slots.reduce((n, x) => (x?.item === id ? n + x.qty : n), 0);
+  check(
+    'fish-bait-worms: the rod casts with the starter worms; the sheet names them',
+    count(m, 'worms') === 9 && shown.includes('Worms') && m.stats['bait.pick'] === 1,
+    shown,
+  );
+  check('fish-bait-worms: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'fish-bait-pick', { profile: PROFILE });
+  await farm.during('panelOpen', ['fishing'], () => farm.press('Space'));
+  m = await farm.state();
+  shown = await uiText(farm);
+  check(
+    'fish-bait-pick: the Glow Grub in hand goes on the hook and is remembered',
+    count(m, 'glow_grub') === 2 && shown.includes('Glow Grub') && m.stats['bait.pick'] === 4,
+    shown,
+  );
+  check('fish-bait-pick: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 async function lang() {
   // The title in Portuguese at a first launch, on the smallest phone.
   let farm = await openScenario(browser, url, 'lang-pt-title', { profile: 'se' });
@@ -2229,6 +2273,7 @@ try {
         towing,
         towingLane,
         weirTow,
+        bait,
         lang,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)

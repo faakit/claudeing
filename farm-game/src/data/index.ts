@@ -224,6 +224,22 @@ export interface ItemDef {
   energy?: number;
   /** Taken from a letter together with it (the journal tucked in the seed tin). */
   comesWith?: { item: string; qty: number }[];
+  /** Bait (type `bait`): what one cast with it changes. Casting needs one; each cast uses one. */
+  bait?: BaitDef;
+}
+/**
+ * One bait's effect on a cast (`systems/fishing.ts`). `code` is its stable number (the remembered bait is the stat
+ * `bait.pick`, so codes are never reused; the lowest owned code is the fallback). `wait` multiplies the bite wait,
+ * `rare` lifts harder fish (weight x (1 + rare x difficulty x 3)), `legend` multiplies a legend's weight,
+ * `quality` is added to the catch's quality roll and `reel` widens the catch bar.
+ */
+export interface BaitDef {
+  code: number;
+  wait: number;
+  rare: number;
+  legend: number;
+  quality: number;
+  reel: number;
 }
 export interface CropDef {
   seasons: Season[];
@@ -1137,7 +1153,23 @@ export function validateContent(): void {
       fail('items', `placeable item "${id}" has no entry in placeables.json`);
     if (it.type === 'fertilizer' && !it.fertilizer)
       fail('items', `fertilizer "${id}" needs a "fertilizer" block`);
+    if ((it.type === 'bait') !== !!it.bait)
+      fail('items', `"${id}": every bait needs a "bait" block, and only baits have one`);
+    const b = it.bait;
+    if (
+      b &&
+      (!Number.isInteger(b.code) ||
+        b.code < 1 ||
+        !(b.wait > 0) ||
+        b.rare < 0 ||
+        !(b.legend > 0) ||
+        b.quality < 0 ||
+        b.reel < 0)
+    )
+      fail('items', `bait "${id}" has a bad code, wait, rare, legend, quality or reel`);
   }
+  const baitCodes = Object.values(items).flatMap((it) => (it.bait ? [it.bait.code] : []));
+  if (new Set(baitCodes).size !== baitCodes.length) fail('items', 'two baits share a code');
   for (const e of forage.table) {
     if (items[e.item]?.type !== 'forage') fail('forage', `"${e.item}" is not a forage item`);
     for (const m of e.maps ?? []) if (!mapIds.includes(m)) fail('forage', `unknown map "${m}"`);
