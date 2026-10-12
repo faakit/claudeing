@@ -316,6 +316,8 @@ export function hasKind(s: GameState, kind: TutorialKind, world?: CoachWorld): b
       return s.inventory.slots.some((st, i) => !!st && i < 8 && items[st.item]?.placeable === true);
     case 'bait':
       return hasBait(s);
+    case 'rocks':
+      return Object.values(s.nodes[world?.map ?? 'mine'] ?? {}).some((n) => n === 'rock_node');
   }
 }
 
@@ -390,6 +392,10 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
     if (!f || hasEntered(s, f.id)) return false;
   }
   if (c.short !== undefined && !goodsShort(s, c.short.project, c.short.item)) return false;
+  if (c.daysSince !== undefined) {
+    const at = s.stats[`tut.at.${c.daysSince.step}.clock`];
+    if (at === undefined || absoluteDay(s) - Math.floor(at / 1440) < c.daysSince.min) return false;
+  }
   if (c.npc !== undefined && !world.npcs.some((n) => n.id === c.npc)) return false;
   if (c.goal !== undefined && currentGoal(s)?.id !== c.goal) return false;
   if (c.fact === 'npcNew' && !newNpcInView(s, world)) return false;

@@ -2019,6 +2019,7 @@ async function guidedDepth() {
     ['tut-job-turn-in', 'Job done! Turn it in at the board.'],
     ['tut-no-bait', 'No bait: the hoe digs up worms.'],
     ['tut-stone-before-site', 'Stone comes from rocks in the mine.'],
+    ['tut-stone-empty-mine', 'No rocks today: back tomorrow.'],
   ]) {
     const farm = await openScenario(browser, url, name, { profile: PROFILE });
     const shown = await farm
@@ -2187,6 +2188,40 @@ async function bait() {
     'fish-bait-pick: the Glow Grub in hand goes on the hook and is remembered',
     count(m, 'glow_grub') === 2 && shown.includes('Glow Grub') && m.stats['bait.pick'] === 4,
     shown,
+  );
+  // The catch's result: the sheet closes only from Close; its Bait switch changes the next bait (critic D3-2).
+  await farm.eval(() => {
+    const f = window.__farm.game.scene.getScene('UI').fishing;
+    f.phase = 'reel';
+    Object.assign(f.reel, { result: 'caught', elapsed: 2, inside: 2 });
+    f.finish(true);
+  });
+  await farm.frames(3);
+  shown = await uiText(farm);
+  await farm.thumb.tap(100, 300, 70); // a stray tap on the sheet
+  await farm.frames(10);
+  const stayed = (await farm.openSheet()) === 'fishing';
+  const switched = await tapSheetButton(farm, /^Bait: /);
+  await farm.frames(3);
+  m = await farm.state();
+  const closed = await tapSheetButton(farm, /^Close$/);
+  await farm.panelClosed();
+  check(
+    'fish-bait-pick: after a catch, Bait switches the next bait and only Close closes the sheet',
+    /Bait: Glow Grub 2 >/.test(shown) &&
+      /\bClose\b/.test(shown) &&
+      !/Tap to continue/.test(shown) &&
+      stayed &&
+      switched &&
+      m.stats['bait.pick'] === 1 &&
+      closed,
+    JSON.stringify({
+      stayed,
+      switched,
+      pick: m.stats['bait.pick'],
+      closed,
+      shown: shown.slice(-200),
+    }),
   );
   check('fish-bait-pick: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();

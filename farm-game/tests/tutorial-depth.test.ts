@@ -193,8 +193,30 @@ describe('guided start: stone before the site (owner)', () => {
     s.nodes['mine'] = { '5,5': 'rock_node' };
     expect(view(s, mine)?.pointer).toMatchObject({ kind: 'tile' });
     addStat(s, 'mined');
-    expect(step(s, world('farm'))).toBe('valleyAsk');
+    // one rock is not 20 stone: no walk back to the site today (critic D3-1)
+    expect(step(s, mine)).toBeNull();
     expect(stepDone(s, 'stone')).toBe(true);
+    expect(step(s, world('farm'))).toBeNull();
+    // ...the next morning the site's own line says what is left
+    s.time.day += 1;
+    expect(step(s, world('farm'))).toBe('valleyAsk');
+  });
+
+  it('or as soon as the stone is all gathered, the same day', () => {
+    const s = asked();
+    expect(step(s, world('farm'))).toBe('stone');
+    addStat(s, 'mined');
+    addItem(s, 'stone', 20);
+    expect(step(s, world('farm'))).toBe('valleyAsk');
+  });
+
+  it('an empty mine says the rocks are back tomorrow and points at nothing (critic D3-3)', () => {
+    const s = asked();
+    s.nodes['mine'] = {};
+    const v = view(s, world('mine'));
+    expect(v?.step.id).toBe('stone');
+    expect(v?.text).toBe("No rocks today: back tomorrow.");
+    expect(v?.pointer).toBeNull();
   });
 
   it('with the stone in hand, or already given, it is skipped and the site shows at once', () => {
@@ -208,6 +230,7 @@ describe('guided start: stone before the site (owner)', () => {
   it('with auto tool off in the mine, it shows the pickaxe slot first', () => {
     const s = asked();
     s.settings.controls.autoTool = false;
+    s.nodes['mine'] = { '5,5': 'rock_node' };
     equip(s, 'fishing_rod');
     expect(view(s, world('mine'))?.pointer).toEqual({ kind: 'slot', slot: 4 });
   });

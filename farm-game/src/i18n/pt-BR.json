@@ -207,7 +207,7 @@
     "castAtWater": "Jogue a linha na água.",
     "needBait": "Sem isca: cave minhocas ou compre.",
     "dugWorms": "Achou minhocas! +{n}",
-    "nextBait": "Isca: {bait} x{n}  >",
+    "nextBait": "Isca: {bait} {n} >",
     "nothingBites": "Nada está mordendo aqui agora.",
     "title": "Pescaria",
     "leave": "Recolher e sair",
@@ -217,8 +217,7 @@
     "tapNow": "! TOQUE JÁ !",
     "anyTap": "Qualquer toque na janela fisga o peixe.",
     "keepGreen": "Mantenha o peixe no verde!",
-    "holdLift": "Segure para subir, solte para descer.",
-    "tapToContinue": "Toque para continuar."
+    "holdLift": "Segure para subir, solte para descer."
   },
   "food": {
     "restoresNow": "Agora recupera {n}: prato {nth} de hoje.",

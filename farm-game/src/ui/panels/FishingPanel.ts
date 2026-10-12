@@ -109,20 +109,33 @@ export class FishingPanel extends Modal {
         .inventory.slots.filter((st) => st && items[st.item]?.bait)
         .map((st) => st!.item),
     );
+    // The sheet closes only from Close (owner rule; critic D3-2): with two kinds of bait or more, the bottom row is
+    // [Bait: X n >] wide and [Close] narrow on the thumb's side (mirrored for the left hand).
     if (this.phase === 'done' && next && kinds.size >= 2) {
+      const closeW = 40;
+      const baitW = this.panelW - 16 - closeW - 4;
+      const left = this.leftHanded;
       this.button(
-        8,
+        left ? 8 + closeW + 4 : 8,
         this.panelH - 28,
-        this.panelW - 16,
+        baitW,
         22,
         t('fishing.nextBait', { bait: items[next]?.name ?? next, n: countItem(getState(), next) }),
         () => {
           nextBait(getState());
           audio.play('select');
-          this.clock = 0; // the tap that switched never also closes the sheet
           this.rebuild();
         },
         { textColor: C.green },
+      );
+      this.button(
+        left ? 8 : 8 + baitW + 4,
+        this.panelH - 28,
+        closeW,
+        22,
+        t('common.close'),
+        () => this.close(),
+        { textColor: C.warn },
       );
       this.draw();
       return;
@@ -148,7 +161,6 @@ export class FishingPanel extends Modal {
 
   private onRelease(): void {
     this.pointerDown = false;
-    if (this.phase === 'done' && this.clock > 0.6) this.close();
   }
 
   private holding(): boolean {
@@ -176,8 +188,6 @@ export class FishingPanel extends Modal {
     } else if (this.phase === 'reel') {
       stepReel(this.reel, Math.min(dt, 0.05), down, () => random(getState()));
       if (this.reel.result) this.finish(outcomeOf(this.reel).caught);
-    } else if (this.phase === 'done' && pressed && this.clock > 0.5) {
-      this.close();
     }
     this.draw();
   }
@@ -254,7 +264,7 @@ export class FishingPanel extends Modal {
       this.fishIcon.setVisible(false);
       this.status.setText(this.resultText);
       this.status.setColor(this.resultText === t('fishing.gotAway') ? C.warn : C.green);
-      this.hint.setText(t('fishing.tapToContinue'));
+      this.hint.setText('');
     }
   }
 }

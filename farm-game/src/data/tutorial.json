@@ -1076,7 +1076,15 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "alt": [
+        {
+          "when": {
+            "none": "rocks"
+          },
+          "text": "No rocks today: back tomorrow."
+        }
+      ]
     },
     {
       "id": "place",
@@ -1181,6 +1189,19 @@
                 "map": "mine"
               },
               {
+                "none": "rocks"
+              }
+            ]
+          },
+          "text": "No rocks today: back tomorrow."
+        },
+        {
+          "when": {
+            "all": [
+              {
+                "map": "mine"
+              },
+              {
                 "some": "explicitHand"
               }
             ]
@@ -1236,16 +1257,30 @@
           {
             "any": [
               {
-                "stat": "tut.stone",
-                "min": 1
-              },
-              {
                 "not": {
                   "short": {
                     "project": "place_spring",
                     "item": "stone"
                   }
                 }
+              },
+              {
+                "daysSince": {
+                  "step": "stone",
+                  "min": 1
+                }
+              },
+              {
+                "all": [
+                  {
+                    "stat": "tut.stone",
+                    "min": 1
+                  },
+                  {
+                    "stat": "tut.seen.stone",
+                    "max": 0
+                  }
+                ]
               }
             ]
           }

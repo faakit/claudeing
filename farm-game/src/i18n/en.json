@@ -207,7 +207,7 @@
     "castAtWater": "Cast at the water.",
     "needBait": "No bait: dig worms or buy at Mara's.",
     "dugWorms": "Dug up worms! +{n}",
-    "nextBait": "Bait: {bait} x{n}  >",
+    "nextBait": "Bait: {bait} {n} >",
     "nothingBites": "Nothing bites here right now.",
     "title": "Fishing",
     "leave": "Reel in & leave",
@@ -217,8 +217,7 @@
     "tapNow": "! TAP NOW !",
     "anyTap": "Any tap on the sheet hooks it.",
     "keepGreen": "Keep the fish in the green!",
-    "holdLift": "Hold to lift, let go to sink.",
-    "tapToContinue": "Tap to continue."
+    "holdLift": "Hold to lift, let go to sink."
   },
   "food": {
     "restoresNow": "Restores {n} now: dish {nth} today.",

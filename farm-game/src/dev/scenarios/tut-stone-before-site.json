@@ -1,6 +1,6 @@
 {
   "title": "Guided start: stone first, then the spring",
-  "about": "Guided game, spring 9, 08:00 on the farm: the farm has turned green and Rosa has asked for the Old Spring (300g and 20 stone), with no stone in the bag. Before the coach shows the site, it says \"Stone comes from rocks in the mine.\" and points the way there; in the mine, \"Tap a rock: the pickaxe breaks it.\" (\"Pick the pickaxe on the hotbar.\" with auto tool off). After the first rock (+ Stone), the spring's own intro, \"Up through Ilse's gate: the spring.\", follows. The mine has three rocks today. With 20 stone already, the stone line is skipped.",
+  "about": "Guided game, spring 9, 08:00 on the farm: the farm has turned green and Rosa has asked for the Old Spring (300g and 20 stone), with no stone in the bag. Before the coach shows the site, it says \"Stone comes from rocks in the mine.\" and leads there through the door chain (farm, town, woods, mine); in the mine, \"Tap a rock: the pickaxe breaks it.\" (\"Pick the pickaxe on the hotbar.\" with auto tool off). After the first rock it goes quiet: the spring's own intro waits until the stone is all gathered or the next morning. The mine has three rocks today. With 20 stone already, the stone line is skipped.",
   "tags": ["farm", "onboarding", "valley", "spring", "mine"],
   "at": {
     "map": "farm",

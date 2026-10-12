@@ -738,7 +738,9 @@ export type TutorialKind =
   | 'explicitHand'
   | 'placeable'
   /** any bait in the bag (fishing needs one) */
-  | 'bait';
+  | 'bait'
+  /** a rock (stone) on this map today */
+  | 'rocks';
 /** A condition: every field given must hold (`any`, `all`, `not` combine). */
 export interface TutorialCond {
   /** A lifetime stat, counted from when the guide (re)started. */
@@ -789,6 +791,8 @@ export interface TutorialCond {
    * (`{ "project": "place_spring", "item": "stone" }`). Used to teach where a good comes from before the ask.
    */
   short?: { project: string; item: string };
+  /** At least `min` mornings have passed since that step first showed ("the next morning"). */
+  daysSince?: { step: string; min: number };
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
   touched?: number;
   /** At least this many game minutes have passed since the step first showed. */
@@ -1445,6 +1449,7 @@ const TUT_KINDS = [
   'unread',
   'placeable',
   'bait',
+  'rocks',
 ];
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
@@ -1492,6 +1497,7 @@ const TUT_COND_KEYS = new Set([
   'goal',
   'fact',
   'short',
+  'daysSince',
   'after',
   'wet',
   'any',
