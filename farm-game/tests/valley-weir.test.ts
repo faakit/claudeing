@@ -8,7 +8,14 @@ import { migrate } from '../src/systems/save';
 import { fishFor } from '../src/systems/fishing';
 import { generateOrders, orderCandidates } from '../src/systems/orders';
 import { npcLocation } from '../src/systems/npcs';
-import { completeEvent, linesNow, pendingEvent, POINTS_PER_HEART } from '../src/systems/friendship';
+import {
+  completeEvent,
+  isGiftable,
+  linesNow,
+  pendingEvent,
+  POINTS_PER_HEART,
+} from '../src/systems/friendship';
+import { isShippable } from '../src/systems/economy';
 import {
   askHolds,
   buyPart,
@@ -140,8 +147,9 @@ describe('the Weir: the fund and the sluice gate from Orin', () => {
     expect(countItem(s, 'sluice_gate')).toBe(1);
     expect(partOffer(s, 'orin')).toBeNull(); // one is enough
     // a key item: never sold, shipped or given
-    const gate = s.inventory.slots.find((x) => x?.item === 'sluice_gate');
-    expect(gate && valley.parts?.['sluice_gate']?.npc).toBe('orin');
+    expect(isShippable('sluice_gate')).toBe(false);
+    expect(isGiftable({ item: 'sluice_gate' })).toBe(false);
+    expect(valley.parts?.['sluice_gate']?.npc).toBe('orin');
   });
 
   it('funding takes the gate with the gold and stone, and the offer goes', () => {
