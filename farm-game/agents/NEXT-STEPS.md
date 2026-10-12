@@ -358,10 +358,12 @@ Dry Year, audio". M7 adds, in the same direction:
 `houseLit` is listened to by name with a loose cast in `src/game/audioWiring.ts`, because `events.ts` belongs to the
 builder. After the merge, type it (`gameEvents.on('houseLit', ...)`) so a renamed event fails the typecheck.
 
-**Verified:** `verify:fast` green at each commit. The full `verify` at 6b56f04 passed everything but `perf 4x` and
-`perf 6x` (frame pacing at 6x: walk 194 ms, the farm door 111 ms), which ran while the critic's own verify loaded the
-PC. No input or render code changed. The critic (`audio-critique/review-13.md` onward) measured the checkpoint on a
-frozen copy. Renders and `LISTEN.md` are in `C:/Users/andre/dev/tiny-acre/audio-renders/m7/`. **Not verified:** no
+**Verified:** `verify:fast` green at each commit. The critic's full `verify`, run alone at 6b56f04 (code-identical
+to 0e6cb95): VERIFY OK, perf 1x/4x/6x inside budget, and `e2e:scenarios` flaky once (feel's chained T1 tow tap,
+passed alone). My own full run overlapped the critic's, so its perf 4x/6x failures were load; `npm run perf` rerun
+at 0e6cb95 is inside budget. Unit tests 1308/1308. The critic accepted the round with all findings closed
+(`audio-critique/review-13.md` to `review-15.md`, `final-m7.md`). Renders and `LISTEN.md` are in
+`C:/Users/andre/dev/tiny-acre/audio-renders/m7/`. **Not verified:** no
 real phone; the builder's events (above) do not exist on this branch, so the arrival, the lit window and the mill
 were checked only in renders and unit tests.
 
