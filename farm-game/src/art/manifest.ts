@@ -647,7 +647,8 @@ export function artManifest(): ArtEntry[] {
         from: 'placeholders.ts',
       });
   }
-  for (const id of Object.keys(npcs))
+  // villagers, and the families who come home (their art ships before or with their npcs.json entry)
+  for (const id of new Set([...Object.keys(npcs), ...RETURNING_NPCS]))
     for (const d of DIRECTIONS)
       for (let i = 0; i < NPC_IDLE_FRAMES; i++)
         add({
@@ -707,6 +708,30 @@ export function artManifest(): ArtEntry[] {
       exact: false,
       optional: true,
     });
+  // The families' houses by stage (M7, art-src/tools/houses.py): drawn over the boarded facade until the family is home.
+  for (const [k, w, h] of HOUSE_SPRITES)
+    add({
+      texture: k,
+      w,
+      h,
+      group: 'world',
+      kind: 'house stage',
+      from: 'valley.json houses',
+      exact: true, // wider than 64 px: only an exact frame stands in (artPlan.frameFits)
+      optional: true,
+    });
+  // Towing (M7, art-src/tools/towart.py). The tow controller draws placeholders for any key the atlas lacks.
+  for (const [k, w, h, group] of TOW_SPRITES)
+    add({
+      texture: k,
+      w,
+      h,
+      group,
+      kind: 'towing',
+      from: 'TowController',
+      exact: false,
+      optional: true,
+    });
   add({
     texture: mail.mailbox.sprite,
     w: 16,
@@ -719,6 +744,51 @@ export function artManifest(): ArtEntry[] {
   });
   return out;
 }
+
+/**
+ * Towing art (M7): drift logs short (16 x 8) and long (32 x 10, a branch stub), east-west and north-south (`_v`),
+ * each with a snag pose (`_tilt`: the west end raised 2 px, or for `_v` the south end kicked 2 px west; flip it so
+ * that end is the one at the snag); the
+ * rope's 2 x 2 stamp; the lab's snag rock; the slip (16 x 32 over its water and bank tiles: `tow_slip` with the water
+ * north of the bank, `tow_slip_s` with it south); the Action button's verbs.
+ */
+export const TOW_SPRITES: [string, number, number, AtlasGroup][] = [
+  ...['tow_log', 'tow_log_long'].flatMap((k): [string, number, number, AtlasGroup][] => {
+    const [w, h] = k === 'tow_log' ? [16, 8] : [32, 10];
+    return [
+      [k, w, h, 'world'],
+      [`${k}_tilt`, w, h + 2, 'world'],
+      [`${k}_v`, h, w, 'world'],
+      [`${k}_v_tilt`, h + 2, w, 'world'],
+    ];
+  }),
+  ['tow_rope_dot', 2, 2, 'world'],
+  ['tow_rock', 16, 16, 'world'],
+  ['tow_slip', 16, 32, 'world'],
+  ['tow_slip_s', 16, 32, 'world'],
+  ['tow_icon_hook', 16, 16, 'ui'],
+  ['tow_icon_home', 16, 16, 'ui'],
+  ['tow_icon_tug', 16, 16, 'ui'],
+  // the town's mill wheel turning once the Marls are home (32 x 32 at 21,30; frame 0 is the static tile)
+  ...[0, 1, 2, 3].map((i): [string, number, number, AtlasGroup] => [
+    `obj_millwheel_${i}`,
+    32,
+    32,
+    'world',
+  ]),
+];
+
+/**
+ * House stages (M7): `obj_house_<id>_<n>`, n = 0 scaffolding begun, 1 scaffolding up, 2 the boards off (door and
+ * windows in), 3 built with dark windows, 4 (optional) home by day with a warm window. Each covers the house's wall rows
+ * and the roof row above, anchored bottom-left at the bottom of the facade row (origin 0, 1).
+ */
+export const HOUSE_SPRITES: [string, number, number][] = [
+  ...[0, 1, 2, 3, 4].map((n): [string, number, number] => [`obj_house_marls_${n}`, 96, 48]),
+];
+
+/** Villagers who come home (M7 on), drawn in art-src/tools (senna.py): listed here as well as in npcs.json. */
+export const RETURNING_NPCS = ['senna'] as const;
 
 /** Manifest entries grouped by texture key, in manifest order. */
 export function manifestByTexture(entries: ArtEntry[] = artManifest()): Map<string, ArtEntry[]> {

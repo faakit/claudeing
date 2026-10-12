@@ -252,6 +252,8 @@ const COMPOSITION = {
     },
 
     cobble: [10, 9, 4, 4],
+    // R27-4: no tree crown over the mill wheel (21-22, 30-31; its foot dips into the river 26 px down)
+    clear: [[21, 30, 2, 26 / 16]],
     trees: ['oak', 'birch', 'oak', 'pine'],
     bushes: ['bush_big', 'bush_rose', 'bush_small'],
     blooms: 0.4,
@@ -260,6 +262,10 @@ const COMPOSITION = {
   // opens); a plank bridge at y 22
   wendhead: {
     props: [],
+    // R27-3: the weir's wall across the gorge (x 19-21, rows 10-11), meeting the site sprite's west abutment: the
+    // river over it once the weir is open, standing over the dry bed before
+    weirSpan: [19, 10, 'wet'],
+    variants: { dry: { weirSpan: [19, 10, 'dry'] }, spring: { weirSpan: [19, 10, 'dry'] } },
     trees: ['oak', 'birch'],
     bushes: ['fern', 'bush_small', 'fern'],
     blooms: 0.2,
@@ -1011,6 +1017,26 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
       flags: 'tg',
     });
   }
+  // keep-clear rects (R27-4: the town's mill wheel): a crown that would reach into one shrinks and settles lower
+  // until it does not, or is left out
+  for (const [rx, ry, rw, rh] of C.clear ?? []) {
+    const [X0, Y0, X1, Y1] = [rx * 16, ry * 16, (rx + rw) * 16, (ry + rh) * 16];
+    const touches = (c, r) => {
+      const nx = Math.max(X0, Math.min(c.cx, X1));
+      const ny = Math.max(Y0, Math.min(c.cy, Y1));
+      return ((nx - c.cx) / (r * 1.2 + 2)) ** 2 + ((ny - c.cy) / (r * 1.4 + 2)) ** 2 <= 1;
+    };
+    for (let i = crowns.length - 1; i >= 0; i--) {
+      const c = crowns[i];
+      if (!touches(c, c.r)) continue;
+      // smaller, then lower toward its trunk (so the tree still has a crown over its own tile), else left out
+      const d = { ...c };
+      while (d.r > 11 && touches(d, d.r)) d.r--;
+      while (d.cy < c.base - 2 && touches(d, d.r)) d.cy++;
+      if (touches(d, d.r)) crowns.splice(i, 1);
+      else crowns[i] = d;
+    }
+  }
   const reach = (c) => ({
     x0: Math.floor((c.cx - c.r * 1.2 - 2) / 16),
     x1: Math.floor((c.cx + c.r * 1.2 + 6) / 16),
@@ -1207,6 +1233,19 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
     set('props', x, y + 1, `${top}_b`);
     L.shade[y * w + x] = L.shade[(y + 1) * w + x] = 0;
     if (aground) solid.add(y * w + x).add((y + 1) * w + x);
+  }
+  // R27-3: the weir's span across Wendhead's gorge (decor on the props layer; the gorge is solid in every stage, so
+  // collision is unchanged)
+  if (C.weirSpan) {
+    const [sx, sy, wet] = C.weirSpan;
+    for (let i = 0; i < 3; i++)
+      for (const [dy, part] of [
+        [0, 't'],
+        [1, 'b'],
+      ]) {
+        const n = `weir_span_${wet}_${i}_${part}`;
+        if (has(n)) set('props', sx + i, sy + dy, n);
+      }
   }
   // river decor on water tiles (M6, the town's river stage): reed beds and rock spurs on the shade layer, the mill
   // wheel (2 x 2) on the props layer; water is solid already, so collision is unchanged

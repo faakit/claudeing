@@ -178,6 +178,43 @@ def _sprig(flow: dict[str, np.ndarray] | None) -> np.ndarray | None:
     return patch if (patch >= 0).any() else None
 
 
+def knee(names: list[str], f: np.ndarray) -> np.ndarray:
+    """R29-1: the crouch from the side reads in the legs, not only the arm: just above the shoe the front knee pushes
+    forward 2 px (under the reaching arm, where it shows) and the seat drops back 2 px over the heels (2 x 2 folds of
+    trouser, lit above, in shade below, with their own ink)."""
+    f = f.copy()
+    soil = names.index("soil")
+    rows = [y for y in range(28, 40) if (f[y, 13:19] == soil).any()]
+    if not rows:
+        return f
+    y0 = rows[0] - 2  # the two rows over the shoe
+    xs = np.nonzero(f[y0, 12:20] >= 0)[0]
+    if not len(xs):
+        return f
+    xr = 12 + int(xs.max())  # the leg's front (right) outline
+    xl = 12 + int(xs.min())  # its back (left) outline
+    # the seat drops back over the heels: 2 px of trouser behind the leg, on the two rows over the shoe
+    seat = [(y, x) for y in (y0, y0 + 1) for x in (xl - 1, xl)]
+    for y, x in seat:
+        if f[y, x] in (-1, 0):
+            f[y, x] = names.index("dusk blue" if y == y0 else "night navy")
+    for y, x in seat:
+        for dy, dx in ((-1, 0), (1, 0), (0, -1)):
+            yy, xx = y + dy, x + dx
+            if (yy, xx) not in seat and f[yy, xx] == -1:
+                f[yy, xx] = 0
+    block = [(y, x) for y in (y0, y0 + 1) for x in (xr, xr + 1)]
+    for y, x in block:
+        if f[y, x] in (-1, 0):
+            f[y, x] = names.index("dusk blue" if y == y0 else "night navy")
+    for y, x in block:
+        for dy, dx in ((-1, 0), (1, 0), (0, 1)):
+            yy, xx = y + dy, x + dx
+            if (yy, xx) not in block and f[yy, xx] == -1:
+                f[yy, xx] = 0
+    return f
+
+
 def build(names: list[str], idle: dict[str, np.ndarray], flow: dict | None = None) -> dict[str, np.ndarray]:
     bodies = {
         "down": ta.strip_arms_front(idle["down"]),
@@ -195,6 +232,8 @@ def build(names: list[str], idle: dict[str, np.ndarray], flow: dict | None = Non
                     continue
                 pose, sink = entry
                 out[f"player_act_{anim}_{d}_{i}"] = posed(names, bodies[d], _line(pose), d == "right", sink)
+    for i in (1, 2, 3):  # R29-1: a knee fold on the side crouch
+        out[f"player_act_plant_right_{i}"] = knee(names, out[f"player_act_plant_right_{i}"])
     # plant right: a soil fleck where the seed goes in (contact); harvest up: the crop held up by the right shoulder
     c = out["player_act_plant_right_2"]
     x, y = SEED_AT

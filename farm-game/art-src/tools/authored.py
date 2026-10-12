@@ -485,6 +485,18 @@ def sprites_only(P: Pal, pal, groups, specs) -> dict:
 
     for key, idx in sites.build(P.names).items():
         groups["world"][key] = px.idx_to_rgba(idx, pal)
+    import towart  # towing (M7): drift logs, the slip, the snag rock, the rope and the Action verbs
+
+    tw_world, tw_ui = towart.build(P.names)
+    for key, idx in tw_world.items():
+        groups["world"][key] = px.idx_to_rgba(idx, pal)
+    if groups.get("ui") is not None:
+        for key, idx in tw_ui.items():
+            groups["ui"][key] = px.idx_to_rgba(idx, pal)
+    import houses  # the families' houses by stage (M7): scaffolding, built, lit; composed from the final maps
+
+    for key, idx in houses.build(P.names, pal).items():
+        groups["world"][key] = px.idx_to_rgba(idx, pal)
     groups["world"]["soil_tilled"] = px.idx_to_rgba(soil(P, False), pal)
     groups["world"]["soil_watered"] = px.idx_to_rgba(soil(P, True), pal)
     return {}

@@ -78,6 +78,7 @@ export class TownScene extends WorldScene {
             if (!this.sys.isActive()) return;
             this.valleyMoment(
               `${t('house.homeTitle')}\n${t('house.homeLine', { name })}`,
+              0,
               'homecoming',
             );
           });
