@@ -15,7 +15,7 @@ import { analytics } from '../platform/analytics';
 import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
 import { Button, drawPanel } from '../ui/widgets';
-import { CONSENT_TEXT_W, LETTER_CARD, LETTER_PAD, letterLayout } from '../ui/titleLetter';
+import { CONSENT_TEXT_W, LETTER_CARD, LETTER_PAD, letterLayout, LOGO } from '../ui/titleLetter';
 import { letterTexture } from '../ui/sheetSkin';
 import { Wipe } from '../fx/Wipe';
 import { WIPE_CLOSE_MS } from '../fx/feel';
@@ -99,13 +99,13 @@ export class TitleScene extends Phaser.Scene {
 
     // The logo is the game's name, the same in every language.
     const [logo1, logo2] = ['TINY', 'ACRE']; // i18n-ok: the logo
-    const title = new Label(this, GAME_WIDTH / 2, 52, logo1, {
-      scale: 6,
+    const title = new Label(this, GAME_WIDTH / 2, LOGO.y[0], logo1, {
+      scale: LOGO.scale,
       align: 'center',
       color: C.gold,
     });
-    const title2 = new Label(this, GAME_WIDTH / 2, 98, logo2, {
-      scale: 6,
+    const title2 = new Label(this, GAME_WIDTH / 2, LOGO.y[1], logo2, {
+      scale: LOGO.scale,
       align: 'center',
       color: C.gold,
     });
@@ -113,8 +113,8 @@ export class TitleScene extends Phaser.Scene {
     // foot, and the valley's carved sprout standing on the I of TINY
     const layers: Label[] = [];
     for (const [word, y] of [
-      ['TINY', 52], // i18n-ok: the logo
-      ['ACRE', 98], // i18n-ok: the logo
+      ['TINY', LOGO.y[0]], // i18n-ok: the logo
+      ['ACRE', LOGO.y[1]], // i18n-ok: the logo
     ] as const)
       for (const [dy, color] of [
         [4, 0x2a1a24],
@@ -123,7 +123,7 @@ export class TitleScene extends Phaser.Scene {
         [1, 0xe48c24],
       ] as const) {
         const l = new Label(this, GAME_WIDTH / 2, y + dy, word, {
-          scale: 6,
+          scale: LOGO.scale,
           align: 'center',
           color,
           shadow: null,
@@ -136,7 +136,7 @@ export class TitleScene extends Phaser.Scene {
     const sprout = this.add.graphics().setDepth(2);
     {
       const ix = Math.round(GAME_WIDTH / 2 - title.textWidth / 2 + (title.textWidth / 4) * 1.5);
-      const sy = 44;
+      const sy = LOGO.y[0] - 8;
       sprout.fillStyle(0x2a1a24, 1).fillRect(ix - 1, sy - 2, 3, 9);
       sprout.fillStyle(0x2e6a3e, 1).fillRect(ix, sy - 1, 1, 7);
       sprout
@@ -160,7 +160,7 @@ export class TitleScene extends Phaser.Scene {
     ] as Phaser.GameObjects.Components.Transform[]) {
       this.tweens.add({
         targets: t,
-        y: t.y + 3,
+        y: t.y + LOGO.bob,
         duration: 1800,
         yoyo: true,
         repeat: -1,

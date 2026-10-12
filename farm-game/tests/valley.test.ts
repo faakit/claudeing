@@ -41,7 +41,7 @@ import {
 import { measureText, wrapText } from '../src/ui/fontMetrics';
 import { giftLine } from '../src/ui/panels/mailText';
 import { arrangeNotes } from '../src/ui/panels/summaryNotes';
-import { letterLayout, LETTER_CARD, TITLE_BUTTON_H } from '../src/ui/titleLetter';
+import { letterLayout, LETTER_CARD, logoBottom, TITLE_BUTTON_H } from '../src/ui/titleLetter';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
 import { STATE_VERSION } from '../src/state/GameState';
@@ -294,7 +294,8 @@ describe("Rosa's letter", () => {
     const L = letterLayout();
     expect(L.rows.length).toBeLessThanOrEqual(10);
     for (const r of L.rows) expect(measureText(r), r).toBeLessThanOrEqual(LETTER_CARD.w - 16);
-    expect(LETTER_CARD.y).toBeGreaterThanOrEqual(146); // under the logo's ACRE (and its bob)
+    // under the logo's ACRE, its carving and its bob (the card is drawn over the logo)
+    expect(logoBottom()).toBeLessThanOrEqual(LETTER_CARD.y);
     expect(L.buttonY + TITLE_BUTTON_H).toBeLessThanOrEqual(340); // above the field at the bottom
   });
 

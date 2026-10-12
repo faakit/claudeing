@@ -7,6 +7,14 @@ import { wrapText } from './fontMetrics';
  * prove the card and the button fit the 200 x 400 canvas (and so the e2e and the critic's bot can find New Game).
  */
 export const LETTER_CARD = { x: 8, y: 148, w: 184 } as const;
+/**
+ * The logo above it: TINY and ACRE at 6x, each word's glyph rows 1-7 (6 to 48 px under its y), carved 4 px deep and
+ * bobbing 3 px down. Its lowest pixel (ACRE's carving at the bottom of the bob) stays above the card: the card is
+ * drawn over the logo, so a deeper logo would sink under the paper.
+ */
+export const LOGO = { y: [47, 93], scale: 6, depth: 4, bob: 3 } as const;
+/** The logo's lowest drawn row, at the bottom of its bob. */
+export const logoBottom = (): number => LOGO.y[1] + 8 * LOGO.scale + LOGO.depth + LOGO.bob;
 /** Text inset inside the card, and the bitmap font's row pitch. */
 export const LETTER_PAD = 8;
 export const LETTER_ROW = 11;
