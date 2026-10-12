@@ -1,0 +1,17 @@
+{
+  "title": "The town wakes: villagers walk in at 08:00",
+  "about": "Town, day 4, 07:58, by the store. At 08:00 Mara, Clay and Orin come out to their spots through the nearest door and walk there; nobody appears from nowhere (owner: \"sometimes the NPCs appear from nowhere or just disappear\").",
+  "version": 18,
+  "tags": ["town", "villagers"],
+  "at": {
+    "map": "town",
+    "tx": 10,
+    "ty": 13,
+    "facing": "up"
+  },
+  "time": {
+    "day": 4,
+    "clock": "07:58"
+  },
+  "goal": "harvest"
+}

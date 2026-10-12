@@ -550,8 +550,28 @@ export abstract class WorldScene extends Phaser.Scene {
         );
     }
 
-    this.npcs = new NpcRenderer(this, this.mapId);
-    this.npcs.sync(state, playerTile(state.player));
+    // villagers walk their schedule's changes, through this map's doors (never popping in or out on screen)
+    this.npcs = new NpcRenderer(this, this.mapId, {
+      grid: () => this.grid,
+      // the ways off the map (gates and edges): never the farmer's own house door
+      exits: () =>
+        this.objects
+          .filter((o) => o.type === 'door' && o.props.to !== 'house')
+          .map((o) => ({ tx: o.tx, ty: o.ty })),
+      inView: (tx, ty) => {
+        const v = this.cameras.main.worldView;
+        const x = tx * TILE_SIZE;
+        const y = ty * TILE_SIZE;
+        return (
+          x + TILE_SIZE * 2 > v.x &&
+          x - TILE_SIZE < v.right &&
+          y + TILE_SIZE * 3 > v.y &&
+          y - TILE_SIZE < v.bottom
+        );
+      },
+    });
+    // the scene opens behind its wipe: everyone stands where they are at once
+    this.npcs.sync(state, playerTile(state.player), true);
     this.rebuildGrid();
     this.things = new ObjectsRenderer(this, this.mapId);
     this.things.sync(state, false);
@@ -838,6 +858,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.updateNpcs(state);
+    if (this.npcs?.update(delta)) this.rebuildGrid();
     this.updateTarget();
     this.updateHighlight(time);
     this.updateGuide(time, delta);
