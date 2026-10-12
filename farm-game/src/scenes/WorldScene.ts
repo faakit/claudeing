@@ -310,6 +310,8 @@ export abstract class WorldScene extends Phaser.Scene {
    * or an Action press it took returns true, and the usual handling is skipped.
    */
   protected tapHook: ((wx: number, wy: number) => boolean) | null = null;
+  /** Where the last world touch landed and the camera's scroll then (a tap is read on the world as it was). */
+  private touchCam: { x: number; y: number; sx: number; sy: number } | null = null;
   protected actionHook: (() => boolean) | null = null;
   /** Called when a walk started with `walkTo` arrives. */
   private walkDone: (() => void) | null = null;
@@ -566,6 +568,10 @@ export abstract class WorldScene extends Phaser.Scene {
 
     this.cleanup.push(
       inputHub.on('interact', () => this.onInteract()),
+      inputHub.on('touchDown', (p) => {
+        const cam = this.cameras.main;
+        this.touchCam = { x: p.x, y: p.y, sx: cam.scrollX, sy: cam.scrollY };
+      }),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
       inputHub.on('tapCancel', () => this.onTapCancel()),
@@ -1784,7 +1790,10 @@ export abstract class WorldScene extends Phaser.Scene {
   private worldPoint(x: number, y: number): { x: number; y: number } | null {
     if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return null;
     const cam = this.cameras.main;
-    return { x: x - cam.x + cam.scrollX, y: y - cam.y + cam.scrollY };
+    // the touch at this point read the world as the camera stood when it landed (the view may scroll by the lift)
+    const at =
+      this.touchCam && this.touchCam.x === x && this.touchCam.y === y ? this.touchCam : null;
+    return { x: x - cam.x + (at?.sx ?? cam.scrollX), y: y - cam.y + (at?.sy ?? cam.scrollY) };
   }
 
   /** The world as tap intent sees it. */
@@ -2136,6 +2145,11 @@ export abstract class WorldScene extends Phaser.Scene {
   /** Can the farmer stand on this tile? */
   protected walkable(tx: number, ty: number): boolean {
     return this.inMap({ tx, ty }) && !isTileBlocked(this.grid, tx, ty);
+  }
+
+  /** Action would act on something right now (the marked tile's plan, as last drawn): a verb yields to it. */
+  protected get actionInFront(): boolean {
+    return this.lastMark?.plan != null;
   }
 
   /** The farmer's sprite (a verb may lean it for a frame; syncSprite puts it back each frame). */

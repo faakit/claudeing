@@ -111,17 +111,41 @@ function moveLog(
       return 'moved';
     }
     if (r.snag) {
+      // the way it was going: the larger part of the step (a tug pops it on that way)
+      const horiz = Math.abs(x - log.x) >= Math.abs(y - log.y);
       log.snag = {
         tx: r.snag[0],
         ty: r.snag[1],
-        dx: Math.sign(x - log.x),
-        dy: Math.sign(y - log.y),
+        dx: horiz ? Math.sign(x - log.x) : 0,
+        dy: horiz ? 0 : Math.sign(y - log.y),
         tugs: 0,
       };
       return 'snagged';
     }
   }
   return 'blocked';
+}
+
+/** How much the motion along one axis must outweigh the other before a log turns to lie along it. */
+const TURN_RATIO = 2.5;
+
+/**
+ * A log turns to lie along the lane's current where it is (a lane that bends from east-west to north-south turns
+ * the log with it), when that way clearly dominates and the turned log fits on open water there. Returns true when
+ * it turned.
+ */
+export function alignAxis(world: TowWorld, log: Log, dx: number, dy: number): boolean {
+  const want: 'h' | 'v' | null =
+    Math.abs(dy) > TURN_RATIO * Math.abs(dx)
+      ? 'v'
+      : Math.abs(dx) > TURN_RATIO * Math.abs(dy)
+        ? 'h'
+        : null;
+  if (!want || want === log.axis) return false;
+  const turned = { ...log, axis: want };
+  if (!placeAt(world, turned, log.x, log.y).ok) return false;
+  log.axis = want;
+  return true;
 }
 
 /** A drifting log (not hooked) goes with the current, `flow` px/s, until something stops it. */
@@ -132,7 +156,9 @@ export function drift(
   dtMs: number,
 ): 'moved' | 'blocked' | 'snagged' {
   if (log.hooked || log.landed || log.snag) return 'blocked';
-  return moveLog(world, log, log.x + (flow.x * dtMs) / 1000, log.y + (flow.y * dtMs) / 1000);
+  const r = moveLog(world, log, log.x + (flow.x * dtMs) / 1000, log.y + (flow.y * dtMs) / 1000);
+  if (r === 'moved') alignAxis(world, log, flow.x, flow.y);
+  return r;
 }
 
 /** Is the log within the rope's reach of the farmer's hands? */
@@ -144,13 +170,16 @@ export type TowState = 'slack' | 'taut' | 'snagged' | 'free';
 /**
  * One frame of a hooked log on the rope: while the rope is shorter than the distance, the log closes on the point
  * at the rope's end on the line to the farmer's hands (eased, so it lags and swings round a turn), sliding along
- * the bank, and catches on a snag. A slack rope leaves the log where it is.
+ * the bank, and catches on a snag. A slack rope leaves the log where it is. `along` is the lane's downstream
+ * direction where the log is (a unit vector): a log held against the inside of a bend moves that way instead, and
+ * the log turns to lie along it (systems/towing alignAxis).
  */
 export function follow(
   world: TowWorld,
   log: Log,
   hands: { x: number; y: number },
   dtMs: number,
+  along?: { x: number; y: number } | null,
 ): TowState {
   if (!log.hooked || log.landed) return 'free';
   if (log.snag) return 'snagged';
@@ -161,7 +190,20 @@ export function follow(
   const tx = hands.x + (dx / d) * ROPE_PX;
   const ty = hands.y + (dy / d) * ROPE_PX;
   const k = 1 - Math.pow(1 - FOLLOW_RATE, Math.max(0, dtMs) / (1000 / 60));
-  const r = moveLog(world, log, log.x + (tx - log.x) * k, log.y + (ty - log.y) * k);
+  const step = Math.hypot(tx - log.x, ty - log.y) * k;
+  const x0 = log.x;
+  const y0 = log.y;
+  let r = moveLog(world, log, log.x + (tx - log.x) * k, log.y + (ty - log.y) * k);
+  const got = Math.hypot(log.x - x0, log.y - y0);
+  if (r !== 'snagged' && along && got < step / 2) {
+    // held against the bank on the inside of a bend: the rest of the pull carries it on downstream along the lane,
+    // until the rope can draw it straight again (it never cuts across the bank)
+    const rest = step - got;
+    const r2 = moveLog(world, log, log.x + along.x * rest, log.y + along.y * rest);
+    if (r2 !== 'blocked') r = r2;
+  }
+  // it lies along the lane where it is (it turns with a bend, not with every pull of the rope)
+  if (r === 'moved' && along) alignAxis(world, log, along.x, along.y);
   return r === 'snagged' ? 'snagged' : 'taut';
 }
 
@@ -178,14 +220,14 @@ export function tug(world: TowWorld, log: Log): { freed: boolean; x: number; y: 
   const { hx, hy } = halfExtents(log);
   const cx = s.tx * TILE + TILE / 2;
   const cy = s.ty * TILE + TILE / 2;
-  // past the snag along the way it was moving; then the same a row (or column) either side
-  const along = log.axis === 'h' ? s.dx || 1 : s.dy || 1;
+  // past the snag along the way it was moving (whichever way the log lies); then the same a row (or column) either
+  // side
   const candidates: [number, number][] = [];
-  if (log.axis === 'h') {
-    const x = cx + along * (TILE / 2 + hx + 1);
+  if (s.dx !== 0 || s.dy === 0) {
+    const x = cx + (s.dx || 1) * (TILE / 2 + hx + 1);
     candidates.push([x, log.y], [x, log.y + TILE], [x, log.y - TILE], [log.x, log.y + TILE]);
   } else {
-    const y = cy + along * (TILE / 2 + hy + 1);
+    const y = cy + s.dy * (TILE / 2 + hy + 1);
     candidates.push([log.x, y], [log.x + TILE, y], [log.x - TILE, y], [log.x + TILE, log.y]);
   }
   for (const [x, y] of candidates)
@@ -203,11 +245,28 @@ export function tug(world: TowWorld, log: Log): { freed: boolean; x: number; y: 
 /** How fast the farmer hauls a log in to the slip once he stands at it (px/s). */
 export const HAUL_PX_S = 110;
 
-/** The farmer stands at the slip (on its bank tile or one beside it): he hauls the log in. */
+/**
+ * How near the slip counts as at it (tiles, either axis): standing this near, a free log is hauled in, and a tow
+ * tap this near the slip (bank or water) means the slip. A thumb taps near the slip while the camera scrolls, and
+ * the log should still land (critic T1 ruling).
+ */
+export const SLIP_REACH = 2;
+
+const near = (a: { tx: number; ty: number }, b: { tx: number; ty: number }, r: number): boolean =>
+  Math.abs(a.tx - b.tx) <= r && Math.abs(a.ty - b.ty) <= r;
+
+/** The farmer stands at the slip (within SLIP_REACH of its bank tile): he hauls the log in. */
 export const atSlipBank = (
   farmer: { tx: number; ty: number },
   bank: { tx: number; ty: number },
-): boolean => Math.abs(farmer.tx - bank.tx) <= 1 && Math.abs(farmer.ty - bank.ty) <= 1;
+  reach = SLIP_REACH,
+): boolean => near(farmer, bank, reach);
+
+/** A tow tap on this tile means the slip: within SLIP_REACH of the slip's bank tile or of its water tile. */
+export const meansSlip = (
+  t: { tx: number; ty: number },
+  slip: { bank: { tx: number; ty: number }; water: { tx: number; ty: number } },
+): boolean => near(t, slip.bank, SLIP_REACH) || near(t, slip.water, SLIP_REACH);
 
 /**
  * One frame of hauling a hooked log in, hand over hand, toward the slip's water tile (its centre), sliding along
@@ -318,4 +377,37 @@ export function hookStand(
       if (!best || cost < best.cost) best = { tx, ty, cost };
     }
   return best ? { tx: best.tx, ty: best.ty } : null;
+}
+
+// ---- what Action means near the water ----
+
+/**
+ * What Action does in towing's context (critic ruling, T2): the tow only claims Action while its context is live.
+ * - `tug`: the log is caught on a snag;
+ * - `home`: a free hooked log: walk it to the slip along the bank (a tap still goes where it is tapped);
+ * - `busy`: hooked, already on the way home or hauling in: Action does nothing else meanwhile;
+ * - `hook`: no log hooked, one in view and the farmer within NEAR_WATER tiles of the lane, and nothing in front of
+ *   him that Action would act on (a ripe crop or a forage good there wins);
+ * - null: not towing's: Action does what it always does.
+ */
+export type TowVerb = 'tug' | 'home' | 'busy' | 'hook' | null;
+
+/** How near the lane's water (tiles) an unhooked log in view lets Action hook it. */
+export const NEAR_WATER = 4;
+
+export function actionVerb(c: {
+  hooked: boolean;
+  snagged: boolean;
+  /** Walking to the slip, or hauling the log in at it. */
+  homing: boolean;
+  logInView: boolean;
+  /** Tiles from the farmer to the nearest lane water tile (either axis). */
+  waterDist: number;
+  /** Action would act on something in front of the farmer (crop, forage, soil...). */
+  front: boolean;
+}): TowVerb {
+  if (c.snagged) return 'tug';
+  if (c.hooked) return c.homing ? 'busy' : 'home';
+  if (!c.logInView || c.waterDist > NEAR_WATER || c.front) return null;
+  return 'hook';
 }

@@ -1513,6 +1513,38 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   the slip stops beside it so the log never lands on the farmer. Rules in `systems/towing.ts` (pure); the
   controller and placeholder art are debug-only (`src/dev/towSpike.ts`, stat `lab.towSpike`).
 
+## Towing, round 2 (feel lane, feel/towing, 2026-10-12)
+
+- **T1 was a near miss, not a lost goal** (traced, and the critic's correction): a chained slip tap aimed before
+  the hook walk scrolled the camera landed on (15,28), the farmer walked there and stood one tile outside the haul
+  range. Critic ruling: **a tow tap within 2 tiles of the slip (bank or water) means the slip**, and **standing
+  within 2 tiles of it with the log free hauls it in** (`SLIP_REACH`, `meansSlip`, `atSlipBank`). The last tow goal
+  is kept whatever set it (a tap, the chained tap, Action) and walked to after every tug, and an idle farmer with an
+  unreached goal walks on by himself after 250 ms (never a stall that needs another tap). A replan of the hook walk
+  no longer drops a chained destination.
+- **Action is the one-thumb route through the verb, only while towing's context is live** (critic ruling;
+  `systems/towing.ts actionVerb`, unit tested): snagged → tug; hooked and free → walk home to the slip's stand along
+  the bank (then Action does nothing else while it goes or hauls: "busy"); not hooked → hook, but only with a log in
+  view, the farmer within 4 tiles of the lane's water, and nothing in front of him that Action would act on (a ripe
+  crop or forage good there wins). Otherwise Action does exactly what it did. A tap always wins over a pending
+  Action route (it sets a new goal). The Action button shows the verb's icon (hook, slip, tug) while the tow owns it
+  (`inputHub.actionIcon`, read by `UIScene.updateActionIcon`): a feel requirement for the go.
+- **Forgiving targets** (critic ruling 4): a water tap within 1.5 tiles of a drifting log hooks it; a tap on the bank
+  while nothing is hooked still walks normally; while towing, a tap on a bush or wall beside the lane means the
+  nearest bank or water within 2 tiles (no silent tap).
+- **A log lies along the lane's current where it is** (`alignAxis`), not along every pull of the rope: hooked from
+  straight above, a log in an east-west lane stays east-west. Held against the inside of a bend, the rest of the
+  pull carries it downstream until the rope can draw it straight again (`follow(..., along)`), so it never sticks at
+  an inner corner or cuts across the bank. A tug pops it on the way it was going (the larger part of its step),
+  whichever way it lies.
+- **The long lab lane sits beside the showcase, not below it** (columns 26-47): extending the map south moved the
+  spike's shore up the screen (the camera no longer stopped at its edge) and pushed the right thumb's slip tap into
+  the hard zone. It runs west from a head just below the farmer and turns south to a slip that stays above the
+  floating controls (a slip at the map's last rows sat against the Menu plate on the SE). The farmer walks the outer
+  banks, so on the long leg the log trails behind and below him and a tug tap on it is in comfortable reach.
+- **The lab draws below the UI**: added last at runtime, the lab scene drew over the floating controls (they sit
+  inside the world's view since the dock went), so every lab scenario hid the Action plate and the hotbar.
+
 ## Owner bugs (feel lane, fix/owner-bugs, 2026-10-11)
 
 - **Dry beds are not walkable (coordinator ruling, owner bug 3: "there is a bridge, but this bridge is above a

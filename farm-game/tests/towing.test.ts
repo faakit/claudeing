@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  actionVerb,
+  alignAxis,
   atSlip,
   atSlipBank,
   bankFor,
@@ -10,6 +12,8 @@ import {
   inReach,
   land,
   makeLog,
+  meansSlip,
+  NEAR_WATER,
   placeAt,
   ROPE_PX,
   TILE,
@@ -148,7 +152,10 @@ describe('towing: the slip', () => {
     const log = makeLog(c.x, c.y);
     log.hooked = true;
     expect(atSlipBank({ tx: 14, ty: 28 }, { tx: 13, ty: 28 })).toBe(true);
-    expect(atSlipBank({ tx: 11, ty: 28 }, { tx: 13, ty: 28 })).toBe(false);
+    // within two tiles counts (a thumb taps near the slip while the camera scrolls: critic T1)
+    expect(atSlipBank({ tx: 15, ty: 28 }, { tx: 13, ty: 28 })).toBe(true);
+    expect(atSlipBank({ tx: 11, ty: 28 }, { tx: 13, ty: 28 })).toBe(true);
+    expect(atSlipBank({ tx: 16, ty: 28 }, { tx: 13, ty: 28 })).toBe(false);
     let r = 'moved';
     for (let i = 0; i < 120 && r !== 'arrived'; i++) r = haul(world, log, { tx: 13, ty: 29 }, 16);
     expect(r).toBe('arrived');
@@ -156,6 +163,88 @@ describe('towing: the slip', () => {
     expect(land(log)).toBe(1);
     expect(log).toMatchObject({ landed: true, hooked: false });
     expect(land(makeLog(0, 0, true))).toBe(3);
+  });
+});
+
+describe('towing: a tap near the slip means the slip', () => {
+  const slip = { bank: { tx: 13, ty: 28 }, water: { tx: 13, ty: 29 } };
+  it('within two tiles of its bank or its water, on either side', () => {
+    expect(meansSlip({ tx: 15, ty: 28 }, slip)).toBe(true); // the T1 tap, two tiles east, mid-scroll
+    expect(meansSlip({ tx: 11, ty: 28 }, slip)).toBe(true);
+    expect(meansSlip({ tx: 14, ty: 31 }, slip)).toBe(true); // the water beside it
+    expect(meansSlip({ tx: 16, ty: 28 }, slip)).toBe(false);
+    expect(meansSlip({ tx: 13, ty: 25 }, slip)).toBe(false);
+  });
+});
+
+describe('towing: a log turns with its lane', () => {
+  // a lane running east-west (rows 29-32) that bends south (x 3-5, rows 29-40)
+  const bendWater = (tx: number, ty: number): boolean =>
+    (tx >= 3 && tx <= 24 && ty >= 29 && ty <= 32) || (tx >= 3 && tx <= 5 && ty >= 29 && ty <= 40);
+  const bend: TowWorld = { water: bendWater, snag: () => false };
+
+  it('lies along the way it clearly moves, when the turned log fits on the water', () => {
+    const c = centre(4, 30);
+    const log = makeLog(c.x, c.y, true);
+    expect(alignAxis(bend, log, 1, 0)).toBe(false); // already east-west
+    expect(alignAxis(bend, log, 2, 3)).toBe(false); // diagonal: no clear way
+    expect(alignAxis(bend, log, 0.2, 3)).toBe(true);
+    expect(log.axis).toBe('v');
+    // in the narrow east-west part a long log cannot turn (it would stick into the bank)
+    const narrow: TowWorld = {
+      water: (tx, ty) => tx >= 3 && tx <= 24 && ty === 30,
+      snag: () => false,
+    };
+    const n = makeLog(centre(10, 30).x, centre(10, 30).y, true);
+    expect(alignAxis(narrow, n, 0, 3)).toBe(false);
+    expect(n.axis).toBe('h');
+  });
+
+  it('a towed log follows round the bend and turns into the south leg, never leaving the water', () => {
+    const c = centre(10, 30);
+    const log = makeLog(c.x, c.y);
+    log.hooked = true;
+    // the farmer walks west along the north bank, then south down the inner bank beside the south leg (x 6): the
+    // pull would hold the log against the inside of the bend, so it goes on downstream (west, then south)
+    const along = (l: { x: number; y: number }) =>
+      Math.floor(l.y / TILE) <= 32 && Math.floor(l.x / TILE) > 5 ? { x: -1, y: 0 } : { x: 0, y: 1 };
+    const route: [number, number][] = [];
+    for (let x = 9; x >= 7; x--) route.push([x, 28]);
+    for (let y = 33; y <= 40; y++) route.push([6, y]);
+    for (const [tx, ty] of route)
+      for (let i = 0; i < 20; i++) {
+        follow(bend, log, handsOn(tx, ty), 1000 / 60, along(log));
+        expect(placeAt(bend, log, log.x, log.y).ok).toBe(true);
+      }
+    expect(log.axis).toBe('v');
+    expect(Math.floor(log.y / TILE)).toBeGreaterThanOrEqual(34);
+  });
+});
+
+describe('towing: what Action means', () => {
+  const base = {
+    hooked: false,
+    snagged: false,
+    homing: false,
+    logInView: true,
+    waterDist: 1,
+    front: false,
+  };
+  it('tugs a snagged log, sends a free hooked log home, and does nothing else while it goes', () => {
+    expect(actionVerb({ ...base, hooked: true, snagged: true })).toBe('tug');
+    expect(actionVerb({ ...base, hooked: true })).toBe('home');
+    expect(actionVerb({ ...base, hooked: true, homing: true })).toBe('busy');
+    // hooked, the tow owns Action even with something in front
+    expect(actionVerb({ ...base, hooked: true, front: true })).toBe('home');
+  });
+
+  it('hooks a log in view near the water, unless Action has something in front of the farmer', () => {
+    expect(actionVerb(base)).toBe('hook');
+    // a ripe crop or a forage good in front beats the tow while no log is hooked
+    expect(actionVerb({ ...base, front: true })).toBeNull();
+    expect(actionVerb({ ...base, logInView: false })).toBeNull();
+    expect(actionVerb({ ...base, waterDist: NEAR_WATER + 1 })).toBeNull();
+    expect(actionVerb({ ...base, waterDist: NEAR_WATER })).toBe('hook');
   });
 });
 

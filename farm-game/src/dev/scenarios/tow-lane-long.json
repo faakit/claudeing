@@ -1,0 +1,21 @@
+{
+  "title": "Towing, the long lane: hook a log at the lane's head, tow it about 17 tiles round the bend, tug it off the rock, land it at the slip",
+  "about": "The M7 spike's long lane east of the lab's showcase (debug only). The farmer stands on the north bank above the lane's head; a placeholder log comes into the water just below him and drifts west. Tap it (or press Action: the button shows a hook): he hooks it on a 3-tile rope. Tap the bank or the water ahead to tow it (or press Action: the button shows the slip, and he walks it home along the bank). The lane runs west along the bank, then turns south; the log trails behind and below him and follows round the bend. It catches on the rock at (34,19): Action or any tap tugs it free, and the walk goes on. At the slip (planks at 28,29, the bottom of the lane) he hauls it in and it lands (+1 Timber). `__farm.dev.tow()` reads the taps, the time from the first input to the landing, the lane's length and the slip.",
+  "version": 18,
+  "tags": ["lab", "towing", "feel"],
+  "at": {
+    "map": "lab",
+    "tx": 37,
+    "ty": 18,
+    "facing": "down"
+  },
+  "time": {
+    "day": 5,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "stats": {
+    "lab.towSpike": 1,
+    "lab.towLane": 2
+  }
+}
