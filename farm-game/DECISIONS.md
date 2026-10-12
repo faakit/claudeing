@@ -1797,3 +1797,58 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Funnel analytics (release lane, release/analytics, 2026-10-12)
+
+- **Provider: Google Analytics for Firebase, on Android only, through `@capacitor-firebase/analytics` 8.x.** Its
+  retention cohorts (D1/D7/D30) and funnel explorations are built in and free, its SDK keeps its own offline store,
+  and the Play Data safety rows for it are well documented. The plugin supports Capacitor 8. Alternatives weighed:
+  GameAnalytics (free, game-focused funnels and retention, a JS SDK that would also run on the web) was the runner-up,
+  but it collects device model and OS details by default, has no consent mode, and puts a third party's code in the
+  web bundle. A privacy-light self-hosted counter (Plausible/Umami-style) has no cohort retention without our own
+  server, which the game has never had. Firebase keeps the web bundle untouched: the adapter calls the native plugin
+  through `registerPlugin('FirebaseAnalytics')`, so no Firebase JS is shipped.
+- **Off by default, everywhere.** With no config, `wireAnalytics` returns before anything starts: no storage key, no
+  timer, no consent question, no Options switch, so the game is exactly as before. The production adapter needs all
+  of `VITE_ANALYTICS=firebase` (gitignored `.env.local`), a native build and the plugin present; a scenario sandbox
+  never uses it. The web build (GitHub Pages) never has analytics. No keys live in the repo: Firebase's come from the
+  owner's gitignored `google-services.json`.
+- **No npm dependency until the owner turns it on** (agreed with the Android lane). With the plugin synced and no
+  `google-services.json`, Firebase is not initialised and the native plugin can fail at load, so the
+  `npm i @capacitor-firebase/analytics@^8` line is an owner step beside the json (agents/PUBLISHING.md). The Android
+  lane's manifest (2a21718) keeps collection off until consent, turns off the ad id and ad personalisation, and
+  removes `AD_ID`.
+- **Consent is asked once, of everyone, on the title**, only when a production provider is configured. A stored
+  analytics id needs consent under ePrivacy/GDPR (EU, UK) and LGPD is easiest met with it; the game reads no location,
+  so it can't ask only where the law requires it. The title is the one place every player passes before the guided
+  start, so the funnel's first steps are never lost to a question asked later. It costs one tap, once. Nothing is
+  sent before the answer: events wait in the local queue, delivered on Share, dropped on No thanks. The opt-out is
+  Options > Controls... > Share stats (the main Options page has no free row: a sixth row would push out the help
+  card). With the switch, Replay guide shares Back's row so the page keeps its four rows of switches.
+- **Opt-out stops everything.** The queue is emptied at once, nothing more is recorded (not even local session
+  counts), and Firebase is told to stop and reset its app-instance id. Turning it back on starts a new session.
+- **Events are a closed schema** (`src/platform/analytics/schema.ts`): each parameter is a whole number in
+  [0, 10^7], an identifier (`[a-zA-Z][a-zA-Z0-9_]{0,23}`) or a language code; an event off the schema is dropped
+  and counted, never queued. That rules out free text and personal data by construction. Firebase's reserved names
+  get a `ta_` prefix (`ta_first_open`, `ta_session_start`).
+- **The install id is ours, random (128 bits), and stays on the device**: it dates the install (for `install_day`)
+  and would identify a batch for a self-hosted backend; the Firebase adapter does not send it (Firebase has its own
+  app-instance id).
+- **Days are the player's local calendar days**, computed with the offset at each instant (DST-safe); a clock set
+  back counts as day 0. Dn retention is exact-day (active on install day N), as Firebase counts it. Churn is 7 days
+  without a session; its day is the last game day and install day seen.
+- **Sessions follow Firebase's 30-minute rule**: back within 30 minutes continues the session; `session_end` is sent
+  for each foreground stretch of a second or more (a flapping visibility event is not play).
+- **Once means once per install.** Tutorial steps, the completion, the skip and each milestone use a once key in
+  the record, so a guide replay or a second new game sends nothing again. An old save loaded for the first time
+  uses up what it had already done without sending it.
+- **Tutorial steps are reported from the step machine itself** (`finish` and `skipStep` emit `tutorialStep`), and
+  only the day-1 and day-2 tracks are the funnel (16 steps); the one-off intros are not. A skipped single step still
+  counts as passed. `skipTutorial` emits `tutorialSkipped`.
+- **Never per frame.** `track` validates and pushes onto an array (well under 0.1 ms, unit-tested); delivery runs on
+  a 10 s timer, at once for a full batch of 20, and on pause; failures back off to 5 minutes. Milestones are checked
+  on stat changes (the goals' stat watcher), each new morning and on entering a game, never in `update`.
+- **Files outside the lane**: `src/main.ts` (one wiring line and `analytics` on the debug hook), `TitleScene`
+  (the question and a `gameEntered` event), `ControlsTab`, `systems/tutorial.ts` and `systems/events.ts` (the
+  events above), `game/language.ts` (`languageChosen`), `src/dev/devMenu.ts` (the Analytics page),
+  `scripts/e2e-onboarding.mjs` (funnel checks) and `scripts/verify.mjs`.
