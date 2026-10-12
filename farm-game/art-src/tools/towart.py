@@ -18,6 +18,8 @@
                                     2 px foam line, two mooring posts in foam rings, a sill beam on the bank.
   tow_rope_dot                      the rope's 2 x 2 stamp (wood over ink), laid every 1 px along the rope's curve.
   p_timberstack                     (a tileset prop, solid) landed timber stacked by the town's slip.
+  obj_millwheel_0..3                the town's mill wheel turning (32 x 32, top-left on its tile at 21,30), drawn by
+                                    towntiles.millwheel turned 0, 11.25, 22.5 and 33.75 degrees.
   tow_icon_hook, tow_icon_home, tow_icon_tug
                                     the Action button's towing verbs, 16 x 16 like the tool icons, 2 px strokes in ink:
                                     hook (a steel hook on a rope), home (a log landed on the slip's planks), tug (a taut
@@ -275,6 +277,10 @@ def build(names: list[str]) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray
             return names.index(n)
 
     world["tow_rock"] = towntiles.rockspur(_P)
+    # the mill wheel turning (M7, once the Marls are home): 4 frames, 11.25 degrees apart (a spoke is 45), frame 0
+    # pixel-identical to the static tile, so the animation starts without a pop
+    for i in range(4):
+        world[f"obj_millwheel_{i}"] = towntiles.millwheel(_P, i * 11.25)
     world["tow_slip"] = slip(names, True)
     world["tow_slip_s"] = slip(names, False)
     world["tow_rope_dot"] = _rope_dot(names)

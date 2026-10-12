@@ -241,6 +241,8 @@ const COMPOSITION = {
     },
 
     cobble: [10, 9, 4, 4],
+    // R27-4: no tree crown over the mill wheel (21-22, 30-31; its foot dips into the river 26 px down)
+    clear: [[21, 30, 2, 26 / 16]],
     trees: ['oak', 'birch', 'oak', 'pine'],
     bushes: ['bush_big', 'bush_rose', 'bush_small'],
     blooms: 0.4,
@@ -999,6 +1001,26 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
       base: oy * 16 + 14,
       flags: 'tg',
     });
+  }
+  // keep-clear rects (R27-4: the town's mill wheel): a crown that would reach into one shrinks and settles lower
+  // until it does not, or is left out
+  for (const [rx, ry, rw, rh] of C.clear ?? []) {
+    const [X0, Y0, X1, Y1] = [rx * 16, ry * 16, (rx + rw) * 16, (ry + rh) * 16];
+    const touches = (c, r) => {
+      const nx = Math.max(X0, Math.min(c.cx, X1));
+      const ny = Math.max(Y0, Math.min(c.cy, Y1));
+      return ((nx - c.cx) / (r * 1.2 + 2)) ** 2 + ((ny - c.cy) / (r * 1.4 + 2)) ** 2 <= 1;
+    };
+    for (let i = crowns.length - 1; i >= 0; i--) {
+      const c = crowns[i];
+      if (!touches(c, c.r)) continue;
+      // smaller, then lower toward its trunk (so the tree still has a crown over its own tile), else left out
+      const d = { ...c };
+      while (d.r > 11 && touches(d, d.r)) d.r--;
+      while (d.cy < c.base - 2 && touches(d, d.r)) d.cy++;
+      if (touches(d, d.r)) crowns.splice(i, 1);
+      else crowns[i] = d;
+    }
   }
   const reach = (c) => ({
     x0: Math.floor((c.cx - c.r * 1.2 - 2) / 16),

@@ -769,6 +769,13 @@ export const TOW_SPRITES: [string, number, number, AtlasGroup][] = [
   ['tow_icon_hook', 16, 16, 'ui'],
   ['tow_icon_home', 16, 16, 'ui'],
   ['tow_icon_tug', 16, 16, 'ui'],
+  // the town's mill wheel turning once the Marls are home (32 x 32 at 21,30; frame 0 is the static tile)
+  ...[0, 1, 2, 3].map((i): [string, number, number, AtlasGroup] => [
+    `obj_millwheel_${i}`,
+    32,
+    32,
+    'world',
+  ]),
 ];
 
 /**

@@ -13,7 +13,8 @@
                                    winter like the other reeds).
   rockspur                         stones breaking the river's surface, ice-white foam on their upstream side.
   millwheel_tl/tr/bl/br            the mill wheel (32 x 32 over four water tiles): a wooden wheel with eight spokes
-                                   and paddles, its foot dipping into the river at a 2 px foam line. Static.
+                                   and paddles, its foot dipping into the river at a 2 px foam line. Static; the
+                                   turning frames (obj_millwheel_0..3) are the same drawing turned.
 
 No 1 px features, no alpha. Positions are in scripts/map-art.mjs (town).
 """
@@ -155,7 +156,9 @@ def rockspur(P) -> np.ndarray:
     return t
 
 
-def millwheel(P) -> np.ndarray:
+def millwheel(P, turn: float = 0.0) -> np.ndarray:
+    """The wheel turned `turn` degrees clockwise (0 = the static tile; the spokes repeat every 45 degrees, so frames
+    at 0, 11.25, 22.5 and 33.75 loop: obj_millwheel_0..3, towart.py)."""
     c = P.name
     n = 32
     t = np.full((n, n), -1, dtype=np.int32)
@@ -168,7 +171,7 @@ def millwheel(P) -> np.ndarray:
     rim = (r <= 13.5) & (r > 10.5)
     t[rim] = c("wood")
     t[rim & (r > 12.5)] = c("soil")  # the rim's outer band, in shade
-    for a in range(0, 360, 45):  # eight spokes, 2 px
+    for a in np.arange(0, 360, 45) + turn:  # eight spokes, 2 px
         d = np.abs(((ang - a + 180) % 360) - 180)
         t[(r <= 10.5) & (d * np.pi / 180 * np.maximum(r, 1) <= 1.1)] = c("wood")
         paddle = (r > 10.5) & (r <= 14.5) & (d * np.pi / 180 * r <= 1.6)
