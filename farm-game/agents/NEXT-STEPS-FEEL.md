@@ -1,165 +1,94 @@
-# Next steps: game feel (The Dry Year)
+# Next steps: game feel (towing round, The Dry Year)
 
-Branch `feel/dry-year` (worktree `controls`), from `integration/dry-year-core` (db29f2a). The feel critic reviewed
-frozen copies with real CDP touches on the iPhone 13 and SE, both hands, at 1x and 4x CPU; its notes are outside the
-repo in `C:/Users/andre/dev/tiny-acre/feel-critique/` (`dry-*`). **No real phone was used**, and headless GL is
-software-rendered: frame times are relative, judge by draws and JS.
+Branch `feel/towing` (worktree `controls`, head 53c6e90 plus this file), from the deployed `integration/dry-year-2`
+(7222bb3), with `origin/integration/dry-year-2` @ 022d0e7 merged in (53d54b4). Full `npm run verify` green at
+64de502 (e2e:scenarios flaky beside the other suites, green alone; its one failure led to 53c6e90's fix). The feel critic reviewed frozen copies with real CDP
+touches on the iPhone 13 and SE, both hands, at 1x and 4x CPU, using its own probe (`feel-critique/tools/dry/tow2.mjs`:
+450 ms reactions, 1.5 mm scatter, 150 ms aim lag). Its notes are outside the repo in `C:/Users/andre/dev/tiny-acre/feel-critique/`.
+**No real phone was used**, and headless GL is software-rendered.
 
-The previous handover (rounds 4 and 5: the pixel camera, wipes, tool timing, canvas scale) is in git history and in
-`DECISIONS.md`, "Game feel (feel agent, round 4)".
+The previous handover (the Dry Year feel lane: channel juice, edge hold, the first tow spike) is in git history and in
+`DECISIONS.md`, "The Dry Year, feel lane". This round is in `DECISIONS.md`, "Towing, round 2".
+
+## Towing verdict
+
+**GO** (feel critic, on frozen 53c6e90; its report: `feel-critique/final-towing.md`). The Weir's verb stays as
+designed.
+
+- 96/96 landed at 1x and 4x: i13 and SE, both hands, wait/chain/water/action, with 1.5 mm scatter, 450 ms reactions
+  and a 150 ms aim lag.
+- tow-lane-long (17 tiles) took 8.2-9.8 s (bar: under 20 s). Inputs were 3 by Action and 3-5 by taps (bar: at most 6).
+- 0 silent taps, 0 'hard' taps, 0 stalls. Draws 2.
+- Game JS max 12.4 ms at 4x. Every frame over 33 ms had game JS of at most 4.2 ms, so those were host stalls.
+- The snag, the tug and the landing read in strips.
+- e2e:controls (193 PASS), bench:thumb (36/36, gestures identical to the baseline) and perf 1,4 are green on 64de502.
+  The change from 64de502 to 53c6e90 is towing-only.
+
+**Conditions for M7:**
+
+1. The probe bar (`scripts/lib/tow.mjs`, or the critic's `tools/dry/tow2.mjs`) is the acceptance test for
+   `tow-first-log` and `tow-east-lane`.
+2. Slips stay low and toward the middle of the screen. The right thumb's slip and 'toward' taps still reach 80-85 mm
+   (stretch) on the i13; the Action route covers it.
+3. Final art keeps the snag cues (the tilt, the foam crest, the ripple) and the Action plate's verb icons.
+4. Action keeps its priority rule: a crop or forage good in front wins while nothing is hooked.
+5. The owner's real-phone check, haptics included, is still to do. It is on the checklist.
 
 ## What changed this round
 
 | area | what | where |
 |---|---|---|
-| Channel dig | The spade swings with a 50 ms wind-up (a key item, it had no swing at all). On impact 7 soil clods (1-2 px, palette wood/sand/soil) arc onto both banks beside the cut, 2/3 to the throwing side, hop 1 px, rest 0.4 s and fade in two steps; the cut stands 1 px proud for 70 ms and settles; a haptic tick per dug tile, even along a painted row. | `fx/ChannelFx.ts`, `fx/channelRun.ts`, `WorldScene.tryAction` |
-| Water into a cut | The new tiles are held dry and the water runs in from upstream (the real wet tile cropped from the tileset and grown from the entry side, 220 ms ease-out, a 1 px foam line on its front), the bank tile first; drops and the water cue when full. The old instant splash and ripple at the cut are gone. | same; `FarmRenderer.holdDry/release` |
-| Morning run | The first time the reached channels come into view each day, the water runs from the creek down the ditch as one continuous front (65 ms a tile, a whole run capped at 1.5 s so the weir's 64 still reads), and each watered soil tile beside it darkens with a droplet as the front passes. It waits until its first 3 tiles, or half the run, are inside the view inset by 16 px (critic C1-1). Not on the creek's first morning, not in Calm (the water is simply there); rain: the run plays, soil not held. | `ChannelFx.planMorning`, `channelRun.runSeen` |
-| Creek reveal | The creek's first morning starts once the bed (x 26-27) is wholly in view, a tile in from the edge (it started with the bed still off screen). | `WorldScene.update` |
-| Edge hold | Band 36 CSS px and 180 ms unchanged (critic ruling: an edge-grown tile can't be trimmed, so a faster interval overshoots). Exit hysteresis: once growing, the hold lasts until the finger leaves a 52 CSS px band along the leg's axis (critic D3: a 33 px rest lost 4 tiles in a frame). | `input/gesture.ts` `PAINT_EDGE_EXIT_CSS`, `UIScene.updateHold` |
-| Taps | A tap in the upper 60% of the void under a door on a map's bottom edge (the house's front door) goes out that door. The dug toast counts the bank tile. | `systems/tapIntent.ts` |
-| Towing spike (M7) | See below. | `systems/towing.ts`, `dev/towSpike.ts` |
+| T1 (the chained-tap stall) | Root cause: a slip tap aimed while the hook walk scrolled the camera landed a tile or two off the slip, and the farmer stood outside the haul range (the critic's corrected trace agrees). Now a tow tap within 2 tiles of the slip (bank or water) means the slip; standing within 2 tiles with the log free hauls it in; the last tow goal (from a tap, the chained tap or Action) is walked to after every tug; an idle farmer with an unreached goal walks on after 250 ms; a hook-walk replan keeps a chained destination. | `systems/towing.ts` `SLIP_REACH`, `meansSlip`, `atSlipBank`; `dev/towSpike.ts` |
+| Taps | Every world tap is read through one point: the thumb-offset correction, then the camera as it stood at touch-down (a tap during a walk used to drift ~5 px with the scroll; the tow hook used to skip the correction). | `WorldScene.tapPoint`, `worldPoint`; `inputHub` `touchDown`; `input/WorldTouch.ts` |
+| No silent tow taps (T5) | While a log is hooked, a tap on solid land (the hedge) walks to the nearest bank tile, the slip's way of the nearest ring; a water tap within 1.5 tiles of a drifting log hooks it; a bank tap with nothing hooked walks as usual. | `towing.ts nearestBank`, `towSpike.towGoal` |
+| Action route (T2) | Action hooks a log in view (walks to it), sends a free hooked log home to the slip, and tugs, only while towing's context is live (hooked, or within 4 tiles of the lane with a log in view); a ripe crop or forage good in front wins. The Action plate shows the verb's icon (hook, slip, tug; placeholder art). | `towing.ts actionVerb`; `inputHub.actionIcon`; `UIScene.updateActionIcon`; `WorldScene.actionInFront` |
+| Long lane | `tow-lane-long`: 17 tiles in lab columns 26-47 (beside the showcase, so the spike's shore keeps its place on screen): west from a head just below the farmer, then south to a slip above the floating controls; one rock; no water decor on any tow lane. Logs lie along the current, slide on downstream at an inside corner, and pop the way they were going after a tug. | `scripts/generate-lab-map.mjs` (`tow` lanes in `lab-map.json`), `labDef.ts TowLaneDef`, `towSpike.ts` |
+| Lab bug | The lab scene was added last at runtime and drew over the floating controls: every lab scenario hid Action and the hotbar. It now sits below the UI. | `dev/lab.ts` |
+| T3 nits | Snag: 2 px tilt, a flickering 1 px foam crest at the rock, a ripple on the catch and every 700 ms. The held farmer keeps his row or column (no sideways step, no north-facing frame after a tug). | `towSpike.ts` |
+| One act per Action press | Coordinator ruling: each press acts once; only a key the system reports as held (auto-repeat) repeats. A press seen held past the 200 ms lock on a loaded machine no longer acts twice. farm.act's workaround is gone. On desktop a held Space now repeats after the system's repeat delay (~500 ms). | `input/actionGate.ts`, `InputHub.pressAction`, `KeyboardInput`, `UIScene`; `perf.mjs` |
+| Restoration beats | Pickaxe day 2.6 s (was 3.3): swings 560 ms apart, stone chips and a 1 px heap shudder per strike, the top stone loose on the third as the lower sprite shows. Spade day 1.8 s (was 3.4): the channel's clods, a cut that settles, the eased fill with a foam front. | `fx/SiteFx.ts`, `WorldScene.useSite`, `ObjectsRenderer.landmarkSprite` |
 
-Scenarios: `channels-first-dig`, `channels-row` (the run plays on load), `channels-morning` (step out of the house),
-`channels-home-only`, `tow-spike`, `tow-spike-long`. e2e: `e2e:scenarios` blocks `morning` (house door by a real
-tap; the run holds until its head is in view) and `towing`; `e2e:controls` has the trembling-rest row. Unit tests:
-`tests/channel-fx.test.ts`, `tests/towing.test.ts`, `tests/paint.test.ts`, `tests/tapmove.test.ts`. Probes:
-`agents/probes/feel-channels.mjs`, `tow-spike.mjs`, `feel-beats.mjs`.
+`__farm.dev.tow()` now reports `lane`, `laneTiles`, `slip.bank`/`slip.water`, `snags`, `spawn`, `verb`, `goal` and
+`log.axis` besides taps, actions, tugs, times and the phase.
 
-Perf (headless, my probes): at most 3 draws during a dig and a morning run, at most 2 while towing; the critic
-measured JS p95 at 4x of 3.5-3.8 ms against 3.8-4.4 on the base, no frame over 33 ms at 4x.
+## Scenarios, tests, probes
 
-The critic accepted item 1 (dig and fill juice) at acbcd24, with C1-1 open; C1-1 was fixed at 281f5a4. It ruled on
-item 3 (keep band and interval, add hysteresis), done at dfaa633.
+- Scenarios: `tow-spike`, `tow-spike-long` (spawn moved to x 18), `tow-lane-long` (new), `spring-site-work-3` (new: the
+  spade day).
+- Unit: `tests/towing.test.ts` (slip reach, hedge taps, the lane turn, Action's verb and its priority),
+  `tests/action-gate.test.ts` (slow frames), `tests/site-fx.test.ts`.
+- e2e:scenarios blocks: `towing` (4 seeded chained T1 taps two tiles east of the slip mid-scroll, each landing with 3
+  inputs; the long log by taps and by Action), `towingLane` (wait/water/chain/action on the long lane, the hedge tap,
+  Action is the tool again away from the lane), `actionSlowFrame` (one press through six slow frames), and the
+  spring block times each beat in game time.
+- `scripts/lib/tow.mjs` plays towing like a person against the critic's bar (`playTow`, `towBar`); the e2e and
+  `agents/probes/tow-spike.mjs` (`SCENARIOS`, `PROFILES`, `HANDS`, `STRATEGIES`, `RUNS`, `THROTTLE`) use it.
+  `scripts/e2e-scenarios.mjs` takes `BLOCKS=towing,towingLane` to run only those blocks.
 
-## The towing spike (M7 "spike first")
+## Numbers (my runs; the critic's are in its reviews)
 
-On the lab's south shore (debug only): water rows 29-32 flowing west at 6 px/s, a rock snag at (17,29) in the
-near-bank row, slip planks at (13,28) where the road meets the shore, the farmer at (13,27), a log spawning at
-(19,30).
-
-- **Hook:** tap the log anywhere: the farmer walks to the nearest bank tile with the log a tile inside the rope's
-  reach and hooks it the moment it is in reach (the rope throws out over 120 ms). Action hooks too when in reach. A
-  tap on the bank or water on the way is kept as the tow destination and walked right after the hook.
-- **Tow:** tap a bank tile, or the water (it resolves to the nearest bank beside it). The log follows on a 3-tile
-  rope (an eased chase, so it lags and swings round turns), slides along the bank and only ever lies on open water.
-  The rope is a solid 1 px line that sags when slack and is straight when taut. The stick works the same.
-- **Snag:** the log stops, tilts and bobs a pixel, the rope goes straight, a knock and a tick; the farmer is held
-  where it caught and the walk is cut. Action, a tap on the log, or any bank or water tap tugs: he leans back, the
-  log pops a tile past the rock in a 4 px hop, a splash, and the walk resumes. A long log gives on the first tug and
-  comes free on the second.
-- **Land:** standing at the slip he hauls it in (110 px/s) to the slip's water tile, then it is lifted onto the
-  planks and dropped (dust, splash, "+1 Timber", success haptic); input stays free. A walk to the slip stops beside
-  it, so the log never lands on the farmer.
-- **Numbers:** 3 taps (log, slip, tug), first input to landing 3.7-4.0 s with instant reactions on i13 and SE, both
-  hands (the spec asks under 20 s). `__farm.dev.tow()` reports taps, actions, tugs, times and the phase.
-- **Rules for M7** (`systems/towing.ts`, pure, tested): `makeLog`, `placeAt`, `drift`, `follow`, `tug`, `haul`,
-  `atSlip`, `atSlipBank`, `land`, `bankFor`, `hookStand`, `inReach`; constants `ROPE_PX` 48, `FOLLOW_RATE` 0.16,
-  `HAUL_PX_S` 110, `TUGS` 1/2, `TIMBER` 1/3. Not yet: lanes chosen by day hash, the spur that turns a log, ice
-  rims, saving while towing, logs turning into a vertical lane.
-- **Critic's verdict:** not given yet; the go/no-go waits for the next round (owner order to stop testing).
-
-WorldScene gained small verb hooks for it (also usable by M7): `tapHook`, `actionHook`, `walkTo`, `walkGoal`,
-`stopWalk`, `walkable`, `farmerSprite`. The lab scene creates the spike when the stat `lab.towSpike` is set.
-
-## Owner bugs (branch `fix/owner-bugs`, from integration/dry-year-2 16f89eb)
-
-Three bugs the owner saw while playing, one commit each, **all untested** (owner order: the PC was needed, so no
-test, typecheck, lint, build, e2e, perf, bench or browser ran). Root causes and rulings are in `DECISIONS.md`,
-"Owner bugs".
-
-| bug | fix | where |
-|---|---|---|
-| 1. Walking behind a crown, it "faded" and the farmer showed whole | The see-through hole opens only when a crown covers the lower body (behind the trunk, never beside or in front), eases in and out over 150 ms with the checker rim, 9 px body circles; the target circle only behind or standing still | `fx/SeeThrough.ts`, `art/mapLayers.ts`, `game/ObjectsRenderer.ts`, `WorldScene.tick`; `tests/see-through.test.ts`; scenario `walk-behind-tree` |
-| 2. A tap while walking "flicks" | Re-plan from the tile ahead or behind, whichever is the shorter walk from the exact position (ahead wins ties and 4 px); no step back, no stop, no turn unless the target is behind; a held preview is not overwritten | `systems/pathfind.ts`, `WorldScene.planTap/onTap/walkTo/followRoute`; `tests/tapmove.test.ts`; e2e:controls row; scenario `tap-retarget-walk` |
-| 3. A bridge over a walkable dry bed | Coordinator ruling: dry beds block exactly where the water stage does (farm creek, town D1, Wendhead pool, creek head and gorge); data only, the dry look unchanged | `scripts/generate-maps.mjs`, six variant `.tmj` collision layers; `tests/maps.test.ts`, `tests/map-stages.test.ts`; scenario notes |
-
-**Before merging, run on an idle machine:** `npm run verify` (in particular the new `tests/see-through.test.ts`, the
-new rows in `tests/tapmove.test.ts`, `tests/maps.test.ts` and `tests/map-stages.test.ts`, the typecheck of
-`mapLayers.ts`'s alpha probe, and `tests/dev-scenarios.test.ts` for the two new scenarios); `npm run e2e:controls`
-(the new "a second tap ahead mid-step keeps walking" row, both phones and hands); `npm run e2e:feel`; `npm run perf`
-(the "behind a lone tree" and "behind a grown fruit tree" rows: the hole now redraws for 150 ms on each open and
-close, and reads tile alpha once per tile id); `npm run bench:thumb`; `npm run e2e:scenarios` (it loads every
-scenario, the new `walk-behind-tree` and `tap-retarget-walk` with them, and the creek and dry-town blocks); and
-`npm run e2e:onboarding`, comparing its median with the last run, in case a guided path used to cross a dry bed.
-Then open `?scenario=walk-behind-tree` and `?scenario=tap-retarget-walk` and judge them by eye: the hole's size and
-ease, and the walk through retargets, were never seen running.
-
-## Other lanes' files touched
-
-`scenes/WorldScene.ts` (ChannelFx wiring, the spade swing, verb hooks, the creek reveal threshold),
-`game/FarmRenderer.ts` (`holdDry`/`release`), `scenes/UIScene.ts` (edge-hold exit band), `systems/tapIntent.ts`
-(the void under a door), `dev/lab.ts`, `dev/api.ts`, `dev/devtools.ts` (`__farm.dev.tow()`),
-`scripts/e2e-scenarios.mjs`, `scripts/e2e-controls.mjs`.
+- 64-run matrix (3 scenarios x i13/SE x both hands x wait/chain/water/action, 1x, dev server): 64/64 landed, 0 stalls,
+  0 silent taps, 0 'hard' taps. tow-lane-long 7.7-8.9 s, 3 inputs by Action, 5 by taps; spike 3.1-4.6 s, 3 inputs (4
+  long). Draws 2 throughout. The right thumb's slip and westward 'toward' taps are stretch (69-82 mm); the rest and
+  the whole Action route are comfort.
+- 4x: draws 2; JS p95 3.8-8 ms; isolated 50-180 ms frames only while other agents' browsers loaded the host (a rerun of
+  6 runs: 0 frames over 33 ms). The critic measured 0 frames over 33 ms at 4x on a quiet host.
 
 ## Open
 
-1. **Item 2, the restoration beats, is not done.** From strips (`feel-beats.mjs work|reveal|creek`): the pickaxe
-   day (`spring-site-work`) is 3.3 s with about 600 ms of dead air between swings, and the stone rolls off at
-   2.2 s, a second after the last hit. Plan: swings about 560 ms apart, grey chips and a 1 px heap shudder per hit
-   (needs a landmark getter in `ObjectsRenderer`), the stone breaking loose on the third hit with the site's lower
-   sprite showing as it leaves, about 2.6 s in all. The spade day (no scenario yet: add `spring-site-work-3`)
-   should reuse the channel clods and the foam-edged fill. The first-green dissolve (`valley-farm-green-reveal`)
-   reads well. Doors must stay under 0.3 s.
-2. **Art merge** (art/dry-year 0dd9a35 landed the channel tiles `chan:wet|dry:<mask>`): at integration, the ChannelFx
-   `src(tx, ty, look)` callback in `WorldScene.create` should use the art lane's `channelGid(tx, ty, look)` (null on a
-   path; `tileset.getTileTextureCoordinates(gid)`) in place of `CHANNEL_GID`, and the foam line in `ChannelFx.stepFills`
-   should be limited to `CHANNEL_WATER_BAND` ([6, 12], from `src/art/channelTiles.ts`; columns on a vertical run).
-3. **Audio:** the audio lane is adding `dig` (actionFx's dig case) and `logLand`; the spike already asks for
-   `logHook`, `logKnock`, `logTug` and `logLand` and falls back to existing cues until they exist.
-4. Critic nit passed on (not feel): decor (a pebble, a bush, a canopy) is drawn over channel water.
-5. Towing after a go: a bench:thumb row, art (logs short and long, rope, slip), turn frames, the M7 rules above.
+1. **After the go (M7 proper):** the depth lane adopts `systems/towing.ts` for the real weir (lanes chosen by day hash,
+   the spur, ice rims, saving while towing); `tow-first-log` etc. per MILESTONES M7; a `bench:thumb` towing row.
+2. **Art:** logs short and long (east-west and north-south), the rope, the slip, the snag rock, and the three Action
+   icons (`tow_icon_hook`, `tow_icon_home`, `tow_icon_tug`) are placeholders drawn in `towSpike.ts makeTextures`.
+3. **Audio:** `logHook`, `logKnock`, `logTug`, `logLand` still fall back to existing cues.
+4. The right thumb's reach to a slip on the far left of a horizontal lane stays stretch (about 80 mm on the i13): the
+   Action route covers it; M7's weir layout should keep the slip low on screen as the long lane does.
+5. Banners ("THE RIVER IS BACK") read low-contrast on straw: the art lane's (owner note).
+6. Not run this round: a real phone. The critic ran `bench:thumb` on 64de502 (36/36).
 
-## Unverified, and what must run before the merge
+## Other lanes' files touched
 
-The owner stopped all tests before the full verify finished (the PC was needed). What did run on this branch:
-
-- `verify:fast` green at 281f5a4 and at dfaa633 (the unit suite's 2 ms pathfind timing test failed once at dfaa633
-  while the machine was loaded and passed when rerun alone).
-- `e2e:scenarios` full green at 281f5a4 plus the morning-run fixes (towing and morning blocks included).
-- `e2e:controls` before dfaa633's last edits: the new trembling-rest rows passed on i13, both hands; 7 SE rows
-  failed on harness lag (flicks, swipes, a rolled press) while verify:fast ran beside it. Not rerun alone.
-- The interrupted full `npm run verify` at dfaa633: typecheck, lint, build, e2e:onboarding, e2e:mobile, bundle and
-  lab-map ok; e2e and e2e:scenarios ok when rerun alone; **test failed** on `tests/sim.test.ts` (the board-race
-  balance sim, a 91 s run under load, most likely a timeout, not a logic change: nothing in this branch touches the
-  sim's rules); controls, feel and perf never ran.
-
-**Before merging, run** `npm run verify` on an idle machine and check in particular: `tests/sim.test.ts` alone,
-`npm run e2e:controls` (SE rows), `npm run e2e:feel`, and `npm run perf` (draws and frame pacing; the channel run
-and the dig add pooled images only). `npm run bench:thumb` was not run this round. The towing go/no-go waits for
-the next round (the critic has the spike at 281f5a4).
-
-No real phone or native build. Haptic timing, the rope's 1 px line and the clods on a real panel are judged from
-strips and emulated touches only.
-
-## Floating controls (branch `ui/float-controls`, 2026-10-11): no dock band
-
-The owner asked for the wooden dock to go ("it still feels big"). Now true (DECISIONS.md "Floating controls"):
-
-- **Layout.** HUD 0-74, then world to the bottom edge (camera viewport 200 x 326, was 214). Action, Interact and Menu
-  float at their old positions (`ui/layout.ts`, from `CONTROLS_Y` 288) on solid walnut plates: 2 px ink outline,
-  2 px wood ring, 2 px soil lip, no alpha; pressed, the face sinks onto its lip in one frame. The hotbar is 8 slot
-  plates (22 px faces, 24 px pitch, 2 px lips) 2 px off the bottom edge; its touch zones are 24 x 27 and meet.
-- **Camera.** `PixelCamera` gets the 112 px controls band as an inset: the farmer sits where he did, a small room is
-  centred above the controls, a map's last row can scroll up above them, and every scroll equals the old view's.
-- **Above the controls (`WORLD_CLEAR`, 74-288):** toasts, the item name (now a plate at the bottom of the toast lane),
-  the coach line and arrows, the goal arrow, the channel run's "in view".
-- **Taps:** anywhere below the HUD that is not a control is world (tap walks or acts, drag is the stick), including
-  the stick's home; taps on a control or a slot zone never reach the world.
-- **Safe area:** the canvas still sits inside the safe area; the home-indicator strip under it is ink, not walnut.
-- **Scenarios:** `ui-float-controls` (straw, Interact showing, full hotbar), `ui-float-controls-left`,
-  `ui-float-controls-se`, `ui-float-controls-grass`, `ui-float-controls-water`, `ui-float-controls-mine`.
-
-**Nothing was run** (owner order: no tests, no browser). Before merging, on an idle machine:
-
-1. `npm run verify` (new `tests/float-controls.test.ts`; `tests/layout.test.ts` and the scenario loader cover the
-   rest).
-2. `E2E_CONTROLS_PARALLEL=1 npm run e2e:controls` (the graze check now taps the hotbar row only; a new check taps the
-   stick's home and expects a walk), then `npm run bench:thumb` against its baseline (no control or scroll moved,
-   so it should match; `scripts/bench-thresholds.json` is unchanged).
-3. `npm run e2e:mobile` (new check: the bottom safe-area strip is ink), `npm run e2e:onboarding` (coach geometry
-   should be identical) and `npm run perf` (12 draws, 3.5 ms JS at 1x: the tilemap now draws a 52% taller view and
-   rain has 137 drops).
-4. Screenshots of `ui-float-controls` on the iPhone 13 and the SE, both hands (`-left`), over straw (the base),
-   grass, water and the mine (`-grass`, `-water`, `-mine`): every plate solid and even at the fractional scales, the
-   selected slot obvious, the farmer above the controls, the name plate and toasts clear of them.
+`scenes/WorldScene.ts` (`tapPoint`, touch-down camera, `actionInFront`, the Action gate, the site beat now in
+`fx/SiteFx`), `scenes/UIScene.ts` (`pressAction`, the Action icon override), `game/ObjectsRenderer.ts`
+(`landmarkSprite`), `scripts/lib/farm.mjs` (`act`), `scripts/perf.mjs` (held Action), `scripts/e2e-scenarios.mjs`,
+`DECISIONS.md`.
