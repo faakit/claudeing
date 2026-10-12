@@ -22,6 +22,7 @@ import {
   CLOUD_BOOK_KEY,
   CLOUD_PREV_KEY,
   CloudSync,
+  LOCAL_PREV_KEY,
   RETRY_MS,
   type Timers,
 } from '../src/game/cloudSync';
