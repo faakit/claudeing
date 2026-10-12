@@ -105,6 +105,7 @@ A real phone works the same way over USB (USB debugging on).
 - Haptics: a light tick on a tile action; Options > vibration off silences it.
 - `adb shell dumpsys package app.tinyacre.farm | grep -E "targetSdk|versionName|AD_ID"`: targetSdk=36, the build
   label, no AD_ID.
+- With analytics on: `adb logcat -s FA FA-SVC` shows no events before the title's consent answer.
 
 ## Upload key and Play App Signing (owner only)
 
@@ -146,11 +147,14 @@ support can reset it).
 - [ ] **Privacy policy URL** (App content): required, public, and true to the shipped build, including analytics
       (release/analytics) and cloud save (release/cloud-save) once they ship. A page beside the game, e.g.
       `https://faakit.github.io/claudeing/farm/privacy.html`, is fine.
-- [ ] **Data safety form**, matching the shipped build: - this lane alone: no data collected or shared, no network use; - with analytics: app interactions and diagnostics, only after the in-game consent, not shared, no advertising
-      id (AD_ID is removed); Firebase acts as Google's processor; - with cloud save: the save file goes to the player's own Play Games account; the gamer name is shown in-game
-      only.
-      The analytics and cloud-save lanes supply their exact rows. Declare encryption in transit only for what uses
-      HTTPS.
+- [ ] **Data safety form**, matching the shipped build. Without analytics or cloud save: no data collected or
+      shared, and no network use. With analytics (only builds made with VITE_ANALYTICS=firebase and
+      google-services.json): App activity > App interactions, Device or other IDs (Firebase app-instance ID; no
+      advertising ID, AD_ID removed), Approximate location (Google derives it from masked IPs). Each row: collected,
+      not shared (Firebase is Google's processor), optional (consent asked on the title, opt-out in Options >
+      Controls), purpose Analytics, encrypted in transit. With cloud save: the save file goes to the player's own Play
+      Games account, and the gamer name is shown in-game only. Full rows and the GA settings to turn off are in
+      "Privacy, consent and Data safety" at the end of this file (added by the analytics and cloud-save lanes).
 - [ ] **Content rating** (IARC questionnaire): no violence, gambling, user content, chat or location; in-app
       purchases "no" until Billing ships. Expect Everyone / PEGI 3.
 - [ ] **Target audience**: 13+ unless you want the Families programme. Under-13 brings Families rules (certified
