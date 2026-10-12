@@ -22,7 +22,7 @@ import actFrameCounts from './actFrames.json';
  * atlas in `public/assets/` or falls back to the code-generated placeholder of the same key.
  * `art-src/tools/manifest.mjs` prints this list to `agents/out/art-manifest.md`.
  */
-export type AtlasGroup = 'tiles' | 'world' | 'ui' | 'chars';
+export type AtlasGroup = 'tiles' | 'world' | 'ui' | 'chars' | 'chars2';
 
 export interface ArtEntry {
   /** Phaser texture key the game code asks for. */
@@ -58,6 +58,12 @@ export const ATLAS_FILES: Record<
     key: 'atlas_chars',
     png: 'assets/sprites/chars.png',
     json: 'assets/sprites/chars.json',
+  },
+  // the first chars atlas is full at 512x1024 (the round-5 actions filled it): action and new character frames
+  chars2: {
+    key: 'atlas_chars2',
+    png: 'assets/sprites/chars2.png',
+    json: 'assets/sprites/chars2.json',
   },
 };
 /** The terrain tileset image: same tile order as PLACEHOLDER_TILES (Tiled gid = index + 1). */
@@ -500,7 +506,7 @@ export function artManifest(): ArtEntry[] {
           texture: actKey(anim, d, i),
           w: ACT_FRAME_W,
           h: ACT_FRAME_H,
-          group: 'chars',
+          group: 'chars2',
           kind: `player action ${anim} ${d}`,
           from: 'art round 5 (flowanim.py, Flow anim_*)',
           optional: true,

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { PX_TEXTURE } from '../art/gameArt';
 import { audio } from '../platform/audio';
+import { CHANNEL_WATER_BAND } from '../art/channelTiles';
 import { TILE_SIZE } from '../config';
 import type { GameState } from '../state/GameState';
 import { channelKeys, flowReach, wateredByChannels } from '../systems/channels';
@@ -282,8 +283,12 @@ export class ChannelFx {
       }
       if (r.edge) {
         f.foam ??= this.grab(PX_TEXTURE).setTint(FOAM).setOrigin(0, 0).setDepth(0.026);
-        f.foam.setPosition(f.tx * TILE_SIZE + r.edge.x, f.ty * TILE_SIZE + r.edge.y);
-        f.foam.setScale(r.edge.w / 2, r.edge.h / 2);
+        // the foam spans only the water between the banks (art: CHANNEL_WATER_BAND), not the whole tile
+        const [b0, b1] = CHANNEL_WATER_BAND;
+        const across = r.edge.h > r.edge.w; // a vertical front line: the run goes east or west
+        const e = across ? { ...r.edge, y: b0, h: b1 - b0 } : { ...r.edge, x: b0, w: b1 - b0 };
+        f.foam.setPosition(f.tx * TILE_SIZE + e.x, f.ty * TILE_SIZE + e.y);
+        f.foam.setScale(e.w / 2, e.h / 2);
       }
       if (f.t >= f.ms) done.push(f);
     }

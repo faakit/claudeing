@@ -423,6 +423,10 @@ def build(pal, outline, groups, specs, make, names=None):
     req = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "map-tiles.json")
     for name in json.load(open(req)) if os.path.exists(req) else []:
         extra[name] = bake.bake(P, name, tiles["grass"], tiles["stone"])
+    # Channel tiles (Dry Year M4): painted by the game, not by the maps, so they go LAST and never move a map gid
+    import channeltiles
+
+    extra.update(channeltiles.build(P))
     # Identical tiles share one slot; every name keeps its own entry in tiles.json.
     index: dict[str, int] = {}
     slot_names: list[str] = []

@@ -28,7 +28,7 @@ and never names games, studios or artists (art director's request).
 
 > Pixel art game user interface asset for Tiny Acre, a cozy, warm top-down farming game. Drawn with big chunky square pixels on a strict pixel grid, seen straight on (flat, no perspective, no tilt), limited warm palette: walnut and honey wood browns, cream parchment, a little gold, a 1-pixel soft dark plum outline, simple flat shading with one highlight and one shadow tone, no anti-aliasing, no gradients, no text, no letters, no icons, no drop shadows. Flat solid pure magenta (#FF00FF) background around the asset. The asset contains no magenta or hot pink.
 
-Generations: **41** prompts.
+Generations: **45** prompts.
 
 ## 1. `items1` (1:1, preamble: standard)
 
@@ -341,3 +341,35 @@ Generations: **41** prompts.
 - raw: anim_place-a.jpg, anim_place-b.jpg
 - used: not used (review 18: no crate survived; the place is drawn in code with the held item's icon)
 - note: round 5, player tool and action animations (owner request); reference image: the project's `player1` variant a sheet ("Farmer character sprite sheet" in Flow), the source of the current player sprite, added with the prompt box's + control (local uploads are not possible from the agent's browser pane)
+
+## 42. `site_spring` (1:1, preamble: tinyacre)
+
+> Four stages of the same small spring mouth at the foot of a grassy hillside, seen from above in three-quarter top-down view, each stage a separate 32x32 pixel sprite, in a 2x2 grid with wide even spacing, all four exactly the same size and framing. Stage 1 (top left): the spring's mouth completely choked by a heap of grey boulders and broken rock about two tiles wide, dry cracked sandy mud in front of it, a few dead straw-coloured reeds, no water at all. Stage 2 (top right): the same heap with its top stones levered off and stacked to one side, a dark damp patch and a few glints of water between the lower stones. Stage 3 (bottom left): only two big mossy stones remain either side of a gap, clear water seeping out into a small shallow pool that is half full. Stage 4 (bottom right): the mouth open between the two mossy stones, clear blue water pouring out in a small bright fall into a full round pool, fresh green ferns and grass around it. Match the reference image exactly in pixel scale, palette, plum outline and shading: it is a screenshot of the game's own tiles (grass, a creek with blue water and dark banks, trees).
+
+- raw: site_spring-a.jpg, site_spring-b.jpg
+- used: not used yet: kept in flow-raw/ for the next art round (Dry Year list items 2-3)
+- note: Dry Year, the Old Spring's site in four stages (obj_site_spring_0..3); reference image: tiny-acre-farm-reference.png, a 1x crop of the farm map (grass, creek, trees) rendered from the game's own tileset and uploaded to the Flow project by drag and drop from the agent's browser pane
+
+## 43. `warm_pool` (1:1, preamble: tinyacre)
+
+> Two versions of the same small warm spring pool landmark on a hillside, side by side with wide spacing, seen from above in three-quarter top-down view, each about 48 pixels wide and 32 pixels tall. The pool is an irregular oval ring of flat pale grey stones around turquoise-blue water, with a short wooden bench on its left side and a wooden ladle hanging from a little post on its right, a few green ferns between the stones. Left version: the pool is empty and dry, pale cracked mud inside the stone ring, the bench weathered grey, no steam. Right version: the pool is full of clear warm water with two small curls of white steam rising, a ring of light ripples, the bench warm brown wood. Match the reference image exactly in pixel scale, palette, plum outline and shading: it is a screenshot of the game's own tiles.
+
+- raw: warm_pool-a.jpg, warm_pool-b.jpg
+- used: not used yet: kept in flow-raw/ for the next art round (Dry Year list items 2-3)
+- note: Dry Year, the Warm Pool landmark at Wendhead (obj_landmark_bathhouse); reference image: tiny-acre-farm-reference.png, a 1x crop of the farm map (grass, creek, trees) rendered from the game's own tileset and uploaded to the Flow project by drag and drop from the agent's browser pane
+
+## 44. `icons_ilse` (1:1, preamble: tinyacre)
+
+> A grid of 3 columns and 2 rows of separate item icons with wide even spacing, each icon filling its 16x16 cell. Column 1, both rows (two variations): an old grandmother's seed tin, a small round dented tin box with a lid, faded blue paint worn to silver at the rim and a hand-painted green sprout on the lid. Column 2, both rows: a small worn brown leather journal tied shut with a string, a pressed green leaf sticking out of its pages. Column 3, both rows: an old garden spade with a worn pale wooden D-shaped handle and a narrow dark iron blade, drawn diagonally from top right to bottom left. Match the reference image in palette, plum outline and shading.
+
+- raw: icons_ilse-a.jpg, icons_ilse-b.jpg
+- used: not used yet: kept in flow-raw/ for the next art round (Dry Year list items 2-3)
+- note: Dry Year, Ilse's seed tin, journal and spade icons; reference image: tiny-acre-farm-reference.png, a 1x crop of the farm map (grass, creek, trees) rendered from the game's own tileset and uploaded to the Flow project by drag and drop from the agent's browser pane
+
+## 45. `letter_paper` (4:3, preamble: tinyacre-ui)
+
+> A single sheet of old hand-written letter paper, seen straight on and filling most of the image, wider than tall: warm cream parchment with slightly uneven soft edges, one gentle horizontal fold crease across the middle, the top right corner folded down, a small pressed pink cherry blossom sprig with two green leaves near the top left corner, a faint round tea stain near the bottom right. The paper is empty, no lines and no writing.
+
+- raw: letter_paper-a.jpg, letter_paper-b.jpg
+- used: not used yet: kept in flow-raw/ for the next art round (Dry Year list items 2-3)
+- note: Dry Year, Rosa's letter paper on the title (ui_letter_paper); the preamble's palette line named cream parchment, sand and honey browns, a little rose pink and leaf green; no reference image

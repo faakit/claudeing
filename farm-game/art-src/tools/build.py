@@ -174,7 +174,7 @@ def main() -> None:
 
     import authored  # noqa: E402  (needs the palette)
 
-    groups: dict[str, dict[str, np.ndarray]] = {"world": {}, "ui": {}, "chars": {}}
+    groups: dict[str, dict[str, np.ndarray]] = {"world": {}, "ui": {}, "chars": {}, "chars2": {}}
     tiles_only = "--tiles" in sys.argv  # just the tileset (after the maps asked for new baked tiles)
     for key, spec in specs.items():
         if "src" not in spec or tiles_only:

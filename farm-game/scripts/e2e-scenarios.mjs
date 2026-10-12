@@ -1081,6 +1081,29 @@ async function channels() {
     look.first === 'wet' && look.past === 'dry',
     JSON.stringify(look),
   );
+  // Channel art (art lane): the serpentine's cells show the autotiled ditch for their neighbours, wet where the
+  // flow reaches and dry past it; a culvert's headwalls stand on the path; the flowers on a channel are gone.
+  await farm.load('channels-serpentine');
+  const art = await farm.eval(() => {
+    const scene = window.__farm.game.scene.getScene('Farm');
+    const idx = scene.cache.json.get('tiles_index').tiles;
+    const layer = (n) =>
+      scene.children.list.find((o) => o.type === 'TilemapLayer' && o.layer.name === n);
+    const at = (n, x, y) => layer(n)?.getTileAt(x, y)?.index ?? 0;
+    return {
+      corner: at('detail', 17, 16) === idx['chan:wet:6'] + 1, // E and S: the turn down at x 17
+      tee: at('detail', 20, 16) === idx['chan:wet:14'] + 1, // E, S, W: the T at x 20
+      dry: at('detail', 10, 22) === idx['chan:dry:15'] + 1, // the cross, past the flow
+      culvert: at('shade', 14, 19) === idx['culvert:8'] + 1, // the west wall of the path crossing
+      mouth: at('shade', 26, 16) === idx['chanmouth:w'] + 1, // the cut through the creek's bank
+    };
+  });
+  if (process.env.SHOTS) await farm.shot('channels-serpentine', process.env.SHOTS);
+  check(
+    'channels-serpentine: corners, a T, a dry cross, a culvert and the creek mouth draw their tiles',
+    Object.values(art).every(Boolean),
+    JSON.stringify(art),
+  );
   // A home-plot-only farm (owner ruling): from the creek's open bank along y 14 (a culvert under the road), then
   // down x 13 beside the home plot; the next morning its east column is watered without the can.
   await farm.load('channels-home-only');

@@ -7385,10 +7385,10 @@
    "name": "placeholder",
    "image": "../tilesets/tiles.png",
    "imagewidth": 512,
-   "imageheight": 1152,
+   "imageheight": 1168,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 2304,
+   "tilecount": 2336,
    "columns": 32,
    "margin": 0,
    "spacing": 0

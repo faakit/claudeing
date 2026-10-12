@@ -1625,3 +1625,15 @@ about 9,000 px² of the old 22,400 px² band (Action 2,600, Interact 1,340 when 
 "tap between the controls walks" check), `e2e:mobile` (new ink-strip check; slot zones are 24 x 27),
 `e2e:onboarding` (coach geometry should be identical), `bench:thumb` against its baseline. `bench-thresholds.json`
 is unchanged: no control moved and the camera scrolls are identical.
+
+## Channel tiles drawn in code, appended last, looked up by name (art lane, Dry Year, 2026-10-11)
+
+- Channel tiles are a 16-mask autotile plus culverts and creek mouths, drawn in `art-src/tools/channeltiles.py`
+  rather than from Flow: exact seams and the 2 px rule matter more than painterly texture (the creek was done the
+  same way).
+- They go at the end of the tileset and the game reads them by name from `tiles.json`, so adding them moved no
+  map gid; the `.tmj` files changed only in their tileset header. WorldScene indexes gids past a map's own tile
+  count, so a taller tileset never breaks `putTileAt`.
+- A channel hides flowers and tufts on its cell and restores them when filled in (the art critic's ruling); crowns
+  stay. Water tiles are static, like the map's other water; the feel lane draws the moving front.
+- The chars atlas split moved only the action frames (they are single-image textures, so any atlas works).

@@ -1,0 +1,216 @@
+{
+  "title": "A serpentine channel network: corners, a T, a cross, a culvert and a dry tail",
+  "about": "Spring 13, 08:00: one network off the creek at y 16 (31 tiles, flow 24): west along y 16, a T down at x 20, a turn at x 17, under the farm path at x 14-15 (culverts), down x 10 to a cross at 10,22. The water reaches the first 24 tiles breadth-first; the rest is a dry ditch. For judging channel tiles: every corner, T, cross, dead end, culvert and creek mouth.",
+  "version": 18,
+  "tags": ["farm", "valley", "channels", "art"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 1,
+    "projectsDone": 1,
+    "shipped": 20,
+    "tut.channels": 1,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1
+  },
+  "at": {
+    "map": "farm",
+    "tx": 22,
+    "ty": 18,
+    "facing": "left"
+  },
+  "time": {
+    "day": 13,
+    "clock": "08:00"
+  },
+  "items": [
+    {
+      "item": "spade",
+      "slot": 6
+    }
+  ],
+  "select": "spade",
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": 2,
+      "rect": [18, 15, 7, 1],
+      "watered": true
+    },
+    {
+      "crop": "parsnip",
+      "stage": 1,
+      "rect": [11, 20, 3, 2],
+      "watered": true
+    }
+  ],
+  "state": {
+    "farm": {
+      "tiles": {
+        "17,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "18,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "19,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "21,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "22,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "23,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "24,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "25,16": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "17,17": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "17,18": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "11,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "12,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "13,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "14,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "15,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "16,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "17,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,20": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,21": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,22": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "10,23": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "8,22": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "9,22": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "11,22": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "12,22": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,17": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,18": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,19": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        },
+        "20,20": {
+          "watered": false,
+          "crop": null,
+          "channel": true
+        }
+      }
+    }
+  },
+  "plots": "all",
+  "goal": "craft"
+}
