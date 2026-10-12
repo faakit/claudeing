@@ -4,6 +4,8 @@ import { createInitialState, STATE_VERSION } from '../src/state/GameState';
 import { performAction } from '../src/systems/actions';
 import { BACKUP_KEY, loadGame, migrate, SAVE_KEY, saveGame } from '../src/systems/save';
 import { grass, newState } from './helpers';
+import { mail, UNSIGNED } from '../src/data';
+import { sendLetter } from '../src/systems/mail';
 
 describe('save/load', () => {
   it('round trip equals the original state', async () => {
@@ -204,5 +206,20 @@ describe('saveNow ordering', () => {
     enqueue(b);
     await chain;
     expect((await loadGame(slow))?.state.money).toBe(2);
+  });
+});
+
+describe('letters in the save', () => {
+  it('an unsigned letter (Clay sack at the gate) survives a reload with its gift', async () => {
+    const store = new MemoryStore();
+    const s = newState();
+    const def = mail.letters.find((l) => l.from === UNSIGNED)!;
+    expect(def.gift).toBeDefined();
+    sendLetter(s, def);
+    await saveGame(store, s);
+    const loaded = (await loadGame(store))!.state;
+    const kept = loaded.mail.list.find((l) => l.title === def.title);
+    expect(kept?.from).toBe(UNSIGNED);
+    expect(kept?.gift).toEqual(def.gift);
   });
 });

@@ -11,6 +11,7 @@ import {
   plots,
   shops,
   skills,
+  UNSIGNED,
 } from '../data';
 import { plotAtTile, starterPlots } from './plots';
 import { maxEnergy as maxEnergyOf } from './energy';
@@ -618,7 +619,8 @@ export function sanitize(raw: Raw): GameState {
   if (Array.isArray(mailRaw['list']))
     for (const l of mailRaw['list'].slice(-40)) {
       if (!isObj(l) || typeof l['title'] !== 'string' || typeof l['text'] !== 'string') continue;
-      if (typeof l['from'] !== 'string' || !npcs[l['from']]) continue;
+      // a letter nobody signs (Clay's sack at the gate) has no villager behind it
+      if (typeof l['from'] !== 'string' || (!npcs[l['from']] && l['from'] !== UNSIGNED)) continue;
       const id = int(l['id'], 0, 0, 1e9);
       if (id === 0 || letters.some((x) => x.id === id)) continue;
       maxLetter = Math.max(maxLetter, id);
