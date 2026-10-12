@@ -79,6 +79,18 @@ async function clean(farm, zoom = 1) {
     window.__storeClean();
   }, zoom);
 }
+/** Frame a tile: the world camera stops following the farmer and centres on (tx, ty). */
+const look = (farm, tx, ty) =>
+  farm.eval(
+    ([x, y]) => {
+      const w = window.__farm.game.scene
+        .getScenes(true)
+        .find((sc) => 'tilemap' in sc && sc.tilemap);
+      w.cameras.main.stopFollow();
+      w.cameras.main.centerOn(x * 16 + 8, y * 16 + 8);
+    },
+    [tx, ty],
+  );
 /** Set the clock (golden hour, dusk); the day tint and lights follow on the next frame. */
 const clock = (farm, hhmm) => farm.eval((c) => window.__farm.dev.time.set({ clock: c }), hhmm);
 /** A capture: the whole 200x400 screen, or only the world view in the clean look. */
@@ -297,6 +309,107 @@ const MOMENTS = {
       await t.hold(40);
     },
   },
+
+  // ---- round 3 (critic review 5): closer crops at a whole 6x or 8x, captions the panel can keep ----
+  // Rosa's letter at 5x (cropped to its key lines by store_art.py).
+  'letter-5x': {
+    scenario: 'title-first-launch',
+    dpr: 5,
+    shotAt: 60,
+    async drive(farm, t) {
+      await farm.eval(() => {
+        const sc = window.__farm.game.scene.getScene('Title');
+        const walk = (list) => {
+          for (const o of list) {
+            const text = typeof o.text === 'string' ? o.text : '';
+            if (/[0-9a-f]{7}\s+\d{4}-\d\d-\d\d/.test(text)) o.setVisible(false);
+            if (o.list) walk(o.list);
+          }
+        };
+        walk(sc.children.list);
+      });
+      await t.hold(90);
+    },
+  },
+  // Senna's homecoming at 5x: HOME AGAIN, Senna at her door, the wheel turning (the full screen: the banner is HUD).
+  'homecoming-5x': {
+    scenario: 'marls-arrive',
+    dpr: 5,
+    shotAt: 105,
+    async drive(farm, t) {
+      await goto(farm, 'town', 15, 6, 'right');
+      await t.hold(120);
+    },
+  },
+  // The river running through the restored town at golden hour, the Heron afloat.
+  'river-town': {
+    scenario: 'weir-opened-town',
+    shotAt: 88,
+    async drive(farm, t) {
+      await goto(farm, 'town', 16, 24, 'right');
+      await clock(farm, '18:40');
+      await clean(farm, 1.5);
+      await look(farm, 19, 26);
+      await t.hold(100);
+    },
+  },
+  // The Marls' house in scaffolding at 8x (cropped to the scaffold by store_art.py).
+  'rebuild-8x': {
+    scenario: 'tow-house-marls',
+    dpr: 8,
+    shotAt: 20,
+    async drive(farm, t) {
+      await goto(farm, 'town', 15, 2, 'down');
+      await clock(farm, '17:50');
+      await clean(farm, 1);
+      await t.hold(40);
+    },
+  },
+  // ---- the social pack (marketing/social/PLAN.md) ----
+  // The creek's first morning: water running down the dry bed from Ilse's gate.
+  creek: {
+    scenario: 'farm-creek-first-morning',
+    async drive(farm, t) {
+      await clean(farm, 0.8);
+      await look(farm, 24, 16);
+      await t.hold(150);
+    },
+  },
+  // The last timber given at the Marls' door: the house is finished (full screen, the HUD's line says so).
+  'house-give': {
+    scenario: 'tow-house-marls',
+    async drive(farm, t) {
+      await t.hold(20);
+      await farm.page.keyboard.down('KeyE');
+      await t.hold(3);
+      await farm.page.keyboard.up('KeyE');
+      await t.hold(100);
+    },
+  },
+  // Cozy sounds: the scythe down a column of ripe tomatoes and blueberries, one tile at a time, at golden hour.
+  asmr: {
+    scenario: 'store-full-field',
+    async drive(farm, t) {
+      await goto(farm, 'farm', 13, 16, 'left');
+      await clock(farm, '18:45');
+      await clean(farm, 2);
+      await t.hold(12);
+      for (let k = 0; k < 6; k++) {
+        await t.press(4);
+        await t.hold(20);
+        await farm.page.keyboard.down('ArrowDown');
+        await t.hold(7);
+        await farm.page.keyboard.up('ArrowDown');
+        await t.hold(3);
+        // face the crops again: one game frame of Left turns the farmer without a step
+        await farm.page.keyboard.down('ArrowLeft');
+        await step(farm, 1);
+        await farm.page.keyboard.up('ArrowLeft');
+        await t.hold(2);
+      }
+      await t.hold(20);
+    },
+  },
 };
 
 /** A timeline over a paused game: each frame steps 2 game frames, then the hook runs (save a PNG, take the still). */
@@ -341,14 +454,14 @@ const browser = await launch();
 const problems = [];
 try {
   if (mode === 'shots' || mode === 'video') {
-    for (const lang of mode === 'video' ? locales.slice(0, 1) : locales) {
+    for (const lang of locales) {
       for (const name of picked) {
         const m = MOMENTS[name];
         if (!m) throw new Error(`no moment "${name}" (have ${Object.keys(MOMENTS).join(', ')})`);
         const farm = await open(browser, url, m.scenario, lang, { ...PHONE, dpr: m.dpr ?? 4 });
         await pause(farm);
         const shotDir = join(OUT, 'raw', lang);
-        const vidDir = join(OUT, 'video', 'frames', name);
+        const vidDir = join(OUT, 'video', 'frames', lang === 'en' ? name : `${name}@${lang}`);
         mkdirSync(shotDir, { recursive: true });
         if (mode === 'video') {
           rmSync(vidDir, { recursive: true, force: true });

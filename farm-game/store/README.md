@@ -8,10 +8,10 @@ Everything the Play Console listing needs, except the video (Play takes a YouTub
 | Feature graphic   | `play/feature-graphic.png` (en), `play/feature-graphic.pt-BR.png`                       | 1024x500, 24-bit PNG, no alpha; Flow key art with the logo in the game's font, text inside the central area                                    |
 | Phone screenshots | `play/screenshots/en/01..07-*.png`, `play/screenshots/pt-BR/01..07-*.png`               | 1080x1920 (9:16), real gameplay framed over a Flow backdrop, big caption                                                                       |
 | Listing text      | `listing.en.md`, `listing.pt-BR.md`                                                     | app name, short and full description, what's new, category and tags                                                                            |
-| Promo video       | outside the repo: `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4` | 1080x1920, 30 fps, H.264 + AAC, 21.5 s, gameplay over the Flow backdrop                                                                        |
+| Promo video       | outside the repo: `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4` | 1080x1920, 30 fps, H.264 + AAC, 22 s, gameplay over the Flow backdrop                                                                          |
 
-Screenshot order (the story arc in `BRIEF.md`): the hero before/after, Rosa's letter, the river coming home, Senna at
-dusk, cozy life at golden hour, one hand, the town rising.
+Screenshot order (the story arc in `BRIEF.md`): the hero before/after, Rosa's letter, Senna's homecoming, the river
+through town, a golden field, the town rising, one hand.
 
 ## Rebuild
 

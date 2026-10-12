@@ -33,20 +33,23 @@ CREAM = (244, 234, 210)
 
 # The story set (store/BRIEF.md): the store order, the raw capture(s) each frame uses, and its caption.
 STORY = [
-    ('hero', ('hero-dry', 'hero-green'),
+    ('hero', ('hero-dry', 'hero-green'), None,
      {'en': 'Bring a fading valley back to life', 'pt-BR': 'Faça o vale florescer de novo'}),
-    ('letter', ('letter',),
+    # the logo and the letter at 5x (game px 8-192 x 25-285)
+    ('letter', ('letter-5x',), (40, 125, 960, 1425),
      {'en': "Your grandmother's farm is waiting", 'pt-BR': 'A fazenda da sua avó te espera'}),
-    ('river', ('river-clean',),
-     {'en': 'The river finds its way home', 'pt-BR': 'O rio encontra o caminho de casa'}),
-    ('people', ('people',),
+    # HOME AGAIN, Senna at her door, Mara at the store, at 5x (game px 8-192 x 74-334)
+    ('homecoming', ('homecoming-5x',), (40, 370, 960, 1670),
      {'en': 'Rebuild homes. Welcome families back', 'pt-BR': 'Reerga as casas. Receba quem volta'}),
-    ('cozy', ('cozy',),
-     {'en': 'Grow, cook, fish at your own pace', 'pt-BR': 'Plante, cozinhe e pesque sem pressa'}),
-    ('hand', ('hand',),
+    ('river', ('river-town',), None,
+     {'en': 'The river finds its way home', 'pt-BR': 'O rio encontra o caminho de casa'}),
+    ('field', ('cozy',), None,
+     {'en': 'Your fields, at your own pace', 'pt-BR': 'Sua roça, no seu ritmo'}),
+    # the Marls' house in scaffolding at 8x (game px 75-175 of the world view)
+    ('rebuild', ('rebuild-8x',), (600, 0, 1400, 1304),
+     {'en': 'Rebuild the town, house by house', 'pt-BR': 'Reerga a vila, casa por casa'}),
+    ('hand', ('hand',), None,
      {'en': 'Made for one hand', 'pt-BR': 'Feito para jogar com uma mão'}),
-    ('rebuild', ('rebuild',),
-     {'en': 'Rebuild the town, log by log', 'pt-BR': 'Reerga a vila, tronco a tronco'}),
 ]
 FLOW = os.path.join(os.path.dirname(RAW), 'flow-raw')
 FEATURE = {'en': 'The Dry Year', 'pt-BR': 'O Ano Seco'}
@@ -203,7 +206,7 @@ def fits(text, px, maxw):
 
 def story_px(locale):
     """One caption size for the whole set: the largest that sets every caption in at most two lines."""
-    return next((px for px in (12, 11, 10, 9) if all(fits(c[locale], px, W - 100) for _, _, c in STORY)), 9)
+    return next((px for px in (12, 11, 10, 9) if all(fits(c[locale], px, W - 100) for *_, c in STORY)), 9)
 
 
 def caption(img, text, px):
@@ -286,7 +289,7 @@ def phone(img, screen, at):
     img.paste(screen, (x, y))
 
 
-def story_shot(locale, name, raws, text, px):
+def story_shot(locale, name, raws, crop, text, px):
     img = backdrop()
     caption(img, text, px)
 
@@ -295,8 +298,6 @@ def story_shot(locale, name, raws, text, px):
 
     if name == 'hero':
         framed(img, split(load(raws[0]), load(raws[1])), PANEL_AT)
-    elif name == 'letter':
-        framed(img, load('letter').crop((0, 120, 800, 120 + PANEL[1])), PANEL_AT)
     elif name == 'hand':
         scr = load('hand')
         assert scr.size == (600, 1200), scr.size
@@ -305,7 +306,10 @@ def story_shot(locale, name, raws, text, px):
         # the Action button's centre is about (165, 344) game px: 3x, from the screen's corner
         thumb(img, (at[0] + 165 * 3 + 6, at[1] + 344 * 3 + 30))
     else:
-        framed(img, load(raws[0]), PANEL_AT)
+        panel = load(raws[0])
+        if crop:
+            panel = panel.crop(crop)
+        framed(img, panel, ((W - panel.width) // 2, PANEL_AT[1]))
     return img
 
 
@@ -317,9 +321,9 @@ def shots():
         for f in os.listdir(out):
             os.remove(os.path.join(out, f))
         px = story_px(locale)
-        for i, (name, raws, caps) in enumerate(STORY, 1):
+        for i, (name, raws, crop, caps) in enumerate(STORY, 1):
             p = os.path.join(out, f'{i:02d}-{name}.png')
-            story_shot(locale, name, raws, caps[locale], px).save(p, optimize=True)
+            story_shot(locale, name, raws, crop, caps[locale], px).save(p, optimize=True)
             paths.append(p)
     return paths
 
@@ -370,7 +374,7 @@ def sheet():
     tw, th = 216, 384
     img = Image.new('RGB', (cols * (tw + 8) + 8, 2 * (th + 8) + 8 + 280), INK)
     for r, locale in enumerate(('en', 'pt-BR')):
-        for c, (name, _, _) in enumerate(STORY):
+        for c, (name, *_) in enumerate(STORY):
             s = Image.open(os.path.join(OUT, 'screenshots', locale, f'{c + 1:02d}-{name}.png'))
             img.paste(s.resize((tw, th), Image.LANCZOS), (8 + c * (tw + 8), 8 + r * (th + 8)))
     y = 2 * (th + 8) + 8

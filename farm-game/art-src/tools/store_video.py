@@ -34,9 +34,9 @@ BEATS = [
     ('green-clean', 0, 104, 'Bring a fading valley back to life', [('green', 0.25)], None),
     ('letter', 0, 89, "Your grandmother's farm is waiting", [], TITLE_CROP),
     ('river-clean', 0, 104, 'The river finds its way home', [('green', 0.2)], None),
-    ('people', 10, 109, 'Rebuild homes. Welcome families back', [('homecoming', 0.3)], None),
-    ('cozy', 10, 95, 'Grow, cook, fish at your own pace', [('swing', 0.33), ('harvest', 0.5)], None),
-    ('fishing', 60, 183, 'Grow, cook, fish at your own pace', [('ui', 0.1), ('harvest', 2.05)], SHEET_CROP),
+    ('senna', 0, 109, 'Rebuild homes. Welcome families back', [('homecoming', 0.0)], (0, 0, 800, 1304)),
+    ('cozy', 10, 95, 'Your fields, at your own pace', [('swing', 0.33), ('harvest', 0.5)], None),
+    ('fishing', 60, 183, 'Your fields, at your own pace', [('ui', 0.1), ('harvest', 2.05)], SHEET_CROP),
 ]
 # SOCIAL=1: the social-media trailer, which opens on an AI-generated (Google Flow, Veo 3.1) shot animated from a real
 # capture of the dry farm (frames in video/frames/veo-intro, 800x1600). Never used in the Play Store video.
