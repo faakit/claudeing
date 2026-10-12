@@ -16,7 +16,7 @@ export type PanelType =
   | 'cart';
 
 export interface GameEvents {
-  toast: { text: string; kind?: 'info' | 'warn' | 'good' };
+  toast: { text: string; kind?: ToastKind };
   inventoryChanged: undefined;
   moneyChanged: { delta: number };
   energyChanged: undefined;
@@ -85,5 +85,11 @@ export class TypedEmitter {
 
 export const gameEvents = new TypedEmitter();
 
-export const toast = (text: string, kind: 'info' | 'warn' | 'good' = 'info'): void =>
+/**
+ * A toast's kind: `info` and `good` go by themselves after their reading time; `warn` (a refusal, which often says
+ * what to do) and `tip` (a first-time tip, which teaches) stay until the screen is touched (ui/readTime.ts).
+ */
+export type ToastKind = 'info' | 'warn' | 'good' | 'tip';
+
+export const toast = (text: string, kind: ToastKind = 'info'): void =>
   gameEvents.emit('toast', { text, kind });

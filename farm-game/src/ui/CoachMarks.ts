@@ -19,7 +19,8 @@ import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
-import { gameEvents } from '../systems/events';
+import { gameEvents, type ToastKind } from '../systems/events';
+import { readMs } from './readTime';
 import { faceDirection } from '../systems/movement';
 import { toggleLeftHanded } from '../systems/settings';
 import {
@@ -94,22 +95,21 @@ export interface CoachHost {
 }
 
 /** HUD element boxes (logical px), matching Hud.ts. */
-const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number; label: Key }> =
-  {
-    clock: { x: 3, y: 2, w: 104, h: 32, label: 'coach.tagClock' },
-    gold: { x: 110, y: 2, w: 87, h: 17, label: 'coach.tagGold' },
-    energy: { x: 4, y: 34, w: 95, h: 13, label: 'coach.tagEnergy' },
-    water: { x: 101, y: 34, w: 95, h: 13, label: 'coach.tagWater' },
-    goal: { x: 3, y: 48, w: 194, h: 25, label: 'coach.tagGoal' },
-    // the eight floating slots, their lips and the selected one's rise
-    hotbar: {
-      x: HOTBAR_X - 1,
-      y: HOTBAR_Y - 3,
-      w: 7 * SLOT_PITCH + SLOT + 2,
-      h: SLOT + PLATE_LIP + 4,
-      label: 'coach.tagHotbar',
-    },
-  };
+const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number; label: Key }> = {
+  clock: { x: 3, y: 2, w: 104, h: 32, label: 'coach.tagClock' },
+  gold: { x: 110, y: 2, w: 87, h: 17, label: 'coach.tagGold' },
+  energy: { x: 4, y: 34, w: 95, h: 13, label: 'coach.tagEnergy' },
+  water: { x: 101, y: 34, w: 95, h: 13, label: 'coach.tagWater' },
+  goal: { x: 3, y: 48, w: 194, h: 25, label: 'coach.tagGoal' },
+  // the eight floating slots, their lips and the selected one's rise
+  hotbar: {
+    x: HOTBAR_X - 1,
+    y: HOTBAR_Y - 3,
+    w: 7 * SLOT_PITCH + SLOT + 2,
+    h: SLOT + PLATE_LIP + 4,
+    label: 'coach.tagHotbar',
+  },
+};
 
 const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] } as const;
 
@@ -267,11 +267,13 @@ export class CoachMarks {
   }
 
   /** The Hud's toast hook: while a step shows, a refusal appears in the coach line, not as a second message. */
-  intercept(text: string, kind: 'info' | 'warn' | 'good'): boolean {
+  intercept(text: string, kind: ToastKind): boolean {
     if (kind !== 'warn' || !this.active) return false;
+    const said = rewriteRefusal(text, this.view?.step.id);
+    // up for its reading time (it was 2.4 s whatever its length)
     this.flash = {
-      text: rewriteRefusal(text, this.view?.step.id),
-      until: this.scene.time.now + 2400,
+      text: said,
+      until: this.scene.time.now + readMs(said, getState().settings.reduceMotion),
     };
     this.refusals++;
     this.refusedRun++;

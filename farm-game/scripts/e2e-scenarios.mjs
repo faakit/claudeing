@@ -1957,6 +1957,151 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- villagers never pop in or out (owner bug)
+
+/**
+ * Run the world `frames` frames (paused loop, stepped one at a time) and report every villager who appeared,
+ * vanished or jumped inside the camera's view anywhere but on a door tile.
+ */
+const npcWatch = (farm, frames) =>
+  farm.eval((n) => {
+    const f = window.__farm;
+    const d = f.dev;
+    const w = f.game.scene.getScenes(true).find((sc) => sc.grid);
+    const doors = w.objects.filter((o) => o.type === 'door').map((o) => [o.tx, o.ty]);
+    const onDoor = (x, y) =>
+      doors.some(([tx, ty]) => Math.floor(x / 16) === tx && Math.floor((y - 2) / 16) === ty);
+    const seen = (x, y) => {
+      const v = w.cameras.main.worldView;
+      return x + 8 > v.x && x - 8 < v.right && y > v.y && y - 32 < v.bottom;
+    };
+    d.loop.pause();
+    const bad = [];
+    let prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
+    let walked = 0;
+    for (let i = 0; i < n; i++) {
+      d.loop.step(1);
+      for (const e of w.npcs.debug()) {
+        const p = prev.get(e.id);
+        if (e.walking) walked++;
+        if (!p) continue;
+        if (p.visible !== e.visible) {
+          const [x, y] = e.visible ? [e.x, e.y] : [p.x, p.y];
+          if (seen(x, y) && !onDoor(x, y))
+            bad.push(
+              `${e.id} ${e.visible ? 'appeared' : 'vanished'} at ${x | 0},${y | 0} (frame ${i})`,
+            );
+        } else if (
+          e.visible &&
+          Math.hypot(e.x - p.x, e.y - p.y) > 4 &&
+          (seen(e.x, e.y) || seen(p.x, p.y))
+        )
+          bad.push(`${e.id} jumped ${p.x | 0},${p.y | 0} -> ${e.x | 0},${e.y | 0} (frame ${i})`);
+      }
+      prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
+    }
+    d.loop.resume();
+    return { bad, walked, end: w.npcs.debug(), minutes: f.getState().time.minutes };
+  }, frames);
+
+async function npcPops() {
+  for (const [scenario, frames, who] of [
+    ['npc-schedule-change', 1500, 'rosa'],
+    ['npc-arrive-town', 1500, 'mara'],
+  ]) {
+    const farm = await openScenario(browser, url, scenario, { profile: 'se' });
+    await farm.idle();
+    const r = await npcWatch(farm, frames);
+    check(
+      `${scenario} (SE): no villager appears, vanishes or jumps on screen (only through a door)`,
+      r.bad.length === 0 && r.walked > 0,
+      JSON.stringify({ bad: r.bad.slice(0, 5), walked: r.walked, minutes: r.minutes }),
+    );
+    const end = r.end.find((e) => e.id === who);
+    check(
+      `${scenario} (SE): ${who} walked it out (${scenario === 'npc-arrive-town' ? 'standing at her spot' : 'gone through the gate'})`,
+      scenario === 'npc-arrive-town' ? end?.visible && !end.walking : !end?.visible,
+      JSON.stringify(r.end),
+    );
+    check(`${scenario}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
+// ---------------------------------------------------------------- toasts last their reading time (owner bug)
+
+async function toastTiming() {
+  const farm = await openScenario(browser, url, 'ripe-plot', {
+    profile: 'se',
+    query: '&lang=pt-BR',
+  });
+  await farm.idle();
+  const r = await farm.eval(() => {
+    const f = window.__farm;
+    const d = f.dev;
+    const hud = f.game.scene.getScene('UI').hud;
+    const now = () => f.game.scene.getScene('UI').time.now;
+    d.loop.pause();
+    const said = (text, kind = 'info') => f.gameEvents.emit('toast', { text, kind });
+    const A = 'Coisas novas vão para o Menu > Livro. Complete uma página e ganhe ouro.';
+    said(A);
+    said('Comprou 1 Sementes de pastinaca', 'good');
+    said('Ganhou 30 de xp em Agricultura.', 'good');
+    said('Nada para colher aqui.', 'info');
+    d.loop.step(2);
+    const out = {
+      shown: hud.toasts.map((t) => t.text),
+      queued: hud.queue.map((q) => q.text),
+      lifeA: hud.toasts[0]?.life,
+      expectA: 1500 + 60 * [...A].length,
+    };
+    // A third never pushed the first out: it is still there just before its reading time ends
+    const t0 = now();
+    for (let i = 0; i < 1000 && now() - t0 < out.lifeA - 300; i++) d.loop.step(10);
+    out.stepped = now() - t0;
+    out.aBeforeEnd = hud.toasts.some((t) => t.text === A);
+    d.loop.step(60);
+    out.aAfterEnd = hud.toasts.some((t) => t.text === A);
+    out.queuedShown = hud.toasts.some((t) => t.text === 'Nada para colher aqui.');
+    // stacked plates never overlap
+    const plates = hud.toasts.map((t) => t.bg.getBounds());
+    out.overlap = plates.some((p, i) =>
+      plates.some((q, j) => j > i && p.bottom > q.top && q.bottom > p.top),
+    );
+    // a refusal stays past its reading time until the screen is touched
+    for (const t of [...hud.toasts]) t.life = 0;
+    d.loop.step(60);
+    said('Aterre a vala primeiro.', 'warn');
+    d.loop.step(2);
+    const w = hud.toasts.find((t) => t.text === 'Aterre a vala primeiro.');
+    const t1 = now();
+    for (let i = 0; i < 1000 && now() - t1 < w.life + 3000; i++) d.loop.step(10);
+    out.warnStays = hud.toasts.includes(w);
+    hud.touchedAt = now();
+    d.loop.step(60);
+    out.warnGoesOnTouch = !hud.toasts.includes(w);
+    d.loop.resume();
+    return out;
+  });
+  check(
+    'toasts (SE, pt-BR): a fourth toast waits in the queue instead of pushing one out',
+    r.shown.length === 3 && r.queued.length === 1,
+    JSON.stringify(r),
+  );
+  check(
+    'toasts (SE, pt-BR): a toast stays its reading time (1.5 s + 60 ms a character), then goes',
+    r.lifeA === r.expectA && r.aBeforeEnd && !r.aAfterEnd && r.queuedShown,
+    JSON.stringify(r),
+  );
+  check('toasts (SE, pt-BR): stacked toast plates never overlap', !r.overlap, JSON.stringify(r));
+  check(
+    'toasts (SE, pt-BR): a refusal waits for a touch past its reading time',
+    r.warnStays && r.warnGoesOnTouch,
+    JSON.stringify(r),
+  );
+  await farm.close();
+}
+
 // ---------------------------------------------------------------- sheets close only from Close (owner bug)
 
 /** Sheets to tap over: [name, scenario, opener in the page]. */
@@ -3049,6 +3194,8 @@ try {
         fishCast,
         textGuard,
         sheetTaps,
+        toastTiming,
+        npcPops,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

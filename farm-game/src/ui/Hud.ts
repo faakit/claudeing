@@ -7,7 +7,8 @@ import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
 import { waterCapacity } from '../systems/actions';
 import { maxEnergy } from '../systems/energy';
-import { gameEvents } from '../systems/events';
+import { gameEvents, type ToastKind } from '../systems/events';
+import { readMs, STICKY_TOASTS } from './readTime';
 import { goalProgress } from '../systems/goals';
 import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
@@ -39,14 +40,26 @@ interface Toast {
   lit?: Phaser.GameObjects.Rectangle;
   text: string;
   born: number;
+  /** On screen this long (its reading time, `readMs`), then a 600 ms fade; a sticky one waits for a touch. */
+  life: number;
+  /** Its reading time (a sticky toast's life grows past it until a touch after it). */
+  read: number;
+  sticky: boolean;
 }
 
 /**
  * Always-on overlay. Top: clock, gold, weather, energy/water, goal (read-only, out of thumb reach
  * on purpose). Bottom: the floating hotbar, over the world. Reads state only.
  */
-/** Toasts on screen at once: a third pushes the oldest out (a tap's results never pile over the world). */
-export const MAX_TOASTS = 2;
+/**
+ * Toasts on screen at once (a tap's results never pile over the world). A fourth waits in a queue and shows when
+ * one has gone: a new toast never cuts one off mid-read (owner: "a few dialogs are too quick to read").
+ */
+export const MAX_TOASTS = 3;
+/** Px between stacked toast plates (a plate is its text's height + 5). */
+const TOAST_GAP = 2;
+/** A toast fades out over this long at the end of its life. */
+const TOAST_FADE_MS = 600;
 /** The goal toast that the GOAL COMPLETE banner replaces (its text up to the gold, in the current language). */
 const isGoalToast = (text: string): boolean =>
   text.startsWith(t('goals.completeToast', { gold: '' }));
@@ -229,6 +242,9 @@ export class Hud {
       .setDepth(depth + 5)
       .setAlpha(0);
 
+    // a touch (or a key, on a desktop) lets a sticky toast go once it has had its reading time
+    scene.input.on('pointerdown', () => (this.touchedAt = scene.time.now));
+    scene.input.keyboard?.on('keydown', () => (this.touchedAt = scene.time.now));
     this.cleanup.push(
       gameEvents.on('toast', (t) => this.toast(t.text, t.kind)),
       gameEvents.on('inventoryChanged', () => (this.hotbarDirty = true)),
@@ -352,8 +368,10 @@ export class Hud {
     // a homecoming has its own jingle (audio lane), the valley's `green` otherwise
     audio.play(cue && (SFX_IDS as readonly string[]).includes(cue) ? (cue as Sfx) : 'green');
     haptic('success');
-    showBanner(3400);
     const calm = this.getState().settings.reduceMotion;
+    // held for its reading time (never shorter than the 2.9 s it had), then a 500 ms fade
+    const hold = Math.max(2900, readMs(`${title ?? ''} ${line ?? ''}`, calm));
+    showBanner(hold + 500);
     this.momentTitle.setText(title ?? '');
     this.moment.setText(line ?? '');
     const w = Math.min(
@@ -383,7 +401,7 @@ export class Hud {
       o.setAlpha(0).setY(y + rise);
       const round = () => o.setY(Math.round(o.y));
       this.scene.tweens.add({ targets: o, alpha: 1, y, duration: 400, onUpdate: round });
-      this.scene.tweens.add({ targets: o, alpha: 0, duration: 500, delay: 2900 });
+      this.scene.tweens.add({ targets: o, alpha: 0, duration: 500, delay: hold });
     }
   }
 
@@ -395,9 +413,10 @@ export class Hud {
   ): void {
     audio.play(cue);
     haptic(pulse);
-    showBanner(2100); // world pickup lines keep clear of it (fx/hudBand.ts)
-    // Rises in and out in whole pixels; Calm mode only fades it.
+    // Rises in and out in whole pixels; Calm mode only fades it. Held for its reading time (it was 1.9 s).
     const calm = this.getState().settings.reduceMotion;
+    const hold = readMs(text, calm);
+    showBanner(hold + 400); // world pickup lines keep clear of it (fx/hudBand.ts)
     this.banner
       .setText(text)
       .setAlpha(0)
@@ -434,7 +453,7 @@ export class Hud {
       alpha: 0,
       y: HUD_H + (calm ? 14 : 8),
       duration: 400,
-      delay: 1700,
+      delay: hold,
       onUpdate: round,
     });
   }
@@ -532,7 +551,7 @@ export class Hud {
 
   /**
    * The selected item's name on a solid plate at the bottom of the toast lane (toasts stack above it while it shows).
-   * It goes in one step after 1.5 s: a fading plate over the world would be see-through.
+   * It goes in one step after its reading time (readMs): a fading plate over the world would be see-through.
    */
   private showName(name: string): void {
     this.nameTimer?.remove();
@@ -544,10 +563,13 @@ export class Hud {
       .setSize(l.textWidth + 10, l.textHeight + 5)
       .setAlpha(name ? 1 : 0);
     if (!name) return;
-    this.nameTimer = this.scene.time.delayedCall(1500, () => {
-      this.nameLabel.setAlpha(0);
-      this.nameBg.setAlpha(0);
-    });
+    this.nameTimer = this.scene.time.delayedCall(
+      readMs(name, this.getState().settings.reduceMotion),
+      () => {
+        this.nameLabel.setAlpha(0);
+        this.nameBg.setAlpha(0);
+      },
+    );
   }
 
   /** Bottom of the toast lane: just above the floating controls, and above the item name while it shows. */
@@ -560,19 +582,33 @@ export class Hud {
    * A hook that may take a message instead of a toast (returns true when it did): while the guided start shows a
    * coach line, refusals appear there, so there is only ever one instruction on screen.
    */
-  intercept: ((text: string, kind: 'info' | 'warn' | 'good') => boolean) | null = null;
+  intercept: ((text: string, kind: ToastKind) => boolean) | null = null;
 
   // ---- toasts ----
-  toast(text: string, kind: 'info' | 'warn' | 'good' = 'info'): void {
+  /** Toasts waiting for room in the lane. */
+  private queue: { text: string; kind: ToastKind }[] = [];
+  /** When the player last touched the screen (sticky toasts go on a touch). */
+  private touchedAt = -Infinity;
+
+  toast(text: string, kind: ToastKind = 'info'): void {
     if (this.intercept?.(text, kind)) return;
     // the goal banner already says it (critic, valley review 4: one tap stacked the banner and two toasts)
     if (isGoalToast(text)) return;
     const now = this.scene.time.now;
-    const dup = this.toasts.find((t) => t.text === text && now - t.born < 1400);
+    const dup = this.toasts.find((t) => t.text === text);
     if (dup) {
-      dup.born = now; // keep it alive instead of stacking spam
+      dup.born = Math.max(dup.born, now - 140); // keep it alive instead of stacking spam (no new fade-in)
       return;
     }
+    if (this.queue.some((q) => q.text === text)) return;
+    if (this.toasts.length >= MAX_TOASTS) {
+      this.queue.push({ text, kind });
+      return;
+    }
+    this.showToast(text, kind, now);
+  }
+
+  private showToast(text: string, kind: ToastKind, now: number): void {
     // walnut (critic R0-3): parchment text with its ink shadow on a walnut plate; gold only to stress a warning
     const color =
       SKIN === 'plum'
@@ -614,40 +650,52 @@ export class Hud {
         )
         .setDepth(79.5);
     }
-    this.toasts.push({ label, bg, lit, text, born: now });
-    if (this.toasts.length > MAX_TOASTS) {
-      const old = this.toasts.shift();
-      old?.label.destroy();
-      old?.bg.destroy();
-      old?.lit?.destroy();
-    }
+    const calm = this.getState().settings.reduceMotion;
+    this.toasts.push({
+      label,
+      bg,
+      lit,
+      text,
+      born: now,
+      life: readMs(text, calm),
+      read: readMs(text, calm),
+      sticky: STICKY_TOASTS.includes(kind),
+    });
   }
 
   private updateToasts(time: number, dt: number): void {
     this.toasts = this.toasts.filter((t) => {
       const age = time - t.born;
-      if (age > 2800) {
+      // a sticky toast (a refusal, a tip) stays past its reading time until the screen is touched after it
+      if (t.sticky && age >= t.life && !(this.touchedAt > t.born + t.read)) t.life = age;
+      if (age > t.life + TOAST_FADE_MS) {
         t.label.destroy();
         t.bg.destroy();
         t.lit?.destroy();
         return false;
       }
-      // Eases in over 140 ms (fade, and a 4 px rise below), out over 600 ms.
-      const a = age > 2200 ? 1 - (age - 2200) / 600 : Math.min(1, age / 140);
+      // Eases in over 140 ms (fade, and a 4 px rise below), out over 600 ms after its reading time.
+      const a = age > t.life ? 1 - (age - t.life) / TOAST_FADE_MS : Math.min(1, age / 140);
       t.label.setAlpha(a);
       t.bg.setAlpha((SKIN === 'plum' ? 0.72 : 1) * a); // walnut: an opaque plate, never a grey veil
       t.lit?.setAlpha(a);
       return true;
     });
+    while (this.queue.length && this.toasts.length < MAX_TOASTS) {
+      const q = this.queue.shift()!;
+      this.showToast(q.text, q.kind, time);
+    }
     // Newest sits on the bottom; older ones stack upward by their real (wrapped) height. While a sheet is open
     // the toasts move to the top of the screen, above the dim, so a sheet's own results ("Kept 4 Potato for the
     // board.", "Order done!") are seen when they happen (critique 10, F1).
     const sheet = runtime.modals > 0;
     let y = sheet ? 4 : this.laneBottom();
-    if (sheet) for (const t of this.toasts) y += t.label.textHeight + 2;
+    // each step is a whole plate and a gap (a step of the text's height let plates overprint: critic P1-2)
+    const step = (t: Toast): number => Math.ceil(t.label.textHeight) + 5 + TOAST_GAP;
+    if (sheet) for (const t of this.toasts) y += step(t);
     for (let i = this.toasts.length - 1; i >= 0; i--) {
       const t = this.toasts[i]!;
-      y -= t.label.textHeight + 2;
+      y -= step(t);
       t.label.setDepth(sheet ? 232 : 80);
       t.bg.setDepth(sheet ? 231 : 79);
       t.lit?.setDepth(sheet ? 231.5 : 79.5);

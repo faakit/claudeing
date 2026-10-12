@@ -137,7 +137,7 @@ export function checkTips(state: GameState): void {
     const key = `tip.${tip.id}`;
     if (state.stats[key] || stat(state, tip.stat) < tip.min) continue;
     state.stats[key] = 1;
-    toast(tip.text, 'info');
+    toast(tip.text, 'tip');
     return; // one at a time; the next waits for the next check
   }
 }
