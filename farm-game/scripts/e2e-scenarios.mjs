@@ -636,8 +636,17 @@ async function valley() {
   );
   check(
     'valley-farm-green-reveal: the next morning the farm is done with straw (Wendhead and the town keep it, until the spring and the weir)',
+    // the dry tileset stays resident for Wendhead and the town, so its count alone could not fail: the farm itself
+    // must be built on the normal tileset
     (await dryResident(farm)).length === 1 &&
-      (await farm.eval(() => !window.__farm.getState().stats['valley.greenSeen'] === false)),
+      (await farm.state()).player.map === 'farm' &&
+      !String(await groundKey(farm)).endsWith('_dry') &&
+      (await farm.eval(() => window.__farm.getState().stats['valley.greenSeen'] === 1)),
+    JSON.stringify({
+      map: (await farm.state()).player.map,
+      ground: await groundKey(farm),
+      dry: await dryResident(farm),
+    }),
   );
   // Rosa's letter: take the gift, both key items arrive
   await farm.mutate((st) => {
@@ -1496,7 +1505,7 @@ async function worldText() {
       if (process.env.SHOTS) await farm.shot(`world-text-${name}-${profile}`, process.env.SHOTS);
       check(
         `${name} (${profile}): no world label sits under a control plate`,
-        r.under.length === 0,
+        r.seen > 0 && r.under.length === 0, // at least one label on screen was checked
         JSON.stringify(r),
       );
       if (name === 'ui-float-controls' && profile === 'i13') {
@@ -1872,7 +1881,13 @@ async function lang() {
   const said = (await textsOf(farm, 'UI')).join(' | ');
   check(
     'lang-pt-dialogue (SE): Mara talks in Portuguese, inside the sheet',
-    over.length === 0 && /Presente|Loja|Fechar/.test(said) && !/\bGift\b|\bShop\b/.test(said),
+    // her own text in Portuguese (her blurb from the data overlay, a Portuguese step button): the sheet's own
+    // "Fechar", which alone passed this check, says nothing about Mara
+    over.length === 0 &&
+      said.includes('Cuida do Armazém.') &&
+      !said.includes('Runs the General Store.') &&
+      /Próximo|Presente|Loja/.test(said) &&
+      !/\bGift\b|\bShop\b|\bNext\b/.test(said),
     `${over.join(' | ')} :: ${said}`,
   );
   await farm.close();
