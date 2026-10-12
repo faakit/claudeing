@@ -201,7 +201,16 @@ for its review).
 
 **Open:**
 
-- M7 review: VERIFY_PLACEHOLDER
+- **Verified (M7):** the full `npm run verify` passed alone (every phase, perf 1x/4x/6x within budget; onboarding
+  e2e OK). The towing probe (`agents/probes/tow-spike.mjs`, i13 and SE, both hands, wait/chain/water/action, 1.5 mm
+  scatter) met the critic's bar on `tow-first-log` and `tow-east-lane` in 32/32 runs at 1x and 32/32 at 4x (at most
+  3 inputs on first-log, 2 on the east lane; draws at most 5; 0 silent taps, stalls or hard taps). At 4x,
+  `tow-long-log` (whose bar is landing and two tugs) logged frames over 33 ms in a pass run while other lanes' verifies
+  loaded the PC (see Open). In the browser: the slip by the timber stack, the caught log over the spur with its tilt,
+  the house stages and Senna, the lit windows, the wheel turning (frame 0 in Calm), and each audio hook once (the four
+  tow cues, the splash 173 ms after the freeing tug, `homecoming`, `window-lit` via `houseLit`, Senna's motif once a
+  day, the mill bed only in the `marls` stage). No real phone.
+- M7 review: the valley critic's review of valley/m7 (see its reports in `valley-critique/`).
 - The tow scenarios start on the west bank coming from the north (16,20): the river is the town's east edge, so a log
   tapped from beside or below it is in the left thumb's hard zone. In play a left-handed player tows by Action from
   below (comfort). A real-phone pass decides whether that is enough (checklist row in OPEN-FINDINGS).
