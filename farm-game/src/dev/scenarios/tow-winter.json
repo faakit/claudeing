@@ -1,0 +1,58 @@
+{
+  "title": "Winter on the river: ice rims the banks, one log a day, drifting at half speed",
+  "about": "Winter 6, 11:00, with the hook: the river runs all year. One log came this morning (one a day in winter), a short one in the middle lane, drifting at half speed onto the first spur (19,26). Ice rims the banks (the season's art). Towing works as in summer.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "drift.0": 3,
+    "drift.lastLane": 2
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 20,
+    "facing": "down"
+  },
+  "time": {
+    "season": "winter",
+    "day": 6,
+    "clock": "11:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1
+    }
+  ]
+}

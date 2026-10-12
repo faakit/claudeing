@@ -1,0 +1,48 @@
+{
+  "title": "A save from before M7 keeps everything, and its river starts carrying timber",
+  "about": "A raw v18 save from the M6 deploy, fall 10, the weir restored by play (valley.weirOn 1, place.weir 3) and no M7 stats: nothing is lost or given. No drift waits yet (the first logs come the next morning), no timber, the Marls' house boarded at 0 of 6, Senna not in the valley. Orin's sheet offers the timber hook (250g) and his letter about drift timber comes the next morning.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "saves", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1
+  },
+  "money": 1200,
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 10,
+    "ty": 18,
+    "facing": "left"
+  },
+  "time": {
+    "season": "fall",
+    "day": 10,
+    "clock": "10:00"
+  },
+  "goal": "tree"
+}

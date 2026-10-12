@@ -1255,6 +1255,42 @@
           }
         }
       ]
+    },
+    {
+      "id": "towing",
+      "track": "intro",
+      "valley": true,
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "stat": "place.weir",
+            "min": 3
+          },
+          {
+            "has": "timber_hook"
+          },
+          {
+            "map": "town"
+          },
+          {
+            "stat": "towed",
+            "max": 0
+          }
+        ]
+      },
+      "text": "Tap a log, tow it to the slip.",
+      "target": {
+        "object": "slip",
+        "map": "town"
+      },
+      "done": [
+        {
+          "stat": "towed",
+          "min": 1
+        }
+      ]
     }
   ],
   "refusals": {

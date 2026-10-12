@@ -1,0 +1,58 @@
+{
+  "title": "The east lane: a log out of reach until the second spur turns it west, then it rests by the mill wheel",
+  "about": "Summer 24, 10:00, coming down to the river from the north, with the hook: one short log enters the east lane (21,22), out of reach of every bank. The second rock spur (21,27) turns it west and it comes to rest by the mill wheel (20,30). Tap it any time: the farmer walks to the slip's stand (18,32) and waits for it, hooks it as it comes into reach and hauls it in. The acceptance: under 30 s from the first input (scripts/lib/tow.mjs).",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "drift.0": 5,
+    "drift.lastLane": 3
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 20,
+    "facing": "down"
+  },
+  "time": {
+    "season": "summer",
+    "day": 24,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1
+    }
+  ]
+}

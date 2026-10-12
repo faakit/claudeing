@@ -1,0 +1,64 @@
+{
+  "title": "The Marls' lit window: the first evening Senna is home",
+  "about": "Fall 1, 18:40, by the Marls' house: Senna has been home since the morning (the homecoming seen). At dusk the house's windows light (the town's `marls` stage carries their lights) and the mill wheel turns; the first time this is seen, audio plays the window-lit sting (event houseLit, once a house).",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "house.marls": 6,
+    "house.marls.done": 56,
+    "arrived.marls": 57,
+    "arrived.marls.seen": 1,
+    "towed": 5,
+    "timberLanded": 7,
+    "timberGiven": 6,
+    "mail.senna_coming": 1
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 9,
+    "facing": "up"
+  },
+  "time": {
+    "season": "fall",
+    "day": 1,
+    "clock": "18:40"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1
+    }
+  ]
+}

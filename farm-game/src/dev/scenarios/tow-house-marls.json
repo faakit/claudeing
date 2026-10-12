@@ -1,0 +1,66 @@
+{
+  "title": "The Marls' house at 5 of 6 timber: one more finishes it",
+  "about": "Summer 27, 10:00, in front of the Marls' house (the north-east house, door 16,6) with 1 timber in the bag: the scaffolding stands (stage 2 of 4) over the boarded front. Interact (or Action) at the door gives the timber: the house is finished, and Senna comes home tomorrow morning. Senna's letter (the house half done) is read.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "house.marls": 5,
+    "towed": 4,
+    "timberLanded": 6,
+    "timberGiven": 5,
+    "mail.senna_coming": 1
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 7,
+    "facing": "up"
+  },
+  "time": {
+    "season": "summer",
+    "day": 27,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1
+    },
+    {
+      "item": "timber",
+      "qty": 1
+    }
+  ],
+  "select": "timber"
+}

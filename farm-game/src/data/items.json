@@ -1101,5 +1101,23 @@
     "sellPrice": 0,
     "stackLimit": 1,
     "description": "Orin's oak and iron gate for the weir's gap. It goes into the Weir's fund."
+  },
+  "timber": {
+    "name": "Timber",
+    "type": "material",
+    "icon": "item_timber",
+    "color": "#a0703c",
+    "sellPrice": 5,
+    "description": "Drift timber towed in from the river. It rebuilds the houses families come home to."
+  },
+  "timber_hook": {
+    "name": "Timber Hook",
+    "type": "key",
+    "icon": "item_timber_hook",
+    "color": "#7c8088",
+    "sellPrice": 0,
+    "stackLimit": 1,
+    "tool": "timber_hook",
+    "description": "Orin's hook on a rope. Tap a log in the river to hook it, then walk it to the slip."
   }
 }

@@ -6,6 +6,7 @@ import { addStat, checkGoals } from './goals';
 import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
 import { items } from '../data';
+import { villagerHome } from './houses';
 import { absoluteDay } from './time';
 import { openingLine, openingScene, valleyHolds } from './valley';
 import { isWet } from './weather';
@@ -25,6 +26,9 @@ export const GIFT_POINTS: Record<Reaction, number> = {
 };
 
 export const npcIds = (): string[] => Object.keys(npcs);
+/** The villagers in the valley now (a returning one counts from the morning they come home). */
+export const npcsHome = (state: Pick<GameState, 'stats'>): string[] =>
+  npcIds().filter((id) => villagerHome(state, id));
 
 const blank = (): Friendship => ({ points: 0, talkedDay: 0, giftedDay: 0 });
 export const friendOf = (state: GameState, id: string): Friendship => state.friends[id] ?? blank();
@@ -57,7 +61,7 @@ function addPoints(state: GameState, id: string, delta: number): void {
   f.points = Math.max(0, Math.min(MAX_POINTS, f.points + delta));
   const after = heartsOf(state, id);
   if (after > before) gameEvents.emit('heartUp', { id, hearts: after });
-  const best = Math.max(0, ...npcIds().map((n) => heartsOf(state, n)));
+  const best = Math.max(0, ...npcsHome(state).map((n) => heartsOf(state, n)));
   state.stats['maxHearts'] = best;
 }
 
@@ -202,7 +206,7 @@ export function nextPerk(
 /** Sum of a perk across every villager's reached heart levels. Used by `perk()` in skills.ts. */
 export function friendPerk(state: GameState, key: string): number {
   let total = 0;
-  for (const id of npcIds()) {
+  for (const id of npcsHome(state)) {
     const hearts = heartsOf(state, id);
     for (const [h, perks] of Object.entries((npcs[id] as NpcDef).perks))
       if (Number(h) <= hearts) total += perks[key] ?? 0;

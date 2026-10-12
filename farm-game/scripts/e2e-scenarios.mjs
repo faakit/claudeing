@@ -1364,8 +1364,8 @@ async function morning() {
 // 7 draws while towing, no tap in the 'hard' thumb zone, none ignored, no stall that needs another tap, and the log
 // never off the water. T1: the chained tap lands two tiles east of the slip while the hook walk scrolls the camera,
 // and the log still lands with no further input.
-const towCheck = (tag, r, extra = true, detail = '') => {
-  const bad = towBar(r);
+const towCheck = (tag, r, extra = true, detail = '', bar = {}) => {
+  const bad = towBar(r, bar);
   check(
     `${tag}: lands by itself, ${r.inputs} inputs, ${((r.ms ?? 0) / 1000).toFixed(1)} s, ${r.draws} draws`,
     bad.length === 0 && extra,
@@ -1404,6 +1404,144 @@ async function towing() {
     const farm = await openScenario(browser, url, 'tow-spike-long', { profile: PROFILE, hand });
     const r = await playTow(farm, { strategy, seed: 505 });
     towCheck(`tow-spike-long ${strategy} (${hand})`, r, r.tugs === 2, `tugs ${r.tugs}`);
+    await farm.close();
+  }
+}
+
+// M7 on the town river: the probe bar for tow-first-log (under 20 s) and tow-east-lane (under 30 s), the long log's
+// two tugs and 3 timber, winter, the Marls' house taking its last timber, the homecoming, the lit window, and a save
+// from before M7.
+async function weirTow() {
+  const timber = (s) =>
+    s.inventory.slots.reduce((n, x) => n + (x?.item === 'timber' ? x.qty : 0), 0);
+  for (const [scenario, hand, strategy, maxMs, extra] of [
+    ['tow-first-log', 'right', 'wait', 20000, (r, s) => timber(s) === 1 && r.tugs >= 1],
+    ['tow-first-log', 'left', 'action', 20000, (_r, s) => timber(s) === 1],
+    ['tow-east-lane', 'right', 'wait', 30000, (r, s) => timber(s) === 1 && r.tugs === 0],
+    ['tow-east-lane', 'left', 'chain', 30000, (_r, s) => timber(s) === 1],
+    ['tow-long-log', 'right', 'wait', 20000, (r, s) => timber(s) === 3 && r.tugs >= 2],
+    ['tow-winter', 'left', 'water', 20000, (_r, s) => timber(s) === 1],
+  ]) {
+    const farm = await openScenario(browser, url, scenario, { profile: PROFILE, hand });
+    const r = await playTow(farm, { strategy, seed: 707 });
+    await farm.frames(30);
+    const s = await farm.state();
+    const left = await farm.eval(() => window.__farm.dev.tow()?.logs.length ?? -1);
+    towCheck(
+      `${scenario} ${strategy} (${hand})`,
+      r,
+      extra(r, s) && left === 0 && !Object.keys(s.stats).some((k) => /^drift\.\d$/.test(k)),
+      `timber ${timber(s)} tugs ${r.tugs} logs left ${left}`,
+      { maxMs },
+    );
+    check(
+      `${scenario} (${hand}): no console errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+  // winter: half speed (a middle-lane log takes twice as long to reach the spur)
+  {
+    const farm = await openScenario(browser, url, 'tow-winter', { profile: PROFILE });
+    const y0 = await farm.eval(() => window.__farm.dev.tow().logs[0].y);
+    await farm.frames(60);
+    const y1 = await farm.eval(() => window.__farm.dev.tow().logs[0].y);
+    check(
+      'tow-winter: a log drifts at half speed (5 px/s)',
+      y1 - y0 >= 3 && y1 - y0 <= 7,
+      `${y1 - y0} px in 60 frames`,
+    );
+    await farm.close();
+  }
+  // the Marls' house: Interact at the door gives the last timber, the scaffolding shows built
+  {
+    const farm = await openScenario(browser, url, 'tow-house-marls', { profile: PROFILE });
+    const before = await farm.eval(() =>
+      window.__farm.game.scene
+        .getScene('Town')
+        .things.landmarkSprite('house.marls')
+        ?.getData('sprite'),
+    );
+    await farm.interact();
+    await farm.frames(3);
+    const s = await farm.state();
+    const after = await farm.eval(() =>
+      window.__farm.game.scene
+        .getScene('Town')
+        .things.landmarkSprite('house.marls')
+        ?.getData('sprite'),
+    );
+    check(
+      'tow-house-marls: Interact at the door gives the last timber; the house shows built',
+      s.stats['house.marls'] === 6 &&
+        timber(s) === 0 &&
+        before === 'obj_house_marls_2' &&
+        after === 'obj_house_marls_3',
+      JSON.stringify({ house: s.stats['house.marls'], before, after }),
+    );
+    await farm.eval(() => window.__farm.dev.time.skipDays(1, { wake: false }));
+    const t = await farm.state();
+    check(
+      'tow-house-marls: Senna comes home the next morning',
+      t.stats['arrived.marls'] > 0,
+      JSON.stringify(t.stats['arrived.marls']),
+    );
+    await farm.close();
+  }
+  // the homecoming: HOME AGAIN with the homecoming cue, the house open, Senna at her door, the wheel turning
+  {
+    const farm = await openScenario(browser, url, 'marls-arrive', { profile: PROFILE });
+    const moment = await farm.event('valleyMoment', () =>
+      farm.eval(() => window.__farm.dev.goto('town', 12, 2, 'down')),
+    );
+    await farm.idle();
+    const look = await farm.eval(() => {
+      const sc = window.__farm.game.scene.getScene('Town');
+      return {
+        senna: sc.npcs.at(17, 7),
+        wheel: sc.wheel?.texture.key ?? null,
+        house: sc.things.landmarkSprite('house.marls') ? 'scaffold' : null,
+      };
+    });
+    check(
+      'marls-arrive: HOME AGAIN (the homecoming cue), Senna at her door, the wheel turning, no scaffolding',
+      moment?.text?.startsWith('HOME AGAIN') &&
+        moment?.cue === 'homecoming' &&
+        look.senna === 'senna' &&
+        /^obj_millwheel_/.test(look.wheel ?? '') &&
+        look.house === null,
+      JSON.stringify({ moment, look }),
+    );
+    check('marls-arrive: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+  {
+    const farm = await openScenario(browser, url, 'marls-home', { profile: PROFILE });
+    const lit = await farm.event('houseLit', () =>
+      farm.eval(() => window.__farm.dev.time.set({ clock: '20:30' })),
+    );
+    check(
+      'marls-home: the first evening the window is lit, once (houseLit)',
+      lit?.house === 'marls',
+      JSON.stringify(lit),
+    );
+    await farm.close();
+  }
+  // a save from before M7: nothing lost or given, Orin sells the hook, nothing on the river yet, the house boarded
+  {
+    const farm = await openScenario(browser, url, 'old-save-m7', { profile: PROFILE });
+    const s = await farm.state();
+    const t = await farm.eval(() => window.__farm.dev.tow());
+    check(
+      'old-save-m7: the money and stats kept, no timber, no drift yet, Senna away, the house boarded',
+      s.money === 1200 &&
+        timber(s) === 0 &&
+        t?.logs.length === 0 &&
+        !s.stats['arrived.marls'] &&
+        !(await farm.eval(() => window.__farm.game.scene.getScene('Town').npcs.at(17, 7))),
+      JSON.stringify({ money: s.money, logs: t?.logs.length }),
+    );
     await farm.close();
   }
 }
@@ -2084,6 +2222,7 @@ try {
         morning,
         towing,
         towingLane,
+        weirTow,
         lang,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)

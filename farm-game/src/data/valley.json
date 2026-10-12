@@ -116,8 +116,8 @@
           "text": "Finn sets Orin's gate in its frame. One beam short."
         },
         {
-          "taste": "beam",
-          "text": "Orin opens the gate. The water lifts the last beam in."
+          "taste": "tow",
+          "text": "Orin opens the gate. A log rides down; you hook it into the gap."
         }
       ],
       "sprites": [
@@ -236,10 +236,20 @@
           }
         },
         {
-          "variant": "river"
+          "variant": "river",
+          "when": {
+            "stat": "arrived.marls",
+            "max": 0
+          }
+        },
+        {
+          "variant": "marls"
         }
       ],
-      "delta": [[17, 22, 4, 10]],
+      "delta": [
+        [17, 22, 4, 10],
+        [14, 3, 6, 4]
+      ],
       "deltaText": "The old river bed. Best left clear."
     }
   },
@@ -247,6 +257,112 @@
     "sluice_gate": {
       "npc": "orin",
       "price": 500
+    },
+    "timber_hook": {
+      "npc": "orin",
+      "price": 250,
+      "sells": {
+        "place": "weir",
+        "min": 3
+      }
+    }
+  },
+  "weir": {
+    "drift": {
+      "perDay": [1, 2],
+      "winterPerDay": 1,
+      "longOneIn": 3,
+      "speed": 10,
+      "winterSpeed": 5,
+      "maxWaiting": 3,
+      "map": "town",
+      "river": [17, 22, 6, 10],
+      "blocks": [
+        [21, 30, 2, 2],
+        [18, 28, 1, 2]
+      ],
+      "snags": [
+        [18, 24],
+        [19, 26],
+        [21, 27]
+      ],
+      "slip": {
+        "bank": [19, 32],
+        "water": [19, 31]
+      },
+      "turnRow": 30,
+      "lanes": {
+        "west": {
+          "snag": [18, 24],
+          "path": [[18, 22]],
+          "long": [[18, 22.5]]
+        },
+        "middle": {
+          "snag": [19, 26],
+          "path": [
+            [19, 22],
+            [19, 30]
+          ],
+          "long": [
+            [19, 22.5],
+            [19, 30]
+          ],
+          "waits": true
+        },
+        "east": {
+          "path": [
+            [21, 22],
+            [21, 25],
+            [20, 25],
+            [20, 30]
+          ],
+          "long": [
+            [21, 22.5],
+            [21, 25],
+            [20, 25],
+            [20, 29.5]
+          ]
+        }
+      }
+    }
+  },
+  "houses": {
+    "marls": {
+      "name": "The Marls' house",
+      "timber": 6,
+      "family": "marls",
+      "place": "weir",
+      "map": "town",
+      "door": [16, 6],
+      "anchor": [14, 6],
+      "sprites": [
+        "obj_house_marls_0",
+        "obj_house_marls_1",
+        "obj_house_marls_2",
+        "obj_house_marls_3"
+      ],
+      "lit": "obj_house_marls_4",
+      "boarded": "Boarded up since the Marls left with the mill.",
+      "built": "Finished. Someone's coming home.",
+      "home": "The Marls' house. The mill wheel's turning."
+    },
+    "holt": {
+      "name": "The Holt wing",
+      "timber": 5,
+      "family": "holt",
+      "place": "seedhouse"
+    },
+    "wren": {
+      "name": "Wren's cottage",
+      "timber": 5,
+      "family": "wren",
+      "place": "orchard"
+    },
+    "tobin": {
+      "name": "Tobin's rooms",
+      "timber": 4,
+      "family": "tobin",
+      "place": "market"
     }
   }
 }

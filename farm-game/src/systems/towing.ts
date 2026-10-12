@@ -14,6 +14,8 @@ export const ROPE_TILES = 3;
 export const ROPE_PX = ROPE_TILES * TILE;
 /** How fast a towed log closes on its place at the rope's end (per 60 Hz frame; frame-rate independent). */
 export const FOLLOW_RATE = 0.16;
+/** Extra px a log that waited caught on a rock pops past it (systems/towing tug). */
+const DRIFT_POP = 6;
 /** Tugs that free a snagged log: one for a short log, two for a long one. */
 export const TUGS = { short: 1, long: 2 } as const;
 /** Timber a landed log gives. */
@@ -36,9 +38,14 @@ export interface Log {
   /** The axis it lies along ('h': east-west). */
   axis: 'h' | 'v';
   hooked: boolean;
-  /** Caught on a snag tile: which, the way the log was moving, and the tugs so far. */
-  snag: { tx: number; ty: number; dx: number; dy: number; tugs: number } | null;
+  /**
+   * Caught on a snag tile: which, the way the log was moving, and the tugs so far. `drift`: it caught while drifting
+   * free (a log waiting on the spur), so a tug pops it the hooking farmer's way round the snag.
+   */
+  snag: { tx: number; ty: number; dx: number; dy: number; tugs: number; drift?: boolean } | null;
   landed: boolean;
+  /** The next waypoint of its lane while it drifts down one (driftAlong). */
+  wp?: number;
 }
 
 export const makeLog = (x: number, y: number, long = false, axis: 'h' | 'v' = 'h'): Log => ({
@@ -183,7 +190,54 @@ export function drift(
   if (log.hooked || log.landed || log.snag) return 'blocked';
   const r = moveLog(world, log, log.x + (flow.x * dtMs) / 1000, log.y + (flow.y * dtMs) / 1000);
   if (r === 'moved') alignAxis(world, log, flow.x, flow.y);
+  // (moveLog may have set the snag: read it afresh)
+  const caught = log.snag as Log['snag'];
+  if (r === 'snagged' && caught) caught.drift = true;
   return r;
+}
+
+/**
+ * A drifting log goes down its lane: toward each waypoint (world px, the log's centre) in turn at `speed` px/s,
+ * turning to lie along the way it goes, and it rests at the last one (or where something stops it). Returns what
+ * happened; 'rest' once it is at the end of its lane.
+ */
+export function driftAlong(
+  world: TowWorld,
+  log: Log,
+  path: readonly (readonly [number, number])[],
+  speed: number,
+  dtMs: number,
+): 'moved' | 'blocked' | 'snagged' | 'rest' {
+  if (log.hooked || log.landed || log.snag) return 'blocked';
+  let i = log.wp ?? 0;
+  while (i < path.length && Math.hypot(path[i]![0] - log.x, path[i]![1] - log.y) < 0.5) i++;
+  log.wp = i;
+  if (i >= path.length) return 'rest';
+  const [tx, ty] = path[i]!;
+  const d = Math.hypot(tx - log.x, ty - log.y);
+  const step = Math.min(d, (speed * Math.max(0, dtMs)) / 1000);
+  if (step <= 0) return 'blocked';
+  return drift(
+    world,
+    log,
+    { x: ((tx - log.x) / d) * speed, y: ((ty - log.y) / d) * speed },
+    (step / speed) * 1000,
+  );
+}
+
+/** The way a lane runs where a drifting log is (a unit vector toward its next waypoint), or null at its end. */
+export function laneAlong(
+  log: Pick<Log, 'x' | 'y' | 'wp'>,
+  path: readonly (readonly [number, number])[],
+): { x: number; y: number } | null {
+  const i = Math.min(log.wp ?? 0, path.length - 1);
+  const a = path[i];
+  const b = path[i - 1] ?? [log.x, log.y];
+  if (!a) return null;
+  const dx = a[0] - b[0];
+  const dy = a[1] - b[1];
+  const d = Math.hypot(dx, dy);
+  return d ? { x: dx / d, y: dy / d } : null;
 }
 
 /** Is the log within the rope's reach of the farmer's hands? */
@@ -237,7 +291,11 @@ export function follow(
  * the snag (on along the way it was going, or round it a row out) onto the nearest open water. Returns where it
  * lands, or null when it held (or was not snagged).
  */
-export function tug(world: TowWorld, log: Log): { freed: boolean; x: number; y: number } | null {
+export function tug(
+  world: TowWorld,
+  log: Log,
+  toward?: { x: number; y: number } | null,
+): { freed: boolean; x: number; y: number } | null {
   const s = log.snag;
   if (!s) return null;
   s.tugs++;
@@ -248,12 +306,25 @@ export function tug(world: TowWorld, log: Log): { freed: boolean; x: number; y: 
   // past the snag along the way it was moving (whichever way the log lies); then the same a row (or column) either
   // side
   const candidates: [number, number][] = [];
+  // a log that waited on the rock is hooked from upstream of it: it pops a little further on, so the rope's first
+  // pull (back toward the farmer) does not draw it straight onto the rock again
+  const clear = 1 + (s.drift ? DRIFT_POP : 0);
   if (s.dx !== 0 || s.dy === 0) {
-    const x = cx + (s.dx || 1) * (TILE / 2 + hx + 1);
+    const x = cx + (s.dx || 1) * (TILE / 2 + hx + clear);
     candidates.push([x, log.y], [x, log.y + TILE], [x, log.y - TILE], [log.x, log.y + TILE]);
   } else {
-    const y = cy + s.dy * (TILE / 2 + hy + 1);
+    const y = cy + s.dy * (TILE / 2 + hy + clear);
     candidates.push([log.x, y], [log.x + TILE, y], [log.x - TILE, y], [log.x + TILE, log.y]);
+  }
+  // caught while drifting (a log waiting on a spur), it pops past the snag on the hooking farmer's side of it (the
+  // three places past it, nearest the farmer first); a place beside it stays the last resort
+  if (s.drift && toward) {
+    const past = candidates.slice(0, 3);
+    past.sort(
+      (a, b) =>
+        Math.hypot(a[0] - toward.x, a[1] - toward.y) - Math.hypot(b[0] - toward.x, b[1] - toward.y),
+    );
+    candidates.splice(0, 3, ...past);
   }
   for (const [x, y] of candidates)
     if (placeAt(world, log, x, y).ok) {
@@ -319,7 +390,29 @@ export function haul(
     }
   }
   const r = moveLog(world, log, log.x + (dx / d) * step, log.y + (dy / d) * step);
-  return atSlip(log, slip) ? 'arrived' : r;
+  if (atSlip(log, slip)) return 'arrived';
+  // held by the bank a hair short of the slip's tile (a long log against the bottom bank): it settles onto the
+  // nearest place inside the tile that it fits (a log never floats over the bank)
+  if (r === 'blocked' && d <= TILE) {
+    let best: [number, number] | null = null;
+    for (let oy = 0; oy < TILE; oy++)
+      for (let ox = 0; ox < TILE; ox++) {
+        const x = slip.tx * TILE + ox;
+        const y = slip.ty * TILE + oy;
+        if (!placeAt(world, log, x, y).ok) continue;
+        if (
+          !best ||
+          Math.hypot(x - log.x, y - log.y) < Math.hypot(best[0] - log.x, best[1] - log.y)
+        )
+          best = [x, y];
+      }
+    if (best) {
+      log.x = best[0];
+      log.y = best[1];
+      return 'arrived';
+    }
+  }
+  return r;
 }
 
 /** Has a hooked log reached the slip's water tile? (Its centre in the tile.) */
@@ -410,13 +503,15 @@ export function nearestBank(
 
 /**
  * Where to stand to hook a log: the walkable tile nearest the farmer from which the log is comfortably in reach
- * (a tile's margin inside the rope, since the log drifts while the farmer walks). Null when no bank reaches it.
+ * (`margin` px inside the rope: three quarters of a tile, since the log drifts while the farmer walks; a log lying
+ * still may take a few px past it). Null when no bank reaches it.
  */
 export function hookStand(
-  log: Log,
+  log: Pick<Log, 'x' | 'y'>,
   from: { tx: number; ty: number },
   walkable: (tx: number, ty: number) => boolean,
   handsUp = 6,
+  margin = TILE * 0.75,
 ): { tx: number; ty: number } | null {
   const ltx = Math.floor(log.x / TILE);
   const lty = Math.floor(log.y / TILE);
@@ -425,7 +520,7 @@ export function hookStand(
     for (let tx = ltx - ROPE_TILES; tx <= ltx + ROPE_TILES; tx++) {
       if (!walkable(tx, ty)) continue;
       const hands = { x: tx * TILE + TILE / 2, y: ty * TILE + TILE - 3 - handsUp };
-      if (!inReach(hands, log, TILE * 0.75)) continue;
+      if (Math.hypot(log.x - hands.x, log.y - hands.y) > ROPE_PX - margin) continue;
       const cost = Math.abs(tx - from.tx) + Math.abs(ty - from.ty);
       if (!best || cost < best.cost) best = { tx, ty, cost };
     }

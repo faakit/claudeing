@@ -1,3 +1,4 @@
+import { driftDefaults } from './drift';
 import { valleyDefaults, weirDefaults } from './valley';
 import {
   crops,
@@ -494,6 +495,7 @@ export function sanitize(raw: Raw): GameState {
     if (isFiniteNum(v) && v >= 0) stats[k] = v;
   valleyDefaults(stats);
   weirDefaults(stats);
+  driftDefaults(stats);
 
   const st = obj(raw['settings']);
   const settings = {

@@ -185,10 +185,11 @@ const COMPOSITION = {
       ['p_stonelantern', 15, 14],
       // Clay's house
       ['p_wheelbarrow', 20, 5],
-      // Finn's things by the river
-      ['p_bucket', 18, 32],
-      ['p_netrack', 19, 32],
-      ['p_fishcrate', 21, 32],
+      // Finn's things by the river (M7: row 32 x 18-19 is the log slip and its stand)
+      ['p_netrack', 14, 32],
+      ['p_fishcrate', 22, 32],
+      // the slip's timber stack, in every stage (collision outside a delta rect is the same in all of them)
+      ['p_timberstack', 21, 32],
       ['p_signpost', 9, 26],
       ['p_sign_sprout', 14, 1],
       ['w_laundry', 3, 13],
@@ -214,7 +215,8 @@ const COMPOSITION = {
       [6, 15],
       [18, 3],
     ],
-    boats: [[18, 29]],
+    // the Heron by the dock, rows 28-29 (M7: towed logs turn east along rows 30-31 to the slip)
+    boats: [[18, 28]],
     // the river stage's decor (M6): a reed bed off the west bank, rock spurs, the mill wheel on the east channel
     river: [
       ['reeds_bed', 18, 24],
@@ -231,6 +233,15 @@ const COMPOSITION = {
         creek: { bridge: [], stages: { dry: { bed: 'dry' } } },
         boats: [[19, 25]],
         river: [],
+        boarded: [
+          [15, 6],
+          [16, 6],
+          [18, 6],
+        ],
+        cold: [[18, 3]],
+      },
+      // M7: the river is back but the Marls are not: their house boarded, its chimney cold
+      river: {
         boarded: [
           [15, 6],
           [16, 6],
@@ -1207,13 +1218,17 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
         [0, 1, 'bl'],
         [1, 1, 'br'],
       ];
-      if (!has('millwheel_tl') || cells.some(([dx, dy]) => kind(x + dx, y + dy) !== 'water')) continue;
+      if (!has('millwheel_tl') || cells.some(([dx, dy]) => kind(x + dx, y + dy) !== 'water'))
+        continue;
       for (const [dx, dy, part] of cells) {
         set('props', x + dx, y + dy, `millwheel_${part}`);
         L.shade[(y + dy) * w + x + dx] = 0;
       }
     } else if (has(n) && kind(x, y) === 'water') set('shade', x, y, n);
-    else console.warn(`map-art: ${name}: river decor ${n} at ${x},${y} skipped (no tile or not water)`);
+    else
+      console.warn(
+        `map-art: ${name}: river decor ${n} at ${x},${y} skipped (no tile or not water)`,
+      );
   }
   for (const [x, y] of C.vane ?? []) {
     const b = blocks.find(

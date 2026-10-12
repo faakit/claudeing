@@ -106,7 +106,8 @@ describe('town projects', () => {
 
   it('a finished project raises a landmark in town', () => {
     const s = newState();
-    expect(landmarksOn(s, 'town')).toEqual([]);
+    // the Marls' house door stands in town from day one (M7: it reads "boarded up")
+    expect(landmarksOn(s, 'town').filter((l) => l.kind !== 'house')).toEqual([]);
     finish(s, 'canopy');
     const l = projects['canopy']!.landmark!;
     expect(landmarkAt(s, 'town', l.tx, l.ty)).toBe('canopy');

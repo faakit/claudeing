@@ -379,9 +379,28 @@ describe('map stages: variants differ only inside their delta rects (WORLD-PLAN 
     ) as { ground: string[]; collision: string[] };
     const flat = (rows: string[]) => rows.join(',').split(',').map(Number);
     const all = Object.fromEntries(variants('town').map(({ v, raw }) => [v, raw]));
-    // walkability and ground of the river town are today's, tile for tile (WORLD-PLAN 1)
-    expect(layer(all['river']!, 'ground')).toEqual(flat(today.ground));
-    expect(layer(all['river']!, 'collision')).toEqual(flat(today.collision));
+    // walkability and ground of the river town are today's, tile for tile (WORLD-PLAN 1), whether the Marls are home
+    // yet or not (M7's `river` and `marls` stages differ only in the boarded facade's art). M7 moved Finn's things on
+    // row 32 for the log slip (19,32) and its stand (18,32): the net rack to 14,32, the fish crate to 22,32, the
+    // bucket gone; the slip's timber stack (21,32) is the art lane's tile, solid once its tileset lands.
+    const moved: Record<string, boolean | null> = {
+      '14,32': true,
+      '18,32': false,
+      '19,32': false,
+      '21,32': null,
+      '22,32': true,
+    };
+    const want = flat(today.collision);
+    for (const v of ['river', 'marls']) {
+      expect(layer(all[v]!, 'ground'), v).toEqual(flat(today.ground));
+      const col = layer(all[v]!, 'collision');
+      col.forEach((c, i) => {
+        const at = `${i % 24},${Math.floor(i / 24)}`;
+        if (at in moved) {
+          if (moved[at] !== null) expect(c > 0, `${v} ${at}`).toBe(moved[at]);
+        } else expect(c, `${v} ${at}`).toBe(want[i]);
+      });
+    }
     const kind = (raw: TiledMapLike, x: number, y: number) =>
       PLACEHOLDER_TILES[(layer(raw, 'ground')[y * raw.width + x] ?? 0) - 1]?.name;
     const dry = all['dry']!;

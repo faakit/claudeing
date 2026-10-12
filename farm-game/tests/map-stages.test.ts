@@ -109,13 +109,19 @@ describe('valleyStage: which variant a map shows', () => {
   });
 
   it("the town is dry until the weir is restored, then its river (today's town.tmj)", () => {
-    expect(mapVariants('town')).toEqual(['dry', 'river']);
+    expect(mapVariants('town')).toEqual(['dry', 'river', 'marls']);
     for (const weir of [0, 1, 2])
       expect(mapLook(stats({ 'place.weir': weir }), 'town')).toEqual({
         file: 'assets/maps/town@dry.tmj',
         palette: 'dry',
       });
-    expect(mapLook(stats({ 'place.weir': 3 }), 'town')).toEqual({ file: 'assets/maps/town.tmj' });
+    // M7: the river back, the Marls' house boarded until they are home; then today's town
+    expect(mapLook(stats({ 'place.weir': 3 }), 'town')).toEqual({
+      file: 'assets/maps/town@river.tmj',
+    });
+    expect(mapLook(stats({ 'place.weir': 3, 'arrived.marls': 60 }), 'town')).toEqual({
+      file: 'assets/maps/town.tmj',
+    });
   });
 
   it("Wendhead's pool follows the spring and its gorge the weir, either first (an old save's weir)", () => {
@@ -142,9 +148,10 @@ describe('valleyStage: which variant a map shows', () => {
     const files = allMapLooks().map((l) => l.file);
     expect(new Set(files).size).toBe(files.length);
     expect(files).toContain('assets/maps/farm@dry.tmj');
-    // the farm's dry and waking files, Wendhead's dry (M3), gorge and spring ones, the town's dry one (M6)
-    expect(files.length).toBe(Object.keys(mapsData.maps).length + 6);
-    for (const f of ['wendhead@dry', 'wendhead@gorge', 'wendhead@spring', 'town@dry'])
+    // the farm's dry and waking files, Wendhead's dry (M3), gorge and spring ones, the town's dry one (M6) and its
+    // river one with the Marls' house boarded (M7)
+    expect(files.length).toBe(Object.keys(mapsData.maps).length + 7);
+    for (const f of ['wendhead@dry', 'wendhead@gorge', 'wendhead@spring', 'town@dry', 'town@river'])
       expect(files).toContain(`assets/maps/${f}.tmj`);
   });
 

@@ -767,11 +767,14 @@ export function takeRiverMoment(state: GameState): boolean {
 
 /**
  * A part an asked place's fund still needs and the bag does not hold, sold by this villager (valley.json `parts`:
- * the sluice gate from Orin, until the forge is lit). Null when there is nothing to offer.
+ * the sluice gate from Orin, until the forge is lit), or a part sold while its `sells` holds (the timber hook once the
+ * river is back). Null when there is nothing to offer.
  */
 export function partOffer(s: GameState, npc: string): { item: string; price: number } | null {
   for (const [item, part] of Object.entries(valley.parts ?? {})) {
     if (part.npc !== npc || owns(s, item)) continue;
+    // a tool a place opens (the timber hook once the river is back): sold while that holds
+    if (part.sells && valleyHolds(s, part.sells)) return { item, price: part.price };
     const needed = placeIds().some(
       (id) => stageOf(s, id) === 1 && fundLeft(s, id).items.some((n) => n.item === item),
     );

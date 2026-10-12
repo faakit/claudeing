@@ -41,7 +41,7 @@ try {
                 .catch(() => {});
             }
             const r = await playTow(farm, { strategy, seed: 1000 + seed++ * 7919 });
-            const bad = towBar(r);
+            const bad = towBar(r, { maxMs: scenario === 'tow-east-lane' ? 30000 : 20000 });
             const jsOver = r.jsMax > 33 ? 1 : 0;
             if (throttle > 1 && (r.over33 || jsOver)) bad.push(`frames over 33 ms: ${r.over33}`);
             total++;

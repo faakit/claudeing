@@ -47,6 +47,10 @@ export const TEXT_FIELDS: Record<string, readonly string[]> = {
     'lines',
     'phrase',
     'deltaText',
+    // valley.houses: what a house's door says (M7)
+    'boarded',
+    'built',
+    'home',
     // valley.planned: id -> name of a place not built yet
     'forge',
     'weir',

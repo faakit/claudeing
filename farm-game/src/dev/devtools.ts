@@ -19,7 +19,7 @@ import { DevControl } from './control';
 import { DevMenu } from './devMenu';
 import { FrameMeter } from './frameStats';
 import { installLab, standVillagersInLab } from './lab';
-import { LAB_MAP, LAB_SCENE, labMap } from './labDef';
+import { LAB_MAP, labMap } from './labDef';
 import { SCENARIOS } from './scenarioIndex';
 import { buildScenarioState, mapInfoFromTiled, scenarioRuntime, type MapInfoFn } from './scenarios';
 import { DevWaits } from './waits';
@@ -290,11 +290,13 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
     },
     frameStats: () => meter.stats(),
     tow: () => {
-      const lab = game.scene.getScene(LAB_SCENE) as unknown as {
-        tow?: { metrics: unknown };
-      } | null;
-      return game.scene.isActive(LAB_SCENE) && lab?.tow
-        ? (JSON.parse(JSON.stringify(lab.tow.metrics)) as ReturnType<FarmDevApi['tow']>)
+      // the active world scene with a towing controller: the lab's spike or the town river (M7)
+      const sc = game.scene
+        .getScenes(true)
+        .find((s) => (s as unknown as { tow?: unknown }).tow) as unknown as
+        { tow: { metrics: unknown } } | undefined;
+      return sc
+        ? (JSON.parse(JSON.stringify(sc.tow.metrics)) as ReturnType<FarmDevApi['tow']>)
         : null;
     },
   };
