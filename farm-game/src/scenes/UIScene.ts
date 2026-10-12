@@ -791,6 +791,7 @@ export class UIScene extends Phaser.Scene {
       await cloudSync.resolve('local');
       return;
     }
+    await saveNow(true); // this farm as it is now goes into the phone's keep slot (game/cloudSync.ts)
     runtime.inGame = false; // no autosave may write this farm over the one being taken from the cloud
     const next = await cloudSync.resolve('cloud');
     if (!next) {

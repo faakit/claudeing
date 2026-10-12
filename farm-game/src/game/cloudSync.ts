@@ -36,6 +36,8 @@ import { SAVE_KEY, saveGame } from '../systems/save';
 export const CLOUD_BOOK_KEY = 'farm.cloud';
 /** The cloud save the player chose to replace ("Keep this phone's"), kept on the phone just in case. */
 export const CLOUD_PREV_KEY = 'farm.save.cloudPrev';
+/** This phone's save that "Use the cloud save" replaced, kept until the next such choice (a mis-tap costs nothing). */
+export const LOCAL_PREV_KEY = 'farm.save.localPrev';
 
 /** Waits before retrying a queued upload (ms); the last repeats. */
 export const RETRY_MS = [15_000, 30_000, 60_000, 120_000, 300_000];
@@ -398,8 +400,8 @@ export class CloudSync implements CloudSave {
         this.deps.onConflict?.(this.conflict);
         return;
       }
-      // Replacing a cloud save the player chose to give up: keep it on the phone, just in case.
-      if (blob && cloud.kind === 'ok' && d.verdict !== 'local')
+      // Replacing a cloud save the player chose to give up, or one that does not read: keep it on the phone.
+      if (blob && (cloud.kind === 'corrupt' || (cloud.kind === 'ok' && d.verdict !== 'local')))
         await this.store.write(CLOUD_PREV_KEY, blob.data).catch(() => undefined);
       await p.save(text, this.meta(local.summary));
       if (gen !== this.gen) return;
@@ -480,6 +482,9 @@ export class CloudSync implements CloudSave {
       return null;
     }
     this.book.approved = null;
+    // the rotating backup would lose this phone's farm after two saves: keep it in its own slot
+    const mine = await this.store.read(SAVE_KEY).catch(() => null);
+    if (mine) await this.store.write(LOCAL_PREV_KEY, mine).catch(() => undefined);
     await saveGame(this.store, c.cloudState);
     await this.synced();
     return c.cloudState;

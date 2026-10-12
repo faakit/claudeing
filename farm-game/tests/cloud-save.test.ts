@@ -465,4 +465,20 @@ describe('cloud sync against the fake provider', () => {
     await sync.save('resume');
     expect(sync.status.state).toBe('off');
   });
+
+  it("use the cloud save: this phone's farm is kept in its own slot, past any number of later saves", async () => {
+    const local = farm(10, 900, 2000);
+    const { sync, store } = await setup({ local, cloud: json(farm(20, 5000, 3000)) });
+    const before = store.data.get(SAVE_KEY);
+    await sync.save('manual');
+    await sync.resolve('cloud');
+    for (let i = 0; i < 3; i++) await saveGame(store, farm(21 + i, 6000, 4000 + i));
+    expect(store.data.get(LOCAL_PREV_KEY)).toBe(before);
+  });
+
+  it('a corrupt cloud blob is kept on the phone before it is replaced', async () => {
+    const { store, sync } = await setup({ local: farm(2, 50, 2000), cloud: '{"broken' });
+    await sync.save('manual');
+    expect(store.data.get(CLOUD_PREV_KEY)).toBe('{"broken');
+  });
 });

@@ -868,7 +868,7 @@
     "off": "Cloud save is off on this phone.",
     "lastSynced": "Last synced {ago}",
     "neverSynced": "Not synced yet",
-    "privacy": "Only your farm's save is stored, in your Google Play Games account. Nothing else leaves the phone.",
+    "privacy": "Cloud save stores only your farm's save, in your Google Play Games account.",
     "newer": "The cloud save is from a newer version of the game. Update the game to use it.",
     "signIn": "Sign in",
     "syncNow": "Sync now",

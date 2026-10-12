@@ -1826,6 +1826,9 @@ is unchanged: no control moved and the camera scrolls are identical.
   and `savedAt`, the write time stamped by `saveNow`. Stats need no migration, and a save from before this feature
   reads as 0 for both. The Play Games snapshot's metadata is derived from the save: a description, the played time,
   and a progress value of day x 1e6 + minutes, so Play Games' own rare conflicts resolve by `HIGHEST_PROGRESS`.
+  That policy can drop one of two diverged snapshots on Google's side without asking. This is safe: both phones'
+  local saves are untouched, and the next sync on the phone whose save was dropped finds the cloud diverged and asks
+  the player (critic review 4, C4).
 - **"Further along" means day and play time together, never only the timestamp.** A save is ahead when it leads on
   the absolute day and does not trail on play time, or leads on play time on the same day. When the two disagree
   (more days but less play), the saves diverged, because two phones played: that is a conflict. Equal progress falls
@@ -1833,7 +1836,9 @@ is unchanged: no control moved and the camera scrolls are identical.
   one phone uploads freely without any record of the last sync. A cloud save that is further along or diverged is
   never uploaded over without the player choosing. When the player picks "Keep this phone's", that one cloud save is
   approved for replacement (by its write time, persisted, so it holds through an offline queue), and the replaced
-  blob is kept on the phone (`farm.save.cloudPrev`). A cloud save from a newer game version is never overwritten
+  blob is kept on the phone (`farm.save.cloudPrev`, also for an unreadable blob). "Use the cloud save" keeps this
+  phone's farm in its own slot (`farm.save.localPrev`), because the rotating backup would lose it after two saves.
+  A mis-tap on a one-thumb sheet never costs a farm (critic review 4, C2). A cloud save from a newer game version is never overwritten
   (state `newer`). An unreadable one is replaced.
 - **When it syncs:** after sleep (debounced 2 s, behind the save chain), on app pause (at once, because the app may be
   killed), on resume and when the browser reports it is online again, on sign-in, and on "Sync now". There is no sync
