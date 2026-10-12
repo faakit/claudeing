@@ -1444,13 +1444,20 @@ async function weirTow() {
   // winter: half speed (a middle-lane log takes twice as long to reach the spur)
   {
     const farm = await openScenario(browser, url, 'tow-winter', { profile: PROFILE });
-    const y0 = await farm.eval(() => window.__farm.dev.tow().logs[0].y);
+    // game time, not frames: px per second of the controller's own clock
+    const at = () =>
+      farm.eval(() => {
+        const sc = window.__farm.game.scene.getScene('Town');
+        return { y: sc.tow.metrics.logs[0].y, now: sc.tow.now };
+      });
+    const a = await at();
     await farm.frames(60);
-    const y1 = await farm.eval(() => window.__farm.dev.tow().logs[0].y);
+    const b = await at();
+    const speed = ((b.y - a.y) / (b.now - a.now)) * 1000;
     check(
       'tow-winter: a log drifts at half speed (5 px/s)',
-      y1 - y0 >= 3 && y1 - y0 <= 7,
-      `${y1 - y0} px in 60 frames`,
+      speed >= 3.5 && speed <= 6.5,
+      `${speed.toFixed(1)} px/s`,
     );
     await farm.close();
   }

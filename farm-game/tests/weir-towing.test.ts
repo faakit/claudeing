@@ -167,8 +167,10 @@ describe('drift timber: the morning queue', () => {
     for (const lane of lanes)
       for (const long of [false, true]) {
         const [, y] = lanePath(D, lane, long)[0]!;
-        // the log's north end in the river's first row (a long log's centre is half a tile lower)
-        expect(Math.floor((y - (long ? 15 : 7)) / TILE), `${lane} ${long}`).toBe(D.river[1]);
+        // the log's north end in the river's first rows (the east lane enters two rows down, out of the north bank's
+        // reach: the spur must turn it before anyone can hook it)
+        const top = Math.floor((y - (long ? 15 : 7)) / TILE) - D.river[1];
+        expect(top, `${lane} ${long}`).toBe(lane === 'east' ? 2 : 0);
       }
   });
 
@@ -353,11 +355,18 @@ describe('towing on the town river (lanes, snags, the slip)', () => {
       for (let t = 0; t < 40000; t += 16) {
         driftAlong(world, log, path, D.speed, 16);
         // never in reach from the west bank before it is turned (above the spur's row)
-        if (log.y < D.snags[2]![1] * TILE)
+        if (log.y < D.snags[2]![1] * TILE) {
+          // nor from the north bank
+          for (let tx = 15; tx <= 22; tx++)
+            expect(
+              inReach({ x: tx * TILE + 8, y: 21 * TILE + 7 }, log),
+              `${long} north ${tx}`,
+            ).toBe(false);
           for (let ty = 21; ty <= 31; ty++)
             expect(inReach({ x: 16 * TILE + 8, y: ty * TILE + 7 }, log), `${long} ${ty}`).toBe(
               false,
             );
+        }
       }
       expect(log.snag).toBeNull();
       expect(Math.floor(log.x / TILE)).toBe(20);
