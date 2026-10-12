@@ -292,11 +292,13 @@ describe('the river and its fish', () => {
       s.stats['place.weir'] = 0;
       const dry = orderCandidates(s).map((r) => r.item);
       for (const f of river) expect(dry, season).not.toContain(f);
+      const posted = generateOrders(s);
+      expect(posted.length, season).toBeGreaterThan(0);
+      for (const o of posted) expect(river, season).not.toContain(o.item.split('|')[0]);
       s.stats['place.weir'] = 3;
       const wet = orderCandidates(s).map((r) => r.item);
       for (const f of fish.filter((x) => river.includes(x.item) && !x.legend))
         if (f.seasons.includes(season)) expect(wet, season).toContain(f.item);
-      for (const o of generateOrders(s)) expect(o.item).toBeTruthy();
     }
   });
 });
@@ -343,8 +345,9 @@ describe('Finn, Clay and the river', () => {
     const dry = pendingEvent(s, 'finn');
     s.stats['place.weir'] = 3;
     const wet = pendingEvent(s, 'finn');
-    expect(dry?.id === 'heron' || dry?.id === 'lake').toBe(true);
-    if (dry?.id === 'heron' && wet?.id === 'heron') expect(dry.lines).not.toEqual(wet.lines);
+    expect(dry?.id).toBe('heron');
+    expect(wet?.id).toBe('heron');
+    expect(dry!.lines).not.toEqual(wet!.lines);
   });
 
   it("an old save's quiet weir counts as a place open, never as a place done", () => {

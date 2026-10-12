@@ -170,7 +170,11 @@ describe('see-through hole: the crown keeps its mass (integration review, coordi
           true,
           sameTree,
         );
-        if (!want.body) continue; // walking past its edge: nothing is cut
+        // walking past its edge: nothing is cut; straight behind the trunk it always opens (so this checks)
+        if (!want.body) {
+          expect(tx, `crown r ${r}`).not.toBe(TRUNK.tx);
+          continue;
+        }
         const circles = holeCircles(
           px,
           py,
