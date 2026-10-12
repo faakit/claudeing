@@ -1,5 +1,5 @@
 import {
-  detectLocale,
+  deviceLocale,
   getLocale,
   LOCALES,
   parseLocale,
@@ -32,7 +32,7 @@ export function initLanguage(): Promise<void> {
     return Promise.resolve();
   }
   const nav = globalThis.navigator as Navigator | undefined;
-  setLocale(nav?.webdriver ? 'en' : detectLocale(nav?.languages ?? [nav?.language ?? 'en']));
+  setLocale(deviceLocale(nav));
   return saveStore
     .read(LANG_KEY)
     .then((stored) => {

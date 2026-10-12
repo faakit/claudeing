@@ -71,6 +71,16 @@ export function detectLocale(languages: readonly string[] | undefined): Locale {
   return 'en';
 }
 
+/**
+ * The language a device starts in before any stored choice: an automated browser (`navigator.webdriver`) reads
+ * English whatever the machine is set to, so checks see the same text; anyone else gets `detectLocale`.
+ */
+export function deviceLocale(
+  nav: { webdriver?: boolean; languages?: readonly string[]; language?: string } | undefined,
+): Locale {
+  return nav?.webdriver ? 'en' : detectLocale(nav?.languages ?? [nav?.language ?? 'en']);
+}
+
 /** A `?lang=` value or a stored choice, if it names a supported locale (case-insensitive, `pt` = pt-BR). */
 export function parseLocale(raw: string | null | undefined): Locale | null {
   if (!raw) return null;

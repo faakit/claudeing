@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   detectLocale,
+  deviceLocale,
   dictionary,
   fmtGold,
   fmtNum,
@@ -384,5 +385,12 @@ describe('the language at boot', () => {
   it('starts in English (tests and automated browsers rely on it)', () => {
     expect(getLocale()).toBe('en');
     expect(tEn('common.close')).toBe('Close');
+  });
+
+  it('an automated browser starts in English on a Portuguese machine; a person gets the device language', () => {
+    expect(deviceLocale({ webdriver: true, languages: ['pt-BR'] })).toBe('en');
+    expect(deviceLocale({ webdriver: false, languages: ['pt-BR', 'en'] })).toBe('pt-BR');
+    expect(deviceLocale({ language: 'pt-PT' })).toBe('pt-BR');
+    expect(deviceLocale(undefined)).toBe('en');
   });
 });
