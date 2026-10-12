@@ -178,6 +178,19 @@ describe('towing: a tap near the slip means the slip', () => {
   });
 });
 
+describe('towing: a slow frame', () => {
+  it('never carries a log past a snag (a long step goes in pieces)', () => {
+    // the log east of the rock (17,29) in the near-bank row, the farmer far west on the bank: one 500 ms frame
+    const c = centre(19, 29);
+    const log = makeLog(c.x, c.y);
+    log.hooked = true;
+    const s = follow(world, log, handsOn(10, 28), 500);
+    expect(s).toBe('snagged');
+    expect(log.snag).toMatchObject({ tx: 17, ty: 29 });
+    expect(Math.floor((log.x - 7) / TILE)).toBeGreaterThanOrEqual(18); // still east of the rock
+  });
+});
+
 describe('towing: a tap on the hedge while towing', () => {
   // a bank row (y 10, x 0-20) with hedge above it (y < 10) and the lane below
   const bank = (tx: number, ty: number): boolean => ty === 10 && tx >= 0 && tx <= 20;

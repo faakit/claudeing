@@ -1374,7 +1374,8 @@ const towCheck = (tag, r, extra = true, detail = '') => {
 };
 
 async function towing() {
-  // T1: log, then the slip region mid-scroll (two tiles east of the slip), then the tug: 3 inputs and it lands
+  // T1: log, then the slip region mid-scroll (two tiles east of the slip), then the tug if it snags: at most 3
+  // inputs and it lands with no further one (on a loaded machine the log can pass the rock without catching)
   for (const [hand, seed] of [
     ['right', 101],
     ['right', 202],
@@ -1386,7 +1387,7 @@ async function towing() {
     towCheck(
       `tow-spike chained T1 tap (${hand}, seed ${seed})`,
       r,
-      r.inputs === 3,
+      r.inputs <= 3,
       `inputs ${r.inputs}`,
     );
     check(

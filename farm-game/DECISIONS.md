@@ -1537,7 +1537,8 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   straight above, a log in an east-west lane stays east-west. Held against the inside of a bend, the rest of the
   pull carries it downstream until the rope can draw it straight again (`follow(..., along)`), so it never sticks at
   an inner corner or cuts across the bank. A tug pops it on the way it was going (the larger part of its step),
-  whichever way it lies.
+  whichever way it lies. A long frame moves a log in steps of at most 4 px, so it can never jump a snag (it did once
+  under load in the full verify: the chained run landed without the rock catching it).
 - **The long lab lane sits beside the showcase, not below it** (columns 26-47): extending the map south moved the
   spike's shore up the screen (the camera no longer stopped at its edge) and pushed the right thumb's slip tap into
   the hard zone. It runs west from a head just below the farmer and turns south to a slip that stays above the

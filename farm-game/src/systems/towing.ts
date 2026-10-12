@@ -84,11 +84,36 @@ export function placeAt(
   return land ? { ok: false, snag: null } : { ok: true };
 }
 
+/** The longest step a log takes at once (px): a long frame moves it in pieces, so it never jumps a snag. */
+const MAX_STEP = 4;
+
 /**
  * Move a log toward (nx, ny) as far as the water lets it: the whole step, else along one axis (it slides along a
- * bank). Running into a snag catches it there. Returns what happened.
+ * bank). Running into a snag catches it there. Returns what happened. A step longer than MAX_STEP (a slow frame) is
+ * taken in pieces, stopping where one is caught or held.
  */
 function moveLog(
+  world: TowWorld,
+  log: Log,
+  nx: number,
+  ny: number,
+): 'moved' | 'blocked' | 'snagged' {
+  const len = Math.hypot(nx - log.x, ny - log.y);
+  if (len > MAX_STEP) {
+    const n = Math.ceil(len / MAX_STEP);
+    const sx = (nx - log.x) / n;
+    const sy = (ny - log.y) / n;
+    let r: 'moved' | 'blocked' | 'snagged' = 'moved';
+    for (let i = 0; i < n; i++) {
+      r = moveStep(world, log, log.x + sx, log.y + sy);
+      if (r !== 'moved') break;
+    }
+    return r;
+  }
+  return moveStep(world, log, nx, ny);
+}
+
+function moveStep(
   world: TowWorld,
   log: Log,
   nx: number,
