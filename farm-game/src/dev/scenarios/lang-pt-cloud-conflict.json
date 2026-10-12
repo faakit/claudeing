@@ -1,0 +1,36 @@
+{
+  "title": "Portuguese: the cloud save choice dialog",
+  "about": "pt-BR. The cloud-conflict dialog in Portuguese: both cards, \"mais adiantado\", the two long buttons (\"Ficar com este celular\", \"Usar o save da nuvem\") and \"Decidir depois\" must fit; check the accents.",
+  "tags": ["cloud", "dialog", "i18n"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "lang": "pt-BR",
+    "cloud": {
+      "account": "Ana",
+      "save": {
+        "season": "summer",
+        "day": 3,
+        "money": 12400,
+        "playSec": 18000,
+        "savedMinAgo": 180
+      },
+      "syncOnStart": true
+    }
+  }
+}

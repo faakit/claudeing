@@ -847,5 +847,59 @@
     "row": "{n} de {of} madeiras",
     "rowDone": "pronta, a família chega amanhã",
     "step": "{name}: {n} de {of} madeiras"
+  },
+  "cloud": {
+    "continueCloud": "Continuar (nuvem)",
+    "continuePhone": "Continuar (este celular)",
+    "entrySignIn": "Nuvem: entrar",
+    "entryOn": "Nuvem...",
+    "lineOff": "Salvar na nuvem está desligado.",
+    "lineSignedOut": "Nuvem: você não entrou.",
+    "lineSynced": "Nuvem: sincronizado {ago}",
+    "lineIdle": "Nuvem: conectado",
+    "lineSyncing": "Nuvem: sincronizando...",
+    "linePending": "Nuvem: esperando conexão",
+    "lineConflict": "Nuvem: dois saves para escolher",
+    "lineNewer": "Nuvem: save de uma versão nova.",
+    "lineError": "Nuvem: falhou, tentando de novo",
+    "title": "Salvar na nuvem",
+    "signedInAs": "Conectado como {name}",
+    "signedIn": "Conectado ao Play Games",
+    "notSignedIn": "Você não entrou.",
+    "off": "Salvar na nuvem está desligado neste celular.",
+    "lastSynced": "Sincronizado {ago}",
+    "neverSynced": "Ainda não sincronizado",
+    "privacy": "O salvamento na nuvem guarda só o save da fazenda, na sua conta do Google Play Games.",
+    "newer": "O save da nuvem é de uma versão mais nova do jogo. Atualize o jogo para usá-lo.",
+    "signIn": "Entrar",
+    "syncNow": "Sincronizar",
+    "turnOff": "Desligar",
+    "choose": "Escolher save",
+    "justNow": "agora",
+    "minutesAgo": {
+      "one": "há {count} min",
+      "other": "há {count} min"
+    },
+    "hoursAgo": {
+      "one": "há {count} h",
+      "other": "há {count} h"
+    },
+    "daysAgo": {
+      "one": "há {count} dia",
+      "other": "há {count} dias"
+    },
+    "playHours": "{h}h {m}min",
+    "playMinutes": "{m} min",
+    "conflictTitle": "Dois saves, uma fazenda",
+    "conflictAhead": "O save da nuvem está mais adiantado.",
+    "conflictDiverged": "Este celular e a nuvem jogaram dias diferentes.",
+    "phone": "Este celular",
+    "cloud": "Nuvem",
+    "ahead": "mais adiantado",
+    "played": "Jogou {time}, salvo {ago}",
+    "noSave": "Nenhum save neste celular.",
+    "keepPhone": "Ficar com este celular",
+    "useCloud": "Usar o save da nuvem",
+    "later": "Decidir depois"
   }
 }

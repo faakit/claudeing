@@ -161,14 +161,52 @@ export interface ScenarioDef {
     /**
      * "first-launch": stop on the title screen as a first launch shows it (no save in the sandbox: Rosa's letter
      * and New Game). The scenario's state is not started.
+     * "continue": stop on the title with the scenario's state as this phone's save (Continue, and with `cloud`,
+     * "Continue (cloud)").
      */
-    title?: 'first-launch';
+    title?: 'first-launch' | 'continue';
+    /**
+     * Cloud save with the fake provider (platform/cloud/fake.ts) instead of none. Without it a scenario has no
+     * cloud save at all, as the web build.
+     */
+    cloud?: ScenarioCloud;
     /**
      * The language the scenario shows ("en" or "pt-BR"). Without it a scenario page uses `?lang=` if the URL has one,
      * else English: the sandbox never follows the device, so a check reads the same text on every machine.
      */
     lang?: 'en' | 'pt-BR';
   };
+}
+
+export interface ScenarioCloud {
+  /** The signed-in account's name, or null for signed out. Default "Farmer". */
+  account?: string | null;
+  /** The player turned cloud save off on this phone. */
+  off?: boolean;
+  /** The fake cloud is unreachable. */
+  offline?: boolean;
+  /** Minutes since the last sync (absent: never synced). */
+  lastSyncMinAgo?: number;
+  /**
+   * What the cloud holds: the scenario's own save with these changes, "same" (exactly this phone's save),
+   * "corrupt" (unreadable) or "newer" (from a newer game version). Absent: an empty cloud.
+   */
+  save?:
+    | 'same'
+    | 'corrupt'
+    | 'newer'
+    | {
+        season?: Season;
+        day?: number;
+        year?: number;
+        money?: number;
+        /** Seconds played. */
+        playSec?: number;
+        /** Minutes since that save was written (default 30). */
+        savedMinAgo?: number;
+      };
+  /** Run a sync as soon as the world is up (a conflict then opens its dialog). */
+  syncOnStart?: boolean;
 }
 
 export interface MapInfo {
@@ -407,8 +445,25 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
   }
   if (d.dev?.clock !== undefined && !['paused', 'running'].includes(d.dev.clock))
     p.push('dev.clock must be "paused" or "running"');
-  if (d.dev?.title !== undefined && d.dev.title !== 'first-launch')
-    p.push('dev.title must be "first-launch"');
+  if (d.dev?.title !== undefined && !['first-launch', 'continue'].includes(d.dev.title))
+    p.push('dev.title must be "first-launch" or "continue"');
+  const cl = d.dev?.cloud;
+  if (cl !== undefined) {
+    if (!isObj(cl)) p.push('dev.cloud must be an object');
+    else {
+      const known = ['account', 'off', 'offline', 'lastSyncMinAgo', 'save', 'syncOnStart'];
+      for (const k of Object.keys(cl))
+        if (!known.includes(k)) p.push(`dev.cloud: unknown key "${k}"`);
+      const sv = cl.save;
+      if (sv !== undefined && typeof sv === 'string' && !['same', 'corrupt', 'newer'].includes(sv))
+        p.push('dev.cloud.save must be an object, "same", "corrupt" or "newer"');
+      if (isObj(sv)) {
+        const ok = ['season', 'day', 'year', 'money', 'playSec', 'savedMinAgo'];
+        for (const k of Object.keys(sv))
+          if (!ok.includes(k)) p.push(`dev.cloud.save: unknown key "${k}"`);
+      }
+    }
+  }
   if (d.dev?.lang !== undefined && !['en', 'pt-BR'].includes(d.dev.lang))
     p.push('dev.lang must be "en" or "pt-BR"');
   return p;
@@ -580,8 +635,9 @@ export function scenarioRuntime(def: ScenarioDef): {
   seed: number;
   clock: 'paused' | 'running';
   clockScale: number;
-  title: 'first-launch' | null;
+  title: 'first-launch' | 'continue' | null;
   lang: 'en' | 'pt-BR' | null;
+  cloud: ScenarioCloud | null;
 } {
   return {
     seed: (def.dev?.seed ?? DEFAULT_SEED) >>> 0,
@@ -589,7 +645,31 @@ export function scenarioRuntime(def: ScenarioDef): {
     clockScale: def.dev?.clockScale ?? 1,
     title: def.dev?.title ?? null,
     lang: def.dev?.lang ?? null,
+    cloud: def.dev?.cloud ?? null,
   };
+}
+
+/**
+ * The blob a cloud scenario's fake cloud holds (`dev.cloud.save`), built from the scenario's own state: `now` and
+ * the minutes ago give it a write time, so "saved 30 min ago" reads the same on every run. Null: an empty cloud.
+ */
+export function scenarioCloudData(
+  save: ScenarioCloud['save'],
+  state: GameState,
+  now: number,
+): string | null {
+  if (save === undefined) return null;
+  if (save === 'corrupt') return '{"version":';
+  if (save === 'same') return JSON.stringify(state);
+  if (save === 'newer') return JSON.stringify({ ...state, version: STATE_VERSION + 1 });
+  const s = JSON.parse(JSON.stringify(state)) as GameState;
+  if (save.season) s.time.season = save.season;
+  if (save.day !== undefined) s.time.day = save.day;
+  if (save.year !== undefined) s.time.year = save.year;
+  if (save.money !== undefined) s.money = save.money;
+  if (save.playSec !== undefined) s.stats['playSec'] = save.playSec;
+  s.stats['savedAt'] = now - (save.savedMinAgo ?? 30) * 60_000;
+  return JSON.stringify(s);
 }
 
 /** Map bounds and walkability from a Tiled map (its collision layer). */

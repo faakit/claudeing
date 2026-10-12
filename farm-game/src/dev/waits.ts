@@ -25,7 +25,15 @@ type Loose = Record<string, unknown>;
 const loose = (o: unknown): Loose => o as Loose;
 
 /** Names `panelOpen` understands: the panel types plus the sheets the UI scene keeps by name. */
-export const NAMED_SHEETS = ['jar', 'move', 'npc', 'plot', 'summary', 'yearEnd'] as const;
+export const NAMED_SHEETS = [
+  'jar',
+  'move',
+  'npc',
+  'plot',
+  'summary',
+  'yearEnd',
+  'cloudPanel',
+] as const;
 
 export interface WaitOptions {
   /** Real milliseconds before giving up (default 10000). */

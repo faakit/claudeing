@@ -1,0 +1,29 @@
+{
+  "title": "Cloud save: signed in and synced (Options > Cloud save...)",
+  "about": "The fake cloud holds exactly this phone's save, synced 5 minutes ago, signed in as Ana. Open Menu > Opts: the status line above the rows reads 'Cloud: synced 5 min ago' and the language row's far button is 'Cloud save...'. Its page shows the account, the last sync, the privacy line, Sync now on the thumb side and Turn off.",
+  "tags": ["cloud", "options"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "cloud": {
+      "account": "Ana",
+      "save": "same",
+      "lastSyncMinAgo": 5
+    }
+  }
+}
