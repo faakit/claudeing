@@ -1957,6 +1957,113 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- sheets close only from Close (owner bug)
+
+/** Sheets to tap over: [name, scenario, opener in the page]. */
+const TAP_SHEETS = [
+  [
+    'menu.bag',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('bag')),
+  ],
+  [
+    'menu.opts',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('opts')),
+  ],
+  [
+    'menu.goals',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('goals')),
+  ],
+  ['npc', 'late-game-farm', (ui) => ui.npc.openFor('mara')],
+  ['shop', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'shop' })],
+  ['bin', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'bin' })],
+  ['board', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'board' })],
+  ['mail', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'mail' })],
+  ['sleep', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'sleep' })],
+];
+
+async function sheetTapsOn(profile, hand) {
+  const farm = await openScenario(browser, url, 'late-game-farm', { profile, hand });
+  // the DEV tab (plain HTML over the canvas's corner) is not the game's: a grid tap on it opened the dev sheet
+  await farm.eval(() =>
+    document.querySelectorAll('.tadev-tab').forEach((e) => (e.style.display = 'none')),
+  );
+  for (const [name, , open] of TAP_SHEETS) {
+    await farm.during('panelOpen', [], () =>
+      farm.eval((src) => {
+        const f = window.__farm;
+        new Function(`return (${src})`)()(f.game.scene.getScene('UI'), f);
+      }, open.toString()),
+    );
+    await farm.idle();
+    // every point of a 16 px grid over the whole screen that is not on a live control: rows, the gaps between
+    // them, padding, headers, disabled buttons, and the world above the sheet (the dim)
+    const live = await farm.targets();
+    const on = (x, y) =>
+      live.some((t) => x >= t.x - 2 && x <= t.x + t.w + 2 && y >= t.y - 2 && y <= t.y + t.h + 2);
+    let taps = 0;
+    let closed = null;
+    for (let y = 6; y < 400 && !closed; y += 16)
+      for (let x = 6; x < 200; x += 16) {
+        if (on(x, y)) continue;
+        await farm.thumb.tap(x, y, 10);
+        taps++;
+        if (
+          !(await farm.eval(() =>
+            window.__farm.game.scene
+              .getScene('UI')
+              .allModals()
+              .some((m) => m.isOpen),
+          ))
+        ) {
+          closed = `${x},${y}`;
+          break;
+        }
+      }
+    check(
+      `sheet taps (${profile}, ${hand}): ${name} stays open through ${taps} taps off its controls`,
+      !closed && taps > 30,
+      `closed by a tap at ${closed}`,
+    );
+    // Close still closes it
+    await farm.idle();
+    await farm.frames(10);
+    const closer = (await farm.targets()).find((t) =>
+      /^(Close|Done|Not now|Not yet|Leave it)$/.test(t.text),
+    );
+    if (closer) {
+      await farm.during('panelClosed', [], () => farm.thumb.tap(closer.cx, closer.cy, 60));
+      check(`sheet taps (${profile}, ${hand}): ${name} closes from its Close button`, true);
+    } else {
+      check(
+        `sheet taps (${profile}, ${hand}): ${name} has a Close button`,
+        false,
+        live.map((t) => t.text).join(', '),
+      );
+      await closeSheet(farm);
+    }
+    await farm.idle();
+  }
+  check(
+    `sheet taps (${profile}, ${hand}): no page errors`,
+    farm.errors.length === 0,
+    farm.errors.join(' | '),
+  );
+  await farm.close();
+}
+
+async function sheetTaps() {
+  await Promise.all(
+    [
+      ['se', 'right'],
+      ['se', 'left'],
+      ['i13', 'right'],
+    ].map(([p, h]) => sheetTapsOn(p, h)),
+  );
+}
+
 // ---------------------------------------------------------------- the text guard over every sheet (owner bug)
 
 /**
@@ -2607,6 +2714,8 @@ function overflowIn(sceneKey) {
         if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text))
           bad.push(`raw: ${n.text}`);
         if (u.inCoach || (sheetAt >= 0 && u.i < sheetAt)) return;
+        // cut short with fitText's ".." (a row or button that lost its end): the words must fit or wrap
+        if (/[^.]\.\.$/.test(n.text.trim())) bad.push(`cut short: ${name}`);
         // a lower layer of stacked copies of one text (the title's outlined logo): only the top layer is read
         if (
           units.some(
@@ -2939,6 +3048,7 @@ try {
         coachShop,
         fishCast,
         textGuard,
+        sheetTaps,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

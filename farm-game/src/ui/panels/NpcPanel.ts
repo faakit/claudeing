@@ -23,7 +23,6 @@ import { keyOf, displayName, iconKey, refOf, sellValue, type ItemRef } from '../
 import { countStack } from '../../systems/inventory';
 import { gameEvents, toast } from '../../systems/events';
 import { buyPart, partOffer } from '../../systems/valley';
-import { fitText } from '../font';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
 import { perkLine } from './perkText';
@@ -41,6 +40,8 @@ export class NpcPanel extends Modal {
   private line = '';
   private gained = 0;
   private reply = '';
+  /** How far a two-line blurb pushed the body down. */
+  private dy = 0;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 236);
@@ -74,12 +75,16 @@ export class NpcPanel extends Modal {
     const def = npcs[this.id]!;
     this.panel();
     this.label(8, 8, def.name, C.gold);
-    this.label(
+    // the blurb wraps beside the hearts bar (x 148; one line cut Clay's short), and the body moves down under it
+    const blurbEnd = this.para(
       8,
       20,
-      fitText(isBirthday(s, this.id) ? t('npc.birthdayToday') : def.blurb, 136), // clear of the hearts bar (x 148)
+      isBirthday(s, this.id) ? t('npc.birthdayToday') : def.blurb,
       isBirthday(s, this.id) ? C.gold : C.creamDim,
+      136,
+      0,
     );
+    this.dy = Math.max(0, blurbEnd - 31);
     const hearts = heartsOf(s, this.id);
     for (let i = 0; i < MAX_HEARTS; i++)
       this.icon(150 + i * 9, 13, 'ui_heart').setTint(i < hearts ? 0xe0574a : 0x4a4560);
@@ -104,7 +109,7 @@ export class NpcPanel extends Modal {
     }
     const last = this.evLine >= ev.lines.length - 1;
     // a flow: the scene's line wraps as long as it needs, the counter under it, the button under that
-    let y = this.para(8, 38, ev.title.toUpperCase(), C.warn, 184, 8);
+    let y = this.para(8, 38 + this.dy, ev.title.toUpperCase(), C.warn, 184, 8);
     y = this.para(8, y, `"${ev.lines[this.evLine]}"`, C.cream, 184, 6);
     y = this.para(8, y, `${this.evLine + 1}/${ev.lines.length}`, C.creamDim, 184, 4);
     this.wantHeight = y + 62 + 2;
@@ -155,8 +160,8 @@ export class NpcPanel extends Modal {
       this.reply || (offer ? t('npc.partOffer', { part: offerName.toLowerCase() }) : this.line);
     // A flow from the line down (each part under the last, however far it wrapped), then the buttons: Portuguese
     // lines wrapped into the next part at their old fixed rows.
-    let fy = this.para(8, 42, `"${say}"`, C.cream, 184, 8);
-    fy = Math.max(fy, 66);
+    let fy = this.para(8, 42 + this.dy, `"${say}"`, C.cream, 184, 8);
+    fy = Math.max(fy, 66 + this.dy);
     if (this.gained > 0)
       fy = this.para(8, fy, t('npc.friendship', { n: this.gained }), C.green, 184, 5);
     const next = nextPerk(s, this.id);
@@ -227,7 +232,7 @@ export class NpcPanel extends Modal {
 
   private buildGift(): void {
     const s = getState();
-    this.label(8, 36, t('npc.giftFor', { name: npcs[this.id]!.name }), C.cream);
+    this.label(8, 36 + this.dy, t('npc.giftFor', { name: npcs[this.id]!.name }), C.cream);
     const kinds = new Map<string, ItemRef>();
     for (const st of s.inventory.slots) if (st && isGiftable(st)) kinds.set(keyOf(st), refOf(st));
     // Known favourites first, unknown next, known dislikes last: the list remembers past gifts.
@@ -242,7 +247,7 @@ export class NpcPanel extends Modal {
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
     if (list.length === 0) this.label(8, 56, t('npc.nothingToGive'), C.creamDim, 1, 'left', 184);
-    let y = 48;
+    let y = 48 + this.dy;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const known = knownReaction(s, this.id, ref);
       y = this.row(y, {

@@ -220,14 +220,19 @@ const SHORTER: Record<Locale, [RegExp, string][]> = {
   ],
 };
 
-/** Like fitText, but first applies friendlier abbreviations so list rows keep their facts. */
-export function fitRow(text: string, maxPx: number, scale = 1): string {
+/** The friendlier abbreviations alone (the text may still be too wide; nothing is cut). */
+export function shorten(text: string, maxPx: number, scale = 1): string {
   let t = text;
   for (const [re, to] of SHORTER[getLocale()]) {
     if (measureText(t, scale) <= maxPx) return t;
     t = t.replace(re, to);
   }
-  return fitText(t, maxPx, scale);
+  return t;
+}
+
+/** Like fitText, but first applies friendlier abbreviations so list rows keep their facts. */
+export function fitRow(text: string, maxPx: number, scale = 1): string {
+  return fitText(shorten(text, maxPx, scale), maxPx, scale);
 }
 
 /**
