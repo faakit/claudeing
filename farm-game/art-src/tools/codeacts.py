@@ -125,6 +125,24 @@ PLACE = {
         (_p(hands=((13, 22), (18, 22)), behind_arms=True, front=False), 1),
     ],
 }
+# The two facings Flow never drew (art round dry-year-2): plant from the side, harvest from behind. Frame 0 is the
+# idle (as Flow's plant and harvest), the last is standing again (plant) or holding the crop up (harvest).
+PLANT_RIGHT = [
+    "idle",
+    (_p(hands=((18, 26), (20, 27))), 2),
+    (_p(hands=((21, 29), (22, 30))), 3),  # contact: the seed pressed in
+    (_p(hands=((19, 28), (21, 29))), 2),
+    "idle",
+]
+HARVEST_UP = [
+    "idle",
+    (_p(hands=((12, 24), (19, 24)), behind_arms=True, front=False), 2),
+    (_p(hands=((12, 26), (19, 26)), behind_arms=True, front=False), 4),  # contact: the pull
+    (_p(hands=((12, 21), (19, 19)), behind_arms=True, front=False), 1),
+    "idle",
+]
+SEED_AT = (23, 38)  # the seed's soil fleck on plant right's contact frame (frame px, 2 x 2)
+
 # where the game draws the held item's icon (its centre, in the 32 x 44 frame's pixels) per frame; None: hidden
 PLACE_ANCHORS = {
     "down": [(16, 28), (16, 33), (16, 38), None],
@@ -150,14 +168,26 @@ def idle_frame(idle: np.ndarray) -> np.ndarray:
     return out
 
 
-def build(names: list[str], idle: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+def _sprig(flow: dict[str, np.ndarray] | None) -> np.ndarray | None:
+    """The crop held up in Flow's harvest-down last frame: its pixels right of the body (x >= 24), as a patch."""
+    src = (flow or {}).get("player_act_harvest_down_4")
+    if src is None:
+        return None
+    patch = np.full_like(src, -1)
+    patch[:, 24:] = src[:, 24:]
+    return patch if (patch >= 0).any() else None
+
+
+def build(names: list[str], idle: dict[str, np.ndarray], flow: dict | None = None) -> dict[str, np.ndarray]:
     bodies = {
         "down": ta.strip_arms_front(idle["down"]),
         "up": ta.strip_arms_front(idle["up"]),
         "right": ta.side_body(names, idle["right"]),
     }
     out = {}
-    for anim, table in (("pet", PET), ("reel", REEL), ("place", PLACE)):
+    tables = (("pet", PET), ("reel", REEL), ("place", PLACE), ("plant", {"right": PLANT_RIGHT}),
+              ("harvest", {"up": HARVEST_UP}))
+    for anim, table in tables:
         for d, poses in table.items():
             for i, entry in enumerate(poses):
                 if entry == "idle":  # standing again: the idle frame itself
@@ -165,4 +195,18 @@ def build(names: list[str], idle: dict[str, np.ndarray]) -> dict[str, np.ndarray
                     continue
                 pose, sink = entry
                 out[f"player_act_{anim}_{d}_{i}"] = posed(names, bodies[d], _line(pose), d == "right", sink)
+    # plant right: a soil fleck where the seed goes in (contact); harvest up: the crop held up by the right shoulder
+    c = out["player_act_plant_right_2"]
+    x, y = SEED_AT
+    c[y : y + 2, x : x + 2] = names.index("earth dark")
+    sprig = _sprig(flow)
+    if sprig is not None:
+        for i in (3, 4):
+            k = f"player_act_harvest_up_{i}"
+            f = out[k].copy() if i == 3 else idle_frame(idle["up"])
+            dy = 3 if i == 3 else 0  # still rising on frame 3
+            sp = np.roll(np.roll(sprig, dy, axis=0), -3, axis=1)  # held at the shoulder, not beside it
+            behind = (sp >= 0) & (f < 0)  # the crop goes behind the farmer (the head stays the idle head)
+            f[behind] = sp[behind]
+            out[k] = f
     return out

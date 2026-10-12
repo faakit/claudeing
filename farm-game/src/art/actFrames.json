@@ -6,7 +6,8 @@
  },
  "harvest": {
   "down": 5,
-  "right": 5
+  "right": 5,
+  "up": 5
  },
  "pet": {
   "down": 5,
@@ -20,6 +21,7 @@
  },
  "plant": {
   "down": 5,
+  "right": 5,
   "up": 5
  },
  "reel": {

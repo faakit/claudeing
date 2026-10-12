@@ -681,7 +681,7 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
         acts = flowanim.build(names, pal, idle, lambda rgba: to_idx(rgba, pal))
         import codeacts  # pet, reel and place, drawn in code on the round-4 machinery (review 18)
 
-        acts.update(codeacts.build(names, idle))
+        acts.update(codeacts.build(names, idle, acts))
         for key, idx in acts.items():  # the chars atlas is full (512x1024): actions live in the second one
             add("chars2", key, idx)
         if acts:  # the frame counts the game reads (src/art/actFrames.json)
