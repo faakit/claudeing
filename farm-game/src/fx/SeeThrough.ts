@@ -66,13 +66,14 @@ export const NO_HOLE: HoleWant = { body: false, target: false };
 export type Opaque = (x: number, y: number) => boolean;
 
 /**
- * Opaque overhead pixels over the player's lower body: 10 px wide, the 12 rows above the feet (px, py). With feet at
- * tile row ty (py = ty * 16 + 11) that is the player's own tile row, where the generator puts a crown only when its
- * trunk stands further south: the player is behind the tree. Pure.
+ * Opaque overhead pixels over the player's lower body: 10 px wide, the 12 rows up to the feet (px, py). With feet at
+ * tile row ty (py = ty * 16 + 11) that is the player's own tile row (it took the row above too, whose bottom pixel
+ * row could hold an open hole open once he stepped out), where the generator puts a crown only when its trunk
+ * stands further south: the player is behind the tree. Pure.
  */
 export function bodyCover(px: number, py: number, opaque: Opaque): number {
   const x0 = Math.round(px) - 5;
-  const y0 = Math.round(py) - 12;
+  const y0 = Math.round(py) - 11;
   let n = 0;
   for (let y = y0; y < y0 + 12; y++) for (let x = x0; x < x0 + 10; x++) if (opaque(x, y)) n++;
   return n;
