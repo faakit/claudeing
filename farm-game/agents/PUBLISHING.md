@@ -178,5 +178,5 @@ stops collection and resets the identifier on your device. Google processes this
 **Cloud save (Android, optional).** When you play signed in to Google Play Games, your farm's save file is stored
 in your Google Play Games account so you can continue on another phone. It contains only game progress and game
 settings. We do not run a server and never receive it. The game shows your Play Games name on your phone and does
-not store or send it. Turn cloud save off in Menu > Opts > Cloud save; delete Play Games data from your Play Games
+not store or send it. Turn cloud save off in Menu > Opts > Cloud save... > Turn off; delete Play Games data from your Play Games
 profile or Google Account.
