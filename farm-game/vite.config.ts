@@ -1,8 +1,19 @@
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vitest/config';
 import { offlineServiceWorker } from './scripts/sw-plugin.mjs';
 
+/** The build's label on the title: the commit and its date ("ab7158f 2026-10-12"), or "dev" outside git. */
+function buildLabel(): string {
+  try {
+    return execSync('git log -1 --format="%h %cs"', { encoding: 'utf8' }).trim();
+  } catch {
+    return 'dev';
+  }
+}
+
 export default defineConfig({
   base: './',
+  define: { __BUILD__: JSON.stringify(buildLabel()) },
   plugins: [offlineServiceWorker()],
   build: {
     chunkSizeWarningLimit: 2000,

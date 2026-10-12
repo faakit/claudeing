@@ -65,6 +65,16 @@ if (import.meta.env.PROD && !isNative() && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => undefined);
   });
+  // The worker is cache-first, so the first launch after a deploy runs the old build while the new one installs.
+  // When the new worker takes over and the player is still on the title (no game running), reload into it once;
+  // mid-game it waits for the next launch.
+  const hadWorker = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadWorker || reloading || !game.scene.isActive('Title')) return;
+    reloading = true;
+    window.location.reload();
+  });
 }
 
 /**

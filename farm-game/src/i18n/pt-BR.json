@@ -520,7 +520,7 @@
   },
   "title": {
     "subtitle": "um joguinho de roça aconchegante",
-    "version": "protótipo v0.2",
+    "version": "versão {build}",
     "newerSave": "Seu jogo salvo é de uma versão mais nova. Atualize o jogo para continuar.",
     "recovered": "Recuperado do seu jogo salvo reserva.",
     "continue": "Continuar",

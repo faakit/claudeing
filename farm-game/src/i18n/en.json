@@ -520,7 +520,7 @@
   },
   "title": {
     "subtitle": "a cozy little farming game",
-    "version": "prototype v0.2",
+    "version": "build {build}",
     "newerSave": "Your save is from a newer version. Update the game to continue it.",
     "recovered": "Recovered from your backup save.",
     "continue": "Continue",
