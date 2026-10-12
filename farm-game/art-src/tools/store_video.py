@@ -15,7 +15,7 @@ import shutil
 import subprocess
 import sys
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import store_art as A  # noqa: E402
@@ -26,52 +26,61 @@ WORK = os.path.join(STORE, 'video', 'cut')
 FPS = 30
 XF = 8  # cross-dissolve frames
 
-# (moment, first frame, last frame, caption, cues as (sfx, seconds into the beat))
+# The story arc (store/BRIEF.md). (moment, first frame, last frame, caption, cues as (sfx, seconds into the beat),
+# crop of a full-screen capture to the 800x1304 panel or None for the clean world view)
+TITLE_CROP = (0, 120, 800, 1424)
+SHEET_CROP = (0, 296, 800, 1600)
 BEATS = [
-    ('letter', 0, 89, 'A letter from Rosa', []),
-    ('green', 0, 104, 'Bring the green back', [('green', 0.1)]),
-    ('field', 12, 91, 'Grow a full field', [('swing', 0.62), ('harvest', 0.78)]),
-    ('tow', 8, 157, 'Tow timber downriver', [('logHook', 0.4), ('logTug', 2.1), ('logTug', 3.0)]),
-    ('river', 0, 94, 'The river comes home', [('green', 0.1)]),
-    ('senna', 30, 114, 'Welcome families home', [('homecoming', 0.0)]),
-    ('fishing', 30, 183, 'Fish the living river', [('select', 0.4), ('ui', 0.6), ('harvest', 3.05)]),
+    ('green-clean', 0, 104, 'Bring a fading valley back to life', [('green', 0.25)], None),
+    ('letter', 0, 89, "Your grandmother's farm is waiting", [], TITLE_CROP),
+    ('river-clean', 0, 104, 'The river finds its way home', [('green', 0.2)], None),
+    ('people', 10, 109, 'Rebuild homes. Welcome families back', [('homecoming', 0.3)], None),
+    ('cozy', 10, 95, 'Grow, cook, fish at your own pace', [('swing', 0.33), ('harvest', 0.5)], None),
+    ('fishing', 60, 183, 'Grow, cook, fish at your own pace', [('ui', 0.1), ('harvest', 2.05)], SHEET_CROP),
 ]
 # SOCIAL=1: the social-media trailer, which opens on an AI-generated (Google Flow, Veo 3.1) shot animated from a real
 # capture of the dry farm (frames in video/frames/veo-intro, 800x1600). Never used in the Play Store video.
 SOCIAL = os.environ.get('SOCIAL') == '1'
 if SOCIAL:
-    BEATS.insert(0, ('veo-intro', 1, 105, 'The valley is fading', []))
-END_FRAMES = 78
-CARD = ('The Dry Year', 'Bring the valley back')
+    BEATS.insert(0, ('veo-intro', 1, 105, 'The valley is fading', [], (0, 148, 800, 1452)))
+END_FRAMES = 84
+CARD = {'en': 'The Dry Year', 'pt-BR': 'O Ano Seco'}
 
 
 def end_card():
-    """The last frame: the logo carved as on the title, the chapter, and the green farm (a real capture at 3x)
-    under it. No store claims."""
-    img = Image.new('RGB', (A.W, A.H), A.INK)
-    farm = Image.open(os.path.join(A.RAW, 'wide', 'wide-store-full-field-farm-14-13.png')).convert('RGB')
-    d = ImageDraw.Draw(img)
-    d.rectangle([28 - 12, 1290 - 12, 28 + 1022 + 12, 1290 + 499 + 12], fill=A.WOOD)
-    d.rectangle([28 - 8, 1290 - 8, 28 + 1022 + 8, 1290 + 499 + 8], fill=A.EARTH)
-    d.rectangle([28 - 4, 1290 - 4, 28 + 1022 + 4, 1290 + 499 + 4], fill=A.INK)
-    img.paste(farm.crop((0, 0, 1023, 500)), (28, 1290))
+    """The last frame: the painted key art (Flow, the valley half straw and half green), the logo carved as on the
+    title, the chapter. No store claims."""
+    img = A.backdrop()
+    art = Image.open(os.path.join(A.FLOW, 'key-split-2.jpg')).convert('RGB')
+    art = art.resize((1000, round(art.height * 1000 / art.width)), Image.LANCZOS)
+    A.framed(img, art, (40, 900))
     cx = A.W // 2
-    A.embossed(img, 'TINY', cx, 300, 26, 6)
-    A.embossed(img, 'ACRE', cx, 540, 26, 6)
-    A.embossed(img, CARD[0], cx, 860, 10, 4, face=A.CREAM)
-    A.embossed(img, CARD[1], cx, 1040, 8, 4, face=A.SAND)
+    A.embossed(img, 'TINY', cx, 170, 24, 6)
+    A.embossed(img, 'ACRE', cx, 400, 24, 6)
+    veil = Image.new('L', img.size, 0)
+    ImageDraw.Draw(veil).rounded_rectangle([170, 650, A.W - 170, 790], radius=40, fill=150)
+    img = Image.composite(Image.new('RGB', img.size, A.INK), img, veil.filter(ImageFilter.GaussianBlur(14)))
+    A.embossed(img, CARD['en'], cx, 680, 10, 4, face=A.CREAM)
     return img
 
 
 def clips():
-    """Each clip as (get frame i, first, last): the beats in their caption frames, then the end card."""
+    """Each clip as (get frame i, first, last): the beats in their story frames, then the end card."""
     out = []
-    px = min(A.caption_px(cap) for _, _, _, cap, _ in BEATS)
-    for name, a, b, cap, _ in BEATS:
-        frame = A.band(cap, px)
+    px = A.story_px('en')
+    blank = Image.new('RGB', A.PANEL, A.INK)
+    for name, a, b, cap, _, crop in BEATS:
+        base = A.backdrop()
+        A.caption(base, cap, px)
+        A.framed(base, blank, A.PANEL_AT)
 
-        def get(i, name=name, frame=frame):
-            return A.compose(Image.open(os.path.join(FRAMES, name, f'{i:04d}.png')), None, frame=frame)
+        def get(i, name=name, base=base, crop=crop):
+            shot = Image.open(os.path.join(FRAMES, name, f'{i:04d}.png')).convert('RGB')
+            if crop:
+                shot = shot.crop(crop)
+            img = base.copy()
+            img.paste(shot, A.PANEL_AT)
+            return img
 
         out.append((get, a, b))
     end = end_card()
@@ -113,9 +122,9 @@ def main():
     seconds = count / FPS
     print(f'{count} frames, {seconds:.2f} s; beats start at', [round(s / FPS, 2) for s in starts])
     # the soundtrack: summer music, thin while the valley is dry, full from the first green
-    green_at = starts[[b[0] for b in BEATS].index('green')] / FPS
+    green_at = starts[[b[0] for b in BEATS].index('green-clean')] / FPS
     cues = []
-    for k, (_, _, _, _, cs) in enumerate(BEATS):
+    for k, (_, _, _, _, cs, _) in enumerate(BEATS):
         for cue, at in cs:
             cues.append({'cue': cue, 'at': round(starts[k] / FPS + at, 3)})
     opts = {

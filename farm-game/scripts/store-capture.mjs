@@ -58,6 +58,37 @@ const fishing = (farm) =>
   });
 
 /**
+ * The clean look for the story set: the HUD, controls and banners hidden (every UI-scene object above the day tint,
+ * the night glow and the rain stays), the world camera zoomed so the characters read. Shots then clip to the world
+ * view (200x326 game px, 800x1304 at 4x). Re-applied before every capture, so a toast made since is hidden too.
+ */
+async function clean(farm, zoom = 1) {
+  farm.clean = true;
+  await farm.eval((z) => {
+    const g = window.__farm.game;
+    const world = g.scene.getScenes(true).find((sc) => 'tilemap' in sc && sc.tilemap);
+    if (world) world.cameras.main.setZoom(z);
+    window.__storeClean = () => {
+      const ui = g.scene.getScene('UI');
+      for (const o of ui.children.list) if ((o.depth ?? 0) >= 2.5) o.setVisible(false);
+      // in the world: plot prices, site names, quest marks and the tool strip (labels for play, not for a still)
+      if (world)
+        for (const o of world.children.list)
+          if ((o.depth ?? 0) >= 9000 || typeof o.text === 'string') o.setVisible(false);
+    };
+    window.__storeClean();
+  }, zoom);
+}
+/** Set the clock (golden hour, dusk); the day tint and lights follow on the next frame. */
+const clock = (farm, hhmm) => farm.eval((c) => window.__farm.dev.time.set({ clock: c }), hhmm);
+/** A capture: the whole 200x400 screen, or only the world view in the clean look. */
+async function snap(farm, path) {
+  if (!farm.clean) return farm.page.screenshot({ path });
+  await farm.eval(() => window.__storeClean?.());
+  return farm.page.screenshot({ path, clip: { x: 0, y: 74, width: 200, height: 326 } });
+}
+
+/**
  * Each moment: the scenario, then `drive(farm, t)` brings the game to the shot through the timeline `t`
  * (t.frame() is one video frame, 2 game frames). Drives run with the loop paused, so the same inputs always give
  * the same frames. The still is taken at `shotAt` (a video frame index), at the drive's t.mark(), or at its end.
@@ -177,6 +208,95 @@ const MOMENTS = {
       await t.hold(45);
     },
   },
+  // ---- the story set (owner brief, round 2): golden hour and dusk, the HUD hidden, the camera closer ----
+  // The hero's two halves: the same farm view, parched at midday and green at golden hour.
+  'hero-dry': {
+    scenario: 'farm-variant-dry',
+    shotAt: 20,
+    async drive(farm, t) {
+      await goto(farm, 'farm', 14, 16, 'down');
+      await clock(farm, '13:00');
+      await clean(farm, 1);
+      await t.hold(30);
+    },
+  },
+  'hero-green': {
+    scenario: 'store-full-field',
+    shotAt: 70,
+    async drive(farm, t) {
+      await goto(farm, 'farm', 14, 16, 'down');
+      await clock(farm, '19:45');
+      await clean(farm, 1);
+      await t.hold(80);
+    },
+  },
+  // The first green spreading out from the farmer (the video's hook).
+  'green-clean': {
+    scenario: 'valley-farm-green-reveal',
+    shotAt: 14,
+    async drive(farm, t) {
+      await clean(farm, 1.25);
+      await t.hold(110);
+    },
+  },
+  // The river's first morning: the dry town dissolving into the river town.
+  'river-clean': {
+    scenario: 'river-first-morning',
+    shotAt: 18,
+    async drive(farm, t) {
+      await clean(farm, 1.25);
+      await t.hold(110);
+    },
+  },
+  // Dusk in town the first evening Senna is home: the Marls' windows lit, the wheel turning.
+  people: {
+    scenario: 'marls-home',
+    shotAt: 110,
+    async drive(farm, t) {
+      // at dusk Senna stands on the north bank (21,21) watching the river come past the turning wheel
+      await goto(farm, 'town', 20, 18, 'down');
+      await clean(farm, 1.5);
+      await t.hold(120);
+    },
+  },
+  // A full field at golden hour, a swing of the scythe through the ripe tomatoes.
+  cozy: {
+    scenario: 'store-full-field',
+    shotAt: 18,
+    async drive(farm, t) {
+      await goto(farm, 'farm', 13, 18, 'left');
+      await clock(farm, '19:40');
+      await clean(farm, 1.5);
+      await t.hold(20);
+      await t.press(6);
+      await t.hold(70);
+    },
+  },
+  // One thumb: the whole screen, HUD and controls, at golden hour, at 3x (600x1200) to sit in a phone held in one
+  // hand (store_art.py).
+  hand: {
+    scenario: 'store-full-field',
+    dpr: 3,
+    shotAt: 30,
+    async drive(farm, t) {
+      await goto(farm, 'farm', 13, 18, 'left');
+      await clock(farm, '18:30');
+      await t.hold(20);
+      await t.press(6);
+      await t.hold(40);
+    },
+  },
+  // The Marls' house rising: the scaffolding at 5 of 6 timber, the farmer at the door with the last log.
+  rebuild: {
+    scenario: 'tow-house-marls',
+    shotAt: 20,
+    async drive(farm, t) {
+      await goto(farm, 'town', 15, 2, 'down');
+      await clock(farm, '17:50');
+      await clean(farm, 1.5);
+      await t.hold(40);
+    },
+  },
 };
 
 /** A timeline over a paused game: each frame steps 2 game frames, then the hook runs (save a PNG, take the still). */
@@ -225,7 +345,7 @@ try {
       for (const name of picked) {
         const m = MOMENTS[name];
         if (!m) throw new Error(`no moment "${name}" (have ${Object.keys(MOMENTS).join(', ')})`);
-        const farm = await open(browser, url, m.scenario, lang);
+        const farm = await open(browser, url, m.scenario, lang, { ...PHONE, dpr: m.dpr ?? 4 });
         await pause(farm);
         const shotDir = join(OUT, 'raw', lang);
         const vidDir = join(OUT, 'video', 'frames', name);
@@ -238,11 +358,10 @@ try {
         const take = async () => {
           if (taken) return;
           taken = true;
-          await farm.shot(name, shotDir);
+          await snap(farm, join(shotDir, `${name}.png`));
         };
         const t = timeline(farm, async (n, tl) => {
-          if (mode === 'video')
-            await farm.page.screenshot({ path: join(vidDir, `${String(n).padStart(4, '0')}.png`) });
+          if (mode === 'video') await snap(farm, join(vidDir, `${String(n).padStart(4, '0')}.png`));
           else if (n === m.shotAt || (m.shotAt === undefined && tl.marked && tl.sinceMark() === 0))
             await take();
         });

@@ -13,7 +13,9 @@ import os
 import re
 import sys
 
-from PIL import Image, ImageDraw
+import math
+
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RAW = os.path.join(os.environ.get('STORE_OUT', 'C:/Users/andre/dev/tiny-acre/marketing'), 'raw')
@@ -29,16 +31,24 @@ GOLD = (244, 211, 94)
 ORANGE = (228, 140, 36)
 CREAM = (244, 234, 210)
 
-# The store order, and each shot's caption (2-5 words).
-SHOTS = [
-    ('green', {'en': 'Bring the green back', 'pt-BR': 'Traga o verde de volta'}),
-    ('letter', {'en': 'A letter from Rosa', 'pt-BR': 'Uma carta da Rosa'}),
-    ('field', {'en': 'Grow a full field', 'pt-BR': 'Cultive um campo cheio'}),
-    ('tow', {'en': 'Tow timber downriver', 'pt-BR': 'Reboque troncos pelo rio'}),
-    ('river', {'en': 'The river comes home', 'pt-BR': 'O rio volta para casa'}),
-    ('senna', {'en': 'Welcome families home', 'pt-BR': 'As famílias voltam'}),
-    ('fishing', {'en': 'Fish the living river', 'pt-BR': 'Pesque no rio vivo'}),
+# The story set (store/BRIEF.md): the store order, the raw capture(s) each frame uses, and its caption.
+STORY = [
+    ('hero', ('hero-dry', 'hero-green'),
+     {'en': 'Bring a fading valley back to life', 'pt-BR': 'Faça o vale florescer de novo'}),
+    ('letter', ('letter',),
+     {'en': "Your grandmother's farm is waiting", 'pt-BR': 'A fazenda da sua avó te espera'}),
+    ('river', ('river-clean',),
+     {'en': 'The river finds its way home', 'pt-BR': 'O rio encontra o caminho de casa'}),
+    ('people', ('people',),
+     {'en': 'Rebuild homes. Welcome families back', 'pt-BR': 'Reerga as casas. Receba quem volta'}),
+    ('cozy', ('cozy',),
+     {'en': 'Grow, cook, fish at your own pace', 'pt-BR': 'Plante, cozinhe e pesque sem pressa'}),
+    ('hand', ('hand',),
+     {'en': 'Made for one hand', 'pt-BR': 'Feito para jogar com uma mão'}),
+    ('rebuild', ('rebuild',),
+     {'en': 'Rebuild the town, log by log', 'pt-BR': 'Reerga a vila, tronco a tronco'}),
 ]
+FLOW = os.path.join(os.path.dirname(RAW), 'flow-raw')
 FEATURE = {'en': 'The Dry Year', 'pt-BR': 'O Ano Seco'}
 
 
@@ -169,16 +179,147 @@ def screenshot(locale, name, caption, px=None):
     return compose(Image.open(os.path.join(RAW, locale, f'{name}.png')), caption, px)
 
 
+PANEL = (800, 1304)  # the clean world view, 200x326 game px at 4x
+PANEL_AT = ((W - PANEL[0]) // 2, 500)
+
+
+def backdrop():
+    """The painted key art behind every frame (Google Flow, Nano Banana, from real screenshots): atmosphere only."""
+    bd = Image.open(os.path.join(FLOW, 'backdrop-1.jpg')).convert('RGB')
+    k = W / bd.width
+    bd = bd.resize((W, round(bd.height * k)), Image.LANCZOS).crop((0, 0, W, H))
+    # an ink veil over the sky so the caption reads at any size
+    veil = Image.new('L', (1, H), 0)
+    for y in range(470):
+        veil.putpixel((0, y), int(170 * (1 - y / 470) ** 1.3))
+    veil = veil.resize((W, H))
+    return Image.composite(Image.new('RGB', (W, H), INK), bd, veil)
+
+
+def fits(text, px, maxw):
+    lines = wrap(text, px, maxw)
+    return len(lines) <= 2 and all(text_width(line, px) <= maxw for line in lines)
+
+
+def story_px(locale):
+    """One caption size for the whole set: the largest that sets every caption in at most two lines."""
+    return next((px for px in (12, 11, 10, 9) if all(fits(c[locale], px, W - 100) for _, _, c in STORY)), 9)
+
+
+def caption(img, text, px):
+    lines = wrap(text, px, W - 100)
+    lh = 9 * px + 6 * 4
+    block = len(lines) * lh - 6 * 4
+    top = 60 + (400 - block) // 2
+    for i, line in enumerate(lines):
+        embossed(img, line, W // 2, top + i * lh, px, 5)
+
+
+def framed(img, panel, at):
+    """Set a captured frame into the store image: a soft ink shadow, the wood rim, the panel."""
+    x, y = at
+    w, h = panel.size
+    sh = Image.new('L', img.size, 0)
+    ImageDraw.Draw(sh).rectangle([x - 4, y + 8, x + w + 20, y + h + 28], fill=120)
+    img.paste(Image.new('RGB', img.size, INK), (0, 0), sh.filter(ImageFilter.GaussianBlur(10)))
+    d = ImageDraw.Draw(img)
+    d.rectangle([x - 16, y - 16, x + w + 15, y + h + 15], fill=INK)
+    d.rectangle([x - 12, y - 12, x + w + 11, y + h + 11], fill=WOOD)
+    d.rectangle([x - 8, y - 8, x + w + 7, y + h + 7], fill=EARTH)
+    d.rectangle([x - 4, y - 4, x + w + 3, y + h + 3], fill=INK)
+    img.paste(panel, (x, y))
+
+
+def split(dry, green, unit=4):
+    """The hero: the same view parched and green, joined by the game's dithered reveal edge on the game-pixel grid,
+    leaning like the light (the green spreads in from the lower right)."""
+    out = dry.copy()
+    gp, op = green.load(), out.load()
+    b = bayer()
+    w, h = out.size
+    for gy in range(h // unit):
+        for gx in range(w // unit):
+            edge = w * 0.52 - (gy * unit - h / 2) * 0.45
+            t = (gx * unit - edge) / 70 + 0.5
+            if t >= 1 or (t > 0 and t > b(gx, gy)):
+                for yy in range(gy * unit, gy * unit + unit):
+                    for xx in range(gx * unit, gx * unit + unit):
+                        op[xx, yy] = gp[xx, yy]
+    return out
+
+
+def thumb(img, tip):
+    """A pixel-art thumb (8 px pixels, the palette's sand and ink) reaching up to the Action button from the lower
+    right: it says "one hand" and covers only the edge of the button."""
+    U = 8
+    small = Image.new('RGBA', (W // U, H // U), (0, 0, 0, 0))
+    d = ImageDraw.Draw(small)
+    tx, ty = tip[0] / U, tip[1] / U
+    ang = math.radians(32)
+    dx, dy = math.sin(ang), math.cos(ang)  # down and to the right
+    nx, ny = dy, -dx
+    pts = []
+    for k in range(0, 181, 12):  # the rounded tip
+        a = math.radians(k)
+        r = 6.5
+        pts.append((tx + r * (math.cos(a) * nx - math.sin(a) * dx), ty + r * (math.cos(a) * ny - math.sin(a) * dy)))
+    L = 60
+    pts.append((tx - 8.5 * nx + L * dx, ty - 8.5 * ny + L * dy))
+    pts.append((tx + 8.5 * nx + L * dx, ty + 8.5 * ny + L * dy))
+    d.polygon(pts, fill=(42, 26, 36, 255))
+    inner = [(x - (x - tx - 20 * dx) * 0.14, y - (y - ty - 20 * dy) * 0.14) for x, y in pts]
+    d.polygon(inner, fill=(220, 180, 124, 255))
+    d.polygon([(x + 1.5 * nx, y + 1.5 * ny) for x, y in inner[len(inner) // 2:]], fill=(180, 124, 76, 255))
+    d.ellipse([tx - 3, ty - 1, tx + 2, ty + 4], fill=(244, 228, 188, 255))
+    big = small.resize((W, H), Image.NEAREST)
+    img.paste(big, (0, 0), big)
+
+
+def phone(img, screen, at):
+    """A phone held upright: an ink body and bezel around the 600x1200 capture (3x)."""
+    x, y = at
+    w, h = screen.size
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([x - 36, y - 56, x + w + 35, y + h + 55], radius=64, fill=(20, 16, 31))
+    d.rounded_rectangle([x - 30, y - 50, x + w + 29, y + h + 49], radius=58, outline=(90, 72, 96), width=4)
+    d.rounded_rectangle([x + w // 2 - 50, y - 34, x + w // 2 + 50, y - 22], radius=6, fill=(58, 48, 80))
+    img.paste(screen, (x, y))
+
+
+def story_shot(locale, name, raws, text, px):
+    img = backdrop()
+    caption(img, text, px)
+
+    def load(r):
+        return Image.open(os.path.join(RAW, locale, f'{r}.png')).convert('RGB')
+
+    if name == 'hero':
+        framed(img, split(load(raws[0]), load(raws[1])), PANEL_AT)
+    elif name == 'letter':
+        framed(img, load('letter').crop((0, 120, 800, 120 + PANEL[1])), PANEL_AT)
+    elif name == 'hand':
+        scr = load('hand')
+        assert scr.size == (600, 1200), scr.size
+        at = ((W - 600) // 2, 600)
+        phone(img, scr, at)
+        # the Action button's centre is about (165, 344) game px: 3x, from the screen's corner
+        thumb(img, (at[0] + 165 * 3 + 6, at[1] + 344 * 3 + 30))
+    else:
+        framed(img, load(raws[0]), PANEL_AT)
+    return img
+
+
 def shots():
     paths = []
     for locale in ('en', 'pt-BR'):
         out = os.path.join(OUT, 'screenshots', locale)
         os.makedirs(out, exist_ok=True)
-        # one caption size for the whole set: the largest that fits every caption on one line
-        px = min(caption_px(caps[locale]) for _, caps in SHOTS)
-        for i, (name, caps) in enumerate(SHOTS, 1):
+        for f in os.listdir(out):
+            os.remove(os.path.join(out, f))
+        px = story_px(locale)
+        for i, (name, raws, caps) in enumerate(STORY, 1):
             p = os.path.join(out, f'{i:02d}-{name}.png')
-            screenshot(locale, name, caps[locale], px).save(p, optimize=True)
+            story_shot(locale, name, raws, caps[locale], px).save(p, optimize=True)
             paths.append(p)
     return paths
 
@@ -191,36 +332,16 @@ def bayer(n=4):
 
 
 def feature(locale='en'):
-    """1024x500: the same farm view captured dry and green, joined by the game's dithered reveal edge (in 3 px
-    game pixels), the logo carved as on the title, and the chapter's name. Text stays inside the central safe area."""
-    dry = Image.open(os.path.join(RAW, 'wide', 'wide-valley-farm-dry-farm-14-13.png')).convert('RGB')
-    green = Image.open(os.path.join(RAW, 'wide', 'wide-store-full-field-farm-14-13.png')).convert('RGB')
-    img = Image.new('RGB', (1024, 500), INK)
-    img.paste(dry, (0, 0))
-    # the reveal: green grows from the right in a soft diagonal, dithered on the 3 px game grid
-    b = bayer()
-    gp = green.load()
-    ip = img.load()
-    U = 3
-    for gy in range(0, 500 // U + 1):
-        for gx in range(0, 1023 // U + 1):
-            edge = 470 + (gy * U - 250) * 0.35  # the seam leans like the light
-            t = (gx * U - edge) / 90 + 0.5
-            if t >= 1 or (t > 0 and t > b(gx, gy)):
-                for yy in range(gy * U, min(500, gy * U + U)):
-                    for xx in range(gx * U, min(1023, gx * U + U)):
-                        ip[xx, yy] = gp[xx, yy]
-    # a dusk vignette band behind the logo so it reads at any size
-    shade = Image.new('RGB', (1024, 500), INK)
-    mask = Image.new('L', (1024, 500), 0)
-    md = ImageDraw.Draw(mask)
-    for i, a in enumerate((70, 110, 150)):
-        md.rectangle([260 + i * 24, 60 + i * 12, 763 - i * 24, 330 - i * 12], fill=a)
-    img = Image.composite(shade, img, mask)
-    # the logo, as on the title: TINY ACRE, carved gold (the title's scale-6 letters, here 4 px per font pixel x 3)
-    embossed(img, 'TINY ACRE', 512, 120, 12, 4)
-    draw = FEATURE[locale]
-    embossed(img, draw, 512, 248, 6, 2, face=CREAM)
+    """1024x500: one evocative image, the valley half straw and half green under a dusk sky (key art painted with
+    Google Flow, Nano Banana, from real screenshots), with the TINY ACRE logo carved in the game's own font."""
+    art = Image.open(os.path.join(FLOW, 'key-split-2.jpg')).convert('RGB')
+    art = art.crop((0, 0, 1376, 672)).resize((1024, 500), Image.LANCZOS)
+    veil = Image.new('L', (1024, 500), 0)
+    ImageDraw.Draw(veil).ellipse([230, -70, 794, 150], fill=120)
+    veil = veil.filter(ImageFilter.GaussianBlur(28))
+    img = Image.composite(Image.new('RGB', (1024, 500), INK), art, veil)
+    embossed(img, 'TINY ACRE', 512, 18, 8, 3)
+    embossed(img, FEATURE[locale], 512, 92, 4, 2, face=CREAM)
     return img
 
 
@@ -245,20 +366,21 @@ def icon():
 # ---- contact sheet ----------------------------------------------------------------------------------------------
 
 def sheet():
-    cols = len(SHOTS)
+    cols = len(STORY)
     tw, th = 216, 384
     img = Image.new('RGB', (cols * (tw + 8) + 8, 2 * (th + 8) + 8 + 280), INK)
     for r, locale in enumerate(('en', 'pt-BR')):
-        for c, (name, _) in enumerate(SHOTS):
+        for c, (name, _, _) in enumerate(STORY):
             s = Image.open(os.path.join(OUT, 'screenshots', locale, f'{c + 1:02d}-{name}.png'))
             img.paste(s.resize((tw, th), Image.LANCZOS), (8 + c * (tw + 8), 8 + r * (th + 8)))
     y = 2 * (th + 8) + 8
-    fg = Image.open(os.path.join(OUT, 'feature-graphic.png')).resize((512, 250), Image.LANCZOS)
-    img.paste(fg, (8, y))
-    ic = Image.open(os.path.join(OUT, 'icon-512.png')).resize((250, 250), Image.LANCZOS)
-    img.paste(ic, (528, y))
+    for k, f in enumerate(('feature-graphic.png', 'feature-graphic.pt-BR.png')):
+        fg = Image.open(os.path.join(OUT, f)).resize((512, 250), Image.LANCZOS)
+        img.paste(fg, (8 + k * 520, y))
+    ic = Image.open(os.path.join(OUT, 'icon-512.png')).convert('RGB').resize((250, 250), Image.LANCZOS)
+    img.paste(ic, (1048, y))
     small = Image.open(os.path.join(OUT, 'feature-graphic.png')).resize((256, 125), Image.LANCZOS)
-    img.paste(small, (788, y))
+    img.paste(small, (1306, y))
     p = os.path.join(os.path.dirname(RAW), 'contact-sheet.png')
     img.save(p)
     return p
