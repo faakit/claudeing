@@ -9,7 +9,10 @@ import {
   wateredByChannels,
 } from '../src/systems/channels';
 import type { GameState } from '../src/state/GameState';
-import { newState, grass } from './helpers';
+import { equip, newState, grass } from './helpers';
+import { plots } from '../src/data';
+import { performAction } from '../src/systems/actions';
+import { addItem } from '../src/systems/inventory';
 import '../src/mechanics';
 import { actOn, chooseAction } from '../src/systems/autoTool';
 import { endDay } from '../src/systems/day';
@@ -232,5 +235,21 @@ describe('save v18 (the Dry Year bump)', () => {
     expect(fixed.farm.tiles['21,12']!.crop!.tag).toBeUndefined();
     const old = migrate(JSON.parse(JSON.stringify({ ...newState(), version: 17 })));
     expect(old.settings.strikeOffset).toBeUndefined();
+  });
+});
+
+describe('placing over a channel', () => {
+  it('is refused, and the channel stays (placing used to fill it in for free)', () => {
+    const s = newState();
+    s.stats['place.spring'] = 3;
+    s.stats['valley.farmGreen'] = 1;
+    s.plots = Object.keys(plots);
+    row(s, 10, 5);
+    addItem(s, 'sprinkler', 1);
+    equip(s, 'sprinkler');
+    const r = performAction(s, grass(23, 10));
+    expect(r.ok).toBe(false);
+    expect(s.farm.tiles['23,10']?.channel).toBe(true);
+    expect(s.placed['farm'] ?? []).toHaveLength(0);
   });
 });

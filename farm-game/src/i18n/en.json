@@ -64,6 +64,7 @@
     "fertilized": "Already fertilized.",
     "cantPlace": "Can't place that here.",
     "cantPlaceCrop": "Can't place on a growing crop.",
+    "cantPlaceChannel": "Fill the channel in first.",
     "someoneStands": "Someone stands here every day. Try another spot.",
     "willStandFund": "The {name} will stand here. Fund it at the town board.",
     "onlyMax": "You can only have {n} of these.",
