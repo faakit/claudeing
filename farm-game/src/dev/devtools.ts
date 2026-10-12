@@ -23,7 +23,7 @@ import { LAB_MAP, LAB_SCENE, labMap } from './labDef';
 import { SCENARIOS } from './scenarioIndex';
 import { buildScenarioState, mapInfoFromTiled, scenarioRuntime, type MapInfoFn } from './scenarios';
 import { DevWaits } from './waits';
-import { parseLocale, setLocale } from '../i18n';
+import { getLocale, parseLocale, setLocale } from '../i18n';
 
 type Loose = Record<string, unknown>;
 
@@ -125,7 +125,12 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
     sandbox();
     current = name;
     // The scenario's language, else ?lang=, else English (never the device: checks read the same text everywhere).
+    const was = getLocale();
     setLocale(opts.lang ?? parseLocale(new URLSearchParams(location.search).get('lang')) ?? 'en');
+    // A language change restarts an open title (TitleScene), on the next step. Let that run first: a start called
+    // on the old title (its buttons still up) was wiped by the restart's create, and the world never opened (any
+    // scenario loaded right after a lang-pt title scenario timed out on sceneReady).
+    if (getLocale() !== was && titleActive()) await waits.frames(2);
     if (opts.title === 'first-launch') {
       // A first launch: an empty sandbox (no save), then the title rebuilt from scratch so it looks for none.
       mem = new MemoryStore();
