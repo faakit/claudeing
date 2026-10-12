@@ -225,21 +225,6 @@ export function driftAlong(
   );
 }
 
-/** The way a lane runs where a drifting log is (a unit vector toward its next waypoint), or null at its end. */
-export function laneAlong(
-  log: Pick<Log, 'x' | 'y' | 'wp'>,
-  path: readonly (readonly [number, number])[],
-): { x: number; y: number } | null {
-  const i = Math.min(log.wp ?? 0, path.length - 1);
-  const a = path[i];
-  const b = path[i - 1] ?? [log.x, log.y];
-  if (!a) return null;
-  const dx = a[0] - b[0];
-  const dy = a[1] - b[1];
-  const d = Math.hypot(dx, dy);
-  return d ? { x: dx / d, y: dy / d } : null;
-}
-
 /** Is the log within the rope's reach of the farmer's hands? */
 export const inReach = (hands: { x: number; y: number }, log: Log, slackPx = 0): boolean =>
   Math.hypot(log.x - hands.x, log.y - hands.y) <= ROPE_PX - slackPx;
