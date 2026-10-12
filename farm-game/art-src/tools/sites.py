@@ -143,6 +143,10 @@ def spring(names: list[str], stage: int) -> np.ndarray:
         cv.rect(12, 26, 8, 2, "ice white")  # foam where it lands
         cv.rect(7, 29, 4, 2, "sky")
         cv.rect(21, 29, 3, 2, "sky")
+        # the overflow (R22-1): the rim opens on the south-east, where the map's pool lies just below the site, and
+        # the water spills out of the sprite's bottom edge toward it
+        cv.rect(20, 29, 8, 3, "water")
+        cv.rect(22, 30, 2, 2, "sky")
     if not green:
         for x, y, w, h, k in side:
             stone(cv, x, y, w, h, warm=k in WARM)

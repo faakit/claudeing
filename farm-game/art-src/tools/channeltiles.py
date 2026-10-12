@@ -60,6 +60,15 @@ def _shift(h: np.ndarray, dy: int, dx: int) -> np.ndarray:
     return out
 
 
+def rim(mask: int) -> np.ndarray:
+    """R21-1: a 2 px earth-dark rim just outside the lit south and east lips (on the ground), so a crop beside the
+    channel stands on dark soil instead of melting into the wood lip (leaf mid on wood was about 1.2:1)."""
+    h = cut_mask(mask)
+    out = ~h & (_shift(h, 1, 0) | _shift(h, 2, 0) | _shift(h, 0, 1) | _shift(h, 0, 2))
+    s = slice(PAD, PAD + T)
+    return out[s, s]
+
+
 def bands(mask: int):
     """Per pixel of the tile: inside the cut, and which bank band it is in (north face, west face, south lip,
     east lip), else the bed."""
@@ -127,6 +136,7 @@ def channel(P, look: str, mask: int) -> np.ndarray:
     t[south | east] = lip
     t[west] = face if look == "wet" else shadow
     t[north] = shadow
+    t[rim(mask)] = face
     # the north face's top 2 rows read as the cut edge; below them, in a wet ditch, a muddy 1-row step would be
     # 1 px, so the face is a solid 3 px block
     return t
@@ -144,31 +154,37 @@ def _shift_t(a: np.ndarray, dy: int) -> np.ndarray:
 
 def culvert(P, mask: int) -> np.ndarray:
     """Stone headwalls on a path cell, one per channel side: the path itself stays (the overlay is transparent
-    elsewhere). Facing the viewer (south) the wall shows its dark mouth; the other sides show the wall's cap."""
+    elsewhere). Facing the viewer (south) the wall shows its dark mouth; the other sides show the wall's cap.
+    R21-3: the walls are 6 px deep (a 2 px lit cap, 2 px of stone, a 2 px dark foot) and 4 px wider than the cut,
+    so they read as masonry across a 2-wide path, not as a thin kerb."""
     t = np.full((T, T), -1, dtype=np.int32)
     dark, mid, lt, gap = P.name("stone dark"), P.name("stone"), P.name("stone lt"), P.name("night navy")
-    a, b = LO - 1, HI + 1  # the wall is 2 px wider than the cut
+    ink = P.name("ink")
+    a, b = LO - 2, HI + 2  # the wall is 4 px wider than the cut
     if mask & N:
-        t[0:4, a:b] = mid
+        t[0:6, a:b] = mid
         t[0:2, a:b] = lt
+        t[4:6, a:b] = dark
         t[2:4, a:a + 2] = dark
         t[2:4, b - 2:b] = dark
     if mask & S:
-        t[10:16, a:b] = mid
-        t[10:12, a:b] = lt
+        t[8:16, a:b] = mid
+        t[8:10, a:b] = lt
         t[12:16, LO + 1:HI - 1] = gap  # the mouth under the path
         t[14:16, LO + 1:HI - 1] = P.name("dusk blue")
-        t[12:16, a:a + 2] = dark
-        t[12:16, b - 2:b] = dark
+        t[10:16, a:a + 2] = dark
+        t[10:16, b - 2:b] = dark
+        t[10:12, LO + 1:HI - 1] = ink  # the arch's shadowed lintel
     if mask & W:
-        t[a:b, 0:4] = mid
+        t[a:b, 0:6] = mid
         t[a:b, 0:2] = lt
-        t[b - 2:b, 0:4] = dark
+        t[b - 2:b, 0:6] = dark
+        t[a:a + 2, 4:6] = dark
     if mask & E:
-        t[a:b, 12:16] = mid
+        t[a:b, 10:16] = mid
         t[a:b, 14:16] = lt
-        t[LO + 1:HI - 1, 12:14] = gap
-        t[b - 2:b, 12:16] = dark
+        t[LO + 1:HI - 1, 10:12] = gap
+        t[b - 2:b, 10:16] = dark
     return t
 
 
@@ -190,7 +206,41 @@ def mouth(P, side: str) -> np.ndarray:
     return t
 
 
+def channel_winter(P, mask: int) -> np.ndarray:
+    """R21-2: a wet channel in winter: the season's shore remap (sand lips), dark open water, and a 2 px ice-white
+    edge frozen along the lit lips. Replaces the generic remap in tiles_winter.png (tiles_extra.SEASON_OVERRIDES)."""
+    hole, north, west, south, east = bands(mask)
+    t = channel(P, "wet", mask)
+    bed = hole & ~(north | west | south | east)
+    t[bed] = P.name("water")
+    near = np.zeros_like(bed)
+    for k in (1, 2):
+        near |= _shift_t(south, -k)
+        near[:, : T - k] |= east[:, k:]
+    t[bed & near] = P.name("ice white")
+    t[south | east] = P.name("sand")  # the winter ground remap's lip (wood -> sand)
+    return t
+
+
+def mouth_winter(P, side: str) -> np.ndarray:
+    m = DIRS[side]
+    full = channel_winter(P, m | {N: S, S: N, E: W, W: E}[m])
+    t = np.full((T, T), -1, dtype=np.int32)
+    k = 6
+    sl = {"w": (slice(None), slice(0, k)), "e": (slice(None), slice(T - k, T)),
+          "n": (slice(0, k), slice(None)), "s": (slice(T - k, T), slice(None))}[side]
+    t[sl] = full[sl]
+    return t
+
+
 def build(P) -> dict[str, np.ndarray]:
+    import tiles_extra
+
+    winter = tiles_extra.SEASON_OVERRIDES.setdefault("winter", {})
+    for m in range(16):
+        winter[f"chan:wet:{m}"] = channel_winter(P, m)
+    for d in DIRS:
+        winter[f"chanmouth:{d}"] = mouth_winter(P, d)
     out: dict[str, np.ndarray] = {}
     for look in ("dry", "wet"):
         for m in range(16):
