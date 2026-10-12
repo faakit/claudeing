@@ -1,15 +1,22 @@
 import stagesData from './stages.json';
 
-/** A water bed that runs on a map stage (src/audio/stages.json). */
+/** A water bed that runs on a map stage (src/audio/stages.json): running water, or the mill wheel turning. */
 export interface StageWater {
-  bed: 'creek' | 'river';
+  bed: WaterBed;
   /** Tile rects [x, y, w, h] of the water: the bed is louder near them. None: the same level everywhere. */
   near?: [number, number, number, number][];
   /** Level scale for the bed (a trickle is a creek at a third). */
   gain?: number;
   /** A stat that must be set before the bed runs (the reveal that first shows the water sets it). */
   wait?: string;
+  /** Positional only: the level far away (default WATER_FLOOR; the mill wheel fades out, 0). */
+  floor?: number;
+  /** Positional only: tiles from full level down to the floor (default WATER_FALLOFF). */
+  falloff?: number;
 }
+
+export type WaterBed = 'creek' | 'river' | 'mill';
+export type WaterLevels = Record<WaterBed, number>;
 
 export interface StageAudio {
   arrangement?: 'thin' | 'full';
@@ -54,13 +61,13 @@ export function waterLevel(w: StageWater, tx: number, ty: number): number {
   const g = w.gain ?? 1;
   if (!w.near?.length) return g;
   const d = tilesTo(w.near, tx, ty);
-  const k = 1 - Math.max(0, d - WATER_NEAR) / WATER_FALLOFF;
-  return g * Math.max(WATER_FLOOR, Math.min(1, k));
+  const k = 1 - Math.max(0, d - WATER_NEAR) / (w.falloff ?? WATER_FALLOFF);
+  return g * Math.max(w.floor ?? WATER_FLOOR, Math.min(1, k));
 }
 
 /**
- * Levels of the water beds for a stage (creek, river), with the stats (for `wait`) and the player's tile.
- * Two entries for the same bed take the louder.
+ * Levels of the water beds for a stage (creek, river, the mill wheel), with the stats (for `wait`) and the
+ * player's tile. Two entries for the same bed take the louder.
  */
 export function waterBeds(
   map: string,
@@ -68,8 +75,8 @@ export function waterBeds(
   stats: Record<string, number>,
   tx: number,
   ty: number,
-): { creek: number; river: number } {
-  const out = { creek: 0, river: 0 };
+): WaterLevels {
+  const out: WaterLevels = { creek: 0, river: 0, mill: 0 };
   for (const w of stageAudio(map, variant).water ?? []) {
     if (w.wait && !stats[w.wait]) continue;
     out[w.bed] = Math.max(out[w.bed], waterLevel(w, tx, ty));

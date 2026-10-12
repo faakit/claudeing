@@ -46,6 +46,13 @@ export interface SfxAsset {
   /** Cues this one silences for `maskFor` seconds after it plays (a row tick hides the footstep on that tile). */
   masks?: string[];
   maskFor?: number;
+  /**
+   * Level change (dB) when this cue follows another within `softFor` seconds (default SOFT_AFTER): the water a
+   * spade cut lets in plays under the cut ({ dig: -9 }), so a wet channel row is not louder than a dry one, and
+   * the splash of a log freed by a tug (170 ms after it) under the tug.
+   */
+  softAfter?: Record<string, number>;
+  softFor?: number;
 }
 
 /** A looping ambience bed or a pool of one-shots (birds, drips). */
@@ -136,6 +143,8 @@ export interface Piece {
    * `swap` gives accompaniment layers a sparser pattern, `db` is the level offset (default THIN_DB).
    */
   thin?: { drop: string[]; swap?: Record<string, string>; db?: number };
+  /** Level (dB) of the rainy-day arrangement (default RAIN_DB): fall's leans on its percussion and needs less cut. */
+  rainDb?: number;
   /** Melody phrases in note:beats tokens, bars separated by '|'. */
   phrases: Record<string, string>;
 }

@@ -682,5 +682,133 @@
   "licence": "CC0-1.0",
   "pack": "OpenGameArt: 40-cc0-water-splash-slime-sfx",
   "member": "bubble_02.ogg"
+ },
+ "sfx/kenney-rpg/cloth3": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/cloth3.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/cloth4": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/cloth4.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/metalLatch": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/metalLatch.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-impact/impactWood_light_000": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactWood_light_000.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/impactWood_light_001": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactWood_light_001.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/kenney-impact/impactWood_light_002": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactWood_light_002.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/oga-rubberduck-100/wooden_01": {
+  "url": "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx",
+  "member": "wooden_01.ogg"
+ },
+ "sfx/oga-rubberduck-100v2/wood_hit_02": {
+  "url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx-2",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx-2",
+  "member": "sfx100v2_wood_hit_02.ogg"
+ },
+ "sfx/kenney-rpg/doorClose_2": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/doorClose_2.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-rpg/doorClose_4": {
+  "url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "member": "Audio/doorClose_4.ogg",
+  "page": "https://kenney.nl/assets/rpg-audio",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney RPG Audio"
+ },
+ "sfx/kenney-impact/impactWood_medium_003": {
+  "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "member": "Audio/impactWood_medium_003.ogg",
+  "page": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney (kenney.nl)",
+  "licence": "CC0-1.0",
+  "pack": "Kenney Impact Sounds"
+ },
+ "sfx/oga-rubberduck-100/wooden_02": {
+  "url": "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx",
+  "member": "wooden_02.ogg"
+ },
+ "sfx/oga-rubberduck-100/wooden_03": {
+  "url": "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx",
+  "member": "wooden_03.ogg"
+ },
+ "sfx/oga-rubberduck-100/hit_03": {
+  "url": "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx",
+  "member": "hit_03.ogg"
+ },
+ "sfx/oga-rubberduck-100v2/wood_hit_03": {
+  "url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx-2",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx-2",
+  "member": "sfx100v2_wood_hit_03.ogg"
+ },
+ "sfx/oga-rubberduck-100v2/loop_water_03": {
+  "url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip",
+  "page": "https://opengameart.org/content/100-cc0-sfx-2",
+  "author": "rubberduck",
+  "licence": "CC0-1.0",
+  "pack": "OpenGameArt: 100-cc0-sfx-2",
+  "member": "sfx100v2_loop_water_03.ogg"
  }
 }

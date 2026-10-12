@@ -319,71 +319,67 @@ merges.
 
 ### Audio
 
-**Now (branch `audio/dry-year`, ab8cdab plus a docs commit):** composed music on CC0 samples (day and night per
-season, title, festival, mine, shop, lullaby, motifs, dawn/dusk, stings), recorded CC0 effects and ambience with a
-synth fallback for each; the owner listened and approved the direction. The Dry Year round adds, in the same
-direction (no new compositions):
+**Now (branch `audio/m7`, from `integration/dry-year-2`):** composed music on CC0 samples, recorded CC0 effects and
+ambience with a synth fallback for each cue. The owner listened and approved the direction. The Dry Year round
+(audio by map stage, the `green` jingle, the creek and river beds, the dig cue) is described in `DECISIONS.md`, "The
+Dry Year, audio". M7 adds, in the same direction:
 
-- **Audio by map stage** (`src/audio/stages.json`, read through `src/audio/stages.ts`): keyed on
-  `valleyStage(state, map).variant` (`default` for a map with one look). A stage marked `arrangement: "thin"`, or on
-  the dry palette, plays the season piece thinned (each season piece's `thin` in `music_src.py`: bass and percussion
-  fade out on their own strips, then are not played; fall's harp moves to its half pattern; about 3 dB under the
-  full piece), over the dry wind (now 0.6, about 11 dB under the thinned piece) with a bird now and then. A rainy
-  dry day plays the rainy arrangement, never both. `water` lists the beds a stage runs (creek, river), positional
-  by tile distance to `near` rects (floor 0.25), with a `wait` stat for a reveal (`valley.creekSeen`). Farm
-  `restored` and Wendhead `spring`/`restored` run the creek; town `river` and today's town (`default`) run the
-  river; town `dry` is thin with a faint trickle at x 21-22; Wendhead `gorge` (old saves) is thin with the river.
-  The M6 builder confirmed these variant names.
-- **A reveal** (`runtime.valleyReveal`) holds the stage before it: the dry wind and few birds while the straw
-  dissolves, then the birds return and the arrangement fills back in on the same bar clock (about 2 s). The dawn
-  flourish is spent, not played, on a reveal morning.
-- **The `green` jingle** (jingle system, priority 3, 92 bpm, about 3.3 s, synth fallback) plays for every valley
-  moment (`Hud.valleyMoment`: the first green, THE CREEK RUNS, and M6's THE RIVER IS BACK) instead of the special
-  fanfare.
-- **New cues:** `dig` (a channel cut: `actionFx` case `dig` and the spring site's channel beat), `logLand` and
-  `logKnock` for M7 towing (the feel lane calls them from `tow-spike`). All come from packs already credited (Kenney
-  Impact Sounds, rubberduck's water pack, the shovel), extracted from the cached archives: no new downloads.
-- **New beds:** `creek` (three water-loop layers), `burble` (gurgle one-shots), `river`; the `wind` bed has a second
-  11 s layer (combined period 165 s). New payload about 0.35 MB.
-- Tools: `build.py` loop layers take their own `src`, `shift`, `gain`, `lp` and a `search` that slides the start to a
-  matched wrap level; per-cue `repeatWindow`; `render.ts` renders `thin` and timed `changes`; `render.mjs` has the
-  `dy-*` jobs. Tests: `tests/audio-dry-year.test.ts`.
+- **Tow cues:** `logHook` (the hook bites wood) and `logTug` (rope rustle, a creak pitched down, a wooden shift) are
+  new. `logKnock` (wood on stone in water) and `logLand` (a heavy log on timber, a little water) are rebuilt with a
+  wooden crack, so 40 % or more of a single hit is above 400 Hz and a phone speaker plays it. Levels: hook -22.9 M,
+  tug -21.4, knock -21.8, land -20.2. Every take peaks at -4.6 dBTP or lower at the output (recipe `tpOut`, unit
+  test). The tug is 300 ms long and never repeat-ducked: `audio-src/tools/tow-cues.mjs` plays the tow scenarios and
+  found the quickest second tug 277 ms after the first.
+- **Cues under cues** (`softAfter`, `softFor` in a recipe): the water a wet channel cut lets in plays 9 dB under the
+  cut, and the splash of a log freed by a tug plays 6 dB under the tug. Watering alone has a 0.5 s repeat window
+  (-4 dB). A wet dig row is now -20.6 LUFS (the dry row is -20.8), and the full tow peaks at -18.4 M.
+- **Senna:** `motif-senna` and `-heart` (a triplet arc on vibes over a turning pizz) play through the existing
+  `talkTo` / `heartUp` wiring. The `homecoming` jingle (priority 4, 3.6 s) plays on her arrival banner. The
+  `window-lit` sting plays on `houseLit` and spends that evening's dusk flourish.
+- **The mill wheel:** the `mill` bed (`gen_beds.py mill()`, self-made from CC0 splashes, creaks and a knock, with a
+  recorded spill layer; 120 KB). It is positional at x 21-22, y 30-31 (full within 1.5 tiles, silent 9.5 tiles
+  out), and it plays only on the town's `marls` stage (`src/audio/stages.json`).
+- **Fall rain:** the rainy fall arrangement gets its own level (`rainDb` 0.8), -31.7 LUFS alone (it was -35.0).
+- **Tools:** `render.ts` starts cues at their exact time (repeat windows used to see tick-rounded gaps); `render.mjs`
+  has the `m7-*` jobs; `build.py` has a per-part `lp`, per-layer `correlated` and per-cue `tpOut`. Tests:
+  `tests/audio-m7.test.ts`.
 
-**Verified:** `verify:fast` green at ab8cdab. The full `verify` ran at ab8cdab while renders loaded the PC: the unit
-`tapmove` pathfind timing (9.4 ms against 2 ms) and `e2e:controls` gesture and timing checks failed (harness lag; no
-input code changed here); everything else passed, and `perf` was not reached. Renders and `LISTEN.md` are in
-`C:/Users/andre/dev/tiny-acre/audio-renders/dry-year/`. **Not verified:** no real phone; no scenario was checked by
-ear in the built-in browser (only a Playwright probe of `channels-first-dig` cue timing); the critic
-(`audio-critique/review-11.md`) has not reviewed a checkpoint yet.
+**Audio hooks the M7 builder must call (exact names; audio does nothing until they exist):**
+
+| Hook | Where | Plays |
+| --- | --- | --- |
+| `audio.play('logHook' \| 'logTug' \| 'logKnock' \| 'logLand')` | the towing controller, at the same moments as `towSpike`: catch, each tug, first snag, `T.drop` | the tow cues (towSpike falls back to `swing` / `till` while an id is missing) |
+| `audio.play('water')` 150-250 ms after a freeing tug | the towing controller | the splash, 6 dB under the tug |
+| town stage variant `marls` (`valleyStage`) | `src/data/valley.json` | the river plus the mill wheel |
+| villager id `senna` | `src/data/npcs.json` | `motif-senna` on the first talk of the day, `-heart` at a new heart |
+| `valleyMoment` with `cue: 'homecoming'` | the arrival banner (`Hud` plays `m.cue ?? 'green'`) | the homecoming jingle |
+| `gameEvents.emit('houseLit', { house })` once per house | the lights system | `window-lit`, and no dusk flourish that evening |
+
+`houseLit` is listened to by name with a loose cast in `src/game/audioWiring.ts`, because `events.ts` belongs to the
+builder. After the merge, type it (`gameEvents.on('houseLit', ...)`) so a renamed event fails the typecheck.
+
+**Verified:** `verify:fast` green at each commit. The critic's full `verify`, run alone at 6b56f04 (code-identical
+to 0e6cb95): VERIFY OK, perf 1x/4x/6x inside budget, and `e2e:scenarios` flaky once (feel's chained T1 tow tap,
+passed alone). My own full run overlapped the critic's, so its perf 4x/6x failures were load; `npm run perf` rerun
+at 0e6cb95 is inside budget. Unit tests 1308/1308. The critic accepted the round with all findings closed
+(`audio-critique/review-13.md` to `review-15.md`, `final-m7.md`). Renders and `LISTEN.md` are in
+`C:/Users/andre/dev/tiny-acre/audio-renders/m7/`. **Not verified:** no
+real phone; the builder's events (above) do not exist on this branch, so the arrival, the lit window and the mill
+were checked only in renders and unit tests.
 
 **Open:**
 
-1. **Major, fix first:** the creek's layers 1 and 2 (2.25 s, 2.4 s) realign every 36 s (self-correlation 0.83 at
-   36 s in `dy-creek-long`). Set creek layer 2 `body` to 2.47 in `audio-src/recipes.json` (repeat over 500 s),
-   rebuild, and check the self-correlation stays under 0.6 over 3-120 s.
-2. Critic D2 (provisional, disputed): the critic wants town `default` to be thin with the trickle before M6. Today's
-   town map shows a full river (Finn's lines say it still flows), so audio follows the map, and M6's `dry` variant
-   flips it by data. Settle it with the critic.
-3. The dig row is louder than rapid water but 3.8 dB under the same row tilled (`dy-dig-row-alone` -22.9 against
-   `dy-till-row-alone` -19.7 LUFS); a wet row adds the water at full level every 0.45 s (-17.4 LUFS with music).
-   Consider `repeatWindow` 0.5 for `water` (painted watering rows have the same 0.45 s rate).
-4. The rainy arrangement alone is quiet in fall (-35 LUFS, music only): base behaviour, untouched here.
-5. Wendhead's gorge rect for a positional river (the M6 builder will send it).
-
-**Before merge (none of this ran after the last commit):** `npm run verify` on an idle PC (`e2e:controls`, the
-pathfind timing and `perf` alone if they fail beside others); the creek fix above and its rebuild; renders with
-`node audio-src/tools/render.mjs <dir> <url> dy-`, plus `hits-` and the baselines (`music-`, `rain-`,
-`storm-summer`, `amb-wind`, `mix-farm-work`, `stress-max`, `water-rapid`), then `measure.py` and `sfxlevels.py`;
-these scenarios by ear: `valley-farm-dry`, `valley-farm-green-reveal`, `valley-farm-green`,
-`farm-creek-first-morning`, `farm-creek-running`, `spring-opened`, `channels-row`, and `tow-spike` once the feel lane
-lands it; the critic's acceptance.
+1. Wendhead's gorge rect for a positional river (the M6 builder will send it).
+2. After the M7 merge: play `marls-arrive`, `tow-first-log` and the town at `marls` in the browser and check that each
+   hook fires once (the table above).
+3. M10's market murmur (A4).
 
 How to rebuild: `python -I audio-src/tools/fetch.py <raw-dir> --lock` (extracts from the cached archives in
 `<raw-dir>/_archives`), `python -I audio-src/tools/build.py <raw-dir>` (raw sources in
 `C:/Users/andre/dev/tiny-acre/audio-raw/samples`), `python -I audio-src/tools/music_src.py` for the music, then
 `npx prettier --write src/audio/manifest.json src/audio/music.json` and `python -I audio-src/tools/sources_md.py`.
-Measure with `render.mjs`, `measure.py`, `sfxlevels.py` and `seasons.py`. Details are in `docs/EXTENDING.md`
-section 9.
+Measure with `render.mjs`, `measure.py`, `sfxlevels.py` and `seasons.py`; check cue timing in play with
+`tow-cues.mjs`. Details are in `docs/EXTENDING.md` section 9.
 
 ## Needs the owner
 

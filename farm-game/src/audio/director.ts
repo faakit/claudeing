@@ -1,3 +1,4 @@
+import type { WaterLevels } from './stages';
 import type { MusicSlot } from './types';
 
 /** What the director needs to know about the game; plain data so it is unit tested without Phaser. */
@@ -20,7 +21,7 @@ export interface Scene {
   /** The map stage plays the season piece thinned (src/audio/stages.json; outdoors only). */
   thin?: boolean;
   /** Water beds running on this map stage, 0..1 each (positional levels from src/audio/stages.ts). */
-  water?: { creek: number; river: number };
+  water?: Partial<WaterLevels>;
 }
 
 export interface MusicChoice {
@@ -73,6 +74,8 @@ export interface AmbienceTargets {
   creek: number;
   burble: number;
   river: number;
+  /** The mill wheel turning (the town once the Marls are home), by the wheel only. */
+  mill: number;
 }
 
 /** On a dry map, birdsong is a lone bird now and then (a share of the usual level). */
@@ -99,6 +102,7 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     creek: 0,
     burble: 0,
     river: 0,
+    mill: 0,
   };
   if (!s.inGame) return none;
   // The General Store with the smithy next door: creaks and pages, the forge, now and then the anvil.
@@ -151,6 +155,7 @@ export function chooseAmbience(s: Scene): AmbienceTargets {
     // the creek's burbles: a pool of single gurgles over its bed (the bed alone would repeat audibly)
     burble: creek,
     river: (s.water?.river ?? 0) * wet2,
+    mill: (s.water?.mill ?? 0) * wet2,
   };
 }
 
@@ -192,6 +197,11 @@ export class MomentClock {
   private dawnDay = -1;
   private duskDay = -1;
   private lastNight: number | null = null;
+
+  /** A moment that takes the evening's place (a house's window lit for the first time): no dusk flourish today. */
+  spendDusk(absDay: number): void {
+    this.duskDay = absDay;
+  }
 
   step(absDay: number, night: number, outdoor: boolean): string | null {
     const prev = this.lastNight;
