@@ -1273,7 +1273,15 @@ async function towing() {
     for (let i = 0; i < (name.includes('long') ? 2 : 1); i++) {
       if (tugBy === 'action') await farm.tapButton('ACTION');
       else await tapLog();
-      await farm.frames(6);
+      // Wait for the tug to land and Action's 200 ms lock to end. Six frames used to be the only gap: on a loaded
+      // machine the second Action tap (held 70 ms) fell inside the first tug's lock, was dropped, and the long
+      // log stayed snagged until the 20 s timeout (tugs 1, actions 1).
+      await farm.until(
+        (_s, w, n) => w.dev.tow()?.tugs > n && w.game.scene.getScene('Lab').actionLock <= 0,
+        i,
+        `${name}: tug ${i + 1}`,
+        5000,
+      );
     }
     await farm.until((_s, w) => w.dev.tow()?.landed > 0, null, `${name}: landed`, 20000);
     const t = await tow();
