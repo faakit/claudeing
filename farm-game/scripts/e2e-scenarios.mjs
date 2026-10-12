@@ -366,33 +366,38 @@ async function stages() {
   );
   await farm.load('farm-creek-place');
   await farm.ready('Farm');
+  // every drawn frame after the press: how far the drawn farmer is off his spot (the refusal's shake), and the
+  // target marker's lowest alpha (the press's flash dips it from 0.35; its own throb never goes under 0.51)
+  await farm.eval(() => {
+    const sc = window.__farm.game.scene.getScene('Farm');
+    const rec = (window.__pressRec = { shake: 0, alpha: 1 });
+    rec.off = () => sc.events.off('postupdate', rec.fn);
+    rec.fn = () => {
+      rec.shake = Math.max(rec.shake, Math.abs(sc.sprite.x - window.__farm.getState().player.x));
+      rec.alpha = Math.min(rec.alpha, sc.highlight.gfx.alpha);
+    };
+    sc.events.on('postupdate', rec.fn);
+  });
   const said = await farm.event('toast', () => farm.press('Space'));
-  // the refusal's shake shows on the drawn farmer (syncSprite used to put him back on his spot every frame)
-  const shook = await farm
-    .until(
-      (st, w) => Math.abs(w.game.scene.getScene('Farm').sprite.x - st.player.x) >= 1,
-      null,
-      'the farmer to shake on a refusal',
-      1000,
-    )
-    .catch(() => false);
-  // ...and the press flashes the target marker (its alpha dips from 0.35 back up; the per-frame alpha overwrote it)
-  const flashed = await farm
-    .until(
-      (_st, w) => w.game.scene.getScene('Farm').highlight.gfx.alpha < 0.45, // its own throb never dips under 0.51
-      null,
-      'the target marker to flash on a press',
-      1000,
-    )
-    .catch(() => false);
+  await farm.frames(20);
+  const rec = await farm.eval(() => {
+    const r = window.__pressRec;
+    r.off();
+    return { shake: r.shake, alpha: r.alpha };
+  });
   s = await farm.state();
   check(
     'farm-creek-place: placing in the old creek bed is refused with its line',
     said?.text === 'The old creek bed. Best left clear.' && !(s.placed.farm ?? []).length,
     JSON.stringify(said),
   );
-  check('farm-creek-place: the refusal shakes the farmer', shook === true, String(shook));
-  check('farm-creek-place: the press flashes the target marker', flashed === true, String(flashed));
+  // (syncSprite put the farmer back on his spot every frame, and the marker's throb overwrote the flash)
+  check('farm-creek-place: the refusal shakes the farmer', rec.shake >= 1, JSON.stringify(rec));
+  check(
+    'farm-creek-place: the press flashes the target marker',
+    rec.alpha < 0.45,
+    JSON.stringify(rec),
+  );
   await farm.select(0); // the hoe: the bed's own line, not the land-for-sale one (critic review 1, #2)
   await farm.idle(); // the refusal's action lock runs out first
   const tilled = await farm.event('toast', () => farm.press('Space'));
