@@ -198,8 +198,8 @@ export class DevWaits {
   }
 
   /**
-   * Nothing is in motion for `frames` frames in a row: the player stands still (no walk, route, painted row or
-   * swing), no input is held, no door or flow runs, and no sheet is sliding.
+   * Nothing is in motion for `frames` frames in a row: the player stands still (no walk, glide onto a tile, route,
+   * painted row or swing), no input is held, no door or flow runs, and no sheet is sliding.
    */
   idle(frames = 3, opts?: WaitOptions): Promise<true> {
     let quiet = 0;
@@ -212,6 +212,9 @@ export class DevWaits {
           !!loose(w)['transitioning'] ||
           !!loose(w)['route'] ||
           !!loose(w)['work'] ||
+          // the glide onto a tile centre after the stick or a key lets go (movement.ts settle): a state edit made
+          // while it runs is walked back toward the old target (actions: the farmer drifted off his placed tile)
+          (loose(w)['move'] as { settle?: number | null } | undefined)?.settle != null ||
           Number(loose(w)['actionLock'] ?? 0) > 0 ||
           w.cameras.main.fadeEffect.isRunning ||
           this.wiping() ||
