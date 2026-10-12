@@ -183,6 +183,39 @@ def millwheel(P) -> np.ndarray:
     return t
 
 
+def boarded_door(P, top: np.ndarray, low: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """R27-1: a two-storey door shut up: the door darkened behind (wood -> soil, soil -> earth dark) and three light
+    planks nailed across it, two level and one on the diagonal, running past both jambs onto the wall (the tile's full
+    width), nail heads in stone dark at their ends. Drawn on the door's two tiles stacked (16 x 32), then split."""
+    c = P.name
+    d = np.vstack([top, low]).copy()
+    door = np.zeros_like(d, dtype=bool)
+    door[6:28, 1:15] = True  # the opening (the arch's top rows to the step)
+    for a, b in (("soil", "earth dark"), ("wood", "soil")):
+        d[door & (d == c(a))] = c(b)
+    yy, xx = np.mgrid[0:32, 0:16]
+
+    def plank(mask: np.ndarray) -> None:
+        body = mask
+        core = body & np.roll(body, 1, axis=0) & np.roll(body, -1, axis=0)
+        d[body] = c("ink")
+        d[core] = c("wood")
+        lit = core & ~np.roll(core, 2, axis=0)
+        d[lit] = c("sand")  # its 2 px lit top
+
+    # the diagonal first, under the level planks: from the top left of the opening to the bottom right
+    diag = (np.abs(xx - (1 + (yy - 7) * 13 / 22)) <= 2.5) & (yy >= 6) & (yy <= 29)
+    core = diag & np.roll(diag, 1, axis=1) & np.roll(diag, -1, axis=1)
+    d[diag] = c("ink")
+    d[core] = c("wood")
+    d[core & ~np.roll(core, 2, axis=1)] = c("sand")  # its lit left edge, 2 px
+    for y0 in (11, 21):
+        plank((yy >= y0) & (yy < y0 + 6) & (xx >= 0) & (xx < 16))
+        for nx in (1, 13):
+            d[y0 + 2 : y0 + 4, nx : nx + 2] = c("stone dark")  # nail heads at the board's ends
+    return d[:16].copy(), d[16:].copy()
+
+
 def build(P, out: dict[str, np.ndarray]) -> None:
     """Add the M6 town tiles to `out` (tiles_extra's dict, before it is laid out)."""
     afloat = heron(P, False)
@@ -191,8 +224,7 @@ def build(P, out: dict[str, np.ndarray]) -> None:
     out["heron_aground_t"], out["heron_aground_b"] = ag[:T].copy(), ag[T:].copy()
     out["f_window_boarded"] = boarded(P, out["f_window"], [3, 8], 2, 14)
     out["f_window_hi_boarded"] = boarded(P, out["f_window_hi"], [3, 8], 2, 14)
-    out["f_doortop_red_boarded"] = boarded(P, out["f_doortop_red"], [10], 2, 14)
-    out["f_doorlow_red_boarded"] = boarded(P, out["f_doorlow_red"], [3], 2, 14)
+    out["f_doortop_red_boarded"], out["f_doorlow_red_boarded"] = boarded_door(P, out["f_doortop_red"], out["f_doorlow_red"])
     if "f_door" in out:
         out["f_door_boarded"] = boarded(P, out["f_door"], [3, 9], 2, 14)
     out["reeds_bed"] = reeds_bed(P)
