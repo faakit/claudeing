@@ -67,7 +67,19 @@ const MOMENTS = {
   letter: {
     scenario: 'title-first-launch',
     shotAt: 60,
-    async drive(_farm, t) {
+    async drive(farm, t) {
+      // the build label (commit and date) under the letter is for testers, not for the store
+      await farm.eval(() => {
+        const sc = window.__farm.game.scene.getScene('Title');
+        const walk = (list) => {
+          for (const o of list) {
+            const text = typeof o.text === 'string' ? o.text : '';
+            if (/[0-9a-f]{7}\s+\d{4}-\d\d-\d\d/.test(text)) o.setVisible(false);
+            if (o.list) walk(o.list);
+          }
+        };
+        walk(sc.children.list);
+      });
       await t.hold(90);
     },
   },

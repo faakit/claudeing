@@ -48,10 +48,10 @@ MADE FOR ONE THUMB
 Tap to walk, tap to work, drag to till or plant a whole row. A single Action button does the right thing for where you stand. A left-handed layout and a calmer, reduced-motion mode are in the options.
 
 COZY, NEVER PUNISHING
-There are no timers to beat and nothing you can lose by waiting. Nobody leaves because you were slow. The valley waits for you.
+There are no timers to beat. Nobody leaves because you were slow. The valley waits for you.
 
 PLAYS OFFLINE
-No account, no ads, no in-app purchases. Your farm is saved on your device.
+No ads, no in-app purchases. Plays offline; your farm saves on your phone, with optional cloud backup through Google Play Games. Anonymous gameplay statistics help improve the game, and you can turn them off in Options.
 
 Available in English and Brazilian Portuguese.
 ```
@@ -69,12 +69,15 @@ The Dry Year, chapter one: Rosa's letter, the first green, the Old Spring and it
 - **Tags (pick up to 5 in Play Console):** Farming, Life sim, Pixel art, Relaxing, Offline
 - **Content rating:** expect Everyone / PEGI 3 (no violence, no gambling, no user content); answer the IARC
   questionnaire honestly.
-- **Contact and privacy:** the game collects no data. A privacy policy URL is still required: it should say exactly
-  that (see `docs/MOBILE.md`, store checklist).
+- **Privacy and Data safety:** answer from the Data safety section in `agents/PUBLISHING.md` (owned by the cloud-save
+  and analytics lanes), and use a privacy policy URL that matches it. Do not claim "no data collected" once cloud save
+  or analytics is configured.
 
 ## Policy notes (checked)
 
 - No ranking or price claims ("best", "#1", "free", "sale"), no emoji, no other games' names, no keyword lists.
 - Every feature named is in the build; Lantern Night, the Seed House, the orchard and the market are not mentioned
   because they are not built yet.
-- "No ads, no in-app purchases" is true of this build; remove that line if that ever changes.
+- "No ads, no in-app purchases" is true of this build; remove that line if that ever changes. The cloud backup and
+  statistics sentences assume the Play Games cloud save and the opt-out analytics ship in the uploaded build; drop
+  either sentence if its feature is not in it.

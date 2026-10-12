@@ -48,10 +48,10 @@ FEITO PARA UM POLEGAR
 Toque para andar, toque para trabalhar, arraste para arar ou plantar uma fileira inteira. Um único botão de Ação faz a coisa certa para onde você está. Há um modo para canhotos e um modo mais calmo, com menos movimento, nas opções.
 
 ACONCHEGANTE, NUNCA PUNITIVO
-Não há cronômetro para vencer nem nada que se perca por esperar. Ninguém vai embora porque você demorou. O vale espera por você.
+Não há cronômetro para vencer. Ninguém vai embora porque você demorou. O vale espera por você.
 
 JOGA OFFLINE
-Sem conta, sem anúncios, sem compras no app. Sua fazenda fica salva no seu aparelho.
+Sem anúncios, sem compras no app. Joga offline; sua fazenda fica salva no seu celular, com backup opcional na nuvem pelo Google Play Games. Estatísticas anônimas de jogo ajudam a melhorar o jogo, e você pode desligá-las nas Opções.
 
 Disponível em português do Brasil e em inglês.
 ```
@@ -68,6 +68,8 @@ O Ano Seco, capítulo um: a carta de Rosa, o primeiro verde, a Nascente Velha e 
 - **Categoria:** Simulação (alternativa: Casual)
 - **Tags (até 5 no Play Console):** Fazenda, Simulação de vida, Pixel art, Relaxante, Offline
 - **Classificação indicativa:** esperado Livre / PEGI 3; responda o questionário IARC com honestidade.
+- **Privacidade e Segurança dos dados:** responda pela seção Data safety de `agents/PUBLISHING.md` (das lanes de
+  nuvem e analytics). As frases de backup na nuvem e de estatísticas valem só se esses recursos estiverem no build.
 
 ## Policy notes (checked)
 

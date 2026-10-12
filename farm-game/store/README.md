@@ -2,13 +2,13 @@
 
 Everything the Play Console listing needs, except the video (Play takes a YouTube link).
 
-| Asset | File | Spec |
-| --- | --- | --- |
-| App icon | `play/icon-512.png` | 512x512, 32-bit PNG, every pixel opaque; the adaptive icon's layers (`resources/icon-foreground.png` on `icon-background.png`) on whole pixels |
-| Feature graphic | `play/feature-graphic.png` (en), `play/feature-graphic.pt-BR.png` | 1024x500, 24-bit PNG, no alpha; text inside the central area |
-| Phone screenshots | `play/screenshots/en/01..07-*.png`, `play/screenshots/pt-BR/01..07-*.png` | 1080x1920 (9:16), real gameplay with a caption band |
-| Listing text | `listing.en.md`, `listing.pt-BR.md` | app name, short and full description, what's new, category and tags |
-| Promo video | outside the repo: `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4` | 1080x1920, 30 fps, H.264 + AAC, 26 s, gameplay only |
+| Asset             | File                                                                                    | Spec                                                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| App icon          | `play/icon-512.png`                                                                     | 512x512, 32-bit PNG, every pixel opaque; the adaptive icon's layers (`resources/icon-foreground.png` on `icon-background.png`) on whole pixels |
+| Feature graphic   | `play/feature-graphic.png` (en), `play/feature-graphic.pt-BR.png`                       | 1024x500, 24-bit PNG, no alpha; text inside the central area                                                                                   |
+| Phone screenshots | `play/screenshots/en/01..07-*.png`, `play/screenshots/pt-BR/01..07-*.png`               | 1080x1920 (9:16), real gameplay with a caption band                                                                                            |
+| Listing text      | `listing.en.md`, `listing.pt-BR.md`                                                     | app name, short and full description, what's new, category and tags                                                                            |
+| Promo video       | outside the repo: `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4` | 1080x1920, 30 fps, H.264 + AAC, 26 s, gameplay only                                                                                            |
 
 Screenshot order: the first green, Rosa's letter, a full field, towing a log, the river's return, Senna's homecoming,
 fishing the restored river.
@@ -43,5 +43,8 @@ Re-capture after any change to the HUD, hotbar or text that shows in a shot.
    the platform asks.
 3. **Play Console:** create the app with the final application id (see `docs/MOBILE.md`), then upload the icon,
    feature graphic and screenshots per language (en-US, pt-BR), paste the listing text, choose the category and
-   tags, fill the content rating questionnaire, the data safety form ("no data collected") and a privacy policy URL.
+   tags, fill the content rating questionnaire, and fill the Data safety form and the privacy policy URL from the
+   Data safety section in `agents/PUBLISHING.md` (cloud save through Google Play Games and opt-out analytics mean
+   the game is not "no data collected"). Keep the listing's cloud backup and statistics sentences only if those
+   features are in the uploaded build.
 4. Check every screenshot against the build you upload; re-capture if the HUD or hotbar changed.
