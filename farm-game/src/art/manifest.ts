@@ -707,6 +707,9 @@ export function artManifest(): ArtEntry[] {
       exact: false,
       optional: true,
     });
+  // Towing (M7, art-src/tools/towart.py). The tow controller draws placeholders for any key the atlas lacks.
+  for (const [k, w, h, group] of TOW_SPRITES)
+    add({ texture: k, w, h, group, kind: 'towing', from: 'TowController', exact: false, optional: true });
   add({
     texture: mail.mailbox.sprite,
     w: 16,
@@ -719,6 +722,32 @@ export function artManifest(): ArtEntry[] {
   });
   return out;
 }
+
+/**
+ * Towing art (M7): drift logs short (16 x 8) and long (32 x 10, a branch stub), east-west and north-south (`_v`),
+ * each with a snag pose (`_tilt`: the west end raised 2 px, or for `_v` the south end kicked 2 px west; flip it so
+ * that end is the one at the snag); the
+ * rope's 2 x 2 stamp; the lab's snag rock; the slip (16 x 32 over its water and bank tiles: `tow_slip` with the water
+ * north of the bank, `tow_slip_s` with it south); the Action button's verbs.
+ */
+export const TOW_SPRITES: [string, number, number, AtlasGroup][] = [
+  ...['tow_log', 'tow_log_long'].flatMap((k): [string, number, number, AtlasGroup][] => {
+    const [w, h] = k === 'tow_log' ? [16, 8] : [32, 10];
+    return [
+      [k, w, h, 'world'],
+      [`${k}_tilt`, w, h + 2, 'world'],
+      [`${k}_v`, h, w, 'world'],
+      [`${k}_v_tilt`, h + 2, w, 'world'],
+    ];
+  }),
+  ['tow_rope_dot', 2, 2, 'world'],
+  ['tow_rock', 16, 16, 'world'],
+  ['tow_slip', 16, 32, 'world'],
+  ['tow_slip_s', 16, 32, 'world'],
+  ['tow_icon_hook', 16, 16, 'ui'],
+  ['tow_icon_home', 16, 16, 'ui'],
+  ['tow_icon_tug', 16, 16, 'ui'],
+];
 
 /** Manifest entries grouped by texture key, in manifest order. */
 export function manifestByTexture(entries: ArtEntry[] = artManifest()): Map<string, ArtEntry[]> {
