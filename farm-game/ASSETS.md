@@ -37,13 +37,19 @@
 
 ## Store and marketing art (`store/`)
 
-- **Google Play screenshots, feature graphic, icon** (`store/play/`): built by `art-src/tools/store_art.py` from
+- **Google Play screenshots and icon** (`store/play/`): built by `art-src/tools/store_art.py`. Inside every frame is
   real gameplay captured in scenarios by `scripts/store-capture.mjs` (every game pixel is a captured pixel, scaled by
-  a whole number), the game's own pixel font for the captions, and the adaptive icon's layers in `resources/` for
-  the 512 icon. No generated imagery in these files.
+  a whole number); captions use the game's own pixel font; the 512 icon is the adaptive icon's layers in
+  `resources/`. **Around** the frames, the backdrop is painted key art generated with Google Flow (model Nano
+  Banana 2.1, the owner's account, 2026-10-12) from real screenshots (`marketing/flow-ref/`), raw output
+  `marketing/flow-raw/backdrop-1.jpg`.
+- **Feature graphic** (`store/play/feature-graphic*.png`): key art generated with Google Flow (Nano Banana 2.1,
+  2026-10-12) from a real dry/green capture and the title screen (`marketing/flow-raw/key-split-2.jpg`), cropped and
+  scaled, with the logo set in the game's font. It shows only things that are in the game (the dry and green farm,
+  the creek, the farmhouse), drawn as illustration.
 - **Promo video** (kept outside the repo, `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4`):
   gameplay frames stepped from the game's loop, and the game's own music and sfx rendered offline
-  (`src/audio/render.ts`). No generated footage.
+  (`src/audio/render.ts`), set over the Flow backdrop; the end card uses the Flow key art. No generated footage.
 - **Flow-generated marketing art:** the social-media trailer
   (`marketing/video/tiny-acre-trailer-social-en.mp4`) opens on a 3.5 s shot generated with Google Flow (model Veo 3.1
   Fast, the owner's account, 2026-10-12) from a real capture of the dry farm (`marketing/flow-ref/`); the raw output

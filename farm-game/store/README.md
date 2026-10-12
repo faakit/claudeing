@@ -5,13 +5,13 @@ Everything the Play Console listing needs, except the video (Play takes a YouTub
 | Asset             | File                                                                                    | Spec                                                                                                                                           |
 | ----------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | App icon          | `play/icon-512.png`                                                                     | 512x512, 32-bit PNG, every pixel opaque; the adaptive icon's layers (`resources/icon-foreground.png` on `icon-background.png`) on whole pixels |
-| Feature graphic   | `play/feature-graphic.png` (en), `play/feature-graphic.pt-BR.png`                       | 1024x500, 24-bit PNG, no alpha; text inside the central area                                                                                   |
-| Phone screenshots | `play/screenshots/en/01..07-*.png`, `play/screenshots/pt-BR/01..07-*.png`               | 1080x1920 (9:16), real gameplay with a caption band                                                                                            |
+| Feature graphic   | `play/feature-graphic.png` (en), `play/feature-graphic.pt-BR.png`                       | 1024x500, 24-bit PNG, no alpha; Flow key art with the logo in the game's font, text inside the central area                                    |
+| Phone screenshots | `play/screenshots/en/01..07-*.png`, `play/screenshots/pt-BR/01..07-*.png`               | 1080x1920 (9:16), real gameplay framed over a Flow backdrop, big caption                                                                       |
 | Listing text      | `listing.en.md`, `listing.pt-BR.md`                                                     | app name, short and full description, what's new, category and tags                                                                            |
-| Promo video       | outside the repo: `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4` | 1080x1920, 30 fps, H.264 + AAC, 26 s, gameplay only                                                                                            |
+| Promo video       | outside the repo: `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4` | 1080x1920, 30 fps, H.264 + AAC, 21.5 s, gameplay over the Flow backdrop                                                                        |
 
-Screenshot order: the first green, Rosa's letter, a full field, towing a log, the river's return, Senna's homecoming,
-fishing the restored river.
+Screenshot order (the story arc in `BRIEF.md`): the hero before/after, Rosa's letter, the river coming home, Senna at
+dusk, cozy life at golden hour, one hand, the town rising.
 
 ## Rebuild
 
@@ -35,8 +35,9 @@ Re-capture after any change to the HUD, hotbar or text that shows in a shot.
 ## What the owner does (nothing here is uploaded)
 
 1. **Licence check:** confirm Google's generative AI terms allow commercial use of the Flow-derived sprites and of
-   the Flow intro in the social trailer (see `ASSETS.md`). The store screenshots, feature graphic, icon and store
-   video contain no generated imagery beyond the game's own Flow-derived sprites.
+   the Flow art in the store set: the feature graphic, the backdrop behind the screenshots and the video's end card,
+   and the Veo intro in the social trailer (see `ASSETS.md`). The gameplay inside every frame is captured from the
+   game.
 2. **YouTube:** upload `tiny-acre-promo-en.mp4` to YouTube (public or unlisted, not "made for kids" unless you mean
    it, ads off), then paste the link into Play Console > Main store listing > Video. The social trailer
    (`tiny-acre-trailer-social-en.mp4`) is for social posts only; label it as containing AI-generated footage where
