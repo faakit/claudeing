@@ -4,7 +4,8 @@
 //    delivered while it waits; No thanks empties the queue and records nothing more; Share delivers what waited, in
 //    order.
 // 2. Opt-out (scenario analytics-first-harvest, `&analytics=dev`): the first harvest reports once; Menu > Opts >
-//    Controls... > Share stats turns it off (queue emptied, nothing more recorded) and back on.
+//    Share stats turns it off (queue emptied, nothing more recorded) and back on; Fullscreen moved to Controls....
+// 3. Off by default: Opts keeps Fullscreen and has no switch, as before.
 // 3. Off by default: a plain debug page has no provider, no record in storage, no switch in Controls.
 //
 // The tutorial funnel (every guided step once, in order, then the completion) is checked by e2e:onboarding, which
@@ -147,20 +148,22 @@ try {
       harvests.length === 1 && harvests[0].params.game_day === 1,
       JSON.stringify(names(log)),
     );
-    // Menu > Opts > Controls...
+    // Menu > Opts: the switch takes Fullscreen's cell on the Left hand row
     await farm.tapButton('MENU');
     await farm.panel('menu');
     await farm.tapButton(/^Opts$/);
     await farm.frames(2);
-    await farm.tapButton(/^Controls/);
-    await farm.frames(2);
-    const sw = (await farm.targets()).find((t) => /^Share stats:/.test(t.text));
+    const opts = await farm.targets();
+    const sw = opts.find((t) => /^Share stats:/.test(t.text));
+    const lh = opts.find((t) => /^Left hand:/.test(t.text));
     c.check(
-      'Options > Controls shows Share stats: ON',
-      sw?.text === 'Share stats: ON',
-      JSON.stringify(sw),
+      'Menu > Opts shows Share stats: ON beside Left hand, and no Fullscreen there',
+      sw?.text === 'Share stats: ON' &&
+        Math.abs(sw.cy - lh?.cy) < 2 &&
+        !opts.some((t) => /^Fullscreen$/.test(t.text)),
+      JSON.stringify(opts.map((t) => t.text)),
     );
-    await farm.shot('analytics-controls-on');
+    await farm.shot('analytics-opts-on');
     // something waiting in the queue when the player turns it off
     await farm.eval(() => window.__farm.gameEvents.emit('languageChosen', { lang: 'en' }));
     c.check('a queued event waits for its batch', (await queued(farm)).length > 0);
@@ -172,7 +175,7 @@ try {
       'off: consent denied, the queue emptied at once',
       (await consent(farm)) === 'denied' && (await queued(farm)).length === 0,
     );
-    await farm.shot('analytics-controls-off');
+    await farm.shot('analytics-opts-off');
     const before = (await delivered(farm)).length;
     await farm.eval(() => {
       const f = window.__farm;
@@ -193,6 +196,15 @@ try {
       log.at(-1)?.name === 'session_start' && log.at(-1)?.params.n === 2,
       JSON.stringify(log.at(-1)),
     );
+    await farm.tapButton(/^Controls/);
+    await farm.frames(2);
+    const ctl = (await farm.targets()).map((t) => t.text);
+    c.check(
+      'Controls... has Fullscreen (moved from Opts) and Replay guide beside Back',
+      ctl.includes('Fullscreen') && ctl.includes('Replay guide') && ctl.includes('Back'),
+      JSON.stringify(ctl),
+    );
+    await farm.shot('analytics-controls');
     c.check('opt-out: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
     await farm.close();
   }
@@ -213,13 +225,19 @@ try {
     await farm.panel('menu');
     await farm.tapButton(/^Opts$/);
     await farm.frames(2);
+    const o = (await farm.targets()).map((x) => x.text);
+    c.check(
+      'no config: Opts has Fullscreen and no Share stats switch (as today)',
+      !o.some((x) => /^Share stats/.test(x)) && o.includes('Fullscreen'),
+      JSON.stringify(o),
+    );
     await farm.tapButton(/^Controls/);
     await farm.frames(2);
-    const t = await farm.targets();
+    const t = (await farm.targets()).map((x) => x.text);
     c.check(
-      'no config: Controls has no Share stats switch (as today)',
-      !t.some((x) => /^Share stats/.test(x.text)) && t.some((x) => /^Replay guide$/.test(x.text)),
-      JSON.stringify(t.map((x) => x.text)),
+      'no config: Controls is as today (no Fullscreen, Replay guide in the switch rows)',
+      !t.includes('Fullscreen') && t.includes('Replay guide'),
+      JSON.stringify(t),
     );
     await farm.close();
   }

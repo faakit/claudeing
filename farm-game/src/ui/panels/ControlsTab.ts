@@ -17,6 +17,7 @@ import type { MenuTabContext } from './MenuPanel';
 import { t, type Key } from '../../i18n';
 import { onOff } from './onOff';
 import { analytics } from '../../platform/analytics';
+import { fullscreenSupported, toggleFullscreen } from '../../platform/display';
 
 const SIZE_KEY = { s: 'controls.sizeS', m: 'controls.sizeM', l: 'controls.sizeL' } as const;
 
@@ -71,11 +72,11 @@ const ITEMS: ControlItem[] = [
     run: (s) => (setHapticsEnabled(toggleVibration(s)), 'haptics'),
   },
   {
-    // The analytics opt-out: only in a build that has analytics (none by default). Off empties the queue at once.
-    id: 'analytics',
-    label: () => t('privacy.toggle', { state: onOff(analytics.consent === 'granted') }),
-    run: () => (analytics.setConsent(analytics.consent !== 'granted'), 'none'),
-    show: () => analytics.enabled,
+    // Only in a build with analytics (none by default): its opt-out takes Fullscreen's cell on the Opts page.
+    id: 'fullscreen',
+    label: () => t('opts.fullscreen'),
+    run: () => (void toggleFullscreen(), 'none'),
+    show: () => analytics.enabled && fullscreenSupported(),
   },
 ];
 

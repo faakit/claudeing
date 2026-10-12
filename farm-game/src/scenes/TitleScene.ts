@@ -268,7 +268,7 @@ export class TitleScene extends Phaser.Scene {
 
   /**
    * The analytics question, once, where the buttons go (only with a production provider configured: DECISIONS.md).
-   * Nothing is sent until it is answered; Options > Controls changes the answer later.
+   * Nothing is sent until it is answered; Menu > Opts > Share stats changes the answer later.
    */
   private buildConsent(): void {
     this.primary = null;
@@ -294,10 +294,8 @@ export class TitleScene extends Phaser.Scene {
     const gap = 4;
     const x = (GAME_WIDTH - w * 2 - gap) / 2;
     this.buttons.push(
-      new Button(this, x, by, w, 30, t('privacy.yes'), () => answer(true), {
-        textColor: INK.green,
-        rim: INK.green,
-      }),
+      // Two equal buttons: neither answer is pushed.
+      new Button(this, x, by, w, 30, t('privacy.yes'), () => answer(true)),
       new Button(this, x + w + gap, by, w, 30, t('privacy.no'), () => answer(false)),
     );
   }

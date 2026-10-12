@@ -76,6 +76,7 @@ export const MILESTONE_TEST: Record<Milestone, (s: GameState) => boolean> = {
 const TUT_COMPLETE = 'tut.complete';
 const TUT_SKIP = 'tut.skip';
 const tutKey = (id: string): string => `tut.${id}`;
+const skippedKey = (id: string): string => `tut.skipped.${id}`;
 
 /**
  * Report milestones reached since the last look. `baseline`: an old save just loaded, so the ones it already has
@@ -89,16 +90,21 @@ export function checkMilestones(s: GameState, baseline = false): void {
   }
 }
 
-/** A guided step finished: its funnel event, and the completion once every guided step is done. */
-export function onTutorialStep(s: GameState, id: string): void {
+/**
+ * A guided step was passed (finished, or `skipped` by the player after a stall): its funnel event, and the completion
+ * once every guided step is passed. Skips are flagged on both, so the funnel and a clean completion leave them out.
+ */
+export function onTutorialStep(s: GameState, id: string, skipped = false): void {
   const ids = guidedStepIds();
   const index = ids.indexOf(id);
   if (index < 0) return; // a one-off intro, not part of the funnel
-  analytics.trackOnce(tutKey(id), 'tutorial_step', { id, index });
+  if (!analytics.hasSent(tutKey(id)) && skipped) analytics.markSent(skippedKey(id));
+  analytics.trackOnce(tutKey(id), 'tutorial_step', { id, index, skipped: skipped ? 1 : 0 });
   if (guidedTracksDone(s))
     analytics.trackOnce(TUT_COMPLETE, 'tutorial_complete', {
       steps: ids.length,
       game_day: absoluteDay(s),
+      skipped: ids.filter((x) => analytics.hasSent(skippedKey(x))).length,
     });
 }
 
@@ -159,7 +165,7 @@ export function wireAnalytics(): void {
     analytics.noteGameDay(day);
     checkMilestones(s);
   });
-  gameEvents.on('tutorialStep', ({ id }) => onTutorialStep(getState(), id));
+  gameEvents.on('tutorialStep', ({ id, skipped }) => onTutorialStep(getState(), id, skipped));
   gameEvents.on('tutorialSkipped', () => onTutorialSkipped(getState()));
   gameEvents.on('languageChosen', ({ lang }) => {
     if ((LANGS as readonly string[]).includes(lang))

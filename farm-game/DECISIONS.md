@@ -1823,8 +1823,13 @@ is unchanged: no control moved and the camera scrolls are identical.
   so it can't ask only where the law requires it. The title is the one place every player passes before the guided
   start, so the funnel's first steps are never lost to a question asked later. It costs one tap, once. Nothing is
   sent before the answer: events wait in the local queue, delivered on Share, dropped on No thanks. The opt-out is
-  Options > Controls... > Share stats (the main Options page has no free row: a sixth row would push out the help
-  card). With the switch, Replay guide shares Back's row so the page keeps its four rows of switches.
+  on the main Menu > Opts page, as easy to reach as the consent was to give (critic review 3, N2): it takes the far
+  cell of the Left hand row, Fullscreen's, because a sixth row would push out the help card and the language row's
+  far cell is cloud save's (agreed with that lane). Analytics only runs in native Android builds, where Fullscreen
+  does nothing; with analytics on, Fullscreen moves to Controls..., where Replay guide then shares Back's row so the
+  page keeps four rows of switches. The pt-BR label is "Estatística: SIM/NÃO": "Estatísticas: NÃO" and "Dados de
+  jogo: NÃO" are 91-94 px, over the half button's 86. The consent text says "play stats", not "anonymous": Firebase
+  keeps an app-instance id and a coarse location (N1). Share and No thanks are equal buttons (N5).
 - **Opt-out stops everything.** The queue is emptied at once, nothing more is recorded (not even local session
   counts), and Firebase is told to stop and reset its app-instance id. Turning it back on starts a new session.
 - **Events are a closed schema** (`src/platform/analytics/schema.ts`): each parameter is a whole number in
@@ -1843,8 +1848,9 @@ is unchanged: no control moved and the camera scrolls are identical.
   the record, so a guide replay or a second new game sends nothing again. An old save loaded for the first time
   uses up what it had already done without sending it.
 - **Tutorial steps are reported from the step machine itself** (`finish` and `skipStep` emit `tutorialStep`), and
-  only the day-1 and day-2 tracks are the funnel (16 steps); the one-off intros are not. A skipped single step still
-  counts as passed. `skipTutorial` emits `tutorialSkipped`.
+  only the day-1 and day-2 tracks are the funnel (16 steps); the one-off intros are not. A skipped single step
+  is sent with `skipped` = 1 (and counted in `tutorial_complete.skipped`), so the documented funnel and a clean
+  completion (`skipped` = 0) leave skips out (critic review 3, N3). `skipTutorial` emits `tutorialSkipped`.
 - **Never per frame.** `track` validates and pushes onto an array (well under 0.1 ms, unit-tested); delivery runs on
   a 10 s timer, at once for a full batch of 20, and on pause; failures back off to 5 minutes. Milestones are checked
   on stat changes (the goals' stat watcher), each new morning and on entering a game, never in `update`.

@@ -33,10 +33,13 @@ export const SCHEMA = {
   session_start: { n: 'int', days_away: 'int', last_game_day: 'int' },
   /** The app went to the background: `length_s` is that foreground stretch in seconds. */
   session_end: { length_s: 'int' },
-  /** A guided-start step finished (`index` is its place in the funnel, 0-based). Once per step per install. */
-  tutorial_step: { id: 'id', index: 'int' },
-  /** Every guided step is done. Once per install. */
-  tutorial_complete: { steps: 'int', game_day: 'int' },
+  /**
+   * A guided-start step was passed (`index` is its place in the funnel, 0-based). `skipped` is 1 when the player
+   * skipped that one step (offered after a long stall), else 0: the funnel counts `skipped` 0 only. Once per step.
+   */
+  tutorial_step: { id: 'id', index: 'int', skipped: 'int' },
+  /** Every guided step is passed; `skipped` is how many of them were skipped (0: a clean completion). Once. */
+  tutorial_complete: { steps: 'int', game_day: 'int', skipped: 'int' },
   /** The player skipped the guided start at step `index` (`id`). Once per install. */
   tutorial_skip: { id: 'id', index: 'int' },
   /** A game day started being played (`game_day` 1 is spring 1 of year 1). */

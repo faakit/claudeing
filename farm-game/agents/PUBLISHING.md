@@ -73,10 +73,10 @@ Cloud save deletion: through the player's Play Games profile or Google Account. 
   else is dropped before it is queued.
 - **Off by default**: with no config the layer never starts: no storage, no timers, no network, no consent
   question, no Options switch. The web build (GitHub Pages) has no analytics at all.
-- **Consent**: an Android build with Firebase asks once on the title, before New Game or Continue: "Share anonymous
+- **Consent**: an Android build with Firebase asks once on the title, before New Game or Continue: "Share
   play stats to help improve the game? No names, no ads." with Share / No thanks. Nothing is sent before the answer
   (events wait in a local queue and are dropped on No). Firebase collection is off in the manifest until the game
-  turns it on after a Share. Options > Controls... > Share stats: ON/OFF changes the answer at any time.
+  turns it on after a Share. Menu > Opts > Share stats: ON/OFF changes the answer at any time.
 - **Why ask everyone**: an analytics identifier stored on the phone needs consent under the EU/UK ePrivacy rules
   and GDPR, and LGPD in Brazil (the game's second language) is easiest to meet with consent too. The game does not
   know where the player is (it reads no location), so it asks everywhere, once. See DECISIONS.md.
@@ -110,9 +110,12 @@ Event names in Firebase are ours, except the two Google reserves: `first_open` i
 
 - **Tutorial funnel**: Analytics > Explore > Funnel exploration. Steps: `ta_first_open`, then `tutorial_step` with
   `index` = 0, 1, 2 ... 15 (one step per guided step: harvest, seeds, plant, water, grow, ship, clock, energy,
-  errands, bedOffer, sleep, water2, mail, menu, jobs, town), then `tutorial_complete`. Register `index` and `id` as
-  custom dimensions first (Admin > Custom definitions, event-scoped). Each step fires once per install, in order, so
-  the drop between two steps is the share of players lost there. `tutorial_skip` (`id`, `index`) counts players who
+  errands, bedOffer, sleep, water2, mail, menu, jobs, town), each filtered to `skipped` = 0, then
+  `tutorial_complete` with `skipped` = 0 (a clean completion). Register `index`, `id` and `skipped` as custom
+  dimensions first (Admin > Custom definitions, event-scoped). Each step fires once per install, in order, so the
+  drop between two steps is the share of players lost there. A step the player skipped after a long stall (the coach
+  offers it on optional steps) is sent with `skipped` = 1 and `tutorial_complete.skipped` counts them: count those
+  separately, as stuck points, not as passes. `tutorial_skip` (`id`, `index`) counts players who
   skipped the guide and where.
 - **D1 / D7 / D30**: Analytics > Retention (built in, from Google's own `first_open` and engagement): the cohort
   table's day 1, day 7 and day 30 columns. The same from our events: an install is retained on day N if it sent any
@@ -157,16 +160,18 @@ Android only, Google Play Games Saved Games. What leaves the device, the answers
 
 ### Privacy policy text
 
-Put this on the privacy policy page (e.g. `https://faakit.github.io/claudeing/farm/privacy.html`), adjusted to what
-the uploaded build actually does.
+The policy page ships with the game: `public/privacy.html`, served at
+`https://faakit.github.io/claudeing/farm/privacy.html` (English, then Portuguese). It describes the default build (no
+data), then cloud save and analytics, each marked as only in the Android builds that have them. Before linking it
+in Play Console, replace `CONTACT_EMAIL` and `EFFECTIVE_DATE`, and keep it in step with the text below.
 
-**Analytics (only if this build has it).** If you agree when the game asks, Tiny Acre sends anonymous play
+**Analytics (only if this build has it).** If you agree when the game asks, Tiny Acre sends play
 statistics to Google Analytics for Firebase, so we can see where new players get stuck and whether they come back:
 which guided-start steps were finished, the in-game day, a few milestones (such as the first harvest), when a play
 session starts and ends and how long it lasted, and the language chosen. Google assigns a random app-instance
 identifier and derives an approximate location (country or region) from your IP address. We do not collect your
 name, email, contacts, precise location or advertising ID, nothing you type is sent, and the data is not used for
-ads or sold. Data is kept for 2 months. You can turn this off at any time in Options > Controls > Share stats; that
+ads or sold. Data is kept for 2 months. You can turn this off at any time in Menu > Opts > Share stats; that
 stops collection and resets the identifier on your device. Google processes this data for us under its
 [Firebase data processing terms](https://firebase.google.com/terms/data-processing-terms).
 

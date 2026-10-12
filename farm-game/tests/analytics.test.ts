@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { serviceWorkerSource } from '../scripts/sw-plugin.mjs';
 import { Analytics, analytics, sanitizeRecord, STORE_KEY } from '../src/platform/analytics';
 import {
   createDevProvider,
@@ -39,8 +41,8 @@ describe('analytics schema', () => {
     first_open: {},
     session_start: { n: 1, days_away: 0, last_game_day: 0 },
     session_end: { length_s: 42 },
-    tutorial_step: { id: 'harvest', index: 0 },
-    tutorial_complete: { steps: 16, game_day: 2 },
+    tutorial_step: { id: 'harvest', index: 0, skipped: 0 },
+    tutorial_complete: { steps: 16, game_day: 2, skipped: 0 },
     tutorial_skip: { id: 'water', index: 3 },
     day_start: { game_day: 1 },
     settings_language: { lang: 'pt-BR' },
@@ -76,13 +78,17 @@ describe('analytics schema', () => {
   });
 
   it('refuses unknown events, missing, extra or mistyped params, and any free text', () => {
-    const ok = { id: 'harvest', index: 0, install_day: 0 };
+    const ok = { id: 'harvest', index: 0, skipped: 0, install_day: 0 };
     expect(validateEvent('tutorial_step', ok)).toBeNull();
     expect(validateEvent('purchase', { install_day: 0 })).toMatch(/unknown event/);
-    expect(validateEvent('tutorial_step', { id: 'harvest', install_day: 0 })).toMatch(/missing/);
+    expect(validateEvent('tutorial_step', { id: 'harvest', skipped: 0, install_day: 0 })).toMatch(
+      /missing/,
+    );
     expect(validateEvent('tutorial_step', { ...ok })).toBeNull();
     expect(validateEvent('tutorial_step', { ...ok, name: 'Andre' })).toMatch(/unexpected/);
-    expect(validateEvent('tutorial_step', { id: 'harvest', index: 0 })).toMatch(/install_day/);
+    expect(validateEvent('tutorial_step', { id: 'harvest', index: 0, skipped: 0 })).toMatch(
+      /install_day/,
+    );
     for (const bad of [-1, 1.5, Number.NaN, 1e9, '3'])
       expect(validateEvent('tutorial_step', { ...ok, index: bad }), String(bad)).toMatch(
         /bad value/,
@@ -102,7 +108,10 @@ describe('analytics schema', () => {
 
   it('every guided step id is a valid id parameter', () => {
     for (const id of guidedStepIds())
-      expect(validateEvent('tutorial_step', { id, index: 0, install_day: 0 }), id).toBeNull();
+      expect(
+        validateEvent('tutorial_step', { id, index: 0, skipped: 0, install_day: 0 }),
+        id,
+      ).toBeNull();
   });
 });
 
@@ -432,7 +441,7 @@ describe('the analytics layer', () => {
     const before = a.record()!.queue.length;
     // @ts-expect-error: not in the schema
     a.track('player_name', { name: 'Andre' });
-    a.track('tutorial_step', { id: 'not an id', index: 0 });
+    a.track('tutorial_step', { id: 'not an id', index: 0, skipped: 0 });
     expect(a.record()!.queue.length).toBe(before);
     expect(a.rejected).toBe(2);
   });
@@ -623,7 +632,8 @@ describe('analytics wiring', () => {
       ]);
       expect(ev.slice(0, -1).map((e) => e['index'])).toEqual(ids.map((_, i) => i));
       expect(ev.slice(0, -1).map((e) => e['id'])).toEqual(ids);
-      expect(ev.at(-1)).toMatchObject({ steps: ids.length, game_day: 1 });
+      expect(ev.at(-1)).toMatchObject({ steps: ids.length, game_day: 1, skipped: 0 });
+      expect(ev.slice(0, -1).every((e) => e['skipped'] === 0)).toBe(true);
     });
 
     it('a skip reports where the player was, once', async () => {
@@ -634,6 +644,21 @@ describe('analytics wiring', () => {
       onTutorialSkipped(s);
       const ev = (await sent()).filter((e) => e.name === 'tutorial_skip');
       expect(ev).toEqual([{ name: 'tutorial_skip', id: 'plant', index: 2, install_day: 0 }]);
+    });
+
+    it('a step skipped after a stall is flagged, and the completion counts the skips', async () => {
+      const s = newState();
+      onGameEntered(s);
+      const ids = guidedStepIds();
+      for (const id of ids) {
+        s.stats[`tut.${id}`] = 1;
+        onTutorialStep(s, id, id === 'water');
+      }
+      const ev = (await sent()).filter((e) => e.name.startsWith('tutorial_'));
+      expect(
+        ev.filter((e) => e.name === 'tutorial_step' && e['skipped'] === 1).map((e) => e['id']),
+      ).toEqual(['water']);
+      expect(ev.at(-1)).toMatchObject({ name: 'tutorial_complete', skipped: 1 });
     });
 
     it('milestones fire once each when reached, with the game day', async () => {
@@ -713,5 +738,26 @@ describe('analytics text fits', () => {
       for (const on of ['common.on', 'common.off'] as const)
         expect(measureText(t('privacy.toggle', { state: t(on) })), l).toBeLessThanOrEqual(86);
     }
+  });
+});
+
+// ---------------------------------------------------------------- the privacy policy page
+
+describe('the privacy policy page (public/privacy.html)', () => {
+  const html = readFileSync('public/privacy.html', 'utf8');
+  it('has English and Portuguese, the owner placeholders, and each feature scoped to the builds that have it', () => {
+    expect(html).toMatch(/<section lang="en">/);
+    expect(html).toMatch(/<section lang="pt-BR" id="pt-BR">/);
+    expect(html).toContain('CONTACT_EMAIL');
+    expect(html).toContain('EFFECTIVE_DATE');
+    expect(html).toMatch(
+      /Only in Android builds with Google Analytics for Firebase, and only if you agree/,
+    );
+    expect(html).toMatch(/Only in Android builds with Google Play Games cloud save/);
+    expect(html).toMatch(/collect no data at all/);
+    expect(html.toLowerCase()).not.toMatch(/anonymous|anônim/);
+  });
+  it('is precached by the service worker (it is under public/)', () => {
+    expect(serviceWorkerSource([], 'public')).toContain('privacy.html');
   });
 });

@@ -848,9 +848,9 @@
     "step": "{name}: {n} de {of} madeiras"
   },
   "privacy": {
-    "ask": "Compartilhar estatísticas anônimas para melhorar o jogo? Sem nomes, sem anúncios. Dá para mudar em Opções.",
+    "ask": "Compartilhar estatísticas de jogo para melhorar o jogo? Sem nomes, sem anúncios. Dá para mudar em Opções.",
     "yes": "Compartilhar",
     "no": "Não, obrigado",
-    "toggle": "Estatíst.: {state}"
+    "toggle": "Estatística: {state}"
   }
 }

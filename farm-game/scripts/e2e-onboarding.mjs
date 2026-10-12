@@ -447,7 +447,7 @@ async function run(p, hand, deviant = false) {
   check(
     `${tag}: funnel: every guided step reported once, in order`,
     JSON.stringify(steps.map((e) => e.params.id)) === JSON.stringify(GUIDED) &&
-      steps.every((e, i) => e.params.index === i),
+      steps.every((e, i) => e.params.index === i && e.params.skipped === 0),
     JSON.stringify(steps.map((e) => e.params.id)),
   );
   check(
