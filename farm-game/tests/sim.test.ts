@@ -142,7 +142,9 @@ const FISHER_CASTS = 4;
  */
 function fishEvening(s: GameState): void {
   const bite: { fish: string | null; bait: string | null } = { fish: null, bait: null };
-  const off = gameEvents.on('startFishing', ({ fish, bait }) => Object.assign(bite, { fish, bait }));
+  const off = gameEvents.on('startFishing', ({ fish, bait }) =>
+    Object.assign(bite, { fish, bait }),
+  );
   for (let i = 0; i < FISHER_CASTS && s.energy > 20; i++) {
     bite.fish = null;
     // Every cast takes a bait (bait round): beyond the worms the hoe digs up, a fisher buys Bait Mix at 6g.

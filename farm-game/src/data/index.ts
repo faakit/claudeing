@@ -1529,7 +1529,8 @@ export function validateTutorial(t: TutorialData): void {
     for (const k of [c.none, c.some])
       if (k !== undefined && !TUT_KINDS.includes(k)) bad(`${where}: unknown kind "${k}"`);
     if (c.has !== undefined && !items[c.has]) bad(`${where}: unknown item "${c.has}"`);
-    if (c.fact !== undefined && !TUT_FACTS.includes(c.fact)) bad(`${where}: unknown fact "${c.fact}"`);
+    if (c.fact !== undefined && !TUT_FACTS.includes(c.fact))
+      bad(`${where}: unknown fact "${c.fact}"`);
     if (
       c.short !== undefined &&
       !projects[c.short.project]?.items?.some((i) => i.item === c.short!.item)

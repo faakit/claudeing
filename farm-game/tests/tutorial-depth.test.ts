@@ -215,7 +215,7 @@ describe('guided start: stone before the site (owner)', () => {
     s.nodes['mine'] = {};
     const v = view(s, world('mine'));
     expect(v?.step.id).toBe('stone');
-    expect(v?.text).toBe("No rocks today: back tomorrow.");
+    expect(v?.text).toBe('No rocks today: back tomorrow.');
     expect(v?.pointer).toBeNull();
   });
 

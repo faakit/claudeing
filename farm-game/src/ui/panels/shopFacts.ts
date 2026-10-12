@@ -42,11 +42,7 @@ export function shopFacts(
     const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
     const again = crop.regrowDays ? t('shop.again', { n: crop.regrowDays }) : '';
     const f = { days, sell: fmtGold(sell), again };
-    base = late
-      ? t('shop.tooLateNow')
-      : glass
-        ? t('shop.glassOnly', f)
-        : t('shop.seedFacts', f);
+    base = late ? t('shop.tooLateNow') : glass ? t('shop.glassOnly', f) : t('shop.seedFacts', f);
     alts = late
       ? []
       : glass
@@ -108,5 +104,3 @@ export function shopTabOf(id: string): ShopTab {
   if (placeables[id]?.behavior === 'decor') return 'home';
   return 'seeds';
 }
-
-
