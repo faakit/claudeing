@@ -402,5 +402,7 @@ describe('the language at boot', () => {
     expect(deviceLocale({ webdriver: false, languages: ['pt-BR', 'en'] })).toBe('pt-BR');
     expect(deviceLocale({ language: 'pt-PT' })).toBe('pt-BR');
     expect(deviceLocale(undefined)).toBe('en');
+    // some WebViews list no languages at all: the one `language` still counts
+    expect(deviceLocale({ languages: [], language: 'pt-BR' })).toBe('pt-BR');
   });
 });

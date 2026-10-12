@@ -78,7 +78,9 @@ export function detectLocale(languages: readonly string[] | undefined): Locale {
 export function deviceLocale(
   nav: { webdriver?: boolean; languages?: readonly string[]; language?: string } | undefined,
 ): Locale {
-  return nav?.webdriver ? 'en' : detectLocale(nav?.languages ?? [nav?.language ?? 'en']);
+  if (nav?.webdriver) return 'en';
+  // some WebViews give an empty `languages`: then the one `language` speaks for the device
+  return detectLocale(nav?.languages?.length ? nav.languages : [nav?.language ?? 'en']);
 }
 
 /** A `?lang=` value or a stored choice, if it names a supported locale (case-insensitive, `pt` = pt-BR). */
@@ -102,7 +104,11 @@ function lookup(dict: Dict, key: string): string | Dict | undefined {
 const isPlural = (v: string | Dict | undefined): v is PluralForms =>
   typeof v === 'object' && typeof v['other'] === 'string';
 
-function pick(v: string | Dict | undefined, count: unknown, rules: Intl.PluralRules): string | null {
+function pick(
+  v: string | Dict | undefined,
+  count: unknown,
+  rules: Intl.PluralRules,
+): string | null {
   if (typeof v === 'string') return v;
   if (!isPlural(v)) return null;
   const form = typeof count === 'number' ? rules.select(count) : 'other';
