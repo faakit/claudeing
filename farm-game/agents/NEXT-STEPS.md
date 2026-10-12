@@ -35,6 +35,21 @@ the tow after the tug, 19/28 runs), a 10-20 tile lab lane with a turn, and the f
 icons and the letter paper are already in `flow-raw/`); the valley banners (THE RIVER IS BACK) read low-contrast on
 straw. Then M7 (towing and the first homecoming).
 
+### Code review (review/dry-year-2, merged and deployed 2026-10-12)
+
+26 fixes, among them a game-loop freeze on a second placement after any map change (report: `agents/out/` on the
+review worktree; rulings in DECISIONS.md). Coordinator rulings on its questions:
+
+1. A mid-step tap on the farmer's own tile keeps the round-4 rule (cancel, act ahead).
+2. The game, not the e2e harness, should guarantee one act per short Action press on a slow frame (feel lane, next).
+3. An unreadable save: the title says so and offers Retry, and New Game asks before overwriting (copy in both
+   languages; next round).
+4. pt-BR: the mine's rock node gets its own word ("Rocha"), apart from Stone ("Pedra") (i18n, next round).
+
+Left open (low): the drag hint's looping tween is never killed; the landmark list rebuilds about 7 times a frame;
+`toEnglish` of a pt-BR price of 1,000 or more misses the tutorial's price pattern; the `mechanics` e2e block timed out
+"waiting for an Action result" 3 times in about 20 runs.
+
 ## How to work
 
 Build every feature scenario-first (see [AGENTS.md](AGENTS.md) and `docs/EXTENDING.md` section 0). Run
