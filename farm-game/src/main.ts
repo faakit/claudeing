@@ -24,7 +24,7 @@ import { setHapticsEnabled } from './platform/haptics';
 import { controlsLog } from './input/controlsLog';
 import { displayFit } from './platform/displayFit';
 import { chooseLanguage, initLanguage } from './game/language';
-import { getLocale } from './i18n';
+import { getLocale, t } from './i18n';
 import { saveNow } from './game/persistence';
 import { wireCloudSave } from './game/cloudWiring';
 import { analyticsDebug, wireAnalytics } from './game/analyticsWiring';
@@ -132,7 +132,7 @@ if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {
     // Read-only use: why the world is frozen (open modal count, a busy flow, the app suspended).
     runtime,
     // The language: read it, or pick one as Menu > Opts does (remembered outside a scenario sandbox).
-    i18n: { getLocale, choose: chooseLanguage },
+    i18n: { getLocale, choose: chooseLanguage, t },
     // Analytics: the provider, consent, the queue and (dev provider) every event delivered.
     analytics: analyticsDebug,
   };

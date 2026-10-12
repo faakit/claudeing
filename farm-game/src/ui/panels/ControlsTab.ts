@@ -130,8 +130,10 @@ export function buildControlsPage(c: MenuTabContext, back: () => void): void {
     }
   }
   y -= 16;
-  c.label(8, y, t('controls.title'), C.gold);
-  c.label(8, c.top + 4, t('controls.help'), C.creamDim, 1, 'left', 184);
+  // the help runs about 10 lines in pt-BR: the heading goes only where the help leaves room for it (it ran over the
+  // help's last line; the page's switches and Back say what it is anyway)
+  const help = c.label(8, c.top + 4, t('controls.help'), C.creamDim, 1, 'left', 184);
+  if (c.top + 4 + help.textHeight + 2 <= y) c.label(8, y, t('controls.title'), C.gold);
 }
 
 /** The four one-thumb gestures, for the help card: a picture and two short lines each (tests measure them). */

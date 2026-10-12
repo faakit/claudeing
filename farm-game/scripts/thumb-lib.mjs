@@ -356,7 +356,9 @@ export async function liveTargets(page) {
     if (action) names.set(action.zone, 'ACTION');
     if (interact) names.set(interact.zone, 'INTERACT');
     if (menu) names.set(menu.zone, 'MENU');
-    (ui.hud?.hotbarZones ?? []).forEach((z, i) => names.set(z, `slot ${i + 1}`));
+    // each hotbar cell is named by the hotbar slot it shows now (five cells show the eight slots: a tool shares
+    // the tool cell)
+    (ui.hud?.hotbarZones ?? []).forEach((z, i) => names.set(z, `slot ${(ui.hud.cells?.[i] ?? i) + 1}`));
     const modalOpen = ui.allModals().some((m) => m.isOpen);
     const topDepth = (o) => {
       let n = o;

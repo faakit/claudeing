@@ -35,6 +35,37 @@ the tow after the tug, 19/28 runs), a 10-20 tile lab lane with a turn, and the f
 icons and the letter paper are already in `flow-raw/`); the valley banners (THE RIVER IS BACK) read low-contrast on
 straw. Then M7 (towing and the first homecoming).
 
+### Owner's polish round (UI lane, polish/owner-round, 2026-10-12)
+
+Owner reports fixed, each with its scenario and e2e block (rulings in DECISIONS.md "Owner's polish round"):
+
+- **Hidden text:** a text guard (`overflowIn` and block `textGuard` in e2e-scenarios; `SHEETS=<prefix>` for one) reads
+  every visible text on about 80 sheet and HUD states, SE and iPhone 13, pt-BR and English. It fails text that is off
+  its sheet, cut with "..", overprinted, covered (including over an open sheet), or low-contrast. Its fixes include:
+  the sleep and villager flows, the fishing hint, shop and board lines, rows that wrap, item and count labels on wood,
+  the goal banner plate, and the controls help.
+- **Buy 5 items:** on Mara's sheet the coach points at Shop (`coachShop`).
+- **Fishing:** the rod alone, with the line held out under the sheet (`fish-cast`, `fishCast`).
+- **Sheets close only from Close** (`sheetTaps`).
+- **Reading time and toasts:** `readMs`; tips and refusals stay until a touch; toasts queue; over a sheet, one shows in
+  the free band (`toastTiming`, case `sheet.toasts`).
+- **Villagers never pop:** walks, entering and leaving just past the screen's edge (`npc-schedule-change`,
+  `npc-arrive-town`, `npcPops`).
+- **Hotbar:** five big cells (tool cell, can, three items), the can's water level, a hand pick used by the next press,
+  and a press in the action lock kept (`hotbar-can-level`, `hotbar-full-bag`, `hotbar`).
+
+**Open:**
+
+- The i13 right "fish" row of bench:thumb sits at its 16-gesture limit: 12-19 here, 8-16 on base; it follows the reel's
+  randomness.
+- In full parallel `e2e:scenarios` runs, the spring and weir morning checks have failed under load and passed alone.
+- A forage good can spawn on an unreachable dry-town tile and stall the guided forage step (chip filed, gameplay lane).
+- Villagers have no walk frames; a 1 px bob stands in (art lane).
+
+**Merge:** depth/bait-board touches FishingPanel (result screen Close-only: drop the `tapToContinue` `setHint`
+call) and BoardPanel (tabs move the requests header). After the merge, add the fishing result to `TAP_SHEETS` and run
+`BLOCKS=textGuard SHEETS=board,fishing`.
+
 ### Code review (review/dry-year-2, merged and deployed 2026-10-12)
 
 26 fixes, among them a game-loop freeze on a second placement after any map change (report: `agents/out/` on the

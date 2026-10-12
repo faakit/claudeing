@@ -42,25 +42,29 @@ export const HIT_MARGIN = 8;
 export const PLATE_LIP = 2;
 
 /**
- * The floating hotbar: a slim row of solid slot frames hugging the bottom edge, no band behind it. The pitch is the
- * touch floor (24 game px is 38.8 CSS px on the SE and 45.8 on the iPhone 13 at their fitted scales), so the row
- * cannot be narrower; the faces are 2 px narrower than the pitch so the world shows between them.
+ * The floating hotbar: five big cells (ui/hotbarCells.ts) of solid frames hugging the bottom edge, no band behind
+ * them. Each touch zone is a whole 40 px pitch wide (64.7 CSS px on the SE, 76.3 on the iPhone 13; the eight 24 px
+ * slots were 38.8 and 45.8) and runs from just above the faces to the bottom edge. The faces are 2 px narrower than
+ * the pitch so the world shows between them, and only 24 px tall: the row's touch zone must start below Interact's
+ * touch circle (y 370).
  */
 export const HOTBAR = {
-  /** Drawn face, square. */
-  slot: 22,
-  /** Slot to slot (and the width of each slot's touch zone, so the zones meet and no tap falls between them). */
-  pitch: 24,
+  /** Drawn face height. */
+  slot: 24,
+  /** Drawn face width. */
+  w: 38,
+  /** Cell to cell (and the width of each cell's touch zone, so the zones meet and no tap falls between them). */
+  pitch: 40,
   /** Px left free under the lip, above the canvas's bottom edge. */
   bottom: 2,
 } as const;
-/** Top of the slot faces (374): the face, its lip, then `HOTBAR.bottom` px to the edge. */
+/** Top of the cell faces (372): the face, its lip, then `HOTBAR.bottom` px to the edge. */
 export const HOTBAR_Y = GAME_HEIGHT - HOTBAR.bottom - PLATE_LIP - HOTBAR.slot;
 /** Top of the slots' touch zones: they run from here to the canvas's bottom edge (the selected face rises 2 px). */
 export const HOTBAR_HIT_Y = HOTBAR_Y - 1;
-/** Left edge of slot `i`'s face, for a row of `n` slots centred on the canvas. */
+/** Left edge of cell `i`'s face, for a row of `n` cells centred on the canvas. */
 export const hotbarSlotX = (i: number, n: number): number =>
-  Math.round((GAME_WIDTH - (n * HOTBAR.pitch - (HOTBAR.pitch - HOTBAR.slot))) / 2) +
+  Math.round((GAME_WIDTH - (n * HOTBAR.pitch - (HOTBAR.pitch - HOTBAR.w))) / 2) +
   i * HOTBAR.pitch;
 
 /**

@@ -75,7 +75,12 @@ function makeWorld(page, thumb, L, reactionMs) {
   const INTERACT = { x: L.interact.x, y: L.interact.y };
   const MENU = { x: L.menu.x, y: L.menu.y };
   const JOY = L.stickHome; // a thumb resting by Action starts a stick drag in the open dock
-  const slot = (i) => ({ x: 16.5 + i * 24, y: 383.5 });
+  // the cell a hotbar slot is drawn in (src/ui/hotbarCells.ts): the tools 0, 2, 3, 4 share cell 0, the can is cell 1,
+  // slots 5-7 are cells 2-4; cells are 38 px faces on a 40 px pitch from x 1, faces y 372-396
+  const slot = (i) => {
+    const cell = i === 1 ? 1 : i < 5 ? 0 : i - 3;
+    return { x: 1 + cell * 40 + 19, y: 384 };
+  };
 
   const state = (fn, arg) => page.evaluate(fn, arg);
   const tile = () =>

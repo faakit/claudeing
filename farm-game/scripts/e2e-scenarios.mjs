@@ -1942,7 +1942,8 @@ async function actions() {
   // Calm mode: no action frames, the action itself still happens
   await farm.mutate((s) => (s.settings.reduceMotion = true));
   await placeAt(10, 15, 'down');
-  await farm.select(2);
+  // the scythe in hand, not picked by hand (a hand pick would keep auto tool from planting: owner item 6)
+  await farm.mutate((s) => (s.inventory.selected = 2));
   await farm.frames(5);
   await seen();
   const c = await farm.act();
@@ -1957,29 +1958,1156 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- the five-cell hotbar (owner items 5-7)
+
+/** Blue pixels in the can's cell on the read-back canvas (its water level bar). */
+const canBluePixels = (farm) =>
+  farm.eval(async () => {
+    const game = window.__farm.game;
+    const hud = game.scene.getScene('UI').hud;
+    const cell = hud.cells.indexOf(1);
+    const img = await new Promise((r) => game.renderer.snapshot(r));
+    const cv = document.createElement('canvas');
+    cv.width = img.width;
+    cv.height = img.height;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const k = img.width / 200;
+    const x0 = Math.floor((1 + cell * 40 + 28) * k);
+    const y0 = Math.floor(370 * k);
+    const d = ctx.getImageData(x0, y0, Math.ceil(6 * k), Math.ceil(28 * k)).data;
+    let n = 0;
+    for (let q = 0; q < d.length; q += 4)
+      if (d[q] === 0x72 && d[q + 1] === 0xaa && d[q + 2] === 0xdc) n++;
+    return n;
+  });
+
+async function hotbar() {
+  for (const profile of ['se', 'i13']) {
+    // 5. the can's water level, live
+    let farm = await openScenario(browser, url, 'hotbar-can-level', { profile });
+    await farm.idle();
+    const full = await canBluePixels(farm);
+    const used = [];
+    for (let i = 0; i < 2; i++) {
+      used.push(await farm.act());
+      await farm.idle();
+    }
+    const drained = await farm.eval(() => window.__farm.getState().water);
+    await farm.frames(2);
+    const dry = await canBluePixels(farm);
+    check(
+      `hotbar-can-level (${profile}): the can's cell shows its water and drains to a dry track as it waters`,
+      full > 0 && drained === 0 && dry === 0 && used.every((u) => u.ok && u.used.plan === 'water'),
+      JSON.stringify({ full, dry, drained, used: used.map((u) => u.used?.plan) }),
+    );
+    await farm.close();
+
+    // A slot tap then an Action press at once, right after an act: the press is kept, never lost in the act's lock
+    farm = await openScenario(browser, url, 'hotbar-can-level', { profile });
+    await farm.idle();
+    const A = await farm.eval(() => window.__farm.game.scene.getScene('UI').layout.action);
+    let kept = 0;
+    for (let i = 0; i < 6; i++) {
+      await farm.mutate((s) => {
+        s.water = 20;
+        for (const k of Object.keys(s.farm.tiles)) s.farm.tiles[k].watered = false;
+        s.inventory.selected = 0;
+      });
+      await farm.idle();
+      const before = await farm.eval(() => window.__farm.getState().water);
+      await farm.thumb.tap(A.x, A.y, 40); // an act (the hoe: nothing to till here, a refusal's lock)
+      await farm.thumb.tap(60, 384, 30); // the can's cell
+      await farm.thumb.tap(A.x, A.y, 40);
+      await farm.idle();
+      if ((await farm.eval(() => window.__farm.getState().water)) < before) kept++;
+    }
+    check(
+      `hotbar-can-level (${profile}): act, tap a slot, press Action at once: every press is kept (6/6)`,
+      kept === 6,
+      `kept ${kept}/6`,
+    );
+    await farm.close();
+
+    // 6 and 7. five cells; scroll with the Action swipe, press Action at once: the highlighted slot is what is used
+    farm = await openScenario(browser, url, 'hotbar-full-bag', { profile });
+    await farm.idle();
+    const cells = await farm.eval(() => window.__farm.game.scene.getScene('UI').hud.cells);
+    const targets = (await farm.targets()).filter((t) => /^slot \d$/.test(t.text));
+    check(
+      `hotbar-full-bag (${profile}): five cells (tool, can, three items), each zone at least 60 x 43 CSS px`,
+      cells.length === 5 &&
+        cells[1] === 1 &&
+        targets.length === 5 &&
+        targets.every((t) => t.w * (profile === 'se' ? 1.6175 : 1.9067) >= 60),
+      JSON.stringify({ cells, targets: targets.map((t) => [t.text, t.w, t.h]) }),
+    );
+    const steps = [];
+    for (let i = 0; i < 4; i++) {
+      await farm.eval(() =>
+        window.__farm.game.scene.getScene('UI').actionEvents([{ type: 'step', dir: 1 }]),
+      );
+      const sel = await farm.eval(() => window.__farm.getState().inventory.selected);
+      const r = await farm.act();
+      const after = await farm.eval(() => window.__farm.getState().inventory.selected);
+      steps.push({ sel, used: r.used?.slot, ok: r.ok, after });
+      await farm.idle();
+    }
+    check(
+      `hotbar-full-bag (${profile}): after a scroll, Action uses the highlighted slot (or refuses), never another`,
+      steps.every((x) => (x.ok ? x.used === x.sel : true) && x.after === (x.ok ? x.used : x.sel)),
+      JSON.stringify(steps),
+    );
+    // the tool cell: tapped with its tool in hand, it moves on to the next tool
+    await farm.select(0); // the hoe in hand: the tool cell shows it
+    await farm.tapButton('slot 1');
+    const t0 = await farm.eval(() => window.__farm.getState().inventory.selected);
+    await farm.tapButton(`slot ${t0 + 1}`);
+    const t1 = await farm.eval(() => window.__farm.getState().inventory.selected);
+    check(
+      `hotbar-full-bag (${profile}): taps on the tool cell with its tool in hand go hoe, scythe, rod`,
+      t0 === 2 && t1 === 3,
+      JSON.stringify({ t0, t1 }),
+    );
+    check(`hotbar (${profile}): no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
+// ---------------------------------------------------------------- villagers never pop in or out (owner bug)
+
+/**
+ * Run the world `frames` frames (paused loop, stepped one at a time) and report every villager who appeared,
+ * vanished or jumped inside the camera's view anywhere but on a door tile.
+ */
+const npcWatch = (farm, frames, start) =>
+  farm.eval(
+    ([n, start]) => {
+      const f = window.__farm;
+      const d = f.dev;
+      const w = f.game.scene.getScenes(true).find((sc) => sc.grid);
+      d.loop.pause();
+      // from the scenario's own minute, everyone placed (a busy machine let the clock run on while loading)
+      f.getState().time.minutes = start;
+      w.npcs.sync(f.getState(), undefined, true);
+      w.lastNpcMinute = start;
+      const doors = w.objects.filter((o) => o.type === 'door').map((o) => [o.tx, o.ty]);
+      const onDoor = (x, y) =>
+        doors.some(([tx, ty]) => Math.floor(x / 16) === tx && Math.floor((y - 2) / 16) === ty);
+      const seen = (x, y) => {
+        const v = w.cameras.main.worldView;
+        return x + 8 > v.x && x - 8 < v.right && y > v.y && y - 32 < v.bottom;
+      };
+      d.loop.pause();
+      const bad = [];
+      let prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
+      let walked = 0;
+      for (let i = 0; i < n; i++) {
+        d.loop.step(1);
+        for (const e of w.npcs.debug()) {
+          const p = prev.get(e.id);
+          if (e.walking) walked++;
+          if (!p) continue;
+          if (p.visible !== e.visible) {
+            const [x, y] = e.visible ? [e.x, e.y] : [p.x, p.y];
+            if (seen(x, y) && !onDoor(x, y))
+              bad.push(
+                `${e.id} ${e.visible ? 'appeared' : 'vanished'} at ${x | 0},${y | 0} (frame ${i})`,
+              );
+          } else if (
+            e.visible &&
+            Math.hypot(e.x - p.x, e.y - p.y) > 4 &&
+            (seen(e.x, e.y) || seen(p.x, p.y))
+          )
+            bad.push(`${e.id} jumped ${p.x | 0},${p.y | 0} -> ${e.x | 0},${e.y | 0} (frame ${i})`);
+        }
+        prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
+      }
+      d.loop.resume();
+      return { bad, walked, end: w.npcs.debug(), minutes: f.getState().time.minutes };
+    },
+    [frames, start],
+  );
+
+async function npcPops() {
+  for (const [scenario, frames, who, start] of [
+    ['npc-schedule-change', 1500, 'rosa', 11 * 60 + 58],
+    ['npc-arrive-town', 1500, 'mara', 7 * 60 + 58],
+  ]) {
+    const farm = await openScenario(browser, url, scenario, { profile: 'se' });
+    const r = await npcWatch(farm, frames, start);
+    check(
+      `${scenario} (SE): no villager appears, vanishes or jumps on screen (only through a door)`,
+      r.bad.length === 0 && r.walked > 0,
+      JSON.stringify({ bad: r.bad.slice(0, 5), walked: r.walked, minutes: r.minutes }),
+    );
+    const end = r.end.find((e) => e.id === who);
+    check(
+      `${scenario} (SE): ${who} walked it out (${scenario === 'npc-arrive-town' ? 'standing at her spot' : 'gone through the gate'})`,
+      scenario === 'npc-arrive-town' ? end?.visible && !end.walking : !end?.visible,
+      JSON.stringify(r.end),
+    );
+    check(`${scenario}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
+// ---------------------------------------------------------------- toasts last their reading time (owner bug)
+
+async function toastTiming() {
+  const farm = await openScenario(browser, url, 'ripe-plot', {
+    profile: 'se',
+    query: '&lang=pt-BR',
+  });
+  await farm.idle();
+  const r = await farm.eval(() => {
+    const f = window.__farm;
+    const d = f.dev;
+    const hud = f.game.scene.getScene('UI').hud;
+    const now = () => f.game.scene.getScene('UI').time.now;
+    d.loop.pause();
+    const said = (text, kind = 'info') => f.gameEvents.emit('toast', { text, kind });
+    const A = 'Coisas novas vão para o Menu > Livro. Complete uma página e ganhe ouro.';
+    said(A);
+    said('Comprou 1 Sementes de pastinaca', 'good');
+    said('Ganhou 30 de xp em Agricultura.', 'good');
+    said('Nada para colher aqui.', 'info');
+    d.loop.step(2);
+    const out = {
+      shown: hud.toasts.map((t) => t.text),
+      queued: hud.queue.map((q) => q.text),
+      lifeA: hud.toasts[0]?.life,
+      expectA: 1500 + 60 * [...A].length,
+    };
+    // A third never pushed the first out: it is still there just before its reading time ends
+    const t0 = now();
+    for (let i = 0; i < 1000 && now() - t0 < out.lifeA - 300; i++) d.loop.step(10);
+    out.stepped = now() - t0;
+    out.aBeforeEnd = hud.toasts.some((t) => t.text === A);
+    d.loop.step(60);
+    out.aAfterEnd = hud.toasts.some((t) => t.text === A);
+    out.queuedShown = hud.toasts.some((t) => t.text === 'Nada para colher aqui.');
+    // stacked plates never overlap
+    const plates = hud.toasts.map((t) => t.bg.getBounds());
+    out.overlap = plates.some((p, i) =>
+      plates.some((q, j) => j > i && p.bottom > q.top && q.bottom > p.top),
+    );
+    // a refusal stays past its reading time until the screen is touched
+    for (const t of [...hud.toasts]) t.life = 0;
+    d.loop.step(60);
+    said('Aterre a vala primeiro.', 'warn');
+    d.loop.step(2);
+    const w = hud.toasts.find((t) => t.text === 'Aterre a vala primeiro.');
+    const t1 = now();
+    for (let i = 0; i < 1000 && now() - t1 < w.life + 3000; i++) d.loop.step(10);
+    out.warnStays = hud.toasts.includes(w);
+    hud.touchedAt = now();
+    d.loop.step(60);
+    out.warnGoesOnTouch = !hud.toasts.includes(w);
+    d.loop.resume();
+    return out;
+  });
+  check(
+    'toasts (SE, pt-BR): a fourth toast waits in the queue instead of pushing one out',
+    r.shown.length === 3 && r.queued.length === 1,
+    JSON.stringify(r),
+  );
+  check(
+    'toasts (SE, pt-BR): a toast stays its reading time (1.5 s + 60 ms a character), then goes',
+    r.lifeA === r.expectA && r.aBeforeEnd && !r.aAfterEnd && r.queuedShown,
+    JSON.stringify(r),
+  );
+  check('toasts (SE, pt-BR): stacked toast plates never overlap', !r.overlap, JSON.stringify(r));
+  check(
+    'toasts (SE, pt-BR): a refusal waits for a touch past its reading time',
+    r.warnStays && r.warnGoesOnTouch,
+    JSON.stringify(r),
+  );
+  await farm.close();
+}
+
+// ---------------------------------------------------------------- sheets close only from Close (owner bug)
+
+/** Sheets to tap over: [name, scenario, opener in the page]. */
+const TAP_SHEETS = [
+  [
+    'menu.bag',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('bag')),
+  ],
+  [
+    'menu.opts',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('opts')),
+  ],
+  [
+    'menu.goals',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('goals')),
+  ],
+  ['npc', 'late-game-farm', (ui) => ui.npc.openFor('mara')],
+  ['shop', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'shop' })],
+  ['bin', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'bin' })],
+  ['board', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'board' })],
+  ['mail', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'mail' })],
+  ['sleep', 'late-game-farm', (ui, f) => f.gameEvents.emit('openPanel', { type: 'sleep' })],
+];
+
+async function sheetTapsOn(profile, hand) {
+  const farm = await openScenario(browser, url, 'late-game-farm', { profile, hand });
+  // the DEV tab (plain HTML over the canvas's corner) is not the game's: a grid tap on it opened the dev sheet
+  await farm.eval(() =>
+    document.querySelectorAll('.tadev-tab').forEach((e) => (e.style.display = 'none')),
+  );
+  for (const [name, , open] of TAP_SHEETS) {
+    await farm.during('panelOpen', [], () =>
+      farm.eval((src) => {
+        const f = window.__farm;
+        new Function(`return (${src})`)()(f.game.scene.getScene('UI'), f);
+      }, open.toString()),
+    );
+    await farm.idle();
+    // every point of a 16 px grid over the whole screen that is not on a live control: rows, the gaps between
+    // them, padding, headers, disabled buttons, and the world above the sheet (the dim)
+    const live = await farm.targets();
+    const on = (x, y) =>
+      live.some((t) => x >= t.x - 2 && x <= t.x + t.w + 2 && y >= t.y - 2 && y <= t.y + t.h + 2);
+    let taps = 0;
+    let closed = null;
+    for (let y = 6; y < 400 && !closed; y += 16)
+      for (let x = 6; x < 200; x += 16) {
+        if (on(x, y)) continue;
+        await farm.thumb.tap(x, y, 10);
+        taps++;
+        if (
+          !(await farm.eval(() =>
+            window.__farm.game.scene
+              .getScene('UI')
+              .allModals()
+              .some((m) => m.isOpen),
+          ))
+        ) {
+          closed = `${x},${y}`;
+          break;
+        }
+      }
+    check(
+      `sheet taps (${profile}, ${hand}): ${name} stays open through ${taps} taps off its controls`,
+      !closed && taps > 30,
+      `closed by a tap at ${closed}`,
+    );
+    // Close still closes it
+    await farm.idle();
+    await farm.frames(10);
+    const closer = (await farm.targets()).find((t) =>
+      /^(Close|Done|Not now|Not yet|Leave it)$/.test(t.text),
+    );
+    if (closer) {
+      await farm.during('panelClosed', [], () => farm.thumb.tap(closer.cx, closer.cy, 60));
+      check(`sheet taps (${profile}, ${hand}): ${name} closes from its Close button`, true);
+    } else {
+      check(
+        `sheet taps (${profile}, ${hand}): ${name} has a Close button`,
+        false,
+        live.map((t) => t.text).join(', '),
+      );
+      await closeSheet(farm);
+    }
+    await farm.idle();
+  }
+  check(
+    `sheet taps (${profile}, ${hand}): no page errors`,
+    farm.errors.length === 0,
+    farm.errors.join(' | '),
+  );
+  await farm.close();
+}
+
+async function sheetTaps() {
+  await Promise.all(
+    [
+      ['se', 'right'],
+      ['se', 'left'],
+      ['i13', 'right'],
+    ].map(([p, h]) => sheetTapsOn(p, h)),
+  );
+}
+
+// ---------------------------------------------------------------- the text guard over every sheet (owner bug)
+
+/**
+ * Each sheet the game can show, opened straight through the UI scene on a scenario that has something in it. Each
+ * opener runs in the page with (ui, farm hook) and may return false when the sheet does not apply there.
+ */
+const SHEETS = [
+  ['hud', 'late-game-farm', () => true],
+  // critic P3-1: a sheet open (the guide's shop on day 2, its coach line showing) and three toasts at once
+  [
+    'sheet.toasts',
+    'town-dry-day2',
+    (ui, f) => {
+      f.gameEvents.emit('openPanel', { type: 'shop' });
+      f.gameEvents.emit('toast', {
+        text: 'New kinds of goods go in Menu > Book. Finish a page for gold.',
+        kind: 'tip',
+      });
+      f.gameEvents.emit('toast', { text: 'Bought 1 Parsnip Seeds', kind: 'good' });
+      f.gameEvents.emit('toast', { text: 'Not enough gold.', kind: 'warn' });
+      return true;
+    },
+  ],
+  [
+    'banner',
+    'farm-variant-dry',
+    (ui, f) => {
+      f.gameEvents.emit('goalCompleted', { text: 'Ship 5 items', reward: 50 });
+      return true;
+    },
+  ],
+  [
+    'moment',
+    'farm-variant-dry',
+    (ui, f) => {
+      f.gameEvents.emit('valleyMoment', {
+        text: ['THE CREEK RUNS', 'Water finds the old bed again.'].join(String.fromCharCode(10)),
+      });
+      return true;
+    },
+  ],
+  [
+    'toast',
+    'late-game-farm',
+    (ui, f) => {
+      f.gameEvents.emit('toast', {
+        text: 'New kinds of goods go in Menu > Book. Finish a page for gold.',
+        kind: 'info',
+      });
+      f.gameEvents.emit('toast', { text: 'Bought 1 Parsnip Seeds', kind: 'good' });
+      return true;
+    },
+  ],
+  ...['sunny', 'rain', 'storm'].map((w) => [
+    `sleep.${w}`,
+    'late-game-farm',
+    (ui, f, a) => {
+      f.getState().forecast = a;
+      f.getState().time.minutes = 20 * 60;
+      f.gameEvents.emit('openPanel', { type: 'sleep' });
+      return true;
+    },
+    w,
+  ]),
+  [
+    'summary',
+    'late-game-farm',
+    (ui) => {
+      void ui.summary.present({
+        endedDay: 9,
+        endedSeason: 'summer',
+        shipped: [
+          { item: 'tomato', qty: 12, gold: 720 },
+          { item: 'melon', qty: 3, gold: 750 },
+          { item: 'corn', qty: 9, gold: 450 },
+        ],
+        total: 1920,
+        withered: 2,
+        passedOut: false,
+        weather: 'rain',
+        yearEnd: false,
+        notes: ['The keg is ready: pale ale.', 'A new order is on the board.'],
+      });
+      return true;
+    },
+  ],
+  ['yearEnd', 'late-game-farm', (ui) => (void ui.yearEnd.present(), true)],
+  ...['seeds', 'home', 'upgrades', 'tools', 'goods'].map((tab) => [
+    `shop.${tab}`,
+    'late-game-farm',
+    (ui, f, a) => {
+      const shop = ui.panels.get('shop');
+      shop.tab = a;
+      shop.page = 0;
+      f.gameEvents.emit('openPanel', { type: 'shop' });
+      return true;
+    },
+    tab,
+  ]),
+  ...['bin', 'board', 'mail', 'cart', 'festival'].map((type) => [
+    type,
+    'late-game-farm',
+    (ui, f, a) => (f.gameEvents.emit('openPanel', { type: a }), true),
+    type,
+  ]),
+  [
+    'festival.day',
+    'festival-day',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'festival' }), true),
+  ],
+  [
+    'mail.letter',
+    'mailbox-mail',
+    (ui, f) => {
+      f.gameEvents.emit('openPanel', { type: 'mail' });
+      return true;
+    },
+    null,
+    /^(Read|Ler)$/,
+  ],
+  ...['bag', 'goals', 'craft', 'skills', 'book', 'opts'].map((tab) => [
+    `menu.${tab}`,
+    'late-game-farm',
+    (ui, f, a) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab(a), true),
+    tab,
+  ]),
+  // Menu > Opts > Controls (its help text wraps about 10 lines in pt-BR)
+  [
+    'menu.controls',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('opts'), true),
+    null,
+    /^Contro(ls|les)/,
+  ],
+  ...['wait', 'bite', 'reel', 'done'].map((phase) => [
+    `fishing.${phase}`,
+    'fishing-spot',
+    (ui, f, a) => {
+      ui.fishing.start('carp', true);
+      ui.fishing.phase = a;
+      ui.fishing.delay = 1e9; // held in its phase while the guard reads it (no bite, no timeout)
+      ui.fishing.clock = a === 'wait' ? 0 : -1e9;
+      ui.fishing.resultText = 'Carp (silver)';
+      ui.fishing.draw();
+      return true;
+    },
+    phase,
+  ]),
+  ['plot', 'farm-mechanics', (ui) => (ui.plot.openFor('west'), true)],
+  ...['place_spring', 'place_weir', 'greenhouse', 'library'].map((id) => [
+    `project.${id}`,
+    'late-game-farm',
+    (ui, f, a) => (ui.panels.get('projects').openFor(a), true),
+    id,
+  ]),
+  [
+    'site.spring',
+    'spring-site-ask',
+    (ui) => (ui.panels.get('projects').openFor('place_spring'), true),
+  ],
+  ...['mara', 'clay', 'finn', 'rosa', 'senna', 'orin'].flatMap((id) => [
+    [
+      `npc.${id}.talk`,
+      'late-game-farm',
+      (ui, f, a) => {
+        ui.npc.openFor(a);
+        ui.npc.mode = 'talk';
+        ui.npc.gained = 10;
+        ui.npc.rebuild();
+        return true;
+      },
+      id,
+    ],
+    [
+      `npc.${id}.event`,
+      'late-game-farm',
+      (ui, f, a) => {
+        ui.npc.openFor(a);
+        if (ui.npc.mode !== 'event') return false;
+        return true;
+      },
+      id,
+    ],
+    [
+      `npc.${id}.gift`,
+      'late-game-farm',
+      (ui, f, a) => {
+        ui.npc.openFor(a);
+        ui.npc.mode = 'gift';
+        ui.npc.rebuild();
+        return true;
+      },
+      id,
+    ],
+    [
+      `npc.${id}.giftResult`,
+      'late-game-farm',
+      (ui, f, a) => {
+        ui.npc.openFor(a);
+        ui.npc.mode = 'talk';
+        ui.npc.gained = 80;
+        ui.npc.reply = window.__farm.i18n.t('npc.replyLove');
+        ui.npc.rebuild();
+        return true;
+      },
+      id,
+    ],
+  ]),
+];
+
+async function textGuard() {
+  // the four phone and language pairs side by side, each on its own page
+  const pairs = ['se', 'i13'].flatMap((profile) => ['pt-BR', 'en'].map((lang) => [profile, lang]));
+  await Promise.all(pairs.map(([profile, lang]) => textGuardOn(profile, lang)));
+}
+
+async function textGuardOn(profile, lang) {
+  const only = process.env.SHEETS?.split(',');
+  {
+    let farm = null;
+    let at = null;
+    for (const [name, scenario, open, arg, button] of SHEETS) {
+      if (only && !only.some((o) => name.startsWith(o))) continue;
+      if (!farm || at !== scenario) {
+        await farm?.close();
+        farm = await openScenario(browser, url, scenario, { profile, query: `&lang=${lang}` });
+        at = scenario;
+      } else {
+        await farm.load(scenario);
+      }
+      await farm.idle();
+      const shown = await farm.eval(
+        ([src, a]) => {
+          const f = window.__farm;
+          const ui = f.game.scene.getScene('UI');
+          return new Function(`return (${src})`)()(ui, f, a);
+        },
+        [open.toString(), arg],
+      );
+      if (shown === false) continue;
+      if (!['hud', 'toast', 'banner', 'moment'].includes(name)) await farm.panel();
+      if (button) await tapSheetButton(farm, button);
+      await farm.idle();
+      // toasts glide into their stack for a moment
+      await farm.frames(['toast', 'banner', 'moment'].includes(name) ? 40 : 12);
+      if (name === 'moment')
+        await farm.until(
+          (s, f) => f.game.scene.getScene('UI').hud.moment.alpha === 1,
+          null,
+          'the moment to fade in',
+        );
+      const bad = await uiOverflow(farm);
+      if (process.env.SHOTS) await farm.shot(`text-${name}-${profile}-${lang}`, process.env.SHOTS);
+      check(`text guard (${profile}, ${lang}): ${name}`, bad.length === 0, bad.join(' | '));
+      await farm.eval(() => {
+        const ui = window.__farm.game.scene.getScene('UI');
+        for (const m of ui.allModals()) if (m.isOpen) m.close();
+      });
+      await farm.idle();
+    }
+    check(
+      `text guard (${profile}, ${lang}): no page errors`,
+      !farm || farm.errors.length === 0,
+      farm?.errors.join(' | '),
+    );
+    await farm?.close();
+  }
+}
+
+// ---------------------------------------------------------------- fishing: the rod alone (owner bug)
+
+/**
+ * Step the paused loop frame by frame from an Action press until the fishing sheet has been open a few frames,
+ * recording what the farmer shows each frame (the pose image's texture, or the sprite's when no pose shows) and any
+ * tool icon swinging beside him.
+ */
+async function castFrames(farm) {
+  await farm.eval(() => window.__farm.dev.loop.pause());
+  await farm.page.keyboard.down('Space');
+  const seq = [];
+  try {
+    for (let i = 0; i < 90; i++) {
+      if (i === 3) await farm.page.keyboard.up('Space');
+      const r = await farm.eval(() => {
+        window.__farm.dev.loop.step(1);
+        const w = window.__farm.game.scene.getScenes(true).find((sc) => sc.grid);
+        const ui = window.__farm.game.scene.getScene('UI');
+        const shown = w.pose?.visible
+          ? w.pose.texture.key
+          : w.sprite.visible
+            ? w.sprite.texture.key + ':' + w.sprite.frame.name
+            : '-';
+        const icons = w.children.list
+          .filter((o) => o.visible && o.type === 'Image' && o.depth === 9300)
+          .map((o) => o.texture.key)
+          .filter((k) => /hoe|pick|can|scythe|axe|spade|rod/.test(k));
+        return { shown, icons, sheet: ui.fishing.isOpen };
+      });
+      seq.push(r);
+      if (r.sheet && seq.filter((x) => x.sheet).length >= 4) break;
+    }
+  } finally {
+    await farm.page.keyboard.up('Space');
+    await farm.eval(() => window.__farm.dev.loop.resume());
+  }
+  return seq;
+}
+
+/** A bank tile near the farmer with water on the given side (stand there, face it, cast). */
+const bankFacing = (farm, dir) =>
+  farm.eval((d) => {
+    const w = window.__farm.game.scene.getScene('Farm');
+    const v = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[d];
+    const p = window.__farm.getState().player;
+    const px = Math.floor(p.x / 16);
+    const py = Math.floor(p.y / 16);
+    let best = null;
+    for (let dy = -14; dy <= 14; dy++)
+      for (let dx = -14; dx <= 14; dx++) {
+        const tx = px + dx;
+        const ty = py + dy;
+        const here = w.tileInfo({ tx, ty });
+        const there = w.tileInfo({ tx: tx + v[0], ty: ty + v[1] });
+        if (here.kind === 'water' || here.blocked || here.door || there.kind !== 'water') continue;
+        const dd = Math.abs(dx) + Math.abs(dy);
+        if (!best || dd < best.dd) best = { tx, ty, dd };
+      }
+    return best;
+  }, dir);
+
+/** The rod's frames, less its swing frame (1), which carries the pickaxe's swoosh arc. */
+const ROD_ONLY = /^player_(tool_rod_\w+_[023]|act_reel_\w+_\d)$/;
+
+async function fishCast() {
+  for (const profile of ['se', 'i13']) {
+    const farm = await openScenario(browser, url, 'fish-cast', { profile });
+    for (const dir of ['right', 'left', 'down', 'up']) {
+      const at = await bankFacing(farm, dir);
+      if (!check(`fish-cast (${profile}): a bank to cast ${dir} from`, !!at)) continue;
+      await farm.mutate(
+        (s, f, a) => {
+          s.player.x = a.tx * 16 + 8;
+          s.player.y = a.ty * 16 + 11;
+          s.player.facing = a.dir;
+          s.energy = 999;
+        },
+        { ...at, dir },
+      );
+      await farm.select(3);
+      await farm.idle();
+      const seq = await castFrames(farm);
+      const before = seq.filter((x) => !x.sheet);
+      const open = seq.filter((x) => x.sheet);
+      const bad = seq.filter((x) => !ROD_ONLY.test(x.shown) || x.icons.length);
+      check(
+        `fish-cast (${profile}, ${dir}): from the first frame the farmer shows only the rod, cast to line out`,
+        before.length >= 3 && open.length >= 1 && bad.length === 0,
+        JSON.stringify({ bad: bad.slice(0, 3), first: seq[0], n: before.length }),
+      );
+      check(
+        `fish-cast (${profile}, ${dir}): the sheet opens over the farmer holding the line out`,
+        open.every((x) => /^player_act_reel_\w+_0$/.test(x.shown)),
+        JSON.stringify(open[0]),
+      );
+      // A catch: the line comes in with the reel, still the rod alone, then he stands.
+      await farm.eval(() => window.__farm.gameEvents.emit('fishCaught', undefined));
+      await closeSheet(farm);
+      const after = [];
+      await farm.eval(() => window.__farm.dev.loop.pause());
+      for (let i = 0; i < 40; i++)
+        after.push(
+          await farm.eval(() => {
+            window.__farm.dev.loop.step(1);
+            const w = window.__farm.game.scene.getScene('Farm');
+            return w.pose?.visible ? w.pose.texture.key : `sprite:${w.sprite.frame.name}`;
+          }),
+        );
+      await farm.eval(() => window.__farm.dev.loop.resume());
+      const posed = after.filter((x) => !x.startsWith('sprite:'));
+      check(
+        `fish-cast (${profile}, ${dir}): the catch reels in with the rod, then the farmer stands`,
+        posed.length > 0 &&
+          posed.every((x) => ROD_ONLY.test(x)) &&
+          after.at(-1).startsWith('sprite:'),
+        JSON.stringify([...new Set(after)]),
+      );
+    }
+    // A cast straight after another tool's swing: the pickaxe's (forced, mid-pose) and the hoe's.
+    for (const tool of [
+      ['pickaxe', 'mine'],
+      ['hoe', 'till'],
+    ]) {
+      const at = await bankFacing(farm, 'right');
+      await farm.mutate((s, f, a) => {
+        s.player.x = a.tx * 16 + 8;
+        s.player.y = a.ty * 16 + 11;
+        s.player.facing = 'right';
+      }, at);
+      await farm.select(3);
+      await farm.idle();
+      await farm.eval(([item, kind]) => {
+        const w = window.__farm.game.scene.getScene('Farm');
+        w.toolSwing(item, kind);
+        w.actionLock = 0;
+        w.moveLock = 0;
+      }, tool);
+      const seq = await castFrames(farm);
+      const bad = seq.filter((x) => !ROD_ONLY.test(x.shown) || x.icons.length);
+      check(
+        `fish-cast (${profile}): a cast right after the ${tool[0]}'s swing shows only the rod`,
+        seq.some((x) => x.sheet) && bad.length === 0,
+        JSON.stringify(bad.slice(0, 3)),
+      );
+      await closeSheet(farm);
+      await farm.idle();
+    }
+    check(
+      `fish-cast (${profile}): no page errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+}
+
+// ---------------------------------------------------------------- the guided start's buy step (owner bug)
+
+/** The coach's view now (step, line, pointer). */
+const coachNow = (farm) => farm.eval(() => window.__farm.game.scene.getScene('UI').coach.debug());
+
+async function coachShop() {
+  // Owner: "Buy 5 items is buggy: when you tap Mara it shows to tap on Close when it should show to tap in the
+  // store." On her sheet the coach points at Shop; in the shop at a price; closed early, back at Mara.
+  for (const lang of ['en', 'pt-BR']) {
+    const farm = await openScenario(browser, url, 'town-dry-day2', {
+      profile: 'se',
+      query: `&lang=${lang}`,
+    });
+    const tag = `town-dry-day2 (SE, ${lang})`;
+    await farm.during('panelOpen', ['npc'], () =>
+      farm.eval(() => window.__farm.gameEvents.emit('talkTo', { id: 'mara' })),
+    );
+    await farm.idle();
+    let c = await coachNow(farm);
+    check(
+      `${tag}: on Mara's sheet the coach points at Shop, never Close`,
+      c?.visible && c.step === 'buySeeds' && c.pointer?.pattern === '^Shop$' && !!c.aim,
+      JSON.stringify(c),
+    );
+    const tapped = await tapSheetButton(farm, lang === 'en' ? /^Shop$/ : /^Loja$/);
+    await farm.panel('shop');
+    await farm.idle();
+    c = await coachNow(farm);
+    check(
+      `${tag}: Shop opens the store and the coach points at a price`,
+      tapped &&
+        c?.visible &&
+        c.pointer?.kind === 'button' &&
+        /g\$/.test(c.pointer.pattern) &&
+        !!c.aim,
+      JSON.stringify(c),
+    );
+    await closeSheet(farm);
+    await farm.idle();
+    c = await coachNow(farm);
+    check(
+      `${tag}: closed before 5 are bought, the coach leads back to Mara`,
+      c?.visible && c.step === 'buySeeds' && c.pointer?.kind !== 'button',
+      JSON.stringify(c),
+    );
+    check(`${tag}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
 // ---------------------------------------------------------------- languages (src/i18n)
 
 /**
- * Every visible text of a scene (the UI scene or the title) that leaves the 200 px canvas, or shows an unfilled
- * `{param}` or a raw dictionary key. Empty when the layout holds.
+ * The text guard (owner: "many of the texts are getting hidden"). Every visible text of a scene (the UI scene or the
+ * title), found by walking the scene's display list in render order (a Label counts once, by its main glyphs; its
+ * drop shadow is part of it), is checked and every problem is returned (empty when the layout holds):
+ *
+ * - it stays on the 200 x 400 canvas, with no unfilled `{param}` or raw dictionary key;
+ * - inside an open sheet, it lies inside the sheet's visible part (below its top edge, above the canvas bottom);
+ * - it overlaps no other text (two lines overprinting, as a 3-line wrap over a fixed-y line did);
+ * - nothing opaque drawn after it covers it (an image, a sprite or a filled rectangle; the guided start's own
+ *   marks, which point at things on purpose, are left out);
+ * - it reads against what is behind it: the canvas is read back and the commonest colour in the text's box that
+ *   is neither the text's nor its shadow's is the background; the contrast ratio (WCAG) must be at least 3, or 2
+ *   for light text on an ink drop shadow (the shadow carries it).
  */
 function overflowIn(sceneKey) {
   return (farm) =>
-    farm.eval((key) => {
-      const scene = window.__farm.game.scene.getScene(key);
+    farm.eval(async (key) => {
+      const game = window.__farm.game;
+      const scene = game.scene.getScene(key);
       const bad = [];
-      const walk = (n, shown) => {
+      const coach = key === 'UI' ? scene.coach?.root : null;
+      const modal = key === 'UI' ? scene.allModals?.().find((m) => m.isOpen) : null;
+      scene.sys.displayList.depthSort();
+      // render order: [object, inCoach, inModal]
+      const order = [];
+      const units = [];
+      const walk = (n, shown, inCoach, inModal) => {
         const on = shown && n.visible !== false && n.alpha !== 0;
-        if (on && n.type === 'BitmapText' && n.text) {
-          const b = n.getBounds();
-          if (b.left < -0.5 || b.right > 200.5)
-            bad.push(`${n.text} [${b.left | 0}..${b.right | 0}]`);
-          if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text))
-            bad.push(`raw: ${n.text}`);
+        if (!on) return;
+        const c = inCoach || n === coach;
+        const m = inModal || (modal && n === modal.root);
+        if (n.main && n.main.type === 'BitmapText') {
+          if (n.main.text?.trim())
+            units.push({
+              t: n.main,
+              shade: n.shade ?? null,
+              outline: typeof n.outline === 'number' ? n.outline : null,
+              inCoach: c,
+              inModal: m,
+              i: order.length,
+            });
+          order.push({ o: n, c, m, text: true });
+          return;
         }
-        (n.list ?? []).forEach((c) => walk(c, on));
+        if (n.type === 'BitmapText') {
+          if (n.text?.trim())
+            units.push({ t: n, shade: null, inCoach: c, inModal: m, i: order.length });
+          order.push({ o: n, c, m, text: true });
+          return;
+        }
+        if (typeof n.bw === 'number' && typeof n.bh === 'number') {
+          // a Button: its face is Graphics (no bounds); it covers what lies under its footprint
+          const mt = n.getWorldTransformMatrix();
+          const a = mt.transformPoint(0, 0);
+          const z = mt.transformPoint(n.bw, n.bh);
+          const box = { left: a.x, top: a.y, right: z.x, bottom: z.y };
+          order.push({
+            o: { type: 'Button', alpha: n.alpha, getBounds: () => box },
+            c,
+            m,
+            text: false,
+          });
+        } else if (n.type === 'Graphics') {
+          // a Graphics has no bounds: read its solid fillRects from its command buffer (arguments per command)
+          const ARGS = {
+            0: 7,
+            1: 0,
+            2: 0,
+            3: 4,
+            4: 2,
+            5: 2,
+            6: 3,
+            7: 2,
+            8: 0,
+            9: 0,
+            10: 6,
+            11: 6,
+            14: 0,
+            15: 0,
+            21: 8,
+            22: 6,
+          };
+          const mt = n.getWorldTransformMatrix();
+          const cmd = n.commandBuffer ?? [];
+          const rects = [];
+          let fa = 0;
+          for (let q = 0; q < cmd.length;) {
+            const code = cmd[q];
+            if (!(code in ARGS)) break; // a transform or an unknown command: stop reading this one
+            if (code === 7) fa = cmd[q + 2];
+            if (code === 3 && fa * n.alpha > 0.5) {
+              const a = mt.transformPoint(cmd[q + 1], cmd[q + 2]);
+              const z = mt.transformPoint(cmd[q + 1] + cmd[q + 3], cmd[q + 2] + cmd[q + 4]);
+              rects.push({ left: a.x, top: a.y, right: z.x, bottom: z.y });
+            }
+            q += 1 + ARGS[code];
+          }
+          order.push({ o: { type: 'Graphics', alpha: n.alpha, rects }, c, m, text: false });
+        } else order.push({ o: n, c, m, text: false });
+        (n.list ?? []).forEach((ch) => walk(ch, on, c, m));
       };
-      scene.children.list.forEach((c) => walk(c, true));
+      scene.sys.displayList.list.forEach((ch) => walk(ch, true, false, false));
+      // With a sheet open, what is drawn before it (the HUD, the hotbar) sits under its dim on purpose.
+      const sheetAt = modal ? order.findIndex((e) => e.o === modal.root) : -1;
+      let sheetEnd = sheetAt;
+      while (sheetEnd + 1 < order.length && order[sheetEnd + 1].m) sheetEnd++;
+      // the canvas, read back once (logical px -> device px)
+      const img = await new Promise((r) => game.renderer.snapshot(r));
+      const cv = document.createElement('canvas');
+      cv.width = img.width;
+      cv.height = img.height;
+      const ctx = cv.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const k = img.width / 200;
+      const lum = (c) => {
+        const f = (v) => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * f((c >> 16) & 255) + 0.7152 * f((c >> 8) & 255) + 0.0722 * f(c & 255);
+      };
+      const ratio = (a, b) => {
+        const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+        return (x + 0.05) / (y + 0.05);
+      };
+      const near = (a, b) =>
+        Math.abs(((a >> 16) & 255) - ((b >> 16) & 255)) +
+          Math.abs(((a >> 8) & 255) - ((b >> 8) & 255)) +
+          Math.abs((a & 255) - (b & 255)) <
+        40;
+      const hex = (c) => '#' + c.toString(16).padStart(6, '0');
+      // Each text's ink box: the extent of its own colour's pixels inside its layout box (a layout box carries the
+      // font's line padding, which would make neighbouring lines and big logos "overlap" with no glyph touching).
+      const layout = units.map((u) => u.t.getBounds());
+      const boxes = units.map((u, ui) => {
+        const b = layout[ui];
+        const fg = u.t.tintTopLeft & 0xffffff;
+        const x0 = Math.max(0, Math.floor(b.left * k));
+        const y0 = Math.max(0, Math.floor(b.top * k));
+        const x1 = Math.min(cv.width, Math.ceil(b.right * k));
+        const y1 = Math.min(cv.height, Math.ceil(b.bottom * k));
+        if (x1 <= x0 || y1 <= y0) return { left: 0, top: 0, right: 0, bottom: 0, none: true };
+        const px = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+        const w = x1 - x0;
+        let [l, t, r, bt] = [Infinity, Infinity, -1, -1];
+        for (let q = 0; q < px.length; q += 4) {
+          const c = (px[q] << 16) | (px[q + 1] << 8) | px[q + 2];
+          if (!near(c, fg)) continue;
+          const xx = (q / 4) % w;
+          const yy = Math.floor(q / 4 / w);
+          // only a line's 9 glyph rows: its 2 rows of line spacing may hold the next text's top
+          const row = ((y0 + yy) / k - b.top) / (u.t.scaleY || 1);
+          if (row % 11 >= 9) continue;
+          l = Math.min(l, xx);
+          r = Math.max(r, xx);
+          t = Math.min(t, yy);
+          bt = Math.max(bt, yy);
+        }
+        if (r < 0) return { left: 0, top: 0, right: 0, bottom: 0, none: true };
+        return {
+          left: (x0 + l) / k,
+          top: (y0 + t) / k,
+          right: (x0 + r + 1) / k,
+          bottom: (y0 + bt + 1) / k,
+        };
+      });
+      // Each line's glyph band (rows 1-7: capitals' tops and the x-height, without the accent row above or the
+      // descender row below), from the font's own character
+      // boxes: two texts overprint when these bands meet. (Layout and cell boxes carry accent and descender rows
+      // and line spacing that are empty in most lines, so they "overlap" with no glyph touching.)
+      const cores = units.map((u) => {
+        const m = u.t.getWorldTransformMatrix();
+        const lines = new Map();
+        for (const ch of u.t.getTextBounds().characters ?? []) {
+          if (!ch.char.trim()) continue;
+          const a = m.transformPoint(ch.x, ch.y + 1);
+          const z = m.transformPoint(ch.x + ch.w, ch.y + 8);
+          const L = lines.get(ch.line);
+          if (!L) lines.set(ch.line, { left: a.x, top: a.y, right: z.x, bottom: z.y });
+          else {
+            L.left = Math.min(L.left, a.x);
+            L.right = Math.max(L.right, z.x);
+          }
+        }
+        return [...lines.values()];
+      });
+      const inter = (a, b) =>
+        Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
+        Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      units.forEach((u, ui) => {
+        const n = u.t;
+        const b = boxes[ui];
+        const lb = layout[ui];
+        const name = `"${n.text.replace(/\n/g, ' ').slice(0, 40)}"`;
+        if (lb.left < -0.5 || lb.right > 200.5 || lb.top < -0.5 || lb.bottom > 400.5)
+          bad.push(`${n.text} [${lb.left | 0}..${lb.right | 0} x ${lb.top | 0}..${lb.bottom | 0}]`);
+        if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text))
+          bad.push(`raw: ${n.text}`);
+        if (u.inCoach) return;
+        if (sheetAt >= 0 && u.i < sheetAt) {
+          // under an open sheet's dim (the HUD): only what is drawn over the sheet (a toast) must not cover it
+          // (critic P3-1: toasts over the shop printed over the goal line and the date)
+          for (let j = sheetEnd + 1; j < order.length; j++) {
+            const e = order[j];
+            if (e.c) continue;
+            const o = e.o;
+            const box = e.text ? null : o.getBounds?.();
+            const hit = e.text
+              ? units.some(
+                  (v, vi) =>
+                    v.i === j && cores[vi].some((q) => cores[ui].some((p) => inter(p, q) > 1)),
+                )
+              : !!box && o.alpha > 0.5 && cores[ui].some((p) => inter(p, box) > 4);
+            if (hit) bad.push(`covered over the sheet by ${e.text ? 'text' : o.type}: ${name}`);
+          }
+          return;
+        }
+        // cut short with fitText's ".." (a row or button that lost its end): the words must fit or wrap
+        if (/[^.]\.\.$/.test(n.text.trim())) bad.push(`cut short: ${name}`);
+        // a lower layer of stacked copies of one text (the title's outlined logo): only the top layer is read
+        if (
+          units.some(
+            (v, vi) => vi !== ui && v.i > u.i && v.t.text === n.text && inter(b, boxes[vi]) > 0,
+          )
+        )
+          return;
+        if (b.none) {
+          bad.push(`not drawn (no pixel of its colour): ${name}`);
+          return;
+        }
+        if (u.inModal) {
+          const top = modal.root.y;
+          const bottom = Math.min(400, top + modal.panelH);
+          if (b.top < top + 1.5 || b.bottom > bottom + 0.5 || b.left < 0 || b.right > modal.panelW)
+            bad.push(
+              `outside its sheet: ${name} [${b.top | 0}..${b.bottom | 0} in ${top | 0}..${bottom | 0}]`,
+            );
+        }
+        // overlapping text (each pair once)
+        units.forEach((v, vi) => {
+          if (vi <= ui || v.inCoach || v.inModal !== u.inModal || v.t.text === n.text) return;
+          if (sheetAt >= 0 && v.i < sheetAt) return;
+          if (cores[ui].some((p) => cores[vi].some((q) => inter(p, q) > 1)))
+            bad.push(`overlaps text: ${name} / "${v.t.text.slice(0, 30)}"`);
+        });
+        // covered by something opaque drawn after it
+        for (let j = u.i + 1; j < order.length; j++) {
+          const e = order[j];
+          if (e.c || e.text) continue;
+          const o = e.o;
+          const solid =
+            ((o.type === 'Image' || o.type === 'Sprite' || o.type === 'Button') && o.alpha > 0.5) ||
+            (o.type === 'Rectangle' && o.isFilled && o.fillAlpha > 0.5 && o.alpha > 0.5);
+          if (o.type === 'Graphics') {
+            if (o.rects.some((r) => cores[ui].some((p) => inter(p, r) > 4)))
+              bad.push(`covered by Graphics: ${name}`);
+            continue;
+          }
+          if (!solid || !o.getBounds) continue;
+          const ob = o.getBounds();
+          // the x-height bands where the glyphs should be (the ink box only holds what still shows)
+          if (cores[ui].some((p) => inter(p, ob) > 4))
+            bad.push(`covered by ${o.type}${o.texture ? ' ' + o.texture.key : ''}: ${name}`);
+        }
+        // contrast against the commonest other colour in its box
+        const x0 = Math.max(0, Math.floor((b.left - 1) * k));
+        const y0 = Math.max(0, Math.floor((b.top - 1) * k));
+        const x1 = Math.min(cv.width, Math.ceil((b.right + 1) * k));
+        const y1 = Math.min(cv.height, Math.ceil((b.bottom + 1) * k));
+        if (x1 <= x0 || y1 <= y0) return;
+        const px = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+        const fg = n.tintTopLeft & 0xffffff;
+        const sh = u.shade ? u.shade.tintTopLeft & 0xffffff : null;
+        const count = new Map();
+        let ink = 0;
+        for (let q = 0; q < px.length; q += 4) {
+          const c = (px[q] << 16) | (px[q + 1] << 8) | px[q + 2];
+          if (near(c, fg)) {
+            ink++;
+            continue;
+          }
+          if (sh !== null && near(c, sh)) continue;
+          count.set(c, (count.get(c) ?? 0) + 1);
+        }
+        if (ink === 0) {
+          bad.push(`not drawn (no pixel of its colour): ${name}`);
+          return;
+        }
+        let bg = null;
+        let most = 0;
+        for (const [c, m] of count) if (m > most) [bg, most] = [c, m];
+        if (bg === null) return;
+        // an outlined text is read against its own outline, which rings every glyph
+        const r =
+          u.outline !== null && u.outline !== undefined ? ratio(fg, u.outline) : ratio(fg, bg);
+        const need = sh !== null && lum(fg) > lum(sh) ? 2 : 3;
+        if (r < need) bad.push(`low contrast ${r.toFixed(2)}: ${name} ${hex(fg)} on ${hex(bg)}`);
+      });
       return [...new Set(bad)];
     }, sceneKey);
 }
@@ -2577,6 +3705,11 @@ try {
         guidedDepth,
         lang,
         cloud,
+        coachShop,
+        fishCast,
+        toastTiming,
+        npcPops,
+        hotbar,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');
@@ -2586,7 +3719,9 @@ try {
   await Promise.all(blocks.filter((b) => !only || only.includes(b.name)).map(run));
   // Timing blocks run after, with no other page beside them: actionSlowFrame stalls frames on purpose, and the
   // other blocks' load turned its stalls into a 10 s timeout (twice in full verifies; never alone).
-  const alone = SMOKE ? [] : [actionSlowFrame];
+  // The text guard and the sheet taps open many pages of their own (four and three at once): beside the parallel
+  // blocks they starved them into timeouts, so they run after them.
+  const alone = SMOKE ? [] : [actionSlowFrame, textGuard, sheetTaps];
   for (const b of alone.filter((b) => !only || only.includes(b.name))) await run(b);
 } finally {
   await browser.close();

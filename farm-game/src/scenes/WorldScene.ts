@@ -157,8 +157,6 @@ import {
 import { activeMapKey, preparseMap, takeTilemap } from './mapCache';
 import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutorial';
 import type { CoachScreenWorld } from '../ui/CoachMarks';
-import { npcLocation } from '../systems/npcs';
-import { npcs as npcData } from '../data';
 import { t } from '../i18n';
 
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
@@ -205,6 +203,8 @@ let fxWarmed = false;
 const SWING = { windup: 50 } as const;
 /** After a swing the stick may walk again this soon, even while the next use still waits for the lock. */
 const MOVE_ROOT_MS = 120;
+/** A press made during the action lock acts when the lock ends, if within this long. */
+const PRESS_BUFFER_MS = 450;
 /** Standing still this long facing a tile under a crown cuts the target part of the see-through hole. */
 const HOLE_STILL_MS = 250;
 
@@ -253,6 +253,10 @@ export abstract class WorldScene extends Phaser.Scene {
   private poseUntil = 0;
   /** An action animation waiting for the world to run again (the reel, after the fishing sheet). */
   private pendingAct: string | null = null;
+  /** The line is out (from the cast's end until the fishing sheet closes): the pose held, rod only. */
+  private castHold: FrameRef | null = null;
+  /** When the cast pose has played out and the sheet may open (`castReady`), or null once announced. */
+  private castReadyAt: number | null = null;
   /** The held item drawn in the farmer's hands during `place` (art round 5), per pose frame. */
   private held: Phaser.GameObjects.Image | null = null;
   private heldSeq: { at: number; xy: [number, number] | null }[] = [];
@@ -269,6 +273,8 @@ export abstract class WorldScene extends Phaser.Scene {
   /** After a door, ignore held input until it is released once, so doors never bounce. */
   private inputLocked = true;
   private actionLock = 0;
+  /** A press that came during the action lock, kept to act when the lock ends (`PRESS_BUFFER_MS`). */
+  private bufferedPress: { id: number; at: number } | null = null;
   private idleMs = 0;
   private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
@@ -346,6 +352,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.heldSeq = [];
     this.poseSeq = [];
     this.poseUntil = 0;
+    this.castHold = null;
+    this.castReadyAt = null;
     this.dipUntil = 0;
     this.shakeOff.x = 0;
     this.moveLock = 0;
@@ -544,8 +552,29 @@ export abstract class WorldScene extends Phaser.Scene {
         );
     }
 
-    this.npcs = new NpcRenderer(this, this.mapId);
-    this.npcs.sync(state, playerTile(state.player));
+    // villagers walk their schedule's changes, through this map's doors (never popping in or out on screen)
+    this.npcs = new NpcRenderer(this, this.mapId, {
+      grid: () => this.grid,
+      // the ways off the map (gates and edges): never the farmer's own house door
+      exits: () =>
+        this.objects
+          .filter((o) => o.type === 'door' && doorTarget(o).map !== 'house')
+          .map((o) => ({ tx: o.tx, ty: o.ty })),
+      inView: (tx, ty) => {
+        const v = this.cameras.main.worldView;
+        const x = tx * TILE_SIZE;
+        const y = ty * TILE_SIZE;
+        return (
+          x + TILE_SIZE * 2 > v.x &&
+          x - TILE_SIZE < v.right &&
+          y + TILE_SIZE * 3 > v.y &&
+          y - TILE_SIZE < v.bottom
+        );
+      },
+    });
+    // the scene opens behind its wipe: everyone stands where they are at once
+    this.npcs.sync(state, playerTile(state.player), true);
+    runtime.handPick = false; // a map change ends a hand pick (critic ruling)
     this.rebuildGrid();
     this.things = new ObjectsRenderer(this, this.mapId);
     this.things.sync(state, false);
@@ -715,6 +744,15 @@ export abstract class WorldScene extends Phaser.Scene {
       return;
     }
 
+    // The cast has played out: hold the line out, then let the fishing sheet open over a still, rod-only pose.
+    if (this.castReadyAt !== null && this.time.now >= this.castReadyAt) {
+      this.castReadyAt = null;
+      this.syncSprite(false);
+      gameEvents.emit('castReady', undefined);
+      if (runtime.blocked) return;
+    }
+    // The sheet closed: the line comes in (the reel plays below on a catch, else the farmer stands).
+    if (this.castHold && this.castReadyAt === null && !runtime.fishing) this.castHold = null;
     if (this.pendingAct) {
       const anim = this.pendingAct;
       this.pendingAct = null;
@@ -803,7 +841,14 @@ export abstract class WorldScene extends Phaser.Scene {
       return;
     }
 
-    if (!inputHub.actionHeld) {
+    // A new press that lands while the last act's lock still runs (act, tap a slot, press again at once: half the
+    // presses were lost) is kept and acts as soon as the lock ends, if that is soon (critic, coordinator ruling).
+    const now = this.time.now;
+    if (inputHub.actionHeld && this.actionLock > 0 && this.actionGate.may(inputHub.actionPress, false))
+      this.bufferedPress = { id: inputHub.actionPress, at: now };
+    const buffered =
+      this.bufferedPress?.id === inputHub.actionPress && now - this.bufferedPress.at < PRESS_BUFFER_MS;
+    if (!inputHub.actionHeld && !buffered) {
       this.heldFailed = false;
       this.holdUses = 0;
       this.holdKind = null;
@@ -823,6 +868,7 @@ export abstract class WorldScene extends Phaser.Scene {
     }
 
     this.updateNpcs(state);
+    if (this.npcs?.update(delta)) this.rebuildGrid();
     this.updateTarget();
     this.updateHighlight(time);
     this.updateGuide(time, delta);
@@ -920,11 +966,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const drift = valley.weir?.drift;
     if (drift?.map === this.mapId && riverBack(state))
       objects.push({ type: 'slip', tx: drift.slip.bank[0], ty: drift.slip.bank[1], w: 1, h: 1 });
-    const npcs: { id: string; tx: number; ty: number }[] = [];
-    for (const id of Object.keys(npcData)) {
-      const at = npcLocation(id, state.time.minutes, state);
-      if (at && at.map === this.mapId) npcs.push({ id, tx: at.tx, ty: at.ty });
-    }
+    // where the villagers are drawn (a walker by the tile it is crossing), not where the schedule will put them
+    const npcs: { id: string; tx: number; ty: number }[] = this.npcs?.positions() ?? [];
     const screen = (tx: number, ty: number) => ({
       x: tx * TILE_SIZE + TILE_SIZE / 2 - cam.scrollX + cam.x,
       y: ty * TILE_SIZE + TILE_SIZE / 2 - cam.scrollY + cam.y,
@@ -1026,7 +1069,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     this.sprite.setPosition(p.x + this.shakeOff.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
     this.sprite.setDepth(10 + p.y);
-    const posing = !!this.pose && now < this.poseUntil && !moving;
+    const posing = !!this.pose && (now < this.poseUntil || !!this.castHold) && !moving;
     this.sprite.setVisible(!posing);
     if (this.pose) {
       this.pose
@@ -1035,6 +1078,7 @@ export abstract class WorldScene extends Phaser.Scene {
         .setDepth(10 + p.y);
       let cur: FrameRef | null = null;
       for (const step of this.poseSeq) if (now >= step.at) cur = step.f;
+      if (this.castHold && now >= this.poseUntil) cur = this.castHold;
       if (posing && cur) {
         if (this.pose.texture.key !== cur.texture || this.pose.frame.name !== cur.frame) {
           this.pose.setTexture(cur.texture, cur.frame);
@@ -1095,7 +1139,10 @@ export abstract class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     const own = !!item && (TOOL_KINDS[item]?.includes(kind) ?? false);
     if (!own) return { delay: 0, shown: false };
-    const drawn = this.frames.tool(item, p.facing);
+    // The rod casts with the rod alone in every facing: facing up (no cast drawn) plays the reel backwards.
+    const drawn =
+      this.frames.tool(item, p.facing) ??
+      (item === 'fishing_rod' ? this.frames.castFromReel(p.facing) : null);
     let delay: number = SWING.windup;
     if (drawn) {
       // Wind-up, swing, contact (the impact lands here), follow-through, then the idle frame.
@@ -1162,6 +1209,26 @@ export abstract class WorldScene extends Phaser.Scene {
     this.pose ??= this.add.image(0, 0, first.texture, first.frame).setOrigin(0.5, 1);
     this.syncSprite(false);
     return this.poseSeq[Math.min(ACT_CONTACT_FRAME, this.poseSeq.length - 1)]!.at - now;
+  }
+
+  /**
+   * A cast: the fishing sheet waits until the cast pose has played out (owner: the farmer showed the rod's
+   * wind-up, raised like a pickaxe, frozen behind the sheet), then the farmer holds the line out until it closes.
+   * The farmer is rooted meanwhile, so the pose is never cut short by a walk.
+   */
+  private startCastHold(shown: boolean): void {
+    const p = getState().player;
+    const now = this.time.now;
+    this.castHold = this.frames.lineOut(p.facing);
+    if (this.castHold && !this.pose) {
+      this.pose = this.add
+        .image(0, 0, this.castHold.texture, this.castHold.frame)
+        .setOrigin(0.5, ACT_ORIGIN_Y);
+    }
+    const ready = shown ? Math.max(this.poseUntil, now) : now;
+    this.castReadyAt = ready;
+    this.moveLock = Math.max(this.moveLock, ready - now + 1);
+    this.actionLock = Math.max(this.actionLock, ready - now + 1);
   }
 
   /** Hold the frame for a moment on an impact (a harvest): tweens pause, input does not. */
@@ -1465,7 +1532,10 @@ export abstract class WorldScene extends Phaser.Scene {
     const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
-      repeating ? { kind: this.holdKind!, quiet: true } : {},
+      // a painted row works the whole bed (till, plant, water) whatever was picked by hand
+      repeating
+        ? { kind: this.holdKind!, quiet: true, row: this.work !== null }
+        : { row: this.work !== null },
     );
     if (!res.ok && repeating) {
       this.heldFailed = true;
@@ -1495,7 +1565,9 @@ export abstract class WorldScene extends Phaser.Scene {
       this.actionLock = ACTION_LOCK_MS.ok;
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
-      const swing = this.toolSwing(stack?.item, res.kind);
+      // a cast is the rod's whatever is in hand (a bait in hand casts too: depth lane, baits)
+      const swing = this.toolSwing(res.kind === 'cast' ? 'fishing_rod' : stack?.item, res.kind);
+      if (res.kind === 'cast') this.startCastHold(swing.shown);
       if (!swing.shown && ACT_FOR_KIND[res.kind]) {
         // art round 5: plant, harvest, forage, eat and place play the farmer's own action; the fx land on contact
         const d = this.playAct(ACT_FOR_KIND[res.kind]!, heldBefore);
@@ -1983,6 +2055,8 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     const plan = this.planTap(x, y);
     if (!plan) return;
+    // a tap on the world (a walk, or an act there) ends a hand pick: auto tool chooses again (critic ruling)
+    runtime.handPick = false;
     if (!plan.path && this.onPlayerTile(plan.intent.target) && this.ownTileTap()) return;
     if (!plan.path) {
       // Nothing to do there, or no way to get there: answer anyway, never silently.
@@ -2236,6 +2310,8 @@ export abstract class WorldScene extends Phaser.Scene {
 
   private onPaintLine(dir: Direction | null, tiles: number, path?: Direction[]): void {
     if (this.transitioning || runtime.blocked) return;
+    // a painted row works the bed with auto tool (till, plant, water): it ends a hand pick (critic P4-2)
+    runtime.handPick = false;
     if (this.work) this.work = null;
     this.cancelRoute();
     if (!dir || tiles === 0) {

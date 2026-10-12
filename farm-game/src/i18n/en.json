@@ -420,7 +420,8 @@
     "litTalk": "Tap the lit button to talk.",
     "litOpen": "Tap the lit button to open it.",
     "readJobs": "Read your jobs, then tap Close.",
-    "closeToCarryOn": "Close this to carry on."
+    "closeToCarryOn": "Close this to carry on.",
+    "tapShop": "Tap Shop to see her goods."
   },
   "dir": {
     "up": "up",

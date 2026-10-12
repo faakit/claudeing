@@ -1,0 +1,17 @@
+{
+  "title": "Rosa leaves the farm at noon",
+  "about": "Farm, day 4, 11:58, standing a few tiles below Rosa at her morning spot (16,12). At 12:00 her schedule takes her to town: she walks to the farm's gate south and goes through it, never vanishing on screen (owner: \"sometimes the NPCs appear from nowhere or just disappear\"). The e2e block npcPops also runs the town at 07:58 (villagers walking in through doors) on npc-arrive-town.",
+  "version": 18,
+  "tags": ["farm", "villagers"],
+  "at": {
+    "map": "farm",
+    "tx": 16,
+    "ty": 15,
+    "facing": "up"
+  },
+  "time": {
+    "day": 4,
+    "clock": "11:58"
+  },
+  "goal": "harvest"
+}

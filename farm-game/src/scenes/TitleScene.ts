@@ -171,7 +171,7 @@ export class TitleScene extends Phaser.Scene {
       align: 'center',
       color: C.cream,
     });
-    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 10, t('title.version', { build: __BUILD__ }), {
+    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 11, t('title.version', { build: __BUILD__ }), {
       align: 'right',
       color: C.creamDim,
     });

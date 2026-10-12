@@ -1,0 +1,31 @@
+{
+  "title": "The can's water level on the hotbar",
+  "about": "Farm, day 4 at 09:00, a row of dry parsnips in the home plot and 2 water in the can (owner: \"the watering can should show how much water it has in the hotbar\"). Water the row and watch the can's cell drain to an empty ink track; refill at the pond (east, by the greenhouse site) and it fills again.",
+  "version": 18,
+  "tags": ["farm", "hotbar", "ui"],
+  "at": {
+    "map": "farm",
+    "tx": 9,
+    "ty": 16,
+    "facing": "down"
+  },
+  "time": {
+    "day": 4,
+    "clock": "09:00"
+  },
+  "water": 2,
+  "select": 1,
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": 1,
+      "tiles": [
+        [9, 17],
+        [10, 17],
+        [11, 17],
+        [12, 17]
+      ]
+    }
+  ],
+  "goal": "harvest"
+}

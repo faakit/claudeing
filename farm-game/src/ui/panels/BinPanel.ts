@@ -52,16 +52,7 @@ export class BinPanel extends Modal {
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
 
-    if (list.length === 0)
-      this.label(
-        8,
-        50,
-        t('bin.empty'),
-        C.creamDim,
-        1,
-        'left',
-        184,
-      );
+    if (list.length === 0) this.label(8, 50, t('bin.empty'), C.creamDim, 1, 'left', 184);
     let y = 34;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const have = countStack(s, ref);
@@ -98,7 +89,7 @@ export class BinPanel extends Modal {
         ],
       });
     }
-    const footerY = 34 + ROWS * ROW_H + 4;
+    const footerY = Math.max(y, 34 + ROWS * ROW_H) + 4; // under the rows, however tall they grew
     // Left-handed: Ship all on the left (by the thumb), the page arrows on the right.
     const left = this.leftHanded;
     const pagerX = left ? this.panelW - 60 : 8;
