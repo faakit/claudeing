@@ -124,10 +124,17 @@ export class NpcRenderer {
     const from = s.walk ? this.walkTile(s) : s.at;
     if (!s.here || !from) {
       if (!to) return this.place(s, null); // not here, not wanted here: nothing shows
-      // arriving: in through the exit nearest the spot, walking
-      const path = this.pathOut(to);
+      // arriving where nobody sees: simply there
+      if (!w.inView(to.tx, to.ty)) return this.place(s, to);
+      // arriving in view: in from the nearest tile out of view (just past the screen's edge), so the villager is
+      // there about as soon as the schedule says (the guided start meets Rosa at 7:00), else from a gate
+      const path = this.pathOffView(to) ?? this.pathToExit(to);
       if (path) {
-        s.walk = { path: [...path].reverse(), pos: 0, leaves: false };
+        const inward = [...path].reverse();
+        let from0 = 0;
+        for (let i = 0; i < inward.length; i++)
+          if (!w.inView(inward[i]!.tx, inward[i]!.ty)) from0 = i;
+        s.walk = { path: inward.slice(from0), pos: 0, leaves: false };
         s.at = null;
         s.here = true;
         const first = s.walk.path[0]!;
@@ -138,6 +145,8 @@ export class NpcRenderer {
       }
       return w.inView(to.tx, to.ty) ? false : this.place(s, to); // no way in: only where nobody sees it
     }
+    // both ends out of view: the change is made at once, unseen
+    if (!w.inView(from.tx, from.ty) && (!to || !w.inView(to.tx, to.ty))) return this.place(s, to);
     if (to) {
       const path = this.pathBetween(from, to);
       if (path && path.length > 1) {
@@ -148,7 +157,8 @@ export class NpcRenderer {
       }
       if (path) return this.place(s, to);
     } else {
-      const path = this.pathOut(from);
+      // leaving: off the nearest screen edge (gone once out of view), else through a gate
+      const path = this.pathOffView(from) ?? this.pathToExit(from);
       if (path) {
         const had = !!s.at;
         s.walk = { path, pos: 0, leaves: true };
@@ -179,8 +189,18 @@ export class NpcRenderer {
     return findPath(this.gridFree(), a, [b], { maxNodes: 6000 });
   }
 
-  /** The walk from a tile to the nearest exit (a door or an edge way off the map). */
-  private pathOut(from: TileCoord): TileCoord[] | null {
+  /** The walk from a tile to the nearest tile out of view (where a change is never seen). */
+  private pathOffView(from: TileCoord): TileCoord[] | null {
+    const w = this.world!;
+    const g = this.gridFree();
+    const goals: TileCoord[] = [];
+    for (let ty = 0; ty < g.height; ty++)
+      for (let tx = 0; tx < g.width; tx++)
+        if (!g.blocked[ty * g.width + tx] && !w.inView(tx, ty)) goals.push({ tx, ty });
+    return goals.length ? findPath(g, from, goals, { maxNodes: 6000 }) : null;
+  }
+
+  private pathToExit(from: TileCoord): TileCoord[] | null {
     const exits = this.world!.exits();
     if (!exits.length) return null;
     const g = this.gridFree();
@@ -233,6 +253,9 @@ export class NpcRenderer {
         b.tx > a.tx ? 'right' : b.tx < a.tx ? 'left' : b.ty < a.ty ? 'up' : 'down';
       this.idle(s.sprite, id, dir);
       s.marker.setVisible(false);
+      // a villager leaving is gone once out of view (no long unseen walk to the gate)
+      const here = this.walkTile(s);
+      if (w.leaves && this.world && !this.world.inView(here.tx, here.ty)) w.pos = w.path.length - 1;
       if (w.pos < w.path.length - 1) continue;
       const end = w.path[w.path.length - 1]!;
       s.walk = null;

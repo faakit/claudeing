@@ -1842,6 +1842,14 @@ is unchanged: no control moved and the camera scrolls are identical.
   43.7). The faces stay 24 px tall because the row's touch zone must start under Interact's touch circle (y 370).
   The can's cell carries its water level, a solid 2 px blue bar in an ink track, empty when dry.
 - **The highlighted slot is what Action uses.** A slot picked by hand (a tap, the Action swipe, the ring, a key, the
-  wheel) is what Action uses until it has acted: auto tool waits ("when we scroll, the item does not change"). When
-  auto tool does pick another slot, the selection moves to it at the press, so the highlight always shows what was
-  used; the name plate only shows for hand picks. A hand pick is runtime state (a reload starts with auto tool).
+  wheel) is what the next Action press uses: auto tool waits ("when we scroll, the item does not change"). The pick
+  lasts one press (done or refused) and ends on a tap on the world, a painted row or a map change (critic rulings);
+  while the guided start's line shows it never holds auto tool back, so a step's target is always doable. When auto
+  tool uses another slot on a single press, the selection moves to it, so the highlight shows what was used (not
+  along a painted row, whose tools take turns and whose seeds in hand stay the ones it sows); the name plate shows
+  for hand picks only. A hand pick is runtime state (a reload starts with auto tool).
+- **An Action press is never lost in the last act's lock.** A press that lands within the 200-280 ms lock (act, tap
+  a slot, press again) used to vanish about half the time; it is kept and acts when the lock ends, within 450 ms.
+- **Villagers come and go just past the screen's edge.** An arrival in view starts at the nearest tile out of view
+  (a far gate kept the guided start waiting for Rosa), a departure walks to the nearest tile out of view and goes;
+  gates are the fallback.

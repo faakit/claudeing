@@ -2003,6 +2003,32 @@ async function hotbar() {
     );
     await farm.close();
 
+    // A slot tap then an Action press at once, right after an act: the press is kept, never lost in the act's lock
+    farm = await openScenario(browser, url, 'hotbar-can-level', { profile });
+    await farm.idle();
+    const A = await farm.eval(() => window.__farm.game.scene.getScene('UI').layout.action);
+    let kept = 0;
+    for (let i = 0; i < 6; i++) {
+      await farm.mutate((s) => {
+        s.water = 20;
+        for (const k of Object.keys(s.farm.tiles)) s.farm.tiles[k].watered = false;
+        s.inventory.selected = 0;
+      });
+      await farm.idle();
+      const before = await farm.eval(() => window.__farm.getState().water);
+      await farm.thumb.tap(A.x, A.y, 40); // an act (the hoe: nothing to till here, a refusal's lock)
+      await farm.thumb.tap(60, 384, 30); // the can's cell
+      await farm.thumb.tap(A.x, A.y, 40);
+      await farm.idle();
+      if ((await farm.eval(() => window.__farm.getState().water)) < before) kept++;
+    }
+    check(
+      `hotbar-can-level (${profile}): act, tap a slot, press Action at once: every press is kept (6/6)`,
+      kept === 6,
+      `kept ${kept}/6`,
+    );
+    await farm.close();
+
     // 6 and 7. five cells; scroll with the Action swipe, press Action at once: the highlighted slot is what is used
     farm = await openScenario(browser, url, 'hotbar-full-bag', { profile });
     await farm.idle();
@@ -3334,8 +3360,6 @@ try {
         lang,
         coachShop,
         fishCast,
-        textGuard,
-        sheetTaps,
         toastTiming,
         npcPops,
         hotbar,
@@ -3348,7 +3372,9 @@ try {
   await Promise.all(blocks.filter((b) => !only || only.includes(b.name)).map(run));
   // Timing blocks run after, with no other page beside them: actionSlowFrame stalls frames on purpose, and the
   // other blocks' load turned its stalls into a 10 s timeout (twice in full verifies; never alone).
-  const alone = SMOKE ? [] : [actionSlowFrame];
+  // The text guard and the sheet taps open many pages of their own (four and three at once): beside the parallel
+  // blocks they starved them into timeouts, so they run after them.
+  const alone = SMOKE ? [] : [actionSlowFrame, textGuard, sheetTaps];
   for (const b of alone.filter((b) => !only || only.includes(b.name))) await run(b);
 } finally {
   await browser.close();

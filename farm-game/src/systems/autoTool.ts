@@ -128,7 +128,8 @@ export interface Choice {
 export function chooseAction(
   state: GameState,
   candidates: TileInfo[],
-  opts: { kind?: string } = {},
+  /** `row`: a painted row is being worked (auto tool tills, plants and waters along it whatever was picked). */
+  opts: { kind?: string; row?: boolean } = {},
 ): Choice | null {
   const sel = state.inventory.selected;
   const best = (slots: number[]): Choice | null => {
@@ -146,7 +147,10 @@ export function chooseAction(
   // selection moves to what it used: actOn), and never right after the player picked the slot by hand: that pick
   // is what Action uses until it has acted (owner: "when we scroll, the item does not change the selected slot").
   const explicit = best([sel]);
-  if (explicit || !autoMode(state) || runtime.handPick) return explicit;
+  // (the guided start teaches with auto tool: while its line shows, a hand pick never holds auto tool back, so a
+  // step's target is always doable: critic P4-1)
+  if (explicit || !autoMode(state) || (runtime.handPick && !opts.row && !runtime.coaching))
+    return explicit;
   return best(autoSlots(state).filter((s) => s !== sel));
 }
 
@@ -172,17 +176,19 @@ export function performChoice(state: GameState, choice: Choice): ActionResult {
 export function actOn(
   state: GameState,
   candidates: TileInfo[],
-  opts: { kind?: string; quiet?: boolean } = {},
+  opts: { kind?: string; quiet?: boolean; row?: boolean } = {},
 ): ActionResult & { tile: TileInfo; slot: number } {
   const first = candidates[0];
   if (!first) throw new Error('actOn needs at least one candidate tile');
   const choice = chooseAction(state, candidates, opts);
+  // a hand pick lasts one Action press, done or refused (critic ruling): auto tool chooses again after it
+  runtime.handPick = false;
   if (choice) {
     const res = performChoice(state, choice);
     if (res.ok) {
       // the highlighted slot is always what Action used: an auto choice moves the selection to it
-      if (choice.auto) followChoice(state, choice.slot);
-      runtime.handPick = false;
+      // (not along a painted row: the row's own tools take turns, and the seeds in hand stay the ones it sows)
+      if (choice.auto && !opts.row) followChoice(state, choice.slot);
     }
     return { ...res, tile: choice.tile, slot: choice.slot };
   }

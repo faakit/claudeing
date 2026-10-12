@@ -203,6 +203,8 @@ let fxWarmed = false;
 const SWING = { windup: 50 } as const;
 /** After a swing the stick may walk again this soon, even while the next use still waits for the lock. */
 const MOVE_ROOT_MS = 120;
+/** A press made during the action lock acts when the lock ends, if within this long. */
+const PRESS_BUFFER_MS = 450;
 /** Standing still this long facing a tile under a crown cuts the target part of the see-through hole. */
 const HOLE_STILL_MS = 250;
 
@@ -271,6 +273,8 @@ export abstract class WorldScene extends Phaser.Scene {
   /** After a door, ignore held input until it is released once, so doors never bounce. */
   private inputLocked = true;
   private actionLock = 0;
+  /** A press that came during the action lock, kept to act when the lock ends (`PRESS_BUFFER_MS`). */
+  private bufferedPress: { id: number; at: number } | null = null;
   private idleMs = 0;
   private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
@@ -554,7 +558,7 @@ export abstract class WorldScene extends Phaser.Scene {
       // the ways off the map (gates and edges): never the farmer's own house door
       exits: () =>
         this.objects
-          .filter((o) => o.type === 'door' && o.props.to !== 'house')
+          .filter((o) => o.type === 'door' && doorTarget(o).map !== 'house')
           .map((o) => ({ tx: o.tx, ty: o.ty })),
       inView: (tx, ty) => {
         const v = this.cameras.main.worldView;
@@ -570,6 +574,7 @@ export abstract class WorldScene extends Phaser.Scene {
     });
     // the scene opens behind its wipe: everyone stands where they are at once
     this.npcs.sync(state, playerTile(state.player), true);
+    runtime.handPick = false; // a map change ends a hand pick (critic ruling)
     this.rebuildGrid();
     this.things = new ObjectsRenderer(this, this.mapId);
     this.things.sync(state, false);
@@ -836,7 +841,14 @@ export abstract class WorldScene extends Phaser.Scene {
       return;
     }
 
-    if (!inputHub.actionHeld) {
+    // A new press that lands while the last act's lock still runs (act, tap a slot, press again at once: half the
+    // presses were lost) is kept and acts as soon as the lock ends, if that is soon (critic, coordinator ruling).
+    const now = this.time.now;
+    if (inputHub.actionHeld && this.actionLock > 0 && this.actionGate.may(inputHub.actionPress, false))
+      this.bufferedPress = { id: inputHub.actionPress, at: now };
+    const buffered =
+      this.bufferedPress?.id === inputHub.actionPress && now - this.bufferedPress.at < PRESS_BUFFER_MS;
+    if (!inputHub.actionHeld && !buffered) {
       this.heldFailed = false;
       this.holdUses = 0;
       this.holdKind = null;
@@ -1520,7 +1532,10 @@ export abstract class WorldScene extends Phaser.Scene {
     const res = actOn(
       state,
       tiles.map((t) => this.tileInfo(t)),
-      repeating ? { kind: this.holdKind!, quiet: true } : {},
+      // a painted row works the whole bed (till, plant, water) whatever was picked by hand
+      repeating
+        ? { kind: this.holdKind!, quiet: true, row: this.work !== null }
+        : { row: this.work !== null },
     );
     if (!res.ok && repeating) {
       this.heldFailed = true;
@@ -2040,6 +2055,8 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     const plan = this.planTap(x, y);
     if (!plan) return;
+    // a tap on the world (a walk, or an act there) ends a hand pick: auto tool chooses again (critic ruling)
+    runtime.handPick = false;
     if (!plan.path && this.onPlayerTile(plan.intent.target) && this.ownTileTap()) return;
     if (!plan.path) {
       // Nothing to do there, or no way to get there: answer anyway, never silently.
@@ -2293,6 +2310,8 @@ export abstract class WorldScene extends Phaser.Scene {
 
   private onPaintLine(dir: Direction | null, tiles: number, path?: Direction[]): void {
     if (this.transitioning || runtime.blocked) return;
+    // a painted row works the bed with auto tool (till, plant, water): it ends a hand pick (critic P4-2)
+    runtime.handPick = false;
     if (this.work) this.work = null;
     this.cancelRoute();
     if (!dir || tiles === 0) {
