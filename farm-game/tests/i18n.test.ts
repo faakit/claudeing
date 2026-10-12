@@ -123,6 +123,16 @@ describe('i18n core', () => {
     expect(relocalize(en)).toBe(pt);
     expect(relocalize('A line no data has.')).toBe('A line no data has.');
   });
+
+  it("Rosa's kept letter (her text and her signature, stored as one) shows in the language of the day", () => {
+    const l = valley.letter;
+    const en = `${l.text} ${l.sign}`; // as mechanics/valley.ts keeps it
+    const pt = `${overlayFor('pt-BR', 'valley')[l.text]!} ${overlayFor('pt-BR', 'valley')[l.sign] ?? l.sign}`;
+    expect(relocalize(pt)).toBe(en);
+    setLocale('pt-BR');
+    expect(relocalize(en)).toBe(pt);
+    expect(relocalize('A line no data has.')).toBe('A line no data has.');
+  });
 });
 
 describe('dictionaries', () => {
