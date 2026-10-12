@@ -184,7 +184,7 @@ export class DevMenu {
         },
         { on: this.showTiles, sub: 'grid + coords' },
       );
-      btn('Next day', () => api.time.skipDays(1), { sub: 'full rollover' });
+      btn('Next day', () => void api.time.skipDays(1), { sub: 'full rollover' });
       if (analytics.enabled)
         btn('Analytics', () => this.open('analytics'), {
           sub: `${analytics.providerId} · ${analytics.consent}`,

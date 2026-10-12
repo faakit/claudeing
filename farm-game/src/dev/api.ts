@@ -88,7 +88,8 @@ export interface FarmDevApi {
       year?: number;
     }): void;
     /** Live through n nights (full rollover, no sleep screens). The player wakes in bed unless wake is false. */
-    skipDays(n?: number, opts?: { wake?: boolean }): void;
+    /** Resolves once the restarted world is ready (at once with no world, or with the loop paused). */
+    skipDays(n?: number, opts?: { wake?: boolean }): Promise<void>;
   };
   /**
    * Show a map in one of its stages (map stages, M2): sets the valley stats that pick that variant (keeping the rest

@@ -180,7 +180,7 @@ try {
     await farm.eval(() => {
       const f = window.__farm;
       f.gameEvents.emit('languageChosen', { lang: 'pt-BR' });
-      f.dev.time.skipDays(1);
+      return f.dev.time.skipDays(1);
     });
     log = await delivered(farm);
     c.check(

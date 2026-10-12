@@ -282,7 +282,15 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
     seed: (n) => control.seed(n),
     time: {
       set: (t) => control.setTime(t),
-      skipDays: (n, o) => control.skipDays(n, o),
+      // The world restarts on the next step: resolve once the new day's scene is up, so a read straight after
+      // never finds the old scene (or a HUD that has not drawn the new morning yet).
+      skipDays: async (n, o) => {
+        const restarts = !!waits.world();
+        control.skipDays(n, o);
+        if (!restarts || control.isLoopPaused) return;
+        await waits.frames(2);
+        await waits.sceneReady();
+      },
     },
     stage: async (map, variant) => {
       const s = getState();
