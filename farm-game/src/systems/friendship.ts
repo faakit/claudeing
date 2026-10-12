@@ -236,15 +236,18 @@ export function completeEvent(state: GameState, id: string): EventResult {
   if (ev.reward.item && roomFor(state, ev.reward.item, qty) < qty)
     return { ok: false, reason: 'full' };
   state.stats[eventKey(id, ev.id)] = 1;
-  if (ev.reward.item) addItem(state, ev.reward.item, qty);
-  const gold = ev.reward.gold ?? 0;
+  // a retelling of a scene this save already saw (Finn's "The Heron" for "A secret spot") pays and counts nothing twice
+  const retold = !!ev.replaces && !!state.stats[eventKey(id, ev.replaces)];
+  if (ev.reward.item && !retold) addItem(state, ev.reward.item, qty);
+  const gold = retold ? 0 : (ev.reward.gold ?? 0);
   if (gold > 0) {
     state.money += gold;
     gameEvents.emit('moneyChanged', { delta: gold });
   }
   // an opening scene is the place's, not a heart event (the heart-event goal never counts it)
-  if (!ev.id.startsWith('opening.')) addStat(state, 'friendEvents');
+  if (!ev.id.startsWith('opening.') && !retold) addStat(state, 'friendEvents');
   toast(`${(npcs[id] as NpcDef).name}: ${ev.title}`, 'good');
   gameEvents.emit('friendsChanged', undefined);
-  return { ok: true, gold, item: ev.reward.item ?? null, qty: ev.reward.item ? qty : 0 };
+  const item = retold ? null : (ev.reward.item ?? null);
+  return { ok: true, gold, item, qty: item ? qty : 0 };
 }

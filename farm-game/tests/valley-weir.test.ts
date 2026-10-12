@@ -24,6 +24,7 @@ import {
   valleyRows,
   valleyStage,
   valleyStep,
+  placesOpen,
   weirDefaults,
   workAt,
   workDone,
@@ -344,6 +345,39 @@ describe('Finn, Clay and the river', () => {
     const wet = pendingEvent(s, 'finn');
     expect(dry?.id === 'heron' || dry?.id === 'lake').toBe(true);
     if (dry?.id === 'heron' && wet?.id === 'heron') expect(dry.lines).not.toEqual(wet.lines);
+  });
+
+  it("an old save's quiet weir counts as a place open, never as a place done", () => {
+    const s = newState();
+    delete s.stats['valley.weirOn'];
+    weirDefaults(s.stats);
+    expect(placesOpen(s)).toBe(1);
+    expect(s.stats['placesDone'] ?? 0).toBe(0);
+  });
+
+  it('a save that saw "A secret spot" sees "The Heron" without its catfish again', () => {
+    const play = (sawSecret: boolean) => {
+      const s = newState();
+      s.friends['finn'] = { points: 4 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+      for (const ev of npcs['finn']!.events!)
+        if (ev.id !== 'heron' && ev.hearts <= 4) s.stats[`event.finn.${ev.id}`] = 1;
+      if (sawSecret) s.stats['event.finn.secret'] = 1;
+      expect(pendingEvent(s, 'finn')?.id).toBe('heron');
+      const before = s.stats['friendEvents'] ?? 0;
+      const r = completeEvent(s, 'finn');
+      return {
+        r,
+        counted: (s.stats['friendEvents'] ?? 0) - before,
+        seen: s.stats['event.finn.heron'],
+      };
+    };
+    const fresh = play(false);
+    expect(fresh.r).toMatchObject({ ok: true, item: 'catfish', qty: 2 });
+    expect(fresh.counted).toBe(1);
+    const retold = play(true);
+    expect(retold.r).toMatchObject({ ok: true, item: null, qty: 0, gold: 0 });
+    expect(retold.counted).toBe(0);
+    expect(retold.seen).toBe(1);
   });
 
   it("Clay's weir line is said only once the river is back", () => {

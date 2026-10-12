@@ -383,6 +383,13 @@ const def = (id: string): PlaceDef => valley.places[id] as PlaceDef;
 const st = (s: GameState, k: string): number => s.stats[k] ?? 0;
 export const stageOf = (s: GameState, id: string): number => st(s, placeStat(id));
 export const workDone = (s: GameState, id: string): number => st(s, `site.${id}.work`);
+/**
+ * Places open in the valley today (stage 3), however they got there. Later asks that need "N places open" (the
+ * market's three) read this, not `placesDone`: an old save's quietly restored weir counts here, so a returning
+ * player is never stuck one place short, but it never counts toward goals or rewards (coordinator ruling).
+ */
+export const placesOpen = (s: Pick<GameState, 'stats'>): number =>
+  placeIds().filter((id) => (s.stats[placeStat(id)] ?? 0) >= 3).length;
 const setStage = (s: GameState, id: string, stage: number): void => {
   s.stats[placeStat(id)] = stage;
   s.stats[`place.${id}.since`] = absoluteDay(s);
@@ -523,8 +530,7 @@ export function interactSite(s: GameState, id: string): SiteAnswer {
   if (stage === 2) {
     const r = workAt(s, id);
     if (r.ok) return { kind: 'work', day: r.day, of: p.workDays, work: r.work };
-    if (r.reason === 'done')
-      return { kind: 'say', text: t('valley.workDone') };
+    if (r.reason === 'done') return { kind: 'say', text: t('valley.workDone') };
     if (r.reason === 'today') return { kind: 'say', text: t('valley.workToday') };
     return { kind: 'say', text: t('valley.workTired', { n: p.energy }) };
   }

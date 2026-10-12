@@ -293,6 +293,8 @@ export interface NpcEvent {
   /** Up to three short lines, shown one at a time. */
   lines: string[];
   reward: { item?: string; qty?: number; gold?: number };
+  /** An older scene this one retells: a save that saw it sees this one without its reward again. */
+  replaces?: string;
 }
 export interface NpcDef {
   name: string;

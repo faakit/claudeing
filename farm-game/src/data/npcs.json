@@ -307,6 +307,7 @@
       {
         "hearts": 4,
         "id": "heron",
+        "replaces": "secret",
         "title": "The Heron",
         "when": {
           "place": "weir",
@@ -325,6 +326,7 @@
       {
         "hearts": 4,
         "id": "heron",
+        "replaces": "secret",
         "title": "The Heron",
         "when": {
           "place": "weir",
