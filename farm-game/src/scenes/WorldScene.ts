@@ -843,7 +843,6 @@ export abstract class WorldScene extends Phaser.Scene {
     const onScreen = cx === wx && cy === wy;
     const bob = Math.sin(time / 180) * 2;
     arrow.clear().setVisible(true).setPosition(cx, cy);
-    arrow.fillStyle(0x14101f, 0.7);
     arrow.fillStyle(0xf4d35e, 1);
     if (onScreen) {
       // a down arrow floating over the target tile
@@ -2277,7 +2276,7 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /**
-   * Through a door: a short dither wipe closes over the world view (the HUD and dock stay), the next map is built
+   * Through a door: a short dither wipe closes over the world view (the HUD and the floating controls stay), the next map is built
    * and the game saved while it is covered, and the new map opens out of it (about 280 ms in all).
    */
   private useDoor(door: WorldObject): void {

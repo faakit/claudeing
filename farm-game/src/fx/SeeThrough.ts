@@ -3,8 +3,8 @@ import type Phaser from 'phaser';
 /**
  * The see-through hole (art critic, review 9): where a crown, an eave or a tall placed object stands in front of
  * the player or their target, it is cut away in a pixel-art way instead of turning translucent. Fully clear inside
- * about 9 px of the player's body and 10 px of the target tile's centre, with a 2 px checker rim; outside it
- * everything stays opaque, so the player and the target marker are never tinted by foliage.
+ * a 5 px capsule over the player's head and torso and 10 px of the target tile's centre, with a 2 px checker rim;
+ * outside it everything stays opaque, so the player and the target marker are never tinted by foliage.
  *
  * One inverted geometry mask, shared by the overhead layer and any tall sprite that needs it; it is applied only
  * while something actually covers the player, so it costs nothing elsewhere.
