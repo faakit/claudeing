@@ -47,6 +47,22 @@ export interface LabMapFile {
   lights: { type: string; tx: number; ty: number }[];
   blooms: { x: number; y: number; n: number }[];
   layout: LabLayout;
+  /** Tow lanes (M7 spike): `spike` on the showcase's south shore, `long` in the rows below it. */
+  tow: Record<string, TowLaneDef>;
+}
+
+/** A tow lane as the generator writes it; rects are [x, y, w, h] in tiles. */
+export interface TowLaneDef {
+  /** The log's way from the spawn to the slip, in tiles. */
+  tiles: number;
+  water: [number, number, number, number][];
+  /** The current, px/s, per rect. */
+  flow: { rect: [number, number, number, number]; x: number; y: number }[];
+  snags: [number, number][];
+  slip: { bank: [number, number]; water: [number, number] };
+  spawn: { tx: number; ty: number; axis: 'h' | 'v' };
+  /** An unhooked log that drifts into one of these comes round again at the spawn. */
+  end: [number, number, number, number][];
 }
 
 export const labMap = lab as unknown as LabMapFile;

@@ -49,8 +49,12 @@ export class LabScene extends WorldScene {
           get farmer() {
             return scene.farmerSprite;
           },
+          get actionInFront() {
+            return scene.actionInFront;
+          },
         },
         !!stats['lab.towLong'],
+        stats['lab.towLane'] === 2 ? 'long' : 'spike',
       );
       this.tapHook = (wx, wy) => this.tow?.onTap(wx, wy) ?? false;
       this.actionHook = () => this.tow?.onAction() ?? false;
@@ -213,7 +217,12 @@ export function installLab(game: Phaser.Game): Promise<void> {
       data: labTiledJson(tileIds, src.width, src.height),
     });
     registerLabMapDef();
-    if (!game.scene.getScene(LAB_SCENE)) game.scene.add(LAB_SCENE, LabScene, false);
+    if (!game.scene.getScene(LAB_SCENE)) {
+      game.scene.add(LAB_SCENE, LabScene, false);
+      // Added last, the lab would draw over the UI: the floating controls sit inside the world's view (feel lane,
+      // towing round: the Action plate and hotbar were hidden in every lab scenario).
+      if (game.scene.getScene('UI')) game.scene.moveBelow('UI', LAB_SCENE);
+    }
   })();
   return installed;
 }

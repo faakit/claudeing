@@ -56,7 +56,11 @@ const placeables = read('../src/data/placeables.json');
 const nodes = read('../src/data/nodes.json');
 const plots = read('../src/data/plots.json');
 
-const W = 26;
+// Columns 0-25 are the showcase; columns 26-47 hold the long tow lane (M7 spike, round 2), walled off by the tree
+// column 25. The lane sits beside the showcase, not below it, so the spike's shore keeps its place on screen (the
+// camera stops at the map's south edge, as before).
+const SHOWCASE_W = 26;
+const W = 48;
 const H = 34;
 const ground = Array.from({ length: H }, () => Array(W).fill(T.grass));
 const rect = (x, y, w, h, t) => {
@@ -82,20 +86,74 @@ rect(0, 0, W, 1, T.tree); // tree border
 rect(0, 0, 1, H, T.tree);
 rect(W - 1, 0, 1, H, T.tree);
 rect(0, H - 1, W, 1, T.tree);
+rect(SHOWCASE_W - 1, 0, 1, H, T.tree); // the showcase's east edge (the long lane lies beyond)
+rect(SHOWCASE_W - 1, 1, 1, H - 2, T.bush); // drawn as bushes (a lone tree column draws as plain grass)
 rect(1, 1, 7, 4, T.shopwall); // a building: the general store front
 rect(3, 4, 3, 1, T.shopdoor);
 rect(19, 1, 5, 4, T.wall); // a house with a door (the door teleports within the lab)
 rect(21, 4, 1, 1, T.door);
-rect(1, 5, W - 2, 2, T.path); // north road: shop, board, bin, villagers
+rect(1, 5, SHOWCASE_W - 2, 2, T.path); // north road: shop, board, bin, villagers
 rect(13, 7, 1, 21, T.path); // main road down the middle
 rect(11, 4, 1, 1, T.board); // orders board
 rect(15, 4, 1, 1, T.bin); // shipping bin
 rect(5, 16, 5, 8, T.dirt); // west bed: eight crops, every stage (farm plot coordinates, see layout below)
 rect(17, 16, 8, 10, T.dirt); // east bed: seven crops, then soil states
 rect(19, 9, 5, 5, T.stone); // the quarry corner: one ore node of each kind
-rect(1, 28, W - 2, 1, T.dirt); // shore
-rect(1, 29, W - 2, 4, T.water); // water edge
+rect(1, 28, SHOWCASE_W - 2, 1, T.dirt); // shore
+rect(1, 29, SHOWCASE_W - 2, 4, T.water); // water edge
 rect(13, 28, 1, 1, T.path);
+// ---- the long tow lane (columns 26-47, debug only): a water lane that runs west from a head just below the farmer
+// and turns south to a slip at the bottom. The farmer walks the outer banks (north, then west), so the log trails
+// behind and below him on the long leg (a tug tap on it is in comfortable reach), and the slip comes into view below
+// him, low on the screen but above the floating controls. Everything else is bush,
+// so a walk to the slip always follows the bank.
+rect(SHOWCASE_W, 1, W - SHOWCASE_W - 1, H - 2, T.bush);
+rect(26, 18, 13, 1, T.dirt); // the north bank (x 26-38): the farmer starts at (37,18), the lane's head below him
+rect(27, 19, 12, 3, T.water); // leg 1: x 27-38, rows 19-21, flowing west
+rect(27, 22, 3, 7, T.water); // leg 2: x 27-29, rows 22-28, flowing south
+rect(26, 18, 1, 12, T.dirt); // the west bank (x 26, rows 18-29)
+rect(26, 29, 5, 1, T.dirt); // the bottom bank (row 29, x 26-30); bush below it, so the slip sits above the controls
+rect(28, 29, 1, 1, T.path); // the slip
+const towLanes = {
+  // the original spike lane on the showcase's south shore (scenario tow-spike)
+  spike: {
+    tiles: 6,
+    water: [[1, 29, 24, 4]],
+    flow: [{ rect: [1, 29, 24, 4], x: -6, y: 0 }],
+    snags: [[17, 29]],
+    slip: { bank: [13, 28], water: [13, 29] },
+    spawn: { tx: 18, ty: 30, axis: 'h' },
+    end: [[1, 29, 1, 4]],
+  },
+  // scenario tow-lane-long: about 17 tiles along the log's way (head to slip), one turn, one rock
+  long: {
+    tiles: 17,
+    water: [
+      [27, 19, 12, 3],
+      [27, 22, 3, 7],
+    ],
+    flow: [
+      { rect: [30, 19, 9, 3], x: -12, y: 0 },
+      { rect: [27, 19, 3, 10], x: 0, y: 12 },
+    ],
+    snags: [[34, 19]],
+    slip: { bank: [28, 29], water: [28, 28] },
+    spawn: { tx: 37, ty: 20, axis: 'h' },
+    end: [[27, 28, 3, 1]],
+  },
+};
+for (const L of Object.values(towLanes)) {
+  const inWater = (x, y) =>
+    L.water.some(([rx, ry, rw, rh]) => x >= rx && x < rx + rw && y >= ry && y < ry + rh);
+  for (const [rx, ry, rw, rh] of L.water)
+    for (let y = ry; y < ry + rh; y++)
+      for (let x = rx; x < rx + rw; x++)
+        if (ground[y][x] !== T.water) throw new Error(`lab: tow lane water ${x},${y} is not water`);
+  for (const [x, y] of L.snags)
+    if (!inWater(x, y)) throw new Error(`lab: snag ${x},${y} off the lane`);
+  if (!inWater(...L.slip.water)) throw new Error('lab: the slip water is off the lane');
+}
+
 for (const [x, y] of [
   [2, 8],
   [2, 13],
@@ -224,6 +282,15 @@ if (art) {
     ]),
   );
   for (const i of art.solid) collision[Math.floor(i / W)][i % W] ||= T.rock;
+  // No decor on a tow lane's water (reeds, lilies, bank stones): it would cover the log (critic T3).
+  for (const L of Object.values(towLanes))
+    for (const [rx, ry, rw, rh] of L.water)
+      for (let y = ry; y < ry + rh; y++)
+        for (let x = rx; x < rx + rw; x++)
+          for (const [layer, data] of Object.entries(layers)) {
+            const n = names[data[y * W + x] - 1] ?? '';
+            if (layer !== 'ground' && /reeds|lily|p_rocks|p_boulder/.test(n)) data[y * W + x] = 0;
+          }
 }
 
 const out = {
@@ -238,6 +305,7 @@ const out = {
   lights: art?.lights ?? [],
   blooms: art?.blooms ?? [],
   layout: { cropRows, soil, placed, nodes: nodeSpots, forage, villagers },
+  tow: towLanes,
 };
 const file = new URL('../src/dev/lab/lab-map.json', import.meta.url);
 const text = JSON.stringify(out) + '\n';

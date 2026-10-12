@@ -7,7 +7,13 @@ export interface TapPoint {
 export interface InputEvents {
   action: undefined;
   interact: undefined;
-  /** A still touch on the world lifted (logical screen coordinates): commit a tap. */
+  /**
+   * A touch landed on the world (logical screen coordinates). The world notes what was under the finger then: a tap
+   * is read on the world as it was at touch-down, not as the camera has scrolled by the lift (a tap made while the
+   * farmer walks lands where it was aimed: feel lane, towing round, T1).
+   */
+  touchDown: TapPoint;
+  /** A still touch on the world lifted (logical screen coordinates, where it landed): commit a tap. */
   tap: TapPoint;
   /** A touch on the world has been still for a moment: preview what a tap there would do. */
   tapPreview: TapPoint;
@@ -44,11 +50,20 @@ export class InputHub {
    * Action button (one use: holding Action on touch never repeats).
    */
   actionHeld = false;
+  /** Each press of Action counts up (src/input/actionGate.ts: one act per press). */
+  actionPress = 0;
+  /** The current press repeats while held: a key the system reports as held (auto-repeat); a touch tap never does. */
+  actionRepeats = false;
   /**
    * The hotbar slot Action would use right now (auto tool may pick another than the selected one), set
    * by the world each frame so the Action button can show it. Null when Action has nothing to do.
    */
   actionSlot: number | null = null;
+  /**
+   * A texture the Action button shows instead of the tool, set each frame by a verb that owns Action right now
+   * (towing: hook, home, tug). Null otherwise.
+   */
+  actionIcon: string | null = null;
   /** The stick is pushed less than halfway (the two-speed stick walks at half speed then). */
   stickSlow = false;
   private listeners = new Map<keyof InputEvents, Set<Listener<never>>>();
@@ -61,6 +76,13 @@ export class InputHub {
   pressKey(dir: Direction): void {
     this.keys = this.keys.filter((d) => d !== dir);
     this.keys.push(dir);
+  }
+
+  /** A new press of Action: held from now, one act (a held key may repeat: `repeats`). */
+  pressAction(repeats: boolean): void {
+    this.actionPress++;
+    this.actionRepeats = repeats;
+    this.actionHeld = true;
   }
 
   releaseKey(dir: Direction): void {

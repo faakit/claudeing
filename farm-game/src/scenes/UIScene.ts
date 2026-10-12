@@ -530,7 +530,7 @@ export class UIScene extends Phaser.Scene {
         );
       } else if (e.type === 'tap') {
         // one action, held for just long enough for the world to see it
-        inputHub.actionHeld = true;
+        inputHub.pressAction(false);
         this.time.delayedCall(70, () => (inputHub.actionHeld = false));
       } else if (e.type === 'arm') {
         haptic('tick'); // armed: the press pops (visible twin) and the farmer waits for the drag
@@ -628,7 +628,8 @@ export class UIScene extends Phaser.Scene {
     // What Action will use on the marked tile (auto tool may pick another item), else what is in hand.
     const slot = inputHub.actionSlot ?? s.inventory.selected;
     const stack = s.inventory.slots[slot] ?? selectedStack(s);
-    const key = stack ? iconKey(refOf(stack)) : '';
+    // a verb that owns Action right now (towing) shows its own icon
+    const key = inputHub.actionIcon ?? (stack ? iconKey(refOf(stack)) : '');
     if (key === this.actionIconKey || !this.actionIcon) return;
     const changed = this.actionIconKey !== '';
     this.actionIconKey = key;

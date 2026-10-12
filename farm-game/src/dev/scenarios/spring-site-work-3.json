@@ -1,0 +1,32 @@
+{
+  "title": "The Old Spring, work day 3 (the spade)",
+  "about": "Spring 9, 08:00: two work days done (the rockfall is down to its last stones). Tap the site for day 3: two spade cuts throw soil to both banks, the cut settles, and the pool's water runs into it with a foam line on its front (about 1.8 s). The spring opens the next morning.",
+  "version": 17,
+  "tags": ["wendhead", "valley", "spring"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 2
+  },
+  "stats": {
+    "place.spring.since": 7,
+    "project.place_spring": 1,
+    "fund.place_spring": 300,
+    "fund.place_spring.stone": 20,
+    "site.spring.work": 2,
+    "site.spring.last": 8,
+    "shipped": 5,
+    "valley.greenSeen": 1
+  },
+  "at": {
+    "map": "wendhead",
+    "tx": 5,
+    "ty": 15,
+    "facing": "right"
+  },
+  "time": {
+    "day": 9,
+    "clock": "08:00"
+  },
+  "letters": [],
+  "goal": "fish"
+}

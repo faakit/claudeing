@@ -3,8 +3,10 @@
 //
 //   SMOKE=1      only the smoke block (npm run verify:fast): one profile, a few core flows, a few seconds
 //   default      smoke + every scenario starts + the mechanics and ambient blocks moved here from e2e.mjs
-//   E2E_SCENARIOS_PORT (default E2E_PORT + 30), PROFILE (default i13), SHOTS=<dir> to keep a screenshot per scenario
+//   E2E_SCENARIOS_PORT (default E2E_PORT + 30), PROFILE (default i13), SHOTS=<dir> to keep a screenshot per scenario,
+//   BLOCKS=towing,towingLane to run only the named blocks
 import { checker, launch, liveTargets, openScenario, serve } from './lib/farm.mjs';
+import { playTow, towBar } from './lib/tow.mjs';
 
 const PORT = Number(process.env.E2E_SCENARIOS_PORT ?? Number(process.env.E2E_PORT ?? 4800) + 30);
 const SMOKE = process.env.SMOKE === '1';
@@ -101,6 +103,46 @@ async function everyScenario() {
   }
   check(`all ${names.length} scenarios start in the game`, bad.length === 0, bad.join(' | '));
   check('scenarios: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
+// One act per short Action press, even on a slow frame (coordinator ruling after the dry-year-2 review). On a loaded
+// machine a 60 ms press of Space can be seen held for longer than the 200 ms Action lock (slow frames, a key release
+// delivered late), and it used to act again: one press foraged both goods within reach. Here Space goes down, the
+// first act lands, six frames stall for 150 ms each, and the key lifts only after 30 more frames, with no system
+// auto-repeat (the sign of a key really held). Exactly one good is foraged.
+async function actionSlowFrame() {
+  const farm = await openScenario(browser, url, 'farm-mechanics', { profile: PROFILE });
+  await farm.select(0);
+  const acted = farm.eval(() => {
+    const w = window.__farm;
+    return w.dev.wait.actionDone().then(
+      () =>
+        new Promise((done) => {
+          let n = 0;
+          const stall = () => {
+            const t = performance.now();
+            while (performance.now() - t < 150) {
+              /* a slow frame */
+            }
+            if (++n < 6) w.game.events.once('prestep', stall);
+            else done();
+          };
+          w.game.events.once('prestep', stall);
+        }),
+    );
+  });
+  await farm.page.keyboard.down('Space');
+  await acted;
+  await farm.frames(30);
+  await farm.page.keyboard.up('Space');
+  await farm.idle(10);
+  const m = await farm.state();
+  check(
+    'one short Action press acts once, even when slow frames hold it past the Action lock',
+    m.stats.foraged === 1,
+    JSON.stringify({ foraged: m.stats.foraged, forage: m.forage.farm }),
+  );
   await farm.close();
 }
 
@@ -986,10 +1028,28 @@ async function spring() {
     const e0 = (await farm.state()).energy;
     await farm.press('KeyE');
     // the work day's beat plays (the world waits), then the site shows its new stage
-    await farm.until((_s, w) => w.runtime.busy, null, "the work day's beat to start", 3000);
+    const sceneNow = (_s, w) =>
+      w.game.scene.getScenes(true).find((x) => x.scene.key !== 'UI')?.time.now ?? 0;
+    const b0 = await farm.until(
+      (s2, w, f) => w.runtime.busy && new Function(`return (${f})`)()(s2, w),
+      sceneNow.toString(),
+      "the work day's beat to start",
+      3000,
+    );
     if (process.env.SHOTS && day > 1)
       await farm.strip(`spring-beat-day-${day}`, 6, 36, process.env.SHOTS);
-    await farm.until((_s, w) => !w.runtime.busy, null, "the work day's beat to end", 8000);
+    const b1 = await farm.until(
+      (s2, w, f) => !w.runtime.busy && new Function(`return (${f})`)()(s2, w),
+      sceneNow.toString(),
+      "the work day's beat to end",
+      8000,
+    );
+    // the beats are tight (feel critic, review 6): the pickaxe days about 2.6 s, the spade day about 1.8 s
+    check(
+      `work day ${day}: the beat lasts ${Math.round(b1 - b0)} ms of game time`,
+      b1 - b0 <= (day === 3 ? 1900 : 2700),
+      `${Math.round(b1 - b0)} ms`,
+    );
     await farm.frames(3);
     s = await farm.state();
     sprites.push(await siteKey(farm, 'spring'));
@@ -1299,74 +1359,147 @@ async function morning() {
   await farm.close();
 }
 
-// The towing spike (M7 "spike first", feel lane): by real taps only, a drifting log is hooked, towed along the
-// bank, tugged off the snag and landed at the slip, in under 20 s and a handful of taps, never leaving the water;
-// a long log takes two tugs (here by Action, with the left hand).
+// Towing (M7 "spike first", feel lane, round 2): played like a person (scripts/lib/tow.mjs: real taps with 1.5 mm
+// gaussian scatter, 450 ms reactions), against the critic's bar: every run lands, under 20 s, at most 6 inputs, at most
+// 7 draws while towing, no tap in the 'hard' thumb zone, none ignored, no stall that needs another tap, and the log
+// never off the water. T1: the chained tap lands two tiles east of the slip while the hook walk scrolls the camera,
+// and the log still lands with no further input.
+const towCheck = (tag, r, extra = true, detail = '') => {
+  const bad = towBar(r);
+  check(
+    `${tag}: lands by itself, ${r.inputs} inputs, ${((r.ms ?? 0) / 1000).toFixed(1)} s, ${r.draws} draws`,
+    bad.length === 0 && extra,
+    `${bad.join('; ')} ${detail} ${r.zones}`,
+  );
+};
+
 async function towing() {
-  for (const [name, hand, tugBy] of [
-    ['tow-spike', 'right', 'tap'],
-    ['tow-spike-long', 'left', 'action'],
+  // T1: log, then the slip region mid-scroll (two tiles east of the slip), then the tug if it snags: at most 3
+  // inputs and it lands with no further one (on a loaded machine the log can pass the rock without catching)
+  for (const [hand, seed] of [
+    ['right', 101],
+    ['right', 202],
+    ['left', 303],
+    ['left', 404],
   ]) {
-    const farm = await openScenario(browser, url, name, { profile: PROFILE, hand });
-    await farm.frames(5);
-    // every frame until it lands: the log's centre stays on a water tile while it floats
-    const watch = farm.eval(async () => {
-      const d = window.__farm.dev;
-      const lab = window.__farm.game.scene.getScene('Lab');
-      const off = [];
-      for (let i = 0; i < 60 * 60; i++) {
-        await d.wait.frames(1);
-        const t = d.tow();
-        if (!t) continue;
-        if (t.landed) break;
-        if (['drift', 'hooking', 'towing', 'hauling'].includes(t.phase)) {
-          const tx = Math.floor(t.log.x / 16);
-          const ty = Math.floor(t.log.y / 16);
-          if (!lab.tow.world.water(tx, ty)) off.push([t.phase, tx, ty]);
-        }
-      }
-      return off.slice(0, 5);
-    });
-    const tow = () => farm.eval(() => window.__farm.dev.tow());
-    const tapLog = async () => {
-      const t = await tow();
-      await farm.tapTile(Math.floor(t.log.x / 16), Math.floor(t.log.y / 16));
-    };
-    await tapLog();
-    await farm.until((_s, w) => w.dev.tow()?.log.hooked, null, `${name}: hooked`, 15000);
-    await farm.tapTile(13, 28); // the slip
-    await farm.until((_s, w) => w.dev.tow()?.log.snagged, null, `${name}: the snag`, 15000);
-    const snagged = await tow();
-    for (let i = 0; i < (name.includes('long') ? 2 : 1); i++) {
-      if (tugBy === 'action') await farm.tapButton('ACTION');
-      else await tapLog();
-      // Wait for the tug to land and Action's 200 ms lock to end. Six frames used to be the only gap: on a loaded
-      // machine the second Action tap (held 70 ms) fell inside the first tug's lock, was dropped, and the long
-      // log stayed snagged until the 20 s timeout (tugs 1, actions 1).
-      await farm.until(
-        (_s, w, n) => w.dev.tow()?.tugs > n && w.game.scene.getScene('Lab').actionLock <= 0,
-        i,
-        `${name}: tug ${i + 1}`,
-        5000,
-      );
-    }
-    await farm.until((_s, w) => w.dev.tow()?.landed > 0, null, `${name}: landed`, 20000);
-    const t = await tow();
-    const off = await watch;
-    check(
-      `${name} (${hand}): hooked, towed, tugged free and landed by taps in under 20 s`,
-      t.ms !== null && t.ms < 20000 && t.taps + t.actions <= 6,
-      JSON.stringify(t),
+    const farm = await openScenario(browser, url, 'tow-spike', { profile: PROFILE, hand });
+    const r = await playTow(farm, { strategy: 'chain', seed, chainTile: { tx: 15, ty: 28 } });
+    towCheck(
+      `tow-spike chained T1 tap (${hand}, seed ${seed})`,
+      r,
+      r.inputs <= 3,
+      `inputs ${r.inputs}`,
     );
     check(
-      `${name}: the snag stops the log, the tugs free it (${name.includes('long') ? 2 : 1})`,
-      snagged.log.snagged && t.tugs === (name.includes('long') ? 2 : 1),
-      JSON.stringify({ snagged: snagged.log, tugs: t.tugs }),
+      `tow-spike chained (${hand}): no console errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
     );
-    check(`${name}: the log never leaves the water`, off.length === 0, JSON.stringify(off));
-    check(`${name}: no console errors`, farm.errors.length === 0, farm.errors.join(' | '));
     await farm.close();
   }
+  for (const [hand, strategy] of [
+    ['right', 'wait'],
+    ['left', 'action'],
+  ]) {
+    const farm = await openScenario(browser, url, 'tow-spike-long', { profile: PROFILE, hand });
+    const r = await playTow(farm, { strategy, seed: 505 });
+    towCheck(`tow-spike-long ${strategy} (${hand})`, r, r.tugs === 2, `tugs ${r.tugs}`);
+    await farm.close();
+  }
+}
+
+async function towingLane() {
+  // the long lane: about 17 tiles round a bend, by taps (toward the slip when it is off screen) and by Action only
+  for (const [hand, strategy, seed] of [
+    ['right', 'wait', 11],
+    ['left', 'water', 22],
+    ['right', 'chain', 33],
+    ['left', 'action', 44],
+    ['right', 'action', 55],
+  ]) {
+    const farm = await openScenario(browser, url, 'tow-lane-long', { profile: PROFILE, hand });
+    if (strategy === 'action') {
+      // the Action button says what Action will do while towing owns it (the hook, first)
+      const before = await farm
+        .until(
+          (_s, w) =>
+            w.game.scene.getScene('UI').actionIconKey === 'tow_icon_hook' && 'tow_icon_hook',
+          null,
+          'the hook icon on Action',
+          3000,
+        )
+        .catch(() => farm.eval(() => window.__farm.game.scene.getScene('UI').actionIconKey));
+      const r = await playTow(farm, { strategy, seed });
+      towCheck(
+        `tow-lane-long action (${hand}): ${r.laneTiles} tiles`,
+        r,
+        r.laneTiles >= 10 && r.laneTiles <= 20 && r.inputs === 3 && before === 'tow_icon_hook',
+        `icon ${before}`,
+      );
+    } else {
+      const r = await playTow(farm, { strategy, seed });
+      towCheck(`tow-lane-long ${strategy} (${hand})`, r);
+    }
+    check(
+      `tow-lane-long ${strategy} (${hand}): no console errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+  // T5: while a log is hooked, a tap on the hedge round the lane walks to the nearest bank (never silent)
+  {
+    const farm = await openScenario(browser, url, 'tow-lane-long', { profile: PROFILE });
+    await farm.frames(5);
+    await farm.eval(() => window.__farm.controls?.clear?.());
+    await farm.tapButton('ACTION');
+    await farm.until(
+      (_s, w) => w.dev.tow()?.log.hooked,
+      null,
+      'tow-lane-long: hooked by Action',
+      5000,
+    );
+    await farm.until(
+      (_s, w) => w.game.scene.getScene('Lab').actionLock <= 0,
+      null,
+      'the lock',
+      2000,
+    );
+    await farm.tapTile(32, 16); // two tiles up into the hedge, west of the farmer (the slip's way)
+    const r = await farm
+      .until(
+        (_s, w) => {
+          const lab = w.game.scene.getScene('Lab');
+          const g = w.dev.tow()?.goal;
+          return lab.walking && g && g !== 'slip' && lab.walkable(g.tx, g.ty) ? g : null;
+        },
+        null,
+        'a walk after the hedge tap',
+        3000,
+      )
+      .catch(() => null);
+    const silent = await farm.eval(
+      () => window.__farm.controls.entries.filter((e) => e.kind === 'silent').length,
+    );
+    check(
+      'tow-lane-long: a hedge tap while towing walks to the nearest bank, not silent',
+      r !== null && r.ty === 18 && silent === 0,
+      JSON.stringify({ goal: r, silent }),
+    );
+    await farm.close();
+  }
+  // Action stays the tool's when the tow's context is not live: far from the lane's water, nothing hooked
+  const farm = await openScenario(browser, url, 'tow-lane-long', { profile: PROFILE });
+  await farm.eval(() => window.__farm.dev.goto('lab', 13, 15, 'down'));
+  await farm.frames(5);
+  const t = await farm.eval(() => window.__farm.dev.tow());
+  const key = await farm.eval(() => window.__farm.game.scene.getScene('UI').actionIconKey);
+  check(
+    'tow-lane-long: away from the lane, Action is the tool again (no tow verb, no tow icon)',
+    t === null || (t.verb === null && !String(key).startsWith('tow_')),
+    JSON.stringify({ verb: t?.verb, key }),
+  );
+  await farm.close();
 }
 
 // The see-through hole behind a lone crown (owner bug 1, integration review): tap the tile behind the crown, as the
@@ -1938,6 +2071,7 @@ try {
         smoke,
         everyScenario,
         mechanics,
+        actionSlowFrame,
         stages,
         ambient,
         actions,
@@ -1949,13 +2083,18 @@ try {
         weir,
         morning,
         towing,
+        towingLane,
         lang,
       ];
+  // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
+  const only = process.env.BLOCKS?.split(',');
   // Blocks are independent pages: run them side by side (each has its own browser context).
   await Promise.all(
-    blocks.map((b) =>
-      b().catch((e) => check(`${b.name}: block finished`, false, String(e?.stack ?? e))),
-    ),
+    blocks
+      .filter((b) => !only || only.includes(b.name))
+      .map((b) =>
+        b().catch((e) => check(`${b.name}: block finished`, false, String(e?.stack ?? e))),
+      ),
   );
 } finally {
   await browser.close();

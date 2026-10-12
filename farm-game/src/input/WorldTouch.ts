@@ -46,12 +46,14 @@ export class WorldTouch {
   private down(p: Phaser.Input.Pointer): void {
     this.onAnyTouch();
     if (this.scene.input.hitTestPointer(p).length > 0) return; // started on a button or a sheet
+    const world = this.inWorld(p.y);
     this.touches.set(p.id, {
       track: new PressTrack(p.x, p.y, this.scene.time.now),
       at: this.scene.time.now,
-      world: this.inWorld(p.y),
+      world,
       previewed: false,
     });
+    if (world) this.hub.emit('touchDown', { x: p.x, y: p.y });
   }
 
   private move(p: Phaser.Input.Pointer): void {

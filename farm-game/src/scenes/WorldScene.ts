@@ -14,6 +14,7 @@ import {
   type TileIndex,
 } from '../art/channelTiles';
 import { GreenReveal } from '../fx/GreenReveal';
+import { PICK_LOOSE_MS, SITE_BEAT, SiteFx } from '../fx/SiteFx';
 import { ChannelFx } from '../fx/ChannelFx';
 import {
   interactSite,
@@ -101,6 +102,7 @@ import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
+import { ActionGate } from '../input/actionGate';
 import { controlsLog } from '../input/controlsLog';
 import { pathTiles } from '../input/gesture';
 import { TIPS } from '../ui/controlTips';
@@ -169,7 +171,8 @@ const riverBanner = (): string => valley.places['weir']?.banner ?? t('valley.riv
 const CREEK_BANK = [25, 14] as const;
 
 /** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
-const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400, beam: 3600 } as const;
+/** A work day's beat (fx/SiteFx: the pickaxe day about 2.6 s, the spade day about 1.8 s; the weir's beam). */
+const SITE_BEAT_MS = { ...SITE_BEAT, beam: 3600 } as const;
 
 /** A channel's fallback tiles when the tileset has no channel art (placeholder tiles): plain water, dug earth. */
 const CHANNEL_GID = { wet: 5, dry: 2 } as const;
@@ -265,6 +268,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
   private heldFailed = false;
+  /** One act per short Action press (src/input/actionGate.ts). */
+  private readonly actionGate = new ActionGate();
   /** Uses so far in the current Action hold: later ones tick the haptic less often. */
   private holdUses = 0;
   /** The kind of step the current hold started with (it repeats only that). */
@@ -312,6 +317,8 @@ export abstract class WorldScene extends Phaser.Scene {
    * or an Action press it took returns true, and the usual handling is skipped.
    */
   protected tapHook: ((wx: number, wy: number) => boolean) | null = null;
+  /** Where the last world touch landed and the camera's scroll then (a tap is read on the world as it was). */
+  private touchCam: { x: number; y: number; sx: number; sy: number } | null = null;
   protected actionHook: (() => boolean) | null = null;
   /** Called when a walk started with `walkTo` arrives. */
   private walkDone: (() => void) | null = null;
@@ -571,6 +578,10 @@ export abstract class WorldScene extends Phaser.Scene {
 
     this.cleanup.push(
       inputHub.on('interact', () => this.onInteract()),
+      inputHub.on('touchDown', (p) => {
+        const cam = this.cameras.main;
+        this.touchCam = { x: p.x, y: p.y, sx: cam.scrollX, sy: cam.scrollY };
+      }),
       inputHub.on('tap', (p) => this.onTap(p.x, p.y)),
       inputHub.on('tapPreview', (p) => this.onTapPreview(p.x, p.y)),
       inputHub.on('tapCancel', () => this.onTapCancel()),
@@ -790,7 +801,14 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = false;
       this.holdUses = 0;
       this.holdKind = null;
-    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) {
+    } else if (
+      this.actionLock <= 0 &&
+      !this.inputLocked &&
+      !this.heldFailed &&
+      this.actionGate.may(inputHub.actionPress, inputHub.actionRepeats)
+    ) {
+      // one act per press, even when a slow frame outlasts the lock (src/input/actionGate.ts)
+      this.actionGate.acted(inputHub.actionPress);
       if (this.actionHook?.()) {
         // a verb took the press (one use per press, as a refused Action is)
         this.actionLock = ACTION_LOCK_MS.ok;
@@ -1557,98 +1575,36 @@ export abstract class WorldScene extends Phaser.Scene {
     // farmer swings at the rockfall and a stone rolls off its top; on the spade day a channel is cut from the pool
     // and the water runs into it. The site's new sprite shows when the beat ends.
     gameEvents.emit('energyChanged', undefined);
-    const channel = res.work.taste === 'channel';
     const beat = SITE_BEAT_MS[res.work.taste];
-    this.things?.hold(`site.${id}`, beat);
     runtime.busy = true;
     this.siteBeat = true;
     const at = { ...state.player };
-    const rockX = (tile.tx + 1) * TILE_SIZE; // the rockfall's middle (it covers this tile and the next)
-    const rockY = tile.ty * TILE_SIZE;
     const live = () => this.sys.isActive();
-    if (res.work.taste === 'beam') {
-      this.beamBeat(tile, live);
-      this.time.delayedCall(beat, () => {
-        this.endSiteBeat();
-        if (!live()) return;
-        haptic('medium');
-        toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
-      });
-      return;
-    }
-    const swings = channel ? [0, 650] : [0, 800, 1600];
-    swings.forEach((t, k) =>
-      this.time.delayedCall(t, () => {
-        if (!live()) return;
-        this.fx.swing(at.x, at.y, channel ? 'item_spade' : 'item_pickaxe', at.facing);
-        this.time.delayedCall(140, () => {
-          if (!live()) return;
-          if (channel) this.fx.dust((tile.tx + 0.5) * TILE_SIZE, (tile.ty + 1.5) * TILE_SIZE);
-          else this.fx.dust(rockX - 6 + k * 6, rockY + 4 - k * 3);
-          audio.play(channel ? 'dig' : 'swing');
-          haptic('tick');
-        });
-      }),
-    );
-    if (!channel) {
-      // a stone comes off the top of the heap and rolls down beside it
-      this.time.delayedCall(2200, () => {
-        if (!live()) return;
-        const stone = this.add.graphics().setDepth(10 + rockY + 20);
-        stone.fillStyle(0x241a2a, 1).fillRect(-6, -5, 12, 10);
-        stone.fillStyle(0xaeb0b4, 1).fillRect(-5, -4, 10, 8);
-        stone.fillStyle(0x8a8694, 1).fillRect(-5, 1, 10, 3);
-        stone.setPosition(rockX, rockY - 14); // the top stone of the heap
-        this.tweens.add({
-          targets: stone,
-          x: rockX + 26,
-          y: rockY + 22,
-          duration: 700,
-          ease: 'Bounce.easeOut',
-          onComplete: () => {
-            audio.play('till');
-            this.tweens.add({
-              targets: stone,
-              alpha: 0,
-              delay: 500,
-              duration: 300,
-              onComplete: () => stone.destroy(),
-            });
-          },
-        });
-      });
-    } else {
-      // the cut: a strip of dug earth from the pool's edge, then the water runs into it from the pool side
-      const cx = tile.tx * TILE_SIZE;
-      const cy = (tile.ty + 1) * TILE_SIZE;
-      const cut = this.add.graphics().setDepth(0.45);
-      this.time.delayedCall(1100, () => {
-        if (!live()) return;
-        cut.fillStyle(0x4c2c1c, 1).fillRect(cx, cy + 4, TILE_SIZE, 8);
-        const flow = { w: 0 };
-        audio.play('water');
-        this.tweens.add({
-          targets: flow,
-          w: TILE_SIZE,
-          duration: 900,
-          ease: 'Sine.easeOut',
-          onUpdate: () => {
-            const w = Math.round(flow.w);
-            cut.clear();
-            cut.fillStyle(0x4c2c1c, 1).fillRect(cx, cy + 4, TILE_SIZE, 8);
-            cut.fillStyle(0x3c74b4, 1).fillRect(cx + TILE_SIZE - w, cy + 5, w, 6);
-            cut.fillStyle(0x72aadc, 1).fillRect(cx + TILE_SIZE - w, cy + 5, w, 1);
-          },
-          onComplete: () => live() && this.fx.splash(cx + 4, cy + 8),
-        });
-      });
-    }
-    this.time.delayedCall(beat, () => {
+    const done = () => {
       this.endSiteBeat();
       if (!live()) return;
       haptic('medium');
       toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
-    });
+    };
+    const site = new SiteFx(this, this.fx, () => getState().settings.reduceMotion);
+    if (res.work.taste === 'beam') {
+      this.things?.hold(`site.${id}`, beat);
+      this.beamBeat(tile, live);
+    } else if (res.work.taste === 'channel') {
+      // the cut beside the pool, and the pool's water running into it (the channel's clods and fill)
+      this.things?.hold(`site.${id}`, beat);
+      site.spade(at, tile.tx * TILE_SIZE, (tile.ty + 1) * TILE_SIZE, 'e');
+    } else {
+      // the site's lower sprite shows as the top stone breaks loose on the third strike
+      this.things?.hold(`site.${id}`, PICK_LOOSE_MS);
+      site.pickaxe(
+        at,
+        (tile.tx + 1) * TILE_SIZE, // the rockfall's middle (it covers this tile and the next)
+        tile.ty * TILE_SIZE,
+        this.things?.landmarkSprite(`site.${id}`) ?? null,
+      );
+    }
+    this.time.delayedCall(beat, done);
   }
 
   /** A valley moment's banner (HUD), told where the farmer stands on screen so it can keep off them. */
@@ -1798,10 +1754,28 @@ export abstract class WorldScene extends Phaser.Scene {
   // ---- tap to move (M4) ----
 
   /** Screen (logical) point -> world point, or null outside the world view. */
-  private worldPoint(x: number, y: number): { x: number; y: number } | null {
+  private worldPoint(
+    x: number,
+    y: number,
+    from: { x: number; y: number } = { x, y },
+  ): { x: number; y: number } | null {
     if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return null;
     const cam = this.cameras.main;
-    return { x: x - cam.x + cam.scrollX, y: y - cam.y + cam.scrollY };
+    // a touch that landed at `from` reads the world as the camera stood then (the view may scroll by the lift)
+    const t = this.touchCam;
+    const at = t && t.x === from.x && t.y === from.y ? t : null;
+    return { x: x - cam.x + (at?.sx ?? cam.scrollX), y: y - cam.y + (at?.sy ?? cam.scrollY) };
+  }
+
+  /**
+   * Where a world tap at (x, y) lands on the world: the thumb-offset correction (compensateTouch, mirrored for a
+   * left hand) and the camera as it stood at touch-down. Every world tap reads this, the verbs' tap hooks included
+   * (feel critic: a log tap was aimed differently from every other tap).
+   */
+  private tapPoint(x: number, y: number): { x: number; y: number } | null {
+    if (!this.worldPoint(x, y)) return null; // outside the world view: not a world tap
+    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
+    return this.worldPoint(c.x, c.y, { x, y }) ?? this.worldPoint(x, y);
   }
 
   /** The world as tap intent sees it. */
@@ -1872,9 +1846,8 @@ export abstract class WorldScene extends Phaser.Scene {
     x: number,
     y: number,
   ): { intent: TapIntent; path: TileCoord[] | null; face: Direction | null } | null {
-    if (!this.worldPoint(x, y)) return null; // outside the world view: not a world tap
-    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
-    const w = this.worldPoint(c.x, c.y) ?? this.worldPoint(x, y)!;
+    const w = this.tapPoint(x, y);
+    if (!w) return null; // outside the world view: not a world tap
     const intent = tapIntent(this.tapWorld(), w.x, w.y);
     if (intent.kind === 'none') return { intent, path: null, face: null };
     const here = playerTile(getState().player);
@@ -1944,7 +1917,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private onTap(x: number, y: number): void {
     this.preview = false;
     if (this.transitioning || runtime.blocked) return;
-    const wp = this.tapHook ? this.worldPoint(x, y) : null;
+    const wp = this.tapHook ? this.tapPoint(x, y) : null;
     if (wp && this.tapHook?.(wp.x, wp.y)) return;
     if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
     // A new tap replaces a painted row in progress.
@@ -2156,6 +2129,11 @@ export abstract class WorldScene extends Phaser.Scene {
   /** Can the farmer stand on this tile? */
   protected walkable(tx: number, ty: number): boolean {
     return this.inMap({ tx, ty }) && !isTileBlocked(this.grid, tx, ty);
+  }
+
+  /** Action would act on something right now (the marked tile's plan, as last drawn): a verb yields to it. */
+  protected get actionInFront(): boolean {
+    return this.lastMark?.plan != null;
   }
 
   /** The farmer's sprite (a verb may lean it for a frame; syncSprite puts it back each frame). */

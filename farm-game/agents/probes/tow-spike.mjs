@@ -1,91 +1,75 @@
-// The towing spike by real touches (scenario tow-spike): tap the log, tap the slip, tug when it snags (a tap on the
-// log, or Action with TUG=action), and wait for the landing. Prints taps, time from the first tap to the landing,
-// and the most draws and JS ms while towing; shots and a strip of the snag and landing.
+// Towing (M7 spike) played like a person, against the critic's bar (scripts/lib/tow.mjs): every run lands with tap
+// scatter, under 20 s, at most 6 inputs, at most 7 draws while towing, no tap in the 'hard' thumb zone, none ignored,
+// no stall, and no frame over 33 ms (game JS from PRE_STEP to POST_RENDER, and the rAF gap) while towing. Prints
+// one line per run and a summary; non-zero exit when a run misses the bar. Run the 4x pass on a quiet machine.
 //
-//   URL=http://localhost:5331/ PROFILE=se HAND=left node agents/probes/tow-spike.mjs
-//   SCENARIO=tow-spike-long TUG=action THROTTLE=4 ...
+//   URL=http://localhost:5331/ node agents/probes/tow-spike.mjs                       (dev server; else a preview)
+//   SCENARIOS=tow-lane-long PROFILES=i13,se HANDS=right,left STRATEGIES=wait,chain,water,action RUNS=2 THROTTLE=4
+//   SHOTS=agents/out/feel/tow STRIP=1  a frame strip of the snag per run
 import { launch, openScenario, serve } from '../../scripts/lib/farm.mjs';
+import { playTow, towBar } from '../../scripts/lib/tow.mjs';
 
-const scenario = process.env.SCENARIO ?? 'tow-spike';
-const profile = process.env.PROFILE ?? 'i13';
-const hand = process.env.HAND ?? 'right';
+const list = (v, d) => (v ?? d).split(',');
+const scenarios = list(process.env.SCENARIOS, 'tow-spike,tow-spike-long,tow-lane-long');
+const profiles = list(process.env.PROFILES, 'i13,se');
+const hands = list(process.env.HANDS, 'right,left');
+const strategies = list(process.env.STRATEGIES, 'wait,chain,water,action');
+const runs = Number(process.env.RUNS ?? 1);
+const throttle = Number(process.env.THROTTLE ?? 1);
 const dir = process.env.SHOTS ?? 'agents/out/feel/tow';
 const { url, stop } = await serve(Number(process.env.PORT ?? 4896));
 const browser = await launch();
+let seed = Number(process.env.SEED ?? 1);
+let failed = 0;
+let total = 0;
+const worst = { ms: 0, inputs: 0, draws: 0, jsMax: 0, gapMax: 0, over33: 0, jsOver33: 0 };
 try {
-  const farm = await openScenario(browser, url, scenario, { profile, hand });
-  const tag = `${scenario}-${profile}-${hand}`;
-  const tow = () => farm.eval(() => window.__farm.dev.tow());
-  if (process.env.THROTTLE)
-    await farm.cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.THROTTLE) });
-  await farm.frames(10);
-  await farm.shot(`${tag}-0-start`, dir);
-  // draws and JS while the spike runs, sampled every frame in the page until landed
-  const meter = farm
-    .eval(async () => {
-      const d = window.__farm.dev;
-      let draws = 0;
-      let js = 0;
-      let gap = 0;
-      for (let i = 0; i < 60 * 40; i++) {
-        await d.wait.frames(1);
-        const t = d.tow();
-        if (t?.phase === 'towing') {
-          const s = d.frameStats();
-          draws = Math.max(draws, s.draws);
-          js = Math.max(js, s.jsMs);
-          gap = Math.max(gap, d.frameStats().frameMs);
-        }
-        if (t?.landed) break;
-      }
-      return { draws, js, gap };
-    })
-    .catch((e) => ({ meterError: String(e).slice(0, 80) }));
-  const t0 = Date.now();
-  let t = await tow();
-  await farm.tapTile(Math.floor(t.log.x / 16), Math.floor(t.log.y / 16));
-  await farm.until((_s, w) => w.dev.tow()?.phase === 'towing', null, 'hooked', 15000);
-  await farm.shot(`${tag}-1-hooked`, dir);
-  await farm.tapTile(13, 28); // the slip
-  const what = await farm.until(
-    (_s, w) => {
-      const x = w.dev.tow();
-      return x?.log.snagged ? 'snagged' : x?.landed ? 'landed' : null;
-    },
-    null,
-    'snag or landing',
-    20000,
-  );
-  if (what === 'snagged') {
-    await farm.idle();
-    await farm.shot(`${tag}-2-snagged`, dir);
-    const tugs = scenario.includes('long') ? 2 : 1;
-    for (let i = 0; i < tugs; i++) {
-      t = await tow();
-      if (process.env.TUG === 'action') await farm.tapButton('ACTION');
-      else await farm.tapTile(Math.floor(t.log.x / 16), Math.floor(t.log.y / 16));
-      await farm.frames(12);
-    }
-    await farm.strip(`${tag}-3-tug`, 8, 3, dir);
-  }
-  await farm.until((_s, w) => w.dev.tow()?.landed > 0, null, 'landed', 20000);
-  await farm.strip(`${tag}-4-land`, 8, 3, dir);
-  t = await tow();
-  const m = await meter;
-  console.log(
-    JSON.stringify({
-      tag,
-      taps: t.taps,
-      actions: t.actions,
-      tugs: t.tugs,
-      firstToLandMs: t.ms,
-      wallMs: Date.now() - t0,
-      ...m,
-    }),
-  );
-  console.log('errors', farm.errors.length ? farm.errors : 'none');
-  await farm.close();
+  for (const scenario of scenarios)
+    for (const profile of profiles)
+      for (const hand of hands)
+        for (const strategy of strategies)
+          for (let run = 0; run < runs; run++) {
+            const farm = await openScenario(browser, url, scenario, { profile, hand });
+            if (throttle !== 1)
+              await farm.cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle });
+            const tag = `${scenario} ${profile} ${hand} ${strategy} #${run}`;
+            if (process.env.STRIP) {
+              // the snag, frame-exact (the engine is paused while the strip is taken)
+              void farm
+                .until((_s, w) => w.dev.tow()?.log.snagged, null, 'the snag', 30000)
+                .then(() => farm.strip(`${tag.replace(/[ #]/g, '-')}-snag`, 6, 4, dir))
+                .catch(() => {});
+            }
+            const r = await playTow(farm, { strategy, seed: 1000 + seed++ * 7919 });
+            const bad = towBar(r);
+            const jsOver = r.jsMax > 33 ? 1 : 0;
+            if (throttle > 1 && (r.over33 || jsOver)) bad.push(`frames over 33 ms: ${r.over33}`);
+            total++;
+            if (bad.length) failed++;
+            worst.ms = Math.max(worst.ms, r.ms ?? Infinity);
+            worst.inputs = Math.max(worst.inputs, r.inputs);
+            worst.draws = Math.max(worst.draws, r.draws);
+            worst.jsMax = Math.max(worst.jsMax, r.jsMax);
+            worst.gapMax = Math.max(worst.gapMax, r.gapMax);
+            worst.over33 += r.over33;
+            worst.jsOver33 += jsOver;
+            console.log(
+              `${bad.length ? 'MISS' : 'ok  '} ${tag}: ${r.status}, ${r.inputs} inputs, ` +
+                `${r.ms === null ? '-' : (r.ms / 1000).toFixed(1)} s, lane ${r.laneTiles} tiles, draws ${r.draws}, ` +
+                `js p95 ${r.jsP95} max ${r.jsMax}, gap max ${r.gapMax} (>33: ${r.over33}), stalls ${r.stalls}, ` +
+                `silent ${r.silent} | ${r.zones}${bad.length ? ` | ${bad.join('; ')}` : ''}` +
+                (r.slow.length ? ` | slow frames: ${r.slow.join(', ')}` : '') +
+                (farm.errors.length ? ` | errors: ${farm.errors.slice(0, 2).join(' | ')}` : ''),
+            );
+            await farm.close();
+          }
 } finally {
   await browser.close();
   stop();
 }
+console.log(
+  `\n${total - failed}/${total} runs met the bar at ${throttle}x CPU. Worst: ${(worst.ms / 1000).toFixed(1)} s, ` +
+    `${worst.inputs} inputs, ${worst.draws} draws, JS max ${worst.jsMax.toFixed(1)} ms ` +
+    `(${worst.jsOver33} runs over 33), rAF gap max ${worst.gapMax.toFixed(1)} ms (${worst.over33} frames over 33)`,
+);
+process.exit(failed ? 1 : 0);
