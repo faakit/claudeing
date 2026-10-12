@@ -449,4 +449,20 @@ describe('cloud sync against the fake provider', () => {
     expect(await looking).toBeNull();
     expect(sync.conflict).toBeNull();
   });
+
+  it('a sign-in that finished after launch is picked up when the app comes back', async () => {
+    const { fake, sync } = await setup({ local: farm(5, 100, 2000), account: null });
+    expect(sync.status.state).toBe('signedOut');
+    fake.user = 'Ana';
+    await sync.save('resume');
+    expect(sync.status).toMatchObject({ state: 'synced', account: 'Ana' });
+  });
+
+  it('a phone the player turned off stays off on resume', async () => {
+    const { fake, sync } = await setup({ local: farm(5, 100, 2000) });
+    await sync.signOut();
+    fake.user = 'Ana';
+    await sync.save('resume');
+    expect(sync.status.state).toBe('off');
+  });
 });

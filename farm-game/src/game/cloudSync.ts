@@ -321,6 +321,8 @@ export class CloudSync implements CloudSave {
 
   /** Ask for a sync. `pause`, `manual` and `signIn` run at once; the rest wait `debounceMs` for things to settle. */
   save(reason: SyncReason): Promise<void> {
+    // Play Games' automatic sign-in can finish after launch: back in front, look again before giving up.
+    if (reason === 'resume' && this.status.state === 'signedOut') return this.recheck();
     if (this.debounce !== null) {
       this.timers.clear(this.debounce);
       this.debounce = null;
@@ -332,6 +334,21 @@ export class CloudSync implements CloudSave {
       void this.run();
     }, this.deps.debounceMs ?? DEBOUNCE_MS);
     return Promise.resolve();
+  }
+
+  private async recheck(): Promise<void> {
+    const p = this.provider;
+    const gen = this.gen;
+    if (!p) return;
+    let account: string | null;
+    try {
+      account = await p.account();
+    } catch {
+      return;
+    }
+    if (gen !== this.gen || account === null || this.status.state !== 'signedOut') return;
+    this.set('idle', account);
+    await this.run();
   }
 
   /** Runs syncs one at a time; a request during one runs once more after it. */
