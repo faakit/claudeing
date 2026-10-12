@@ -29,6 +29,14 @@ interface Shown {
  * Draws what lies on the ground of one map: forageables and placed machines. Reads state, never
  * edits it. Call `sync` after `forageChanged` / `placedChanged` / `farmChanged`.
  */
+/**
+ * Depth of the dim over land you do not own (and over a project site still to build): above the ground and its
+ * detail (0, 0.02), below the shade layer (0.03: shadows and the crowns drawn under the player), the props (0.06)
+ * and everything after, so a tree or a prop on a plot's edge is never dimmed and never shows a hard dim line
+ * (integration review).
+ */
+export const PLOT_DIM_DEPTH = 0.025;
+
 export class ObjectsRenderer {
   private forage = new Map<string, Shown>();
   private placed = new Map<number, Shown>();
@@ -203,7 +211,8 @@ export class ObjectsRenderer {
           )
           .setOrigin(0)
           .setStrokeStyle(1, built ? 0xdff4ff : 0xf4ead2, built ? 0.8 : 0.4)
-          .setDepth(0.55);
+          // built glass lies over the soil and crops grown in it; a site still to build dims only the ground
+          .setDepth(built ? 0.55 : PLOT_DIM_DEPTH);
         this.plotParts.push(area);
         if (!built)
           this.plotParts.push(
@@ -227,7 +236,7 @@ export class ObjectsRenderer {
         .rectangle(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, 0x14101f, 0.34)
         .setOrigin(0)
         .setStrokeStyle(1, 0xf4ead2, 0.45)
-        .setDepth(0.55);
+        .setDepth(PLOT_DIM_DEPTH);
       this.plotParts.push(area);
       if (!signVisible(state, id)) continue;
       const [sx, sy] = p.sign;

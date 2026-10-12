@@ -1346,6 +1346,42 @@ async function seeThrough() {
       5000,
     );
     if (process.env.SHOTS) await farm.shot(`walk-behind-tree-hole-${profile}`, process.env.SHOTS);
+    // Land you do not own is dimmed over the ground only: the dim lies under the shade, props and overhead layers
+    // (where trees and props are baked), and no tree or prop tile is in the layers under it inside a dim.
+    const dim = await farm.eval(() => {
+      const sc = window.__farm.game.scene.getScene('Farm');
+      const inv = new Map(
+        Object.entries(sc.cache.json.get('tiles_index').tiles).map(([k, v]) => [v + 1, k]),
+      );
+      const layers = sc.children.list.filter((o) => o.type === 'TilemapLayer');
+      const rects = sc.children.list.filter(
+        (o) => o.type === 'Rectangle' && o.fillColor === 0x14101f && o.fillAlpha > 0.2,
+      );
+      const bad = [];
+      for (const r of rects) {
+        for (const l of layers) {
+          const above = ['shade', 'props', 'roof', 'overhead', 'lamps'].includes(l.layer.name);
+          if (above !== l.depth > r.depth)
+            bad.push(`${l.layer.name} at ${l.depth} vs dim ${r.depth}`);
+        }
+        const x0 = Math.round(r.x / 16);
+        const y0 = Math.round(r.y / 16);
+        for (let ty = y0; ty < y0 + Math.round(r.height / 16); ty++)
+          for (let tx = x0; tx < x0 + Math.round(r.width / 16); tx++)
+            // the ground layer's own "tree" tile is the collision kind, painted over by the props layer's art
+            for (const l of layers.filter((q) => q.depth < r.depth && q.layer.name !== 'ground')) {
+              const n = inv.get(l.getTileAt(tx, ty)?.index ?? -1) ?? '';
+              if (/crown|tree|trunk|bush|fence|prop|stump|rock/.test(n))
+                bad.push(`${l.layer.name} ${tx},${ty} ${n}`);
+            }
+      }
+      return { rects: rects.length, bad: bad.slice(0, 6) };
+    });
+    check(
+      `walk-behind-tree (${profile}): unowned plots dim the ground only, never a tree or a prop`,
+      dim.rects > 0 && dim.bad.length === 0,
+      JSON.stringify(dim),
+    );
     check(
       `walk-behind-tree (${profile}): behind the lone crown the farmer's head shows and the crown keeps 60% or more`,
       m.at.join() === '7,1' && m.head && m.target === 0 && m.all > 200 && 1 - m.cut / m.all >= 0.6,
