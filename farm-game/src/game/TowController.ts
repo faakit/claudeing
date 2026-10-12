@@ -111,6 +111,11 @@ export interface TowCourse {
   drift(log: Log, spec: TowLogSpec, world: TowWorld, dtMs: number): 'moved' | 'rest' | 'end';
   /** The way a hooked log is pulled along the course where it is (a unit vector), or null. */
   along(log: Log, spec: TowLogSpec): { x: number; y: number } | null;
+  /**
+   * A water tap at this tile while a log is in hand means "take it down to the slip" (the town river, whose only way
+   * out is the slip): true when the tile lies downstream of the log. Optional (the lab's lanes leave it out).
+   */
+  downstream?(tx: number, ty: number, log: Log): boolean;
   /** Where a drifting log will come to rest (to meet one out of reach), or null. */
   rest(spec: TowLogSpec): { x: number; y: number } | null;
   /** The farmer may hook (owns a hook). False: `refuse` says why, once in a while. */
@@ -534,6 +539,9 @@ export class TowController {
       return meansSlip(bank, this.slip) ? { slip: true } : { slip: false, ...bank };
     }
     const water = this.world.water(tx, ty) || this.world.snag(tx, ty);
+    // a river with one way out (the town's): a tap on the water downstream of the log in hand means the slip
+    const a = this.active;
+    if (water && a?.log.hooked && this.course.downstream?.(tx, ty, a.log)) return { slip: true };
     const bank = water
       ? bankFor(tx, ty, (x, y) => this.host.walkable(x, y), this.world.water)
       : this.host.walkable(tx, ty)

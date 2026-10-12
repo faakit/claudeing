@@ -78,6 +78,9 @@ export function weirCourse(): TowCourse | null {
       return { x: Math.sign(slip.water.tx * TILE_SIZE + 8 - log.x) || 1, y: 0 };
     },
     rest: (spec) => laneRest(d, spec.lane, spec.long),
+    // the river runs south to the slip: a water tap below the log in hand means the slip (fewer taps toward a slip
+    // that is off screen; a bank tap still means that bank tile)
+    downstream: (_tx, ty, log) => ty > Math.floor(log.y / TILE_SIZE),
     canHook: () => owns(getState(), HOOK_ITEM),
     refuse() {
       const now = Date.now();

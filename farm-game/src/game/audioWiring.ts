@@ -151,17 +151,12 @@ export function wireAudio(game: Phaser.Game): void {
   gameEvents.on('heartUp', ({ id }) => audio.motif(id, true));
   // A rebuilt house's window lit for the first time (M7, once per house ever): a soft glow in place of that
   // evening's dusk flourish. If the dusk flourish has just begun, the glow waits for it to end; either way
-  // the dusk is spent for today, so the two never stack. M7's events carry `houseLit`; it is listened to by
-  // name so the audio lane needs no events.ts change (typed once both land).
-  (gameEvents.on as unknown as (e: string, fn: (p: { house: string }) => void) => void).call(
-    gameEvents,
-    'houseLit',
-    () => {
-      moments.spendDusk(absDay());
-      const since = (performance.now() - duskAt) / 1000;
-      audio.sting('window-lit', { delay: Math.max(0.3, DUSK_SECONDS - since), duckDb: -3 });
-    },
-  );
+  // the dusk is spent for today, so the two never stack (systems/events.ts `houseLit`, scenes/TownScene.ts).
+  gameEvents.on('houseLit', () => {
+    moments.spendDusk(absDay());
+    const since = (performance.now() - duskAt) / 1000;
+    audio.sting('window-lit', { delay: Math.max(0.3, DUSK_SECONDS - since), duckDb: -3 });
+  });
   gameEvents.on('daySummary', (sum) => {
     const now = getState().time.season;
     if (sum.endedSeason !== now) audio.seasonSting(now);
