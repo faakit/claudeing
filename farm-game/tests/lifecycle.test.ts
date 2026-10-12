@@ -49,6 +49,19 @@ describe('Lifecycle', () => {
     lc.back();
     expect(fn).toHaveBeenCalledTimes(2);
   });
+
+  it('back reports whether any listener used the press', () => {
+    const lc = new Lifecycle();
+    expect(lc.back()).toBe(false);
+    const a = vi.fn(() => undefined);
+    lc.on('back', a);
+    expect(lc.back()).toBe(false);
+    const off = lc.on('back', () => true);
+    expect(lc.back()).toBe(true);
+    expect(a).toHaveBeenCalledTimes(2); // every listener still hears it
+    off();
+    expect(lc.back()).toBe(false);
+  });
 });
 
 describe('installWebLifecycle', () => {

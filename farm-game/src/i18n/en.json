@@ -526,7 +526,8 @@
     "continue": "Continue",
     "saveLine": "{season} {day}, year {year}  {gold}",
     "eraseConfirm": "Erase save? Tap again",
-    "newGame": "New Game"
+    "newGame": "New Game",
+    "quitConfirm": "Quit Tiny Acre? Your farm is saved."
   },
   "tab": {
     "bag": "Bag",

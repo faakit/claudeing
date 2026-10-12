@@ -1,25 +1,88 @@
 apply plugin: 'com.android.application'
 
+// ---- Version: derived from the commit being built, like the title screen's build label ----
+// The web build labels itself `git log -1 --format="%h %cs"` ("ab7158f 2026-10-12", vite.config.ts). The app uses
+// the same text as versionName, and the commit time in minutes since 2020-01-01 as versionCode: it rises with every
+// newer commit, fits Play's limit (2,100,000,000) for centuries, and two builds of one commit share it.
+// Override either for a one-off with TINY_ACRE_VERSION_CODE / TINY_ACRE_VERSION_NAME.
+def gitOut = { List<String> args ->
+    try {
+        def out = providers.exec { commandLine(['git'] + args); ignoreExitValue = true }
+        def text = out.standardOutput.asText.get().trim()
+        return out.result.get().exitValue == 0 ? text : ''
+    } catch (Exception ignored) {
+        return ''
+    }
+}
+def buildLabel = gitOut(['log', '-1', '--format=%h %cs']) ?: 'dev'
+def commitEpoch = (gitOut(['log', '-1', '--format=%ct']) ?: '0') as long
+def appVersionCode = (System.getenv('TINY_ACRE_VERSION_CODE') ?:
+        String.valueOf(Math.max(1L, (commitEpoch - 1577836800L).intdiv(60L)))) as int
+def appVersionName = System.getenv('TINY_ACRE_VERSION_NAME') ?: buildLabel
+
+// ---- Local, never-committed settings: android/local.properties (gitignored) ----
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+
+// ---- Play Games Services project id (cloud save): env, else local.properties `pgs.projectId`, else none ----
+// Only a numeric id switches the Games manifest entries on (src/pgs/AndroidManifest.xml, merged below); without one
+// the app ships no APP_ID and the Games SDK never starts.
+def pgsProjectId = (System.getenv('TINY_ACRE_PGS_PROJECT_ID') ?: localProps.getProperty('pgs.projectId', '')).trim()
+def pgsConfigured = pgsProjectId ==~ /\d{6,}/
+
+// ---- Release signing: only from android/keystore.properties (gitignored) or env vars, never from the repo ----
+// Without them `bundleRelease` produces an UNSIGNED bundle (agents/PUBLISHING.md, "Upload key").
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('keystore.properties')
+if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
+def signingValue = { String prop, String env -> System.getenv(env) ?: keystoreProps.getProperty(prop) }
+def uploadStoreFile = signingValue('storeFile', 'TINY_ACRE_UPLOAD_STORE_FILE')
+def hasUploadKey = uploadStoreFile && signingValue('storePassword', 'TINY_ACRE_UPLOAD_STORE_PASSWORD') &&
+        signingValue('keyAlias', 'TINY_ACRE_UPLOAD_KEY_ALIAS') && signingValue('keyPassword', 'TINY_ACRE_UPLOAD_KEY_PASSWORD')
+
 android {
     namespace = "app.tinyacre.farm"
     compileSdk = rootProject.ext.compileSdkVersion
+    // resValue below (the Play Games project id) needs generated resources switched on.
+    buildFeatures {
+        resValues = true
+    }
     defaultConfig {
         applicationId "app.tinyacre.farm"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
+        // Cloud save (content owned by release/cloud-save): the Play Games project id, empty by default.
+        resValue "string", "game_services_project_id", pgsProjectId
+    }
+    signingConfigs {
+        if (hasUploadKey) {
+            upload {
+                storeFile rootProject.file(uploadStoreFile)
+                storePassword signingValue('storePassword', 'TINY_ACRE_UPLOAD_STORE_PASSWORD')
+                keyAlias signingValue('keyAlias', 'TINY_ACRE_UPLOAD_KEY_ALIAS')
+                keyPassword signingValue('keyPassword', 'TINY_ACRE_UPLOAD_KEY_PASSWORD')
+            }
+        }
+    }
+    if (pgsConfigured) {
+        // A build-type manifest overlays main's, so the Games entries exist only in a configured build.
+        sourceSets.debug.manifest.srcFile 'src/pgs/AndroidManifest.xml'
+        sourceSets.release.manifest.srcFile 'src/pgs/AndroidManifest.xml'
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasUploadKey) signingConfig signingConfigs.upload
         }
     }
 }
@@ -36,6 +99,8 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Cloud save (content owned by release/cloud-save): Play Games Services v2, used by plugins/PlayGamesSavesPlugin.
+    implementation "com.google.android.gms:play-services-games-v2:$playServicesGamesV2Version"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

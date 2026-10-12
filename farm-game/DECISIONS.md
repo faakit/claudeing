@@ -1797,3 +1797,50 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Android app with Capacitor (release lane, release/android, 2026-10-12)
+
+- **Capacitor, not a Trusted Web Activity.** The owner chose Capacitor for its native plugins (Play Billing, Play
+  Games cloud save, notifications). The app wraps the store web build (`build:store`, no dev code) and is never
+  forked from the web game.
+- **Toolchain: JDK 21 and the Android SDK, set per command.** Capacitor 8 compiles with Java 21. The owner approved a
+  portable Microsoft OpenJDK 21 at `C:/Users/andre/dev/tiny-acre/tools/jdk-21`, and accepted the SDK licence
+  himself. `scripts/android.mjs` sets `JAVA_HOME`/`ANDROID_HOME` for the Gradle call only; nothing global changes.
+- **Back button (critic ruling, keeps the M8 owner decision).** In play, back closes the open sheet, or opens the
+  menu when none is open, and is swallowed while a scripted flow (sleep, results) owns the screen: play never quits
+  by accident. On the title (no game listener), back asks "Quit Tiny Acre? Your farm is saved." in a native dialog,
+  then saves (waits at most 1.5 s) and exits. `lifecycle` back listeners return `true` when they use the press.
+- **Saves stay in Preferences, with a one-time copy from the WebView** (save, backup, language) on first use. It
+  never overwrites a native value and deletes nothing. It is a safety net: native builds have used Preferences since
+  M8, so normally nothing is copied. A Chrome/PWA save is another app's storage and cannot be reached; moving that
+  over is cloud save's job.
+- **Version from the commit.** `versionName` is the title's build label (`git log -1 --format="%h %cs"`, e.g.
+  `9547a9f 2026-10-12`). `versionCode` is the commit time in minutes since 2020-01-01: it grows with each newer
+  commit and stays under Play's 2,100,000,000 cap for millennia. `TINY_ACRE_VERSION_CODE`/`_NAME` override it once.
+  Rebuilding an older commit gives a lower code, which Play refuses, and that is intended.
+- **Target API 36** (`targetSdkVersion`, `compileSdk` 36, min 24). Play requires 35 for new apps and updates
+  since 31 Aug 2025 and is moving to 36. 36 also makes Android 15+ edge-to-edge mandatory, which the page already
+  handles.
+- **Edge-to-edge.** `MainActivity` hides the bars (immersive, swipe shows them briefly). Capacitor's SystemBars
+  is set to `insetsHandling: 'css'` with a `cover` hint, so `env(safe-area-inset-*)` (index.html `#frame`) carries the
+  cutout on WebView 140+, and older WebViews get a padded WebView instead. `displayFit` and the floating controls
+  need no change: they already fit inside `#frame`, and Action keeps 12 px from the side edges (back-swipe strip).
+- **Release signing only from outside the repo** (`android/keystore.properties` or `TINY_ACRE_UPLOAD_*` env, both
+  gitignored). Without them `bundleRelease` is unsigned. No keystore is created or committed by agents.
+- **Native plugin seams.** Custom Java lives in `android/app/src/main/java/app/tinyacre/farm/plugins/`, registered
+  with one line each in `LanePlugins.java` before the bridge starts. All of `android/`, Gradle and
+  `capacitor.config.ts` stay on this lane's branch. Cloud save owns the content of `PlayGamesSavesPlugin.java`, its
+  `play-services-games-v2` dependency and the `game_services_project_id` resValue, and changes reach android/ only
+  through this lane. The Games library's auto-init provider is removed, and the `APP_ID` meta-data is merged only
+  when a numeric project id is configured (`src/pgs/AndroidManifest.xml`), so a build without config runs no Games
+  code. Analytics (Firebase, added by the owner later) gets consent-off meta-data now, and the `AD_ID` permission is
+  removed for every library.
+- **Play Billing and notifications: chosen, not installed.** Billing via a Capacitor 8 billing plugin (RevenueCat's
+  `@revenuecat/purchases-capacitor`, or a thin custom `plugins/BillingPlugin.java` on Play Billing Library 7+ if
+  the owner wants no third party). Notifications via `@capacitor/local-notifications` (crops ready, no server; Android
+  13+ asks for permission at the moment it helps, never at launch). Neither ships until the owner asks for it
+  (agents/PUBLISHING.md).
+- **Verified on this machine:** `assembleDebug` and `bundleRelease` build (JDK 21, SDK 36, build-tools 35), the APK
+  manifest (targetSdk 36, portrait, no AD_ID, no Games provider or APP_ID without config) and a configured build's
+  merged manifest (APP_ID present). **Not verified:** any run on an emulator or phone. No emulator is installed: it is
+  outside the packages this lane may install, and it needs the hypervisor setting.

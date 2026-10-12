@@ -38,7 +38,7 @@ years old) and one iPhone, once per release:
 - [ ] **One-thumb play** for 10 minutes, right hand then left: taps, Action, painted rows, the tool ring, Interact; no missed or stuck inputs. The detailed controls checklist is in `agents/OPEN-FINDINGS.md`.
 - [ ] **Airplane mode**: native app works fully (it has no network use at all).
 - [ ] **Haptics** feel right (a light tick on a tile action, a tool change and each painted tile; a stronger pulse on a ripe harvest or a level-up; a double pulse on a refusal) and the Options toggle turns them off.
-- [ ] **Android back button** closes dialogs, then opens the menu, then exits from the title screen.
+- [ ] **Android back button** closes dialogs, then opens the menu (swallowed during sleep); on the title it asks before quitting.
 - [ ] **Splash**: no white flash between launch and the title screen.
 - [ ] Low storage / blocked storage: the game still plays and says "Saving is unavailable" instead of claiming "Saved!".
 
@@ -53,7 +53,7 @@ npm run cap:android       # opens Android Studio  (Run > Run 'app' on a device o
 npm run cap:ios           # opens Xcode           (select a team under Signing, then Run)
 ```
 
-Command line, Android: `cd android && ./gradlew assembleDebug` (APK) or `./gradlew bundleRelease` (AAB, needs a signing config).
+Command line, Android: `npm run android:debug` (debug APK) or `npm run android:bundle` (AAB; unsigned unless the upload key is set up). JDK 21, SDK, signing and the Play checklist: `agents/PUBLISHING.md`, "Android".
 iOS release: Product > Archive in Xcode, then upload to TestFlight.
 
 Icons and splash come from `scripts/make-icons.mjs` (pixel art drawn in code) via
@@ -63,8 +63,8 @@ in that script (or drop your own `resources/icon.png`, `icon-foreground.png`, `i
 
 ### Before the first store submission: pick the app id
 
-`app.tinyacre.farm` is a placeholder. Change it **before** creating store listings because it cannot
-be changed afterwards. Update it in three places, then `npm run cap:sync`:
+`app.tinyacre.farm` is the configured id. It becomes permanent with the first Play upload, so change it only
+before that. Update it in three places, then `npm run cap:sync`:
 
 1. `capacitor.config.ts` (`appId`)
 2. Android: `android/app/build.gradle` (`namespace`, `applicationId`) and move `MainActivity.java` to the matching package folder
@@ -78,7 +78,9 @@ be changed afterwards. Update it in three places, then `npm run cap:sync`:
 - **Saves**: native key-value store (SharedPreferences / UserDefaults) via Capacitor Preferences, not IndexedDB. Android auto-backup includes it.
 - **Screen stays on** while playing (long stretches without touches).
 - **No service worker in the apps** (their bundle is already local; a cache-first worker could serve a stale game after an update).
-- **Permissions**: only `INTERNET` (the Capacitor template default; the game makes no network requests). No analytics, no ads, no accounts.
+- **Permissions**: `INTERNET` (Capacitor default; the game itself makes no network requests) and `VIBRATE` (haptics). `AD_ID` is removed for every library. No ads.
+- **Edge-to-edge (API 35+)**: SystemBars `insetsHandling: 'css'`; `env(safe-area-inset-*)` carries the cutout. Bars are hidden (immersive).
+- **Version**: `versionName` = the title's build label, `versionCode` = commit minutes since 2020 (`android/app/build.gradle`).
 
 ## Store checklist
 
@@ -96,4 +98,4 @@ Prepare early:
 - **Audio unlock** needs one tap on iOS/Android. The title screen's Continue/New Game provides it; the first tap anywhere also unlocks.
 - **Very small phones** (below ~640 CSS px wide): the UI keeps its layout, so controls fall just under 44 CSS px (43 on a 667px-wide SE). Tiny text (`5x7` pixel font) is about 8-10 CSS px on typical phones; a "larger text" option is a good follow-up.
 - **iPhone Safari (web)** has no fullscreen API; the Options menu tells players to "Add to Home Screen", which gives the fullscreen PWA.
-- The native projects have never been compiled (no Android SDK or Xcode was used), so a first `assembleDebug` / Xcode build may surface a small config issue. The generated projects and `cap sync` are clean.
+- Android compiles (`assembleDebug`, `bundleRelease`, 2026-10-12) but has not run on an emulator or phone yet. iOS has never been compiled (no Xcode).

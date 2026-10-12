@@ -306,8 +306,12 @@ export class UIScene extends Phaser.Scene {
           .find((m) => m.isOpen)
           ?.confirm(),
       ),
-      // Android back: close the open dialog, otherwise open the menu (never kill the game by accident).
-      lifecycle.on('back', () => this.toggleMenu()),
+      // Android back in play: close the open sheet, else open the menu; swallowed while a scripted flow owns the
+      // screen. Always used, so play never quits by accident: only the title asks to quit (platform/native.ts).
+      lifecycle.on('back', () => {
+        this.toggleMenu();
+        return true;
+      }),
       inputHub.on('slot', (i) => selectSlot(getState(), i)),
       inputHub.on('cycle', (d) => cycleSlot(getState(), d)),
     );

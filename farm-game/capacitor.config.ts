@@ -16,6 +16,14 @@ const config: CapacitorConfig = {
     scrollEnabled: false,
   },
   plugins: {
+    // Android edge-to-edge (forced from API 35): the page draws under the system bars and keeps its controls clear
+    // with env(safe-area-inset-*) (index.html #frame). On WebView 140+ with viewport-fit=cover the insets pass
+    // through to env(); on older WebViews Capacitor pads the WebView itself and env() reads 0. 'css' also injects
+    // --safe-area-inset-* variables. MainActivity hides the bars (immersive), so normally only the cutout counts.
+    SystemBars: {
+      insetsHandling: 'css',
+      initialViewportFitValueHint: 'cover',
+    },
     SplashScreen: {
       // We hide it ourselves once the first scene is on screen, so there is no white/black flash.
       launchAutoHide: false,

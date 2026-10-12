@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Merged only when a numeric Play Games project id is configured (TINY_ACRE_PGS_PROJECT_ID or pgs.projectId in
+     android/local.properties; see app/build.gradle). The string resource is the resValue in app/build.gradle. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/game_services_project_id" />
+    </application>
+</manifest>
