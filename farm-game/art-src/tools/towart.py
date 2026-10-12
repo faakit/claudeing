@@ -236,9 +236,9 @@ def icon_home(names: list[str]) -> np.ndarray:
     top = 11 - xx // 3  # the ramp's top ink line: low at the water (west), high on the bank (east)
     inner = (yy > top) & (yy <= top + 3) & (xx <= 14)
     cv.put(((yy == top) | (yy == top + 4)) & (xx <= 15) | (inner & (xx == 15)), "ink")
-    cv.put(inner & (yy <= top + 1), "wood")  # the planks' lit edge
-    cv.put(inner & (yy > top + 1), "soil")
-    cv.put(inner & np.isin(xx, [2, 6, 10, 14]), "ink")  # plank seams across the slope
+    cv.put(inner & (yy <= top + 1), "sand")  # the planks' lit edge (light, so the ramp reads on the walnut button)
+    cv.put(inner & (yy > top + 1), "wood")
+    cv.put(inner & np.isin(xx, [3, 7, 11]) & (yy > top + 1), "soil")  # plank seams across the slope
     disc = (xx - 10.5) ** 2 + (yy - 4.5) ** 2 <= 9.5
     _outlined(cv, [(disc, "sand")])  # the log's sawn end, outlined over the ramp it rests on
     cv.put((xx >= 10) & (xx <= 11) & (yy >= 4) & (yy <= 5), "soil")  # its heart
