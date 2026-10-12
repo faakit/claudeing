@@ -1745,6 +1745,19 @@ async function lang() {
     over.length === 0,
     over.join(' | '),
   );
+  // The plot signs' prices in the world: gold as "o" (they were written "<n>g" by hand).
+  const prices = await farm.eval(() =>
+    window.__farm.game.scene
+      .getScene('Farm')
+      .things.plotParts.filter((o) => o.type === 'Container')
+      .map((o) => o.list.find((c) => c.type === 'BitmapText')?.text ?? '')
+      .filter((s) => /^\d/.test(s)),
+  );
+  check(
+    'lang-pt-farm-hud: the plot signs show their price as gold in Portuguese',
+    prices.length > 0 && prices.every((p) => /^\d[\d.]*o$/.test(p)),
+    JSON.stringify(prices),
+  );
   // Menu > Opts: the language switch, one tap, applies at once and the open menu redraws.
   await openSheet(farm, 'menu');
   await farm.eval(() => window.__farm.game.scene.getScene('UI').menu.openTab('opts'));
