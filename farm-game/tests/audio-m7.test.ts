@@ -75,17 +75,26 @@ describe('the water repeat window', () => {
     expect(gainOf('water', 4)).toBeCloseTo(one, 6);
   });
 
-  it('plays the water a wet channel cut lets in 6 dB under the cut (dig first, the same frame)', async () => {
+  it('plays the water a wet channel cut lets in 9 dB under the cut (dig first, the same frame)', async () => {
     const { gainOf } = await player();
     gainOf('dig', 1);
     const wet = gainOf('water', 1);
     const { gainOf: fresh } = await player();
     const dry = fresh('water', 1);
-    expect(db(dry / wet)).toBeCloseTo(6, 1);
+    expect(db(dry / wet)).toBeCloseTo(9, 1);
     // only right after the cut
+    const window = MANIFEST.sfx['water']!.softFor ?? SOFT_AFTER;
     const { gainOf: late } = await player();
     late('dig', 1);
-    expect(late('water', 1 + SOFT_AFTER + 0.05)).toBeCloseTo(dry, 6);
+    expect(late('water', 1 + window + 0.05)).toBeCloseTo(dry, 6);
+  });
+
+  it('plays the splash of a log freed by a tug (170 ms after it) 6 dB under the tug', async () => {
+    const { gainOf } = await player();
+    const { gainOf: fresh } = await player();
+    const dry = fresh('water', 1);
+    gainOf('logTug', 1);
+    expect(db(dry / gainOf('water', 1.17))).toBeCloseTo(6, 1);
   });
 });
 

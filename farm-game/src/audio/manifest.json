@@ -720,8 +720,10 @@
       "voices": 1,
       "repeatWindow": 0.5,
       "softAfter": {
-        "dig": -6
-      }
+        "dig": -9,
+        "logTug": -6
+      },
+      "softFor": 0.25
     },
     "refill": {
       "files": [
@@ -1210,19 +1212,19 @@
           "file": "sfx/dig-2.mp3",
           "onset": 0.0,
           "dur": 0.36,
-          "tp": -6.5
+          "tp": -7.77
         },
         {
           "file": "sfx/dig-3.mp3",
           "onset": 0.0,
           "dur": 0.4,
-          "tp": -6.31
+          "tp": -7.66
         },
         {
           "file": "sfx/dig-4.mp3",
           "onset": 0.0,
           "dur": 0.38,
-          "tp": -6.81
+          "tp": -7.13
         }
       ],
       "gain": 1.2162,
@@ -1238,7 +1240,7 @@
           "file": "sfx/logLand-1.mp3",
           "onset": 0.0,
           "dur": 0.63,
-          "tp": -8.18
+          "tp": -8.05
         },
         {
           "file": "sfx/logLand-2.mp3",
@@ -1250,7 +1252,7 @@
           "file": "sfx/logLand-3.mp3",
           "onset": 0.0,
           "dur": 0.63,
-          "tp": -7.48
+          "tp": -7.18
         }
       ],
       "gain": 1.122,

@@ -295,8 +295,10 @@
    "trim": 1.8,
    "repeatWindow": 0.5,
    "softAfter": {
-    "dig": -6
-   }
+    "dig": -9,
+    "logTug": -6
+   },
+   "softFor": 0.25
   },
   "refill": {
    "family": "tools",
@@ -972,7 +974,8 @@
    ],
    "trim": 1.7,
    "repeatWindow": 0.6,
-   "repeatDb": -5
+   "repeatDb": -5,
+   "tpOut": -4.0
   },
   "logLand": {
    "family": "tools",
@@ -991,13 +994,13 @@
       "src": "sfx/kenney-rpg/doorClose_4",
       "shift": -3,
       "lp": 2500,
-      "gain": 0
+      "gain": 1
      },
      {
       "src": "sfx/oga-rubberduck-100/wooden_02",
       "shift": -5,
       "lp": 2500,
-      "gain": -3
+      "gain": 0
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_09",
@@ -1036,13 +1039,13 @@
       "src": "sfx/kenney-rpg/doorClose_4",
       "shift": -3,
       "lp": 2500,
-      "gain": 0
+      "gain": 1
      },
      {
       "src": "sfx/oga-rubberduck-100/wooden_03",
       "shift": -6,
       "lp": 2500,
-      "gain": 2
+      "gain": 5
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_09",

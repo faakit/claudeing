@@ -84,7 +84,7 @@ export class SfxPlayer {
     let after = 1;
     for (const [other, db] of Object.entries(a.softAfter ?? {})) {
       const at = this.lastAt.get(other);
-      if (at !== undefined && now - at >= 0 && now - at < SOFT_AFTER)
+      if (at !== undefined && now - at >= 0 && now - at < (a.softFor ?? SOFT_AFTER))
         after *= Math.pow(10, db / 20);
     }
     this.lastAt.set(cue, now);
