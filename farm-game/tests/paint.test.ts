@@ -90,6 +90,31 @@ describe('paint edge hold (coordinator ruling, valley round 6)', () => {
     expect(tiles(p)).toBe(start);
   });
 
+  it('a finger trembling along the row while the hold grows it never takes a tile back (D3, e2e se left)', () => {
+    // The e2e's SE left-hand rest: the thumb trembles about 5 px either way along the row (a 4 CSS px sigma). A tick
+    // that lands while the finger is out at -24 counts that reach too; the finger back at -14 must not undo it.
+    const p = armed(-20);
+    const band = { x: -1, y: 0 };
+    let t = 1000;
+    p.hold(band, t, band);
+    for (let k = 0; k < 6; k++) {
+      p.move(k % 2 ? -24 : -16, 0, (t += 90));
+      p.hold(band, t, band);
+      p.move(-20, 0, (t += 90));
+      p.hold(band, t, band);
+    }
+    p.move(-24.1, 0, (t += 90));
+    p.hold(band, (t += PAINT_EDGE_HOLD_MS), band);
+    const grown = tiles(p);
+    for (const x of [-14.5, -18, -15, -22, -14]) {
+      p.move(x, 0, (t += 16));
+      expect(tiles(p)).toBeGreaterThanOrEqual(grown);
+    }
+    // leaving the exit band still takes the growth back
+    p.hold({ x: 0, y: 0 }, (t += 16), { x: 0, y: 0 });
+    expect(tiles(p)).toBeLessThan(grown);
+  });
+
   it('a right-handed eastward row and a downward row grow the same way', () => {
     const r = armed(30);
     let t = 1000;

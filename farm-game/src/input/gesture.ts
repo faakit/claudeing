@@ -345,7 +345,14 @@ export class ActionPress {
       // while an edge hold is growing this leg, the finger's small moves inside the band keep what it grew
       const last = this.legs[this.legs.length - 1]!;
       const b = this.boostDir === last.dir ? this.boost : 0;
+      const n = this.legs.length;
+      const before = last.tiles;
       this.walkLegs(px + b * VEC[last.dir].x, py + b * VEC[last.dir].y);
+      // ... and its tremor along the leg never takes a tile back: a tick that landed while the finger was out at
+      // the far side of its wobble counted that reach, so the finger swinging back (5 px either way on an SE) undid
+      // it (e2e se left). Only leaving the exit band (hold) gives the growth back.
+      if (b > 0 && this.legs.length === n && this.legs[n - 1] === last && last.tiles < before)
+        last.tiles = before;
     }
     return this.emit();
   }
