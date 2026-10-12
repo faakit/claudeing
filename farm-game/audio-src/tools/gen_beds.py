@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsp  # noqa: E402
 from dsp import SR  # noqa: E402
 
-VERSION = "2"
+VERSION = "3"
 
 
 def _load(raw: str, sid: str) -> np.ndarray:
@@ -82,7 +82,7 @@ def forge(seconds: int = 30) -> np.ndarray:
 
 
 MILL_REV = 3.0  # seconds per turn of the wheel
-MILL_TURNS = 3  # turns per loop: each turn has its own jitter, so the loop repeats only every 9 s
+MILL_TURNS = 5  # turns per loop: each turn has its own jitter, so the loop repeats only every 15 s
 
 
 def mill(raw: str) -> np.ndarray:

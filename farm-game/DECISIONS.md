@@ -1492,6 +1492,27 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
 - **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
 
 
+## M7 audio: towing and the first homecoming (audio lane, audio/m7, 2026-10-12)
+
+- **Tow cues fit the real verb.** `audio-src/tools/tow-cues.mjs` measured the gaps: the quickest second tug comes
+  277 ms after the first, and the splash comes 173 ms after the freeing tug. So the tug is 300 ms long and never
+  repeat-ducked. All four cues carry a wooden crack, so 40 % or more of their energy is above 400 Hz (a phone plays
+  it), and they peak at -4.6 dBTP or lower at the output (recipe `tpOut`).
+- **A cue can play under the one it follows** (`softAfter`, `softFor`). The water a spade cut lets in plays 9 dB
+  under the cut, and the splash of a freed log plays 6 dB under the tug. The moment belongs to the tool, and a wet
+  channel row is no louder than a dry one. Watering alone keeps its level, with a 0.5 s repeat window.
+- **The homecoming echoes the green jingle on purpose.** Both end on the same rising E-G-C arrival (one shared
+  interval 3-gram): a family coming home is the valley coming back. The homecoming opens with Senna's own figure,
+  so the two never sound the same. It has priority 4, so a `green` in the same second gives way to it.
+- **The lit window replaces the dusk flourish** on its evening (`MomentClock.spendDusk`). It fires once per house,
+  ever, so it needs no ration; if a dusk flourish has just begun, it waits for it to end.
+- **The mill wheel is made here** (`gen_beds.py mill()`): jittered paddle slaps, an axle groan and a knock on a
+  circular 15 s timeline, with a recorded water-spill layer as loud as the wheel (7.27 s, so the two never line up
+  within 200 s). It plays only on the town's final `marls` stage, by
+  the wheel only (silent 9.5 tiles away).
+- **Offline renders start cues at their own time,** not on the 100 ms tick, so repeat windows see real gaps (a
+  0.451 s dig gap used to round to 0.4 or 0.5 s).
+
 ## The Dry Year, feel lane (feel/dry-year)
 
 - **Channel juice is drawn over the map, never in a new layer.** The water into a cut and the morning's run crop the

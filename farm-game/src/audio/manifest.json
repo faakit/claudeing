@@ -703,15 +703,15 @@
         },
         {
           "file": "sfx/water-2.mp3",
-          "onset": 0.00082,
+          "onset": 0.00079,
           "dur": 0.42,
-          "tp": -6.78
+          "tp": -7.56
         },
         {
           "file": "sfx/water-3.mp3",
           "onset": 0.00039,
           "dur": 0.42,
-          "tp": -6.88
+          "tp": -7.16
         }
       ],
       "gain": 1.2303,
@@ -1685,14 +1685,14 @@
         {
           "file": "amb/mill.mp3",
           "onset": 0,
-          "dur": 10.1,
-          "loop": [1.0, 10.0]
+          "dur": 16.1,
+          "loop": [1.0, 16.0]
         },
         {
           "file": "amb/mill-2.mp3",
           "onset": 0,
-          "dur": 7.3,
-          "loop": [1.0, 7.2]
+          "dur": 8.37,
+          "loop": [1.0, 8.27]
         }
       ],
       "gain": 1,

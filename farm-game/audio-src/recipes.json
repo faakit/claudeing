@@ -298,7 +298,8 @@
     "dig": -9,
     "logTug": -6
    },
-   "softFor": 0.25
+   "softFor": 0.25,
+   "tpOut": -4.0
   },
   "refill": {
    "family": "tools",
@@ -1604,22 +1605,22 @@
   },
   "mill": {
    "mode": "loop",
-   "level": -35.5,
+   "level": -37.5,
    "hp": 150,
    "layers": [
     {
      "src": "gen/mill",
-     "from": 9.0,
-     "body": 9.0,
+     "from": 15.0,
+     "body": 15.0,
      "correlated": true
     },
     {
      "src": "sfx/oga-rubberduck-100v2/loop_water_03",
      "shift": -3,
      "lp": 1400,
-     "gain": -5,
+     "gain": 0,
      "from": 2.0,
-     "body": 6.2,
+     "body": 7.27,
      "search": 0.5
     }
    ]
