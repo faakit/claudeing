@@ -1213,6 +1213,17 @@ async function morning() {
     });
   await farm.frames(40);
   const early = await fx();
+  // back in and out again before the channels came into view: the run is still to play ("once, on first sight")
+  await farm.during('sceneReady', ['House'], () => farm.tapTile(14, 6));
+  await farm.frames(5);
+  await farm.during('sceneReady', ['Farm'], () => farm.tapTile(5, 9));
+  await farm.frames(5);
+  const again = await fx();
+  check(
+    'channels-morning: leaving the farm before the channels came into view keeps the run for the next visit',
+    again.started === null && again.running,
+    JSON.stringify(again),
+  );
   // walk east along the field until the channel's head is on screen
   await farm.tapTile(19, 8);
   const started = await farm.until(

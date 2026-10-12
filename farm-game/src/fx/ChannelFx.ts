@@ -94,6 +94,9 @@ export class ChannelFx {
   private pending: {
     steps: RunStep[];
     beside: Map<string, string[]>;
+    /** Marked as played when it starts (leaving the farm before seeing it keeps it for the next visit). */
+    state: GameState;
+    day: number;
   } | null = null;
   private held = new Set<string>();
   /** The last morning run's start: its first tiles and the view then (for the e2e and probes). */
@@ -130,7 +133,6 @@ export class ChannelFx {
     const flow = channelFlow(state);
     const reach = flowReach(state, source.at, flow);
     if (!reach.length) return;
-    ranOn.set(state, day);
     const steps = runSteps(reach, source.at);
     // rain watered everything anyway: the run still flows, but the soil is not held back
     const watered =
@@ -139,7 +141,7 @@ export class ChannelFx {
         : wateredByChannels(state, reach, flow).filter((k) => state.farm.tiles[k]?.watered);
     const beside = wetBeside(steps, watered);
     this.hold([...steps.map((s) => s.key), ...[...beside.values()].flat()]);
-    this.pending = { steps, beside };
+    this.pending = { steps, beside, state, day };
   }
 
   /** The run is waiting for the channels to come into view, or running. */
@@ -150,6 +152,7 @@ export class ChannelFx {
   private startRun(view: Phaser.Geom.Rectangle): void {
     const run = this.pending!;
     this.pending = null;
+    ranOn.set(run.state, run.day);
     this.started = {
       head: run.steps.slice(0, 3).map((s) => [s.tx, s.ty] as [number, number]),
       view: { x: view.x, y: view.y, width: view.width, height: view.height },
