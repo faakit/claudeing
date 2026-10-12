@@ -215,7 +215,8 @@ export function boxCoversTile(b: Box, t: { tx: number; ty: number }): boolean {
 export class SeeThrough {
   private readonly g: Phaser.GameObjects.Graphics;
   readonly mask: Phaser.Display.Masks.GeometryMask;
-  private key = '';
+  /** What the hole was last drawn for: feet pixel, target tile, radii (no string built per frame). */
+  private readonly last = [NaN, NaN, NaN, NaN, NaN, NaN];
   private readonly open: HoleOpen = { body: 0, target: 0 };
   private target: { tx: number; ty: number } | undefined;
   /** The hole's pixel runs as last drawn (for the e2e that measures how much of a crown stays). */
@@ -249,9 +250,19 @@ export class SeeThrough {
     const t = this.open.target > 0 ? this.target : undefined;
     const rb = holeRadius(HOLE.body, this.open.body);
     const rt = holeRadius(HOLE.target, this.open.target);
-    const key = `${Math.round(px)},${Math.round(py)},${t?.tx},${t?.ty},${rb},${rt}`;
-    if (key === this.key) return;
-    this.key = key;
+    const x = Math.round(px);
+    const y = Math.round(py);
+    const tx = t?.tx ?? -1;
+    const ty = t?.ty ?? -1;
+    const l = this.last;
+    if (l[0] === x && l[1] === y && l[2] === tx && l[3] === ty && l[4] === rb && l[5] === rt)
+      return;
+    l[0] = x;
+    l[1] = y;
+    l[2] = tx;
+    l[3] = ty;
+    l[4] = rb;
+    l[5] = rt;
     this.g.clear();
     this.g.fillStyle(0xffffff, 1);
     this.runs = holeRuns(holeCircles(px, py, t, this.open));
