@@ -3400,16 +3400,25 @@ async function lang() {
     t.children.list.forEach(walk);
     return found;
   });
+  // The locale flips inside the tap, but the title's restart runs on the next step: wait for the rebuilt title
+  // (its build count), never only for the locale, or the old Portuguese title is read (a race seen under load).
+  const before = {
+    gen: await farm.eval(() => window.__farm.game.scene.getScene('Title').gen),
+    n: texts.length,
+  };
   if (langBtn) await farm.page.touchscreen.tap(langBtn.x, langBtn.y);
-  await farm.eval(() =>
-    window.__farm.dev.wait.until(() => {
-      const t = window.__farm.game.scene.getScene('Title');
-      return (
-        window.__farm.i18n.getLocale() === 'en' &&
-        window.__farm.game.scene.isActive('Title') &&
-        (t.buttons?.length ?? 0) > 0
-      );
-    }, 'the title in English'),
+  await farm.eval(
+    (gen) =>
+      window.__farm.dev.wait.until(() => {
+        const t = window.__farm.game.scene.getScene('Title');
+        return (
+          window.__farm.i18n.getLocale() === 'en' &&
+          window.__farm.game.scene.isActive('Title') &&
+          t.gen > gen &&
+          (t.buttons?.length ?? 0) > 0
+        );
+      }, 'the title in English'),
+    before.gen,
   );
   texts = await textsOf(farm, 'Title');
   check(
@@ -3418,6 +3427,15 @@ async function lang() {
       texts.includes('New Game') &&
       texts.some((x) => x.startsWith("You won't remember me.")),
     JSON.stringify(texts),
+  );
+  // The restart rebuilds the title from scratch: the same texts, none stacked twice (the logo is five labels a
+  // word: the gold face over four carved layers).
+  check(
+    'lang-pt-title: the restarted title draws each label once',
+    texts.length === before.n &&
+      texts.filter((x) => x === 'TINY').length === 5 &&
+      texts.filter((x) => x === 'New Game').length === 1,
+    `${before.n} texts before, ${texts.length} after`,
   );
   await farm.close();
 
