@@ -1791,3 +1791,9 @@ is unchanged: no control moved and the camera scrolls are identical.
   edge, so the camera can never centre it: a log at the head, tapped from beside or below it, sits in the left
   thumb's hard zone (86-106 mm). Coming from the north (the way from the farm), the logs are below the farmer and in
   reach of both thumbs; from below, Action is the left hand's route (comfort, 26-30 mm).
+- **Clay's `rivalLate` at the weir** (the M6 carry-over, WORLD-PLAN 5.1 step 5): a perk source gives his 2-heart
+  `rivalLate` (180 minutes) once the weir is open while he is below 2 hearts; at 2 hearts his own perk gives it, so it
+  never stacks.
+- **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
+  slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
+  slip" taps on the water took 7 inputs. A bank tap still means that bank tile.

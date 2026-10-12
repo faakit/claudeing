@@ -17,6 +17,8 @@ import {
   villagerOf,
 } from '../systems/houses';
 import { countItem } from '../systems/inventory';
+import { heartsOf } from '../systems/friendship';
+import { registerPerkSource } from '../systems/skills';
 import { t } from '../i18n';
 
 // The Weir's verb and the first homecoming (docs/MILESTONES.md M7): drift timber each morning, the timber hook, the
@@ -95,4 +97,12 @@ registerActionHandler({
     if ((state.stats['place.weir'] ?? 0) < 3) return null;
     return { refusal: t('tow.slip') };
   },
+});
+
+// Clay's turn, step 5 (WORLD-PLAN 5.1): once the weir is open his fields get the river too, and he starts his rounds
+// late even below 2 hearts ("Didn't ask for help."). At 2 hearts his own perk gives the same, so it never stacks.
+registerPerkSource('weir', (state, key) => {
+  if (key !== 'rivalLate' || (state.stats['place.weir'] ?? 0) < 3) return 0;
+  const clay = npcs['clay']?.perks['2']?.['rivalLate'] ?? 0;
+  return heartsOf(state, 'clay') >= 2 ? 0 : clay;
 });
