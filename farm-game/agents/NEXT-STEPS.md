@@ -21,35 +21,19 @@ The owner chose this premise. It replaces the original MVP goal. Read these firs
 New work follows those docs. The areas below describe the game as it is now, which is the base the Dry Year
 builds on.
 
-## Pending merge: integration/dry-year-2 (written while the owner had all tests stopped)
+## State: integration/dry-year-2 (deployed 2026-10-11)
 
-`integration/dry-year-2` = dry-year-core + `valley/m6` + `audio/dry-year` + `feel/dry-year` + the Weir beam's
-`logLand` cue + `fix/owner-bugs` + `ui/float-controls` (the wooden dock removed) + `i18n/pt-br` (English and pt-BR).
-**Nothing on it has been run** (about 80 files changed by i18n without a compiler): start with `npm run typecheck`,
-`npm run lint` and `npm test`. Still to do, in this order, on a quiet machine:
-
-1. Merge `art/dry-year` (4feb4fe). Its generated files conflict with M6's (`art-src/sprites/tiles.png`, the tilesets,
-   `tiles.json`, every `.tmj` header): take either side, then `npm run art:maps` (deterministic) and commit the result.
-   Keep art's `paintChannel` in `WorldScene`; point feel's `ChannelFx` tile source at art's `channelGid(tx, ty, look)`
-   and clip its foam to `CHANNEL_WATER_BAND` (see NEXT-STEPS-FEEL.md). `scripts/generate-maps.mjs` now copies
-   the final stage's collision into earlier stages (dry beds block like water), so regenerating keeps that fix.
-2. Audio D3: creek layer 2 `body` 2.47 in `audio-src/recipes.json`, rebuild (`python -I audio-src/tools/build.py
-   <raw-dir>`), re-render `dy-creek-long`.
-3. Small code items: saves that saw "A secret spot" mark "The Heron" seen (no second catfish reward); old saves'
-   quiet weir **counts** toward later "places open" asks (e.g. the market's three places) but never toward goals or
-   rewards (coordinator ruling).
-4. Checks: `npm run verify` (alone), `npm run bench:thumb`, the valley critic's 14 paired onboarding runs
-   (`valley-critique/tools/onb/run14.mjs`, median <= 173 s), the farm-to-town door on `river-first-morning` at 1x
-   and 4x (<= 0.3 s, worst frame <= 34 ms at 4x; else build the overlay under the sleep fade), `e2e:controls` with
-   `E2E_CONTROLS_PARALLEL=1` (SE rows), perf against a baseline rerun alone, and listening to
-   `audio-renders/dry-year/LISTEN.md`. Screenshots on the iPhone 13 and SE, both hands: `ui-float-controls*`,
-   `walk-behind-tree`, `tap-retarget-walk`, `lang-pt-*` (perf is the floating controls' main risk: a 52% taller view).
-5. Then deploy (fast-forward `claude/repo-code-github-pages-3ukz7j`).
+M6 (the Weir), the feel lane (channel juice, edge hold, the `tow-spike` lab), Dry Year audio, the art lane (chars
+atlas split, channel tiles), the owner's bug fixes (tree see-through keeps 60% of a crown, smooth tap retarget, dry
+beds solid like water), floating controls (the wooden dock removed) and English/pt-BR i18n, all merged and verified:
+full verify green, `bench:thumb` 36/36, onboarding 14/14 to town on day 2 (median 163.5 s, gate 173), the
+river-morning door 0.29 s with a 14 ms worst frame at 4x.
 
 Next round: the towing go/no-go needs feel's T1 fixed first (tapping the slip while the farmer walks to hook stalls
 the tow after the tug, 19/28 runs), a 10-20 tile lab lane with a turn, and the feel critic's probe at 1x and 4x
 (`feel-critique/final-dry-year.md`). Art items 2-7 carry over (Flow sources for the spring site, the Warm Pool, the
-icons and the letter paper are already in `flow-raw/`).
+icons and the letter paper are already in `flow-raw/`); the valley banners (THE RIVER IS BACK) read low-contrast on
+straw. Then M7 (towing and the first homecoming).
 
 ## How to work
 
