@@ -98,9 +98,10 @@ export class TownScene extends WorldScene {
     super.update(time, delta);
     if (!runtime.blocked) this.tow?.update(delta);
     // Calm (reduced motion): the wheel stands still on its first frame
-    if (this.wheel && !getState().settings.reduceMotion) {
-      this.wheelMs += delta;
-      const f = Math.floor(this.wheelMs / WHEEL.ms) % WHEEL.frames;
+    if (this.wheel) {
+      const calm = getState().settings.reduceMotion;
+      if (!calm) this.wheelMs += delta;
+      const f = calm ? 0 : Math.floor(this.wheelMs / WHEEL.ms) % WHEEL.frames;
       const key = `obj_millwheel_${f}`;
       if (this.wheel.texture.key !== key) this.wheel.setTexture(key);
     }
