@@ -11,6 +11,7 @@ import {
   plots,
   shops,
   skills,
+  UNSIGNED,
 } from '../data';
 import { plotAtTile, starterPlots } from './plots';
 import { maxEnergy as maxEnergyOf } from './energy';
@@ -47,6 +48,8 @@ function migrateV1(raw: Raw): Raw {
     time,
     money: typeof raw['money'] === 'number' ? raw['money'] : fresh['money'],
     player: mapOk ? player : fresh['player'],
+    // not a new game's markers (valley.on, valley.weirOn): sanitize gives it an old save's defaults
+    stats: {},
   };
 }
 
@@ -439,7 +442,8 @@ export function sanitize(raw: Raw): GameState {
     if (!TILE_KEY.test(key) || !isObj(soil)) continue;
     let crop: GameState['farm']['tiles'][string]['crop'] = null;
     const c = soil['crop'];
-    if (isObj(c) && typeof c['cropId'] === 'string' && crops[c['cropId']]) {
+    // own keys only: "constructor" or "toString" is truthy on any object and has no stageDays
+    if (isObj(c) && typeof c['cropId'] === 'string' && Object.hasOwn(crops, c['cropId'])) {
       const days = (crops[c['cropId']] as (typeof crops)[string]).stageDays.length;
       crop = {
         cropId: c['cropId'],
@@ -618,7 +622,8 @@ export function sanitize(raw: Raw): GameState {
   if (Array.isArray(mailRaw['list']))
     for (const l of mailRaw['list'].slice(-40)) {
       if (!isObj(l) || typeof l['title'] !== 'string' || typeof l['text'] !== 'string') continue;
-      if (typeof l['from'] !== 'string' || !npcs[l['from']]) continue;
+      // a letter nobody signs (Clay's sack at the gate) has no villager behind it
+      if (typeof l['from'] !== 'string' || (!npcs[l['from']] && l['from'] !== UNSIGNED)) continue;
       const id = int(l['id'], 0, 0, 1e9);
       if (id === 0 || letters.some((x) => x.id === id)) continue;
       maxLetter = Math.max(maxLetter, id);

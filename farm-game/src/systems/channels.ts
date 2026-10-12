@@ -133,9 +133,10 @@ export function canDig(
   return wet ? null : t('channels.startAtWater');
 }
 
-/** Dig a channel (after `canDig`). */
+/** Dig a channel (after `canDig`). A weed there goes with the earth, as when tilling. */
 export function digChannel(state: GameState, x: number, y: number): void {
   state.farm.tiles[key(x, y)] = { watered: false, crop: null, channel: true };
+  delete state.farm.weeds[key(x, y)];
 }
 
 /** Fill a channel back in (the tile becomes plain ground). True if there was one. */

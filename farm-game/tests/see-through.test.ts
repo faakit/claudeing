@@ -42,6 +42,16 @@ const ragged: Opaque = (x, y) => {
 const feet = (tx: number, ty: number) => ({ px: tx * 16 + 8, py: ty * 16 + 11 });
 
 describe('see-through hole: when it opens (owner bug 1)', () => {
+  it("counts only the farmer's own tile row: a canopy ending at the row above lets an open hole close", () => {
+    // a solid canopy over row 4 and above; the farmer steps south out from under it to row 5
+    const canopy: Opaque = (_x, y) => Math.floor(y / 16) <= 4;
+    const { px, py } = feet(7, 5);
+    expect(bodyCover(px, py, canopy)).toBe(0);
+    expect(wantHole({ body: true, target: false }, px, py, undefined, canopy, false).body).toBe(
+      false,
+    );
+  });
+
   it('opens when the farmer stands behind the trunk, under the crown', () => {
     const { px, py } = feet(TRUNK.tx, TRUNK.ty - 1);
     expect(bodyCover(px, py, lone)).toBeGreaterThanOrEqual(COVER.body.on);
@@ -170,7 +180,11 @@ describe('see-through hole: the crown keeps its mass (integration review, coordi
           true,
           sameTree,
         );
-        if (!want.body) continue; // walking past its edge: nothing is cut
+        // walking past its edge: nothing is cut; straight behind the trunk it always opens (so this checks)
+        if (!want.body) {
+          expect(tx, `crown r ${r}`).not.toBe(TRUNK.tx);
+          continue;
+        }
         const circles = holeCircles(
           px,
           py,

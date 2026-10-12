@@ -151,7 +151,7 @@ export interface Settings {
   muted: boolean;
   /** Haptic/vibration feedback on actions. */
   vibrate: boolean;
-  /** Mirror the thumb controls to the left side of the dock. */
+  /** Mirror the floating thumb controls to the left side of the screen. */
   leftHanded: boolean;
   /** Calmer visuals: no shaking, bobbing or wandering animation. */
   reduceMotion: boolean;

@@ -135,8 +135,8 @@ export class MapArt {
     const queue: [number, number][] = [];
     const x0 = Math.floor((Math.round(px) - 5) / 16);
     const x1 = Math.floor((Math.round(px) + 4) / 16);
-    const y0 = Math.floor((Math.round(py) - 12) / 16);
-    const y1 = Math.floor((Math.round(py) - 1) / 16);
+    const y0 = Math.floor((Math.round(py) - 11) / 16);
+    const y1 = Math.floor(Math.round(py) / 16);
     for (let ty = y0; ty <= y1; ty++)
       for (let tx = x0; tx <= x1; tx++)
         if (drawn(tx, ty) && !out.has(ty * 100000 + tx)) {

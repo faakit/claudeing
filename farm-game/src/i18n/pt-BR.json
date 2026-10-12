@@ -64,6 +64,7 @@
     "fertilized": "Já está adubado.",
     "cantPlace": "Não dá para pôr isso aqui.",
     "cantPlaceCrop": "Não dá para pôr em cima de uma planta.",
+    "cantPlaceChannel": "Aterre a vala primeiro.",
     "someoneStands": "Alguém fica aqui todo dia. Tente outro lugar.",
     "willStandFund": "Aqui vai ficar: {name}. Financie no mural da vila.",
     "onlyMax": "Você só pode ter {n} destes.",

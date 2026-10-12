@@ -9,6 +9,7 @@ import { DIR_VECTORS } from '../systems/direction';
 import type { Direction } from '../state/GameState';
 import type { GameState } from '../state/GameState';
 import { waterCapacity } from '../systems/actions';
+import { isChannel } from '../systems/channels';
 import { canAfford, spendEnergy } from '../systems/energy';
 import { gameEvents } from '../systems/events';
 import {
@@ -155,6 +156,8 @@ registerActionHandler({
       return { refusal: t('farm.cantPlace') };
     const soil = state.farm.tiles[tileKey(tile.tx, tile.ty)];
     if (soil?.crop) return { refusal: t('farm.cantPlaceCrop') };
+    // a channel is filled in with the spade (its energy), never for free under a sprinkler
+    if (isChannel(soil)) return { refusal: t('farm.cantPlaceChannel') };
     if (placedAt(state, tile.map, tile.tx, tile.ty))
       return { refusal: t('farm.somethingHere') };
     if (villagerSpot(tile.map, tile.tx, tile.ty))

@@ -366,12 +366,37 @@ async function stages() {
   );
   await farm.load('farm-creek-place');
   await farm.ready('Farm');
+  // every drawn frame after the press: how far the drawn farmer is off his spot (the refusal's shake), and the
+  // target marker's lowest alpha (the press's flash dips it from 0.35; its own throb never goes under 0.51)
+  await farm.eval(() => {
+    const sc = window.__farm.game.scene.getScene('Farm');
+    const rec = (window.__pressRec = { shake: 0, alpha: 1 });
+    rec.off = () => sc.events.off('postupdate', rec.fn);
+    rec.fn = () => {
+      rec.shake = Math.max(rec.shake, Math.abs(sc.sprite.x - window.__farm.getState().player.x));
+      rec.alpha = Math.min(rec.alpha, sc.highlight.gfx.alpha);
+    };
+    sc.events.on('postupdate', rec.fn);
+  });
   const said = await farm.event('toast', () => farm.press('Space'));
+  await farm.frames(20);
+  const rec = await farm.eval(() => {
+    const r = window.__pressRec;
+    r.off();
+    return { shake: r.shake, alpha: r.alpha };
+  });
   s = await farm.state();
   check(
     'farm-creek-place: placing in the old creek bed is refused with its line',
     said?.text === 'The old creek bed. Best left clear.' && !(s.placed.farm ?? []).length,
     JSON.stringify(said),
+  );
+  // (syncSprite put the farmer back on his spot every frame, and the marker's throb overwrote the flash)
+  check('farm-creek-place: the refusal shakes the farmer', rec.shake >= 1, JSON.stringify(rec));
+  check(
+    'farm-creek-place: the press flashes the target marker',
+    rec.alpha < 0.45,
+    JSON.stringify(rec),
   );
   await farm.select(0); // the hoe: the bed's own line, not the land-for-sale one (critic review 1, #2)
   await farm.idle(); // the refusal's action lock runs out first
@@ -380,6 +405,28 @@ async function stages() {
     'farm-creek-place: the hoe facing the old creek bed gets the same line',
     tilled?.text === 'The old creek bed. Best left clear.',
     JSON.stringify(tilled),
+  );
+  // Placing on the bank, then again after the farm scene is rebuilt: the item-in-hand image of the first place
+  // was kept across the restart, and setTexture on it threw and stopped the game loop.
+  const placeDown = async () => {
+    await farm.idle(); // a refusal's action lock runs out first
+    await farm.mutate((st) => {
+      st.player.facing = 'down';
+      st.inventory.selected = st.inventory.slots.findIndex((x) => x?.item === 'sprinkler');
+    });
+    await farm.frames(3);
+    return farm.act();
+  };
+  const placed1 = await placeDown();
+  await farm.frames(40); // the place pose plays out
+  await farm.load('farm-creek-place');
+  const placed2 = await placeDown();
+  const clock0 = await farm.eval(() => window.__farm.getState().time.minutes);
+  await farm.until((st, _w, m) => st.time.minutes > m, clock0, 'the clock to tick after a place');
+  check(
+    'farm-creek-place: placing again after the farm scene restarts keeps the game running',
+    placed1.ok && placed2.ok && farm.errors.length === 0,
+    JSON.stringify([placed1.used, placed2.used, farm.errors]),
   );
   await farm.eval(() => window.__farm.dev.goto('farm', 28, 3, 'right')); // resolves once the scene is up
   await farm.frames(3); // a fresh scene ignores input until a frame with nothing held
@@ -589,8 +636,17 @@ async function valley() {
   );
   check(
     'valley-farm-green-reveal: the next morning the farm is done with straw (Wendhead and the town keep it, until the spring and the weir)',
+    // the dry tileset stays resident for Wendhead and the town, so its count alone could not fail: the farm itself
+    // must be built on the normal tileset
     (await dryResident(farm)).length === 1 &&
-      (await farm.eval(() => !window.__farm.getState().stats['valley.greenSeen'] === false)),
+      (await farm.state()).player.map === 'farm' &&
+      !String(await groundKey(farm)).endsWith('_dry') &&
+      (await farm.eval(() => window.__farm.getState().stats['valley.greenSeen'] === 1)),
+    JSON.stringify({
+      map: (await farm.state()).player.map,
+      ground: await groundKey(farm),
+      dry: await dryResident(farm),
+    }),
   );
   // Rosa's letter: take the gift, both key items arrive
   await farm.mutate((st) => {
@@ -1191,6 +1247,17 @@ async function morning() {
     });
   await farm.frames(40);
   const early = await fx();
+  // back in and out again before the channels came into view: the run is still to play ("once, on first sight")
+  await farm.during('sceneReady', ['House'], () => farm.tapTile(14, 6));
+  await farm.frames(5);
+  await farm.during('sceneReady', ['Farm'], () => farm.tapTile(5, 9));
+  await farm.frames(5);
+  const again = await fx();
+  check(
+    'channels-morning: leaving the farm before the channels came into view keeps the run for the next visit',
+    again.started === null && again.running,
+    JSON.stringify(again),
+  );
   // walk east along the field until the channel's head is on screen
   await farm.tapTile(19, 8);
   const started = await farm.until(
@@ -1415,7 +1482,7 @@ async function worldText() {
         const under = [];
         let seen = 0;
         for (const o of labels) {
-          if (w.tweens.isTweening(o)) continue;
+          if (o.name === 'rising') continue; // a "+1" line rises on its own tween (fx/Effects RISING_LABEL)
           const b = o.getBounds();
           const x0 = b.x - cam.scrollX + cam.x;
           const y0 = b.y - cam.scrollY + cam.y;
@@ -1438,9 +1505,36 @@ async function worldText() {
       if (process.env.SHOTS) await farm.shot(`world-text-${name}-${profile}`, process.env.SHOTS);
       check(
         `${name} (${profile}): no world label sits under a control plate`,
-        r.under.length === 0,
+        r.seen > 0 && r.under.length === 0, // at least one label on screen was checked
         JSON.stringify(r),
       );
+      if (name === 'ui-float-controls' && profile === 'i13') {
+        // A villager's bobbing "!" (a Label in a looping tween) put over Action rises clear of it like any label
+        // (labels in a tween were all skipped, so the "!" stayed under the plate).
+        await farm.eval(() => window.__farm.dev.clock.pause()); // no schedule sync hides the marker meanwhile
+        const bob = await farm.eval(async () => {
+          const w = window.__farm.game.scene.getScene('Farm');
+          const cam = w.cameras.main;
+          const plate = window.__farm.game.scene
+            .getScene('UI')
+            .plates()
+            .find((p) => p.kind === 'disc' && p.r >= 28); // Action
+          const m = [...w.npcs.shown.values()][0].marker;
+          const wx = plate.x - cam.x + cam.scrollX;
+          const wy = plate.y - cam.y + cam.scrollY;
+          w.tweens.killTweensOf(m);
+          m.setVisible(true).setPosition(wx, wy);
+          w.tweens.add({ targets: m, y: wy - 3, duration: 450, yoyo: true, repeat: -1 });
+          await window.__farm.dev.wait.frames(5);
+          const b = m.getBounds();
+          return { bottom: b.bottom - cam.scrollY + cam.y, plateTop: plate.y - plate.r };
+        });
+        check(
+          'ui-float-controls (i13): a bobbing villager "!" over Action rises clear of the plate',
+          bob.bottom <= bob.plateTop,
+          JSON.stringify(bob),
+        );
+      }
       await farm.close();
     }
 }
@@ -1723,6 +1817,19 @@ async function lang() {
     over.length === 0,
     over.join(' | '),
   );
+  // The plot signs' prices in the world: gold as "o" (they were written "<n>g" by hand).
+  const prices = await farm.eval(() =>
+    window.__farm.game.scene
+      .getScene('Farm')
+      .things.plotParts.filter((o) => o.type === 'Container')
+      .map((o) => o.list.find((c) => c.type === 'BitmapText')?.text ?? '')
+      .filter((s) => /^\d/.test(s)),
+  );
+  check(
+    'lang-pt-farm-hud: the plot signs show their price as gold in Portuguese',
+    prices.length > 0 && prices.every((p) => /^\d[\d.]*o$/.test(p)),
+    JSON.stringify(prices),
+  );
   // Menu > Opts: the language switch, one tap, applies at once and the open menu redraws.
   await openSheet(farm, 'menu');
   await farm.eval(() => window.__farm.game.scene.getScene('UI').menu.openTab('opts'));
@@ -1774,7 +1881,13 @@ async function lang() {
   const said = (await textsOf(farm, 'UI')).join(' | ');
   check(
     'lang-pt-dialogue (SE): Mara talks in Portuguese, inside the sheet',
-    over.length === 0 && /Presente|Loja|Fechar/.test(said) && !/\bGift\b|\bShop\b/.test(said),
+    // her own text in Portuguese (her blurb from the data overlay, a Portuguese step button): the sheet's own
+    // "Fechar", which alone passed this check, says nothing about Mara
+    over.length === 0 &&
+      said.includes('Cuida do Armazém.') &&
+      !said.includes('Runs the General Store.') &&
+      /Próximo|Presente|Loja/.test(said) &&
+      !/\bGift\b|\bShop\b|\bNext\b/.test(said),
     `${over.join(' | ')} :: ${said}`,
   );
   await farm.close();

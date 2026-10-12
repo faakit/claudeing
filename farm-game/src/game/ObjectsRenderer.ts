@@ -15,7 +15,7 @@ import { ownsPlot, signVisible } from '../systems/plots';
 import { unreadCount } from '../systems/mail';
 import { mail } from '../data';
 import { ensureTexture } from './fallbackTexture';
-import { t } from '../i18n';
+import { fmtGold, getLocale, t } from '../i18n';
 
 const calm = (): boolean => getState().settings.reduceMotion;
 
@@ -188,9 +188,12 @@ export class ObjectsRenderer {
 
   /** Land you have not bought yet is dimmed and fenced with a "for sale" sign showing its price. */
   private syncPlots(state: GameState): void {
-    const sig = Object.keys(plots)
-      .map((id) => (ownsPlot(state, id) ? '1' : signVisible(state, id) ? 's' : '0'))
-      .join('');
+    // the locale too: the signs' prices and the site names are text (redrawn at the next sync after a switch)
+    const sig =
+      getLocale() +
+      Object.keys(plots)
+        .map((id) => (ownsPlot(state, id) ? '1' : signVisible(state, id) ? 's' : '0'))
+        .join('');
     if (sig === this.plotSig) return;
     this.plotSig = sig;
     this.plotParts.forEach((p) => p.destroy());
@@ -248,7 +251,7 @@ export class ObjectsRenderer {
         this.scene,
         sx * TILE_SIZE + TILE_SIZE / 2,
         sy * TILE_SIZE - 7,
-        `${p.price}g`,
+        fmtGold(p.price),
         { align: 'center', color: 0xf4d35e },
       ).setDepth(9000);
       this.plotParts.push(sign, price);

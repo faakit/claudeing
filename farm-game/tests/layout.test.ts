@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { game, goals, items, shops, tips } from '../src/data';
 import { fitText, measureText } from '../src/ui/fontMetrics';
 import { TAB_IDS, tabLabel } from '../src/ui/panels/tabLabels';
@@ -7,6 +7,9 @@ import { menuTabGrid } from '../src/ui/layout';
 import { shopFacts } from '../src/ui/panels/shopFacts';
 import { formatClock } from '../src/systems/time';
 import { CONTROLS_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H, WORLD_CLEAR, WORLD_VIEW } from '../src/config';
+
+// a failing locale loop must not leave Portuguese set for the tests after it
+afterEach(() => setLocale('en'));
 
 /** Text boxes in the 200px portrait UI. If a string does not fit, these tests say which one. */
 describe('portrait layout', () => {

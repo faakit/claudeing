@@ -71,6 +71,18 @@ export function detectLocale(languages: readonly string[] | undefined): Locale {
   return 'en';
 }
 
+/**
+ * The language a device starts in before any stored choice: an automated browser (`navigator.webdriver`) reads
+ * English whatever the machine is set to, so checks see the same text; anyone else gets `detectLocale`.
+ */
+export function deviceLocale(
+  nav: { webdriver?: boolean; languages?: readonly string[]; language?: string } | undefined,
+): Locale {
+  if (nav?.webdriver) return 'en';
+  // some WebViews give an empty `languages`: then the one `language` speaks for the device
+  return detectLocale(nav?.languages?.length ? nav.languages : [nav?.language ?? 'en']);
+}
+
 /** A `?lang=` value or a stored choice, if it names a supported locale (case-insensitive, `pt` = pt-BR). */
 export function parseLocale(raw: string | null | undefined): Locale | null {
   if (!raw) return null;
@@ -92,7 +104,11 @@ function lookup(dict: Dict, key: string): string | Dict | undefined {
 const isPlural = (v: string | Dict | undefined): v is PluralForms =>
   typeof v === 'object' && typeof v['other'] === 'string';
 
-function pick(v: string | Dict | undefined, count: unknown, rules: Intl.PluralRules): string | null {
+function pick(
+  v: string | Dict | undefined,
+  count: unknown,
+  rules: Intl.PluralRules,
+): string | null {
   if (typeof v === 'string') return v;
   if (!isPlural(v)) return null;
   const form = typeof count === 'number' ? rules.select(count) : 'other';
@@ -154,15 +170,17 @@ export const goldText = (amount: string): string => t('fmt.gold', { n: amount })
 /**
  * Rendered text (in the current locale) -> the same text in English, for the few places that match on English
  * labels (the guided start points at a sheet button by a pattern such as `^Read$`). Filled by `t()` and by the data
- * overlay (`rememberEnglish`); bounded, cleared on every language change.
+ * overlay (`rememberEnglish`); bounded (the least recently used goes first, so a label still being matched stays),
+ * cleared on every language change.
  */
 const reverse = new Map<string, () => string>();
 /** Translated data strings -> their English source (the overlay fills it on every switch; never trimmed). */
 const dataReverse = new Map<string, string>();
 const REVERSE_MAX = 2000;
 function remember(out: string, key: string, params?: Params): void {
-  if (reverse.size > REVERSE_MAX) reverse.clear();
-  if (!reverse.has(out)) reverse.set(out, () => tEn(key, params));
+  if (reverse.has(out)) return;
+  if (reverse.size >= REVERSE_MAX) reverse.delete(reverse.keys().next().value!);
+  reverse.set(out, () => tEn(key, params));
 }
 /** The data overlay registers each translated data string with its English source. */
 export function rememberEnglish(out: string, english: string): void {
@@ -175,7 +193,11 @@ export function toEnglish(text: string): string {
   const data = dataReverse.get(text);
   if (data !== undefined) return data;
   const fn = reverse.get(text);
-  return fn ? fn() : text;
+  if (!fn) return text;
+  // used again: to the back of the eviction order
+  reverse.delete(text);
+  reverse.set(text, fn);
+  return fn();
 }
 
 /** A locale's whole dictionary (the key tests compare locales with it). */

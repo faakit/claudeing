@@ -98,10 +98,7 @@ export const SKIN: Skin = readSkin();
 export const C: Tokens = SKIN === 'walnut' ? WALNUT_CONTENT : PLUM;
 /** Chrome: HUD plates, toasts, the floating on-screen controls. */
 export const CH: Tokens = SKIN === 'walnut' ? WALNUT_CHROME : PLUM;
-/** Wood-grain lines on walnut chrome (null in the plum skin). Plates behind text are flat (critic R1-1); only
- * the dock's plank seams use this. */
-export const GRAIN: number | null = SKIN === 'walnut' ? P.plumShadow : null;
-/** Ink, soil and plum shadow of walnut chrome (the old dock's plank seams; `lit` is the buttons' soil lip). */
-export const SEAM = { ink: P.ink, lit: P.soil, knot: P.plumShadow };
+/** Walnut chrome's soil: the floating buttons' lip under the face. */
+export const SEAM = { lit: P.soil };
 
 export const hex = (n: number): string => `#${n.toString(16).padStart(6, '0')}`;
