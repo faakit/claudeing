@@ -92,40 +92,134 @@ export function generateJobs(state: GameState): Job[] {
   });
 }
 
-/** How far along a job is today (0..n). */
-export const jobProgress = (state: GameState, job: Job): number =>
-  job.done ? job.n : Math.max(0, Math.min(job.n, stat(state, job.stat) - job.base));
+/*
+ * The town board (owner, bait round): the morning's jobs are posted on the board in town, not handed out from
+ * nowhere. A job counts only once you take it there (its `base` is set at the taking), and a finished job is turned
+ * in at the board; one you never come back for is paid by post at night, so nothing is lost by waiting (pillar 5).
+ * Which jobs are taken is a bitmask stat for the jobs' day (`jobs.taken`, `jobs.takenDay`), so no save change.
+ */
+export const JOBS_TAKEN = 'jobs.taken';
+export const JOBS_TAKEN_DAY = 'jobs.takenDay';
+/** Jobs already announced as done today (one "turn it in" toast each). */
+const JOBS_TOLD = 'jobs.told';
+/** This save knows the job board (new games carry it; a save from before has today's jobs taken for it once). */
+export const JOBS_BOARD_ON = 'jobs.boardOn';
 
-/** "Finn: catch 2 fish". */
-export function jobLabel(job: Job): string {
-  const name = npcs[job.giver]?.name ?? job.giver;
-  const text = (defOf(job.id)?.text ?? job.id)
-    .replace('{n}', String(job.n))
-    .replace('{s}', job.n === 1 ? '' : 's');
-  return `${name}: ${text}`;
+const isToday = (state: GameState): boolean => state.jobs.day === absoluteDay(state);
+const bits = (state: GameState, key: string): number =>
+  state.stats[JOBS_TAKEN_DAY] === state.jobs.day ? (state.stats[key] ?? 0) : 0;
+const indexOf = (state: GameState, job: Job): number => state.jobs.list.indexOf(job);
+
+/** Was this job of today's taken at the board? */
+export const isTaken = (state: GameState, job: Job): boolean => {
+  const i = indexOf(state, job);
+  return i >= 0 && (bits(state, JOBS_TAKEN) & (1 << i)) !== 0;
+};
+
+function setBit(state: GameState, key: string, i: number): void {
+  if (state.stats[JOBS_TAKEN_DAY] !== state.jobs.day) {
+    state.stats[JOBS_TAKEN_DAY] = state.jobs.day;
+    state.stats[JOBS_TAKEN] = 0;
+    state.stats[JOBS_TOLD] = 0;
+  }
+  state.stats[key] = (state.stats[key] ?? 0) | (1 << i);
 }
 
+/** How far along a job is today (0..n). A job not taken yet has not started. */
+export const jobProgress = (state: GameState, job: Job): number =>
+  job.done
+    ? job.n
+    : isTaken(state, job)
+      ? Math.max(0, Math.min(job.n, stat(state, job.stat) - job.base))
+      : 0;
+
+/** "catch 2 fish": what the job asks, without who asks (the board's row title). */
+export const jobText = (job: Job): string =>
+  (defOf(job.id)?.text ?? job.id)
+    .replace('{n}', String(job.n))
+    .replace('{s}', job.n === 1 ? '' : 's');
+
+/** Who posted it ("Finn"). */
+export const jobGiver = (job: Job): string => npcs[job.giver]?.name ?? job.giver;
+
+/** "Finn: catch 2 fish". */
+export const jobLabel = (job: Job): string => `${jobGiver(job)}: ${jobText(job)}`;
+
 /**
- * Jobs counted at the night's payout instead of on the spot: what is shipped can be taken back out of the
+ * Jobs counted at the night's payout instead of when turned in: what is shipped can be taken back out of the
  * bin until then, so a shipping job pays only for goods that really sold.
  */
 export const PAID_AT_PAYOUT = new Set(['shipped']);
 
-/** Pay out every job whose stat has moved far enough today. Runs whenever stats change. */
-export function checkJobs(state: GameState, atPayout = false): void {
-  if (state.jobs.day !== absoluteDay(state)) return; // yesterday's jobs never pay late
-  for (const job of state.jobs.list) {
-    if (job.done || jobProgress(state, job) < job.n) continue;
-    if (PAID_AT_PAYOUT.has(job.stat) !== atPayout) continue;
-    job.done = true;
-    state.money += job.reward;
-    state.stats['earned'] = stat(state, 'earned') + job.reward;
-    gameEvents.emit('moneyChanged', { delta: job.reward });
-    befriend(state, job.giver, JOB_FRIENDSHIP);
-    toast(t('jobs.done', { job: jobLabel(job), gold: fmtGold(job.reward) }), 'good');
-    addStat(state, 'jobsDone');
-  }
+/** Today's job, taken, counted far enough and not paid yet: turn it in at the board (or wait for the post). */
+export const jobReady = (state: GameState, job: Job): boolean =>
+  isToday(state) && !job.done && isTaken(state, job) && jobProgress(state, job) >= job.n;
+
+/** Take a job off the board: it counts from now. False when it is not today's, already taken or paid. */
+export function takeJob(state: GameState, index: number): boolean {
+  const job = state.jobs.list[index];
+  if (!job || !isToday(state) || job.done || isTaken(state, job)) return false;
+  job.base = stat(state, job.stat);
+  setBit(state, JOBS_TAKEN, index);
+  addStat(state, 'jobsTaken');
+  return true;
 }
 
+function pay(state: GameState, job: Job): void {
+  job.done = true;
+  state.money += job.reward;
+  state.stats['earned'] = stat(state, 'earned') + job.reward;
+  gameEvents.emit('moneyChanged', { delta: job.reward });
+  befriend(state, job.giver, JOB_FRIENDSHIP);
+  addStat(state, 'jobsDone');
+}
+
+/** Turn a finished job in at the board: its gold and the asker's thanks. False if it is not ready. */
+export function turnInJob(state: GameState, index: number): boolean {
+  const job = state.jobs.list[index];
+  if (!job || PAID_AT_PAYOUT.has(job.stat) || !jobReady(state, job)) return false;
+  pay(state, job);
+  toast(t('jobs.done', { job: jobLabel(job), gold: fmtGold(job.reward) }), 'good');
+  return true;
+}
+
+/**
+ * Runs whenever stats change: a taken job that just got far enough says once to turn it in at the board. At the
+ * night's payout (`atPayout`), every finished job not turned in is paid by post (shipping jobs only then).
+ * Returns the gold paid by post.
+ */
+export function checkJobs(state: GameState, atPayout = false): number {
+  if (!isToday(state)) return 0; // yesterday's jobs never pay late
+  let posted = 0;
+  state.jobs.list.forEach((job, i) => {
+    if (!jobReady(state, job)) return;
+    if (atPayout) {
+      pay(state, job);
+      posted += job.reward;
+      return;
+    }
+    if (PAID_AT_PAYOUT.has(job.stat) || bits(state, JOBS_TOLD) & (1 << i)) return;
+    setBit(state, JOBS_TOLD, i);
+    toast(t('jobs.ready', { job: jobLabel(job) }), 'good');
+  });
+  return posted;
+}
+
+/** Today's jobs not paid yet (taken or still on the board). */
 export const openJobs = (state: GameState): Job[] =>
-  state.jobs.day === absoluteDay(state) ? state.jobs.list.filter((j) => !j.done) : [];
+  isToday(state) ? state.jobs.list.filter((j) => !j.done) : [];
+
+/** Today's jobs still on the board, not taken. */
+export const postedJobs = (state: GameState): Job[] =>
+  openJobs(state).filter((j) => !isTaken(state, j));
+
+/** A save from before the board: today's jobs count as taken (it was counting them already), once. */
+export function jobsDefaults(state: GameState): GameState {
+  if (state.stats[JOBS_BOARD_ON]) return state;
+  state.stats[JOBS_BOARD_ON] = 1;
+  if (state.jobs.list.length > 0) {
+    state.stats[JOBS_TAKEN_DAY] = state.jobs.day;
+    state.stats[JOBS_TAKEN] = (1 << state.jobs.list.length) - 1;
+  }
+  return state;
+}

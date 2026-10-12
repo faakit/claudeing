@@ -253,7 +253,13 @@ export function createInitialState(): GameState {
     .filter(([, it]) => it.type === 'tool')
     .map(([id]) => id);
   toolIds.forEach((id, i) => (slots[i] = { item: id, qty: 1 }));
-  game.startingItems.forEach((s, i) => (slots[toolIds.length + i] = { item: s.item, qty: s.qty }));
+  // Seeds start on the hotbar beside the tools; the starter worms start in the bag (the rod draws bait from the
+  // bag, so the guided days keep the seeds and the can in reach; bait round, critic D1-2).
+  let bar = toolIds.length;
+  let bag = game.hotbarSlots;
+  for (const s of game.startingItems)
+    if (items[s.item]?.type === 'bait') slots[bag++] = { item: s.item, qty: s.qty };
+    else slots[bar++] = { item: s.item, qty: s.qty };
   return {
     version: STATE_VERSION,
     time: { year: 1, season: 'spring', day: 1, minutes: game.dayStartMinutes, acc: 0 },
@@ -268,7 +274,9 @@ export function createInitialState(): GameState {
     player: { map, ...spawnPosition(tx, ty), facing },
     // `valley.on`: this save knows the valley (systems/valley.ts); saves from before get their defaults once.
     // `valley.weirOn`: it plays the dry town and the Weir (M6); saves from before keep their river.
-    stats: { 'valley.on': 1, 'valley.weirOn': 1 },
+    // `bait.on`: it fishes with bait from the start (its worms are in `startingItems`); saves from before get theirs once.
+    // `jobs.boardOn`: its jobs are taken at the town board; a save from before has that day's jobs taken for it once.
+    stats: { 'valley.on': 1, 'valley.weirOn': 1, 'bait.on': 1, 'jobs.boardOn': 1 },
     goalIndex: 0,
     settings: {
       music: 0.6,

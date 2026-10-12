@@ -4,6 +4,10 @@
     {
       "item": "parsnip_seed",
       "qty": 10
+    },
+    {
+      "item": "worms",
+      "qty": 10
     }
   ],
   "inventorySlots": 24,

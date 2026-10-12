@@ -27,9 +27,26 @@ import {
   rivalNotice,
   rivalTargets,
 } from '../../systems/rival';
-import { t } from '../../i18n';
+import { fmtGold, t } from '../../i18n';
+import {
+  isTaken,
+  jobGiver,
+  jobText,
+  jobProgress,
+  jobReady,
+  PAID_AT_PAYOUT,
+  takeJob,
+  turnInJob,
+  welcomeFactor,
+  welcomeJobsHeader,
+} from '../../systems/jobs';
+import type { GameState } from '../../state/GameState';
+import { boardStartPage, todaysJobs, type BoardPage as Page } from './boardStart';
 
-/** The town's request board: three orders a day, paid well above the shipping bin. */
+/**
+ * The town board: the day's small jobs (taken here, turned in here; bait round) on one page and the requests (three
+ * orders a day, paid well above the bin, Clay's race, the special, festivals, the cart, projects) on the other.
+ */
 export class BoardPanel extends Modal {
   constructor(scene: Phaser.Scene) {
     super(scene, 196);
@@ -40,14 +57,124 @@ export class BoardPanel extends Modal {
    * so the rows above never slide under the thumb (critique 11, F7).
    */
   private doneSpecial: string | null = null;
+  private page: Page = 'requests';
 
   override open(): void {
     this.doneSpecial = null;
+    this.page = boardStartPage(getState());
     super.open();
+  }
+
+  /** The two page tabs under the title; the open one is lit. */
+  private tabs(s: GameState, y: number): void {
+    const jobsOpen = todaysJobs(s).filter((j) => !j.done).length;
+    const reqOpen = s.orders.list.filter((o) => !o.done).length + (s.special ? 1 : 0);
+    const w = (this.panelW - 20) / 2;
+    const tab = (x: number, page: Page, label: string) =>
+      this.button(
+        x,
+        y,
+        w,
+        18,
+        label,
+        () => {
+          if (this.page === page) return;
+          this.page = page;
+          audio.play('ui');
+          this.rebuild();
+        },
+        this.page === page ? { textColor: C.gold, rim: C.gold } : { textColor: C.creamDim },
+      );
+    tab(8, 'jobs', t('board.tabJobs', { n: jobsOpen }));
+    tab(12 + w, 'requests', t('board.tabRequests', { n: reqOpen }));
+  }
+
+  /** The jobs page: each of today's jobs with Take, Turn in or Done. */
+  private buildJobs(s: GameState): void {
+    const list = todaysJobs(s);
+    const rows = Math.max(1, list.length);
+    this.setHeight(52 + 12 + rows * 26 + 34);
+    this.panel();
+    this.label(8, 8, t('board.townTitle'), C.gold);
+    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.tabs(s, 20);
+    let y = 42;
+    this.label(
+      8,
+      y,
+      welcomeJobsHeader(list.length > 0 ? welcomeFactor(s.jobs.day) : 1),
+      C.creamDim,
+    );
+    y += 12;
+    if (list.length === 0) {
+      this.label(8, y + 6, t('board.jobsNone'), C.creamDim, 1, 'left', 184);
+      y += 26;
+    }
+    list.forEach((job, i) => {
+      const taken = isTaken(s, job);
+      const ready = jobReady(s, job);
+      const tonight = ready && PAID_AT_PAYOUT.has(job.stat);
+      const gold = fmtGold(job.reward);
+      y = this.row(y, {
+        title: jobText(job),
+        // who asked, then where it stands: "Finn  Pays 22g", "Finn  Doing 1/2  22g", "Finn  Done! Turn in: 22g"
+        sub: t('board.jobSub', {
+          who: jobGiver(job),
+          what: job.done
+            ? t('board.thanks')
+            : tonight
+              ? t('board.jobTonight', { gold })
+              : ready
+                ? t('board.jobReady', { gold })
+                : taken
+                  ? t('board.jobDoing', { have: jobProgress(s, job), n: job.n, gold })
+                  : t('board.jobOffer', { gold }),
+        }),
+        subColor: job.done ? C.green : ready ? C.gold : C.creamDim,
+        // A button only where there is something to do: Take, or Turn in once it is done. A job under way, paid or
+        // paid tonight says so on its second line (a hatched "Turn in" read as nothing; critic D2-3).
+        buttons:
+          job.done || tonight || (taken && !ready)
+            ? []
+            : taken
+              ? [
+                  {
+                    label: t('board.turnIn'),
+                    width: 44,
+                    enabled: true,
+                    color: C.green,
+                    onClick: () => {
+                      if (turnInJob(getState(), i)) {
+                        audio.play('order');
+                        haptic('success');
+                      } else audio.play('error');
+                      this.rebuild();
+                    },
+                  },
+                ]
+              : [
+                  {
+                    label: t('board.take'),
+                    width: 44,
+                    enabled: true,
+                    color: C.green,
+                    onClick: () => {
+                      if (takeJob(getState(), i)) {
+                        audio.play('buy');
+                        haptic('success');
+                      } else audio.play('error');
+                      this.rebuild();
+                    },
+                  },
+                ],
+      });
+    });
+    this.closeButton();
   }
 
   protected build(): void {
     const s = getState();
+    if (this.page === 'jobs') return this.buildJobs(s);
     ensureOrders(s);
     applyRival(s);
     // Rows, then the festival and projects buttons, then Close: the sheet grows with the board.
@@ -58,7 +185,7 @@ export class BoardPanel extends Modal {
     const sp = s.special;
     // Once Clay is about, the season's score has a line of its own, every day (critique 9, F1).
     const score = boardScoreLine(s);
-    const top = score ? 42 : 34;
+    const top = (score ? 42 : 34) + 22;
     this.setHeight(
       top +
         (sp || this.doneSpecial ? 26 : 0) +
@@ -69,10 +196,11 @@ export class BoardPanel extends Modal {
         34,
     );
     this.panel();
-    this.label(8, 8, t('board.title'), C.gold);
+    this.label(8, 8, t('board.townTitle'), C.gold);
     this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
-    if (score) this.label(8, 19, score, C.cream);
-    this.label(8, score ? 30 : 20, rivalNotice(s), C.creamDim);
+    this.tabs(s, 20);
+    if (score) this.label(8, 41, score, C.cream);
+    this.label(8, score ? 52 : 42, rivalNotice(s), C.creamDim);
     let y = top;
     // The requests Clay is after today that would score are marked, so the race is about a known target
     // (a fish or wild row he only clears is not: critique 10, F2).

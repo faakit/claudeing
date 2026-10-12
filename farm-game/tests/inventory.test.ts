@@ -24,8 +24,8 @@ describe('inventory', () => {
 
   it('returns the leftover when full instead of losing items silently', () => {
     const s = newState();
-    // Every slot that is neither a tool nor the starting seed stack is free.
-    const free = TOOL_SLOTS === 0 ? 0 : FULL_INVENTORY / 99 - 1;
+    // Every slot that is neither a tool nor a starting stack (seeds, worms) is free.
+    const free = TOOL_SLOTS === 0 ? 0 : FULL_INVENTORY / 99 - game.startingItems.length;
     expect(addItem(s, 'melon', free * 99)).toBe(0);
     expect(roomFor(s, 'melon', 1)).toBe(0);
     expect(addItem(s, 'melon', 7)).toBe(7);
@@ -65,8 +65,8 @@ describe('inventory', () => {
     addItem(s, 'tomato', 5);
     expect(swapSlots(s, 0, 5)).toBe(false);
     // Produce lands in the bag, past the hotbar, so the seeds keep their hotbar slot.
-    const bag = game.hotbarSlots;
-    expect(s.inventory.slots[bag]?.item).toBe('tomato');
+    const bag = s.inventory.slots.findIndex((x) => x?.item === 'tomato');
+    expect(bag).toBeGreaterThanOrEqual(game.hotbarSlots);
     expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('parsnip_seed');
     swapSlots(s, TOOL_SLOTS, bag);
     expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('tomato');

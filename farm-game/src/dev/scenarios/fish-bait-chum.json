@@ -1,0 +1,52 @@
+{
+  "title": "Fish Chum on the river in fall",
+  "about": "Fall 6, 09:00, on the town river's west bank facing the water with the weir restored, Fish Chum in hand: chum lifts the harder fish (salmon and trout bite more often than with worms) and rolls finer quality. Made at the workbench from a carp and a fiber.",
+  "version": 18,
+  "tags": ["town", "fishing", "bait", "weir"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 48,
+    "place.weir.opened": 30,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 26,
+    "facing": "right"
+  },
+  "time": {
+    "season": "fall",
+    "day": 6,
+    "clock": "09:00"
+  },
+  "select": "chum",
+  "items": [
+    {
+      "item": "chum",
+      "qty": 5
+    }
+  ],
+  "goal": "fish20",
+  "weather": "sunny"
+}

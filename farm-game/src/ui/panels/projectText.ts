@@ -2,10 +2,21 @@ import { projects } from '../../data';
 import type { GameState } from '../../state/GameState';
 import { isProjectDone, visibleProjects } from '../../systems/projects';
 import { fmt } from './format';
+import { measureText } from '../fontMetrics';
 import { fmtGold, getLocale, goldText, t } from '../../i18n';
 
 /** The project sheet's height and list layout: rows from LIST_TOP, paging buttons above Close. */
 export const PROJECT_SHEET_H = 250;
+
+/**
+ * A fund's goods line, with where the good comes from while it is short ("Stone 3/20 (have 2): rocks in the
+ * mine"), when that fits the sheet; else the plain line. Every ask says where its goods come from (owner).
+ */
+export function needLine(label: string, source: string | undefined, short: boolean): string {
+  if (!short || !source) return label;
+  const full = t('project.needFrom', { line: label, source });
+  return measureText(full) <= 184 ? full : label;
+}
 export const LIST_TOP = 34;
 export const LIST_ROWS = 5;
 export const LIST_NAV_FROM_BOTTOM = 52;
@@ -35,11 +46,7 @@ export function projectSub(
 
 /** Big gold in few characters: 4,500, 45k, 1.2M. */
 export const kfmt = (n: number): string =>
-  n < 10_000
-    ? fmt(n)
-    : n < 1_000_000
-      ? `${Math.round(n / 1000)}k`
-      : `${fmtNumDecimal(n / 1e6)}M`;
+  n < 10_000 ? fmt(n) : n < 1_000_000 ? `${Math.round(n / 1000)}k` : `${fmtNumDecimal(n / 1e6)}M`;
 
 /** A repeatable project's list line: "Level 2  1,200/9,000g" or "Level 3  12k/68k" (never "68kg"). */
 export const repeatSub = (level: number, given: number, price: number): string => {

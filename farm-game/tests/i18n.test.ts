@@ -257,7 +257,9 @@ describe('Portuguese fits where English is measured', () => {
       expect(measureText(welcome().text)).toBeLessThanOrEqual(WELCOME_PX * 2 - 20);
       expect(wrapText(tutorial.welcome, WELCOME_PX).length).toBeLessThanOrEqual(2);
     });
-  });
+    // the cold dynamic import of the guided start's rules (and what it reads: jobs, bait, festivals) took 5 s on
+    // a busy Windows host
+  }, 30000);
 
   it("Rosa's letter fits the title card above New Game", async () => {
     const { letterLayout, LETTER_CARD, TITLE_BUTTON_H } = await import('../src/ui/titleLetter');

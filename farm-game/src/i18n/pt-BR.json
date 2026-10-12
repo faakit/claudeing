@@ -29,7 +29,7 @@
     "current": "META ATUAL",
     "reward": "Prêmio: +{gold}",
     "allDone": "Todas as metas cumpridas. Você é uma lenda da colheita!",
-    "jobsEveryMorning": "Bicos novos toda manhã.",
+    "jobsEveryMorning": "Bicos novos no mural cada manhã.",
     "completed": "CUMPRIDAS",
     "nothingYet": "Nada ainda. Você consegue!",
     "alsoOpen": "TAMBÉM ABERTAS",
@@ -205,19 +205,19 @@
     "derbyBest": "Recorde no torneio! {fish}. Pontos: {score}.",
     "legend": "Uma lenda! Você pescou o {fish}!",
     "castAtWater": "Jogue a linha na água.",
+    "needBait": "Sem isca: cave minhocas ou compre.",
+    "dugWorms": "Achou minhocas! +{n}",
+    "nextBait": "Isca: {bait} {n} >",
     "nothingBites": "Nada está mordendo aqui agora.",
     "title": "Pescaria",
-    "baitOn": "Com isca!",
-    "noBait": "Sem isca",
     "leave": "Recolher e sair",
-    "tooSlow": "Devagar demais!",
+    "tookBait": "Lento demais! O peixe levou a isca.",
     "perfect": " (perfeito!)",
     "waiting": "Esperando beliscar...",
     "tapNow": "! TOQUE JÁ !",
     "anyTap": "Qualquer toque na janela fisga o peixe.",
     "keepGreen": "Mantenha o peixe no verde!",
-    "holdLift": "Segure para subir, solte para descer.",
-    "tapToContinue": "Toque para continuar."
+    "holdLift": "Segure para subir, solte para descer."
   },
   "food": {
     "restoresNow": "Agora recupera {n}: prato {nth} de hoje.",
@@ -272,10 +272,14 @@
     "headerFactor": "BICOS DE HOJE: PAGA {factor}x",
     "header": "BICOS DE HOJE",
     "done": "Bico feito! {job} +{gold}",
-    "newWelcome": "Novos bicos de {who}: paga {pay} enquanto você se instala. Veja em Menu > Metas.",
+    "newWelcome": "Novos bicos de {who} no mural da vila: paga {pay} enquanto você se instala.",
     "double": "em dobro",
     "factor": "{factor}x",
-    "newNote": "Novos bicos de {who}. Veja em Menu > Metas."
+    "newNote": "Novos bicos de {who} no mural da vila.",
+    "ready": "Feito: {job}. Receba no mural!",
+    "byPost": "Bicos não entregues, pagos pelo correio: +{gold}",
+    "atBoard": "no mural",
+    "turnIn": "entregar"
   },
   "mail": {
     "festTitle": "{festival} amanhã",
@@ -325,7 +329,8 @@
     "notEnough": "Ainda não dá",
     "allGold": "Todo o ouro está aqui!",
     "giveGoods": "Dar produtos",
-    "need": "{item} {given}/{need} (tem {have})"
+    "need": "{item} {given}/{need} (tem {have})",
+    "needFrom": "{line}: {source}"
   },
   "silo": {
     "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}.",
@@ -654,7 +659,18 @@
     "specialDone": "Especial entregue! Valeu!",
     "enterFestival": "Participe: {festival}!",
     "cartHere": "A carroça ambulante chegou!",
-    "projects": "Obras da vila"
+    "projects": "Obras da vila",
+    "townTitle": "Mural da vila",
+    "tabJobs": "Bicos {n}",
+    "tabRequests": "Pedidos {n}",
+    "take": "Pegar",
+    "turnIn": "Receber",
+    "jobOffer": "Paga {gold}",
+    "jobDoing": "{have}/{n}  {gold}",
+    "jobReady": "Feito! {gold}",
+    "jobTonight": "{gold} à noite",
+    "jobsNone": "Sem bicos hoje. Novos toda manhã.",
+    "jobSub": "{who}  {what}"
   },
   "craft": {
     "needsKitchen": "Precisa de cozinha",
@@ -720,7 +736,6 @@
     "dailyFood": "Comida diária",
     "growsFast": "Cresce rápido",
     "finerCrops": "Colheita melhor",
-    "fasterBites": "Fisga mais rápido",
     "forCrafting": "Para fabricar",
     "decor": "Enfeite {n}/{max}",
     "ownLong": "{base} (tem {n})",
@@ -811,7 +826,7 @@
     "weeds": "O mato brota na roça. Corte com a foice e ganhe fibra.",
     "wither": "O que ficar na roça quando a estação muda vai murchar.",
     "bin": "A caixa de envio paga na manhã seguinte: envie antes de dormir.",
-    "jobs": "Os vizinhos postam bicos toda manhã. Pagam na hora."
+    "jobs": "Os vizinhos postam bicos no mural da vila toda manhã."
   },
   "fx": {
     "refilled": "Cheio!",

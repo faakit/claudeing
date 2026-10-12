@@ -1,6 +1,5 @@
 {
   "Fertilizer": "Adubo",
-  "Bait": "Isca",
   "Sprinkler": "Aspersor",
   "Preserve Jar": "Pote de conserva",
   "Speed-Gro": "Cresce-Já",
@@ -20,5 +19,7 @@
   "Fish Stew": "Moqueca de peixe",
   "Berry Tart": "Torta de frutas",
   "Kale Salad": "Salada de couve",
-  "Pumpkin Pie": "Torta de abóbora"
+  "Pumpkin Pie": "Torta de abóbora",
+  "Bait Mix": "Isca mista",
+  "Fish Chum": "Ceva de peixe"
 }

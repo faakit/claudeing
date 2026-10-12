@@ -21,7 +21,7 @@ export const TEXT_FIELDS: Record<string, readonly string[]> = {
   festivals: ['name', 'blurb'],
   game: ['title', 'text'],
   goals: ['text', 'hint'],
-  items: ['name', 'description', 'nameTemplate'],
+  items: ['name', 'description', 'nameTemplate', 'source'],
   jobs: ['text'],
   mail: ['title', 'text'],
   nodes: ['name'],

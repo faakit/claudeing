@@ -311,7 +311,8 @@ describe('guided start: the step machine', () => {
     // nothing dry and no letter: those two pass at once, the Menu is next
     expect(step(s)).toBe('menu');
     expect(stepDone(s, 'water2') && stepDone(s, 'mail')).toBe(true);
-    expect(step(s, world(s), { panel: 'menu', tab: 'bag' })).toBe('jobs');
+    // then the walk to town (the day's jobs are on the town board now: no Goal-tab step; bait round)
+    expect(step(s, world(s), { panel: 'menu', tab: 'bag' })).toBe('town');
   });
 
   it('the first guided morning keeps one note: the letter', () => {
@@ -875,7 +876,7 @@ describe('guided start: review 6', () => {
 });
 
 describe('guided start: depth round 4 introductions', () => {
-  it('on the settling-in days an open job gets one line: Menu, then Goal', async () => {
+  it('on the settling-in days an open job gets one line: the town board, then Take', async () => {
     const { game } = await import('../src/data');
     const g = game as { welcomeJobs?: { from: number; to: number; factor: number } };
     const before = g.welcomeJobs;
@@ -892,10 +893,15 @@ describe('guided start: depth round 4 introductions', () => {
       const house = world(s, { map: 'house', objects: [] });
       expect(step(s, house)).toBe('welcomeJobs');
       const cur = tutorial.steps.find((x) => x.id === 'welcomeJobs')!;
-      expect(coachView(s, house, NO_SHEET, cur).pointer).toEqual({ kind: 'ui', id: 'menu' });
-      const menu: CoachFacts = { panel: 'menu', tab: 'bag' };
-      expect(coachView(s, house, menu, cur).pointer).toEqual({ kind: 'button', pattern: '^Goal$' });
-      step(s, house, { panel: 'menu', tab: 'goals' });
+      // in the house it heads for town (the board is there)
+      expect(coachView(s, house, NO_SHEET, cur).away).toBe(true);
+      const town = world(s, {
+        map: 'town',
+        objects: [{ type: 'board', tx: 14, ty: 11, w: 1, h: 1 }],
+      });
+      const board: CoachFacts = { panel: 'board', tab: null };
+      expect(coachView(s, town, board, cur).pointer).toEqual({ kind: 'button', pattern: '^Take$' });
+      step(s, town, board);
       expect(stepDone(s, 'welcomeJobs')).toBe(true);
       // without settling-in days in the data, it never shows
       g.welcomeJobs = undefined;

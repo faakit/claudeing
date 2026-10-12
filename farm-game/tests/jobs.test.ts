@@ -13,11 +13,23 @@ import {
   JOB_FRIENDSHIP,
   JOBS_PER_DAY,
   jobCandidates,
+  jobGiver,
   jobLabel,
+  jobText,
   jobProgress,
+  jobReady,
   jobReward,
+  JOBS_BOARD_ON,
   openJobs,
+  postedJobs,
+  takeJob,
+  turnInJob,
 } from '../src/systems/jobs';
+import { boardStartPage } from '../src/ui/panels/boardStart';
+import { rowLayout } from '../src/ui/layout';
+import { setLocale, t } from '../src/i18n';
+import { applyDataLocale } from '../src/i18n/dataText';
+import { afterEach } from 'vitest';
 import { migrate } from '../src/systems/save';
 import { measureText } from '../src/ui/fontMetrics';
 import type { GameState } from '../src/state/GameState';
@@ -53,24 +65,104 @@ describe('daily jobs', () => {
     expect(jobCandidates(s).map((j) => j.id)).toContain('collect');
   });
 
-  it('only what happens after posting counts, and a finished job pays gold and friendship once', () => {
+  it('a job counts from when it is taken at the board, and is paid once when turned in there', () => {
     const s = newState();
     s.stats['caught'] = 7; // lifetime catches before today do not count
     sleep(s);
-    const job = s.jobs.list.find((j) => j.id === 'fish')!;
+    const i = s.jobs.list.findIndex((j) => j.id === 'fish');
+    const job = s.jobs.list[i]!;
+    addStat(s, 'caught', 5); // before taking it: nothing counts
+    expect(jobProgress(s, job)).toBe(0);
+    expect(postedJobs(s)).toContain(job);
+    expect(takeJob(s, i)).toBe(true);
+    expect(takeJob(s, i)).toBe(false); // once
+    expect(postedJobs(s)).not.toContain(job);
     expect(jobProgress(s, job)).toBe(0);
     const money = s.money;
-    for (let i = 0; i < job.n - 1; i++) addStat(s, 'caught');
+    for (let k = 0; k < job.n; k++) addStat(s, 'caught');
+    // finished, not paid: it waits to be turned in
+    expect(jobReady(s, job)).toBe(true);
     expect(job.done).toBe(false);
-    addStat(s, 'caught');
+    expect(s.money).toBe(money);
+    expect(turnInJob(s, i)).toBe(true);
     expect(job.done).toBe(true);
     expect(s.money).toBe(money + job.reward);
     expect(pointsOf(s, 'finn')).toBe(JOB_FRIENDSHIP);
     expect(s.stats['jobsDone']).toBe(1);
+    expect(turnInJob(s, i)).toBe(false);
     addStat(s, 'caught');
     checkJobs(s);
     expect(s.money).toBe(money + job.reward);
     expect(openJobs(s)).not.toContain(job);
+  });
+
+  it('turning in an unfinished job, or one never taken, changes nothing', () => {
+    const s = newState();
+    sleep(s);
+    const before = JSON.stringify(s);
+    expect(turnInJob(s, 0)).toBe(false);
+    expect(turnInJob(s, 9)).toBe(false);
+    expect(JSON.stringify(s)).toBe(before);
+    takeJob(s, 0);
+    const taken = JSON.stringify(s);
+    expect(turnInJob(s, 0)).toBe(false);
+    expect(JSON.stringify(s)).toBe(taken);
+  });
+
+  it('a finished job never turned in is paid by post at night: nothing is lost by waiting', () => {
+    const s = newState();
+    sleep(s);
+    const i = s.jobs.list.findIndex((j) => j.id === 'fish');
+    const job = s.jobs.list[i]!;
+    takeJob(s, i);
+    addStat(s, 'caught', job.n);
+    const money = s.money;
+    const sum = sleep(s);
+    expect(s.stats['jobsDone']).toBe(1);
+    expect(pointsOf(s, 'finn')).toBeGreaterThanOrEqual(JOB_FRIENDSHIP);
+    expect(s.money).toBeGreaterThanOrEqual(money + job.reward);
+    expect(sum.notes?.some((n) => n.startsWith('Jobs not turned in, paid by post'))).toBe(true);
+  });
+
+  it('a job left on the board pays nothing, whatever you did', () => {
+    const s = newState();
+    sleep(s);
+    const job = s.jobs.list.find((j) => j.id === 'fish')!;
+    addStat(s, 'caught', 9);
+    sleep(s);
+    expect(job.done).toBe(false);
+    expect(s.stats['jobsDone'] ?? 0).toBe(0);
+  });
+
+  it('the board opens on Jobs while one waits to be taken or turned in, else on Requests', () => {
+    const s = newState();
+    expect(boardStartPage(s)).toBe('requests'); // day 1: no jobs
+    sleep(s);
+    expect(boardStartPage(s)).toBe('jobs');
+    s.jobs.list.forEach((_, i) => takeJob(s, i));
+    expect(boardStartPage(s)).toBe('requests');
+    const i = s.jobs.list.findIndex((j) => j.id === 'fish');
+    addStat(s, 'caught', s.jobs.list[i]!.n);
+    expect(boardStartPage(s)).toBe('jobs');
+    turnInJob(s, i);
+    expect(boardStartPage(s)).toBe('requests');
+  });
+
+  it('old saves: the jobs of the day they were saved on stay counted (taken for them), once', () => {
+    const s = newState();
+    sleep(s);
+    const raw = JSON.parse(JSON.stringify(s)) as { stats: Record<string, number> };
+    delete raw.stats[JOBS_BOARD_ON];
+    const m = migrate(raw);
+    expect(postedJobs(m)).toEqual([]);
+    expect(m.stats[JOBS_BOARD_ON]).toBe(1);
+    // the next morning's jobs are on the board like anyone's
+    sleep(m);
+    expect(postedJobs(m)).toHaveLength(JOBS_PER_DAY);
+    // a new game is not given that
+    const fresh = migrate(JSON.parse(JSON.stringify(newState())));
+    sleep(fresh);
+    expect(postedJobs(fresh)).toHaveLength(JOBS_PER_DAY);
   });
 
   it("yesterday's unfinished jobs are replaced and never pay late", () => {
@@ -159,8 +251,10 @@ describe('jobs are always doable (critique 4)', () => {
         { id: 'ship', giver: 'mara', stat: 'shipped', base: 0, n: 10, reward: 40, done: false },
       ],
     };
+    takeJob(s, 0);
     shipItem(s, 'parsnip', 10);
     expect(s.jobs.list[0]!.done).toBe(false); // not on the spot
+    expect(turnInJob(s, 0)).toBe(false); // nor turned in: it pays for what stays in the bin
     unshipItem(s, 'parsnip', 10);
     sleep(s);
     expect(s.stats['jobsDone'] ?? 0).toBe(0);
@@ -178,6 +272,7 @@ describe('jobs are always doable (critique 4)', () => {
         },
       ],
     };
+    takeJob(s, 0);
     shipItem(s, 'parsnip', 10);
     const money = s.money;
     sleep(s);
@@ -193,13 +288,14 @@ describe('jobs are always doable (critique 4)', () => {
         { id: 'gift', giver: 'rosa', stat: 'likedGifts', base: 0, n: 1, reward: 35, done: false },
       ],
     };
+    takeJob(s, 0);
     addItem(s, 'stone', 1);
     giveGift(s, 'rosa', { item: 'stone' });
-    expect(s.jobs.list[0]!.done).toBe(false);
+    expect(jobReady(s, s.jobs.list[0]!)).toBe(false);
     s.friends['rosa']!.giftedDay = 0;
     addItem(s, 'pumpkin', 1);
     giveGift(s, 'rosa', { item: 'pumpkin' });
-    expect(s.jobs.list[0]!.done).toBe(true);
+    expect(jobReady(s, s.jobs.list[0]!)).toBe(true);
   });
 
   it('labels use the right plural', () => {
@@ -214,5 +310,37 @@ describe('jobs are always doable (critique 4)', () => {
     };
     expect(jobLabel(job)).toBe('Mara: load 1 machine');
     expect(jobLabel({ ...job, n: 2 })).toBe('Mara: load 2 machines');
+  });
+});
+
+describe('the town board text fits in both languages', () => {
+  afterEach(() => {
+    applyDataLocale('en');
+    setLocale('en');
+  });
+  it.each(['en', 'pt-BR'] as const)('%s: every job row and the page tabs fit', (lang) => {
+    setLocale(lang);
+    applyDataLocale(lang); // the jobs' own text is data (critic D2-2: pt-BR names were cut)
+    const room = rowLayout(200, [44], false).maxText;
+    for (const j of jobDefs) {
+      const n = j.qty[1];
+      const job = { id: j.id, giver: j.giver, stat: j.stat, base: 0, n, reward: 0, done: false };
+      const gold = `${jobReward(j, n, 3)}g`; // year 3: a three-digit reward
+      expect(measureText(jobText(job)), jobText(job)).toBeLessThanOrEqual(room);
+      for (const what of [
+        t('board.jobOffer', { gold }),
+        t('board.jobDoing', { have: n, n, gold }),
+        t('board.jobReady', { gold }),
+        t('board.jobTonight', { gold }),
+        t('board.thanks'),
+      ]) {
+        const sub = t('board.jobSub', { who: jobGiver(job), what });
+        expect(measureText(sub), sub).toBeLessThanOrEqual(room);
+      }
+    }
+    for (const tab of [t('board.tabJobs', { n: 3 }), t('board.tabRequests', { n: 4 })])
+      expect(measureText(tab), tab).toBeLessThanOrEqual(80);
+    for (const b of [t('board.take'), t('board.turnIn')])
+      expect(measureText(b), b).toBeLessThanOrEqual(42); // a 44 px button, 1 px each side
   });
 });

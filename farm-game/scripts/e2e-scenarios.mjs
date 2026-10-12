@@ -2012,6 +2012,221 @@ const closeSheet = (farm) =>
     }),
   );
 
+/** The guided start's new intros (bait round): each scenario shows its one line, pointing at one control. */
+async function guidedDepth() {
+  for (const [name, line] of [
+    ['tut-job-board', 'Jobs are on the board: tap it.'],
+    ['tut-job-turn-in', 'Job done! Turn it in at the board.'],
+    ['tut-no-bait', 'No bait: the hoe digs up worms.'],
+    ['tut-stone-before-site', 'Stone comes from rocks in the mine.'],
+    ['tut-stone-empty-mine', 'No rocks today: back tomorrow.'],
+  ]) {
+    const farm = await openScenario(browser, url, name, { profile: PROFILE });
+    const shown = await farm
+      .until(
+        (_s, w, want) => {
+          const texts = [];
+          const walk = (n) => {
+            if (typeof n.text === 'string' && n.visible !== false) texts.push(n.text);
+            (n.list ?? []).forEach(walk);
+          };
+          w.game.scene.getScene('UI').children.list.forEach(walk);
+          return texts.some((x) => x.replace(/\s+/g, ' ').includes(want));
+        },
+        line,
+        `the coach line of ${name}`,
+      )
+      .then(() => true)
+      .catch(() => false);
+    check(`${name}: the coach says "${line}"`, shown, shown ? '' : await uiText(farm));
+    check(`${name}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+  await stoneWalk(PROFILE);
+  await stoneWalk('se');
+}
+
+/**
+ * Stone before the site, followed by the coach alone (critic D2-1: the off-map pointer looped farm <-> town): from
+ * the farm, tap or steer where the coach aims until the first rock in the mine breaks, within a budget of inputs.
+ */
+async function stoneWalk(profile) {
+  const farm = await openScenario(browser, url, 'tut-stone-before-site', { profile });
+  const coachOf = () =>
+    farm.eval(() => {
+      const ui = window.__farm.game.scene.getScene('UI');
+      const s = window.__farm.getState();
+      return {
+        k: ui?.coach?.debug?.() ?? null,
+        map: s.player.map,
+        mined: s.stats.mined ?? 0,
+        sheet: window.__farm.dev.openSheet(),
+      };
+    });
+  let inputs = 0;
+  let crossings = 0;
+  let lastMap = 'farm';
+  let c = await coachOf();
+  const maps = ['farm'];
+  for (let round = 0; c.mined < 1 && inputs < 60 && round < 200; round++) {
+    const a = c.k?.aim;
+    if (process.env.STONE_TRACE)
+      console.log(
+        `      ${c.map} [${c.k?.step}] ${c.k?.text} ${JSON.stringify(a)} sheet ${c.sheet}`,
+      );
+    if (!c.k?.visible || !a) {
+      await farm.frames(10);
+      c = await coachOf();
+      continue;
+    }
+    inputs++;
+    if (a.kind === 'stick') {
+      const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[a.dir];
+      await farm.thumb.drag(a.x, a.y, a.x + d[0] * 30, a.y + d[1] * 30, 120, 6, true);
+      await farm.frames(45);
+      await farm.thumb.up();
+    } else await farm.thumb.tap(a.x, a.y, 70);
+    await farm.idle(4);
+    c = await coachOf();
+    if (c.map !== lastMap) {
+      crossings++;
+      maps.push(c.map);
+      lastMap = c.map;
+    }
+  }
+  check(
+    `tut-stone-before-site (${profile}): following the coach from the farm breaks a rock in the mine within 60 inputs`,
+    c.mined >= 1 && crossings <= 4,
+    `inputs ${inputs}, maps ${maps.join(' > ')}, step ${c.k?.step}`,
+  );
+  await farm.close();
+}
+
+/** The town board (bait round): jobs are taken there and turned in there; the requests are its other page. */
+async function townBoard() {
+  let farm = await openScenario(browser, url, 'town-quest-board', { profile: PROFILE });
+  await farm.during('panelOpen', ['board'], () => farm.press('KeyE'));
+  let shown = await uiText(farm);
+  check(
+    'town-quest-board: the board opens on its Jobs page with the three jobs and Take',
+    shown.includes('Town Board') && shown.includes('catch 2 fish') && /Take/.test(shown),
+    shown.slice(shown.indexOf('Town Board')),
+  );
+  const took = await tapSheetButton(farm, /^Take$/);
+  await farm.frames(3);
+  let m = await farm.state();
+  check(
+    'town-quest-board: a real tap on Take takes the first job (it counts from now)',
+    took &&
+      m.stats['jobs.taken'] === 1 &&
+      m.stats['jobsTaken'] === 1 &&
+      m.jobs.list[0].base === (m.stats.caught ?? 0),
+    JSON.stringify({ took, taken: m.stats['jobs.taken'] }),
+  );
+  const tab = await tapSheetButton(farm, /^Requests \d+$/);
+  await farm.frames(3);
+  shown = await uiText(farm);
+  check(
+    'town-quest-board: the Requests tab shows the requests page',
+    tab && shown.includes('Town projects'),
+    shown,
+  );
+  check('town-quest-board: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'town-quest-turn-in', { profile: PROFILE });
+  const before = await farm.state();
+  await farm.during('panelOpen', ['board'], () => farm.press('KeyE'));
+  const turned = await tapSheetButton(farm, /^Turn in$/);
+  await farm.frames(3);
+  m = await farm.state();
+  check(
+    'town-quest-turn-in: Turn in pays the finished job once, with the asker thanks',
+    // 72g for the job, and 60g for the goal it finishes (Do a job from the town board)
+    turned && m.money === before.money + 72 + 60 && m.stats.jobsDone === 1 && m.jobs.list[0].done,
+    JSON.stringify({ turned, money: m.money - before.money }),
+  );
+  await farm.close();
+}
+
+/** Bait (bait round): no cast without one, each cast uses one, the bait in hand or used last goes on. */
+async function bait() {
+  let farm = await openScenario(browser, url, 'fish-no-bait', { profile: PROFILE });
+  let before = await farm.state();
+  let res = await farm.act();
+  let m = await farm.state();
+  let shown = await uiText(farm);
+  check(
+    'fish-no-bait: Action refuses in one line and casts nothing',
+    !res.ok &&
+      shown.includes("No bait: dig worms or buy at Mara's.") &&
+      m.energy === before.energy &&
+      (await farm.openSheet()) !== 'fishing',
+    `${JSON.stringify(res)} :: ${shown}`,
+  );
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'fish-bait-worms', { profile: PROFILE });
+  await farm.during('panelOpen', ['fishing'], () => farm.press('Space'));
+  m = await farm.state();
+  shown = await uiText(farm);
+  const count = (st, id) =>
+    st.inventory.slots.reduce((n, x) => (x?.item === id ? n + x.qty : n), 0);
+  check(
+    'fish-bait-worms: the rod casts with the starter worms; the sheet names them',
+    count(m, 'worms') === 9 && shown.includes('Worms') && m.stats['bait.pick'] === 1,
+    shown,
+  );
+  check('fish-bait-worms: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'fish-bait-pick', { profile: PROFILE });
+  await farm.during('panelOpen', ['fishing'], () => farm.press('Space'));
+  m = await farm.state();
+  shown = await uiText(farm);
+  check(
+    'fish-bait-pick: the Glow Grub in hand goes on the hook and is remembered',
+    count(m, 'glow_grub') === 2 && shown.includes('Glow Grub') && m.stats['bait.pick'] === 4,
+    shown,
+  );
+  // The catch's result: the sheet closes only from Close; its Bait switch changes the next bait (critic D3-2).
+  await farm.eval(() => {
+    const f = window.__farm.game.scene.getScene('UI').fishing;
+    f.phase = 'reel';
+    Object.assign(f.reel, { result: 'caught', elapsed: 2, inside: 2 });
+    f.finish(true);
+  });
+  await farm.frames(3);
+  shown = await uiText(farm);
+  await farm.thumb.tap(100, 300, 70); // a stray tap on the sheet
+  await farm.frames(10);
+  const stayed = (await farm.openSheet()) === 'fishing';
+  const switched = await tapSheetButton(farm, /^Bait: /);
+  await farm.frames(3);
+  m = await farm.state();
+  const closed = await tapSheetButton(farm, /^Close$/);
+  await farm.panelClosed();
+  check(
+    'fish-bait-pick: after a catch, Bait switches the next bait and only Close closes the sheet',
+    /Bait: Glow Grub 2 >/.test(shown) &&
+      /\bClose\b/.test(shown) &&
+      !/Tap to continue/.test(shown) &&
+      stayed &&
+      switched &&
+      m.stats['bait.pick'] === 1 &&
+      closed,
+    JSON.stringify({
+      stayed,
+      switched,
+      pick: m.stats['bait.pick'],
+      closed,
+      shown: shown.slice(-200),
+    }),
+  );
+  check('fish-bait-pick: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 async function lang() {
   // The title in Portuguese at a first launch, on the smallest phone.
   let farm = await openScenario(browser, url, 'lang-pt-title', { profile: 'se' });
@@ -2357,6 +2572,9 @@ try {
         towing,
         towingLane,
         weirTow,
+        bait,
+        townBoard,
+        guidedDepth,
         lang,
         cloud,
       ];

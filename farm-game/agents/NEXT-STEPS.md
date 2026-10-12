@@ -259,38 +259,76 @@ build ever needs it; Game Center for iOS.
 
 **Now:** a full year loop with farming, quality, foraging, fishing, crafting, machines, animals, five villagers
 (Mara, Finn, Rosa, Orin, Clay) with hearts and events, jobs, mail, festivals, town projects, a greenhouse, the
-mine, cooking and a board race with Clay. The sim bot is calibrated against real play: the five-seed median is
-pinned at 261,631, within -20% / +25%. Save version is **18** (the Dry Year's bump, see above).
+mine, cooking and a board race with Clay. Save version is **18**.
 
-**Open:** see OPEN-FINDINGS.md: summer for a farmer, the "Board 16" row, the race replay, and Clay's crates.
+- **Bait (depth/bait-board):**
+  - Every cast needs a bait and uses one: worms (free, dug up by the hoe and the scythe from day 3), Bait Mix (6g),
+    Fish Chum (a carp and a fiber make 5) and Glow Grub (35g).
+  - Each changes the bite wait and the odds (`bait` blocks in `items.json`).
+  - The bait in hand casts with that bait; with the rod, the one used last goes on. After a catch, the fishing sheet's
+    bottom button switches the next bait in one tap.
+  - New games start with 10 worms in the bag; old saves get them once.
+- **The town job board:** the morning's three jobs are posted on the town board's Jobs page (its other page is the
+  requests). A job counts from Take and is turned in there; one never turned in is paid by post at night.
+- **Every fund ask says where its goods come from** (an item's `source`, shown while a good is short).
+- **Sims:** the tireless five-seed median is 253,873 (pin 261,631, band -20% / +25%). The fisher's year-one median is
+  341k (was 378k: bait costs), under twice the pin.
+
+**Open:**
+
+- See OPEN-FINDINGS.md.
+- The critic's acceptance (7cf1305) holds pending one merged-build pass with `polish/owner-round`: the board's rows
+  under polish's text guard, the fishing result in its `sheetTaps` list, toasts over the board.
+- Clay's notice wrap on the board (polish lane) and the board's new tab row both move the requests page's header:
+  merge with care.
+- The Action-icon bait badge was declined by the critic (the sheet names the bait), so it isn't planned.
 
 **Next:**
 
-1. Critique 13 on a frozen copy: replay the race (a careful and a careless player), long-game goal waits, the
-   jobs on days 3 and 4, and a busy season-change morning.
+1. Critique 13 on a frozen copy: the race (a careful and a careless player), long-game goal waits, the jobs on days
+   3 and 4, and a busy season-change morning. Add the board's turn-in walk and a month of bait spending.
 2. A crop request in the first days of summer and fall, for a crop the player planted.
 3. A long-press hotbar picker, so seeds kept in the bag don't stop a one-thumb farmer. It touches `ui/Hud.ts`, so
    coordinate with the controls lane.
-4. Line Clay and the race up with the Dry Year (rival to ally) once `docs/VISION.md` lands.
+4. Line Clay and the race up with the Dry Year (rival to ally).
+5. Bait follow-ups, if play asks for them: a bait for the river's legends once the weir opens, and Finn selling worms
+   when a player has no hoe-able ground.
 
 Things to watch: goals are an index into a list, so only append to it. `aside` goals and goal waits change which
-goal shows, never the order. The race starts on day 8 (`game.rival.startDay`).
+goal shows, never the order. The race starts on day 8 (`game.rival.startDay`). Bait codes and the board's
+bitmask stats (`jobs.taken`, one bit per job of the day) are save data: never reuse a bait code.
 
 ### Guided start (onboarding)
 
-**Now:** day 1 is a guided harvest, plant, water and ship, then free time, errands and a bed offer. Day 2 is a
-rain morning: the letter, the Goal tab and the walk to town. From day 3, one-time intros follow. The critic's bot
-reaches town on day 2 in 16 of 16 runs. Progress is stored in stats only (`tut.*`).
+**Now:**
 
-**Open:** the tip burst after the first purchase, `job1` without a `where`, and the overlap of "+1" with the goal
-banner.
+- Day 1 is a guided harvest, plant, water and ship, then free time, errands and a bed offer.
+- Day 2 is a rain morning: the letter, the Menu and the walk to town. The Goal-tab jobs step went with the job board,
+  so day 2 got shorter. The new-player critic's paired gate (ABBA, 14 configs, 28 runs each) at 7cf1305: base
+  median 173.5 s, this branch 167.5 s (-6 s; gate 173).
+- From day 3, one-time intros follow. New ones (bait round), one line each and one control each:
+  - the job board (board, then Take) and turning a job in (the way to the board, then Turn in);
+  - no bait (the hoe slot) and switching bait after a catch;
+  - stone before the spring or the weir (the way to the mine, then a rock);
+  - crafting (Menu, then Make) and festivals (board, then Enter).
+- An intro whose target is on another map keeps its own line and leads through the real door chain (`maps.json`
+  links). One already leading somewhere keeps the floor until done.
+- Progress is stored in stats only (`tut.*`).
+
+**Open:**
+
+- The tip burst after the first purchase.
+- The overlap of "+1" with the goal banner.
+- With a world-target intro on and the fishing sheet open mid-fight, the coach says "Close this to carry on" over a
+  sheet whose bottom button is "Reel in & leave".
 
 **Next:**
 
 1. Release held tips one at a time, at most one per in-game hour (`systems/goals.ts`).
-2. Give `job1` a `where`: the board, or the villager who posted the job.
-3. Rewrite the guided start for the Dry Year opening (Rosa's letter, arriving at a fading farm). It is data in
+2. Rewrite the guided start for the Dry Year opening (Rosa's letter, arriving at a fading farm). It is data in
    `src/data/tutorial.json` (`docs/EXTENDING.md` section 10).
+3. Run the paired gate (base vs branch, ABBA) for any change to day 1 or 2: the median must stay within 5 s of base
+   and under 173 s.
 
 ### One-thumb controls
 
@@ -350,14 +388,14 @@ Dry Year, audio". M7 adds, in the same direction:
 
 **Audio hooks the M7 builder must call (exact names; audio does nothing until they exist):**
 
-| Hook | Where | Plays |
-| --- | --- | --- |
+| Hook                                                           | Where                                                                                           | Plays                                                                         |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `audio.play('logHook' \| 'logTug' \| 'logKnock' \| 'logLand')` | the towing controller, at the same moments as `towSpike`: catch, each tug, first snag, `T.drop` | the tow cues (towSpike falls back to `swing` / `till` while an id is missing) |
-| `audio.play('water')` 150-250 ms after a freeing tug | the towing controller | the splash, 6 dB under the tug |
-| town stage variant `marls` (`valleyStage`) | `src/data/valley.json` | the river plus the mill wheel |
-| villager id `senna` | `src/data/npcs.json` | `motif-senna` on the first talk of the day, `-heart` at a new heart |
-| `valleyMoment` with `cue: 'homecoming'` | the arrival banner (`Hud` plays `m.cue ?? 'green'`) | the homecoming jingle |
-| `gameEvents.emit('houseLit', { house })` once per house | the lights system | `window-lit`, and no dusk flourish that evening |
+| `audio.play('water')` 150-250 ms after a freeing tug           | the towing controller                                                                           | the splash, 6 dB under the tug                                                |
+| town stage variant `marls` (`valleyStage`)                     | `src/data/valley.json`                                                                          | the river plus the mill wheel                                                 |
+| villager id `senna`                                            | `src/data/npcs.json`                                                                            | `motif-senna` on the first talk of the day, `-heart` at a new heart           |
+| `valleyMoment` with `cue: 'homecoming'`                        | the arrival banner (`Hud` plays `m.cue ?? 'green'`)                                             | the homecoming jingle                                                         |
+| `gameEvents.emit('houseLit', { house })` once per house        | the lights system                                                                               | `window-lit`, and no dusk flourish that evening                               |
 
 `houseLit` is listened to by name with a loose cast in `src/game/audioWiring.ts`, because `events.ts` belongs to the
 builder. After the merge, type it (`gameEvents.on('houseLit', ...)`) so a renamed event fails the typecheck.

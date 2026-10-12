@@ -149,8 +149,8 @@ describe('fishing', () => {
     equip(s, 'fishing_rod');
     expect(performAction(s, { ...pond(5, 5), map: 'woods' }).ok).toBe(true);
   });
-  it('bait speeds up the bite', () => {
-    expect(biteDelay(0.5, true)).toBeLessThan(biteDelay(0.5, false));
+  it('a quicker bait shortens the bite wait', () => {
+    expect(biteDelay(0.5, 'bait')).toBeLessThan(biteDelay(0.5, 'worms'));
   });
   it('a held bar chasing the fish wins; ignoring it loses', () => {
     const rnd = () => 0.5;

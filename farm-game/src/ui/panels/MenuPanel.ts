@@ -10,7 +10,14 @@ import { maxEnergy } from '../../systems/energy';
 import { gameEvents, toast } from '../../systems/events';
 import { asideGoals, goalProgress, recentGoals, stat } from '../../systems/goals';
 import { valleyLines } from './valleyText';
-import { jobLabel, jobProgress, welcomeFactor, welcomeJobsHeader } from '../../systems/jobs';
+import {
+  isTaken,
+  jobLabel,
+  jobProgress,
+  jobReady,
+  welcomeFactor,
+  welcomeJobsHeader,
+} from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
@@ -360,7 +367,7 @@ function buildGoals(c: MenuTabContext): void {
   let y = top + 80;
   // Rows below never run into STATS at the bottom (THE VALLEY can push them down).
   const floor = c.bottom - 66;
-  // Today's jobs: small requests that pay on the spot, whatever the goal chain says.
+  // Today's jobs: small requests posted on the town board, whatever the goal chain says.
   const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
   c.label(8, y, welcomeJobsHeader(today.length > 0 ? welcomeFactor(s.jobs.day) : 1), C.gold);
   y += 12;
@@ -369,10 +376,15 @@ function buildGoals(c: MenuTabContext): void {
     y += 11;
   }
   for (const job of today) {
+    // Jobs are taken and turned in at the town board: a job still there says so, a finished one says to turn it in.
     const right = job.done
       ? t('common.done')
-      : `${jobProgress(s, job)}/${job.n} +${fmtGold(job.reward)}`;
-    c.label(192, y, right, job.done ? C.green : C.gold, 1, 'right');
+      : !isTaken(s, job)
+        ? `${t('jobs.atBoard')} +${fmtGold(job.reward)}`
+        : jobReady(s, job)
+          ? `${t('jobs.turnIn')} +${fmtGold(job.reward)}`
+          : `${jobProgress(s, job)}/${job.n} +${fmtGold(job.reward)}`;
+    c.label(192, y, right, job.done ? C.green : isTaken(s, job) ? C.gold : C.creamDim, 1, 'right');
     c.label(
       8,
       y,

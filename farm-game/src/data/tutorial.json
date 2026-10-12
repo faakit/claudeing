@@ -590,36 +590,6 @@
       "optional": true
     },
     {
-      "id": "jobs",
-      "track": "day2",
-      "when": {
-        "day": 2
-      },
-      "text": "Tap Goal: jobs that pay you today.",
-      "target": {
-        "button": "^Goal$"
-      },
-      "alt": [
-        {
-          "when": {
-            "not": {
-              "panel": "menu"
-            }
-          },
-          "text": "Tap Menu, then Goal.",
-          "target": {
-            "ui": "menu"
-          }
-        }
-      ],
-      "done": [
-        {
-          "tab": "goals"
-        }
-      ],
-      "optional": true
-    },
-    {
       "id": "town",
       "track": "day2",
       "when": {
@@ -725,24 +695,29 @@
       "when": {
         "fact": "welcomeJobs"
       },
-      "text": "Settling in: jobs pay extra today!",
+      "text": "Settling in: board jobs pay double!",
       "target": {
-        "ui": "menu"
+        "object": "board",
+        "map": "town"
       },
       "alt": [
         {
           "when": {
-            "panel": "menu"
+            "panel": "board"
           },
-          "text": "Tap Goal: today's jobs pay extra.",
+          "text": "Tap Take: today's jobs pay double.",
           "target": {
-            "button": "^Goal$"
+            "button": "^Take$"
           }
         }
       ],
       "done": [
         {
-          "tab": "goals"
+          "stat": "jobsTaken",
+          "min": 1
+        },
+        {
+          "panel": "board"
         }
       ]
     },
@@ -1003,7 +978,16 @@
       "id": "board",
       "track": "intro",
       "when": {
-        "panel": "board"
+        "all": [
+          {
+            "panel": "board"
+          },
+          {
+            "not": {
+              "fact": "jobsPosted"
+            }
+          }
+        ]
       },
       "text": "Requests pay more than the bin.",
       "done": [
@@ -1092,7 +1076,15 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "alt": [
+        {
+          "when": {
+            "none": "rocks"
+          },
+          "text": "No rocks today: back tomorrow."
+        }
+      ]
     },
     {
       "id": "place",
@@ -1140,6 +1132,104 @@
       "leave": true
     },
     {
+      "id": "stone",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "any": [
+          {
+            "all": [
+              {
+                "stat": "place.spring",
+                "min": 1
+              },
+              {
+                "stat": "place.spring",
+                "max": 1
+              },
+              {
+                "short": {
+                  "project": "place_spring",
+                  "item": "stone"
+                }
+              }
+            ]
+          },
+          {
+            "all": [
+              {
+                "stat": "place.weir",
+                "min": 1
+              },
+              {
+                "stat": "place.weir",
+                "max": 1
+              },
+              {
+                "short": {
+                  "project": "place_weir",
+                  "item": "stone"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "text": "Stone comes from rocks in the mine.",
+      "target": {
+        "find": "node",
+        "map": "mine"
+      },
+      "alt": [
+        {
+          "when": {
+            "all": [
+              {
+                "map": "mine"
+              },
+              {
+                "none": "rocks"
+              }
+            ]
+          },
+          "text": "No rocks today: back tomorrow."
+        },
+        {
+          "when": {
+            "all": [
+              {
+                "map": "mine"
+              },
+              {
+                "some": "explicitHand"
+              }
+            ]
+          },
+          "text": "Pick the pickaxe on the hotbar.",
+          "target": {
+            "ui": "pickSlot"
+          }
+        },
+        {
+          "when": {
+            "map": "mine"
+          },
+          "text": "Tap a rock: the pickaxe breaks it.",
+          "target": {
+            "find": "node",
+            "map": "mine"
+          }
+        }
+      ],
+      "done": [
+        {
+          "fresh": "mined",
+          "min": 1
+        }
+      ]
+    },
+    {
       "id": "valleyAsk",
       "track": "intro",
       "valley": true,
@@ -1148,17 +1238,51 @@
       "when": {
         "all": [
           {
-            "stat": "place.spring",
-            "min": 1
+            "all": [
+              {
+                "stat": "place.spring",
+                "min": 1
+              },
+              {
+                "stat": "place.spring",
+                "max": 1
+              },
+              {
+                "not": {
+                  "map": "wendhead"
+                }
+              }
+            ]
           },
           {
-            "stat": "place.spring",
-            "max": 1
-          },
-          {
-            "not": {
-              "map": "wendhead"
-            }
+            "any": [
+              {
+                "not": {
+                  "short": {
+                    "project": "place_spring",
+                    "item": "stone"
+                  }
+                }
+              },
+              {
+                "daysSince": {
+                  "step": "stone",
+                  "min": 1
+                }
+              },
+              {
+                "all": [
+                  {
+                    "stat": "tut.stone",
+                    "min": 1
+                  },
+                  {
+                    "stat": "tut.seen.stone",
+                    "max": 0
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -1289,6 +1413,209 @@
         {
           "stat": "towed",
           "min": 1
+        }
+      ]
+    },
+    {
+      "id": "jobBoard",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "map": "town"
+          },
+          {
+            "fact": "jobsPosted"
+          },
+          {
+            "not": {
+              "goal": "buy"
+            }
+          },
+          {
+            "not": {
+              "panel": "shop"
+            }
+          }
+        ]
+      },
+      "text": "Jobs are on the board: tap it.",
+      "target": {
+        "object": "board",
+        "map": "town"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "board"
+          },
+          "text": "Tap Take: the job counts from now.",
+          "target": {
+            "button": "^Take$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "stat": "jobsTaken",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": "jobTurnIn",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "fact": "jobReady"
+      },
+      "text": "Job done! Turn it in at the board.",
+      "target": {
+        "object": "board",
+        "map": "town"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "board"
+          },
+          "text": "Tap Turn in to get paid.",
+          "target": {
+            "button": "^Turn in$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "stat": "jobsDone",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": "noBait",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "selected": "tool:fish"
+          },
+          {
+            "none": "bait"
+          }
+        ]
+      },
+      "text": "No bait: the hoe digs up worms.",
+      "target": {
+        "ui": "hoeSlot"
+      },
+      "done": [
+        {
+          "some": "bait"
+        }
+      ]
+    },
+    {
+      "id": "baitNext",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "panel": "fishing"
+          },
+          {
+            "fact": "fishResult"
+          },
+          {
+            "fact": "baitKinds"
+          }
+        ]
+      },
+      "text": "Tap Bait to change the next bait.",
+      "target": {
+        "button": "^Bait: "
+      },
+      "done": [
+        {
+          "stat": "baitSwitched",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": "craft",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "goal": "craft"
+      },
+      "text": "Tap Menu, then Make.",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Make: craft from your goods.",
+          "target": {
+            "button": "^Make$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "tab": "craft"
+        },
+        {
+          "stat": "crafted",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": "festival",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "fact": "festivalToday"
+          },
+          {
+            "map": "town"
+          }
+        ]
+      },
+      "text": "Festival today! Enter at the board.",
+      "target": {
+        "object": "board",
+        "map": "town"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "board"
+          },
+          "text": "Tap Enter to join the festival.",
+          "target": {
+            "button": "^Enter the .*!$||^Requests \\d+$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "panel": "festival"
         }
       ]
     }

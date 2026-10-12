@@ -29,7 +29,7 @@
     "current": "CURRENT GOAL",
     "reward": "Reward: +{gold}",
     "allDone": "Every goal is done. You are a Harvest Legend!",
-    "jobsEveryMorning": "New jobs every morning.",
+    "jobsEveryMorning": "New jobs on the board each day.",
     "completed": "COMPLETED",
     "nothingYet": "Nothing yet. You can do it!",
     "alsoOpen": "ALSO OPEN",
@@ -205,19 +205,19 @@
     "derbyBest": "Derby best! {fish}. Score {score}.",
     "legend": "A legend! You caught the {fish}!",
     "castAtWater": "Cast at the water.",
+    "needBait": "No bait: dig worms or buy at Mara's.",
+    "dugWorms": "Dug up worms! +{n}",
+    "nextBait": "Bait: {bait} {n} >",
     "nothingBites": "Nothing bites here right now.",
     "title": "Fishing",
-    "baitOn": "Bait on!",
-    "noBait": "No bait",
     "leave": "Reel in & leave",
-    "tooSlow": "Too slow!",
+    "tookBait": "Too slow! The fish took the bait.",
     "perfect": " (perfect!)",
     "waiting": "Waiting for a bite...",
     "tapNow": "! TAP NOW !",
     "anyTap": "Any tap on the sheet hooks it.",
     "keepGreen": "Keep the fish in the green!",
-    "holdLift": "Hold to lift, let go to sink.",
-    "tapToContinue": "Tap to continue."
+    "holdLift": "Hold to lift, let go to sink."
   },
   "food": {
     "restoresNow": "Restores {n} now: dish {nth} today.",
@@ -272,10 +272,14 @@
     "headerFactor": "TODAY'S JOBS: {factor}x PAY",
     "header": "TODAY'S JOBS",
     "done": "Job done! {job} +{gold}",
-    "newWelcome": "New jobs from {who}: {pay} pay while you settle in. See Menu > Goal.",
+    "newWelcome": "New jobs from {who} on the town board: {pay} pay while you settle in.",
     "double": "double",
     "factor": "{factor}x",
-    "newNote": "New jobs from {who}. See Menu > Goal."
+    "newNote": "New jobs from {who} on the town board.",
+    "ready": "Done: {job}. Turn it in at the board!",
+    "byPost": "Jobs not turned in, paid by post: +{gold}",
+    "atBoard": "at board",
+    "turnIn": "turn in"
   },
   "mail": {
     "festTitle": "{festival} tomorrow",
@@ -325,7 +329,8 @@
     "notEnough": "Not enough yet",
     "allGold": "All the gold is in!",
     "giveGoods": "Give goods",
-    "need": "{item} {given}/{need} (have {have})"
+    "need": "{item} {given}/{need} (have {have})",
+    "needFrom": "{line}: {source}"
   },
   "silo": {
     "hungry": "The {house} went hungry: the silo needs {n} {feed}.",
@@ -654,7 +659,18 @@
     "specialDone": "Special done! Thanks!",
     "enterFestival": "Enter the {festival}!",
     "cartHere": "The traveling cart is here!",
-    "projects": "Town projects"
+    "projects": "Town projects",
+    "townTitle": "Town Board",
+    "tabJobs": "Jobs {n}",
+    "tabRequests": "Requests {n}",
+    "take": "Take",
+    "turnIn": "Turn in",
+    "jobOffer": "Pays {gold}",
+    "jobDoing": "{have}/{n}  {gold}",
+    "jobReady": "Done! {gold}",
+    "jobTonight": "{gold} tonight",
+    "jobsNone": "No jobs today. New ones each morning.",
+    "jobSub": "{who}  {what}"
   },
   "craft": {
     "needsKitchen": "Needs a kitchen",
@@ -720,7 +736,6 @@
     "dailyFood": "Daily food",
     "growsFast": "Grows fast",
     "finerCrops": "Finer crops",
-    "fasterBites": "Faster bites",
     "forCrafting": "For crafting",
     "decor": "Decor {n}/{max}",
     "ownLong": "{base} (own {n})",
@@ -811,7 +826,7 @@
     "weeds": "Weeds sprout in the field. Cut them with the scythe for fiber.",
     "wither": "Crops left in the field when the season changes will wither.",
     "bin": "The shipping bin pays the next morning, so ship before bed.",
-    "jobs": "Villagers post small jobs each morning. They pay on the spot."
+    "jobs": "Villagers post small jobs on the town board each morning."
   },
   "fx": {
     "refilled": "Refilled!",

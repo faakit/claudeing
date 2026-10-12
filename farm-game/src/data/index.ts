@@ -39,6 +39,8 @@ export interface MapDef {
   outdoor?: boolean;
   /** This map holds the farm's soil, crops and weeds. Farm actions are refused elsewhere. */
   farmland?: boolean;
+  /** The maps its doors lead to (the guided start routes an off-map pointer through them; a test checks the maps). */
+  links?: string[];
 }
 export interface SpawnDef {
   map: string;
@@ -222,8 +224,26 @@ export interface ItemDef {
   nameTemplate?: string;
   /** Food: energy restored when eaten. */
   energy?: number;
+  /** Where it comes from, said beside a fund's ask while it is short ("rocks in the mine"). */
+  source?: string;
   /** Taken from a letter together with it (the journal tucked in the seed tin). */
   comesWith?: { item: string; qty: number }[];
+  /** Bait (type `bait`): what one cast with it changes. Casting needs one; each cast uses one. */
+  bait?: BaitDef;
+}
+/**
+ * One bait's effect on a cast (`systems/fishing.ts`). `code` is its stable number (the remembered bait is the stat
+ * `bait.pick`, so codes are never reused; the lowest owned code is the fallback). `wait` multiplies the bite wait,
+ * `rare` lifts harder fish (weight x (1 + rare x difficulty x 3)), `legend` multiplies a legend's weight,
+ * `quality` is added to the catch's quality roll and `reel` widens the catch bar.
+ */
+export interface BaitDef {
+  code: number;
+  wait: number;
+  rare: number;
+  legend: number;
+  quality: number;
+  reel: number;
 }
 export interface CropDef {
   seasons: Season[];
@@ -716,7 +736,11 @@ export type TutorialKind =
   | 'letterGift'
   | 'emptyCan'
   | 'explicitHand'
-  | 'placeable';
+  | 'placeable'
+  /** any bait in the bag (fishing needs one) */
+  | 'bait'
+  /** a rock (stone) on this map today */
+  | 'rocks';
 /** A condition: every field given must hold (`any`, `all`, `not` combine). */
 export interface TutorialCond {
   /** A lifetime stat, counted from when the guide (re)started. */
@@ -742,14 +766,33 @@ export interface TutorialCond {
   energyBelow?: number;
   /** The clock at or after this minute of the day. */
   minute?: number;
-  /** A job posted today, not yet done, counts this stat. */
+  /** A job of today's, taken at the board and not yet paid, counts this stat. */
   job?: string;
   /** This villager is standing on the current map. */
   npc?: string;
   /** The current goal's id. */
   goal?: string;
-  /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
-  fact?: 'npcNew' | 'forageInView' | 'welcomeJobs';
+  /**
+   * A fact: `npcNew` (a villager you never met is in view), `forageInView`, `welcomeJobs`, `jobsPosted` (a job of
+   * today's waits on the town board), `jobReady` (a taken job is done: turn it in), `baitKinds` (two kinds of bait or
+   * more), `fishResult` (the fishing sheet shows a catch's result), `festivalToday` (a festival not entered yet).
+   */
+  fact?:
+    | 'npcNew'
+    | 'forageInView'
+    | 'welcomeJobs'
+    | 'jobsPosted'
+    | 'jobReady'
+    | 'baitKinds'
+    | 'fishResult'
+    | 'festivalToday';
+  /**
+   * A project's goods are short: what the bag holds plus what was already given is under what it asks
+   * (`{ "project": "place_spring", "item": "stone" }`). Used to teach where a good comes from before the ask.
+   */
+  short?: { project: string; item: string };
+  /** At least `min` mornings have passed since that step first showed ("the next morning"). */
+  daysSince?: { step: string; min: number };
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
   touched?: number;
   /** At least this many game minutes have passed since the step first showed. */
@@ -772,7 +815,16 @@ export interface TutorialTarget {
   door?: string;
   /** A long walk to the door that leads to this map: shows a stick drag, then the door once it is near. */
   steer?: string;
-  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot' | 'spadeSlot';
+  ui?:
+    | 'action'
+    | 'menu'
+    | 'interact'
+    | 'seedSlot'
+    | 'canSlot'
+    | 'placeSlot'
+    | 'spadeSlot'
+    | 'hoeSlot'
+    | 'pickSlot';
   gesture?: 'paint' | 'ring';
   /** With `gesture: "paint"`: the Action kinds a row may do (default till, plant, water). */
   work?: string[];
@@ -1137,7 +1189,23 @@ export function validateContent(): void {
       fail('items', `placeable item "${id}" has no entry in placeables.json`);
     if (it.type === 'fertilizer' && !it.fertilizer)
       fail('items', `fertilizer "${id}" needs a "fertilizer" block`);
+    if ((it.type === 'bait') !== !!it.bait)
+      fail('items', `"${id}": every bait needs a "bait" block, and only baits have one`);
+    const b = it.bait;
+    if (
+      b &&
+      (!Number.isInteger(b.code) ||
+        b.code < 1 ||
+        !(b.wait > 0) ||
+        b.rare < 0 ||
+        !(b.legend > 0) ||
+        b.quality < 0 ||
+        b.reel < 0)
+    )
+      fail('items', `bait "${id}" has a bad code, wait, rare, legend, quality or reel`);
   }
+  const baitCodes = Object.values(items).flatMap((it) => (it.bait ? [it.bait.code] : []));
+  if (new Set(baitCodes).size !== baitCodes.length) fail('items', 'two baits share a code');
   for (const e of forage.table) {
     if (items[e.item]?.type !== 'forage') fail('forage', `"${e.item}" is not a forage item`);
     for (const m of e.maps ?? []) if (!mapIds.includes(m)) fail('forage', `unknown map "${m}"`);
@@ -1380,12 +1448,34 @@ const TUT_KINDS = [
   'forage',
   'unread',
   'placeable',
+  'bait',
+  'rocks',
 ];
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site', 'creek', 'slip'];
-const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot', 'spadeSlot'];
+const TUT_UI = [
+  'action',
+  'menu',
+  'interact',
+  'seedSlot',
+  'canSlot',
+  'placeSlot',
+  'spadeSlot',
+  'hoeSlot',
+  'pickSlot',
+];
+const TUT_FACTS = [
+  'npcNew',
+  'forageInView',
+  'welcomeJobs',
+  'jobsPosted',
+  'jobReady',
+  'baitKinds',
+  'fishResult',
+  'festivalToday',
+];
 const TUT_COND_KEYS = new Set([
   'stat',
   'touched',
@@ -1406,6 +1496,8 @@ const TUT_COND_KEYS = new Set([
   'npc',
   'goal',
   'fact',
+  'short',
+  'daysSince',
   'after',
   'wet',
   'any',
@@ -1437,6 +1529,13 @@ export function validateTutorial(t: TutorialData): void {
     for (const k of [c.none, c.some])
       if (k !== undefined && !TUT_KINDS.includes(k)) bad(`${where}: unknown kind "${k}"`);
     if (c.has !== undefined && !items[c.has]) bad(`${where}: unknown item "${c.has}"`);
+    if (c.fact !== undefined && !TUT_FACTS.includes(c.fact))
+      bad(`${where}: unknown fact "${c.fact}"`);
+    if (
+      c.short !== undefined &&
+      !projects[c.short.project]?.items?.some((i) => i.item === c.short!.item)
+    )
+      bad(`${where}: project "${c.short.project}" asks for no "${c.short.item}"`);
     if (c.npc !== undefined && !npcs[c.npc]) bad(`${where}: unknown villager "${c.npc}"`);
     if (c.goal !== undefined && !goals.some((g) => g.id === c.goal))
       bad(`${where}: unknown goal "${c.goal}"`);

@@ -6,7 +6,11 @@ import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import {
   biteDelay,
+  currentBait,
   HOOK_WINDOW,
+  nextBait,
+  noteFishingResult,
+  refundBait,
   newReel,
   outcomeOf,
   reelSize,
@@ -17,6 +21,7 @@ import {
 import { gameEvents, toast } from '../../systems/events';
 import { displayName } from '../../systems/itemRef';
 import { random } from '../../systems/rng';
+import { countItem } from '../../systems/inventory';
 import type { Label } from '../font';
 import { C } from '../theme';
 import { drawBar, drawPanel, Modal } from '../widgets';
@@ -35,7 +40,8 @@ export class FishingPanel extends Modal {
   private clock = 0;
   private delay = 0;
   private fishId = 'carp';
-  private bait = false;
+  /** The bait on this cast (shown top right; it sets the bite wait, the odds and the catch bar). */
+  private bait = 'worms';
   private reel: Reel = newReel(0.3, 0.3);
   private pointerDown = false;
   private wasHolding = false;
@@ -52,7 +58,8 @@ export class FishingPanel extends Modal {
     scene.events.on(Phaser.Scenes.Events.UPDATE, (_t: number, dt: number) => this.tick(dt / 1000));
   }
 
-  start(fishId: string, bait: boolean): void {
+  start(fishId: string, bait: string): void {
+    noteFishingResult(false);
     this.fishId = fishId;
     this.bait = bait;
     this.phase = 'wait';
@@ -70,14 +77,7 @@ export class FishingPanel extends Modal {
   protected build(): void {
     this.panel();
     this.label(8, 8, t('fishing.title'), C.gold);
-    this.label(
-      192,
-      8,
-      this.bait ? t('fishing.baitOn') : t('fishing.noBait'),
-      this.bait ? C.green : C.creamDim,
-      1,
-      'right',
-    );
+    this.label(192, 8, items[this.bait]?.name ?? this.bait, C.green, 1, 'right');
     this.status = this.label(100, 22, '', C.cream, 1, 'center');
     this.gfx = this.scene.add.graphics();
     this.content.add(this.gfx);
@@ -100,6 +100,51 @@ export class FishingPanel extends Modal {
     zone.on('pointerout', () => (this.pointerDown = false));
     this.content.add(zone);
     this.hint = this.label(100, this.panelH - 44, '', C.creamDim, 1, 'center', 190);
+    // After the fight, the bottom button shows the bait the next cast will really use (the hand included) and
+    // switches it in one tap when you carry two kinds or more: no screen before a cast (bait round). With one kind
+    // it simply closes.
+    const next = currentBait(getState());
+    const kinds = new Set(
+      getState()
+        .inventory.slots.filter((st) => st && items[st.item]?.bait)
+        .map((st) => st!.item),
+    );
+    // The sheet closes only from Close (owner rule; critic D3-2): with two kinds of bait or more, the bottom row is
+    // [Bait: X n >] wide and [Close] narrow on the thumb's side (mirrored for the left hand).
+    if (this.phase === 'done' && next && kinds.size >= 2) {
+      const closeW = 40;
+      const baitW = this.panelW - 16 - closeW - 4;
+      const left = this.leftHanded;
+      this.button(
+        left ? 8 + closeW + 4 : 8,
+        this.panelH - 28,
+        baitW,
+        22,
+        t('fishing.nextBait', { bait: items[next]?.name ?? next, n: countItem(getState(), next) }),
+        () => {
+          nextBait(getState());
+          audio.play('select');
+          this.rebuild();
+        },
+        { textColor: C.green },
+      );
+      this.button(
+        left ? 8 : 8 + baitW + 4,
+        this.panelH - 28,
+        closeW,
+        22,
+        t('common.close'),
+        () => this.close(),
+        { textColor: C.warn },
+      );
+      this.draw();
+      return;
+    }
+    if (this.phase === 'done') {
+      this.closeButton();
+      this.draw();
+      return;
+    }
     this.button(
       8,
       this.panelH - 28,
@@ -116,7 +161,6 @@ export class FishingPanel extends Modal {
 
   private onRelease(): void {
     this.pointerDown = false;
-    if (this.phase === 'done' && this.clock > 0.6) this.close();
   }
 
   private holding(): boolean {
@@ -144,8 +188,6 @@ export class FishingPanel extends Modal {
     } else if (this.phase === 'reel') {
       stepReel(this.reel, Math.min(dt, 0.05), down, () => random(getState()));
       if (this.reel.result) this.finish(outcomeOf(this.reel).caught);
-    } else if (this.phase === 'done' && pressed && this.clock > 0.5) {
-      this.close();
     }
     this.draw();
   }
@@ -154,15 +196,18 @@ export class FishingPanel extends Modal {
     if (this.phase === 'done') return;
     const out = caught ? outcomeOf(this.reel) : { caught: false, perfect: false };
     if (this.phase === 'wait' || this.phase === 'bite') {
-      // Left early or missed the bite: nothing was hooked.
+      // Left early or missed the bite: nothing was hooked. Left before any bite, the bait comes back; a missed bite
+      // cost it, and says so.
+      const was = this.phase;
       this.phase = 'done';
-      if (out.caught === false && this.clock > 0) toast(t('fishing.tooSlow'), 'warn');
+      if (was === 'wait') refundBait(getState(), this.bait);
+      else toast(t('fishing.tookBait'), 'warn');
       this.close();
       return;
     }
     this.phase = 'done';
     this.clock = 0;
-    const res = resolveCatch(getState(), this.fishId, out);
+    const res = resolveCatch(getState(), this.fishId, out, this.bait);
     if (res.ok) {
       audio.play('harvest');
       haptic('success');
@@ -172,6 +217,13 @@ export class FishingPanel extends Modal {
       audio.play('error');
       this.resultText = t('fishing.gotAway');
     }
+    noteFishingResult(true); // the guided start's bait intro waits for this moment
+    this.rebuild(); // the bottom button becomes the next-bait switch
+  }
+
+  override close(): void {
+    noteFishingResult(false);
+    super.close();
   }
 
   private resultText = '';
@@ -212,7 +264,7 @@ export class FishingPanel extends Modal {
       this.fishIcon.setVisible(false);
       this.status.setText(this.resultText);
       this.status.setColor(this.resultText === t('fishing.gotAway') ? C.warn : C.green);
-      this.hint.setText(t('fishing.tapToContinue'));
+      this.hint.setText('');
     }
   }
 }

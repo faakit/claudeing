@@ -42,11 +42,7 @@ export function shopFacts(
     const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
     const again = crop.regrowDays ? t('shop.again', { n: crop.regrowDays }) : '';
     const f = { days, sell: fmtGold(sell), again };
-    base = late
-      ? t('shop.tooLateNow')
-      : glass
-        ? t('shop.glassOnly', f)
-        : t('shop.seedFacts', f);
+    base = late ? t('shop.tooLateNow') : glass ? t('shop.glassOnly', f) : t('shop.seedFacts', f);
     alts = late
       ? []
       : glass
@@ -69,7 +65,6 @@ export function shopFacts(
   } else if (def.type === 'feed') base = t('shop.dailyFood');
   else if (def.type === 'fertilizer')
     base = (def.fertilizer?.growth ?? 0) > 0 ? t('shop.growsFast') : t('shop.finerCrops');
-  else if (def.type === 'bait') base = t('shop.fasterBites');
   else if (def.type === 'material') base = t('shop.forCrafting');
   else if (placeables[itemId]?.behavior === 'decor')
     // For decorations `own` counts placed ones too, against the cap: "Decor 1/1".
@@ -109,5 +104,3 @@ export function shopTabOf(id: string): ShopTab {
   if (placeables[id]?.behavior === 'decor') return 'home';
   return 'seeds';
 }
-
-

@@ -1,0 +1,30 @@
+{
+  "title": "Fishing with no bait in the bag",
+  "about": "Spring 4, 10:00, on the farm pond bank facing the water with the rod in hand and no bait at all (the starter worms used up). Action refuses in one line, \"No bait: dig worms or buy at Mara's.\", casts nothing and spends no energy; the guided start's noBait intro would point at the hoe.",
+  "version": 18,
+  "tags": ["farm", "fishing", "bait"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "day": 4,
+    "clock": "10:00"
+  },
+  "state": {
+    "inventory": {
+      "slots": [
+        { "item": "hoe", "qty": 1 },
+        { "item": "watering_can", "qty": 1 },
+        { "item": "scythe", "qty": 1 },
+        { "item": "fishing_rod", "qty": 1 },
+        { "item": "pickaxe", "qty": 1 },
+        { "item": "parsnip_seed", "qty": 4 }
+      ],
+      "selected": 3
+    }
+  },
+  "goal": "fish"
+}
