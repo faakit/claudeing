@@ -135,6 +135,19 @@ describe('i18n core', () => {
   });
 });
 
+describe('back to English', () => {
+  it('a label still on screen keeps its English after many other lines were shown (the memo was wiped when full)', () => {
+    setLocale('pt-BR');
+    const read = t('mail.read');
+    // the coach matches a sheet's buttons through toEnglish every frame while new lines keep coming
+    for (let i = 0; i < 2100; i++) {
+      t('fmt.gold', { n: String(i) });
+      if (i % 50 === 0) expect(toEnglish(read), `after ${i}`).toBe('Read');
+    }
+    expect(toEnglish(read)).toBe('Read');
+  });
+});
+
 describe('dictionaries', () => {
   const en = leaves(dictionary('en'));
 
