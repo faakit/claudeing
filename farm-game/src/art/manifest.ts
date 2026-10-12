@@ -707,9 +707,30 @@ export function artManifest(): ArtEntry[] {
       exact: false,
       optional: true,
     });
+  // The families' houses by stage (M7, art-src/tools/houses.py): drawn over the boarded facade until the family is home.
+  for (const [k, w, h] of HOUSE_SPRITES)
+    add({
+      texture: k,
+      w,
+      h,
+      group: 'world',
+      kind: 'house stage',
+      from: 'valley.json houses',
+      exact: true, // wider than 64 px: only an exact frame stands in (artPlan.frameFits)
+      optional: true,
+    });
   // Towing (M7, art-src/tools/towart.py). The tow controller draws placeholders for any key the atlas lacks.
   for (const [k, w, h, group] of TOW_SPRITES)
-    add({ texture: k, w, h, group, kind: 'towing', from: 'TowController', exact: false, optional: true });
+    add({
+      texture: k,
+      w,
+      h,
+      group,
+      kind: 'towing',
+      from: 'TowController',
+      exact: false,
+      optional: true,
+    });
   add({
     texture: mail.mailbox.sprite,
     w: 16,
@@ -747,6 +768,15 @@ export const TOW_SPRITES: [string, number, number, AtlasGroup][] = [
   ['tow_icon_hook', 16, 16, 'ui'],
   ['tow_icon_home', 16, 16, 'ui'],
   ['tow_icon_tug', 16, 16, 'ui'],
+];
+
+/**
+ * House stages (M7): `obj_house_<id>_<n>`, n = 0 scaffolding begun, 1 scaffolding up, 2 the boards off (door and
+ * windows in), 3 built with dark windows, 4 (optional) home by day with a warm window. Each covers the house's wall rows
+ * and the roof row above, anchored bottom-left at the bottom of the facade row (origin 0, 1).
+ */
+export const HOUSE_SPRITES: [string, number, number][] = [
+  ...[0, 1, 2, 3, 4].map((n): [string, number, number] => [`obj_house_marls_${n}`, 96, 48]),
 ];
 
 /** Manifest entries grouped by texture key, in manifest order. */

@@ -149,46 +149,36 @@ def _stack(cv: Ink, x: int, y: int) -> None:
 
 def slip(names: list[str], water_north: bool) -> np.ndarray:
     """16 x 32 over the slip's water tile and bank tile (water_north: the water tile is the top half, as on the town's
-    south bank; else the bottom half, as in the lab spike). Rails at x 0-2 and 13-15, planks across x 3-12, two
-    mooring posts in the river, a 2 px foam line where the ramp goes under, a sill beam on the bank."""
+    south bank; else the bottom half, as in the lab spike). Planks run the full width (an ink edge each side), on a
+    5 px pitch (an ink seam, 2 px lit, 2 px shade), stepping darker toward the river so it reads as a ramp into it; a
+    2 px foam line where it goes under; a sill beam on the bank (R30-1)."""
     cv = Ink(names, 16, 32)
     edge = 16  # the water's edge between the halves
-
-    def wet(y: int) -> bool:
-        return (y < edge) if water_north else (y >= edge)
-
-    # the ramp's extent: from 6 px into the river (below the posts) to the bank's far side
-    y0, y1 = (6, 32) if water_north else (0, 26)
-    # rails: ink outline, 2 px wood (soil under the water)
-    for x_ink, x_wood, x_out in ((0, 1, 3), (15, 13, 12)):
-        for y in range(y0, y1):
-            cv.rect(x_ink, y, 1, 1, "ink")
-            cv.rect(x_wood, y, 2, 1, "soil" if wet(y) else "wood")
-            cv.rect(x_out, y, 1, 1, "ink")
-    # planks: 5 px pitch (an ink seam, 2 px lit, 2 px shade), lit on their north side
+    # tones by distance from the water's edge: dry (sand / wood), damp (wood / soil), wet (soil / earth dark),
+    # under (dusk blue / night navy)
+    tones = [("sand", "wood"), ("wood", "soil"), ("soil", "earth dark")]
+    y0, y1 = (4, 32) if water_north else (0, 28)
     for y in range(y0, y1):
-        k = (y - y0) % 5
-        if k == 0:
-            name = "ink"
-        elif k < 3:
-            name = "dusk blue" if wet(y) else "sand"
+        # distance from the water's edge into the bank (negative: in the river)
+        d = (y - edge) if water_north else (edge - 1 - y)
+        k = (y - y0) % 5 if water_north else (y1 - 1 - y) % 5
+        if d < 0:
+            lit, shade = "dusk blue", "night navy"
         else:
-            name = "night navy" if wet(y) else "wood"
-        cv.rect(4, y, 8, 1, name)
-    # the foam line where the planks go under (2 px, just inside the water)
+            lit, shade = tones[min(2, max(0, 2 - d // 5))]
+        name = "ink" if k == 0 else (lit if k < 3 else shade)
+        cv.rect(1, y, 14, 1, name)
+        cv.rect(0, y, 1, 1, "ink")
+        cv.rect(15, y, 1, 1, "ink")
+    # the ramp's river end: an ink edge
+    cv.rect(0, y0 if water_north else y1 - 1, 16, 1, "ink")
+    # the foam line where the planks go under (2 px, just inside the water), a fleck either side
     fy = edge - 2 if water_north else edge
-    cv.rect(1, fy, 14, 2, "ice white")
-    # the sill beam at the bank end: 4 px, lit top
+    cv.rect(0, fy, 16, 2, "ice white")
+    # the sill beam at the bank end: 4 px with its outline, lit
     sy = y1 - 4 if water_north else y0
     cv.rect(0, sy, 16, 4, "ink")
     cv.rect(1, sy + 1, 14, 2, "wood")
-    # mooring posts at the river end: 4 px with their outline, a taupe cap, wet earth-dark wood, a 2 px foam ring
-    py = 0 if water_north else 23
-    for px_ in (0, 12):
-        cv.rect(px_, py + 6, 4, 2, "ice white")
-        cv.rect(px_, py, 4, 7, "ink")
-        cv.rect(px_ + 1, py + 1, 2, 2, "taupe")
-        cv.rect(px_ + 1, py + 3, 2, 3, "earth dark")
     return cv.t
 
 
@@ -240,21 +230,18 @@ def icon_hook(names: list[str]) -> np.ndarray:
 
 
 def icon_home(names: list[str]) -> np.ndarray:
+    """A log's sawn end resting on a plank ramp rising at 1 in 3 (R30-2: "to the slip", not a crate on a shelf)."""
     cv = Ink(names, 16, 16)
-    planks = _mask(16, 16, [(1, 10, 14, 5)])
-    logm = _mask(16, 16, [(2, 3, 12, 6)])
-    _outlined(cv, [(planks, "sand"), (logm, "soil")])
-    # the slip's planks: two boards with an ink seam, lit tops
-    cv.rect(1, 12, 14, 1, "ink")
-    cv.rect(1, 13, 14, 2, "wood")
-    cv.rect(1, 10, 14, 1, "ink")
-    # the log resting on them: lit top, bark, a sand face with a soil heart on the east
-    cv.rect(2, 3, 12, 2, "wood")
-    cv.rect(2, 5, 12, 3, "soil")
-    cv.rect(2, 8, 12, 1, "earth dark")
-    cv.rect(9, 3, 5, 6, "sand")
-    cv.rect(8, 3, 1, 6, "ink")
-    cv.rect(10, 5, 2, 2, "soil")
+    yy, xx = np.mgrid[0:16, 0:16]
+    top = 11 - xx // 3  # the ramp's top ink line: low at the water (west), high on the bank (east)
+    inner = (yy > top) & (yy <= top + 3) & (xx <= 14)
+    cv.put(((yy == top) | (yy == top + 4)) & (xx <= 15) | (inner & (xx == 15)), "ink")
+    cv.put(inner & (yy <= top + 1), "wood")  # the planks' lit edge
+    cv.put(inner & (yy > top + 1), "soil")
+    cv.put(inner & np.isin(xx, [2, 6, 10, 14]), "ink")  # plank seams across the slope
+    disc = (xx - 10.5) ** 2 + (yy - 4.5) ** 2 <= 9.5
+    _outlined(cv, [(disc, "sand")])  # the log's sawn end, outlined over the ramp it rests on
+    cv.put((xx >= 10) & (xx <= 11) & (yy >= 4) & (yy <= 5), "soil")  # its heart
     return cv.t
 
 
