@@ -376,6 +376,15 @@ async function stages() {
       1000,
     )
     .catch(() => false);
+  // ...and the press flashes the target marker (its alpha dips from 0.35 back up; the per-frame alpha overwrote it)
+  const flashed = await farm
+    .until(
+      (_st, w) => w.game.scene.getScene('Farm').highlight.gfx.alpha < 0.45, // its own throb never dips under 0.51
+      null,
+      'the target marker to flash on a press',
+      1000,
+    )
+    .catch(() => false);
   s = await farm.state();
   check(
     'farm-creek-place: placing in the old creek bed is refused with its line',
@@ -383,6 +392,7 @@ async function stages() {
     JSON.stringify(said),
   );
   check('farm-creek-place: the refusal shakes the farmer', shook === true, String(shook));
+  check('farm-creek-place: the press flashes the target marker', flashed === true, String(flashed));
   await farm.select(0); // the hoe: the bed's own line, not the land-for-sale one (critic review 1, #2)
   await farm.idle(); // the refusal's action lock runs out first
   const tilled = await farm.event('toast', () => farm.press('Space'));
