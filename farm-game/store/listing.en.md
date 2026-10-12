@@ -54,6 +54,8 @@ PLAYS OFFLINE
 No ads, no in-app purchases. Plays offline; your farm saves on your phone, with optional cloud backup through Google Play Games. Anonymous gameplay statistics help improve the game, and you can turn them off in Options.
 
 Available in English and Brazilian Portuguese.
+
+Made by Quiet Spirit Studio.
 ```
 
 ## What's new (max 500)
@@ -61,6 +63,13 @@ Available in English and Brazilian Portuguese.
 ```text
 The Dry Year, chapter one: Rosa's letter, the first green, the Old Spring and its channels, the Weir and the returning river, towing timber, and the first family coming home.
 ```
+
+## Developer
+
+- **Developer name:** Quiet Spirit Studio
+- **Application id:** com.quietspiritstudio.tinyacre
+- **Contact email and website:** the owner fills these in Play Console (Store settings > Store listing contact
+  details); use the studio's address, not a personal one.
 
 ## Category and tags
 

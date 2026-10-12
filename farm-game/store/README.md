@@ -42,7 +42,8 @@ Re-capture after any change to the HUD, hotbar or text that shows in a shot.
    it, ads off), then paste the link into Play Console > Main store listing > Video. The social trailer
    (`tiny-acre-trailer-social-en.mp4`) is for social posts only; label it as containing AI-generated footage where
    the platform asks.
-3. **Play Console:** create the app with the final application id (see `docs/MOBILE.md`), then upload the icon,
+3. **Play Console:** create the app as developer **Quiet Spirit Studio** with the application id
+   `com.quietspiritstudio.tinyacre`, then upload the icon,
    feature graphic and screenshots per language (en-US, pt-BR), paste the listing text, choose the category and
    tags, fill the content rating questionnaire, and fill the Data safety form and the privacy policy URL from the
    Data safety section in `agents/PUBLISHING.md` (cloud save through Google Play Games and opt-out analytics mean

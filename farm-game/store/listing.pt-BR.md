@@ -54,6 +54,8 @@ JOGA OFFLINE
 Sem anúncios, sem compras no app. Joga offline; sua fazenda fica salva no seu celular, com backup opcional na nuvem pelo Google Play Games. Estatísticas anônimas de jogo ajudam a melhorar o jogo, e você pode desligá-las nas Opções.
 
 Disponível em português do Brasil e em inglês.
+
+Feito por Quiet Spirit Studio.
 ```
 
 ## What's new (max 500)
@@ -61,6 +63,11 @@ Disponível em português do Brasil e em inglês.
 ```text
 O Ano Seco, capítulo um: a carta de Rosa, o primeiro verde, a Nascente Velha e suas valas, o Açude e a volta do rio, o reboque de troncos e a primeira família voltando para casa.
 ```
+
+## Developer
+
+- **Nome do desenvolvedor:** Quiet Spirit Studio
+- **ID do app:** com.quietspiritstudio.tinyacre
 
 ## Category and tags
 

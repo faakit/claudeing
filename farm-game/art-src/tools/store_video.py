@@ -45,6 +45,7 @@ if SOCIAL:
     BEATS.insert(0, ('veo-intro', 1, 105, 'The valley is fading', [], (0, 148, 800, 1452)))
 END_FRAMES = 84
 CARD = {'en': 'The Dry Year', 'pt-BR': 'O Ano Seco'}
+STUDIO = 'Quiet Spirit Studio'
 
 
 def end_card():
@@ -61,6 +62,10 @@ def end_card():
     ImageDraw.Draw(veil).rounded_rectangle([170, 650, A.W - 170, 790], radius=40, fill=150)
     img = Image.composite(Image.new('RGB', img.size, A.INK), img, veil.filter(ImageFilter.GaussianBlur(14)))
     A.embossed(img, CARD['en'], cx, 680, 10, 4, face=A.CREAM)
+    # the studio's sign-off, small, on an ink plate under the key art
+    w = A.text_width(STUDIO, 6) + 80
+    ImageDraw.Draw(img).rounded_rectangle([cx - w // 2, 1500, cx + w // 2, 1600], radius=20, fill=A.INK)
+    A.embossed(img, STUDIO, cx, 1528, 6, 2, face=A.SAND)
     return img
 
 
