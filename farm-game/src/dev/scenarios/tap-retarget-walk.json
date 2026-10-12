@@ -1,6 +1,6 @@
 {
   "title": "Tap again while walking (retarget mid-step)",
-  "about": "Owner bug 2. Farm, 09:00, the farmer at (10,17) facing east on an open row, nothing to work nearby. Tap (18,17), and while he walks tap (21,17) further on: he keeps going with no stop, no step back and no turn, the walk cycle running on; the path dots move to the new goal without a flash. Then tap (14,21), ahead and to the side: he finishes the step he is on, then turns once. Tap behind him (10,17): he turns back at once (the direction really changed). Hold a finger still mid-walk: the preview stays up until it lifts. e2e: e2e:controls, 'a second tap ahead mid-step keeps walking'.",
+  "about": "Owner bug 2. Farm, 09:00, the farmer at (10,17) facing east on an open row, nothing to work nearby. Tap (15,17), and while he walks tap (17,17) further on (the view is 12.5 tiles wide: from (10,17), 18 is off screen): he keeps going with no stop, no step back and no turn, the walk cycle running on; the path dots move to the new goal without a flash. Then tap (14,21), ahead and to the side: he finishes the step he is on, then turns once. Tap behind him (10,17): he turns back at once (the direction really changed). Hold a finger still mid-walk: the preview stays up until it lifts. e2e: e2e:controls, 'a second tap ahead mid-step keeps walking'.",
   "version": 18,
   "tags": ["farm", "controls", "feel"],
   "at": { "map": "farm", "tx": 10, "ty": 17, "facing": "right" },
