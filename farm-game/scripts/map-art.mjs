@@ -251,6 +251,10 @@ const COMPOSITION = {
   // opens); a plank bridge at y 22
   wendhead: {
     props: [],
+    // R27-3: the weir's wall across the gorge (x 19-21, rows 10-11), meeting the site sprite's west abutment: the
+    // river over it once the weir is open, standing over the dry bed before
+    weirSpan: [19, 10, 'wet'],
+    variants: { dry: { weirSpan: [19, 10, 'dry'] }, spring: { weirSpan: [19, 10, 'dry'] } },
     trees: ['oak', 'birch'],
     bushes: ['fern', 'bush_small', 'fern'],
     blooms: 0.2,
@@ -1218,6 +1222,19 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
     set('props', x, y + 1, `${top}_b`);
     L.shade[y * w + x] = L.shade[(y + 1) * w + x] = 0;
     if (aground) solid.add(y * w + x).add((y + 1) * w + x);
+  }
+  // R27-3: the weir's span across Wendhead's gorge (decor on the props layer; the gorge is solid in every stage, so
+  // collision is unchanged)
+  if (C.weirSpan) {
+    const [sx, sy, wet] = C.weirSpan;
+    for (let i = 0; i < 3; i++)
+      for (const [dy, part] of [
+        [0, 't'],
+        [1, 'b'],
+      ]) {
+        const n = `weir_span_${wet}_${i}_${part}`;
+        if (has(n)) set('props', sx + i, sy + dy, n);
+      }
   }
   // river decor on water tiles (M6, the town's river stage): reed beds and rock spurs on the shade layer, the mill
   // wheel (2 x 2) on the props layer; water is solid already, so collision is unchanged

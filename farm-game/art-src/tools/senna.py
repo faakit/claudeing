@@ -188,7 +188,9 @@ def up(mara: np.ndarray) -> np.ndarray:
               13: (3, 15)})
     _patch(t, 6, 0, [".......553........", "......5553........", ".....5533........."])
     t[12:14, 4:15] = CH.index("2")
-    _patch(t, 13, 3, ["0ll0222220ll0", "0lkl02220lkl0", ".0kkk020kkk0.", "..0000000000.."[:13]])
+    # R32-1: the hair either side of the point in red with a 2 px rose highlight (wine read as a dark mask at 1x)
+    _patch(t, 13, 3, ["0mm0222220ml0", "0lll02220lll0", ".0lll020lll0.", "..0000000000.."[:13]])
+    _recolour(t, (17, 18, 0, 20), {"k": "l"})
     _body(t, "up")
     # the apron's strings round the waist and their bow at the small of the back
     for x in range(5, 14):

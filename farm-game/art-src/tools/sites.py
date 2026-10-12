@@ -297,6 +297,47 @@ def weir(names: list[str], stage: int) -> np.ndarray:
     return cv.t
 
 
+def weir_span(names: list[str], wet: bool) -> np.ndarray:
+    """R27-3: the weir's wall across the gorge (48 x 32 over the gorge's three columns, tile rows 10-11, as map tiles
+    `weir_span_<dry|wet>_<0..2>_<t|b>`), the same masonry and courses as the site sprite (top at row 10, foot at 29) so
+    it continues the west abutment east to the far bank.
+
+      dry   (the gorge dry: before and during the work) the wall standing across the bare bed, its foot in shadow
+      wet   (the gorge running: the weir open) the river sheeting over the crest: water on the top face, a 2 px foam
+            band where it falls, foam at the foot
+    """
+    w, h = 48, 32
+    cv = Canvas(names, w, h)
+    yy, xx = np.mgrid[0:h, 0:w]
+    if not wet:
+        cv.put(ellipse(w, h, 24, 31, 26, 2.5) & (yy >= 29), "plum shadow")
+    _wall(cv, -1, w, 10, bottom=29)  # open on the west (it joins the site sprite's wall), closed at the east bank
+    if wet:
+        cv.rect(0, 11, w - 1, 3, "water")  # the river over the crest
+        cv.rect(0, 11, w - 1, 1, "sky")
+        for x in range(2, w - 4, 8):  # its glints, whole 2 px
+            cv.rect(x, 12, 2, 1, "sky")
+        cv.rect(0, 14, w - 1, 2, "ice white")  # the lip, where it falls
+        for x in range(1, w - 3, 6):  # the falling sheet down the face, in 2 px streaks
+            cv.rect(x, 16, 2, 6, "water")
+            cv.rect(x, 16, 2, 2, "sky")
+        cv.rect(0, 27, w, 2, "ice white")  # foam at the foot
+        cv.rect(0, 29, w, 2, "ice white")
+        cv.t[29:31, 3::7] = cv.c("sky")
+    return cv.t
+
+
+def span_tiles(names: list[str]) -> dict[str, np.ndarray]:
+    """The span as tiles for the tileset (tiles_extra)."""
+    out = {}
+    for kind, wet in (("dry", False), ("wet", True)):
+        t = weir_span(names, wet)
+        for i in range(3):
+            out[f"weir_span_{kind}_{i}_t"] = t[:16, i * 16 : (i + 1) * 16].copy()
+            out[f"weir_span_{kind}_{i}_b"] = t[16:, i * 16 : (i + 1) * 16].copy()
+    return out
+
+
 def build(names: list[str]) -> dict[str, np.ndarray]:
     out = {f"obj_site_spring_{i}": spring(names, i) for i in range(4)}
     out["obj_landmark_bathhouse"] = warm_pool(names)

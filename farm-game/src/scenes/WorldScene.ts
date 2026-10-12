@@ -161,6 +161,8 @@ import { t } from '../i18n';
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
 const CREEK_REVEAL_MS = 1800;
 /** The creek's banner: a title line and a line under it. */
+/** The creek's first-morning banner shows this long after the water starts down the bed (ms, R24-1). */
+const CREEK_BANNER_DELAY = 1200;
 const creekBanner = (): string => `${t('valley.creekTitle')}\n${t('valley.creekLine')}`;
 /** The river's first morning in town (M6): the dry town dissolves around the farmer, a little slower. */
 const RIVER_REVEAL_MS = 1600;
@@ -661,7 +663,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.reveal.start();
       runtime.valleyReveal = true;
       audio.play('water');
-      this.valleyMoment(creekBanner());
+      // R24-1: the plate waits until the water front has passed the top of the view (it covered the upper reach)
+      this.valleyMoment(creekBanner(), CREEK_BANNER_DELAY);
     }
     if (this.reveal) {
       this.reveal.update(delta);
@@ -1608,12 +1611,13 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /** A valley moment's banner (HUD), told where the farmer stands on screen so it can keep off them. */
-  private valleyMoment(text: string): void {
+  private valleyMoment(text: string, delay = 0): void {
     const cam = this.cameras.main;
     const p = getState().player;
     gameEvents.emit('valleyMoment', {
       text,
       farmerY: cam.y + (p.y - cam.worldView.y) * cam.zoom,
+      delay,
     });
   }
 

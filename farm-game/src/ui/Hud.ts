@@ -230,7 +230,11 @@ export class Hud {
         ),
       ),
       // The first green: the banner with the special-order fanfare until audio gives it its own jingle.
-      gameEvents.on('valleyMoment', (m) => this.valleyMoment(m.text, m.farmerY)),
+      gameEvents.on('valleyMoment', (m) =>
+        m.delay
+          ? this.scene.time.delayedCall(m.delay, () => this.valleyMoment(m.text, m.farmerY))
+          : this.valleyMoment(m.text, m.farmerY),
+      ),
       gameEvents.on('levelUp', (e) =>
         this.goalBanner(
           t('hud.levelUp', {

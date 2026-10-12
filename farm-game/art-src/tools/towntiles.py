@@ -4,7 +4,8 @@
                                    hull with a white sheer strake, a mast with its sail furled on the boom, a 2 px
                                    dark waterline ring on the water, no translucent water over it.
   heron_aground_t / _b             the same boat on the dry river's mud: listing (its bow 2 px over), its keel sunk in a
-                                   mud bank, a dry grey line where the water used to reach.
+                                   mud bank, a dry grey line where the water used to reach; the high flank's hull side
+                                   in shadow and mud banked against the low flank (R27-2).
   f_window_boarded, f_window_hi_boarded, f_doortop_red_boarded, f_doorlow_red_boarded, f_door_boarded
                                    the north-east house shut up for the dry years: two 2 px boards nailed across each
                                    window and door, over the facade as it was, so it reads as "someone will come back".
@@ -101,6 +102,18 @@ def heron(P, aground: bool) -> np.ndarray:
         t[mud] = c("soil")
         t[(mud & ~_erode(mud)) & (yy == 27)] = c("earth dark")
         del line
+        # R27-2: the list reads at phone scale: the high (west) flank shows 2 px of hull side in shadow inside its
+        # outline, and a mud wedge is banked against the low (east) flank, deepening toward the stern
+        for y in range(4, 27):
+            xs = np.nonzero(m[y])[0]
+            if len(xs) < 6:
+                continue
+            x0, x1 = int(xs[0]), int(xs[-1])
+            t[y, x0 + 1 : x0 + 3] = c("night navy")
+            wedge = min(3, max(0, (y - 6) // 4))
+            for x in range(x1 + 1, min(T, x1 + 1 + wedge)):
+                if t[y, x] < 0:
+                    t[y, x] = c("soil") if x < x1 + wedge else c("earth dark")
     return t
 
 

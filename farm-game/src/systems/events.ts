@@ -57,7 +57,7 @@ export interface GameEvents {
   settingsChanged: undefined;
   /** A moment the valley marks with the HUD banner and a jingle (the first green). */
   /** `farmerY`: the farmer's feet in screen px, so the banner can keep off them. */
-  valleyMoment: { text: string; farmerY?: number };
+  valleyMoment: { text: string; farmerY?: number; delay?: number };
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;
