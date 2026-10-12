@@ -391,21 +391,40 @@ async function runCombo(p, hand) {
         };
         requestAnimationFrame(tick);
       });
-      const r1 = await tileScreen(page, 18, 17);
+      // Both targets must be on screen: the view is 200 px (12.5 tiles) wide and the camera trails the walk, so the
+      // first is 5 tiles ahead and the second 2 more (tile 18 from (10,17) lands off the right edge, at x 228).
+      const r1 = await tileScreen(page, 15, 17);
       await t.tap(r1.x, r1.y, 60);
       // 6 px into the step from (12,17) to (13,17): the tile under the feet is still the one being left
-      await page.waitForFunction(() => window.__farm.getState().player.x >= 12 * 16 + 8 + 6, null, {
-        timeout: 5000,
-      });
-      const r2 = await tileScreen(page, 21, 17);
-      await t.tap(r2.x, r2.y, 60);
-      await page
+      const midStep = await page
+        .waitForFunction(() => window.__farm.getState().player.x >= 12 * 16 + 8 + 6, null, {
+          timeout: 5000,
+        })
+        .then(() => true)
+        .catch(() => false);
+      const r2 = await tileScreen(page, 17, 17);
+      if (midStep) await t.tap(r2.x, r2.y, 60);
+      // The camera still trails the walk while the finger is down, so the tap may resolve one tile past 17: take
+      // the walk's new goal from the route (any tile past the first target counts as "further ahead").
+      const goal2 = await page
         .waitForFunction(
           () => {
             const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
-            return w.route === null && window.__farm.getState().player.x >= 21 * 16 + 8 - 0.01;
+            const g = w.route?.path[w.route.path.length - 1];
+            return g && g.tx > 15 ? { tx: g.tx, ty: g.ty } : null;
           },
           null,
+          { timeout: 2000 },
+        )
+        .then((h) => h.jsonValue())
+        .catch(() => null);
+      await page
+        .waitForFunction(
+          (g) => {
+            const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
+            return w.route === null && window.__farm.getState().player.x >= g.tx * 16 + 8 - 0.01;
+          },
+          goal2 ?? { tx: 17 },
           { timeout: 5000 },
         )
         .catch(() => undefined);
@@ -419,8 +438,14 @@ async function runCombo(p, hand) {
       const rEnd = await player(page);
       check(
         `${tag}: a second tap ahead mid-step keeps walking: no step back, no turn (owner bug 2)`,
-        stepsBack === 0 && facedAway === 0 && rEnd.tx === 21 && rEnd.ty === 17,
-        `steps back ${stepsBack}, faced away ${facedAway}, at ${rEnd.tx},${rEnd.ty}`,
+        midStep &&
+          goal2 !== null &&
+          goal2.ty === 17 &&
+          stepsBack === 0 &&
+          facedAway === 0 &&
+          rEnd.tx === goal2.tx &&
+          rEnd.ty === 17,
+        `reached mid-step ${midStep} (first tap at ${r1.x},${r1.y}), new goal ${JSON.stringify(goal2)}, steps back ${stepsBack}, faced away ${facedAway}, at ${rEnd.tx},${rEnd.ty}`,
       );
 
       // Floating controls (no dock band): taps on the hotbar row (a face, the gap between two faces, a lip, the 2 px
@@ -1390,7 +1415,17 @@ try {
     Array.from({ length: Math.min(PARALLEL, queue.length) }, async () => {
       while (queue.length) {
         const [p, hand] = queue.shift();
-        await runCombo(p, hand);
+        // A throw inside one combo (an await that times out) fails that combo as a check; the others still run.
+        await runCombo(p, hand).catch((e) =>
+          check(
+            `${p.id} ${hand}: every check ran`,
+            false,
+            String(e?.stack ?? e)
+              .split('\n')
+              .slice(0, 3)
+              .join(' | '),
+          ),
+        );
       }
     }),
   );
