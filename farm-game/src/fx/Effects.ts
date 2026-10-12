@@ -351,10 +351,7 @@ export class Effects {
   }
 
   /** Quick horizontal shake to say "no". */
-  shake(
-    target: Phaser.GameObjects.Components.Transform & Phaser.GameObjects.GameObject,
-    amount = 2,
-  ): void {
+  shake(target: { x: number }, amount = 2): void {
     if (getState().settings.reduceMotion) return;
     const x0 = target.x;
     this.scene.tweens.add({

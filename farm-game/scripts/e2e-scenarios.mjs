@@ -367,12 +367,22 @@ async function stages() {
   await farm.load('farm-creek-place');
   await farm.ready('Farm');
   const said = await farm.event('toast', () => farm.press('Space'));
+  // the refusal's shake shows on the drawn farmer (syncSprite used to put him back on his spot every frame)
+  const shook = await farm
+    .until(
+      (st, w) => Math.abs(w.game.scene.getScene('Farm').sprite.x - st.player.x) >= 1,
+      null,
+      'the farmer to shake on a refusal',
+      1000,
+    )
+    .catch(() => false);
   s = await farm.state();
   check(
     'farm-creek-place: placing in the old creek bed is refused with its line',
     said?.text === 'The old creek bed. Best left clear.' && !(s.placed.farm ?? []).length,
     JSON.stringify(said),
   );
+  check('farm-creek-place: the refusal shakes the farmer', shook === true, String(shook));
   await farm.select(0); // the hoe: the bed's own line, not the land-for-sale one (critic review 1, #2)
   await farm.idle(); // the refusal's action lock runs out first
   const tilled = await farm.event('toast', () => farm.press('Space'));

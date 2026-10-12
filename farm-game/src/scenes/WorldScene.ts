@@ -250,6 +250,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private heldSeq: { at: number; xy: [number, number] | null }[] = [];
   /** The farmer dips 1 px on a strike without a drawn strike frame (until this time). */
   private dipUntil = 0;
+  /** A refusal's shake, added to the drawn farmer (syncSprite places him every frame, after the tweens ran). */
+  private readonly shakeOff = { x: 0 };
   /** The stick is held back until this many ms after a use (shorter than the use's lock). */
   private moveLock = 0;
   /** A push held while rooted walks the moment the root ends, without a second turn-in-place wait. */
@@ -333,6 +335,7 @@ export abstract class WorldScene extends Phaser.Scene {
     this.poseSeq = [];
     this.poseUntil = 0;
     this.dipUntil = 0;
+    this.shakeOff.x = 0;
     this.moveLock = 0;
     this.rootedPush = false;
     this.inputLocked = true;
@@ -994,7 +997,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private syncSprite(moving: boolean, delta = 0): void {
     const p = getState().player;
     const now = this.time.now;
-    this.sprite.setPosition(p.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
+    this.sprite.setPosition(p.x + this.shakeOff.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
     this.sprite.setDepth(10 + p.y);
     const posing = !!this.pose && now < this.poseUntil && !moving;
     this.sprite.setVisible(!posing);
@@ -1531,7 +1534,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = true;
       audio.play('error');
       haptic('error');
-      this.fx.shake(this.sprite);
+      this.fx.shake(this.shakeOff);
     }
   }
 
