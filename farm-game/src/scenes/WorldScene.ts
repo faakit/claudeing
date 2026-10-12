@@ -57,7 +57,7 @@ import {
   ACT_ITEM_ANCHORS,
   ACT_ORIGIN_Y,
 } from '../art/manifest';
-import { Effects } from '../fx/Effects';
+import { Effects, RISING_LABEL } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient, parseBlooms } from '../fx/Ambient';
@@ -1977,8 +1977,9 @@ export abstract class WorldScene extends Phaser.Scene {
   /**
    * World text never sits under a floating control plate (the world runs under the controls): a label (a plot
    * sign's price, a site's name, a villager's "!") that would be covered rises just above the plate, and settles
-   * back once it is clear. Its owner may move it any frame: a y it did not get from here is its new resting place.
-   * Labels in a tween (rising "+1" lines) are left alone.
+   * back once it is clear. Its owner may move it any frame: a y it did not get from here is its new resting place
+   * (a villager's bobbing "!" is moved by its tween every frame, so it is lifted from wherever the tween put it).
+   * Rising "+1" lines (`RISING_LABEL`) are left to their own tween.
    */
   private keepLabelsClear(): void {
     const ui = this.scene.get('UI') as unknown as { plates?: () => Plate[] } | null;
@@ -1986,7 +1987,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!plates) return;
     const cam = this.cameras.main;
     for (const o of this.children.list) {
-      if (!(o instanceof Label) || !o.visible || this.tweens.isTweening(o)) continue;
+      if (!(o instanceof Label) || !o.visible || o.name === RISING_LABEL) continue;
       let lift = this.labelLift.get(o);
       if (!lift || o.y !== lift.set) lift = { base: o.y, set: o.y };
       o.y = lift.base;

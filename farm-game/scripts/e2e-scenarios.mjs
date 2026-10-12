@@ -1473,7 +1473,7 @@ async function worldText() {
         const under = [];
         let seen = 0;
         for (const o of labels) {
-          if (w.tweens.isTweening(o)) continue;
+          if (o.name === 'rising') continue; // a "+1" line rises on its own tween (fx/Effects RISING_LABEL)
           const b = o.getBounds();
           const x0 = b.x - cam.scrollX + cam.x;
           const y0 = b.y - cam.scrollY + cam.y;
@@ -1499,6 +1499,33 @@ async function worldText() {
         r.under.length === 0,
         JSON.stringify(r),
       );
+      if (name === 'ui-float-controls' && profile === 'i13') {
+        // A villager's bobbing "!" (a Label in a looping tween) put over Action rises clear of it like any label
+        // (labels in a tween were all skipped, so the "!" stayed under the plate).
+        await farm.eval(() => window.__farm.dev.clock.pause()); // no schedule sync hides the marker meanwhile
+        const bob = await farm.eval(async () => {
+          const w = window.__farm.game.scene.getScene('Farm');
+          const cam = w.cameras.main;
+          const plate = window.__farm.game.scene
+            .getScene('UI')
+            .plates()
+            .find((p) => p.kind === 'disc' && p.r >= 28); // Action
+          const m = [...w.npcs.shown.values()][0].marker;
+          const wx = plate.x - cam.x + cam.scrollX;
+          const wy = plate.y - cam.y + cam.scrollY;
+          w.tweens.killTweensOf(m);
+          m.setVisible(true).setPosition(wx, wy);
+          w.tweens.add({ targets: m, y: wy - 3, duration: 450, yoyo: true, repeat: -1 });
+          await window.__farm.dev.wait.frames(5);
+          const b = m.getBounds();
+          return { bottom: b.bottom - cam.scrollY + cam.y, plateTop: plate.y - plate.r };
+        });
+        check(
+          'ui-float-controls (i13): a bobbing villager "!" over Action rises clear of the plate',
+          bob.bottom <= bob.plateTop,
+          JSON.stringify(bob),
+        );
+      }
       await farm.close();
     }
 }

@@ -22,6 +22,9 @@ interface Burst {
   spread?: number;
 }
 
+/** The name of a floatText label: it rises on its own tween, so WorldScene never lifts it clear of a plate. */
+export const RISING_LABEL = 'rising';
+
 /**
  * Pooled particles, floating numbers and tool swings. Purely cosmetic. Everything moves and sizes in whole pixels
  * (particles are 1 or 2 px squares, icons squash by whole pixels, swings turn in quarter turns), and Calm mode
@@ -208,7 +211,7 @@ export class Effects {
     });
   }
 
-  /** Rising, fading number or word above a point. */
+  /** Rising, fading number or word above a point (named `RISING_LABEL`). */
   floatText(x: number, y: number, text: string, color = 0xf4ead2): void {
     // While a goal or level banner shows at the top of the world view, a line that would rise into it goes below
     // the farmer instead (coordinator, onboarding finding: "+1 Wild Leek" drew over "GOAL COMPLETE").
@@ -217,7 +220,9 @@ export class Effects {
     const label = new Label(this.scene, Math.round(x), Math.round(y), text, {
       color,
       align: 'center',
-    }).setDepth(9500);
+    })
+      .setDepth(9500)
+      .setName(RISING_LABEL); // world text kept clear of the controls leaves it to its own tween
     const still = calm();
     this.scene.tweens.add({
       targets: label,
