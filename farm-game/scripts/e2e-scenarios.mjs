@@ -1019,8 +1019,8 @@ async function spring() {
     s.stats['place.spring'] === 3 &&
       s.stats['placesDone'] === 1 &&
       (await hudLine(farm)) === 'The Old Spring is open!' &&
-      (await farm.eval(() => window.__farm.game.scene.getScene('Wendhead').npcs.at(7, 15))) ===
-        'rosa',
+      (await farm.eval(() => window.__farm.game.scene.getScene('Wendhead').npcs.at(8, 15))) ===
+        'rosa', // two tiles east: the site's sprite covers 6-7
     JSON.stringify({ stage: s.stats['place.spring'], hud: await hudLine(farm) }),
   );
   if (process.env.SHOTS) await farm.shot('spring-opened', process.env.SHOTS);

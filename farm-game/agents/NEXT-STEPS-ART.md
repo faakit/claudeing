@@ -1,140 +1,168 @@
-# Art: next steps (handover, The Dry Year, 2026-10-11)
+# Art: next steps (handover, The Dry Year round 2, 2026-10-12)
 
-Branch `art/dry-year` (from `integration/dry-year-core` db29f2a). The owner asked every lane to wrap up after item 1.
-`npm run verify:fast` was green before each commit. Perf stays at 2-5 draws. Everything was judged from headless
-renders at the iPhone 13 and SE sizes; nobody has looked at it on a real phone.
+Branch `art/dry-year-2` (from `integration/dry-year-2` 7222bb3, with `origin/integration/dry-year-2` 022d0e7 merged
+in at the end; the merge had no conflicts and touched no map or art file). Art critic: add45bc37ac10f5da (reviews
+22-27 in `C:/Users/andre/dev/tiny-acre/art-critique/`). Every item was judged in its scenario at the iPhone 13 and SE
+sizes in headless Chromium. Nobody has looked at it on a real phone.
 
 ## Shipped this round
 
-1. **The chars atlas split** (128ef5d). The 68 player action frames (`player_act_*`) moved to a second chars atlas,
-   `chars2` (512x256). `chars` is now 512x512, with room for new character frames. Frames load by name across
-   atlases, so no texture key changed.
-   - `build.py` has a `chars2` group, and `drawn.py` routes the action frames to it.
-   - `manifest.ts` has `ATLAS_FILES.chars2`, and the action entries are in group `chars2`.
-   - `tests/animation-frames.test.ts` reads both chars atlases.
-   - New character art (villagers, the missing action facings) goes into `chars2`.
-2. **Channel tiles** (0dd9a35): item 1, the valley critic's R5-3.
-   - **Drawn in code:** `art-src/tools/channeltiles.py`. As with the creek, an autotile comes out better in code
-     than from Flow.
-   - **Tiles:**
-     - `chan:<wet|dry>:<mask>`: the ditch, autotiled by its four neighbours;
-     - `culvert:<mask>`: stone headwalls on a path cell;
-     - `chanmouth:<n|e|s|w>`: the cut through the creek bank.
+The critic accepted items 1, 2, 3, 5, 6 and 7. Item 4 was closed by ruling D25-1 (no bake).
 
-     The mask is N1 E2 S4 W8. A bit is set where that neighbour is a channel or creek water.
+1. **The Old Spring site and the Warm Pool** (c76ed7b, R22-1 fix in 7477736). Accepted in review 22.
+   - `obj_site_spring_0..3` (32x32, a 2x2 footprint, base on the bottom row) are drawn in code in
+     `art-src/tools/sites.py`, not from Flow. The `site_spring` sheets pixelized to about 36 native px, a heap of
+     1-2 px gravel.
+   - The same stones run through all four stages:
+     - 0: the full heap, as tall as the farmer;
+     - 1: the crown and front stones off, one gap and some glints;
+     - 2: the mouth clear, the stones rolled aside, a trickle;
+     - 3: mossed stones and an open pool, which spills out of the sprite's south-east toward the map's pool (R22-1).
+   - `obj_landmark_bathhouse` is now the Warm Pool (32x40): the same stones round a pool, a lantern (the one warm
+     accent), a bench and solid steam wisps. It replaces the Flow pavilion, by the critic's ruling (a).
+   - Code changes:
+     - A site also blocks the tile east of it (`WorldScene`, since its sprite covers that tile).
+     - The opening-morning villager now waits at site+2 (`systems/valley.ts` `siteVisit`).
+     - A new scenario, `warm-pool-built`.
+2. **Rosa's letter paper and the Ilse icons** (0482cf4). Accepted in review 23.
+   - `ui_letter_*` (`letterpaper.py`) is a 9-slice: flat parchment, a deckled 2 px soil edge, a sand margin and a
+     folded top-right corner.
+     - `src/ui/sheetSkin.ts` now has one 9-slice composer, shared by `sheetTexture` and the new `letterTexture`.
+     - `TitleScene` uses `letterTexture` (tiled, never stretched) and draws the letter in ink with no shadow.
+     - Slice spec: `LETTER_SLICE` in the manifest.
+   - Icons:
+     - `item_ilse_tin` and `item_spade` are drawn in `drawn.py`. There is now one spade drawing for the hotbar, the
+       Action button and the swing.
+     - `item_ilse_journal` comes from Flow `icons_ilse` b (crop `ilse1b/journal1`).
+   - Ruling D23-1: the fold stays inside the 8 px slice. Don't trade text overlap for a bigger fold.
+3. **Valley banner contrast** (f636585). Accepted in review 24.
+   - `Hud.valleyMoment` draws the gold title and the parchment line on a solid walnut plate: a 2 px ink edge, a lit
+     top, sized to the text, opaque at rest.
+   - `WorldScene.valleyMoment` sends `farmerY`, the farmer's feet in screen px. When the farmer stands in the
+     plate's slot (the town's clamped north edge on the river morning), the plate drops below them.
+   - Ruling D24-1: keep the river plate as wide as it is.
+4. **Baked dry palette: not baked**, by ruling D25-1 (no commit).
+   - A bake with the `art/dryPalette.ts` table gives the same pixels as the runtime remap, which already runs hidden
+     under the title wipe or the sleep fade. A bake would add about 600 KB for nothing.
+   - The only reason ever to bake would be per-tile dry detail (cracked turf, dead tufts) that a slot remap can't
+     draw.
+5. **R21 fixes** (7477736). Accepted in review 25.
+   - R21-1: a 2 px earth-dark rim outside the lit south and east lips (`channeltiles.rim`), so crops beside a
+     channel no longer melt into the wood.
+   - R21-2: winter wet channels and mouths get their own winter tiles through `tiles_extra.SEASON_OVERRIDES`: dark
+     water, a 2 px ice-white edge and sand lips.
+   - R21-3: culvert headwalls are 6 px deep and 4 px wider than the cut, with a lintel over the south mouth.
+   - R21-4 is closed: the critic saw the channels in game.
+6. **M6 visuals** (e6b6aca, R27-1 fix in f6664db). Accepted in review 27.
+   - `obj_site_weir_0..4` (`sites.py`): a masonry wall and its gap, in five silhouettes.
+     - 0: rubble heaped in the gap;
+     - 1: the rubble's top out;
+     - 2: the gap cleared to the footings;
+     - 3: Orin's gate set, one beam short;
+     - 4: the beam in.
+   - `item_sluice_gate` is drawn in `drawn.py`.
+   - `art-src/tools/towntiles.py` adds tileset tiles, appended at the end of `tiles_extra`:
+     - `heron_t/_b` (afloat, with a 2 px navy waterline) and `heron_aground_t/_b` (leaning, sunk in a mud bank,
+       with a dry hull line);
+     - boarded facade pieces (`f_window_boarded`, `f_window_hi_boarded`, `f_door_boarded`,
+       `f_doortop_red_boarded`, `f_doorlow_red_boarded`), where the door has planks crossing it (R27-1);
+     - `reeds_bed`, `rockspur` and a static 2x2 `millwheel`.
+   - `scripts/map-art.mjs`:
+     - The town's boat uses the Heron tiles.
+     - A two-storey boarded facade is boarded piece by piece, with no window light.
+     - A new town config key, `river`, places the reed bed (18,24), the rock spurs (19,26 and 21,27) and the mill
+       wheel (21-22, 30-31). They go on water tiles only, so collision is unchanged. The key is empty in the `dry`
+       variant.
+   - Maps were regenerated with `npm run art:maps`. `tiles.png` is now 512x1184 (it was 512x1136).
+7. **The missing action facings** (845a0cb).
+   - `codeacts.py` adds `plant` right (left mirrors it) and `harvest` up, both drawn on the idle head.
+   - The crop in harvest up is Flow's harvest-down sprig, drawn behind the head.
+   - `actFrames.json` now lists every facing. `chars2` grew to 512x512 (78 frames).
+   - Accepted in review 29.
 
-   - **Shape:** the cut is 10 px wide, with a 3 px shadowed north face, a 2 px west face, and a 2 px lit lip on the
-     south and east sides.
-     - Dry bed: earth dark with clods and pebbles.
-     - Wet bed: water, a 2 px dusk-blue shade and a 3x2 sky glint.
-     - No 1 px features and no alpha.
-   - **Placement:** `authored.build` appends the tiles at the END of the tileset, after the baked map tiles, so no
-     map gid moved.
-     - The game looks them up by name in `src/art/channelTiles.ts` (`channelMask`, `channelTileName`,
-       `culvertTileName`, `mouthTileName`, `tileGid`, `isGroundDecal`, `CHANNEL_WATER_BAND`).
-     - The tileset grew to 512x1136. The `.tmj` files changed only in their tileset header (imageheight and
-       tilecount, from `npm run gen:maps`).
-   - **WorldScene** (a shared file):
-     - `paintChannel` now autotiles each cell and repaints its painted neighbours.
-     - It hides ground decals (flowers, tufts) on a channel cell and restores them when the channel is filled in.
-       This follows the critic's ruling: the hiding is worked out at draw time and nothing is saved.
-     - It draws culverts and creek mouths in the shade layer.
-     - The new public `channelGid(tx, ty, look)` is for the feel lane's water fx.
-     - A few new lines in `create` index the gids beyond the `.tmj` tile count. Phaser's `putTileAt` needs that
-       for tiles past the map's own count.
-   - **Seasons:** wet channels and mouths use the `shore` category (in winter: ice water and sand lips). Dry channels
-     use `ground`. The dry palette doesn't touch them, because they contain no grass ramp.
-   - **Scenario:** `channels-serpentine` has corners, a T, a cross, a culvert under the 2-wide path, the creek
-     mouth, and a dry tail past flow 24.
-   - **Tests:** `tests/channel-tiles.test.ts`, plus an e2e check in the `channels` block of
-     `scripts/e2e-scenarios.mjs`.
-3. **Flow sources for items 2 and 3**, generated and downloaded to `flow-raw/` but not built yet. They are recorded
-   as entries 42-45 in `art-src/flow/prompts.json`:
-   - `site_spring-a/b`: the Old Spring in four stages. Both are good; b sits on a hillside.
-   - `warm_pool-a/b`: the Warm Pool, dry and full. In a, both versions are clean.
-   - `icons_ilse-a/b`: the seed tin, the journal and the spade. b has six small, clean icons.
-   - `letter_paper-a/b`: parchment with a cherry blossom, a fold and a tea stain.
+## Atlases now
 
-   **Reference images can now be uploaded:**
-   - The prompt box accepts a dropped file. Build a `File` in the page with `javascript_tool`, then dispatch
-     `dragenter`, `dragover` and `drop` on the prompt's contenteditable.
-   - Base64 pasted into the tool call got corrupted at 16 KB. Send it in chunks of about 1.5 KB, each with a CRC32
-     check (see `C:/Users/andre/dev/tiny-acre/art-scratch/refs/`), then upscale it in a canvas before the drop.
-   - The upload `tiny-acre-farm-reference.png` is in the Flow project "out. 08 - 07:06". Attach it with the +
-     picker; the attachment clears after each submit.
+| file | size | change |
+|---|---|---|
+| world | 512x256 | unchanged size |
+| ui | 512x256 | was 512x128 |
+| chars | 512x512 | unchanged |
+| chars2 | 512x512 | was 512x256 |
+| tiles | 512x1184 | was 512x1136 |
+
+Each atlas is still one texture, and draws are unchanged.
+
+## Next steps (open findings, by priority)
+
+1. **R27-2 (minor):** the aground Heron's lean is hard to read at phone scale. Show 2-4 px of hull side in shadow on
+   one flank, and bank a mud wedge against the low side. The code is in `towntiles.heron(P, aground=True)`.
+2. **R27-3 (minor):** the weir only shows its west abutment, because the sprite ends at the gorge. Stages 3-4 need a
+   span across the gorge (x 19-21, y 11) in tiles. That means a delta region in `generate-maps.mjs` `wendhead`:
+   - Keep the walkability rule: a stage blocks exactly like its water stage.
+   - A test enforces that rule.
+3. **R24-1 (minor):** THE CREEK RUNS covers the creek's upper reach for about 3 s. Fade the plate in about 1.2 s
+   later, once the water front has passed the top of the view. The code is in `Hud.valleyMoment`, with
+   `farm-creek-first-morning` as the scenario.
+4. **Wendhead's look:** it is still a fenced meadow (the hillside, ferns and gorge banks are not done). The tiles
+   are this lane's job; placement is in `function wendhead(v)`.
+5. **Per-tile dry detail** (cracked turf, dead tufts): the only case where baking the dry palette would pay
+   (ruling D25-1).
+6. **Nits:**
+   - R27-4: the bottom tree border hides most of the mill wheel.
+   - R23-1: the title sky's band edges use 1 px checker dithers, in TitleScene's sky.
+7. **R29-1 (nit):** plant right's crouch reads through the arm only. Give frames 1-3 a 2 px knee fold; that needs a
+   side-crouch body in `toolanim`.
+8. **Perf on a quiet machine:** rerun `npm run perf`. The critic measured up to 2.99 ms JS a frame at 1x while this
+   lane's full verify was running; the budget is 3.5 ms.
+
+## Rulings standing
+
+- D20-1: channels hide flora and decals.
+- D21-1: the crisp rim stays.
+- D21-2: the glint is static.
+- D23-1: the letter's fold stays inside 8 px.
+- D24-1: the river plate keeps its width.
+- D25-1: the dry palette is not baked.
+- The critic's acceptance criteria are in reviews 22-27.
 
 ## Merge notes (for the coordinator)
 
-- **Merge order and map rebuild:** merge `art/dry-year` after any branch that changes `art-src/map-tiles.json` (the
-  M6 builder). Then run `npm run art:maps` and commit the maps, the tilesets and `map-tiles.json`. The channel tiles
-  stay last whatever the maps add, because the game reads them by name.
-- **WorldScene conflict with `feel/dry-year`:** both lanes touched the channel code.
-  - Keep this branch's `paintChannel`, `drawChannelCell` and `channelGid`.
-  - Point the feel lane's `ChannelFx` `src` callback at `channelGid(tx, ty, look)`, and its foam band at
-    `CHANNEL_WATER_BAND`. The feel lane noted this in NEXT-STEPS-FEEL.md.
-- **Other shared files:** `scripts/e2e-scenarios.mjs` (the serpentine check), `art-src/tools/seasons.py` (two
-  categories) and `tests/animation-frames.test.ts`.
-- **Text baked into images (for i18n):** none. No shipped image contains text.
-  - Rosa's letter paper is blank by design, and the game draws its text.
-  - Once the paper ships, `TitleScene.drawLetter` must draw the letter in ink instead of cream, which is unreadable
-    on parchment.
-
-## Next steps (the rest of the Dry Year list, by priority)
-
-1. **The critic's channel findings.** The critic accepted channels at 0dd9a35 with no blockers, by reading the
-   code and the tilesets only, since tests were stopped. The findings are recorded in
-   `C:/Users/andre/dev/tiny-acre/art-critique/`.
-   - **R21-1 (minor):** crops next to the wood lip have about 1.2:1 fill contrast and read only by their ink
-     outline. If a seedling melts in the game, put one soil-dark row before the wood.
-   - **R21-2 (minor):** winter wet channels have no ice-white edge. They only get the shore remap.
-   - **R21-3 (nit):** the culvert headwalls are thin on the 2-wide path.
-   - **R21-4:** nobody has seen the culvert, the creek mouth or the flower hiding in the game yet. Open
-     `channels-serpentine`.
-   - **Rulings:** D21-1 keeps the crisp cut with no tufts. D21-2 keeps the glint static; if it is ever animated,
-     use whole-frame swaps.
-2. **The Old Spring site in four stages**, `obj_site_spring_0..3`.
-   - 32x32: a 2x2 rockfall at the pool's mouth. Build it from `site_spring-b` with the pixelize pipeline (crop,
-     `sprites.json`, `build.py --sprites`).
-   - Judge it in `spring-site-ask`, `spring-site-funded`, `spring-site-work` and `spring-opened`.
-   - The Warm Pool landmark (`obj_landmark_bathhouse`) comes from `warm_pool-a`.
-3. **Rosa's letter paper** (`ui_letter_paper`; scenario `title-first-launch`).
-   - Build it from `letter_paper-a` as a 9-slice, like `ui/sheetSkin.ts`. The card is 184 px wide and its height
-     varies with the text, and `setDisplaySize` would stretch the pixels.
-   - Switch the letter text to ink in `TitleScene` (a few lines in the onboarding lane's file).
-   - The seed tin, journal and spade icons come from `icons_ilse-b`.
-4. **Bake the dry palette** in `seasons.py` from the table in `art/dryPalette.ts`. Keep it only if it looks at least
-   as good as the runtime remap: `valley-farm-dry` must stay straw-coloured, never orange.
-5. **Wendhead's look.** Today it is a fenced meadow with a pool, generated into `wendhead.tmj`.
-   - It needs the hillside, the spring under the rockfall, ferns, and the dry gorge for M6.
-   - This lane makes the tiles. The map owner places them, in `function wendhead(v)` in `generate-maps.mjs`.
-6. **M6 visuals**, with the M6 builder (`valley/m6`):
-   - town `dry`: D1 cracked mud and the boarded north-east house;
-   - town `river`: reeds, rocks and the mill wheel;
-   - the Heron afloat;
-   - Wendhead restored.
-7. **The missing action facings:** the harvest back view and the plant side view, into `chars2`.
-
-## Flow usage this round
-
-Four prompts in "out. 08 - 07:06" (Nano Banana 2.1, x2 each). The first three use the uploaded farm reference; the
-letter uses none. One reference upload. No quota message.
+- **Map rebuild:** the tileset grew (new tiles at the end of `tiles_extra`), so every `.tmj` changed in its gids.
+  - If another branch changes `art-src/map-tiles.json`, `generate-maps.mjs` or `map-art.mjs`, merge it first. Then
+    run `npm run art:maps` and commit the maps and tilesets.
+  - Channel tiles are read by name, so they don't care about the order.
+- **Shared files touched:**
+  - `src/scenes/WorldScene.ts`: site blocking and the `valleyMoment` helper.
+  - `src/systems/valley.ts`: `siteVisit` +2.
+  - `src/systems/events.ts`: `valleyMoment.farmerY`.
+  - `src/ui/Hud.ts`: the plate.
+  - `src/ui/sheetSkin.ts`: the shared 9-slice composer.
+  - `src/scenes/TitleScene.ts`: the letter.
+  - `scripts/map-art.mjs`: Heron, boarded and `river`.
+  - `src/art/manifest.ts`: site and letter entries.
+- **Text baked into images:** none.
 
 ## Verified and not verified
 
 - **Verified:**
-  - `verify:fast` was green at 128ef5d and 0dd9a35.
-  - The full `verify` at 0dd9a35 is partial. Its unit phase failed only on 5 s timeouts while other lanes loaded
-    the machine. The same tests passed in `verify:fast`.
-  - `e2e:scenarios` passed when rerun alone, including `channels-serpentine`.
-  - The run was then stopped on the owner's request, before mobile, onboarding, controls, feel and perf.
-  - Headless shots of `channels-row`, `channels-flow-cap` and `channels-serpentine` at the iPhone 13 and SE sizes.
-- **Untested:**
-  - The handover commits.
-  - The full `verify` phases 2-4 (controls, feel, perf at 1x/4x/6x) with the 512x1136 tileset and the `chars2`
-    atlas.
+  - `verify:fast` was green before every commit. One run had an i18n unit test time out at 5 s under load; it
+    passed alone.
+  - Scenario shots at i13 and SE for every item (in `C:/Users/andre/dev/tiny-acre/art-scratch/r1..r7`).
+  - In-game action strips for item 7.
+  - The full `npm run verify` after the merge, with these results:
+    - Every phase passed except two.
+    - `e2e:scenarios` failed one check that the merge had just made able to fail: it expected Rosa at 7,15 on the
+      spring's opening morning. It now expects 8,15, two tiles east (the site's sprite covers 6-7), and
+      `e2e:scenarios` passes alone.
+    - `perf 6x` was flaky beside the other suites and passed alone.
+    - Perf at 1x and 4x was within budget (at most 12 draws and 3.5 ms JS a frame).
+- **Not verified:**
   - A real phone.
-  - The channels in winter, summer and fall in the game.
-- **Run before merge:**
-  - `npm run verify` on a quiet machine, in particular `perf` (draws must stay at 2-5 with the second chars atlas)
-    and `e2e:scenarios`.
-  - After merging the M6 builder's maps, `npm run art:maps`, then `verify` again.
+  - The winter wet channels in game: water doesn't run on the winter day the scenario shows, so the winter look was
+    judged from the tile sheet.
+  - The Warm Pool next to the spring site in other seasons.
+
+## Flow usage this round
+
+None. Every new asset is drawn in code. The one Flow crop added is `ilse1b/journal1`, from the `icons_ilse-b` sheet
+generated last round.
