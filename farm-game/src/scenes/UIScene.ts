@@ -84,6 +84,8 @@ import { onLocaleChange, t } from '../i18n';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
+/** The fishing sheet opens by this long after a cast even if no world announced the cast landing. */
+const CAST_FALLBACK_MS = 900;
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
 // The Interact icons below are solid (no alpha): they sit on the floating plates, and a semi-alpha pixel at the iPhone
@@ -296,10 +298,15 @@ export class UIScene extends Phaser.Scene {
         inputHub.clearHeld();
         this.npc.openFor(id);
       }),
+      // The sheet opens once the farmer's cast has played out (the world says so with castReady), never over
+      // the rod's wind-up frozen mid-swing; a fallback opens it anyway if no world answers.
       gameEvents.on('startFishing', ({ fish, bait }) => {
         inputHub.clearHeld();
-        this.fishing.start(fish, bait);
+        runtime.fishing = true;
+        this.pendingCast = { fish, bait };
+        this.time.delayedCall(CAST_FALLBACK_MS, () => this.openCast());
       }),
+      gameEvents.on('castReady', () => this.openCast()),
       inputHub.on('menu', () => this.toggleMenu()),
       inputHub.on('confirm', () =>
         this.allModals()
@@ -714,6 +721,21 @@ export class UIScene extends Phaser.Scene {
     this.jarPanels = { jar: this.jar, [MOVE_PANEL]: this.move };
     for (const m of [...this.panels.values(), this.jar, this.move, this.npc, this.plot])
       m.onClosed = () => void saveNow(true);
+    this.fishing.onClosed = () => {
+      runtime.fishing = false;
+      void saveNow(true);
+    };
+  }
+
+  /** The fishing mini-game a cast started, waiting for the cast to land. */
+  private pendingCast: { fish: string; bait: boolean } | null = null;
+
+  private openCast(): void {
+    const c = this.pendingCast;
+    if (!c) return;
+    this.pendingCast = null;
+    inputHub.clearHeld();
+    this.fishing.start(c.fish, c.bait);
   }
 
   /** Which sheet is open (by panel type) and the menu tab, for the guided start. */

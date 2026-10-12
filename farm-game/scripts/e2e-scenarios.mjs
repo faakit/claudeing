@@ -1957,6 +1957,162 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- fishing: the rod alone (owner bug)
+
+/**
+ * Step the paused loop frame by frame from an Action press until the fishing sheet has been open a few frames,
+ * recording what the farmer shows each frame (the pose image's texture, or the sprite's when no pose shows) and any
+ * tool icon swinging beside him.
+ */
+async function castFrames(farm) {
+  await farm.eval(() => window.__farm.dev.loop.pause());
+  await farm.page.keyboard.down('Space');
+  const seq = [];
+  try {
+    for (let i = 0; i < 90; i++) {
+      if (i === 3) await farm.page.keyboard.up('Space');
+      const r = await farm.eval(() => {
+        window.__farm.dev.loop.step(1);
+        const w = window.__farm.game.scene.getScenes(true).find((sc) => sc.grid);
+        const ui = window.__farm.game.scene.getScene('UI');
+        const shown = w.pose?.visible
+          ? w.pose.texture.key
+          : w.sprite.visible
+            ? w.sprite.texture.key + ':' + w.sprite.frame.name
+            : '-';
+        const icons = w.children.list
+          .filter((o) => o.visible && o.type === 'Image' && o.depth === 9300)
+          .map((o) => o.texture.key)
+          .filter((k) => /hoe|pick|can|scythe|axe|spade|rod/.test(k));
+        return { shown, icons, sheet: ui.fishing.isOpen };
+      });
+      seq.push(r);
+      if (r.sheet && seq.filter((x) => x.sheet).length >= 4) break;
+    }
+  } finally {
+    await farm.page.keyboard.up('Space');
+    await farm.eval(() => window.__farm.dev.loop.resume());
+  }
+  return seq;
+}
+
+/** A bank tile near the farmer with water on the given side (stand there, face it, cast). */
+const bankFacing = (farm, dir) =>
+  farm.eval((d) => {
+    const w = window.__farm.game.scene.getScene('Farm');
+    const v = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[d];
+    const p = window.__farm.getState().player;
+    const px = Math.floor(p.x / 16);
+    const py = Math.floor(p.y / 16);
+    let best = null;
+    for (let dy = -14; dy <= 14; dy++)
+      for (let dx = -14; dx <= 14; dx++) {
+        const tx = px + dx;
+        const ty = py + dy;
+        const here = w.tileInfo({ tx, ty });
+        const there = w.tileInfo({ tx: tx + v[0], ty: ty + v[1] });
+        if (here.kind === 'water' || here.blocked || here.door || there.kind !== 'water') continue;
+        const dd = Math.abs(dx) + Math.abs(dy);
+        if (!best || dd < best.dd) best = { tx, ty, dd };
+      }
+    return best;
+  }, dir);
+
+/** The rod's frames, less its swing frame (1), which carries the pickaxe's swoosh arc. */
+const ROD_ONLY = /^player_(tool_rod_\w+_[023]|act_reel_\w+_\d)$/;
+
+async function fishCast() {
+  for (const profile of ['se', 'i13']) {
+    const farm = await openScenario(browser, url, 'fish-cast', { profile });
+    for (const dir of ['right', 'left', 'down', 'up']) {
+      const at = await bankFacing(farm, dir);
+      if (!check(`fish-cast (${profile}): a bank to cast ${dir} from`, !!at)) continue;
+      await farm.mutate(
+        (s, f, a) => {
+          s.player.x = a.tx * 16 + 8;
+          s.player.y = a.ty * 16 + 11;
+          s.player.facing = a.dir;
+          s.energy = 999;
+        },
+        { ...at, dir },
+      );
+      await farm.select(3);
+      await farm.idle();
+      const seq = await castFrames(farm);
+      const before = seq.filter((x) => !x.sheet);
+      const open = seq.filter((x) => x.sheet);
+      const bad = seq.filter((x) => !ROD_ONLY.test(x.shown) || x.icons.length);
+      check(
+        `fish-cast (${profile}, ${dir}): from the first frame the farmer shows only the rod, cast to line out`,
+        before.length >= 3 && open.length >= 1 && bad.length === 0,
+        JSON.stringify({ bad: bad.slice(0, 3), first: seq[0], n: before.length }),
+      );
+      check(
+        `fish-cast (${profile}, ${dir}): the sheet opens over the farmer holding the line out`,
+        open.every((x) => /^player_act_reel_\w+_0$/.test(x.shown)),
+        JSON.stringify(open[0]),
+      );
+      // A catch: the line comes in with the reel, still the rod alone, then he stands.
+      await farm.eval(() => window.__farm.gameEvents.emit('fishCaught', undefined));
+      await closeSheet(farm);
+      const after = [];
+      await farm.eval(() => window.__farm.dev.loop.pause());
+      for (let i = 0; i < 40; i++)
+        after.push(
+          await farm.eval(() => {
+            window.__farm.dev.loop.step(1);
+            const w = window.__farm.game.scene.getScene('Farm');
+            return w.pose?.visible ? w.pose.texture.key : `sprite:${w.sprite.frame.name}`;
+          }),
+        );
+      await farm.eval(() => window.__farm.dev.loop.resume());
+      const posed = after.filter((x) => !x.startsWith('sprite:'));
+      check(
+        `fish-cast (${profile}, ${dir}): the catch reels in with the rod, then the farmer stands`,
+        posed.length > 0 &&
+          posed.every((x) => ROD_ONLY.test(x)) &&
+          after.at(-1).startsWith('sprite:'),
+        JSON.stringify([...new Set(after)]),
+      );
+    }
+    // A cast straight after another tool's swing: the pickaxe's (forced, mid-pose) and the hoe's.
+    for (const tool of [
+      ['pickaxe', 'mine'],
+      ['hoe', 'till'],
+    ]) {
+      const at = await bankFacing(farm, 'right');
+      await farm.mutate((s, f, a) => {
+        s.player.x = a.tx * 16 + 8;
+        s.player.y = a.ty * 16 + 11;
+        s.player.facing = 'right';
+      }, at);
+      await farm.select(3);
+      await farm.idle();
+      await farm.eval(([item, kind]) => {
+        const w = window.__farm.game.scene.getScene('Farm');
+        w.toolSwing(item, kind);
+        w.actionLock = 0;
+        w.moveLock = 0;
+      }, tool);
+      const seq = await castFrames(farm);
+      const bad = seq.filter((x) => !ROD_ONLY.test(x.shown) || x.icons.length);
+      check(
+        `fish-cast (${profile}): a cast right after the ${tool[0]}'s swing shows only the rod`,
+        seq.some((x) => x.sheet) && bad.length === 0,
+        JSON.stringify(bad.slice(0, 3)),
+      );
+      await closeSheet(farm);
+      await farm.idle();
+    }
+    check(
+      `fish-cast (${profile}): no page errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+}
+
 // ---------------------------------------------------------------- the guided start's buy step (owner bug)
 
 /** The coach's view now (step, line, pointer). */
@@ -2281,6 +2437,7 @@ try {
         weirTow,
         lang,
         coachShop,
+        fishCast,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

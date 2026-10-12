@@ -17,6 +17,8 @@ export const runtime = {
   valleyReveal: false,
   /** A painted row is being worked: Action on a channel digs on, it never fills one in (mechanics/channels.ts). */
   paintWork: false,
+  /** From a cast until the fishing sheet closes: the farmer holds the rod out (never a tool swing frame). */
+  fishing: false,
   get blocked(): boolean {
     return this.modals > 0 || this.busy || this.suspended;
   },

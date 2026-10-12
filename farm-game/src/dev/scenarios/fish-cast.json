@@ -1,0 +1,19 @@
+{
+  "title": "A cast right after the pickaxe and the hoe",
+  "about": "Farm pond bank, facing the water, day 4 at 10:00, the rod selected. Owner bug: the farmer cast with the rod's wind-up frozen behind the fishing sheet (raised like a pickaxe) and a swing frame with the pickaxe's swoosh. Press Action: the cast plays (rod only), the sheet opens over the farmer holding the line out, and a catch reels in. Check every facing (the e2e block fishCast stands on a bank for each) and a cast straight after a hoe swing and after a pickaxe swing (it gives the pickaxe).",
+  "version": 18,
+  "tags": ["farm", "fishing", "animation"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "day": 4,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "select": 3,
+  "goal": "fish"
+}

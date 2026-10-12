@@ -40,6 +40,8 @@ export interface GameEvents {
   fishCaught: undefined;
   /** Start the fishing mini-game; resolve with the outcome. */
   startFishing: { map: string; fish: string; bait: boolean };
+  /** The cast has landed (the farmer holds the line out): the fishing sheet opens now. */
+  castReady: undefined;
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
   sleepRequest: { passedOut: boolean };
   /** A villager's friendship reached a new heart (for a flourish). */

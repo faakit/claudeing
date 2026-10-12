@@ -253,6 +253,10 @@ export abstract class WorldScene extends Phaser.Scene {
   private poseUntil = 0;
   /** An action animation waiting for the world to run again (the reel, after the fishing sheet). */
   private pendingAct: string | null = null;
+  /** The line is out (from the cast's end until the fishing sheet closes): the pose held, rod only. */
+  private castHold: FrameRef | null = null;
+  /** When the cast pose has played out and the sheet may open (`castReady`), or null once announced. */
+  private castReadyAt: number | null = null;
   /** The held item drawn in the farmer's hands during `place` (art round 5), per pose frame. */
   private held: Phaser.GameObjects.Image | null = null;
   private heldSeq: { at: number; xy: [number, number] | null }[] = [];
@@ -346,6 +350,8 @@ export abstract class WorldScene extends Phaser.Scene {
     this.heldSeq = [];
     this.poseSeq = [];
     this.poseUntil = 0;
+    this.castHold = null;
+    this.castReadyAt = null;
     this.dipUntil = 0;
     this.shakeOff.x = 0;
     this.moveLock = 0;
@@ -715,6 +721,15 @@ export abstract class WorldScene extends Phaser.Scene {
       return;
     }
 
+    // The cast has played out: hold the line out, then let the fishing sheet open over a still, rod-only pose.
+    if (this.castReadyAt !== null && this.time.now >= this.castReadyAt) {
+      this.castReadyAt = null;
+      this.syncSprite(false);
+      gameEvents.emit('castReady', undefined);
+      if (runtime.blocked) return;
+    }
+    // The sheet closed: the line comes in (the reel plays below on a catch, else the farmer stands).
+    if (this.castHold && this.castReadyAt === null && !runtime.fishing) this.castHold = null;
     if (this.pendingAct) {
       const anim = this.pendingAct;
       this.pendingAct = null;
@@ -1026,7 +1041,7 @@ export abstract class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     this.sprite.setPosition(p.x + this.shakeOff.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
     this.sprite.setDepth(10 + p.y);
-    const posing = !!this.pose && now < this.poseUntil && !moving;
+    const posing = !!this.pose && (now < this.poseUntil || !!this.castHold) && !moving;
     this.sprite.setVisible(!posing);
     if (this.pose) {
       this.pose
@@ -1035,6 +1050,7 @@ export abstract class WorldScene extends Phaser.Scene {
         .setDepth(10 + p.y);
       let cur: FrameRef | null = null;
       for (const step of this.poseSeq) if (now >= step.at) cur = step.f;
+      if (this.castHold && now >= this.poseUntil) cur = this.castHold;
       if (posing && cur) {
         if (this.pose.texture.key !== cur.texture || this.pose.frame.name !== cur.frame) {
           this.pose.setTexture(cur.texture, cur.frame);
@@ -1095,7 +1111,10 @@ export abstract class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     const own = !!item && (TOOL_KINDS[item]?.includes(kind) ?? false);
     if (!own) return { delay: 0, shown: false };
-    const drawn = this.frames.tool(item, p.facing);
+    // The rod casts with the rod alone in every facing: facing up (no cast drawn) plays the reel backwards.
+    const drawn =
+      this.frames.tool(item, p.facing) ??
+      (item === 'fishing_rod' ? this.frames.castFromReel(p.facing) : null);
     let delay: number = SWING.windup;
     if (drawn) {
       // Wind-up, swing, contact (the impact lands here), follow-through, then the idle frame.
@@ -1162,6 +1181,26 @@ export abstract class WorldScene extends Phaser.Scene {
     this.pose ??= this.add.image(0, 0, first.texture, first.frame).setOrigin(0.5, 1);
     this.syncSprite(false);
     return this.poseSeq[Math.min(ACT_CONTACT_FRAME, this.poseSeq.length - 1)]!.at - now;
+  }
+
+  /**
+   * A cast: the fishing sheet waits until the cast pose has played out (owner: the farmer showed the rod's
+   * wind-up, raised like a pickaxe, frozen behind the sheet), then the farmer holds the line out until it closes.
+   * The farmer is rooted meanwhile, so the pose is never cut short by a walk.
+   */
+  private startCastHold(shown: boolean): void {
+    const p = getState().player;
+    const now = this.time.now;
+    this.castHold = this.frames.lineOut(p.facing);
+    if (this.castHold && !this.pose) {
+      this.pose = this.add
+        .image(0, 0, this.castHold.texture, this.castHold.frame)
+        .setOrigin(0.5, ACT_ORIGIN_Y);
+    }
+    const ready = shown ? Math.max(this.poseUntil, now) : now;
+    this.castReadyAt = ready;
+    this.moveLock = Math.max(this.moveLock, ready - now + 1);
+    this.actionLock = Math.max(this.actionLock, ready - now + 1);
   }
 
   /** Hold the frame for a moment on an impact (a harvest): tweens pause, input does not. */
@@ -1496,6 +1535,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.moveLock = MOVE_ROOT_MS;
       this.heldFailed = false;
       const swing = this.toolSwing(stack?.item, res.kind);
+      if (res.kind === 'cast') this.startCastHold(swing.shown);
       if (!swing.shown && ACT_FOR_KIND[res.kind]) {
         // art round 5: plant, harvest, forage, eat and place play the farmer's own action; the fx land on contact
         const d = this.playAct(ACT_FOR_KIND[res.kind]!, heldBefore);
