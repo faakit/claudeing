@@ -206,7 +206,7 @@ def boarded_door(P, top: np.ndarray, low: np.ndarray) -> tuple[np.ndarray, np.nd
     c = P.name
     d = np.vstack([top, low]).copy()
     door = np.zeros_like(d, dtype=bool)
-    door[6:28, 1:15] = True  # the opening (the arch's top rows to the step)
+    door[2:28, 1:15] = True  # the opening (the arch's top rows to the step)
     for a, b in (("soil", "earth dark"), ("wood", "soil")):
         d[door & (d == c(a))] = c(b)
     yy, xx = np.mgrid[0:32, 0:16]
@@ -220,12 +220,12 @@ def boarded_door(P, top: np.ndarray, low: np.ndarray) -> tuple[np.ndarray, np.nd
         d[lit] = c("sand")  # its 2 px lit top
 
     # the diagonal first, under the level planks: from the top left of the opening to the bottom right
-    diag = (np.abs(xx - (1 + (yy - 7) * 13 / 22)) <= 2.5) & (yy >= 6) & (yy <= 29)
+    diag = (np.abs(xx - (1 + (yy - 3) * 13 / 26)) <= 2.5) & (yy >= 2) & (yy <= 29)
     core = diag & np.roll(diag, 1, axis=1) & np.roll(diag, -1, axis=1)
     d[diag] = c("ink")
     d[core] = c("wood")
     d[core & ~np.roll(core, 2, axis=1)] = c("sand")  # its lit left edge, 2 px
-    for y0 in (11, 21):
+    for y0 in (8, 20):
         plank((yy >= y0) & (yy < y0 + 6) & (xx >= 0) & (xx < 16))
         for nx in (1, 13):
             d[y0 + 2 : y0 + 4, nx : nx + 2] = c("stone dark")  # nail heads at the board's ends

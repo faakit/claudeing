@@ -1427,6 +1427,7 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   requests") and the Options autosave note is now two short lines.
 - **Built blind.** The owner stopped all test runs during this round: the code was written by reading and editing
   only. Nothing was compiled or run; see NEXT-STEPS for the checks that must pass before a merge.
+
 ## The Dry Year, M6: the Weir (depth lane, valley/m6)
 
 - **Old saves keep their river (coordinator ruling).** New games carry `valley.weirOn` from `createInitialState`; a
@@ -1490,7 +1491,6 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
 - **Water beds are positional** by tile distance (full within 1.5 tiles, down to a quarter over 12 more), flat on
   Wendhead; a storm takes them to 0.4.
 - **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
-
 
 ## M7 audio: towing and the first homecoming (audio lane, audio/m7, 2026-10-12)
 
@@ -1724,7 +1724,7 @@ is unchanged: no control moved and the camera scrolls are identical.
 ## The Dry Year, M7: towing and the first homecoming (depth lane, valley/m7)
 
 - **The spike was adopted, not rewritten.** The feel lane's controller moved from `src/dev/towSpike.ts` to
-  `src/game/TowController.ts` and now takes a *course* (`TowCourse`: water, snags, slip, how its logs drift, what a
+  `src/game/TowController.ts` and now takes a _course_ (`TowCourse`: water, snags, slip, how its logs drift, what a
   landing gives). The lab's lanes are one course (`towSpike.ts` is now ~90 lines), the town river another
   (`src/game/weirTow.ts`). The controller gained only what the real river needs: several logs on the water (one in
   hand), logs that come to rest, and meeting a drifting log where it will rest. Taps, Action's verb and priority rule,
@@ -1732,7 +1732,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   towing e2e blocks pass unchanged on the refactor.
 - **The lanes were designed by simulating the real river** (x 17-22, y 22-31; the farmer can only walk the west bank
   x 16, the north bank y 21 and the south bank's x 17-18). A towed log trails the farmer down the west bank and hugs
-  column 17, so the only obstacle *in a tow's path* is the reed bed (18,24); the spurs at x 19 and x 21 are only met by a
+  column 17, so the only obstacle _in a tow's path_ is the reed bed (18,24); the spurs at x 19 and x 21 are only met by a
   drifting log. So each lane meets its obstacle differently, and no two consecutive logs share lane or snag:
   - `west` rests at the head under the north bank (18,22) and catches on the reed bed on the way down (a mid-tow snag,
     as in the spike);
@@ -1740,7 +1740,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   - `east` drifts down x 21 out of reach of every bank until the second spur (21,27) turns it west, then rests by the
     mill wheel at (20,30) ("resting against the mill wheel"); it is hooked and hauled from the slip's stand: the
     waiting lane, no snag (`tow-east-lane` 14-19 s, 1-2 inputs).
-  Lanes are waypoint paths in `valley.json` (`weir.drift.lanes`), with a long log's own path (it needs both rows).
+    Lanes are waypoint paths in `valley.json` (`weir.drift.lanes`), with a long log's own path (it needs both rows).
 - **A log that waited caught on a rock** (`snag.drift`): it is hooked from upstream of the rock, so a tug pops it 6 px
   further past the rock, on the farmer's side of the three places past it, the rope pays out (no pull) until the
   farmer is level with it, and he walks it on to the slip by himself. Without these the rope drew it straight back
@@ -1777,7 +1777,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   comes when it is half done. A villager with `arrives` is not drawn, scheduled, written to (birthdays) or counted
   (perks, best hearts) before that morning (`villagerHome`).
 - **The homecoming**: the first step into town on or after the arrival day shows HOME AGAIN with `cue:
-  'homecoming'` (the audio lane's jingle; `green` until its id exists). The first time the player is in town with the
+'homecoming'` (the audio lane's jingle; `green` until its id exists). The first time the player is in town with the
   night glow on after she is home, `houseLit { house }` fires once (audio's window-lit sting). The mill wheel is one
   image swapping `obj_millwheel_0..3` every 180 ms in the `marls` stage, still on frame 0 in Calm mode.
 - **The weir's last work day is a towing beat** (one tap, as every work day; 3.6 s): the water comes through, a log
@@ -1797,3 +1797,53 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Proportions round 2: the scale rule (art lane, art/proportions, 2026-10-12)
+
+The owner: "some things in the city feel out of proportion. There is a small house above Finn that does not match a
+character size", and "the town store has 3 doors, that is simply strange, it could be a bigger one". The critic
+accepted this rule as the standard it judges against (D35-1). C is the character: a 32 px frame, 26-30 px opaque
+(the player 28, Orin and Clay 30).
+
+- **R1 Doors.** Each facade has one entrance; a shop may have one double door instead. A single door is at least
+  14 px wide, with a frame plus step at least 30 px tall (the tallest villager) and an opening at least 26 px (0.9 of
+  the player). A double door is 28-32 px wide, at the same heights. A 30 px _opening_ was considered and dropped: on a
+  two-row (32 px) wall it leaves no frame or lintel, and a three-row wall would change every footprint. So every tall
+  door's frame rose 4 px: 24 + 2 became 28 + 2, with a 26 px opening. That covers the doors themselves, the boarded
+  ones, the DoorFx open frames and the Marls' house stages.
+- **R2 Walls.** A building people live or work in shows at least two rows (32 px, at least C) of front wall under its
+  eaves, with its windows at head height on the upper row.
+- **R3 Buildings.** At least 3 tiles wide and 4 rows tall (2 wall rows plus 2 roof rows).
+- **R4 Passages people walk through.** The mine portal and the woods' mine mouth need a clear opening at least 24 px
+  wide. The opening is either at least C + 2 (34 px) tall, or it is open at the map's edge, so it reads as running on
+  above it.
+- **R5 Props:**
+  - crates, barrels and furniture: at most 0.6 C;
+  - lamps, and supports that hold up a roof: at least 1.1 C (36 px);
+  - fences: 0.4-0.6 C.
+- **R6 Matching things.** Things that match other things share a size: landed timber shows logs the length of a towed
+  short log (16 px).
+- **Stated exceptions** (not changed this round; each is a follow-up in NEXT-STEPS-ART):
+  - The one-tile placeables (barn, shed, coop, sty, silo) and the project landmarks are tokens on a single-tile
+    footprint that game data sets.
+  - The Heron (30 px long) and the mill wheel (32 px) are pinned by the drift `blocks` in valley.json. Larger art
+    would overlap water that logs float on.
+
+What changed:
+
+- **Rosa's cottage**, the house above Finn's town spot, grew a row north, from (14,16,4,3) to (14,15,4,4). As a
+  four-row block it gets the 32 px wall, the tall door, and its windows at head height (with their night lights)
+  through the existing two-storey facade pass.
+  - The new row is drawn after the scatter, so no flower or tree moves.
+  - Row 15, x 14-17, is solid in every town stage.
+  - The stone lantern moved from (15,14) to (18,14), out from under the new eave.
+  - `tests/fixtures/town-before-m6.json` was updated deliberately for those five cells.
+- **The store** keeps its three shopdoor cells, its collision and the shop's trigger (4,9, 3 wide). Its art is one
+  double door (`f_ddoor_<l|c|r>_*`, scale.py): 30 px wide, centred, with glazed leaves and a hanging shop sign west of
+  it. map-art draws a run of exactly three door cells as one double door.
+- **The mine:**
+  - The exit's portal: posts hugging the 2-tile passage on the rock either side, and a lintel 34 px over the floor
+    (it was 18 px).
+  - The hall's roof supports are 42 px tall (they were 16 x 18 frames).
+- **The woods' mine mouth:** timber jambs and a dark opening the full height of the top row (it was a 12 px arch).
+- **The slip's timber stack:** logs 16 px long (they were 12).

@@ -1,0 +1,48 @@
+{
+  "title": "Proportions: the cottage above Finn, in the river town",
+  "about": "Summer 20, 13:00, the weir open but the Marls not home yet (the town's `river` stage): the farmer on the step of Rosa's cottage, Finn at his town spot (16,22). The same cottage as town-proportions, with the river back.",
+  "version": 18,
+  "tags": ["town", "art", "proportions", "valley"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 48,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1
+  },
+  "friends": {
+    "finn": 2
+  },
+  "at": {
+    "map": "town",
+    "tx": 15,
+    "ty": 19,
+    "facing": "up"
+  },
+  "time": {
+    "season": "summer",
+    "day": 20,
+    "clock": "13:00"
+  },
+  "letters": [],
+  "goal": "tree"
+}

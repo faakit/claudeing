@@ -1,0 +1,23 @@
+{
+  "title": "Proportions: the cottage above Finn, in the dry town",
+  "about": "Day 3, 13:00, the dry town: the farmer on the step of Rosa's cottage (east of the main road, north of the pond), Finn at his town spot (16,22) just south. The cottage is four rows now (proportions round): a 32 px wall and a door with a 28 px frame on a 2 px step, so the farmer and Finn read at the right size beside it. See town-proportions-river and -marls for the other stages, town-store-door for the store's double door.",
+  "version": 18,
+  "tags": ["town", "art", "proportions"],
+  "valley": {
+    "weir": 0
+  },
+  "at": {
+    "map": "town",
+    "tx": 15,
+    "ty": 19,
+    "facing": "up"
+  },
+  "time": {
+    "day": 3,
+    "clock": "13:00"
+  },
+  "weather": "sunny",
+  "energy": "max",
+  "letters": [],
+  "goal": "tree"
+}

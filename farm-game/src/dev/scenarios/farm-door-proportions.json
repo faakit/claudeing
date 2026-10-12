@@ -1,0 +1,20 @@
+{
+  "title": "Proportions: the farmhouse door, taller, opening",
+  "about": "Day 3, 09:00, the farmer on the path just below the farmhouse door (14,7), facing it. Every tall door's frame rose 4 px in the proportions round (28 px frame on a 2 px step, a 26 px opening); walking up plays the door's open frames (DoorFx, obj_door_open_0..3), which must line up with the baked door.",
+  "version": 18,
+  "tags": ["farm", "art", "proportions", "door"],
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 8,
+    "facing": "up"
+  },
+  "time": {
+    "day": 3,
+    "clock": "09:00"
+  },
+  "weather": "sunny",
+  "energy": "max",
+  "letters": [],
+  "goal": "tree"
+}

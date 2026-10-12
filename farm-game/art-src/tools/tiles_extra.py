@@ -240,7 +240,7 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     wb[box >= 0] = box[box >= 0]
     out["f_window_box"] = wb
     # two-storey facades (review 8: walls 32 px, not 16): windows and the wall lantern at head height on the row
-    # above the ground row, and tall doors (14 x 26 with a step) split over the two rows
+    # above the ground row, and tall doors (14 x 30 with the step, proportions round) split over the two rows
     hi = np.full((T, T), -1, dtype=np.int32)
     hi[3:12] = win[(T - 9) // 2 : (T - 9) // 2 + 9]
     out["f_window_hi"] = hi.copy()
@@ -251,11 +251,12 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     out["f_lantern_hi"] = make({"src": "village2a/p2_lantern", "size": [T, T], "fit": [9, 13]})
     door_key = {"w": "wood", "b": "soil", "d": "earth dark", "g": "gold", "s": "stone lt", "z": "stone"}
     plank = ".odwbwwbbwwbwdo."
-    top = ["." * 16] * 6 + [
+    # proportions round: the frame rises 4 px (28 px frame + 2 px step = the tallest villager, a 26 px opening)
+    top = ["." * 16] * 2 + [
         "...oooooooooo...",
         "..odwwwwwwwwdo..",
         ".owwwwwwwwwwwwo.",
-    ] + [plank] * 7
+    ] + [plank] * 11
     low = [plank] * 5 + [".odwbwwbbwgbwdo."] + [plank] * 6 + [
         ".odwwwwwwwwwwdo.",
         ".oooooooooooooo.",
@@ -393,4 +394,9 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     import sites
 
     out.update(sites.span_tiles(P.names))
+    # proportions round: the store's one double door, the mine's supports and portal, the woods' mine mouth and the
+    # slip's timber at tow-log length (scale.py; replaces the earlier keys of the same names)
+    import scale
+
+    scale.build(P.names, base, out)
     return out
