@@ -160,8 +160,8 @@ wendhead(v)`. Budget its baked tiles: about 400 slots are left for Wendhead, tow
 **Now:** M1 (the letter, the first green, lines that fit the valley), M3 (the restoration pattern and the Old
 Spring), M4 (channels, save v18), M6 (the Weir) and **M7 (towing and the first homecoming)** are built on M2's map
 stages. Save version is **18** (the plan's one bump; M6 and M7 added none). The valley critic accepted M1-M4 at
-e5f07d6 and M6 (`final-m6.md`); M7 is on `valley/m7` with the audio and art lanes' M7 branches merged in (see Open
-for its review).
+e5f07d6 and M6 (`final-m6.md`); M7 is on `valley/m7` with the audio and art lanes' M7 branches merged in, accepted at
+b2c7600.
 
 - `valley.json` holds Rosa's letter, the first-green rule, the places (the spring, the weir) and the planned ones,
   the parts bought for gold (the sluice gate and the timber hook from Orin), the map stages, **`weir.drift`** (the
@@ -210,7 +210,11 @@ for its review).
   the house stages and Senna, the lit windows, the wheel turning (frame 0 in Calm), and each audio hook once (the four
   tow cues, the splash 173 ms after the freeing tug, `homecoming`, `window-lit` via `houseLit`, Senna's motif once a
   day, the mill bed only in the `marls` stage). No real phone.
-- M7 review: the valley critic's review of valley/m7 (see its reports in `valley-critique/`).
+- **M7 accepted** by the valley critic at b2c7600, with no blockers or majors (`valley-critique/review-9.md`,
+  `final-m7.md`). Its own runs: verify green, onboarding 14/14 (median 163.5 s), bench:thumb OK, and the tow matrix
+  16/16 per scenario at 1x and 4x, except winter at 4x (13/16 under load, 16/16 rerun). Watch items: one-off long
+  frames while towing on a loaded host only; winter's game JS p95 is about 10 ms at 4x, the closest lane to the bar;
+  the lab's T1 chained check flakes under parallel load; R6-2 is still open.
 - The tow scenarios start on the west bank coming from the north (16,20): the river is the town's east edge, so a log
   tapped from beside or below it is in the left thumb's hard zone. In play a left-handed player tows by Action from
   below (comfort). A real-phone pass decides whether that is enough (checklist row in OPEN-FINDINGS).
