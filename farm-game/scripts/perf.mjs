@@ -372,7 +372,7 @@ try {
       await page.evaluate(() => {
         const s = window.__farm.getState();
         s.player.facing = 'down';
-        window.__farm.inputHub.actionHeld = true;
+        window.__farm.inputHub.pressAction(true); // a held key (as its auto-repeat says): Action repeats
       });
     });
     await page.evaluate(() => (window.__farm.inputHub.actionHeld = false));

@@ -530,7 +530,7 @@ export class UIScene extends Phaser.Scene {
         );
       } else if (e.type === 'tap') {
         // one action, held for just long enough for the world to see it
-        inputHub.actionHeld = true;
+        inputHub.pressAction(false);
         this.time.delayedCall(70, () => (inputHub.actionHeld = false));
       } else if (e.type === 'arm') {
         haptic('tick'); // armed: the press pops (visible twin) and the farmer waits for the drag

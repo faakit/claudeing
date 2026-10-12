@@ -58,6 +58,7 @@ try {
                 `${r.ms === null ? '-' : (r.ms / 1000).toFixed(1)} s, lane ${r.laneTiles} tiles, draws ${r.draws}, ` +
                 `js p95 ${r.jsP95} max ${r.jsMax}, gap max ${r.gapMax} (>33: ${r.over33}), stalls ${r.stalls}, ` +
                 `silent ${r.silent} | ${r.zones}${bad.length ? ` | ${bad.join('; ')}` : ''}` +
+                (r.slow.length ? ` | slow frames: ${r.slow.join(', ')}` : '') +
                 (farm.errors.length ? ` | errors: ${farm.errors.slice(0, 2).join(' | ')}` : ''),
             );
             await farm.close();

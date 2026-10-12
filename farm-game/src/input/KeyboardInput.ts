@@ -22,8 +22,10 @@ export class KeyboardInput {
     kb.on('keydown', (e: KeyboardEvent) => {
       const dir = KEY_DIRECTIONS[e.code];
       if (dir) hub.pressKey(dir);
+      // Space held: the system's auto-repeat says so, and only then does Action repeat (src/input/actionGate.ts)
+      if (e.code === 'Space' && e.repeat && hub.actionHeld) hub.actionRepeats = true;
       if (e.repeat) return;
-      if (e.code === 'Space') hub.actionHeld = true;
+      if (e.code === 'Space') hub.pressAction(false);
       if (e.code === 'KeyE') hub.emit('interact', undefined);
       if (e.code === 'Enter' || e.code === 'NumpadEnter') hub.emit('confirm', undefined);
       if (e.code === 'Escape' || e.code === 'KeyM') hub.emit('menu', undefined);

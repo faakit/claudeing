@@ -1544,6 +1544,14 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   banks, so on the long leg the log trails behind and below him and a tug tap on it is in comfortable reach.
 - **The lab draws below the UI**: added last at runtime, the lab scene drew over the floating controls (they sit
   inside the world's view since the dock went), so every lab scenario hid the Action plate and the hotbar.
+- **A world tap is read on the world as it was at touch-down** (`inputHub` `touchDown`, `WorldScene.worldPoint`): the
+  camera scrolls while the farmer walks, and reading the tap at the lift moved it about 5 px along the walk.
+- **One act per short Action press** (coordinator ruling after the dry-year-2 review; `src/input/actionGate.ts`):
+  every press has an id and acts once; only a key the system reports as held (its auto-repeat keydowns) repeats.
+  Frame timing plays no part, so a press seen held past the 200 ms lock on a loaded machine (slow frames, a late key
+  release) no longer acts twice. On desktop a held Space now starts repeating after the system's repeat delay
+  (about 500 ms) instead of after the 200 ms lock. The e2e harness's own workaround (letting go of Space when the
+  result lands) is gone; `e2e:scenarios` `actionSlowFrame` holds a press through six slow frames.
 
 ## Owner bugs (feel lane, fix/owner-bugs, 2026-10-11)
 

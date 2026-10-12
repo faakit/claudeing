@@ -50,6 +50,10 @@ export class InputHub {
    * Action button (one use: holding Action on touch never repeats).
    */
   actionHeld = false;
+  /** Each press of Action counts up (src/input/actionGate.ts: one act per press). */
+  actionPress = 0;
+  /** The current press repeats while held: a key the system reports as held (auto-repeat); a touch tap never does. */
+  actionRepeats = false;
   /**
    * The hotbar slot Action would use right now (auto tool may pick another than the selected one), set
    * by the world each frame so the Action button can show it. Null when Action has nothing to do.
@@ -72,6 +76,13 @@ export class InputHub {
   pressKey(dir: Direction): void {
     this.keys = this.keys.filter((d) => d !== dir);
     this.keys.push(dir);
+  }
+
+  /** A new press of Action: held from now, one act (a held key may repeat: `repeats`). */
+  pressAction(repeats: boolean): void {
+    this.actionPress++;
+    this.actionRepeats = repeats;
+    this.actionHeld = true;
   }
 
   releaseKey(dir: Direction): void {

@@ -101,6 +101,7 @@ import { FarmRenderer } from '../game/FarmRenderer';
 import { NpcRenderer } from '../game/NpcRenderer';
 import { ObjectsRenderer } from '../game/ObjectsRenderer';
 import { saveNow } from '../game/persistence';
+import { ActionGate } from '../input/actionGate';
 import { controlsLog } from '../input/controlsLog';
 import { pathTiles } from '../input/gesture';
 import { TIPS } from '../ui/controlTips';
@@ -265,6 +266,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private lastNpcMinute = -1;
   private arrow: Phaser.GameObjects.Graphics | null = null;
   private heldFailed = false;
+  /** One act per short Action press (src/input/actionGate.ts). */
+  private readonly actionGate = new ActionGate();
   /** Uses so far in the current Action hold: later ones tick the haptic less often. */
   private holdUses = 0;
   /** The kind of step the current hold started with (it repeats only that). */
@@ -796,7 +799,14 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = false;
       this.holdUses = 0;
       this.holdKind = null;
-    } else if (this.actionLock <= 0 && !this.inputLocked && !this.heldFailed) {
+    } else if (
+      this.actionLock <= 0 &&
+      !this.inputLocked &&
+      !this.heldFailed &&
+      this.actionGate.may(inputHub.actionPress, inputHub.actionRepeats)
+    ) {
+      // one act per press, even when a slow frame outlasts the lock (src/input/actionGate.ts)
+      this.actionGate.acted(inputHub.actionPress);
       if (this.actionHook?.()) {
         // a verb took the press (one use per press, as a refused Action is)
         this.actionLock = ACTION_LOCK_MS.ok;

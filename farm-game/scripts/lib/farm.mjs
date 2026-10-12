@@ -161,24 +161,11 @@ export class Farm {
   }
 
   /**
-   * Press Action (Space) and resolve with its result: { ok, marked, used }. Space is let go on the frame the result
-   * lands: Action repeats while held, and on a loaded machine one slow frame outlasts the 200 ms Action lock, so a
-   * 60 ms press used to act twice (farm-mechanics foraged both goods with one press).
+   * Press Action (Space) and resolve with its result: { ok, marked, used }. A real 60 ms key press: the game itself
+   * acts once per short press, even when a slow frame outlasts the 200 ms Action lock (src/input/actionGate.ts).
    */
-  async act(key = 'Space') {
-    const id = await this.eval((code) => {
-      const f = window.__farm;
-      const k = `w${Math.random().toString(36).slice(2)}`;
-      const p = f.dev.wait.actionDone().then((r) => {
-        if (code === 'Space') f.inputHub.actionHeld = false;
-        return r;
-      });
-      (window.__devWaits ??= {})[k] = p;
-      p.catch(() => {});
-      return k;
-    }, key);
-    await this.press(key);
-    return this.eval((k) => window.__devWaits[k].finally(() => delete window.__devWaits[k]), id);
+  act(key = 'Space') {
+    return this.during('actionDone', [], () => this.press(key));
   }
 
   /** Press Interact (E), then wait until the world is idle again. */

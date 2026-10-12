@@ -34,7 +34,7 @@ export async function playTow(farm, opts = {}) {
     const w = window.__farm;
     const g = w.game;
     const lab = g.scene.getScene('Lab');
-    const out = { draws: 0, jsMax: 0, js: [], gapMax: 0, over33: 0, offWater: [], frames: 0 };
+    const out = { draws: 0, jsMax: 0, js: [], gapMax: 0, over33: 0, offWater: [], frames: 0, slow: [] };
     let t0 = 0;
     let last = 0;
     const pre = () => (t0 = performance.now());
@@ -45,6 +45,8 @@ export async function playTow(farm, opts = {}) {
       if (['towing', 'hauling'].includes(t.phase)) {
         const js = now - t0;
         out.js.push(js);
+        if (js > 25 && out.slow.length < 6)
+          out.slow.push(`${js.toFixed(0)}ms ${t.phase}/${t.state} tugs ${t.tugs} snag ${t.log.snagged}`);
         out.jsMax = Math.max(out.jsMax, js);
         out.draws = Math.max(out.draws, w.dev.frameStats().draws);
         if (last) {

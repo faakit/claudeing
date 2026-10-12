@@ -106,6 +106,46 @@ async function everyScenario() {
   await farm.close();
 }
 
+// One act per short Action press, even on a slow frame (coordinator ruling after the dry-year-2 review). On a loaded
+// machine a 60 ms press of Space can be seen held for longer than the 200 ms Action lock (slow frames, a key release
+// delivered late), and it used to act again: one press foraged both goods within reach. Here Space goes down, the
+// first act lands, six frames stall for 150 ms each, and the key lifts only after 30 more frames, with no system
+// auto-repeat (the sign of a key really held). Exactly one good is foraged.
+async function actionSlowFrame() {
+  const farm = await openScenario(browser, url, 'farm-mechanics', { profile: PROFILE });
+  await farm.select(0);
+  const acted = farm.eval(() => {
+    const w = window.__farm;
+    return w.dev.wait.actionDone().then(
+      () =>
+        new Promise((done) => {
+          let n = 0;
+          const stall = () => {
+            const t = performance.now();
+            while (performance.now() - t < 150) {
+              /* a slow frame */
+            }
+            if (++n < 6) w.game.events.once('prestep', stall);
+            else done();
+          };
+          w.game.events.once('prestep', stall);
+        }),
+    );
+  });
+  await farm.page.keyboard.down('Space');
+  await acted;
+  await farm.frames(30);
+  await farm.page.keyboard.up('Space');
+  await farm.idle(10);
+  const m = await farm.state();
+  check(
+    'one short Action press acts once, even when slow frames hold it past the Action lock',
+    m.stats.foraged === 1,
+    JSON.stringify({ foraged: m.stats.foraged, forage: m.forage.farm }),
+  );
+  await farm.close();
+}
+
 // Moved from e2e.mjs block 6b (mechanics), on the farm-mechanics scenario with await helpers instead of 22 fixed
 // waits. Same checks, same expectations.
 async function mechanics() {
@@ -1971,6 +2011,7 @@ try {
         smoke,
         everyScenario,
         mechanics,
+        actionSlowFrame,
         stages,
         ambient,
         actions,
