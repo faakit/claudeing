@@ -223,3 +223,15 @@ describe('letters in the save', () => {
     expect(kept?.gift).toEqual(def.gift);
   });
 });
+
+describe('damaged saves', () => {
+  it('a crop id that names a built-in object property is dropped, not a crash', () => {
+    const raw = JSON.parse(JSON.stringify(newState()));
+    raw.farm.tiles['5,5'] = {
+      watered: false,
+      crop: { cropId: 'constructor', stage: 0, daysInStage: 0 },
+    };
+    const s = migrate(raw);
+    expect(s.farm.tiles['5,5']?.crop).toBeNull();
+  });
+});

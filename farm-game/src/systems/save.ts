@@ -440,7 +440,8 @@ export function sanitize(raw: Raw): GameState {
     if (!TILE_KEY.test(key) || !isObj(soil)) continue;
     let crop: GameState['farm']['tiles'][string]['crop'] = null;
     const c = soil['crop'];
-    if (isObj(c) && typeof c['cropId'] === 'string' && crops[c['cropId']]) {
+    // own keys only: "constructor" or "toString" is truthy on any object and has no stageDays
+    if (isObj(c) && typeof c['cropId'] === 'string' && Object.hasOwn(crops, c['cropId'])) {
       const days = (crops[c['cropId']] as (typeof crops)[string]).stageDays.length;
       crop = {
         cropId: c['cropId'],
