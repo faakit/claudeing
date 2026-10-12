@@ -330,7 +330,8 @@
     "notEnough": "Ainda não dá",
     "allGold": "Todo o ouro está aqui!",
     "giveGoods": "Dar produtos",
-    "need": "{item} {given}/{need} (tem {have})"
+    "need": "{item} {given}/{need} (tem {have})",
+    "needFrom": "{line}: {source}"
   },
   "silo": {
     "hungry": "O {house} ficou com fome: o silo precisa de {n} {feed}.",

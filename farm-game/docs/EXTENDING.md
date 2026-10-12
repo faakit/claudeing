@@ -56,7 +56,7 @@ and the equipped item and answers with a plan (`{ plan: { kind, tx, ty, run } }`
 (`{ refusal: 'text' }`) or `null` ("not mine"). Planning changes nothing; `run` does the work. The first handler
 (highest priority first) with an answer wins.
 
-Priorities in use: harvest 100, forage 95, seed / fertilize / place 50, tool 40. One-thumb targeting asks every
+Priorities in use: harvest 100, forage 95, seed / fertilize / place 50, eat 45, bait 42 (a bait in hand casts), tool 40. One-thumb targeting asks every
 nearby tile and acts where the **highest priority** plan exists, so picking things up beats planting beats
 tilling without the player aiming.
 
@@ -159,6 +159,16 @@ reading a new perk anywhere works the same no matter where it comes from. Town p
 A job is a row in `jobs.json`: who asks (`giver`), the lifetime `stat` it counts, a `qty` range, gold
 (`base + perUnit x n`), a `weight`, and optionally `introDay` (always posted that day) and `requires`
 (a stat that must be reached first). Any stat that `addStat` increments works, so a new job is data only.
+Jobs are posted on the town board's Jobs page: one counts from when it is taken there (`takeJob`), a finished one is
+turned in there (`turnInJob`), and one never turned in is paid by post at night (`systems/jobs.ts`).
+
+### Bait
+
+A bait is an item of type `bait` with a `bait` block in `items.json`: `code` (a stable number, never reused; the
+remembered bait is the stat `bait.pick`), `wait` (bite-wait multiplier), `rare` (harder fish weigh
+`1 + rare x difficulty x 3` times more), `legend` (a legend's weight multiplier), `quality` (added to the catch's roll)
+and `reel` (catch-bar width). Sell it in `shops.json`, make it in `recipes.json`: no code. Every cast needs one
+(`currentBait` in `systems/fishing.ts`).
 Code that should react to stat changes registers `registerStatWatcher(id, fn)` (see `mechanics/jobs.ts`).
 
 ### Letters
@@ -284,11 +294,13 @@ one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.
 - **Conditions** read the state and what the screen shows: `stat`/`fresh` with `min`/`max` (counted from the
   guide's start or the step's first showing), `map`, `day`, `panel`, `tab`, `selected`, `has`, `none`/`some`
   (ripe, dry, crops, wetCrop, emptySoil, seeds, shippable, forage, unread, readLetter, placeable), `energyBelow`,
-  `minute`, `job`, `npc`, `goal`, `fact` (npcNew, forageInView), `touched` (screen touches since it showed),
+  `minute`, `job` (a taken job counts it), `npc`, `goal`, `fact` (npcNew, forageInView, welcomeJobs, jobsPosted,
+  jobReady, baitKinds, fishResult, festivalToday), `short` (a project's goods are short:
+  `{ "project": "place_spring", "item": "stone" }`), `touched` (screen touches since it showed),
   `after` (game minutes since it first showed), `wet` (rain or storm today), and `any`/`all`/`not`.
 - **Targets:** `find` (nearest ripe, dry, emptySoil, workable, forage, node, npcNew; `stand` points at a free
   tile beside it), `npc`, `object` (bin, bed, mailbox, board, shop), `door` (the door to a map), `ui` (action,
-  menu, interact, seedSlot, placeSlot), `gesture` (paint, ring; a paint tip is an unbroken row straight ahead of
+  menu, interact, seedSlot, canSlot, placeSlot, spadeSlot, hoeSlot, pickSlot), `gesture` (paint, ring; a paint tip is an unbroken row straight ahead of
   the farmer, and `work` limits its kinds, e.g. `["water"]` while watering), `button` (a regular expression for a button in
   the open sheet; `a||b` lists them by priority), `hud`, and `action` + `else` (Action when it would do one of
   these kinds right now, else the `else` target). A target with a `map` the player is not on points at the door
@@ -297,7 +309,10 @@ one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.
 - **`day2Weather`** (top level): a guided new game's second morning (`rain`: day 2 is the letter and the town,
   not a watering chore; daily watering is the `waterDaily` intro on the first dry morning).
 - **A new feature's introduction** is one `intro` step: a `when` for the moment it matters, a target, a `done`
-  for the action it teaches, and `leave: true`. No code.
+  for the action it teaches, and `leave: true`. No code. An intro whose target is on another map keeps its own line
+  while the pointer leads to the door. A place or project that asks for goods is preceded by an intro that says where
+  they come from (the `stone` intro and `short`), and the good's `source` (an item text field) shows on the fund sheet
+  while it is short.
 - **State:** progress is stats only (`tut.<id>`, `tut.on`, `tut.off`, `tut.seen.<id>`, `tut.at.<id>.<stat>`,
   `tut.base.<stat>`, `tut.gift`). `?tutorial=0` in the URL starts a bare new game (automated checks use it).
 

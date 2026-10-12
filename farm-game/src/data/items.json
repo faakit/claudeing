@@ -197,6 +197,7 @@
     "icon": "item_fiber",
     "color": "#8fbf5a",
     "sellPrice": 2,
+    "source": "at Mara's",
     "description": "Cut from weeds.",
     "buyPrice": 5
   },
@@ -708,6 +709,7 @@
     "icon": "item_cloth",
     "color": "#6a8ad0",
     "sellPrice": 50,
+    "source": "loom, from wool",
     "description": "Woven from wool.",
     "derived": true,
     "sellMultiplier": 1.2,
@@ -737,6 +739,7 @@
     "icon": "item_stone",
     "color": "#8a8694",
     "sellPrice": 3,
+    "source": "mine rocks",
     "description": "Useful for building."
   },
   "copper_ore": {
@@ -763,6 +766,7 @@
     "icon": "item_quartz",
     "color": "#e8f0f4",
     "sellPrice": 45,
+    "source": "mine crystals",
     "description": "A clear crystal."
   },
   "amethyst": {
@@ -779,6 +783,7 @@
     "icon": "item_ruby",
     "color": "#d8304a",
     "sellPrice": 160,
+    "source": "deep mine",
     "description": "Rare and bright."
   },
   "copper_bar": {
@@ -787,6 +792,7 @@
     "icon": "item_copper_bar",
     "color": "#d8803a",
     "sellPrice": 30,
+    "source": "smelt copper",
     "description": "A bar of copper.",
     "derived": true,
     "sellMultiplier": 1,
@@ -798,6 +804,7 @@
     "icon": "item_iron_bar",
     "color": "#aab4c8",
     "sellPrice": 55,
+    "source": "smelt iron",
     "description": "A bar of iron.",
     "derived": true,
     "sellMultiplier": 1,
@@ -1157,6 +1164,7 @@
     "color": "#6e5a44",
     "sellPrice": 0,
     "stackLimit": 1,
+    "source": "Orin makes it",
     "description": "Orin's oak and iron gate for the weir's gap. It goes into the Weir's fund."
   },
   "timber": {
@@ -1165,6 +1173,7 @@
     "icon": "item_timber",
     "color": "#a0703c",
     "sellPrice": 5,
+    "source": "river logs",
     "description": "Drift timber towed in from the river. It rebuilds the houses families come home to."
   },
   "timber_hook": {

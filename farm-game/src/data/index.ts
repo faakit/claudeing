@@ -222,6 +222,8 @@ export interface ItemDef {
   nameTemplate?: string;
   /** Food: energy restored when eaten. */
   energy?: number;
+  /** Where it comes from, said beside a fund's ask while it is short ("rocks in the mine"). */
+  source?: string;
   /** Taken from a letter together with it (the journal tucked in the seed tin). */
   comesWith?: { item: string; qty: number }[];
   /** Bait (type `bait`): what one cast with it changes. Casting needs one; each cast uses one. */

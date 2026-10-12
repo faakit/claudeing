@@ -1797,3 +1797,84 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Bait, the town job board, and intros for the first mechanics (depth lane, depth/bait-board, 2026-10-12)
+
+Owner requests: "It should not be possible to fish without a bait. It should have multiple types of baits, each
+making a different chance of fish and different chance of time." "The daily small quests should be taken from a board
+in the city instead of from nowhere." "The tutorial must show these mechanics." "The guided start should guide the
+player on how to take stone before showing the place that must be fixed with stones."
+
+### Bait
+
+- **Every cast needs a bait and uses one.** With none, the cast is refused in one line ("No bait: dig worms or buy at
+  Mara's."), and nothing changes (no energy, no RNG). Left before any bite, the bait comes back. A missed bite cost it:
+  "Too slow! The fish took the bait."
+- **Baits are items with a `bait` block** (`items.json`: `code`, `wait`, `rare`, `legend`, `quality`, `reel`; validated
+  at load), not a separate table, so shops, recipes, gifts and the bag need nothing new:
+
+  | Bait | Get it | Bite wait | Odds and catch |
+  | --- | --- | --- | --- |
+  | Worms (code 1) | free: the hoe and the scythe dig them up (1 tile in 6, 1 in 3 on a wet day, from day 3); a new game starts with 10 | x1 | plain (the old bare hook) |
+  | Bait Mix (2, the old `bait` item) | Mara 6g, or 3 fiber -> 5 | x0.55 | catch bar +0.06 (what bait did before) |
+  | Fish Chum (3) | 1 carp + 1 fiber -> 5 | x0.75 | harder fish up (`rare` 0.6), legends x1.5, quality +0.08 |
+  | Glow Grub (4) | Mara 35g | x0.5 | `rare` 1, legends x4 (about twice the chance), quality +0.12, bar +0.04 |
+
+  A fish's weight with a bait is `weight x (1 + rare x difficulty x 3)`, or `weight x legend` for a legend. Fall on the
+  river with the weir open: salmon 14% with worms, 19% with chum, 21% with the grub; the summer pond's Sun Carp 4.3% with worms, 8.9% with the grub.
+- **Choosing the bait, one thumb and no screen before a cast** (critic rulings): the bait in hand casts with that bait
+  (Action at water; the rod is owned from day 1). With the rod, the bait used last goes on (the stat `bait.pick` = its
+  code), else the plainest one carried, never a dearer one by surprise. After a catch the fishing sheet's bottom button
+  shows what the next cast will really use, the hand included ("Bait: Glow Grub x2  >"). One tap switches it; with a
+  bait in hand it moves the hand too (to that bait's hotbar slot, else the rod). With one kind of bait it is Close.
+  Baits go to the bag, not the hotbar (critic D1-2: the hotbar keeps the seeds and the can on the guided days). The bait
+  handler sits at priority 42: the generic tool handler at 40 refuses any item that is not a tool.
+- **Worms from digging use a hash of the running count, not the RNG**, so the sims' random paths do not move (every
+  farmer sim is unchanged to the gold). No worm finds before day 3, so no toast on the guided days.
+- **Old saves** fished without bait: they get the 10 worms once (`bait.on` marker, no version bump; new games carry it),
+  with Finn's note "Picky fish" the next morning. With a full bag, his letter brings the worms instead (`bait.owed`).
+- **Balance.** Bait is a small sink, not a wall: a bought cast costs 6g against a 25g carp (a test keeps it under a
+  quarter). The fisher sim buys Bait Mix when the worms run out. Its year-one median fell from 378k to 341k (seeds 42, 7,
+  99), under the 2x bound. The farmer sims are unchanged.
+
+### The town job board
+
+- **The jobs live on the existing town board** (DECISIONS: "Daily jobs" put three jobs a morning in the morning note and
+  Menu > Goal, "from nowhere"). It is one physical board with two pages, Jobs and Requests (critic ruling: not a second
+  board). It opens on Jobs while a job waits to be taken or turned in, else on Requests. The Requests page is the old
+  board (orders, Clay's race, the special, festivals, the cart, projects).
+- **Take, then turn in.** A job counts only from when it is taken (its `base` is set then). A finished one says once
+  "Done: Finn: catch 2 fish. Turn it in at the board!" and is turned in there for its gold and the asker's +15
+  friendship. A finished job never turned in is **paid by post at night** ("Jobs not turned in, paid by post"), so
+  nothing is lost by not walking back (pillar 5). Shipping jobs pay only at night, as before. A job left on the board
+  pays nothing.
+- **No save change:** taken and announced jobs are bitmask stats for the jobs' day (`jobs.taken`, `jobs.told`,
+  `jobs.takenDay`). Old saves have the jobs of the day they were saved on taken for them once (`jobs.boardOn`), so a
+  job they were working on is not lost.
+- **Pointing there:** the morning note says "New jobs from Finn, Mara and Rosa on the town board.". The Goal tab says
+  "at board" or "turn in" beside each job. The job goal reads "Do a job from the town board", with a goal-arrow `where`
+  on the board (the open finding "job1 without a where" is closed).
+- **Sims:** the bot fills board requests every day, so it takes the day's jobs there. Five-seed median 253,873 (was
+  252,103), human-paced 173,641 (was 183,980: job gold now comes at turn-in or overnight, not mid-day).
+
+### Intros: what a first player meets
+
+- **Audit.** Already introduced: the guided days, late night, low energy, the settling-in jobs, daily watering, wild
+  goods, Mara and the shop, villagers and gifts, the board's requests, the rod and casting, the mine, placing, Clay's
+  race, the spring's ask and site, channels and towing. With no intro until now: bait, the job board (taking, turning
+  in), where stone comes from before the spring, crafting (Menu > Make), festivals. Left as they are: machines once
+  placed (the goal hint), animals, the special order, the cart, upgrades, the Book (each has a goal or a line on its
+  sheet).
+- **Added, one line each, pointing at one control:** `jobBoard`, `jobTurnIn`, `noBait` (the hoe slot), `baitNext` (the
+  sheet's Bait switch after a catch), `stone`, `craft`, `festival`. `welcomeJobs` now points at the board.
+- **The day-2 Goal-tab step `jobs` is gone** (the jobs are on the board), so day 2 gets shorter. Nothing new can show
+  before town (critic and onboarding gate; a test pins the day-1 and day-2 step lists).
+- **Stone before the site (owner).** When the spring's ask (or the weir's) holds and the bag plus what was given is short
+  of its stone (the condition `short`), the coach first says "Stone comes from rocks in the mine." and leads there.
+  Then "Tap a rock: the pickaxe breaks it." (with auto tool off: "Pick the pickaxe on the hotbar.") until the first
+  rock breaks. The spring's site intro waits for that, or for enough stone. With the stone in hand, it is skipped. The
+  auto tool picks the pickaxe on a rock, so selecting it is taught only when auto tool is off.
+- **Every ask says where.** The fund sheet appends a good's `source` (an item text field) while it is short: "Stone
+  0/20 (have 0): mine rocks". Every good a project or place asks for has one, and so does house timber (tested).
+- An intro whose target is on another map keeps its own line while the pointer leads to the door. The guided days'
+  steps still say "Head back to ...".

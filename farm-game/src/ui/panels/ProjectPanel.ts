@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { projects } from '../../data';
+import { items, projects } from '../../data';
 import { ensureTexture } from '../../game/fallbackTexture';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
@@ -26,6 +26,7 @@ import { fmt } from './format';
 import {
   GIVE_STEPS,
   gloryLine,
+  needLine,
   repeatNow,
   LIST_NAV_FROM_BOTTOM,
   LIST_ROWS,
@@ -191,7 +192,12 @@ export class ProjectPanel extends Modal {
     );
     y += 12;
     for (const n of itemNeeds(s, id)) {
-      this.label(8, y, needLabel(s, n), n.given >= n.need ? C.green : C.creamDim);
+      this.label(
+        8,
+        y,
+        needLine(needLabel(s, n), items[n.item]?.source, n.given < n.need),
+        n.given >= n.need ? C.green : C.creamDim,
+      );
       y += 11;
     }
     // Give buttons sit low, next to the thumb: three gold steps, then goods.

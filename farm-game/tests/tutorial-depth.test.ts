@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import '../src/mechanics';
-import { tutorial } from '../src/data';
+import { items, projects, tutorial } from '../src/data';
+import { setLocale, t } from '../src/i18n';
+import { measureText } from '../src/ui/fontMetrics';
+import { needLine } from '../src/ui/panels/projectText';
 import { noteFishingResult } from '../src/systems/fishing';
 import { addItem, removeItem, countItem } from '../src/systems/inventory';
 import { takeJob, turnInJob } from '../src/systems/jobs';
@@ -237,4 +240,25 @@ describe('guided start: crafting and festivals', () => {
       pattern: '^Enter the .*!$||^Requests \\d+$',
     });
   });
+});
+
+describe('every ask says where its goods come from (owner)', () => {
+  afterEach(() => setLocale('en'));
+  it('each good a project or a place asks for, and house timber, has a source', () => {
+    const asked = new Set(
+      Object.values(projects).flatMap((p) => (p.items ?? []).map((i) => i.item)),
+    );
+    asked.add('timber');
+    for (const id of asked) expect(items[id]?.source, id).toBeTruthy();
+  });
+  it.each(['en', 'pt-BR'] as const)(
+    "%s: the spring's stone line names the mine and fits",
+    (lang) => {
+      setLocale(lang);
+      const label = t('project.need', { item: items['stone']!.name, given: 0, need: 20, have: 0 });
+      const line = needLine(label, items['stone']!.source, true);
+      expect(line).not.toBe(label);
+      expect(measureText(line)).toBeLessThanOrEqual(184);
+    },
+  );
 });
