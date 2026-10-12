@@ -647,7 +647,8 @@ export function artManifest(): ArtEntry[] {
         from: 'placeholders.ts',
       });
   }
-  for (const id of Object.keys(npcs))
+  // villagers, and the families who come home (their art ships before or with their npcs.json entry)
+  for (const id of new Set([...Object.keys(npcs), ...RETURNING_NPCS]))
     for (const d of DIRECTIONS)
       for (let i = 0; i < NPC_IDLE_FRAMES; i++)
         add({
@@ -778,6 +779,9 @@ export const TOW_SPRITES: [string, number, number, AtlasGroup][] = [
 export const HOUSE_SPRITES: [string, number, number][] = [
   ...[0, 1, 2, 3, 4].map((n): [string, number, number] => [`obj_house_marls_${n}`, 96, 48]),
 ];
+
+/** Villagers who come home (M7 on), drawn in art-src/tools (senna.py): listed here as well as in npcs.json. */
+export const RETURNING_NPCS = ['senna'] as const;
 
 /** Manifest entries grouped by texture key, in manifest order. */
 export function manifestByTexture(entries: ArtEntry[] = artManifest()): Map<string, ArtEntry[]> {
