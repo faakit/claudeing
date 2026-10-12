@@ -4,11 +4,12 @@
  *
  *  - 'pause'  the app is going to the background (or being closed): save, silence, stop the clock.
  *  - 'resume' it is visible again.
- *  - 'back'   a hardware/system back request (Android back button).
+ *  - 'back'   a hardware/system back request (Android back button). A back listener returns `true` when it
+ *             used the press (closed a sheet); when none does, the native shell asks before quitting.
  */
 export type LifecycleEvent = 'pause' | 'resume' | 'back';
 
-type Listener = () => void;
+type Listener = () => void | boolean;
 
 export class Lifecycle {
   private listeners: Record<LifecycleEvent, Set<Listener>> = {
@@ -40,22 +41,23 @@ export class Lifecycle {
     this.fire('resume');
   }
 
-  /** Returns true if any listener handled the request, so the caller can fall back (e.g. exit the app). */
+  /** Returns true if any listener used the press (returned `true`), so the caller can fall back (ask to quit). */
   back(): boolean {
-    const handled = this.listeners.back.size > 0;
-    this.fire('back');
-    return handled;
+    return this.fire('back');
   }
 
-  private fire(event: LifecycleEvent): void {
+  /** Fires every listener; true if any returned `true`. */
+  private fire(event: LifecycleEvent): boolean {
+    let used = false;
     // Copy first so a listener may unsubscribe itself; one failing listener must not block the rest.
     for (const fn of [...this.listeners[event]]) {
       try {
-        fn();
+        if (fn() === true) used = true;
       } catch (err) {
         console.error(`lifecycle "${event}" listener failed`, err);
       }
     }
+    return used;
   }
 }
 

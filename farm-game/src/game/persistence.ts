@@ -2,10 +2,13 @@ import { lifecycle } from '../platform/lifecycle';
 import { createSaveStore } from '../platform/store';
 import { getState } from '../state/store';
 import { runtime } from '../state/runtime';
-import { saveGame } from '../systems/save';
+import { BACKUP_KEY, SAVE_KEY, saveGame } from '../systems/save';
 import { gameEvents } from '../systems/events';
 
-export const saveStore = createSaveStore();
+/** Keys a native app copies once from the WebView's storage into the native store (the language key is `lang`). */
+export const NATIVE_MIGRATE_KEYS = [SAVE_KEY, BACKUP_KEY, 'lang'] as const;
+
+export const saveStore = createSaveStore(NATIVE_MIGRATE_KEYS);
 
 /** Saves run strictly one after another, each writing the snapshot taken when it was requested. */
 let chain: Promise<unknown> = Promise.resolve();

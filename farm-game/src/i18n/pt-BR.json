@@ -526,7 +526,8 @@
     "continue": "Continuar",
     "saveLine": "{season} {day}, ano {year}  {gold}",
     "eraseConfirm": "Apagar? Toque de novo",
-    "newGame": "Novo jogo"
+    "newGame": "Novo jogo",
+    "quitConfirm": "Sair do Tiny Acre? Sua fazenda fica salva."
   },
   "tab": {
     "bag": "Bolsa",

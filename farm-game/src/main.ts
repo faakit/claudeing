@@ -25,6 +25,7 @@ import { controlsLog } from './input/controlsLog';
 import { displayFit } from './platform/displayFit';
 import { chooseLanguage, initLanguage } from './game/language';
 import { getLocale } from './i18n';
+import { saveNow } from './game/persistence';
 
 suppressBrowserGestures();
 audio.installAutoUnlock();
@@ -112,7 +113,7 @@ refreshOnRotate(() => {
 wireLifecycle(game);
 wireAudio(game);
 installWebLifecycle(lifecycle, document, window);
-initNative();
+initNative(lifecycle, { beforeExit: () => saveNow(true) });
 
 // Debug/test hook for automated checks and tinkering. Enabled in dev builds, or with ?debug in the URL.
 if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) {

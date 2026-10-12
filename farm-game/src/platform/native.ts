@@ -5,6 +5,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar } from '@capacitor/status-bar';
 import { registerHapticsDriver, type HapticKind } from './haptics';
 import { lifecycle, type Lifecycle } from './lifecycle';
+import { t } from '../i18n';
 
 export const isNative = (): boolean => Capacitor.isNativePlatform();
 
@@ -13,11 +14,22 @@ const safely = (p: Promise<unknown> | undefined): void => {
   void p?.catch(() => undefined);
 };
 
+/** What the game lends the native shell: the quit question and a last save before the app closes. */
+export interface NativeHooks {
+  /** Ask the player before quitting (true = quit). Default: the WebView's confirm, a native Android dialog. */
+  confirmQuit?: () => boolean;
+  /** Runs before the app exits (the game saves here); the exit waits for it, at most `EXIT_WAIT_MS`. */
+  beforeExit?: () => Promise<unknown>;
+}
+
+/** The longest a quit waits for the last save. */
+export const EXIT_WAIT_MS = 1500;
+
 /**
  * Connect the native shell (Capacitor iOS/Android) to the game: real haptics, the shared lifecycle,
  * the Android back button, and a hidden status bar. A no-op on the web. Call once at startup.
  */
-export function initNative(target: Lifecycle = lifecycle): void {
+export function initNative(target: Lifecycle = lifecycle, hooks: NativeHooks = {}): void {
   if (!isNative()) return;
 
   registerHapticsDriver((kind: HapticKind) => {
@@ -37,10 +49,17 @@ export function initNative(target: Lifecycle = lifecycle): void {
     ),
   );
   // Registering a backButton listener replaces Android's default "close the app", so route it to the
-  // game: close the open dialog / open the menu. If nothing handles it (title screen), leave the app.
+  // game first: an open sheet closes. When nothing used the press, ask before quitting, save, then leave.
+  const confirmQuit = hooks.confirmQuit ?? (() => window.confirm(t('title.quitConfirm')));
+  let quitting = false;
   safely(
     App.addListener('backButton', () => {
-      if (!target.back()) safely(App.exitApp());
+      if (quitting || target.back()) return;
+      if (!confirmQuit()) return;
+      quitting = true;
+      const saved = hooks.beforeExit?.().catch(() => undefined) ?? Promise.resolve();
+      const timeout = new Promise((r) => globalThis.setTimeout(r, EXIT_WAIT_MS));
+      void Promise.race([saved, timeout]).then(() => safely(App.exitApp()));
     }),
   );
 
