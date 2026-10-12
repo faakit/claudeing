@@ -215,6 +215,14 @@ const COMPOSITION = {
       [18, 3],
     ],
     boats: [[18, 29]],
+    // the river stage's decor (M6): a reed bed off the west bank, rock spurs, the mill wheel on the east channel
+    river: [
+      ['reeds_bed', 18, 24],
+      ['reeds_s', 18, 23],
+      ['rockspur', 19, 26],
+      ['rockspur', 21, 27],
+      ['millwheel', 21, 30],
+    ],
     // map stages (M6): the dry town's river bed is the stone ground in D1 (the farm creek's bed, dry); the Heron sits
     // on the mud (solid there); the north-east house is boarded up (its facade's `_boarded` tiles once the art lane
     // draws them, a bare wall until then) and its chimney cold
@@ -222,6 +230,7 @@ const COMPOSITION = {
       dry: {
         creek: { bridge: [], stages: { dry: { bed: 'dry' } } },
         boats: [[19, 25]],
+        river: [],
         boarded: [
           [15, 6],
           [16, 6],
@@ -1146,7 +1155,8 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
   }
   for (const [x, y, n0] of C.facade ?? []) {
     // a boarded-up house: its facade's `_boarded` tiles once they exist, a bare wall until then (and no light)
-    const n = boarded.has(`${x},${y}`) ? (has(`${n0}_boarded`) ? `${n0}_boarded` : null) : n0;
+    const shut = boarded.has(`${x},${y}`);
+    const n = shut ? (has(`${n0}_boarded`) ? `${n0}_boarded` : null) : n0;
     if (!n) continue;
     const k = kind(x, y);
     if (!BUILDING[k] || k === 'door' || k === 'shopdoor') {
@@ -1154,29 +1164,56 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
       continue;
     }
     const b = blocks.find((q) => q.cells.some(([a, c]) => a === x && c === y));
-    if (b && b.eaveRow < b.bottom && y === b.bottom && HIGH[n]) {
+    if (b && b.eaveRow < b.bottom && y === b.bottom && HIGH[n0]) {
       // a two-storey wall: windows and the lantern at head height on the row above, doors split over both rows
-      if (n === 'f_door') {
-        set('props', x, y, `f_doorlow_${b.style}`);
-        set('props', x, y - 1, `f_doortop_${b.style}`);
-      } else set('props', x, y - 1, HIGH[n]);
-      if (LIGHT_OF[n])
-        lights.push({ type: LIGHT_OF[n], tx: x, ty: y - (n === 'f_door' ? 0 : 0.75) });
+      // (boarded: the same pieces with boards across, `<piece>_boarded`)
+      const up = (piece) => (shut ? (has(`${piece}_boarded`) ? `${piece}_boarded` : null) : piece);
+      if (n0 === 'f_door') {
+        const low = up(`f_doorlow_${b.style}`);
+        const top = up(`f_doortop_${b.style}`);
+        if (low) set('props', x, y, low);
+        if (top) set('props', x, y - 1, top);
+      } else {
+        const hi = up(HIGH[n0]);
+        if (hi) set('props', x, y - 1, hi);
+      }
+      if (LIGHT_OF[n0] && !shut)
+        lights.push({ type: LIGHT_OF[n0], tx: x, ty: y - (n0 === 'f_door' ? 0 : 0.75) });
       continue;
     }
     set('props', x, y, n);
-    if (LIGHT_OF[n]) lights.push({ type: LIGHT_OF[n], tx: x, ty: y });
+    if (LIGHT_OF[n0] && !shut) lights.push({ type: LIGHT_OF[n0], tx: x, ty: y });
   }
 
   for (const [x, y] of C.boats ?? []) {
     // a boat afloat, or (the Heron on the dry town's mud) aground on a bed, where it is solid
     const aground = isBed(x, y) && isBed(x, y + 1);
     if (!aground && (kind(x, y) !== 'water' || kind(x, y + 1) !== 'water')) continue;
-    const top = aground && has('heron_aground_t') ? 'heron_aground' : 'boat';
+    // the town's boat is Finn's Heron (M6): afloat by the dock, or on the dry river's mud
+    const heron = aground ? 'heron_aground' : 'heron';
+    const top = name === 'town' && has(`${heron}_t`) ? heron : 'boat';
     set('props', x, y, `${top}_t`);
     set('props', x, y + 1, `${top}_b`);
     L.shade[y * w + x] = L.shade[(y + 1) * w + x] = 0;
     if (aground) solid.add(y * w + x).add((y + 1) * w + x);
+  }
+  // river decor on water tiles (M6, the town's river stage): reed beds and rock spurs on the shade layer, the mill
+  // wheel (2 x 2) on the props layer; water is solid already, so collision is unchanged
+  for (const [n, x, y] of C.river ?? []) {
+    if (n === 'millwheel') {
+      const cells = [
+        [0, 0, 'tl'],
+        [1, 0, 'tr'],
+        [0, 1, 'bl'],
+        [1, 1, 'br'],
+      ];
+      if (!has('millwheel_tl') || cells.some(([dx, dy]) => kind(x + dx, y + dy) !== 'water')) continue;
+      for (const [dx, dy, part] of cells) {
+        set('props', x + dx, y + dy, `millwheel_${part}`);
+        L.shade[(y + dy) * w + x + dx] = 0;
+      }
+    } else if (has(n) && kind(x, y) === 'water') set('shade', x, y, n);
+    else console.warn(`map-art: ${name}: river decor ${n} at ${x},${y} skipped (no tile or not water)`);
   }
   for (const [x, y] of C.vane ?? []) {
     const b = blocks.find(

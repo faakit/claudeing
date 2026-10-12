@@ -594,6 +594,27 @@ ILSE_TIN = [
 ]
 
 
+# Orin's sluice gate (Dry Year M6): a planked gate with an iron band, its lifting rod and a T handle on top.
+SLUICE_GATE = [
+    "................",
+    "...KKKKKKKKKK...",
+    "...KxxxxxxxxK...",
+    "...KZZZZZZZZK...",
+    "...KKKKZZKKKK...",
+    "......KxzK......",
+    ".KKKKKKxzKKKKKK.",
+    ".KsssssssssssZK.",
+    ".KwwwoowwwoowZK.",
+    ".KwwwoowwwoowZK.",
+    ".KZZZZZZZZZZZZK.",
+    ".KxxxxxxxxxxxZK.",
+    ".KwwwoowwwoowZK.",
+    ".KwwwoowwwoowZK.",
+    ".KZZZZZZZZZZZZK.",
+    ".KKKKKKKKKKKKKK.",
+]
+
+
 def build(P, groups: dict, pal, names: list[str]) -> None:
     def add(group: str, key: str, idx: np.ndarray) -> None:
         groups[group][key] = px.idx_to_rgba(idx, pal)
@@ -608,6 +629,7 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
         ("item_scarecrow", SCARECROW_ITEM),
         ("item_ilse_tin", ILSE_TIN),
         ("item_spade", ILSE_SPADE),
+        ("item_sluice_gate", SLUICE_GATE),
     ):
         add("ui", key, grid(names, rows, 16, 16))
     add("world", "obj_scarecrow", grid(names, SCARECROW, 16, 30))

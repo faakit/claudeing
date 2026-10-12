@@ -219,7 +219,86 @@ def warm_pool(names: list[str]) -> np.ndarray:
     return cv.t
 
 
+def _wall(cv: Canvas, x0: int, x1: int, top: int, broken: bool = False, bottom: int = H) -> None:
+    """Dressed masonry from x0 to x1 (exclusive): a lit 4 px top face, then courses of 6 px blocks (a 2 px lit top,
+    a 2 px dark foot, staggered 2 px dark joints). No 1 px mortar lines."""
+    cv.rect(x0, top, x1 - x0, bottom - top, "ink")
+    cv.rect(x0 + 1, top + 1, x1 - x0 - 2, 3, "stone lt")  # the wall's top, in the sun
+    y, row = top + 4, 0
+    while y < bottom - 1:
+        hgt = min(6, bottom - 1 - y)
+        cv.rect(x0 + 1, y, x1 - x0 - 2, hgt, "stone")
+        cv.rect(x0 + 1, y, x1 - x0 - 2, min(2, hgt), "stone lt")
+        if hgt > 4:
+            cv.rect(x0 + 1, y + hgt - 2, x1 - x0 - 2, 2, "stone dark")
+        for jx in range(x0 + (3 if row % 2 else 7), x1 - 2, 8):
+            cv.rect(jx, y, 2, hgt, "stone dark")
+        y += hgt
+        row += 1
+    if broken:  # the wall's broken end: a stepped bite out of its top toward the gap
+        for i, bx in enumerate(range(x1 - 8, x1, 2)):
+            cv.t[: top + 2 + 2 * i, bx : bx + 2] = -1
+            cv.rect(bx, top + 2 + 2 * i, 2, 2, "ink")
+
+
+def weir(names: list[str], stage: int) -> np.ndarray:
+    """The weir's site on the gorge's west bank (`obj_site_weir_0..4`, 32x32; the gorge begins at the sprite's
+    right edge): the old wall running east, its gap at the gorge end.
+
+      0  the gap choked with rubble, the wall's end broken
+      1  the top of the rubble out (stones out once)
+      2  stones out twice: the gap clear down to the old footings
+      3  Orin's gate set in a new wooden frame, one beam short (the gap open above it)
+      4  mended: the last beam in across the top; water at the gate's foot
+    """
+    cv = Canvas(names)
+    yy, xx = np.mgrid[0:H, 0:W]
+    cv.put(ellipse(W, H, 16, 31, 16, 2.5) & (yy >= 30), "plum shadow")
+    gx0, gx1 = 17, 32  # the gap
+    _wall(cv, 0, gx0 + 1, 10, broken=stage <= 2, bottom=29)
+    if stage <= 2:
+        # the gap: dark, down to the footings
+        cv.rect(gx0 + 1, 18, gx1 - gx0 - 1, 13, "ink")
+        cv.rect(gx0 + 2, 19, gx1 - gx0 - 2, 10, "plum shadow")
+        cv.rect(gx0 + 1, 27, gx1 - gx0 - 1, 4, "stone dark")  # the old footings (a sill)
+        cv.rect(gx0 + 2, 27, gx1 - gx0 - 2, 2, "stone")
+        rubble = [(18, 3, 10, 10), (23, 9, 9, 9), (16, 15, 9, 9), (24, 17, 8, 9), (18, 23, 8, 8), (25, 24, 7, 7)]
+        keep = {0: rubble, 1: rubble[2:], 2: []}[stage]
+        for x, y, w, h in keep:
+            stone(cv, x, y, w, h, warm=(x + y) % 3 == 0)
+        if stage == 1:  # the stones levered out lie at the wall's foot
+            stone(cv, 2, 24, 8, 8)
+            stone(cv, 9, 25, 7, 7, warm=True)
+        if stage == 2:
+            stone(cv, 0, 24, 8, 8)
+            stone(cv, 6, 25, 7, 7, warm=True)
+            stone(cv, 11, 24, 8, 8)
+        return cv.t
+    # 3 and 4: a wooden frame in the gap and Orin's gate
+    for px_ in (gx0 + 1, gx1 - 4):
+        cv.rect(px_, 10, 4, 21, "ink")
+        cv.rect(px_ + 1, 11, 2, 19, "wood")
+    cv.rect(gx0 + 5, 18, gx1 - gx0 - 9, 12, "ink")
+    for k, bx in enumerate(range(gx0 + 6, gx1 - 5, 3)):  # the gate's planks
+        cv.rect(bx, 19, 2, 10, "wood" if k % 2 == 0 else "soil")
+    cv.rect(gx0 + 5, 22, gx1 - gx0 - 9, 2, "stone dark")  # an iron band across it
+    cv.rect(gx0 + 1, 29, gx1 - gx0 - 1, 2, "stone dark")  # the footings under the gate
+    if stage == 3:
+        cv.rect(gx0 + 5, 12, gx1 - gx0 - 9, 6, "ink")  # one beam short: the gap open above the gate
+        cv.rect(gx0 + 5, 13, gx1 - gx0 - 9, 4, "plum shadow")
+    else:
+        cv.rect(gx0 + 1, 11, gx1 - gx0 - 1, 7, "ink")  # the last beam, across the frame
+        cv.rect(gx0 + 2, 12, gx1 - gx0 - 3, 2, "sand")
+        cv.rect(gx0 + 2, 14, gx1 - gx0 - 3, 3, "wood")
+        for bx in (gx0 + 3, gx1 - 4):
+            cv.rect(bx, 14, 2, 2, "stone dark")  # its bolts
+        cv.rect(gx0 + 5, 29, gx1 - gx0 - 9, 2, "water")  # water at the gate's foot
+        cv.rect(gx0 + 8, 29, 3, 2, "sky")
+    return cv.t
+
+
 def build(names: list[str]) -> dict[str, np.ndarray]:
     out = {f"obj_site_spring_{i}": spring(names, i) for i in range(4)}
     out["obj_landmark_bathhouse"] = warm_pool(names)
+    out.update({f"obj_site_weir_{i}": weir(names, i) for i in range(5)})
     return out

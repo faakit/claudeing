@@ -381,4 +381,8 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
         sv = W[f"eave_{style}_c"].copy()
         sv[v >= 0] = v[v >= 0]
         W[f"vane_{style}"] = sv
+    # the Dry Year's town stages (M6): the Heron afloat and aground, the boarded north-east house (towntiles.py)
+    import towntiles
+
+    towntiles.build(P, out)
     return out
