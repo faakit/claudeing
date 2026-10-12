@@ -381,6 +381,28 @@ async function stages() {
     tilled?.text === 'The old creek bed. Best left clear.',
     JSON.stringify(tilled),
   );
+  // Placing on the bank, then again after the farm scene is rebuilt: the item-in-hand image of the first place
+  // was kept across the restart, and setTexture on it threw and stopped the game loop.
+  const placeDown = async () => {
+    await farm.idle(); // a refusal's action lock runs out first
+    await farm.mutate((st) => {
+      st.player.facing = 'down';
+      st.inventory.selected = st.inventory.slots.findIndex((x) => x?.item === 'sprinkler');
+    });
+    await farm.frames(3);
+    return farm.act();
+  };
+  const placed1 = await placeDown();
+  await farm.frames(40); // the place pose plays out
+  await farm.load('farm-creek-place');
+  const placed2 = await placeDown();
+  const clock0 = await farm.eval(() => window.__farm.getState().time.minutes);
+  await farm.until((st, _w, m) => st.time.minutes > m, clock0, 'the clock to tick after a place');
+  check(
+    'farm-creek-place: placing again after the farm scene restarts keeps the game running',
+    placed1.ok && placed2.ok && farm.errors.length === 0,
+    JSON.stringify([placed1.used, placed2.used, farm.errors]),
+  );
   await farm.eval(() => window.__farm.dev.goto('farm', 28, 3, 'right')); // resolves once the scene is up
   await farm.frames(3); // a fresh scene ignores input until a frame with nothing held
   const gate = await farm.event('toast', () => farm.press('KeyE'));

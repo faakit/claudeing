@@ -328,6 +328,8 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     this.transitioning = false;
     this.pose = null; // the scene object is reused across visits; its old images are gone
+    this.held = null; // the item shown in hand went with them (setTexture on it threw and froze the game)
+    this.heldSeq = [];
     this.poseSeq = [];
     this.poseUntil = 0;
     this.dipUntil = 0;
