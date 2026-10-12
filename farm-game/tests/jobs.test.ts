@@ -28,6 +28,7 @@ import {
 import { boardStartPage } from '../src/ui/panels/boardStart';
 import { rowLayout } from '../src/ui/layout';
 import { setLocale, t } from '../src/i18n';
+import { applyDataLocale } from '../src/i18n/dataText';
 import { afterEach } from 'vitest';
 import { migrate } from '../src/systems/save';
 import { measureText } from '../src/ui/fontMetrics';
@@ -313,9 +314,13 @@ describe('jobs are always doable (critique 4)', () => {
 });
 
 describe('the town board text fits in both languages', () => {
-  afterEach(() => setLocale('en'));
+  afterEach(() => {
+    applyDataLocale('en');
+    setLocale('en');
+  });
   it.each(['en', 'pt-BR'] as const)('%s: every job row and the page tabs fit', (lang) => {
     setLocale(lang);
+    applyDataLocale(lang); // the jobs' own text is data (critic D2-2: pt-BR names were cut)
     const room = rowLayout(200, [44], false).maxText;
     for (const j of jobDefs) {
       const n = j.qty[1];

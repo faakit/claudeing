@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import '../src/mechanics';
-import { items, projects, tutorial } from '../src/data';
+import { readFileSync } from 'node:fs';
+import { items, mapsData, projects, tutorial } from '../src/data';
 import { setLocale, t } from '../src/i18n';
 import { measureText } from '../src/ui/fontMetrics';
 import { needLine } from '../src/ui/panels/projectText';
@@ -11,6 +12,7 @@ import {
   advance,
   coachView,
   goodsShort,
+  nextMapToward,
   startTutorial,
   stepDone,
   type CoachFacts,
@@ -261,4 +263,59 @@ describe('every ask says where its goods come from (owner)', () => {
       expect(measureText(line)).toBeLessThanOrEqual(184);
     },
   );
+});
+
+describe('the coach leads through the real door chain (critic D2-1)', () => {
+  it('each map lists exactly the maps its doors lead to', () => {
+    for (const [id, def] of Object.entries(mapsData.maps)) {
+      const tmj = JSON.parse(readFileSync(`public/${def.file}`, 'utf8')) as {
+        layers: { objects?: { type: string; properties?: { name: string; value: unknown }[] }[] }[];
+      };
+      const to = new Set<string>();
+      for (const l of tmj.layers)
+        for (const o of l.objects ?? [])
+          if (o.type === 'door')
+            to.add(String(o.properties?.find((p) => p.name === 'targetMap')?.value));
+      expect([...to].sort(), id).toEqual([...(def.links ?? [])].sort());
+    }
+  });
+
+  it('farm to the mine goes through town and the woods, never back', () => {
+    expect(nextMapToward('farm', 'mine')).toBe('town');
+    expect(nextMapToward('town', 'mine')).toBe('woods');
+    expect(nextMapToward('woods', 'mine')).toBe('mine');
+    expect(nextMapToward('house', 'mine')).toBe('farm');
+    expect(nextMapToward('mine', 'farm')).toBe('woods');
+    expect(nextMapToward('farm', 'farm')).toBeNull();
+  });
+
+  it('in town, the stone intro points at the woods door, not back to the farm', () => {
+    const s = guidedWith('stone');
+    s.stats['place.spring'] = 1;
+    const town = world('town', {
+      objects: [
+        { type: 'door', tx: 11, ty: 0, w: 1, h: 1, to: 'farm' },
+        { type: 'door', tx: 0, ty: 24, w: 1, h: 1, to: 'woods' },
+      ],
+    });
+    expect(view(s, town)?.pointer).toEqual({ kind: 'tile', tx: 0, ty: 24 });
+  });
+});
+
+describe('a leading intro keeps the floor (critic D2-4)', () => {
+  it("Clay's town intro does not take over the walk to the mine once the stone line showed", () => {
+    const s = guidedWith('stone', 'clay');
+    s.stats['place.spring'] = 1;
+    s.time.day = 9;
+    expect(step(s, world('farm'))).toBe('stone');
+    const town = world('town', {
+      objects: [
+        { type: 'board', tx: 14, ty: 11, w: 1, h: 1 },
+        { type: 'door', tx: 0, ty: 24, w: 1, h: 1, to: 'woods' },
+      ],
+    });
+    expect(step(s, town)).toBe('stone');
+    addStat(s, 'mined');
+    expect(step(s, town)).toBe('clay');
+  });
 });

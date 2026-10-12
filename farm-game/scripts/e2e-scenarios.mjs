@@ -2041,6 +2041,64 @@ async function guidedDepth() {
     check(`${name}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
     await farm.close();
   }
+  await stoneWalk(PROFILE);
+  await stoneWalk('se');
+}
+
+/**
+ * Stone before the site, followed by the coach alone (critic D2-1: the off-map pointer looped farm <-> town): from
+ * the farm, tap or steer where the coach aims until the first rock in the mine breaks, within a budget of inputs.
+ */
+async function stoneWalk(profile) {
+  const farm = await openScenario(browser, url, 'tut-stone-before-site', { profile });
+  const coachOf = () =>
+    farm.eval(() => {
+      const ui = window.__farm.game.scene.getScene('UI');
+      const s = window.__farm.getState();
+      return {
+        k: ui?.coach?.debug?.() ?? null,
+        map: s.player.map,
+        mined: s.stats.mined ?? 0,
+        sheet: window.__farm.dev.openSheet(),
+      };
+    });
+  let inputs = 0;
+  let crossings = 0;
+  let lastMap = 'farm';
+  let c = await coachOf();
+  const maps = ['farm'];
+  for (let round = 0; c.mined < 1 && inputs < 60 && round < 200; round++) {
+    const a = c.k?.aim;
+    if (process.env.STONE_TRACE)
+      console.log(
+        `      ${c.map} [${c.k?.step}] ${c.k?.text} ${JSON.stringify(a)} sheet ${c.sheet}`,
+      );
+    if (!c.k?.visible || !a) {
+      await farm.frames(10);
+      c = await coachOf();
+      continue;
+    }
+    inputs++;
+    if (a.kind === 'stick') {
+      const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[a.dir];
+      await farm.thumb.drag(a.x, a.y, a.x + d[0] * 30, a.y + d[1] * 30, 120, 6, true);
+      await farm.frames(45);
+      await farm.thumb.up();
+    } else await farm.thumb.tap(a.x, a.y, 70);
+    await farm.idle(4);
+    c = await coachOf();
+    if (c.map !== lastMap) {
+      crossings++;
+      maps.push(c.map);
+      lastMap = c.map;
+    }
+  }
+  check(
+    `tut-stone-before-site (${profile}): following the coach from the farm breaks a rock in the mine within 60 inputs`,
+    c.mined >= 1 && crossings <= 4,
+    `inputs ${inputs}, maps ${maps.join(' > ')}, step ${c.k?.step}`,
+  );
+  await farm.close();
 }
 
 /** The town board (bait round): jobs are taken there and turned in there; the requests are its other page. */

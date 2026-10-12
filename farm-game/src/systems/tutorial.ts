@@ -11,7 +11,18 @@
  * The scene supplies a `CoachWorld` (what the world looks like right now) and `CoachFacts` (which sheet is
  * open); `advance` marks steps done and returns the current one, `coachView` says what to show for it.
  */
-import { crops, game, items, jobs as jobDefs, npcs, plots, projects, tools, tutorial } from '../data';
+import {
+  crops,
+  game,
+  items,
+  jobs as jobDefs,
+  mapsData,
+  npcs,
+  plots,
+  projects,
+  tools,
+  tutorial,
+} from '../data';
 import type {
   TutorialCond,
   TutorialData,
@@ -453,7 +464,25 @@ export function advance(
       return { current: st, completed };
     }
   }
-  // No track step to show: one-off introductions, the first that applies.
+  // No track step to show: one-off introductions. One already leading the player to another map (shown, not done,
+  // its target on a map) keeps the floor while its moment holds, so an intro on the way (Clay's in town) cannot
+  // hijack the walk to the mine (critic D2-4). Otherwise the first that applies.
+  const leading = steps.filter(
+    (st) =>
+      st.track === 'intro' &&
+      !stepDone(s, st.id) &&
+      s.stats[`tut.seen.${st.id}`] &&
+      (st.target?.map ?? st.target?.else?.map) !== undefined,
+  );
+  for (const st of leading) {
+    const ctx: Ctx = { s, world, facts, step: st };
+    if (st.when && !holds(st.when, ctx)) continue;
+    if ((st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx))) {
+      finish(s, st, completed);
+      continue;
+    }
+    return { current: st, completed };
+  }
   for (const st of steps) {
     if (st.track !== 'intro' || stepDone(s, st.id)) continue;
     // at most one new valley intro a morning: another waits for tomorrow (it is not marked seen meanwhile)
@@ -777,9 +806,32 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
 }
 
 /** The door from this map toward `map` (direct, else back through the farm, else the town). */
+/** The next map on the shortest walk from `from` to `to` through the maps' doors (`maps.json` links), if any. */
+export function nextMapToward(from: string, to: string): string | null {
+  if (from === to) return null;
+  const prev = new Map<string, string>([[from, from]]);
+  const queue = [from];
+  while (queue.length > 0) {
+    const at = queue.shift()!;
+    for (const next of mapsData.maps[at]?.links ?? []) {
+      if (prev.has(next)) continue;
+      prev.set(next, at);
+      if (next === to) {
+        let hop = next;
+        while (prev.get(hop) !== from) hop = prev.get(hop)!;
+        return hop;
+      }
+      queue.push(next);
+    }
+  }
+  return null;
+}
+
 function doorToward(world: CoachWorld, map: string): CoachObject | null {
   const doors = world.objects.filter((o) => o.type === 'door');
-  for (const to of [map, 'farm', 'town']) {
+  // the door on the way (farm -> town -> woods -> mine), never a door back the way you came (critic D2-1)
+  const hop = nextMapToward(world.map, map);
+  for (const to of hop ? [hop] : [map, 'farm', 'town']) {
     const d = nearest(
       world.tile,
       doors.filter((o) => o.to === to),

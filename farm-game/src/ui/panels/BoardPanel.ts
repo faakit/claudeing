@@ -131,43 +131,42 @@ export class BoardPanel extends Modal {
                   : t('board.jobOffer', { gold }),
         }),
         subColor: job.done ? C.green : ready ? C.gold : C.creamDim,
-        buttons: [
-          job.done || tonight
-            ? {
-                label: t('common.done'),
-                width: 44,
-                enabled: false,
-                color: C.creamDim,
-                onClick: () => {},
-              }
+        // A button only where there is something to do: Take, or Turn in once it is done. A job under way, paid or
+        // paid tonight says so on its second line (a hatched "Turn in" read as nothing; critic D2-3).
+        buttons:
+          job.done || tonight || (taken && !ready)
+            ? []
             : taken
-              ? {
-                  label: t('board.turnIn'),
-                  width: 44,
-                  enabled: ready,
-                  color: ready ? C.green : C.creamDim,
-                  onClick: () => {
-                    if (turnInJob(getState(), i)) {
-                      audio.play('order');
-                      haptic('success');
-                    } else audio.play('error');
-                    this.rebuild();
+              ? [
+                  {
+                    label: t('board.turnIn'),
+                    width: 44,
+                    enabled: true,
+                    color: C.green,
+                    onClick: () => {
+                      if (turnInJob(getState(), i)) {
+                        audio.play('order');
+                        haptic('success');
+                      } else audio.play('error');
+                      this.rebuild();
+                    },
                   },
-                }
-              : {
-                  label: t('board.take'),
-                  width: 44,
-                  enabled: true,
-                  color: C.green,
-                  onClick: () => {
-                    if (takeJob(getState(), i)) {
-                      audio.play('buy');
-                      haptic('success');
-                    } else audio.play('error');
-                    this.rebuild();
+                ]
+              : [
+                  {
+                    label: t('board.take'),
+                    width: 44,
+                    enabled: true,
+                    color: C.green,
+                    onClick: () => {
+                      if (takeJob(getState(), i)) {
+                        audio.play('buy');
+                        haptic('success');
+                      } else audio.play('error');
+                      this.rebuild();
+                    },
                   },
-                },
-        ],
+                ],
       });
     });
     this.closeButton();

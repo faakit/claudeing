@@ -39,6 +39,8 @@ export interface MapDef {
   outdoor?: boolean;
   /** This map holds the farm's soil, crops and weeds. Farm actions are refused elsewhere. */
   farmland?: boolean;
+  /** The maps its doors lead to (the guided start routes an off-map pointer through them; a test checks the maps). */
+  links?: string[];
 }
 export interface SpawnDef {
   map: string;
