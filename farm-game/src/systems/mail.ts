@@ -4,6 +4,7 @@ import type { GameState, Letter } from '../state/GameState';
 import { SEASONS } from '../state/GameState';
 import { gameEvents } from './events';
 import { heartsOf } from './friendship';
+import { villagerHome } from './houses';
 import { stat } from './goals';
 import { addItem, removeStack, roomFor } from './inventory';
 import { absoluteDay, seasonLabel } from './time';
@@ -84,13 +85,14 @@ export function deliverCalendarLetters(state: GameState): number {
   }
   for (const [id, def] of Object.entries(npcs)) {
     const b = def.birthday;
-    if (!b || b.season !== now.season || b.day !== now.day + 1) continue;
+    if (!b || b.season !== now.season || b.day !== now.day + 1 || !villagerHome(state, id))
+      continue;
     const key = `mail.bday.${id}.y${now.year}`;
     if (state.stats[key]) continue;
     state.stats[key] = 1;
     // A birthday letter gives away one favourite, so a gift tomorrow is never a guess.
     const fav = items[def.loves[(now.year - 1) % Math.max(1, def.loves.length)] ?? '']?.name;
-    const writer = Object.keys(npcs).find((n) => n !== id) ?? id;
+    const writer = Object.keys(npcs).find((n) => n !== id && !npcs[n]?.arrives) ?? id;
     sendLetter(state, {
       from: writer,
       title: t('mail.bdayTitle', { name: def.name }),

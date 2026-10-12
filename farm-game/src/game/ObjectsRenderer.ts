@@ -99,9 +99,24 @@ export class ObjectsRenderer {
   private syncLandmarks(state: GameState): void {
     for (const l of landmarksOn(state, this.mapId)) {
       const shown = this.landmarks.get(l.id);
-      if (shown?.getData('sprite') === l.sprite) continue;
+      if ((shown?.getData('sprite') ?? '') === (l.kind === 'slip' ? '' : l.sprite)) continue;
       if (shown && (this.held.get(l.id) ?? 0) > this.scene.time.now) continue; // a work day's beat still playing
       shown?.destroy();
+      this.landmarks.delete(l.id);
+      // the log slip is drawn by the towing controller; a house with no scaffolding yet draws nothing (its map art)
+      if (l.kind === 'slip' || (l.kind === 'house' && !l.sprite)) continue;
+      if (l.kind === 'house' && l.anchor) {
+        // the scaffolding over the house's front, from its bottom-left tile (art lane: 96 x 48, decor only)
+        const [ax, ay] = l.anchor;
+        const by = (ay + 1) * TILE_SIZE;
+        const img = this.scene.add
+          .image(ax * TILE_SIZE, by, scaffoldTexture(this.scene, l.sprite, l.level ?? 0))
+          .setOrigin(0, 1)
+          .setDepth(10 + by - 3)
+          .setData('sprite', l.sprite);
+        this.landmarks.set(l.id, img);
+        continue;
+      }
       const y = (l.ty + 1) * TILE_SIZE;
       const shape =
         l.kind === 'site' ? 'site' : l.kind === 'trophy' ? 'trophy' : l.level ? 'statue' : 'house';
@@ -166,7 +181,9 @@ export class ObjectsRenderer {
   /** Cheap per-frame check: a repeatable landmark went up a level (funding fires no map event after the first). */
   syncLandmarkLevels(state: GameState): void {
     for (const l of landmarksOn(state, this.mapId))
-      if (this.landmarks.get(l.id)?.getData('sprite') !== l.sprite)
+      if (
+        (this.landmarks.get(l.id)?.getData('sprite') ?? '') !== (l.kind === 'slip' ? '' : l.sprite)
+      )
         return this.syncLandmarks(state);
   }
 
@@ -498,4 +515,34 @@ export class ObjectsRenderer {
     this.mailMark?.destroy();
     this.mailMark = null;
   }
+}
+
+/**
+ * A house's scaffolding until the art lane's frame exists (96 x 48, palette colours): poles at both ends, planks
+ * that rise with the stage, a timber stack low on the left; stage 3 a closed frame.
+ */
+function scaffoldTexture(scene: Phaser.Scene, key: string, stage: number): string {
+  if (scene.textures.exists(key)) return key;
+  const t = scene.textures.createCanvas(key, 96, 48);
+  if (!t) return key;
+  const c = t.getContext();
+  const INK = '#2a1a24';
+  const WOOD = '#b47c4c';
+  const BARK = '#7c442c';
+  for (const x of [2, 46, 90]) {
+    c.fillStyle = INK;
+    c.fillRect(x, 4, 4, 44);
+    c.fillStyle = WOOD;
+    c.fillRect(x + 1, 5, 2, 43);
+  }
+  const rows = stage >= 3 ? 4 : stage + 1;
+  for (let i = 0; i < rows; i++) {
+    const y = 40 - i * 10;
+    c.fillStyle = INK;
+    c.fillRect(0, y, 96, 4);
+    c.fillStyle = i % 2 ? BARK : WOOD;
+    c.fillRect(1, y + 1, 94, 2);
+  }
+  t.refresh();
+  return key;
 }

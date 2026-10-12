@@ -1492,6 +1492,27 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
 - **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
 
 
+## M7 audio: towing and the first homecoming (audio lane, audio/m7, 2026-10-12)
+
+- **Tow cues fit the real verb.** `audio-src/tools/tow-cues.mjs` measured the gaps: the quickest second tug comes
+  277 ms after the first, and the splash comes 173 ms after the freeing tug. So the tug is 300 ms long and never
+  repeat-ducked. All four cues carry a wooden crack, so 40 % or more of their energy is above 400 Hz (a phone plays
+  it), and they peak at -4.6 dBTP or lower at the output (recipe `tpOut`).
+- **A cue can play under the one it follows** (`softAfter`, `softFor`). The water a spade cut lets in plays 9 dB
+  under the cut, and the splash of a freed log plays 6 dB under the tug. The moment belongs to the tool, and a wet
+  channel row is no louder than a dry one. Watering alone keeps its level, with a 0.5 s repeat window.
+- **The homecoming echoes the green jingle on purpose.** Both end on the same rising E-G-C arrival (one shared
+  interval 3-gram): a family coming home is the valley coming back. The homecoming opens with Senna's own figure,
+  so the two never sound the same. It has priority 4, so a `green` in the same second gives way to it.
+- **The lit window replaces the dusk flourish** on its evening (`MomentClock.spendDusk`). It fires once per house,
+  ever, so it needs no ration; if a dusk flourish has just begun, it waits for it to end.
+- **The mill wheel is made here** (`gen_beds.py mill()`): jittered paddle slaps, an axle groan and a knock on a
+  circular 15 s timeline, with a recorded water-spill layer as loud as the wheel (7.27 s, so the two never line up
+  within 200 s). It plays only on the town's final `marls` stage, by
+  the wheel only (silent 9.5 tiles away).
+- **Offline renders start cues at their own time,** not on the 100 ms tick, so repeat windows see real gaps (a
+  0.451 s dig gap used to round to 0.4 or 0.5 s).
+
 ## The Dry Year, feel lane (feel/dry-year)
 
 - **Channel juice is drawn over the map, never in a new layer.** The water into a cut and the morning's run crop the
@@ -1699,3 +1720,80 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A v1 save is an old save** (it keeps its river): `migrateV1` no longer copies a new game's valley markers.
 - The review's findings, fixed and open, are in `agents/out/review-dry-year-2.md` (git-ignored scratch) and the
   coordinator's summary.
+
+## The Dry Year, M7: towing and the first homecoming (depth lane, valley/m7)
+
+- **The spike was adopted, not rewritten.** The feel lane's controller moved from `src/dev/towSpike.ts` to
+  `src/game/TowController.ts` and now takes a *course* (`TowCourse`: water, snags, slip, how its logs drift, what a
+  landing gives). The lab's lanes are one course (`towSpike.ts` is now ~90 lines), the town river another
+  (`src/game/weirTow.ts`). The controller gained only what the real river needs: several logs on the water (one in
+  hand), logs that come to rest, and meeting a drifting log where it will rest. Taps, Action's verb and priority rule,
+  the snag cues, the resume-after-tug rule and every timing (`TOW_T` = the spike's `T`) are the spike's. The lab's
+  towing e2e blocks pass unchanged on the refactor.
+- **The lanes were designed by simulating the real river** (x 17-22, y 22-31; the farmer can only walk the west bank
+  x 16, the north bank y 21 and the south bank's x 17-18). A towed log trails the farmer down the west bank and hugs
+  column 17, so the only obstacle *in a tow's path* is the reed bed (18,24); the spurs at x 19 and x 21 are only met by a
+  drifting log. So each lane meets its obstacle differently, and no two consecutive logs share lane or snag:
+  - `west` rests at the head under the north bank (18,22) and catches on the reed bed on the way down (a mid-tow snag,
+    as in the spike);
+  - `middle` drifts onto the first spur (19,26) and **waits there, caught** (tilted, foam, ripple): hook, tug, tow;
+  - `east` drifts down x 21 out of reach of every bank until the second spur (21,27) turns it west, then rests by the
+    mill wheel at (20,30) ("resting against the mill wheel"); it is hooked and hauled from the slip's stand: the
+    waiting lane, no snag (`tow-east-lane` 14-19 s, 1-2 inputs).
+  Lanes are waypoint paths in `valley.json` (`weir.drift.lanes`), with a long log's own path (it needs both rows).
+- **A log that waited caught on a rock** (`snag.drift`): it is hooked from upstream of the rock, so a tug pops it 6 px
+  further past the rock, on the farmer's side of the three places past it, the rope pays out (no pull) until the
+  farmer is level with it, and he walks it on to the slip by himself. Without these the rope drew it straight back
+  onto the spur (5 tugs for a long log in the first matrix). A still log can be hooked from 54 px (6 px past the
+  rope; it does not drift away while he walks); a moving one keeps the spike's margin.
+- **The slip is at (19,32) on the south bank; its stand is (18,32), from the west only.** The scatter tree at (20,32)
+  stays: `town.tmj`'s ground is pinned tile for tile (the M6 fixture) and the stand works from one side. Finn's things
+  on row 32 moved (net rack 14,32, fish crate 22,32, bucket dropped) and the art lane's timber stack stands at
+  (21,32) in every stage (collision outside a delta rect must match across stages). The Heron moved up a row
+  (18,28-29, art lane agreed) and blocks logs: towed logs turn east along rows 30-31 to the slip. The maps fixture
+  test lists exactly these row-32 cells.
+- **The town gets a third stage**: `dry` (weir broken), `river` (`town@river.tmj`: the river back, the Marls' house
+  boarded and its chimney cold, no window lights), `marls` (today's `town.tmj`: the house open, warm chimney, lit
+  windows at night, the mill wheel turning). One more delta rect over the house's front (14,3,6,4); walkability is
+  unchanged. Audio keys the wheel loop on `marls` (agreed with the audio lane). Old saves with the river now show the
+  north-east house boarded until it is rebuilt (only art changes).
+- **The hook is a key item**, not a tool: every tool is owned from day 1 in a fixed hotbar slot (the M4 spade ruling).
+  It carries `tool: "timber_hook"`, whose tools.json action `hook` is registered (`registerToolAction('hook')`) and
+  reached through a `key-tool` handler; the towing controller takes Action first whenever a log is in view, so the
+  action itself only says where the logs are. Owning it (in the bag) is what lets taps and Action hook; no need to
+  hold it. Orin sells it for 250g while the river is back (`parts.timber_hook.sells`); year-one restoration gold
+  with the parts is 3,550g (under the 10,000g rail). The auto tool never picks it (a key item).
+- **Drift is a queue in stats** (`drift.0..2`: 1 + lane x 2 + long; `drift.lastLane`), filled by a `morning` hook
+  (order 57) once the river is back: 1-2 logs (a day hash), 1 in winter, about one in three long, never the lane of
+  the log before. No position is saved: whenever the town is built, waiting logs enter at their lane's north edge
+  and drift to rest (10 px/s, 5 in winter), so a save made while towing brings the log back there. Winter's ice rims
+  are the season's art only (logs float as in summer, at half speed).
+- **Timber**: 1 for a short log, 3 for a long one, sells for 5g. A full bag refuses the landing and the log stays at
+  the slip, unhooked. Over a year every log landed is 2.4 timber (12g) a day: under the 20g bound (tested).
+- **Houses** (`valley.json` `houses`: Marls 6, Holt wing 5, Wren 5, Tobin 4; only the Marls' stands on a map in M7):
+  the door (16,6) takes the timber you carry, by Interact or by Action with timber in the bag, only once its place is
+  restored; the scaffolding (`obj_house_marls_0..3`, the art lane's, a generated placeholder until then) shows by
+  share of the timber. Finished, the family arrives the next morning (`arrived.<family>` = that day); Senna's letter
+  comes when it is half done. A villager with `arrives` is not drawn, scheduled, written to (birthdays) or counted
+  (perks, best hearts) before that morning (`villagerHome`).
+- **The homecoming**: the first step into town on or after the arrival day shows HOME AGAIN with `cue:
+  'homecoming'` (the audio lane's jingle; `green` until its id exists). The first time the player is in town with the
+  night glow on after she is home, `houseLit { house }` fires once (audio's window-lit sting). The mill wheel is one
+  image swapping `obj_millwheel_0..3` every 180 ms in the `marls` stage, still on frame 0 in Calm mode.
+- **The weir's last work day is a towing beat** (one tap, as every work day; 3.6 s): the water comes through, a log
+  rides it down the gorge, the rope runs out (`logHook`), one tug (`logTug`) swings it into the gap, `logLand`.
+- **Old saves (no marker, no version bump; save version stays 18).** Every M7 stat defaults to 0: a save from before
+  M7 keeps everything and is given nothing (no timber, no house progress, Senna away). A save with the river back,
+  whether restored by play or by the M6 default, gets its first drift the next morning, Orin's letter about drift
+  timber (it waits on `place.weir` 3), and the hook in Orin's sheet. Tested both ways; scenario `old-save-m7` (and
+  the M6 `old-save-weir-default`).
+- **The tow scenarios start on the west bank at (16,20), coming down from the north.** The river is the town's east
+  edge, so the camera can never centre it: a log at the head, tapped from beside or below it, sits in the left
+  thumb's hard zone (86-106 mm). Coming from the north (the way from the farm), the logs are below the farmer and in
+  reach of both thumbs; from below, Action is the left hand's route (comfort, 26-30 mm).
+- **Clay's `rivalLate` at the weir** (the M6 carry-over, WORLD-PLAN 5.1 step 5): a perk source gives his 2-heart
+  `rivalLate` (180 minutes) once the weir is open while he is below 2 hearts; at 2 hearts his own perk gives it, so it
+  never stacks.
+- **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
+  slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
+  slip" taps on the water took 7 inputs. A bank tap still means that bank tile.

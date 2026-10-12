@@ -856,5 +856,82 @@
         }
       }
     ]
+  },
+  "senna": {
+    "name": "Senna",
+    "role": "friend",
+    "map": "town",
+    "tx": 17,
+    "ty": 7,
+    "facing": "down",
+    "tint": "#d8a070",
+    "blurb": "Back home to the mill.",
+    "arrives": {
+      "place": "weir",
+      "house": "marls"
+    },
+    "loves": ["corn", "pumpkin_pie", "berry_tart", "honey"],
+    "likes": ["potato", "egg", "milk", "apple"],
+    "dislikes": ["holly", "fiber"],
+    "lines": {
+      "stranger": [
+        "You rebuilt our house? With river wood? I don't know what to say.",
+        "Three generations of Marls ran that mill. I'm the fourth.",
+        "Mara kept my room. Of course she did.",
+        "Listen. That's the wheel. I'd forgotten the sound."
+      ],
+      "friend": [
+        "Ivo's greasing the wheel. He sings to it. Don't tell him I told you.",
+        "Bring me corn in the fall and I'll show you what a mill is for.",
+        "Mara says you came with nothing but a key under a pot."
+      ],
+      "close": [
+        "Every turn of that wheel, I think of you hauling logs up the bank.",
+        "We're staying. I needed to say it out loud once.",
+        "The river took us away. You brought it back, and us with it."
+      ],
+      "rain": [
+        "Rain on the race. The wheel likes it.",
+        "Good day for staying in and mending sacks."
+      ]
+    },
+    "gifts": [
+      {
+        "item": "corn",
+        "qty": 2
+      }
+    ],
+    "giftHearts": 3,
+    "perks": {},
+    "birthday": {
+      "season": "spring",
+      "day": 24
+    },
+    "schedule": [
+      {
+        "from": 0,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      },
+      {
+        "from": 480,
+        "map": "town",
+        "tx": 17,
+        "ty": 7
+      },
+      {
+        "from": 780,
+        "map": "town",
+        "tx": 21,
+        "ty": 21
+      },
+      {
+        "from": 1140,
+        "map": "away",
+        "tx": 0,
+        "ty": 0
+      }
+    ]
   }
 }

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { CONTROLS_Y, GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
 import { game, npcs, skills } from '../data';
 import { fmtGold, fmtNum, t } from '../i18n';
-import { audio } from '../platform/audio';
+import { audio, SFX_IDS, type Sfx } from '../platform/audio';
 import { haptic } from '../platform/haptics';
 import type { GameState } from '../state/GameState';
 import { waterCapacity } from '../systems/actions';
@@ -48,7 +48,8 @@ interface Toast {
 /** Toasts on screen at once: a third pushes the oldest out (a tap's results never pile over the world). */
 export const MAX_TOASTS = 2;
 /** The goal toast that the GOAL COMPLETE banner replaces (its text up to the gold, in the current language). */
-const isGoalToast = (text: string): boolean => text.startsWith(t('goals.completeToast', { gold: '' }));
+const isGoalToast = (text: string): boolean =>
+  text.startsWith(t('goals.completeToast', { gold: '' }));
 
 export class Hud {
   private readonly dateLabel: Label;
@@ -230,7 +231,11 @@ export class Hud {
         ),
       ),
       // The first green: the banner with the special-order fanfare until audio gives it its own jingle.
-      gameEvents.on('valleyMoment', (m) => this.valleyMoment(m.text, m.farmerY)),
+      gameEvents.on('valleyMoment', (m) =>
+        m.delay
+          ? this.scene.time.delayedCall(m.delay, () => this.valleyMoment(m.text, m.farmerY, m.cue))
+          : this.valleyMoment(m.text, m.farmerY, m.cue),
+      ),
       gameEvents.on('levelUp', (e) =>
         this.goalBanner(
           t('hud.levelUp', {
@@ -330,9 +335,10 @@ export class Hud {
    * is HUD_H + 30; when the farmer (`farmerY`, their feet in screen px) stands in that band, as at the town's clamped
    * north edge, the banner drops below them instead (critic, round 22). Opaque at rest; the group fades in and out.
    */
-  private valleyMoment(text: string, farmerY?: number): void {
+  private valleyMoment(text: string, farmerY?: number, cue?: string): void {
     const [title, line] = text.split('\n');
-    audio.play('green');
+    // a homecoming has its own jingle (audio lane), the valley's `green` otherwise
+    audio.play(cue && (SFX_IDS as readonly string[]).includes(cue) ? (cue as Sfx) : 'green');
     haptic('success');
     showBanner(3400);
     const calm = this.getState().settings.reduceMotion;

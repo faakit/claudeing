@@ -292,7 +292,14 @@
      }
     ]
    ],
-   "trim": 1.8
+   "trim": 1.8,
+   "repeatWindow": 0.5,
+   "softAfter": {
+    "dig": -9,
+    "logTug": -6
+   },
+   "softFor": 0.25,
+   "tpOut": -4.0
   },
   "refill": {
    "family": "tools",
@@ -968,7 +975,8 @@
    ],
    "trim": 1.7,
    "repeatWindow": 0.6,
-   "repeatDb": -5
+   "repeatDb": -5,
+   "tpOut": -4.0
   },
   "logLand": {
    "family": "tools",
@@ -976,15 +984,24 @@
    "pitch": 0.8,
    "vol": 1,
    "voices": 1,
+   "tpOut": -4.0,
+   "trim": 1.0,
    "variants": [
     [
      {
       "src": "sfx/kenney-impact/impactPlank_medium_001"
      },
      {
-      "src": "sfx/kenney-impact/impactWood_heavy_000",
-      "shift": 15,
-      "gain": -4
+      "src": "sfx/kenney-rpg/doorClose_4",
+      "shift": -3,
+      "lp": 2500,
+      "gain": 1
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/wooden_02",
+      "shift": -5,
+      "lp": 2500,
+      "gain": 0
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_09",
@@ -997,9 +1014,16 @@
       "src": "sfx/kenney-impact/impactPlank_medium_002"
      },
      {
-      "src": "sfx/kenney-impact/impactWood_heavy_001",
-      "shift": 14,
-      "gain": -4
+      "src": "sfx/kenney-rpg/doorClose_2",
+      "shift": -4,
+      "lp": 2500,
+      "gain": -7
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/wooden_02",
+      "shift": -5,
+      "lp": 2500,
+      "gain": -9
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_02",
@@ -1013,9 +1037,16 @@
       "gain": 2
      },
      {
-      "src": "sfx/kenney-impact/impactWood_heavy_003",
-      "shift": 15,
-      "gain": -4
+      "src": "sfx/kenney-rpg/doorClose_4",
+      "shift": -3,
+      "lp": 2500,
+      "gain": 1
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/wooden_03",
+      "shift": -6,
+      "lp": 2500,
+      "gain": 5
      },
      {
       "src": "sfx/oga-rubberduck-water/splash_09",
@@ -1024,25 +1055,32 @@
       "gain": -12
      }
     ]
-   ],
-   "trim": 1.0
+   ]
   },
   "logKnock": {
    "family": "light",
    "pitch": 1.0,
    "vol": 1.5,
    "voices": 2,
+   "hp": 150,
+   "tpOut": -4.0,
    "variants": [
     [
      {
       "src": "sfx/kenney-impact/impactWood_medium_000",
-      "shift": 6
+      "shift": 3
      },
      {
-      "src": "sfx/kenney-impact/impactPlank_medium_001",
-      "from": 0,
-      "to": 0.15,
-      "gain": -8
+      "src": "sfx/oga-rubberduck-100/hit_03",
+      "shift": -5,
+      "lp": 2500,
+      "gain": -9
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/plop_02",
+      "shift": -4,
+      "at": 0.03,
+      "gain": -16
      }
     ],
     [
@@ -1051,27 +1089,186 @@
       "shift": 6
      },
      {
-      "src": "sfx/kenney-impact/impactPlank_medium_002",
-      "from": 0,
-      "to": 0.15,
-      "gain": -8
+      "src": "sfx/oga-rubberduck-100v2/wood_hit_03",
+      "shift": -3,
+      "lp": 2500,
+      "gain": -5
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/plop_02",
+      "shift": -5,
+      "at": 0.03,
+      "gain": -16
      }
     ],
     [
      {
       "src": "sfx/kenney-impact/impactWood_medium_002",
-      "shift": 5
+      "shift": 3
      },
      {
-      "src": "sfx/kenney-impact/impactPlank_medium_000",
+      "src": "sfx/oga-rubberduck-100/wooden_03",
+      "shift": -5,
+      "lp": 2500,
+      "gain": -9
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/plop_02",
+      "shift": -3,
+      "at": 0.03,
+      "gain": -16
+     }
+    ]
+   ],
+   "trim": 1.3
+  },
+  "logHook": {
+   "family": "light",
+   "pitch": 1.0,
+   "vol": 1,
+   "voices": 1,
+   "hp": 200,
+   "maxLen": 0.25,
+   "tpOut": -4.0,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-impact/impactWood_light_000",
+      "shift": 0
+     },
+     {
+      "src": "sfx/kenney-rpg/metalLatch",
+      "shift": -9,
+      "lp": 2500,
+      "gain": -13
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth4",
       "from": 0,
-      "to": 0.15,
+      "to": 0.12,
+      "at": 0.01,
+      "gain": -8
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/impactWood_light_001",
+      "shift": 0
+     },
+     {
+      "src": "sfx/kenney-rpg/metalLatch",
+      "shift": -10,
+      "lp": 2500,
+      "gain": -13
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth4",
+      "from": 0.08,
+      "to": 0.2,
+      "at": 0.01,
+      "gain": -8
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-impact/impactWood_light_002",
+      "shift": 0
+     },
+     {
+      "src": "sfx/kenney-rpg/metalLatch",
+      "shift": -8,
+      "lp": 2500,
+      "gain": -14
+     },
+     {
+      "src": "sfx/kenney-rpg/cloth3",
+      "from": 0.04,
+      "to": 0.18,
+      "at": 0.01,
       "gain": -8
      }
     ]
    ],
-   "trim": 1.0,
-   "hp": 150
+   "trim": 0.8
+  },
+  "logTug": {
+   "family": "light",
+   "pitch": 0.8,
+   "vol": 1,
+   "voices": 2,
+   "hp": 180,
+   "maxLen": 0.3,
+   "tpOut": -4.0,
+   "variants": [
+    [
+     {
+      "src": "sfx/kenney-rpg/cloth2",
+      "from": 0.06,
+      "to": 0.3,
+      "gain": -2
+     },
+     {
+      "src": "sfx/kenney-rpg/creak3",
+      "shift": -9,
+      "lp": 1800,
+      "at": 0.03,
+      "gain": -3
+     },
+     {
+      "src": "sfx/oga-rubberduck-100/wooden_01",
+      "at": 0.05,
+      "gain": -6
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/cloth4",
+      "from": 0,
+      "to": 0.25,
+      "gain": -2
+     },
+     {
+      "src": "sfx/kenney-rpg/creak1",
+      "from": 0.12,
+      "to": 0.5,
+      "shift": -12,
+      "lp": 1200,
+      "at": 0.03,
+      "gain": -6
+     },
+     {
+      "src": "sfx/kenney-impact/impactWood_medium_003",
+      "shift": 5,
+      "at": 0.06,
+      "gain": -2
+     }
+    ],
+    [
+     {
+      "src": "sfx/kenney-rpg/cloth3",
+      "from": 0,
+      "to": 0.25,
+      "gain": -2
+     },
+     {
+      "src": "sfx/kenney-rpg/creak2",
+      "from": 0.25,
+      "to": 0.65,
+      "shift": -9,
+      "lp": 1800,
+      "at": 0.03,
+      "gain": -3
+     },
+     {
+      "src": "sfx/oga-rubberduck-100v2/wood_hit_02",
+      "shift": 3,
+      "at": 0.06,
+      "gain": -6
+     }
+    ]
+   ],
+   "trim": 1.6,
+   "repeatDb": 0
   }
  },
  "ambience": {
@@ -1403,6 +1600,28 @@
      "from": 0.9,
      "body": 2.8,
      "search": 0.6
+    }
+   ]
+  },
+  "mill": {
+   "mode": "loop",
+   "level": -37.5,
+   "hp": 150,
+   "layers": [
+    {
+     "src": "gen/mill",
+     "from": 15.0,
+     "body": 15.0,
+     "correlated": true
+    },
+    {
+     "src": "sfx/oga-rubberduck-100v2/loop_water_03",
+     "shift": -3,
+     "lp": 1400,
+     "gain": 0,
+     "from": 2.0,
+     "body": 7.27,
+     "search": 0.5
     }
    ]
   }

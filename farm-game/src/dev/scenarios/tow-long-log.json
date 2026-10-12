@@ -1,0 +1,59 @@
+{
+  "title": "A long log waits caught on the rock spur: two tugs free it, and it lands 3 timber",
+  "about": "Summer 24, 10:00, coming down the west bank from the north with the hook: one long log drifts down the middle lane onto the first rock spur (19,26) and waits there, caught (tilted, a foam crest, a ripple). Hook it from the bank (a little past the rope's length: it lies still); a long log needs two tugs; it pops your way round the spur, then tow it to the slip: +3 Timber.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "drift.0": 4,
+    "drift.lastLane": 2
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 20,
+    "facing": "down"
+  },
+  "time": {
+    "season": "summer",
+    "day": 24,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1,
+      "slot": 7
+    }
+  ]
+}

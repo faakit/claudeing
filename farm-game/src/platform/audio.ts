@@ -60,7 +60,11 @@ export type Sfx =
   | 'green'
   | 'dig'
   | 'logLand'
-  | 'logKnock';
+  | 'logKnock'
+  // M7 towing: the hook catching a log, a tug on the rope; a family coming home (the arrival banner).
+  | 'logHook'
+  | 'logTug'
+  | 'homecoming';
 
 /** Every cue id, for tests and tooling (keep in sync with the union above; a test checks it). */
 export const SFX_IDS: readonly Sfx[] = [
@@ -94,6 +98,9 @@ export const SFX_IDS: readonly Sfx[] = [
   'dig',
   'logLand',
   'logKnock',
+  'logHook',
+  'logTug',
+  'homecoming',
 ];
 
 // A major pentatonic keeps any random melody pleasant.
@@ -623,14 +630,29 @@ class AudioEngine {
         this.hiss(0.14, { type: 'bandpass', freq: 1800, q: 0.8, gain: 0.1, delay: 0.06 });
         break;
       case 'logLand':
-        // a heavy wet log dropped on timber: a body thud in the phone's range and a short drip
-        this.tone(160, 0.22, { to: 90, gain: 0.5, type: 'triangle' });
-        this.hiss(0.12, { type: 'lowpass', freq: 600, gain: 0.35 });
+        // a heavy wet log dropped on timber: a body thud, a wooden crack a phone can play, a short drip
+        this.tone(160, 0.22, { to: 90, gain: 0.45, type: 'triangle' });
+        this.tone(420, 0.09, { to: 280, gain: 0.22, type: 'triangle' });
+        this.hiss(0.12, { freq: 700, q: 0.8, gain: 0.3 });
         this.hiss(0.18, { freq: 2400, to: 3600, q: 1, gain: 0.08, delay: 0.08 });
         break;
       case 'logKnock':
-        this.tone(220, 0.1, { to: 150, gain: 0.32, type: 'triangle' });
-        this.hiss(0.06, { type: 'lowpass', freq: 900, gain: 0.2 });
+        // wood on stone in water: a muffled knock with an attack a phone can play
+        this.tone(330, 0.1, { to: 200, gain: 0.3, type: 'triangle' });
+        this.hiss(0.05, { freq: 900, q: 1.2, gain: 0.16 });
+        break;
+      case 'logHook':
+        // the hook bites wood: a short dry knock and a small iron click
+        this.tone(520, 0.06, { to: 300, gain: 0.22, type: 'triangle' });
+        this.hiss(0.03, { freq: 2200, q: 2, gain: 0.06, delay: 0.005 });
+        break;
+      case 'logTug':
+        // a tug on the rope: a creak gliding down and a wooden shift under it
+        this.tone(640, 0.22, { to: 420, gain: 0.08, type: 'sawtooth', attack: 0.03 });
+        this.tone(260, 0.12, { to: 170, gain: 0.26, type: 'triangle', delay: 0.05 });
+        break;
+      case 'homecoming':
+        this.synthJingle('homecoming', this.musicPlayer?.jingleKey() ?? 0, 0, 1);
         break;
     }
   }

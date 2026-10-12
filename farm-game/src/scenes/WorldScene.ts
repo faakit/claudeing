@@ -107,7 +107,8 @@ import { controlsLog } from '../input/controlsLog';
 import { pathTiles } from '../input/gesture';
 import { TIPS } from '../ui/controlTips';
 import { inputHub } from '../input/InputHub';
-import { audio } from '../platform/audio';
+import { audio, SFX_IDS, type Sfx } from '../platform/audio';
+import { makeTowTextures } from '../game/TowController';
 import { haptic } from '../platform/haptics';
 import { spawnPosition, type Direction, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
@@ -134,7 +135,9 @@ import {
   type Route,
 } from '../systems/movement';
 import { tickTime } from '../systems/time';
-import { inDelta } from '../systems/valley';
+import { inDelta, riverBack } from '../systems/valley';
+import { countItem } from '../systems/inventory';
+import { giveTimber } from '../systems/houses';
 import {
   adjacentDirection,
   buildCollisionGrid,
@@ -161,6 +164,8 @@ import { t } from '../i18n';
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
 const CREEK_REVEAL_MS = 1800;
 /** The creek's banner: a title line and a line under it. */
+/** The creek's first-morning banner shows this long after the water starts down the bed (ms, R24-1). */
+const CREEK_BANNER_DELAY = 1200;
 const creekBanner = (): string => `${t('valley.creekTitle')}\n${t('valley.creekLine')}`;
 /** The river's first morning in town (M6): the dry town dissolves around the farmer, a little slower. */
 const RIVER_REVEAL_MS = 1600;
@@ -172,7 +177,7 @@ const CREEK_BANK = [25, 14] as const;
 
 /** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
 /** A work day's beat (fx/SiteFx: the pickaxe day about 2.6 s, the spade day about 1.8 s; the weir's beam). */
-const SITE_BEAT_MS = { ...SITE_BEAT, beam: 3600 } as const;
+const SITE_BEAT_MS = { ...SITE_BEAT, tow: 3600 } as const;
 
 /** A channel's fallback tiles when the tileset has no channel art (placeholder tiles): plain water, dug earth. */
 const CHANNEL_GID = { wet: 5, dry: 2 } as const;
@@ -661,7 +666,8 @@ export abstract class WorldScene extends Phaser.Scene {
       this.reveal.start();
       runtime.valleyReveal = true;
       audio.play('water');
-      this.valleyMoment(creekBanner());
+      // R24-1: the plate waits until the water front has passed the top of the view (it covered the upper reach)
+      this.valleyMoment(creekBanner(), CREEK_BANNER_DELAY);
     }
     if (this.reveal) {
       this.reveal.update(delta);
@@ -910,6 +916,10 @@ export abstract class WorldScene extends Phaser.Scene {
     // where channels start: the running creek's bank on open ground (the channels intro points here)
     if (this.mapId === 'farm' && creekSource(state).running)
       objects.push({ type: 'creek', tx: CREEK_BANK[0], ty: CREEK_BANK[1], w: 1, h: 1 });
+    // the log slip on the town river's south bank, once the river is back (the towing intro points here)
+    const drift = valley.weir?.drift;
+    if (drift?.map === this.mapId && riverBack(state))
+      objects.push({ type: 'slip', tx: drift.slip.bank[0], ty: drift.slip.bank[1], w: 1, h: 1 });
     const npcs: { id: string; tx: number; ty: number }[] = [];
     for (const id of Object.keys(npcData)) {
       const at = npcLocation(id, state.time.minutes, state);
@@ -1587,9 +1597,9 @@ export abstract class WorldScene extends Phaser.Scene {
       toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
     };
     const site = new SiteFx(this, this.fx, () => getState().settings.reduceMotion);
-    if (res.work.taste === 'beam') {
+    if (res.work.taste === 'tow') {
       this.things?.hold(`site.${id}`, beat);
-      this.beamBeat(tile, live);
+      this.towBeat(tile, live);
     } else if (res.work.taste === 'channel') {
       // the cut beside the pool, and the pool's water running into it (the channel's clods and fill)
       this.things?.hold(`site.${id}`, beat);
@@ -1608,20 +1618,25 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /** A valley moment's banner (HUD), told where the farmer stands on screen so it can keep off them. */
-  private valleyMoment(text: string): void {
+  protected valleyMoment(text: string, delay = 0, cue?: string): void {
     const cam = this.cameras.main;
     const p = getState().player;
     gameEvents.emit('valleyMoment', {
       text,
       farmerY: cam.y + (p.y - cam.worldView.y) * cam.zoom,
+      delay,
+      ...(cue ? { cue } : {}),
     });
   }
 
   /**
-   * The weir's last work day (scripted until towing, M7): Orin opens the gate a crack, the gorge's water comes through
-   * the gap beside the site, and it lifts the last beam up into place. Placeholder shapes until the feel lane's pass.
+   * The weir's last work day, a taste of towing (M7): Orin opens the gate a crack and the gorge's water comes through
+   * the gap beside the site; a log rides it down the gorge, the farmer throws the hook (the rope runs out), one tug
+   * swings it round into the gap, and it drops in as the last beam. One tap, as every work day; the towing art and
+   * cues (src/game/TowController.ts makeTowTextures, logHook, logTug, logLand).
    */
-  private beamBeat(tile: TileCoord, live: () => boolean): void {
+  private towBeat(tile: TileCoord, live: () => boolean): void {
+    makeTowTextures(this);
     const gapX = (tile.tx + 2) * TILE_SIZE; // the gorge's bank, east of the site's two tiles
     const y = tile.ty * TILE_SIZE;
     const water = this.add.graphics().setDepth(10 + y + 18);
@@ -1633,7 +1648,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.tweens.add({
         targets: flow,
         w: TILE_SIZE * 1.5,
-        duration: 1000,
+        duration: 900,
         ease: 'Sine.easeOut',
         onUpdate: () => {
           const w = Math.round(flow.w);
@@ -1644,41 +1659,75 @@ export abstract class WorldScene extends Phaser.Scene {
         onComplete: () => live() && this.fx.splash(gapX - TILE_SIZE, y + 10),
       });
     });
-    // the beam floats up on the water and swings into the gap
-    const beam = this.add
-      .graphics()
+    // the log rides the water down the gorge (north-south), past the gap
+    const log = this.add
+      .image(gapX + 8, y - 30, 'tow_log_long_v')
       .setDepth(10 + y + 19)
-      .setVisible(false);
-    beam.fillStyle(0x241a2a, 1).fillRect(-13, -3, 26, 6);
-    beam.fillStyle(0x8a6a4a, 1).fillRect(-12, -2, 24, 4);
-    beam.fillStyle(0xb08a5a, 1).fillRect(-12, -2, 24, 1);
-    beam.setPosition(gapX + 6, y + 22).setAngle(70);
-    this.time.delayedCall(1400, () => {
+      .setAlpha(0);
+    this.time.delayedCall(700, () => {
       if (!live()) return;
-      beam.setVisible(true);
+      this.tweens.add({ targets: log, alpha: 1, y: y + 8, duration: 800, ease: 'Sine.easeOut' });
+    });
+    // the hook: the rope runs out from the farmer's hands to the log
+    const p = getState().player;
+    const hands = { x: p.x, y: p.y - 6 };
+    const dots: Phaser.GameObjects.Image[] = [];
+    const rope = { u: 0 };
+    const drawRope = () => {
+      const lx = log.x;
+      const ly = log.y;
+      const n = Math.max(2, Math.floor(Math.hypot(lx - hands.x, ly - hands.y) * rope.u));
+      for (let i = 0; i < Math.max(n, dots.length); i++) {
+        const d = (dots[i] ??= this.add.image(0, 0, 'tow_rope_dot').setDepth(10 + p.y - 1));
+        if (i >= n) {
+          d.setVisible(false);
+          continue;
+        }
+        const u = (i / n) * rope.u;
+        d.setVisible(true).setPosition(
+          Math.round(hands.x + (lx - hands.x) * u),
+          Math.round(hands.y + (ly - hands.y) * u),
+        );
+      }
+    };
+    this.time.delayedCall(1550, () => {
+      if (!live()) return;
+      audio.play((SFX_IDS as readonly string[]).includes('logHook') ? ('logHook' as Sfx) : 'swing');
+      haptic('tick');
+      this.tweens.add({ targets: rope, u: 1, duration: 120, onUpdate: drawRope });
+    });
+    // one tug: the log swings round into the gap, east-west, and drops in as the last beam
+    this.time.delayedCall(2100, () => {
+      if (!live()) return;
+      audio.play((SFX_IDS as readonly string[]).includes('logTug') ? ('logTug' as Sfx) : 'swing');
+      haptic('medium');
+      log.setTexture('tow_log_long');
       this.tweens.add({
-        targets: beam,
+        targets: log,
         x: gapX - TILE_SIZE,
-        y: y + 2,
-        angle: 0,
-        duration: 1100,
+        y: y + 6,
+        duration: 500,
         ease: 'Back.easeOut',
+        onUpdate: drawRope,
         onComplete: () => {
           if (!live()) return;
+          for (const d of dots) d.setVisible(false);
           audio.play('logLand');
           haptic('medium');
           this.fx.dust(gapX - TILE_SIZE, y + 4);
+          this.fx.splash(gapX - 4, y + 10);
         },
       });
     });
     this.time.delayedCall(3400, () => {
       this.tweens.add({
-        targets: [water, beam],
+        targets: [water, log],
         alpha: 0,
         duration: 200,
         onComplete: () => {
           water.destroy();
-          beam.destroy();
+          log.destroy();
+          for (const d of dots) d.destroy();
         },
       });
     });
@@ -1708,6 +1757,13 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     if (hit.type.startsWith('landmark:site.'))
       return void this.useSite(hit.type.slice(14), hit.tile);
+    // a house rebuilt with timber (M7): its door takes the timber you carry, else says how it stands
+    if (hit.type.startsWith('landmark:house.')) {
+      const id = hit.type.slice(15);
+      if (countItem(getState(), 'timber') > 0 && giveTimber(getState(), id)) return;
+      const l = landmarksOn(getState(), this.mapId).find((x) => x.id === `house.${id}`);
+      return void (l && toast(l.text, 'info'));
+    }
     if (hit.type.startsWith('landmark:')) {
       const id = hit.type.slice(9);
       const l = landmarksOn(getState(), this.mapId).find((x) => x.id === id);

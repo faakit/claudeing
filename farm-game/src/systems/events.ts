@@ -57,7 +57,10 @@ export interface GameEvents {
   settingsChanged: undefined;
   /** A moment the valley marks with the HUD banner and a jingle (the first green). */
   /** `farmerY`: the farmer's feet in screen px, so the banner can keep off them. */
-  valleyMoment: { text: string; farmerY?: number };
+  /** `delay`: ms before it shows; `cue`: the jingle to play instead of `green` (a homecoming's, audio lane). */
+  valleyMoment: { text: string; farmerY?: number; delay?: number; cue?: string };
+  /** A rebuilt house's window lit for the first time, its family home (audio's `window-lit` sting). Once a house. */
+  houseLit: { house: string };
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;

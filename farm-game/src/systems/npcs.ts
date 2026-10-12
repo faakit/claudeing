@@ -1,6 +1,7 @@
 import { npcs } from '../data';
 import type { NpcDef } from '../data';
 import type { GameState } from '../state/GameState';
+import { villagerHome } from './houses';
 import { openingMaps, siteVisit, stageWhenHolds } from './valley';
 
 export interface NpcSpot {
@@ -17,6 +18,8 @@ export function npcLocation(
 ): NpcSpot | null {
   const def = npcs[id] as NpcDef | undefined;
   if (!def) return null;
+  // a returning villager is nowhere until their family is home (WORLD-PLAN 4.4)
+  if (def.arrives && !villagerHome(state, id)) return null;
   // the morning a place opens, the one who lost it waits at its site (systems/valley.ts)
   const visit = state ? siteVisit(state, id, minutes) : null;
   if (visit) return visit;

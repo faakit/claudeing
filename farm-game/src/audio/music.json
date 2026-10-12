@@ -336,6 +336,32 @@
           "gain": 0.5
         }
       ]
+    },
+    "homecoming": {
+      "bpm": 92,
+      "volume": 0.85,
+      "priority": 4,
+      "parts": [
+        {
+          "inst": "vibes",
+          "notes": "G4:.333 C5:.333 E5:.334 G5:.333 E5:.333 C5:.334 E5:.5 G5:.5 C6:2.5"
+        },
+        {
+          "inst": "harp",
+          "notes": "r:2 C4:.25 E4:.25 G4:.25 C5:.25 E5:2.5",
+          "gain": 0.6
+        },
+        {
+          "inst": "pizz",
+          "notes": "C3:1 G2:1 C3:1 G2:1 C3:1.5",
+          "gain": 0.5
+        },
+        {
+          "inst": "glock",
+          "notes": "r:3 G6:2",
+          "gain": 0.45
+        }
+      ]
     }
   },
   "stings": {
@@ -511,6 +537,62 @@
           "inst": "glock",
           "notes": "r:2 E6:1.5",
           "gain": 0.4
+        }
+      ]
+    },
+    "motif-senna": {
+      "bpm": 76,
+      "volume": 0.75,
+      "parts": [
+        {
+          "inst": "vibes",
+          "notes": "G4:.333 C5:.333 E5:.334 G5:.333 E5:.333 C5:.334 E5:2"
+        },
+        {
+          "inst": "pizz",
+          "notes": "C3:1 G2:1 C3:2",
+          "gain": 0.55
+        }
+      ]
+    },
+    "motif-senna-heart": {
+      "bpm": 68,
+      "volume": 0.8,
+      "parts": [
+        {
+          "inst": "vibes",
+          "notes": "G4:.333 C5:.333 E5:.334 G5:.333 E5:.333 C5:.334 G5:2.5"
+        },
+        {
+          "inst": "pizz",
+          "notes": "C3:1 G2:1 C3:2.5",
+          "gain": 0.55
+        },
+        {
+          "inst": "glock",
+          "notes": "r:2.5 G6:2",
+          "gain": 0.4
+        }
+      ]
+    },
+    "window-lit": {
+      "bpm": 72,
+      "volume": 0.6,
+      "parts": [
+        {
+          "inst": "harp",
+          "notes": "C5:.25 E5:.25 G5:2.5",
+          "gain": 0.7
+        },
+        {
+          "inst": "vibes",
+          "notes": "r:.5 C6:2.5",
+          "gain": 0.55
+        },
+        {
+          "inst": "glock",
+          "notes": "r:.75 E6:2.25",
+          "gain": 0.45
         }
       ]
     },
@@ -1115,7 +1197,8 @@
           "comp": "arpTripHalf"
         },
         "db": -0.5
-      }
+      },
+      "rainDb": 0.8
     },
     "winter": {
       "key": "D minor",

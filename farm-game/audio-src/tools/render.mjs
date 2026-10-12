@@ -15,7 +15,7 @@ const FILTER = process.argv[4] ?? '';
 const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
-const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'special', 'green', 'dig', 'logLand', 'logKnock'];
+const SFX = ['till', 'water', 'refill', 'plant', 'harvest', 'cut', 'coin', 'buy', 'ui', 'door', 'stepGrass', 'stepWood', 'error', 'sleep', 'goal', 'swing', 'select', 'level', 'heart', 'order', 'tick', 'target', 'ringOpen', 'ringClose', 'confirm', 'special', 'green', 'dig', 'logLand', 'logKnock', 'logHook', 'logTug', 'homecoming'];
 
 const jobs = [];
 for (const s of SEASONS) {
@@ -63,7 +63,7 @@ jobs.push({
 jobs.push({ name: 'tap-rapid-mix', o: { seconds: 6, slot: 'spring', cues: Array.from({ length: 50 }, (_, i) => ({ cue: ['target', 'tick', 'tick', 'tick', 'confirm'][i % 5], at: 0.5 + i * 0.1 })) } });
 jobs.push({ name: 'crickets-long', o: { seconds: 420, ambience: { crickets: 1 } } });
 // Musical moments over the music they will meet in game (cue at 1 s; the rest is context).
-const NPCS = ['mara', 'finn', 'rosa', 'orin', 'clay'];
+const NPCS = ['mara', 'finn', 'rosa', 'orin', 'clay', 'senna'];
 for (const n of NPCS)
   for (const v of ['', '-heart'])
     jobs.push({ name: `moment-motif-${n}${v}`, o: { seconds: 7, slot: 'spring', cues: [{ cue: `motif-${n}${v}`, at: 1, lead: true }] } });
@@ -169,9 +169,50 @@ jobs.push({ name: 'dy-dig-row-alone', o: { seconds: ROW_S, cues: row('dig', fals
 // the same row tilled (the accepted painted-row level the dig row is held to)
 jobs.push({ name: 'dy-till-row-alone', o: { seconds: ROW_S, cues: row('till', false) } });
 jobs.push({ name: 'dy-till-row', o: { seconds: ROW_S, slot: 'spring', cues: row('till', false) } });
+// the water alone at the dig rate, and a held watering can's real repeat (0.2 s), for the 0.5 s window
+jobs.push({ name: 'm7-water-row-alone', o: { seconds: ROW_S, cues: Array.from({ length: 24 }, (_, i) => ({ cue: 'water', at: 0.5 + i * DIG_GAP })) } });
 jobs.push({ name: 'dy-dig-vs-till', o: { seconds: 8, cues: [0, 1, 2, 3].flatMap((i) => [{ cue: 'till', at: 0.3 + i * 0.9 }, { cue: 'dig', at: 4.2 + i * 0.9 }]) } });
 // the log landing over the music it will meet (summer by the river), and a snag knock
 jobs.push({ name: 'dy-log-land', o: { seconds: 8, slot: 'summer', ambience: { river: 1 }, cues: [{ cue: 'logKnock', at: 1 }, { cue: 'logKnock', at: 2.2 }, { cue: 'logLand', at: 4 }] } });
+
+// ---- M7 (m7-*): towing, the water repeat window, Senna's homecoming, the lit window, the mill wheel.
+// A whole tow as towSpike plays it, over summer by the river: hook, the first snag, a tug that gives (a long
+// log), a tug that frees it (water after T.pop 170 ms), the landing at T.drop.
+const TOW = [
+  { cue: 'logHook', at: 1 },
+  { cue: 'logKnock', at: 3 },
+  { cue: 'logTug', at: 4.6 },
+  { cue: 'logTug', at: 6 },
+  { cue: 'water', at: 6.17 },
+  { cue: 'logLand', at: 9.2 },
+];
+jobs.push({ name: 'm7-tow-full', o: { seconds: 11, slot: 'summer', ambience: { birds: 1, river: 1 }, cues: TOW } });
+jobs.push({ name: 'm7-tow-alone', o: { seconds: 11, cues: TOW } });
+// the farmer's steps on the bank between the catch and the snag (the tow walk), with the tow
+jobs.push({
+  name: 'm7-tow-walk',
+  o: { seconds: 11, slot: 'summer', ambience: { birds: 1, river: 1 }, cues: [...TOW, ...Array.from({ length: 12 }, (_, i) => ({ cue: 'stepGrass', at: 1.3 + i * 0.28 }))] },
+});
+// the homecoming over the pieces it will meet (town by day), and its collisions
+for (const s of SEASONS)
+  jobs.push({ name: `m7-homecoming-${s}`, o: { seconds: 8, slot: s, ambience: { birds: s === 'winter' ? 0 : 1, river: 1 }, cues: [{ cue: 'homecoming', at: 1 }] } });
+jobs.push({ name: 'm7-homecoming-vs-green', o: { seconds: 8, slot: 'spring', cues: [{ cue: 'green', at: 1 }, { cue: 'homecoming', at: 1.5 }] } });
+jobs.push({ name: 'm7-homecoming-vs-level', o: { seconds: 8, slot: 'spring', cues: [{ cue: 'homecoming', at: 1 }, { cue: 'level', at: 1.4 }] } });
+jobs.push({ name: 'm7-homecoming-vs-dawn', o: { seconds: 8, slot: 'spring', cues: [{ cue: 'dawn-1', at: 1 }, { cue: 'homecoming', at: 1.3 }] } });
+for (const c of ['homecoming', 'window-lit']) jobs.push({ name: `sting-${c}`, o: { seconds: 6, cues: [{ cue: c, at: 0.2 }] } });
+// the lit window at dusk in town (the dusk flourish is spent that evening, so it plays alone)
+jobs.push({ name: 'm7-window-lit', o: { seconds: 8, slot: 'summer', night: 0.7, ambience: { crickets: 0.6, river: 1 }, cues: [{ cue: 'window-lit', at: 1 }] } });
+jobs.push({ name: 'm7-window-lit-winter', o: { seconds: 8, slot: 'winter', night: 0.7, ambience: { wind: 0.8, river: 1 }, cues: [{ cue: 'window-lit', at: 1 }] } });
+// the mill wheel (town 'marls'): alone and long (its repeat), at the wheel over the river and summer music, five
+// tiles away (level 0.44), and the town river without it for comparison
+jobs.push({ name: 'm7-mill-alone', o: { seconds: 30, ambience: { mill: 1 } } });
+jobs.push({ name: 'm7-mill-long', o: { seconds: 120, ambience: { mill: 1 } } });
+jobs.push({ name: 'm7-town-wheel', o: { seconds: 60, slot: 'summer', ambience: { birds: 1, river: 1, mill: 1 } } });
+jobs.push({ name: 'm7-town-wheel-5tiles', o: { seconds: 60, slot: 'summer', ambience: { birds: 1, river: 1, mill: 0.44 } } });
+jobs.push({ name: 'm7-town-river', o: { seconds: 60, slot: 'summer', ambience: { birds: 1, river: 1 } } });
+jobs.push({ name: 'm7-town-wheel-night', o: { seconds: 60, slot: 'summer', night: 1, ambience: { crickets: 1, river: 1, mill: 1 } } });
+// rainy-day arrangements alone (music only): D9, fall against spring
+for (const s of SEASONS) jobs.push({ name: `m7-rainmusic-${s}`, o: { seconds: 60, slot: s, rain: true } });
 
 function wav(path, pcmB64, sr) {
   const data = Buffer.from(pcmB64, 'base64');

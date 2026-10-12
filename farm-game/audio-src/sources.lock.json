@@ -119,6 +119,18 @@
   "sha1": "89baaffdfc1b97956e7e2edcec494d312ce39cf4",
   "bytes": 6181
  },
+ "sfx/kenney-impact/impactWood_light_000": {
+  "sha1": "198e7b73922d7f2790c26fb33c579be74e6fb08e",
+  "bytes": 6343
+ },
+ "sfx/kenney-impact/impactWood_light_001": {
+  "sha1": "443b058642bccf15ef87456aabe52e43e9ce64a7",
+  "bytes": 6373
+ },
+ "sfx/kenney-impact/impactWood_light_002": {
+  "sha1": "9130f8516038dddaba308acf41bc6ed06c102a8a",
+  "bytes": 6366
+ },
  "sfx/kenney-impact/impactWood_medium_000": {
   "sha1": "894be07d2029526c4583b04b484a8fd15bd1f82f",
   "bytes": 6575
@@ -130,6 +142,10 @@
  "sfx/kenney-impact/impactWood_medium_002": {
   "sha1": "25c33c00e35a6d39496037b72f13fd3d053b83e4",
   "bytes": 6607
+ },
+ "sfx/kenney-impact/impactWood_medium_003": {
+  "sha1": "ff0220050643ce70f74ca59ed2a4efe2a82f002a",
+  "bytes": 6598
  },
  "sfx/kenney-interface/drop_002": {
   "sha1": "c0f735670be0a38a98d2bc3701a4993d0a063c6f",
@@ -195,6 +211,14 @@
   "sha1": "24b65b9ed97cff70aced31b502d8235b357ccd25",
   "bytes": 11787
  },
+ "sfx/kenney-rpg/cloth3": {
+  "sha1": "bd79a62abd781ebc0d6b99526ef2f42083b9579b",
+  "bytes": 12432
+ },
+ "sfx/kenney-rpg/cloth4": {
+  "sha1": "dccec814e3e3a48fbfe4ec4e7c0addd97970a4e1",
+  "bytes": 11043
+ },
  "sfx/kenney-rpg/creak1": {
   "sha1": "095eb25efd7ca901fec1f43288a4ac81e63ecb11",
   "bytes": 15761
@@ -206,6 +230,14 @@
  "sfx/kenney-rpg/creak3": {
   "sha1": "54fbb1ea2db9220db319908600d476521ed8ea48",
   "bytes": 10408
+ },
+ "sfx/kenney-rpg/doorClose_2": {
+  "sha1": "ada651edb46d30c53382f8365d3bad2efccb0f89",
+  "bytes": 17598
+ },
+ "sfx/kenney-rpg/doorClose_4": {
+  "sha1": "103d6dc1d4145dd30ff5e79b5727cee5c3458bbd",
+  "bytes": 16902
  },
  "sfx/kenney-rpg/doorOpen_1": {
   "sha1": "ad436e0e5255fad32720d964ba7430a4be47f90a",
@@ -242,6 +274,10 @@
  "sfx/kenney-rpg/handleSmallLeather": {
   "sha1": "6e09c9300cd927083eb8811f56d6d6e3d00bd0eb",
   "bytes": 10492
+ },
+ "sfx/kenney-rpg/metalLatch": {
+  "sha1": "90c2e0a0e26b18c5c718b3e1d05c300186a20bad",
+  "bytes": 10208
  },
  "sfx/kenney-ui/click1": {
   "sha1": "c3337913b1b58c70d28e332aa8de519dfe607b21",
@@ -286,6 +322,34 @@
  "sfx/oga-rubberduck-100/bell_02": {
   "sha1": "0f5858fcc1b6ce712e637d24aacd4709ec7dc08f",
   "bytes": 18962
+ },
+ "sfx/oga-rubberduck-100/hit_03": {
+  "sha1": "a289f8ac723594cba489b08e737d6435fa160772",
+  "bytes": 20643
+ },
+ "sfx/oga-rubberduck-100/wooden_01": {
+  "sha1": "d26df6d0a97c034fc89e91c3f6e1f00d866d2f27",
+  "bytes": 9357
+ },
+ "sfx/oga-rubberduck-100/wooden_02": {
+  "sha1": "e254515e9c079368ed6c659ae4eeb6fb846008f3",
+  "bytes": 19447
+ },
+ "sfx/oga-rubberduck-100/wooden_03": {
+  "sha1": "40f0d435757167bdc8f78261d36638391dcf9d3d",
+  "bytes": 20716
+ },
+ "sfx/oga-rubberduck-100v2/loop_water_03": {
+  "sha1": "e79fbe3f766bb4edd3be04a2b14975b7722e1f4b",
+  "bytes": 109094
+ },
+ "sfx/oga-rubberduck-100v2/wood_hit_02": {
+  "sha1": "d42cba126d3833e2441d0f843e0263fc0d855b84",
+  "bytes": 8233
+ },
+ "sfx/oga-rubberduck-100v2/wood_hit_03": {
+  "sha1": "3b2deae0d03f61afaecd31c6edb6d4549b7778a6",
+  "bytes": 8113
  },
  "sfx/oga-rubberduck-water/bubble_02": {
   "sha1": "02bd791b8f3fcd28c721ce24113c103d0f599153",

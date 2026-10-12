@@ -1,5 +1,5 @@
 {
-  "_doc": "Audio per map stage (systems/valley.ts valleyStage variant; 'default' = a map with one look). arrangement 'thin' plays the season piece thinned (music_src.py piece 'thin') over the dry wind with a bird now and then; a stage on the dry palette is thin unless it says 'full'. water: beds that run on this stage; 'near' rects [x, y, w, h] (tiles) make it positional (louder near the water, never under 'floor' of its level), none = the same everywhere; 'gain' scales the bed; 'wait' names a stat that must be set first (the reveal that shows the water sets it).",
+  "_doc": "Audio per map stage (systems/valley.ts valleyStage variant; 'default' = a map with one look). arrangement 'thin' plays the season piece thinned (music_src.py piece 'thin') over the dry wind with a bird now and then; a stage on the dry palette is thin unless it says 'full'. water: beds that run on this stage; 'near' rects [x, y, w, h] (tiles) make it positional (louder near the water, never under 'floor' of its level), none = the same everywhere; 'gain' scales the bed; 'wait' names a stat that must be set first (the reveal that shows the water sets it); 'floor' and 'falloff' (tiles) override the positional fade (the mill wheel fades to nothing 9.5 tiles out). Town 'marls' (M7, the Marls home) turns the mill wheel at x 21-22, y 30-31.",
   "farm": {
     "dry": { "arrangement": "thin" },
     "restored": {
@@ -18,6 +18,12 @@
       "water": [{ "bed": "creek", "gain": 0.35, "near": [[21, 22, 2, 10]] }]
     },
     "river": { "water": [{ "bed": "river", "near": [[17, 22, 6, 10]] }] },
+    "marls": {
+      "water": [
+        { "bed": "river", "near": [[17, 22, 6, 10]] },
+        { "bed": "mill", "near": [[21, 30, 2, 2]], "floor": 0, "falloff": 8 }
+      ]
+    },
     "default": { "water": [{ "bed": "river", "near": [[17, 22, 6, 10]] }] }
   }
 }

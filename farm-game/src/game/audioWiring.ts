@@ -21,6 +21,8 @@ import { nightAmount } from '../ui/daylight';
 
 /** How often the director looks at the game (music and ambience change slowly; 4 Hz is plenty). */
 const DIRECTOR_MS = 250;
+/** The dusk flourishes' length (s, the longest of the three with its tail): a lit window waits for one. */
+export const DUSK_SECONDS = 4;
 
 /** Which panel is open (for the shop music), from panel events and the modal count. */
 const panels = new PanelTracker();
@@ -103,6 +105,7 @@ function serviceWorkerSettled(): Promise<unknown> {
  */
 export function wireAudio(game: Phaser.Game): void {
   let last = -Infinity;
+  let duskAt = -Infinity;
   let specials: number | null = null;
   const talked = new Set<string>();
   const absDay = () => {
@@ -124,7 +127,10 @@ export function wireAudio(game: Phaser.Game): void {
     if (scene.inGame && !runtime.blocked) {
       const m2 = moments.step(absDay(), scene.night, scene.outdoor && m.slot === scene.season);
       // a reveal morning's jingle is that morning's moment: the dawn flourish is spent, not played over it
-      if (m2 && !runtime.valleyReveal) audio.sting(m2);
+      if (m2 && !runtime.valleyReveal) {
+        audio.sting(m2);
+        if (m2.startsWith('dusk')) duskAt = performance.now();
+      }
     }
   });
   // Musical moments: villager motifs, new hearts, the season changing under the sleep screen.
@@ -143,6 +149,14 @@ export function wireAudio(game: Phaser.Game): void {
     audio.motif(id);
   });
   gameEvents.on('heartUp', ({ id }) => audio.motif(id, true));
+  // A rebuilt house's window lit for the first time (M7, once per house ever): a soft glow in place of that
+  // evening's dusk flourish. If the dusk flourish has just begun, the glow waits for it to end; either way
+  // the dusk is spent for today, so the two never stack (systems/events.ts `houseLit`, scenes/TownScene.ts).
+  gameEvents.on('houseLit', () => {
+    moments.spendDusk(absDay());
+    const since = (performance.now() - duskAt) / 1000;
+    audio.sting('window-lit', { delay: Math.max(0.3, DUSK_SECONDS - since), duckDb: -3 });
+  });
   gameEvents.on('daySummary', (sum) => {
     const now = getState().time.season;
     if (sum.endedSeason !== now) audio.seasonSting(now);

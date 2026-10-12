@@ -385,4 +385,12 @@ def build_extra(P, make, base: dict[str, np.ndarray], roof_fn) -> dict[str, np.n
     import towntiles
 
     towntiles.build(P, out)
+    # towing (M7): landed timber stacked beside the town's slip (towart.py)
+    import towart
+
+    out["p_timberstack"] = towart.timberstack(P.names)
+    # R27-3: the weir's wall across Wendhead's gorge, dry and with the river over it (sites.py)
+    import sites
+
+    out.update(sites.span_tiles(P.names))
     return out

@@ -120,9 +120,12 @@ export async function renderOffline(base: string, o: RenderOptions): Promise<Ren
         for (const [k, v] of Object.entries(c.ambience ?? {})) amb.set(k, v ?? 0);
       }
       amb.tick(now, true);
-      while (cues.length && cues[0]!.at <= now + 1e-6) {
+      // Cues start at their own time, not on the 100 ms tick: repeat windows (water 0.5 s against the 0.451 s
+      // dig rate) compare real gaps, and a tick-rounded gap of 0.5 s would read as no repeat at all.
+      while (cues.length && cues[0]!.at < now + TICK - 1e-6) {
         const c = cues.shift()!;
-        if (!music.jingle(c.cue, now, 1, { lead: c.lead })) sfx.play(c.cue, now);
+        const when = Math.max(now, c.at);
+        if (!music.jingle(c.cue, when, 1, { lead: c.lead })) sfx.play(c.cue, when);
       }
       void ctx.resume();
     });

@@ -3,7 +3,8 @@ import type { ProjectDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
 import { addStat, checkGoals } from './goals';
-import { markFunded, siteSprite } from './valley';
+import { houseStage, houseText } from './houses';
+import { markFunded, riverBack, siteSprite } from './valley';
 import { countItem, removeItem } from './inventory';
 import { t } from '../i18n';
 
@@ -195,7 +196,10 @@ export interface Landmark {
   /** What tapping it says. */
   text: string;
   level?: number;
-  kind: 'project' | 'trophy' | 'site';
+  /** A house rebuilt with timber (its scaffolding drawn from `anchor`, bottom-left), or the log slip (M7). */
+  kind: 'project' | 'trophy' | 'site' | 'house' | 'slip';
+  /** A house's scaffolding: its bottom-left tile. */
+  anchor?: [number, number];
 }
 
 /**
@@ -236,6 +240,34 @@ export function landmarksOn(state: GameState, map: string): Landmark[] {
       kind: 'site',
     });
   }
+  // Houses rebuilt with timber (systems/houses.ts): the door answers, the scaffolding shows each step (M7)
+  for (const [id, h] of Object.entries(valley.houses ?? {})) {
+    if (h.map !== map || !h.door) continue;
+    const stage = houseStage(state, id);
+    out.push({
+      id: `house.${id}`,
+      tx: h.door[0],
+      ty: h.door[1],
+      sprite: stage === null ? '' : (h.sprites?.[stage] ?? ''),
+      color: '#a0703c',
+      text: houseText(state, id),
+      ...(stage === null ? {} : { level: stage }),
+      kind: 'house',
+      ...(h.anchor ? { anchor: h.anchor } : {}),
+    });
+  }
+  // The log slip on the town river's south bank, once the river is back (the towing controller draws it)
+  const drift = valley.weir?.drift;
+  if (drift && drift.map === map && riverBack(state))
+    out.push({
+      id: 'slip',
+      tx: drift.slip.bank[0],
+      ty: drift.slip.bank[1],
+      sprite: '',
+      color: '#b47c4c',
+      text: t('tow.slip'),
+      kind: 'slip',
+    });
   for (const t of game.trophies ?? []) {
     const n = state.stats[t.stat] ?? 0;
     if (t.map !== map || n < 1) continue;

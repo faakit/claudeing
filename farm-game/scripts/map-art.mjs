@@ -185,10 +185,11 @@ const COMPOSITION = {
       ['p_stonelantern', 15, 14],
       // Clay's house
       ['p_wheelbarrow', 20, 5],
-      // Finn's things by the river
-      ['p_bucket', 18, 32],
-      ['p_netrack', 19, 32],
-      ['p_fishcrate', 21, 32],
+      // Finn's things by the river (M7: row 32 x 18-19 is the log slip and its stand)
+      ['p_netrack', 14, 32],
+      ['p_fishcrate', 22, 32],
+      // the slip's timber stack, in every stage (collision outside a delta rect is the same in all of them)
+      ['p_timberstack', 21, 32],
       ['p_signpost', 9, 26],
       ['p_sign_sprout', 14, 1],
       ['w_laundry', 3, 13],
@@ -214,7 +215,8 @@ const COMPOSITION = {
       [6, 15],
       [18, 3],
     ],
-    boats: [[18, 29]],
+    // the Heron by the dock, rows 28-29 (M7: towed logs turn east along rows 30-31 to the slip)
+    boats: [[18, 28]],
     // the river stage's decor (M6): a reed bed off the west bank, rock spurs, the mill wheel on the east channel
     river: [
       ['reeds_bed', 18, 24],
@@ -238,9 +240,20 @@ const COMPOSITION = {
         ],
         cold: [[18, 3]],
       },
+      // M7: the river is back but the Marls are not: their house boarded, its chimney cold
+      river: {
+        boarded: [
+          [15, 6],
+          [16, 6],
+          [18, 6],
+        ],
+        cold: [[18, 3]],
+      },
     },
 
     cobble: [10, 9, 4, 4],
+    // R27-4: no tree crown over the mill wheel (21-22, 30-31; its foot dips into the river 26 px down)
+    clear: [[21, 30, 2, 26 / 16]],
     trees: ['oak', 'birch', 'oak', 'pine'],
     bushes: ['bush_big', 'bush_rose', 'bush_small'],
     blooms: 0.4,
@@ -249,6 +262,10 @@ const COMPOSITION = {
   // opens); a plank bridge at y 22
   wendhead: {
     props: [],
+    // R27-3: the weir's wall across the gorge (x 19-21, rows 10-11), meeting the site sprite's west abutment: the
+    // river over it once the weir is open, standing over the dry bed before
+    weirSpan: [19, 10, 'wet'],
+    variants: { dry: { weirSpan: [19, 10, 'dry'] }, spring: { weirSpan: [19, 10, 'dry'] } },
     trees: ['oak', 'birch'],
     bushes: ['fern', 'bush_small', 'fern'],
     blooms: 0.2,
@@ -1000,6 +1017,26 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
       flags: 'tg',
     });
   }
+  // keep-clear rects (R27-4: the town's mill wheel): a crown that would reach into one shrinks and settles lower
+  // until it does not, or is left out
+  for (const [rx, ry, rw, rh] of C.clear ?? []) {
+    const [X0, Y0, X1, Y1] = [rx * 16, ry * 16, (rx + rw) * 16, (ry + rh) * 16];
+    const touches = (c, r) => {
+      const nx = Math.max(X0, Math.min(c.cx, X1));
+      const ny = Math.max(Y0, Math.min(c.cy, Y1));
+      return ((nx - c.cx) / (r * 1.2 + 2)) ** 2 + ((ny - c.cy) / (r * 1.4 + 2)) ** 2 <= 1;
+    };
+    for (let i = crowns.length - 1; i >= 0; i--) {
+      const c = crowns[i];
+      if (!touches(c, c.r)) continue;
+      // smaller, then lower toward its trunk (so the tree still has a crown over its own tile), else left out
+      const d = { ...c };
+      while (d.r > 11 && touches(d, d.r)) d.r--;
+      while (d.cy < c.base - 2 && touches(d, d.r)) d.cy++;
+      if (touches(d, d.r)) crowns.splice(i, 1);
+      else crowns[i] = d;
+    }
+  }
   const reach = (c) => ({
     x0: Math.floor((c.cx - c.r * 1.2 - 2) / 16),
     x1: Math.floor((c.cx + c.r * 1.2 + 6) / 16),
@@ -1197,6 +1234,19 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
     L.shade[y * w + x] = L.shade[(y + 1) * w + x] = 0;
     if (aground) solid.add(y * w + x).add((y + 1) * w + x);
   }
+  // R27-3: the weir's span across Wendhead's gorge (decor on the props layer; the gorge is solid in every stage, so
+  // collision is unchanged)
+  if (C.weirSpan) {
+    const [sx, sy, wet] = C.weirSpan;
+    for (let i = 0; i < 3; i++)
+      for (const [dy, part] of [
+        [0, 't'],
+        [1, 'b'],
+      ]) {
+        const n = `weir_span_${wet}_${i}_${part}`;
+        if (has(n)) set('props', sx + i, sy + dy, n);
+      }
+  }
   // river decor on water tiles (M6, the town's river stage): reed beds and rock spurs on the shade layer, the mill
   // wheel (2 x 2) on the props layer; water is solid already, so collision is unchanged
   for (const [n, x, y] of C.river ?? []) {
@@ -1207,13 +1257,17 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
         [0, 1, 'bl'],
         [1, 1, 'br'],
       ];
-      if (!has('millwheel_tl') || cells.some(([dx, dy]) => kind(x + dx, y + dy) !== 'water')) continue;
+      if (!has('millwheel_tl') || cells.some(([dx, dy]) => kind(x + dx, y + dy) !== 'water'))
+        continue;
       for (const [dx, dy, part] of cells) {
         set('props', x + dx, y + dy, `millwheel_${part}`);
         L.shade[(y + dy) * w + x + dx] = 0;
       }
     } else if (has(n) && kind(x, y) === 'water') set('shade', x, y, n);
-    else console.warn(`map-art: ${name}: river decor ${n} at ${x},${y} skipped (no tile or not water)`);
+    else
+      console.warn(
+        `map-art: ${name}: river decor ${n} at ${x},${y} skipped (no tile or not water)`,
+      );
   }
   for (const [x, y] of C.vane ?? []) {
     const b = blocks.find(

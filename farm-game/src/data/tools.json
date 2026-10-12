@@ -23,5 +23,10 @@
     "energyCost": 3,
     "action": "mine",
     "icon": "item_pickaxe"
+  },
+  "timber_hook": {
+    "energyCost": 0,
+    "action": "hook",
+    "icon": "item_timber_hook"
   }
 }

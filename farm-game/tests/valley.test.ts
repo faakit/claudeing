@@ -343,7 +343,8 @@ describe('villager lines that fit the valley', () => {
   const tiers = ['stranger', 'friend', 'close', 'rain'] as const;
 
   it('every villager has 3-4 lines about their loss while their place is unrestored', () => {
-    for (const [id, def] of Object.entries(npcs)) {
+    // a returning villager (Senna) is only in the valley once their place is restored: no dry lines to say
+    for (const [id, def] of Object.entries(npcs).filter(([, d]) => !d.arrives)) {
       const dry = new Set(
         tiers.flatMap((t) =>
           def.lines[t]

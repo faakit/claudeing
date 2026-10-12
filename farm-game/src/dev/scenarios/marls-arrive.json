@@ -1,0 +1,64 @@
+{
+  "title": "The first homecoming: Senna Marl is home, the morning after her house was finished",
+  "about": "Fall 1, 08:30, at the farm's south gate: the Marls' house was finished yesterday (6 of 6 timber) and the weir is open, so Senna came home in the night. Step through the gate into town: HOME AGAIN with the homecoming jingle; the house is open (town stage `marls`), the mill wheel turns, and Senna stands at her door (17,7) until 13:00, then on the north bank watching the river.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "house.marls": 6,
+    "house.marls.done": 56,
+    "arrived.marls": 57,
+    "towed": 5,
+    "timberLanded": 7,
+    "timberGiven": 6,
+    "mail.senna_coming": 1
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 41,
+    "facing": "down"
+  },
+  "time": {
+    "season": "fall",
+    "day": 1,
+    "clock": "08:30"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1,
+      "slot": 7
+    }
+  ]
+}

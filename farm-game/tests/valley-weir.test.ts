@@ -165,14 +165,15 @@ describe('the Weir: the fund and the sluice gate from Orin', () => {
       (n, p) => n + (projects[p.project]?.gold ?? 0),
       0,
     );
+    // parts a fund needs (the sluice gate); a tool a place opens (the timber hook, M7) is counted with them
     const parts = Object.values(valley.parts ?? {}).reduce((n, p) => n + p.price, 0);
     expect(gold + parts).toBeLessThanOrEqual(10000);
-    expect(gold + parts).toBe(300 + 2500 + 500);
+    expect(gold + parts).toBe(300 + 2500 + 500 + 250);
   });
 });
 
 describe('the Weir: four work days and the opening', () => {
-  it('four work days, once a day, the last a scripted beam; then it opens, counted once', () => {
+  it('four work days, once a day, the last a towing beat (the beam hooked into the gap); then it opens, counted once', () => {
     const s = asked();
     fund(s);
     const tastes: string[] = [];
@@ -184,7 +185,7 @@ describe('the Weir: four work days and the opening', () => {
       expect(workDone(s, 'weir')).toBe(d);
       if (d < 4) sleep(s);
     }
-    expect(tastes).toEqual(['pickaxe', 'pickaxe', 'pickaxe', 'beam']);
+    expect(tastes).toEqual(['pickaxe', 'pickaxe', 'pickaxe', 'tow']);
     const placesBefore = s.stats['placesDone'] ?? 0;
     const sum = sleep(s);
     expect(stageOf(s, 'weir')).toBe(3);

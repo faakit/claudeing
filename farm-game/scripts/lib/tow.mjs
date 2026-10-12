@@ -1,4 +1,5 @@
-// Towing played like a person (M7 spike, feel lane), for the scenario e2e and agents/probes/tow-spike.mjs: real
+// Towing played like a person (M7 spike, feel lane; the town river since M7), for the scenario e2e and
+// agents/probes/tow-spike.mjs: real
 // CDP touches with gaussian thumb scatter (SIGMA_MM, default 1.5 mm), a reaction before each decision (counted in
 // frames: 27 frames, 450 ms at 60 Hz), and the critic's bar measured per run (feel-critique/review-6.md):
 // landed, first input to landing, inputs, draws while towing, game JS per frame, the thumb zone of every tap, taps
@@ -33,7 +34,8 @@ export async function playTow(farm, opts = {}) {
   const rec = farm.eval(async (limit) => {
     const w = window.__farm;
     const g = w.game;
-    const lab = g.scene.getScene('Lab');
+    // the active scene that tows: the lab's spike or the town river (M7)
+    const lab = g.scene.getScenes(true).find((sc) => sc.tow);
     const out = {
       draws: 0,
       jsMax: 0,
@@ -97,7 +99,7 @@ export async function playTow(farm, opts = {}) {
   const lookNow = () =>
     farm.eval(() => {
       const w = window.__farm;
-      const lab = w.game.scene.getScene('Lab');
+      const lab = w.game.scene.getScenes(true).find((sc) => sc.tow);
       const c = lab.cameras.main;
       const t = w.dev.tow();
       return {
@@ -152,7 +154,9 @@ export async function playTow(farm, opts = {}) {
     // the press lands, and Action's lock ends, before the next decision (a missed press is just an input)
     await farm
       .until(
-        (_s, w, n) => w.dev.tow()?.actions > n && w.game.scene.getScene('Lab').actionLock <= 0,
+        (_s, w, n) =>
+          w.dev.tow()?.actions > n &&
+          w.game.scene.getScenes(true).find((sc) => sc.tow).actionLock <= 0,
         before,
         'the Action press',
         1500,
@@ -200,6 +204,11 @@ export async function playTow(farm, opts = {}) {
     if (t.landed > 0) {
       status = 'ok';
       break;
+    }
+    if (t.meet) {
+      // the farmer waits at the bank for the log to drift into reach (the town's east lane): nothing to do
+      await farm.frames(6);
+      continue;
     }
     if (t.phase === 'drift' || (t.phase === 'hooking' && !L.walking)) {
       if (logTaps > 0) await farm.frames(reactFrames); // a missed first tap: look again, then retry

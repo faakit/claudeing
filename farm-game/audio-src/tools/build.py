@@ -259,6 +259,9 @@ def render_part(raw: str, part: dict, hp: float) -> np.ndarray:
     b = int(part["to"] * SR) if "to" in part else len(x)
     seg = dsp.highpass(x[a:b], hp)
     seg = resample_shift(seg, part.get("shift", 0))
+    if part.get("lp"):
+        # keep a cue in the band a phone speaker plays (a creak pitched down still hisses above it)
+        seg = dsp.lowpass(seg, part["lp"])
     seg = dsp.fade(seg, fade_in=int(0.002 * SR) if a > 0 else 0, fade_out=int(0.01 * SR) if "to" in part else 0)
     return seg * dsp.undb(part.get("gain", 0))
 
@@ -281,8 +284,10 @@ SFX_BUS_DB = 20 * np.log10(0.8 * 0.9) + 0.6 * 3 * (1 - 1 / 20)
 
 def sfx_tp_ceiling(r: dict) -> float:
     """File true-peak ceiling for a cue: the output limit minus its trim, its random volume spread
-    and the bus gain, with 0.3 dB to spare for pitch spread."""
-    return min(TP_CEIL_DB, OUT_TP_MAX_DB - r.get("trim", 0) - r["vol"] - SFX_BUS_DB - 0.3)
+    and the bus gain, with 0.3 dB to spare for pitch spread. A recipe's "tpOut" (dBTP) sets a lower
+    output limit for a cue whose peaks lead (a heavy wood impact): its spikes are limited, not its level."""
+    out = min(OUT_TP_MAX_DB, r.get("tpOut", OUT_TP_MAX_DB))
+    return min(TP_CEIL_DB, out - r.get("trim", 0) - r["vol"] - SFX_BUS_DB - 0.3)
 
 
 def finish_shot(y: np.ndarray, level_db: float, max_len: float = 2.0, by: str = "rms",
@@ -353,7 +358,7 @@ def build_sfx(raw: str, recipes: dict) -> dict:
         # closes the gap measured on renders of the real mix (audio-src/tools/sfxlevels.py).
         out[cue] = {"files": files, "gain": round(float(dsp.undb(r.get("trim", 0))), 4), "pitch": r["pitch"],
                     "vol": r["vol"], "voices": r["voices"]}
-        for k in ("repeatDb", "repeatWindow", "minGap", "masks", "maskFor"):
+        for k in ("repeatDb", "repeatWindow", "minGap", "masks", "maskFor", "softAfter", "softFor"):
             if k in r:
                 out[cue][k] = r[k]
     report.append("")
@@ -409,7 +414,8 @@ def build_ambience(raw: str, recipes: dict) -> dict:
                 # bed (the clock: body a whole number of periods) has identical ends: equal-gain instead.
                 e = pre + body
                 t = np.linspace(0, np.pi / 2, xfade)
-                fo, fi = (np.cos(t) ** 2, np.sin(t) ** 2) if r.get("correlated") else (np.cos(t), np.sin(t))
+                corr = lay.get("correlated", r.get("correlated"))
+                fo, fi = (np.cos(t) ** 2, np.sin(t) ** 2) if corr else (np.cos(t), np.sin(t))
                 y = seg.copy()
                 y[e - xfade : e] = seg[e - xfade : e] * fo + seg[pre - xfade : pre] * fi
                 y[e : e + int(0.1 * SR)] = seg[pre : pre + int(0.1 * SR)]

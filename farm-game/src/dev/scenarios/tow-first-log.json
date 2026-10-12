@@ -1,0 +1,59 @@
+{
+  "title": "Towing on the town river: the first log, hooked, towed, tugged off the reed bed and landed at the slip",
+  "about": "Summer 24, 10:00, coming down the west bank from the north with Orin's timber hook: one short log rests in the west lane at the head of the river (18,22). Tap it (or press Action): the farmer hooks it. Tap the slip on the south bank (19,32) or the water near it: he walks down the bank and the log follows; it catches on the reed bed (18,24): tap or Action tugs it free, and he walks on. At the slip he hauls it in: +1 Timber. The acceptance: under 20 s by taps only, at most 6 inputs (scripts/lib/tow.mjs).",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "drift.0": 1,
+    "drift.lastLane": 1
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 20,
+    "facing": "down"
+  },
+  "time": {
+    "season": "summer",
+    "day": 24,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1,
+      "slot": 7
+    }
+  ]
+}

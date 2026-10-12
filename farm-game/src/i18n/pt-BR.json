@@ -822,5 +822,29 @@
     "town": "no rio da vila",
     "woods": "na lagoa do bosque",
     "farm": "no lago da fazenda"
+  },
+  "tow": {
+    "landed": {
+      "one": "+{count} Madeira",
+      "other": "+{count} Madeira"
+    },
+    "needHook": "O Orin vende um gancho para os troncos do rio.",
+    "bagFull": "Não cabe a madeira na sua bolsa.",
+    "slip": "A rampa de troncos. Reboque a madeira até aqui.",
+    "slipDry": "Uma velha rampa de troncos, no seco.",
+    "hookHere": "Fisgue a madeira da margem do rio da vila."
+  },
+  "house": {
+    "given": "+{n} madeira: {name}, {total} de {need}",
+    "done": "{name} está pronta. Alguém vai voltar para casa.",
+    "needs": {
+      "one": "{name} precisa de mais {count} madeira. Traga do rio.",
+      "other": "{name} precisa de mais {count} madeiras. Traga do rio."
+    },
+    "homeTitle": "DE VOLTA AO LAR",
+    "homeLine": "{name} voltou para o Wend.",
+    "row": "{n} de {of} madeiras",
+    "rowDone": "pronta, a família chega amanhã",
+    "step": "{name}: {n} de {of} madeiras"
   }
 }

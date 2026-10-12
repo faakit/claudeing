@@ -107,7 +107,74 @@ export interface ValleyData {
    * Parts a place's fund needs, bought from a villager for gold until the forge exists (the sluice gate from Orin).
    * Offered in that villager's sheet while an asked place's fund still needs one and the bag holds none.
    */
-  parts?: Record<string, { npc: string; price: number }>;
+  parts?: Record<string, PartDef>;
+  /** The Weir's verb (M7): drift timber in the town river, towed to the slip. */
+  weir?: { drift: DriftDef };
+  /**
+   * Houses rebuilt with timber (WORLD-PLAN 5.2): `house.<id>` counts the timber delivered; the family arrives the
+   * morning after it is finished and its place is restored (`arrived.<family>`).
+   */
+  houses?: Record<string, HouseDef>;
+}
+/**
+ * A part bought from a villager for gold: offered while an asked place's fund needs it, or (`sells`) while that holds,
+ * either way only while the bag holds none.
+ */
+export interface PartDef {
+  npc: string;
+  price: number;
+  sells?: ValleyWhen;
+}
+/** One drift lane: its waypoints (tile coords of the log's centre; .5 for half a tile), the long log's own way. */
+export interface DriftLaneDef {
+  /** The obstacle that catches its logs (for tests and the dev readout); none for the lane the spur turns. */
+  snag?: [number, number];
+  /** Its logs come to rest caught on that snag (a tug frees them), not at the path's end. */
+  waits?: boolean;
+  path: [number, number][];
+  long: [number, number][];
+}
+export interface DriftDef {
+  /** Logs arriving each morning: a day hash picks between the two. */
+  perDay: [number, number];
+  winterPerDay: number;
+  /** About one log in this many is long (3 timber). */
+  longOneIn: number;
+  /** Drift speed, px/s (winter: half). */
+  speed: number;
+  winterSpeed: number;
+  maxWaiting: number;
+  map: string;
+  /** The river's water: [x, y, w, h]. */
+  river: [number, number, number, number];
+  /** Water tiles a log cannot float on (the mill wheel, the Heron): [x, y, w, h]. */
+  blocks: [number, number, number, number][];
+  /** Rocks and the reed bed: water tiles that catch a log. */
+  snags: [number, number][];
+  slip: { bank: [number, number]; water: [number, number] };
+  /** From this row down a towed log lies east-west, toward the slip. */
+  turnRow: number;
+  lanes: Record<string, DriftLaneDef>;
+}
+export interface HouseDef {
+  name: string;
+  timber: number;
+  family: string;
+  place: string;
+  /** Where it stands (none: off the map, the Holt wing). */
+  map?: string;
+  /** Its door: Interact (or Action with timber) there gives the timber you carry. */
+  door?: [number, number];
+  /** The scaffolding sprites' bottom-left tile. */
+  anchor?: [number, number];
+  /** Scaffolding as timber comes in, then built (windows dark): four stages. */
+  sprites?: string[];
+  /** The lit window once the family is home (drawn when the texture exists). */
+  lit?: string;
+  /** What its door says: boarded (before any timber, or before its place), built (waiting), home. */
+  boarded?: string;
+  built?: string;
+  home?: string;
 }
 
 export type ItemType =
@@ -325,6 +392,11 @@ export interface NpcDef {
   giftHearts: number;
   /** Perks at heart levels, summed into `perk(state, key)` like skill perks. */
   perks: Record<string, Record<string, number>>;
+  /**
+   * A villager who comes home (WORLD-PLAN 5.2): not drawn, scheduled or counted until the morning after their place is
+   * restored and their house finished (`arrived.<house's family>`).
+   */
+  arrives?: { place: string; house: string };
 }
 export interface FestivalDef {
   name: string;
@@ -437,7 +509,7 @@ export interface WorkDayDef {
    * What the farmer does: a pickaxe swing at the rockfall, the spade's first channel tile, or the weir's last day
    * (scripted until towing: the water comes through and lifts a beam into the gap).
    */
-  taste: 'pickaxe' | 'channel' | 'beam';
+  taste: 'pickaxe' | 'channel' | 'tow';
   text: string;
   /** Handed over that day (Ilse's spade on the spring's last work day). */
   gives?: string;
@@ -840,6 +912,29 @@ function validateValleyContent(mapIds: string[]): void {
     if (!items[item]) fail('valley', `part "${item}" is not an item`);
     if (!npcs[part.npc]) fail('valley', `part "${item}" is sold by an unknown villager`);
     if (!(part.price > 0)) fail('valley', `part "${item}" needs a price`);
+    if (part.sells) validateValleyWhen(part.sells, 'valley', `part "${item}" sells`);
+  }
+  const d = v.weir?.drift;
+  if (d) {
+    if (!mapIds.includes(d.map)) fail('valley', 'weir.drift is on an unknown map');
+    if (!(d.perDay[0] >= 0 && d.perDay[1] >= d.perDay[0] && d.winterPerDay >= 0))
+      fail('valley', 'weir.drift needs perDay [min, max] and winterPerDay');
+    if (!(d.longOneIn >= 1 && d.speed > 0 && d.winterSpeed > 0 && d.maxWaiting >= 1))
+      fail('valley', 'weir.drift needs longOneIn, speed, winterSpeed and maxWaiting');
+    const ids = Object.keys(d.lanes);
+    if (ids.length < 2)
+      fail('valley', 'weir.drift needs two lanes or more (never the same twice in a row)');
+    for (const [id, l] of Object.entries(d.lanes))
+      if (l.path.length < 1 || l.long.length < 1)
+        fail('valley', `weir.drift lane "${id}" needs a path and a long path`);
+  }
+  for (const [id, h] of Object.entries(v.houses ?? {})) {
+    const at = `house "${id}"`;
+    if (!(h.timber >= 1) || !h.family) fail('valley', `${at} needs timber and a family`);
+    if (!v.places[h.place] && !v.planned[h.place]) fail('valley', `${at} waits on unknown place`);
+    if (h.map !== undefined && !mapIds.includes(h.map)) fail('valley', `${at} is on unknown map`);
+    if (h.map !== undefined && (!h.door || !h.anchor || h.sprites?.length !== 4 || !h.boarded))
+      fail('valley', `${at} on a map needs a door, an anchor, four sprites and its boarded text`);
   }
   for (const [id, r] of Object.entries(projects)) {
     if (r.place !== undefined && v.places[r.place]?.project !== id)
@@ -1110,6 +1205,12 @@ export function validateContent(): void {
     // Whatever the valley's state, a stranger always has something to say.
     if (!n.lines.stranger.some((l) => typeof l === 'string'))
       fail('npcs', `"${id}" needs one "stranger" line with no "when"`);
+    if (n.arrives) {
+      const hs = valley.houses?.[n.arrives.house];
+      if (!hs) fail('npcs', `"${id}" arrives to unknown house "${n.arrives.house}"`);
+      if (!valley.places[n.arrives.place] && !valley.planned[n.arrives.place])
+        fail('npcs', `"${id}" arrives after unknown place "${n.arrives.place}"`);
+    }
     for (const lvl of Object.keys(n.perks))
       if (Number(lvl) < 1 || Number(lvl) > 5) fail('npcs', `"${id}" perk at invalid hearts ${lvl}`);
   }
@@ -1283,7 +1384,7 @@ const TUT_KINDS = [
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
-const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site', 'creek'];
+const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site', 'creek', 'slip'];
 const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot', 'spadeSlot'];
 const TUT_COND_KEYS = new Set([
   'stat',

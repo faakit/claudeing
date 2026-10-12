@@ -242,6 +242,7 @@ EYES = {
     "orin": {"down": [(9, 9, 6), (13, 13, 6)], "right": [(14, 14, 6)]},
     "rosa": {"down": [(7, 8, 15), (12, 13, 15)], "right": [(13, 14, 13)]},
     "clay": {"down": [(6, 7, 12), (11, 12, 12)], "right": [(12, 13, 11)]},
+    "senna": {"down": [(5, 6, 14), (11, 12, 14)], "right": [(14, 15, 14)]},  # Mara's face (senna.py)
 }
 SKIN = ("skin light", "skin mid", "skin deep")
 
@@ -279,6 +280,8 @@ def villager_idles(names, frames: dict[str, np.ndarray], npc: str) -> dict[str, 
             beat = stretch_up(f, hat)
             if npc == "rosa":
                 beat = shift_rows(beat, 0, hat - 2, 1 if d != "right" else -1)
+        elif npc == "senna":  # tips her head toward the scarf's knot
+            beat = shift_rows(f, 0, c, -1 if d == "down" else 1)
         elif npc == "orin":  # shifts his weight: everything above the knees leans 1 px
             ys = np.where((f >= 0).any(axis=1))[0]
             beat = shift_rows(f, 0, int(ys[-1]) - 3, -1)
@@ -344,6 +347,12 @@ def build(names, groups: dict, to_idx, to_rgba) -> None:
         if len(base) == 3:
             for k, idx in villager_idles(names, base, npc).items():
                 chars[k] = to_rgba(idx)
+    # Senna (M7), drawn over Mara's base frames (senna.py), then idled like every villager
+    import senna
+
+    base = senna.build({f"npc_mara_{d}_0": to_idx(chars[f"npc_mara_{d}_0"]) for d in ("down", "up", "right")})
+    for k, idx in {**base, **villager_idles(names, base, "senna")}.items():
+        chars[k] = to_rgba(idx)
     for d in ("down", "up", "right"):
         k = f"player_idle_{d}_0"
         if k in chars:

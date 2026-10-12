@@ -290,7 +290,7 @@ describe('musical moments', () => {
       expect(MUSIC.stings[`dawn-${v}`]).toBeDefined();
       expect(MUSIC.stings[`dusk-${v}`]).toBeDefined();
     }
-    for (const id of ['mara', 'finn', 'rosa', 'orin', 'clay'])
+    for (const id of ['mara', 'finn', 'rosa', 'orin', 'clay', 'senna'])
       for (const v of ['', '-heart'])
         expect(MUSIC.stings[`motif-${id}${v}`], `${id}${v}`).toBeDefined();
     for (const s of ['spring', 'summer', 'fall', 'winter']) {

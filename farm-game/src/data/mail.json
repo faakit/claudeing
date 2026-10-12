@@ -231,6 +231,26 @@
         "stat": "place.weir.since",
         "min": 1
       }
+    },
+    {
+      "id": "timber_hook",
+      "from": "orin",
+      "title": "Drift timber",
+      "text": "The river's bringing timber down from the hills. I've made you a hook on a rope for it, 250g. Hook a log from the bank, walk it to the slip on the south bank. Houses want timber.",
+      "when": {
+        "stat": "place.weir",
+        "min": 3
+      }
+    },
+    {
+      "id": "senna_coming",
+      "from": "senna",
+      "title": "Our old house",
+      "text": "Mara writes that someone is mending our house, with timber out of the river. I didn't dare believe it. If the wheel can turn again, I'm coming home.",
+      "when": {
+        "stat": "house.marls",
+        "min": 3
+      }
     }
   ]
 }

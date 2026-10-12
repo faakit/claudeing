@@ -1,0 +1,59 @@
+{
+  "title": "A log waiting caught on the rock spur: the snag reads (tilt, foam crest), one tug frees it",
+  "about": "Summer 24, 10:00, coming down the west bank from the north with the hook: a short log drifts down the middle lane onto the first rock spur (19,26) and waits there, caught: tilted toward the rock, a 2 px foam crest where it presses. Hook it (a ripple and the taut rope while it holds), one tug pops it past the spur on your side, and he walks it down to the slip by himself: +1 Timber. The art critic's R30-3 check: the caught log draws above the rock.",
+  "version": 18,
+  "tags": ["town", "valley", "weir", "towing"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 50,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 46,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47,
+    "valley.riverSeen": 1,
+    "mail.timber_hook": 1,
+    "drift.0": 3,
+    "drift.lastLane": 2
+  },
+  "friends": {
+    "finn": 3
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 20,
+    "facing": "down"
+  },
+  "time": {
+    "season": "summer",
+    "day": 24,
+    "clock": "10:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree",
+  "items": [
+    {
+      "item": "timber_hook",
+      "qty": 1,
+      "slot": 7
+    }
+  ]
+}

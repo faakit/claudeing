@@ -822,5 +822,29 @@
     "town": "town river",
     "woods": "woods lake",
     "farm": "farm pond"
+  },
+  "tow": {
+    "landed": {
+      "one": "+{count} Timber",
+      "other": "+{count} Timber"
+    },
+    "needHook": "Orin sells a timber hook for the river's logs.",
+    "bagFull": "No room in your bag for the timber.",
+    "slip": "The log slip. Tow drift timber here to land it.",
+    "slipDry": "An old log slip, high and dry.",
+    "hookHere": "Hook drift timber from the town river's bank."
+  },
+  "house": {
+    "given": "+{n} timber: {name}, {total} of {need}",
+    "done": "{name} is finished. Someone's coming home.",
+    "needs": {
+      "one": "{name} needs {count} more timber. Tow it in from the river.",
+      "other": "{name} needs {count} more timber. Tow it in from the river."
+    },
+    "homeTitle": "HOME AGAIN",
+    "homeLine": "{name} came back to the Wend.",
+    "row": "{n} of {of} timber",
+    "rowDone": "finished, the family comes tomorrow",
+    "step": "{name}: {n} of {of} timber"
   }
 }
