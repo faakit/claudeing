@@ -14,6 +14,7 @@ import {
   type TileIndex,
 } from '../art/channelTiles';
 import { GreenReveal } from '../fx/GreenReveal';
+import { PICK_LOOSE_MS, SITE_BEAT, SiteFx } from '../fx/SiteFx';
 import { ChannelFx } from '../fx/ChannelFx';
 import {
   interactSite,
@@ -170,7 +171,8 @@ const riverBanner = (): string => valley.places['weir']?.banner ?? t('valley.riv
 const CREEK_BANK = [25, 14] as const;
 
 /** A work day's beat at a site (ms): three swings and a stone rolling off, or two spade cuts and the water. */
-const SITE_BEAT_MS = { pickaxe: 3300, channel: 3400, beam: 3600 } as const;
+/** A work day's beat (fx/SiteFx: the pickaxe day about 2.6 s, the spade day about 1.8 s; the weir's beam). */
+const SITE_BEAT_MS = { ...SITE_BEAT, beam: 3600 } as const;
 
 /** A channel's fallback tiles when the tileset has no channel art (placeholder tiles): plain water, dug earth. */
 const CHANNEL_GID = { wet: 5, dry: 2 } as const;
@@ -1570,98 +1572,36 @@ export abstract class WorldScene extends Phaser.Scene {
     // farmer swings at the rockfall and a stone rolls off its top; on the spade day a channel is cut from the pool
     // and the water runs into it. The site's new sprite shows when the beat ends.
     gameEvents.emit('energyChanged', undefined);
-    const channel = res.work.taste === 'channel';
     const beat = SITE_BEAT_MS[res.work.taste];
-    this.things?.hold(`site.${id}`, beat);
     runtime.busy = true;
     this.siteBeat = true;
     const at = { ...state.player };
-    const rockX = (tile.tx + 1) * TILE_SIZE; // the rockfall's middle (it covers this tile and the next)
-    const rockY = tile.ty * TILE_SIZE;
     const live = () => this.sys.isActive();
-    if (res.work.taste === 'beam') {
-      this.beamBeat(tile, live);
-      this.time.delayedCall(beat, () => {
-        this.endSiteBeat();
-        if (!live()) return;
-        haptic('medium');
-        toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
-      });
-      return;
-    }
-    const swings = channel ? [0, 650] : [0, 800, 1600];
-    swings.forEach((t, k) =>
-      this.time.delayedCall(t, () => {
-        if (!live()) return;
-        this.fx.swing(at.x, at.y, channel ? 'item_spade' : 'item_pickaxe', at.facing);
-        this.time.delayedCall(140, () => {
-          if (!live()) return;
-          if (channel) this.fx.dust((tile.tx + 0.5) * TILE_SIZE, (tile.ty + 1.5) * TILE_SIZE);
-          else this.fx.dust(rockX - 6 + k * 6, rockY + 4 - k * 3);
-          audio.play(channel ? 'dig' : 'swing');
-          haptic('tick');
-        });
-      }),
-    );
-    if (!channel) {
-      // a stone comes off the top of the heap and rolls down beside it
-      this.time.delayedCall(2200, () => {
-        if (!live()) return;
-        const stone = this.add.graphics().setDepth(10 + rockY + 20);
-        stone.fillStyle(0x241a2a, 1).fillRect(-6, -5, 12, 10);
-        stone.fillStyle(0xaeb0b4, 1).fillRect(-5, -4, 10, 8);
-        stone.fillStyle(0x8a8694, 1).fillRect(-5, 1, 10, 3);
-        stone.setPosition(rockX, rockY - 14); // the top stone of the heap
-        this.tweens.add({
-          targets: stone,
-          x: rockX + 26,
-          y: rockY + 22,
-          duration: 700,
-          ease: 'Bounce.easeOut',
-          onComplete: () => {
-            audio.play('till');
-            this.tweens.add({
-              targets: stone,
-              alpha: 0,
-              delay: 500,
-              duration: 300,
-              onComplete: () => stone.destroy(),
-            });
-          },
-        });
-      });
-    } else {
-      // the cut: a strip of dug earth from the pool's edge, then the water runs into it from the pool side
-      const cx = tile.tx * TILE_SIZE;
-      const cy = (tile.ty + 1) * TILE_SIZE;
-      const cut = this.add.graphics().setDepth(0.45);
-      this.time.delayedCall(1100, () => {
-        if (!live()) return;
-        cut.fillStyle(0x4c2c1c, 1).fillRect(cx, cy + 4, TILE_SIZE, 8);
-        const flow = { w: 0 };
-        audio.play('water');
-        this.tweens.add({
-          targets: flow,
-          w: TILE_SIZE,
-          duration: 900,
-          ease: 'Sine.easeOut',
-          onUpdate: () => {
-            const w = Math.round(flow.w);
-            cut.clear();
-            cut.fillStyle(0x4c2c1c, 1).fillRect(cx, cy + 4, TILE_SIZE, 8);
-            cut.fillStyle(0x3c74b4, 1).fillRect(cx + TILE_SIZE - w, cy + 5, w, 6);
-            cut.fillStyle(0x72aadc, 1).fillRect(cx + TILE_SIZE - w, cy + 5, w, 1);
-          },
-          onComplete: () => live() && this.fx.splash(cx + 4, cy + 8),
-        });
-      });
-    }
-    this.time.delayedCall(beat, () => {
+    const done = () => {
       this.endSiteBeat();
       if (!live()) return;
       haptic('medium');
       toast(t('valley.workBeat', { text: res.work.text, n: res.day, of: res.of }), 'good');
-    });
+    };
+    const site = new SiteFx(this, this.fx, () => getState().settings.reduceMotion);
+    if (res.work.taste === 'beam') {
+      this.things?.hold(`site.${id}`, beat);
+      this.beamBeat(tile, live);
+    } else if (res.work.taste === 'channel') {
+      // the cut beside the pool, and the pool's water running into it (the channel's clods and fill)
+      this.things?.hold(`site.${id}`, beat);
+      site.spade(at, tile.tx * TILE_SIZE, (tile.ty + 1) * TILE_SIZE, 'e');
+    } else {
+      // the site's lower sprite shows as the top stone breaks loose on the third strike
+      this.things?.hold(`site.${id}`, PICK_LOOSE_MS);
+      site.pickaxe(
+        at,
+        (tile.tx + 1) * TILE_SIZE, // the rockfall's middle (it covers this tile and the next)
+        tile.ty * TILE_SIZE,
+        this.things?.landmarkSprite(`site.${id}`) ?? null,
+      );
+    }
+    this.time.delayedCall(beat, done);
   }
 
   /**

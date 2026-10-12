@@ -1028,10 +1028,28 @@ async function spring() {
     const e0 = (await farm.state()).energy;
     await farm.press('KeyE');
     // the work day's beat plays (the world waits), then the site shows its new stage
-    await farm.until((_s, w) => w.runtime.busy, null, "the work day's beat to start", 3000);
+    const sceneNow = (_s, w) =>
+      w.game.scene.getScenes(true).find((x) => x.scene.key !== 'UI')?.time.now ?? 0;
+    const b0 = await farm.until(
+      (s2, w, f) => w.runtime.busy && new Function(`return (${f})`)()(s2, w),
+      sceneNow.toString(),
+      "the work day's beat to start",
+      3000,
+    );
     if (process.env.SHOTS && day > 1)
       await farm.strip(`spring-beat-day-${day}`, 6, 36, process.env.SHOTS);
-    await farm.until((_s, w) => !w.runtime.busy, null, "the work day's beat to end", 8000);
+    const b1 = await farm.until(
+      (s2, w, f) => !w.runtime.busy && new Function(`return (${f})`)()(s2, w),
+      sceneNow.toString(),
+      "the work day's beat to end",
+      8000,
+    );
+    // the beats are tight (feel critic, review 6): the pickaxe days about 2.6 s, the spade day about 1.8 s
+    check(
+      `work day ${day}: the beat lasts ${Math.round(b1 - b0)} ms of game time`,
+      b1 - b0 <= (day === 3 ? 1900 : 2700),
+      `${Math.round(b1 - b0)} ms`,
+    );
     await farm.frames(3);
     s = await farm.state();
     sprites.push(await siteKey(farm, 'spring'));

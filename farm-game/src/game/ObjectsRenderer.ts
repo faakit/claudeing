@@ -152,6 +152,11 @@ export class ObjectsRenderer {
     return { body, target: tgt && (body || still) };
   }
 
+  /** A landmark's sprite, if drawn (a site's work day shudders it). */
+  landmarkSprite(id: string): Phaser.GameObjects.Image | null {
+    return this.landmarks.get(id) ?? null;
+  }
+
   private held = new Map<string, number>();
   /** Keep a landmark's sprite as it is for `ms` (a site during its work day's beat). */
   hold(id: string, ms: number): void {
