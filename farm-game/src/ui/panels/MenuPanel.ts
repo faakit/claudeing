@@ -12,7 +12,7 @@ import { asideGoals, goalProgress, recentGoals, stat } from '../../systems/goals
 import { valleyLines } from './valleyText';
 import { jobLabel, jobProgress, welcomeFactor, welcomeJobsHeader } from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
-import { fitRow, measureText } from '../font';
+import { fitRow, Label, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { isShippable } from '../../systems/economy';
 import { dishText, eat, eatGain, foodEnergy, tooFullFor } from '../../systems/food';
@@ -24,8 +24,7 @@ import {
   toggleReduceMotion,
   toggleVibration,
 } from '../../systems/settings';
-import { C } from '../theme';
-import type { Label } from '../font';
+import { C, CH } from '../theme';
 import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from '../widgets';
 import { fmt } from './format';
 import { buildAlmanac } from './AlmanacTab';
@@ -128,7 +127,9 @@ export class MenuPanel extends Modal {
       });
     });
     const cr = grid.close;
-    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), { textColor: C.warn });
+    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), {
+      textColor: C.warn,
+    });
     const ctx: MenuTabContext = {
       width: this.panelW,
       height: this.panelH,
@@ -210,7 +211,11 @@ export function installMenuTabs(menu: MenuPanel): void {
   registerMenuTab({ id: 'craft', label: () => tabLabel('craft'), build: buildCraft });
   registerMenuTab({ id: 'skills', label: () => tabLabel('skills'), build: buildSkills });
   registerMenuTab({ id: 'book', label: () => tabLabel('book'), build: buildAlmanac });
-  registerMenuTab({ id: 'opts', label: () => tabLabel('opts'), build: (c) => buildOptions(c, menu) });
+  registerMenuTab({
+    id: 'opts',
+    label: () => tabLabel('opts'),
+    build: (c) => buildOptions(c, menu),
+  });
 }
 
 function buildBag(c: MenuTabContext, menu: MenuPanel): void {
@@ -235,9 +240,17 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       const ref = refOf(stack);
       c.icon(x + size / 2, y + size / 2, iconKey(ref));
       if (!isToolSlot(i) && stack.qty > 1)
-        c.label(x + size - 2, y + size - 9, String(stack.qty), C.cream, 1, 'right');
-      if (ref.q) c.icon(x + 5, y + size - 5, 'ui_star').setTint(ref.q >= 2 ? 0xf4d35e : 0xc9d3e4);
-      if ((ref.q ?? 0) >= 2) c.icon(x + 11, y + size - 5, 'ui_star').setTint(0xf4d35e);
+        // parchment on an ink outline, as on the hotbar: ink alone vanished over a dark icon
+        c.add(
+          new Label(c.scene, x + size - 2, y + size - 9, String(stack.qty), {
+            align: 'right',
+            color: CH.cream,
+            outline: CH.ink,
+          }),
+        );
+      // quality stars in the top corner: at the bottom the second one sat on a two-digit count
+      if (ref.q) c.icon(x + size - 5, y + 5, 'ui_star').setTint(ref.q >= 2 ? 0xf4d35e : 0xc9d3e4);
+      if ((ref.q ?? 0) >= 2) c.icon(x + size - 11, y + 5, 'ui_star').setTint(0xf4d35e);
     }
     const zone = c.scene.add
       .zone(x, y, size + 1, size + 1)
@@ -301,15 +314,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       c.label(8, dy + 64, t('bag.costs', { gold: fmtGold(def.buyPrice) }), C.creamDim);
   } else {
     c.label(8, dy + 2, t('bag.title'), C.gold);
-    c.label(
-      8,
-      dy + 16,
-      t('bag.help'),
-      C.creamDim,
-      1,
-      'left',
-      184,
-    );
+    c.label(8, dy + 16, t('bag.help'), C.creamDim, 1, 'left', 184);
   }
   const ly = c.top + 84;
   c.label(
@@ -325,15 +330,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   );
   c.label(8, ly + 12, t('bag.gold', { gold: fmt(s.money) }), C.gold);
   // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
-  c.label(
-    8,
-    ly + 24,
-    t('bag.tip'),
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
+  c.label(8, ly + 24, t('bag.tip'), C.creamDim, 1, 'left', 184);
 }
 
 function buildGoals(c: MenuTabContext): void {

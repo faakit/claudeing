@@ -13,6 +13,7 @@ import { countItem } from '../../systems/inventory';
 import { orderSub } from './boardText';
 import { iconKey, parseKey } from '../../systems/itemRef';
 import { C } from '../theme';
+import { wrapText } from '../fontMetrics';
 import { Modal } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
@@ -58,7 +59,10 @@ export class BoardPanel extends Modal {
     const sp = s.special;
     // Once Clay is about, the season's score has a line of its own, every day (critique 9, F1).
     const score = boardScoreLine(s);
-    const top = score ? 42 : 34;
+    // Clay's notice wraps (pt-BR ran 59 px past the edge on one line): the rows start under however many lines
+    const noticeY = score ? 30 : 20;
+    const notice = rivalNotice(s);
+    const top = noticeY + wrapText(notice, 184).length * 11 + 3;
     this.setHeight(
       top +
         (sp || this.doneSpecial ? 26 : 0) +
@@ -72,7 +76,7 @@ export class BoardPanel extends Modal {
     this.label(8, 8, t('board.title'), C.gold);
     this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
     if (score) this.label(8, 19, score, C.cream);
-    this.label(8, score ? 30 : 20, rivalNotice(s), C.creamDim);
+    this.label(8, noticeY, notice, C.creamDim, 1, 'left', 184);
     let y = top;
     // The requests Clay is after today that would score are marked, so the race is about a known target
     // (a fish or wild row he only clears is not: critique 10, F2).

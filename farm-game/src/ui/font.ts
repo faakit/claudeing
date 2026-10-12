@@ -87,12 +87,21 @@ export interface LabelStyle {
   shadow?: number | null;
   align?: 'left' | 'center' | 'right';
   maxWidth?: number;
+  /**
+   * A full 1 px outline in this colour (four offset copies under the text), for text that sits on busy art
+   * whatever is behind it, such as a stack count over an item icon. The copies share the font texture, so they
+   * batch with the text and cost no draw call.
+   */
+  outline?: number;
 }
 
 /** Pixel text with a 1px drop shadow. Anchor follows `align`. */
 export class Label extends Phaser.GameObjects.Container {
   private readonly main: Phaser.GameObjects.BitmapText;
   private readonly shade: Phaser.GameObjects.BitmapText | null;
+  /** The outline's copies (empty without `outline`), and its colour (read by the e2e text guard). */
+  private readonly rim: Phaser.GameObjects.BitmapText[] = [];
+  readonly outline: number | null;
   private readonly align: 'left' | 'center' | 'right';
   private color: number;
 
@@ -111,8 +120,11 @@ export class Label extends Phaser.GameObjects.Container {
     // Dark text (ink on parchment) gets no drop shadow; light text gets an ink one.
     const shadowColor =
       style.shadow === undefined ? (isDark(this.color) ? null : C.ink) : style.shadow;
-    this.shade = shadowColor === null ? null : make(shadowColor);
+    this.outline = style.outline ?? null;
+    this.shade = shadowColor === null || this.outline !== null ? null : make(shadowColor);
     this.main = make(this.color);
+    if (this.outline !== null) for (let i = 0; i < 4; i++) this.rim.push(make(this.outline));
+    this.add(this.rim);
     if (this.shade) this.add(this.shade);
     this.add(this.main);
     this.layout();
@@ -123,6 +135,7 @@ export class Label extends Phaser.GameObjects.Container {
     if (this.main.text === text) return this;
     this.main.setText(text);
     this.shade?.setText(text);
+    for (const r of this.rim) r.setText(text);
     this.layout();
     return this;
   }
@@ -151,6 +164,8 @@ export class Label extends Phaser.GameObjects.Container {
     const ox = this.align === 'center' ? -w / 2 : this.align === 'right' ? -w : 0;
     this.main.setPosition(Math.round(ox), 0);
     this.shade?.setPosition(Math.round(ox) + 1, 1);
+    const o = Math.round(ox);
+    this.rim.forEach((r, i) => r.setPosition(o + [1, -1, 0, 0][i]!, [0, 0, 1, -1][i]!));
   }
 }
 

@@ -343,6 +343,7 @@ export abstract class Modal {
     panelH: number,
   ) {
     this.panelH = Math.min(panelH, GAME_HEIGHT - HUD_H);
+    this.baseH = this.panelH;
     this.dim = scene.add
       .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, C.ink, 0.6)
       .setOrigin(0)
@@ -370,8 +371,40 @@ export abstract class Modal {
 
   protected rebuild(): void {
     this.content.removeAll(true);
+    this.wantHeight = 0;
     this.build();
+    // A flowing sheet whose text wrapped longer than its height (Portuguese runs about 25% longer) grows once to
+    // fit, up to its cap, rather than let lines run under its buttons (owner: "many of the texts are getting
+    // hidden").
+    if (this.wantHeight > this.panelH && this.panelH < this.maxHeight) {
+      this.panelH = Math.min(this.maxHeight, this.wantHeight);
+      this.content.removeAll(true);
+      this.wantHeight = 0;
+      this.build();
+    }
     if (this.opened) this.root.y = GAME_HEIGHT - this.panelH;
+  }
+
+  /** The height this sheet was made with; each opening starts from it (a grown sheet shrinks back). */
+  private readonly baseH: number;
+  /** Set during build() by a flowing sheet: the height its content needs (rebuild grows the sheet to it). */
+  protected wantHeight = 0;
+
+  /**
+   * A paragraph in the flow: a label at (x, y), wrapped to `maxWidth`, returning the y under it (plus `gap`), so
+   * the next line starts below however many lines this one wrapped to. Nothing in a flow sits at a fixed y.
+   */
+  protected para(
+    x: number,
+    y: number,
+    text: string,
+    color: number = C.cream,
+    maxWidth = this.panelW - 16,
+    gap = 3,
+    align: 'left' | 'center' | 'right' = 'left',
+  ): number {
+    const l = this.label(x, y, text, color, 1, align, maxWidth);
+    return y + Math.ceil(l.textHeight) + gap;
   }
 
   /** Change the sheet height from inside build(); the sheet stays glued to the bottom edge. */
@@ -408,6 +441,7 @@ export abstract class Modal {
     runtime.modals += 1;
     this.scene.tweens.killTweensOf(this.root);
     this.scene.tweens.killTweensOf(this.dim);
+    this.panelH = this.baseH;
     this.rebuild();
     const calm = getState().settings.reduceMotion;
     const top = GAME_HEIGHT - this.panelH;

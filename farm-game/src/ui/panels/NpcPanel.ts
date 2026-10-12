@@ -77,7 +77,7 @@ export class NpcPanel extends Modal {
     this.label(
       8,
       20,
-      isBirthday(s, this.id) ? t('npc.birthdayToday') : fitText(def.blurb, 150),
+      fitText(isBirthday(s, this.id) ? t('npc.birthdayToday') : def.blurb, 136), // clear of the hearts bar (x 148)
       isBirthday(s, this.id) ? C.gold : C.creamDim,
     );
     const hearts = heartsOf(s, this.id);
@@ -103,16 +103,22 @@ export class NpcPanel extends Modal {
       return this.buildTalk(heartsOf(s, this.id));
     }
     const last = this.evLine >= ev.lines.length - 1;
-    this.label(8, 38, ev.title.toUpperCase(), C.warn);
-    this.label(8, 56, `"${ev.lines[this.evLine]}"`, C.cream, 1, 'left', 184);
-    this.label(8, 120, `${this.evLine + 1}/${ev.lines.length}`, C.creamDim);
+    // a flow: the scene's line wraps as long as it needs, the counter under it, the button under that
+    let y = this.para(8, 38, ev.title.toUpperCase(), C.warn, 184, 8);
+    y = this.para(8, y, `"${ev.lines[this.evLine]}"`, C.cream, 184, 6);
+    y = this.para(8, y, `${this.evLine + 1}/${ev.lines.length}`, C.creamDim, 184, 4);
+    this.wantHeight = y + 62 + 2;
     this.button(
       8,
       this.panelH - 62,
       this.panelW - 16,
       24,
       // an opening scene (a place restored) gives nothing but the moment
-      last ? (ev.id.startsWith('opening.') ? t('common.close') : t('npc.accept')) : t('common.next'),
+      last
+        ? ev.id.startsWith('opening.')
+          ? t('common.close')
+          : t('npc.accept')
+        : t('common.next'),
       () => {
         if (!last) {
           this.evLine += 1;
@@ -145,26 +151,30 @@ export class NpcPanel extends Modal {
     // a part an asked place's fund needs (the sluice gate from Orin, until the forge is lit): said, and sold here
     const offer = partOffer(s, this.id);
     const offerName = offer ? (items[offer.item]?.name ?? offer.item) : '';
-    const say = this.reply || (offer ? t('npc.partOffer', { part: offerName.toLowerCase() }) : this.line);
-    this.label(8, 42, `"${say}"`, C.cream, 1, 'left', 184);
-    if (this.gained > 0) this.label(8, 88, t('npc.friendship', { n: this.gained }), C.green);
+    const say =
+      this.reply || (offer ? t('npc.partOffer', { part: offerName.toLowerCase() }) : this.line);
+    // A flow from the line down (each part under the last, however far it wrapped), then the buttons: Portuguese
+    // lines wrapped into the next part at their old fixed rows.
+    let fy = this.para(8, 42, `"${say}"`, C.cream, 184, 8);
+    fy = Math.max(fy, 66);
+    if (this.gained > 0)
+      fy = this.para(8, fy, t('npc.friendship', { n: this.gained }), C.green, 184, 5);
     const next = nextPerk(s, this.id);
-    this.label(
+    fy = this.para(
       8,
-      104,
+      fy,
       next
         ? t('npc.atHearts', { count: next.hearts, perks: perkLine(next.perks) })
         : t('npc.bestFriends'),
       next ? C.creamDim : C.green,
-      1,
-      'left',
       184,
+      3,
     );
     if (hearts >= 3) {
       const loves = def.loves.map((i) => items[i]?.name ?? i).join(', ');
-      this.label(8, 128, t('npc.loves', { items: loves }), C.warn, 1, 'left', 184);
-    } else
-      this.label(8, 128, t('npc.reachHearts'), C.creamDim, 1, 'left', 184);
+      fy = this.para(8, fy, t('npc.loves', { items: loves }), C.warn, 184, 3);
+    } else fy = this.para(8, fy, t('npc.reachHearts'), C.creamDim, 184, 3);
+    this.wantHeight = fy + 62 + 2;
     const y = this.panelH - 62;
     this.button(
       8,
@@ -231,16 +241,7 @@ export class NpcPanel extends Modal {
     );
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
-    if (list.length === 0)
-      this.label(
-        8,
-        56,
-        t('npc.nothingToGive'),
-        C.creamDim,
-        1,
-        'left',
-        184,
-      );
+    if (list.length === 0) this.label(8, 56, t('npc.nothingToGive'), C.creamDim, 1, 'left', 184);
     let y = 48;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const known = knownReaction(s, this.id, ref);

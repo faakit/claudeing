@@ -114,6 +114,12 @@ export class FishingPanel extends Modal {
     this.draw();
   }
 
+  /** The hint sits on the Leave button, however many lines it wraps to (pt-BR wrapped under the button). */
+  private setHint(text: string): void {
+    this.hint.setText(text);
+    this.hint.setY(this.panelH - 31 - Math.ceil(this.hint.textHeight));
+  }
+
   private onRelease(): void {
     this.pointerDown = false;
     if (this.phase === 'done' && this.clock > 0.6) this.close();
@@ -197,7 +203,7 @@ export class FishingPanel extends Modal {
       this.fishIcon.setVisible(false);
       this.status.setText(this.phase === 'wait' ? t('fishing.waiting') : t('fishing.tapNow'));
       this.status.setColor(this.phase === 'bite' ? C.gold : C.cream);
-      this.hint.setText(t('fishing.anyTap'));
+      this.setHint(t('fishing.anyTap'));
     } else if (this.phase === 'reel') {
       const r = this.reel;
       const barTop = y + h - (r.bar + r.size) * h;
@@ -207,12 +213,12 @@ export class FishingPanel extends Modal {
       drawBar(g, x + w + 14, y, 8, h, r.progress, C.gold, true);
       this.status.setText(t('fishing.keepGreen'));
       this.status.setColor(C.cream);
-      this.hint.setText(t('fishing.holdLift'));
+      this.setHint(t('fishing.holdLift'));
     } else {
       this.fishIcon.setVisible(false);
       this.status.setText(this.resultText);
       this.status.setColor(this.resultText === t('fishing.gotAway') ? C.warn : C.green);
-      this.hint.setText(t('fishing.tapToContinue'));
+      this.setHint(t('fishing.tapToContinue'));
     }
   }
 }

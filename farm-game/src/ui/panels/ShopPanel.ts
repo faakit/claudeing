@@ -141,7 +141,7 @@ export class ShopPanel extends Modal {
     const shop = shops[SHOP_ID]!;
     for (const up of shop.upgrades.filter((u) => u.tab !== 'home')) y = this.upgradeRow(y, up);
     if (perkDiscount(s) > 0)
-      this.label(
+      this.para(
         8,
         y + 6,
         t('shop.friendDiscount', { n: Math.round(perkDiscount(s) * 100) }),
@@ -181,17 +181,20 @@ export class ShopPanel extends Modal {
       });
       if (next?.needs) {
         // Bars are part of the price: show them on their own line so the effect text stays readable.
-        this.label(
-          28,
-          y - 1,
-          t('shop.needs', {
-            n: next.needs.qty,
-            item: items[next.needs.item]?.name ?? next.needs.item,
-            have,
-          }),
-          missing ? C.red : C.green,
-        );
-        y += 10;
+        // wrapped inside the sheet (pt-BR ran 11 px past the edge), the next row under however many lines
+        y =
+          this.para(
+            28,
+            y - 1,
+            t('shop.needs', {
+              n: next.needs.qty,
+              item: items[next.needs.item]?.name ?? next.needs.item,
+              have,
+            }),
+            missing ? C.red : C.green,
+            this.panelW - 36,
+            0,
+          ) - 1;
       }
     }
     return y;

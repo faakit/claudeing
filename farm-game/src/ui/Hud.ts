@@ -92,6 +92,8 @@ export class Hud {
   private toasts: Toast[] = [];
   private readonly savedLabel: Label;
   private readonly banner: Label;
+  /** The goal banner's solid walnut plate (gold on the bare world read low on straw and sand). */
+  private readonly bannerPlate: Phaser.GameObjects.Graphics;
   /** The valley's own moments (the first green): two lines, a slot apart from goal and heart banners. */
   private readonly moment: Label;
   private readonly momentTitle: Label;
@@ -133,7 +135,11 @@ export class Hud {
 
     this.hotbarGfx = scene.add.graphics().setDepth(depth);
     // The selected item's name, in the toast lane just above the controls (on the old dock it sat over Interact).
-    this.nameLabel = new Label(scene, GAME_WIDTH / 2, CONTROLS_Y - 15, '', { align: 'center' })
+    // Parchment with its ink shadow on the walnut plate (owner: the default ink read black on dark wood).
+    this.nameLabel = new Label(scene, GAME_WIDTH / 2, CONTROLS_Y - 15, '', {
+      align: 'center',
+      color: CH.cream,
+    })
       .setDepth(80)
       .setAlpha(0);
     this.nameBg = scene.add
@@ -151,21 +157,23 @@ export class Hud {
       );
       this.hotbarStars.push(
         scene.add
-          .image(x + 5, HOTBAR_Y + SLOT - 5, 'ui_star')
+          .image(x + SLOT - 5, HOTBAR_Y + 5, 'ui_star')
           .setDepth(depth + 2)
           .setVisible(false),
       );
       this.hotbarStars2.push(
         scene.add
-          .image(x + 11, HOTBAR_Y + SLOT - 5, 'ui_star')
+          .image(x + SLOT - 11, HOTBAR_Y + 5, 'ui_star')
           .setDepth(depth + 2)
           .setTint(0xf4d35e)
           .setVisible(false),
       );
       this.hotbarQty.push(
-        new Label(scene, x + SLOT - 2, HOTBAR_Y + SLOT - 9, '', { align: 'right' }).setDepth(
-          depth + 2,
-        ),
+        new Label(scene, x + SLOT - 2, HOTBAR_Y + SLOT - 9, '', {
+          align: 'right',
+          color: CH.cream,
+          outline: CH.ink, // over the item's own icon, whatever its colours
+        }).setDepth(depth + 2),
       );
       new Label(scene, x + 3, HOTBAR_Y + 2, String(i + 1), { color: CH.creamDim, shadow: null })
         .setDepth(depth + 2)
@@ -197,6 +205,10 @@ export class Hud {
       maxWidth: 190,
     })
       .setDepth(depth + 5)
+      .setAlpha(0);
+    this.bannerPlate = scene.add
+      .graphics()
+      .setDepth(depth + 4)
       .setAlpha(0);
     this.momentPlate = scene.add
       .graphics()
@@ -390,8 +402,25 @@ export class Hud {
       .setText(text)
       .setAlpha(0)
       .setY(HUD_H + (calm ? 14 : 22));
+    // a solid walnut plate under it (ink edge, lit top), moving and fading with the text
+    const w = Math.min(GAME_WIDTH - 4, Math.ceil(this.banner.textWidth) + 14);
+    const h = Math.ceil(this.banner.textHeight) + 6;
+    const px = Math.round((GAME_WIDTH - w) / 2);
+    this.bannerPlate
+      .clear()
+      .fillStyle(CH.ink, 1)
+      .fillRect(px + 1, 0, w - 2, h)
+      .fillRect(px, 1, w, h - 2)
+      .fillStyle(CH.panel, 1)
+      .fillRect(px + 1, 1, w - 2, h - 2)
+      .fillStyle(CH.panelLight, 1)
+      .fillRect(px + 2, 1, w - 4, 1);
     this.scene.tweens.killTweensOf(this.banner);
-    const round = () => this.banner.setY(Math.round(this.banner.y));
+    const round = () => {
+      this.banner.setY(Math.round(this.banner.y));
+      this.bannerPlate.setY(this.banner.y - 3).setAlpha(this.banner.alpha);
+    };
+    round();
     this.scene.tweens.add({
       targets: this.banner,
       alpha: 1,
@@ -485,8 +514,8 @@ export class Hud {
         star
           .setVisible(q > 0)
           .setTint(q >= 2 ? 0xf4d35e : 0xc9d3e4)
-          .setY(HOTBAR_Y + SLOT - 5 - lift);
-        star2.setVisible(q >= 2).setY(HOTBAR_Y + SLOT - 5 - lift);
+          .setY(HOTBAR_Y + 5 - lift);
+        star2.setVisible(q >= 2).setY(HOTBAR_Y + 5 - lift);
       } else {
         icon.setVisible(false);
         qty.setText('');
