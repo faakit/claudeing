@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import {
   ATLAS_FILES,
+  LETTER_SLICE,
   SHEET_PIECES,
   SHEET_SLICE,
+  letterPieceKey,
   sheetPieceKey,
   type SheetPiece,
 } from '../art/manifest';
@@ -18,16 +20,35 @@ import { SKIN } from './theme';
  */
 export function sheetTexture(scene: Phaser.Scene, w: number, h: number): string | null {
   if (SKIN !== 'walnut') return null;
+  return nineSlice(scene, 'ui_sheet', sheetPieceKey, SHEET_SLICE, w, h);
+}
+
+/** Rosa's letter paper at w x h (Dry Year, art-src/tools/letterpaper.py), or null when its pieces are missing. */
+export function letterTexture(scene: Phaser.Scene, w: number, h: number): string | null {
+  return nineSlice(scene, 'ui_letter', letterPieceKey, LETTER_SLICE, w, h);
+}
+
+type Slice = { left: number; right: number; top: number; bottom: number };
+
+/** Compose 9-slice pieces into one canvas texture `<prefix>_<w>x<h>`: edges and centre tile, corners as they are. */
+function nineSlice(
+  scene: Phaser.Scene,
+  prefix: string,
+  pieceKey: (p: SheetPiece) => string,
+  slice: Slice,
+  w: number,
+  h: number,
+): string | null {
   const atlasKey = ATLAS_FILES.ui.key;
   if (!scene.textures.exists(atlasKey)) return null;
   const atlas = scene.textures.get(atlasKey);
-  if (!SHEET_PIECES.every((p) => atlas.has(sheetPieceKey(p)))) return null;
-  const id = `ui_sheet_${w}x${h}`;
+  if (!SHEET_PIECES.every((p) => atlas.has(pieceKey(p)))) return null;
+  const id = `${prefix}_${w}x${h}`;
   if (scene.textures.exists(id)) return id;
-  const L = SHEET_SLICE.left;
-  const R = SHEET_SLICE.right;
-  const T = SHEET_SLICE.top;
-  const B = SHEET_SLICE.bottom;
+  const L = slice.left;
+  const R = slice.right;
+  const T = slice.top;
+  const B = slice.bottom;
   if (w < L + R || h < T + B) return null;
   const canvas = scene.textures.createCanvas(id, w, h);
   if (!canvas) return null;
@@ -35,7 +56,7 @@ export function sheetTexture(scene: Phaser.Scene, w: number, h: number): string 
   ctx.imageSmoothingEnabled = false;
   const img = atlas.getSourceImage() as CanvasImageSource;
   const tile = (p: SheetPiece, x: number, y: number, rw: number, rh: number) => {
-    const f = atlas.get(sheetPieceKey(p));
+    const f = atlas.get(pieceKey(p));
     for (let yy = 0; yy < rh; yy += f.cutHeight)
       for (let xx = 0; xx < rw; xx += f.cutWidth) {
         const cw = Math.min(f.cutWidth, rw - xx);

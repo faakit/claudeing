@@ -547,6 +547,53 @@ def to_idx(rgba: np.ndarray, pal) -> np.ndarray:
     return out
 
 
+# ---------------------------------------------------------------- Ilse's spade and seed tin (Dry Year)
+
+# Ilse's spade: a D grip, a 2 px shaft and a broad metal blade (Flow's spade had a 1 px shaft and a dark blade that
+# vanished on the walnut Action button). The one spade: the hotbar, the Action button and the swing all use it.
+ILSE_SPADE = [
+    "...........KKKK.",
+    "..........KswwsK",
+    "..........KwKKwK",
+    "..........KwKKwK",
+    "..........KswwKK",
+    ".........KswKK..",
+    "........KswK....",
+    ".......KswK.....",
+    "......KswK......",
+    "..KKKKswKK......",
+    ".KxxxKwKzK......",
+    ".KxxzzKzZK......",
+    "KxxzzzzZK.......",
+    "KxzzzzZZK.......",
+    "KzzZZZZK........",
+    ".KKKKKK.........",
+]
+
+
+
+# A round-shouldered tin, not a packet: a grey metal lid over a blue body, and a paper label with a sprout on it.
+# (Flow's icons_ilse tin grew a seedling and read as a plant pot; the journal and the spade come from that sheet.)
+ILSE_TIN = [
+    "................",
+    "................",
+    "..KKKKKKKKKKKK..",
+    ".KxxxxxxxxxxxxK.",
+    ".KzzzzzzzzzzzzK.",
+    ".KKZZZZZZZZZZKK.",
+    "..KKKKKKKKKKKK..",
+    "..KSSWWWWWWWDK..",
+    "..KSpppppggpDK..",
+    "..KSppggGppDDK..",
+    "..KSpppGGppDDK..",
+    "..KSpppGGppDDK..",
+    "..KSssssssssDK..",
+    "..KWDDDDDDDDDK..",
+    "...KKKKKKKKKK...",
+    "................",
+]
+
+
 def build(P, groups: dict, pal, names: list[str]) -> None:
     def add(group: str, key: str, idx: np.ndarray) -> None:
         groups[group][key] = px.idx_to_rgba(idx, pal)
@@ -559,6 +606,8 @@ def build(P, groups: dict, pal, names: list[str]) -> None:
         ("item_glimmer_trout", GLIMMER_TROUT),
         ("item_sun_carp", SUN_CARP),
         ("item_scarecrow", SCARECROW_ITEM),
+        ("item_ilse_tin", ILSE_TIN),
+        ("item_spade", ILSE_SPADE),
     ):
         add("ui", key, grid(names, rows, 16, 16))
     add("world", "obj_scarecrow", grid(names, SCARECROW, 16, 30))

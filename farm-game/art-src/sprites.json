@@ -4461,5 +4461,13 @@
    11
   ],
   "group": "world"
+ },
+ "item_ilse_journal": {
+  "src": "ilse1b/journal1",
+  "size": [
+   16,
+   16
+  ],
+  "group": "ui"
  }
 }

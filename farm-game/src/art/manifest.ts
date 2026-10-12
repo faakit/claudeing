@@ -173,6 +173,25 @@ export const SHEET_PIECE_SIZES: Record<SheetPiece, [number, number]> = {
 };
 
 /**
+ * Rosa's letter paper (Dry Year): plain parchment with a deckled soil edge and a folded top-right corner, as 9-slice
+ * pieces in the ui atlas (art-src/tools/letterpaper.py), composed by src/ui/sheetSkin.ts `letterTexture`. Corners
+ * 8 x 8, edges 16 long, the centre 16 x 16; everything tiles, never stretches.
+ */
+export const letterPieceKey = (p: SheetPiece): string => `ui_letter_${p}`;
+export const LETTER_SLICE = { left: 8, right: 8, top: 8, bottom: 8, inset: 8 } as const;
+export const LETTER_PIECE_SIZES: Record<SheetPiece, [number, number]> = {
+  tl: [8, 8],
+  t: [16, 8],
+  tr: [8, 8],
+  l: [8, 16],
+  c: [16, 16],
+  r: [8, 16],
+  bl: [8, 8],
+  b: [16, 8],
+  br: [8, 8],
+};
+
+/**
  * Player action animations (art round 5): harvest, plant and eat drawn by Google Flow from the player's own sheet,
  * pet, reel and place drawn in code (review 18); all composed on the idle head (pixel-identical):
  * `player_act_<anim>_<dir>_<i>`, 32 x 44, the body at x 8..23 and the feet on row 39
@@ -557,6 +576,19 @@ export function artManifest(): ArtEntry[] {
       group: 'ui',
       kind: `menu sheet 9-slice ${p}`,
       from: 'art round 5 (uisheet.py, Flow ui1)',
+      optional: true,
+    });
+  }
+  // Rosa's letter paper on the title (Dry Year); without it the title draws a content panel
+  for (const p of SHEET_PIECES) {
+    const [w, h] = LETTER_PIECE_SIZES[p];
+    add({
+      texture: letterPieceKey(p),
+      w,
+      h,
+      group: 'ui',
+      kind: `letter paper 9-slice ${p}`,
+      from: 'Dry Year (letterpaper.py)',
       optional: true,
     });
   }

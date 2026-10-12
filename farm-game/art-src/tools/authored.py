@@ -476,6 +476,11 @@ def sprites_only(P: Pal, pal, groups, specs) -> dict:
 
     if groups.get("ui") is not None and groups.get("chars"):
         drawn.build(P, groups, pal, P.names)
+    import letterpaper  # Rosa's letter paper, a 9-slice (Dry Year)
+
+    if groups.get("ui") is not None:
+        for key, idx in letterpaper.build(P.names).items():
+            groups["ui"][key] = px.idx_to_rgba(idx, pal)
     import sites  # the broken places' sites by stage (Dry Year): the Old Spring
 
     for key, idx in sites.build(P.names).items():

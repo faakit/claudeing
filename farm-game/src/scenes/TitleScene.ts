@@ -15,6 +15,7 @@ import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
 import { Button, drawPanel } from '../ui/widgets';
 import { LETTER_CARD, LETTER_PAD, letterLayout } from '../ui/titleLetter';
+import { letterTexture } from '../ui/sheetSkin';
 import { Wipe } from '../fx/Wipe';
 import { WIPE_CLOSE_MS } from '../fx/feel';
 import { prewarmTasks } from '../fx/prewarm';
@@ -254,13 +255,14 @@ export class TitleScene extends Phaser.Scene {
 
   /**
    * Rosa's letter (valley.json), on parchment under the logo (ui/titleLetter.ts lays it out). The paper is the
-   * art lane's `ui_letter_paper` when it exists, else a content panel drawn here.
+   * art lane's letter 9-slice (ui/sheetSkin.ts `letterTexture`) when it exists, else a content panel drawn here.
+   * The text is ink on the paper (no shadow), the signature plum.
    */
   private drawLetter(): void {
     const L = letterLayout();
     const { x, y, w } = LETTER_CARD;
-    if (this.textures.exists('ui_letter_paper'))
-      this.add.image(x, y, 'ui_letter_paper').setOrigin(0).setDisplaySize(w, L.h).setDepth(3);
+    const paper = letterTexture(this, w, L.h);
+    if (paper) this.add.image(x, y, paper).setOrigin(0).setDepth(3);
     else {
       const g = this.add.graphics().setDepth(3);
       drawPanel(g, x, y, w, L.h);
@@ -282,6 +284,7 @@ export class TitleScene extends Phaser.Scene {
     }).setDepth(4);
     new Label(this, L.signX, L.signY, valley.letter.sign, {
       color: INK.creamDim,
+      shadow: null,
       align: 'right',
     }).setDepth(4);
   }
