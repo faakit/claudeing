@@ -235,3 +235,12 @@ describe('damaged saves', () => {
     expect(s.farm.tiles['5,5']?.crop).toBeNull();
   });
 });
+
+describe('the oldest saves', () => {
+  it('a v1 save is an old save: it keeps its river (the weir restored quietly), as every pre-M6 save does', () => {
+    const s = migrate({ version: 1, day: 5, season: 'summer', money: 900 });
+    expect(s.money).toBe(900);
+    expect(s.stats['place.weir']).toBe(3);
+    expect(s.stats['placesDone'] ?? 0).toBe(0);
+  });
+});

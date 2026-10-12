@@ -48,6 +48,8 @@ function migrateV1(raw: Raw): Raw {
     time,
     money: typeof raw['money'] === 'number' ? raw['money'] : fresh['money'],
     player: mapOk ? player : fresh['player'],
+    // not a new game's markers (valley.on, valley.weirOn): sanitize gives it an old save's defaults
+    stats: {},
   };
 }
 
