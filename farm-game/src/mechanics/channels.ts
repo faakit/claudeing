@@ -126,11 +126,12 @@ registerActionHandler({
 });
 
 // Each morning, as rain does: the water runs down the channels and waters the soil beside them (so it shows
-// watered on stepping out, and that night's growth counts it).
+// watered on stepping out, and that night's growth counts it). After the places open (valley:places, 55): the
+// morning the weir opens, its 64-tile flow already runs, as the channels are drawn.
 registerDayHook({
   id: 'channels:water',
   phase: 'morning',
-  order: 10,
+  order: 56,
   run(state, ctx) {
     const source = creekSource(state);
     if (!source.running) return;

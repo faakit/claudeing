@@ -33,6 +33,7 @@ import { measureText } from '../src/ui/fontMetrics';
 import { valleyLines } from '../src/ui/panels/valleyText';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
+import { digChannel } from '../src/systems/channels';
 
 const sleep = (s: GameState) => endDay(s, { passedOut: false, weedCandidates: [] });
 const weir = valley.places['weir']!;
@@ -444,5 +445,37 @@ describe('saves from before the Weir keep their river (coordinator ruling)', () 
     const back = migrate(JSON.parse(JSON.stringify(o)));
     expect(stageOf(back, 'weir')).toBe(3);
     expect(back.stats['valley.riverSeen']).toBe(1);
+  });
+});
+
+describe('the morning the weir opens', () => {
+  it('the channels already carry the weir flow (64): tiles past 24 are drawn wet and water their soil', () => {
+    const s = newState();
+    s.time.season = 'summer';
+    s.time.day = 20;
+    s.weather = 'sunny';
+    s.forecast = 'sunny';
+    Object.assign(s.stats, {
+      'valley.farmGreen': 1,
+      'valley.greenSeen': 1,
+      'place.spring': 3,
+      'place.spring.opened': 10,
+      'valley.creekSeen': 1,
+      'valley.compost': 1,
+      'place.weir': 2,
+      'site.weir.work': 4,
+      'site.weir.last': 28 + 20,
+      'place.weir.since': 28 + 20,
+    });
+    // a 30-tile channel west from the creek along y 10, then down x 0; soil beside tile 21 and tile 26
+    for (let i = 1; i <= 26; i++) digChannel(s, 26 - i, 10);
+    for (let i = 0; i < 4; i++) digChannel(s, 0, 11 + i);
+    s.farm.tiles['5,9'] = { watered: false, crop: null };
+    s.farm.tiles['0,9'] = { watered: false, crop: null };
+    sleep(s);
+    expect(stageOf(s, 'weir')).toBe(3);
+    expect(channelFlow(s)).toBe(64);
+    expect(s.farm.tiles['5,9']!.watered).toBe(true);
+    expect(s.farm.tiles['0,9']!.watered).toBe(true);
   });
 });
