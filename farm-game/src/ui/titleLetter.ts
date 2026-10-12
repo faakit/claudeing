@@ -14,6 +14,8 @@ export const LETTER_ROW = 11;
 export const LETTER_GAP = 10;
 /** New Game's height on the title (the same 30 px button as with a save). */
 export const TITLE_BUTTON_H = 30;
+/** The analytics question's text width on the title, where the buttons go (only when a provider asks). */
+export const CONSENT_TEXT_W = 180;
 
 export interface LetterLayout {
   rows: string[];

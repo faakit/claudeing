@@ -846,5 +846,11 @@
     "row": "{n} of {of} timber",
     "rowDone": "finished, the family comes tomorrow",
     "step": "{name}: {n} of {of} timber"
+  },
+  "privacy": {
+    "ask": "Share anonymous play stats to help improve the game? No names, no ads. You can change it in Options.",
+    "yes": "Share",
+    "no": "No thanks",
+    "toggle": "Share stats: {state}"
   }
 }

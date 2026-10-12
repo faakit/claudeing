@@ -10,11 +10,13 @@ import { createInitialState, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { setState } from '../state/store';
 import { hasNewerSave, loadGame } from '../systems/save';
+import { gameEvents } from '../systems/events';
+import { analytics } from '../platform/analytics';
 import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
 import { Button, drawPanel } from '../ui/widgets';
-import { LETTER_CARD, LETTER_PAD, letterLayout } from '../ui/titleLetter';
+import { CONSENT_TEXT_W, LETTER_CARD, LETTER_PAD, letterLayout } from '../ui/titleLetter';
 import { letterTexture } from '../ui/sheetSkin';
 import { Wipe } from '../fx/Wipe';
 import { WIPE_CLOSE_MS } from '../fx/feel';
@@ -48,6 +50,9 @@ export class TitleScene extends Phaser.Scene {
   private firstLaunch = false;
   /** Counts the title's builds (create), so a stale save lookup never draws on a newer one. */
   private gen = 0;
+  /** The analytics question's text while it is asked. */
+  private consentText: Label | null = null;
+  private consentPlate: Phaser.GameObjects.Graphics | null = null;
 
   constructor() {
     super('Title');
@@ -70,6 +75,8 @@ export class TitleScene extends Phaser.Scene {
     this.wipe = new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
     this.confirmNew = false;
     this.buttons = [];
+    this.consentText = null;
+    this.consentPlate = null;
     this.cameras.main.setBackgroundColor('#1e2848');
     this.drawBackdrop();
 
@@ -159,7 +166,8 @@ export class TitleScene extends Phaser.Scene {
 
     // A language change restarts the title: a look for the save from before the restart draws nothing.
     const gen = ++this.gen;
-    void loadGame(saveStore).then(async (res) => {
+    // The analytics record is read beside the save (at once when analytics is off): the title may have to ask first.
+    void Promise.all([loadGame(saveStore), analytics.ready()]).then(async ([res]) => {
       if (gen !== this.gen) return;
       this.loaded = res?.state ?? null;
       if (!this.loaded && (await hasNewerSave(saveStore))) {
@@ -191,6 +199,11 @@ export class TitleScene extends Phaser.Scene {
   private buildButtons(): void {
     this.buttons.forEach((b) => b.destroy());
     this.buttons = [];
+    this.consentText?.destroy();
+    this.consentText = null;
+    this.consentPlate?.destroy();
+    this.consentPlate = null;
+    if (analytics.needsConsent) return this.buildConsent();
     this.primary = this.loaded
       ? () => this.start(this.loaded as GameState)
       : this.newerSave
@@ -250,6 +263,42 @@ export class TitleScene extends Phaser.Scene {
         },
         { textColor: this.confirmNew ? INK.red : INK.cream },
       ),
+    );
+  }
+
+  /**
+   * The analytics question, once, where the buttons go (only with a production provider configured: DECISIONS.md).
+   * Nothing is sent until it is answered; Options > Controls changes the answer later.
+   */
+  private buildConsent(): void {
+    this.primary = null;
+    const y = this.firstLaunch ? letterLayout().buttonY : 200;
+    this.consentText = new Label(this, GAME_WIDTH / 2, y, t('privacy.ask'), {
+      align: 'center',
+      color: C.cream,
+      maxWidth: CONSENT_TEXT_W,
+    });
+    const by = y + this.consentText.textHeight + 6;
+    // An ink plate under the question, so it reads over the backdrop's field as the letter does on its paper.
+    this.consentPlate = this.add
+      .graphics()
+      .fillStyle(0x1b1530, 0.94)
+      .fillRect(6, y - 4, GAME_WIDTH - 12, by - y + 2);
+    this.consentText.setDepth(1);
+    const answer = (granted: boolean) => {
+      if (this.starting) return;
+      analytics.setConsent(granted);
+      this.buildButtons();
+    };
+    const w = 88;
+    const gap = 4;
+    const x = (GAME_WIDTH - w * 2 - gap) / 2;
+    this.buttons.push(
+      new Button(this, x, by, w, 30, t('privacy.yes'), () => answer(true), {
+        textColor: INK.green,
+        rim: INK.green,
+      }),
+      new Button(this, x + w + gap, by, w, 30, t('privacy.no'), () => answer(false)),
     );
   }
 
@@ -343,6 +392,7 @@ export class TitleScene extends Phaser.Scene {
     runtime.inGame = true;
     runtime.busy = false;
     runtime.modals = 0;
+    gameEvents.emit('gameEntered', undefined);
     // The HUD and controls are built on one frame and the world on the next, both under the wipe, so neither build
     // makes a frame long enough to see (or to feel, if a touch lands on it).
     this.scene.launch('UI');

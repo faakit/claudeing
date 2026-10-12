@@ -1,0 +1,23 @@
+{
+  "title": "Analytics: a first harvest and the opt-out switch",
+  "about": "Open with &analytics=dev. The guided start off and nothing harvested yet, standing over ripe parsnips, scythe in hand. The first harvest sends first_harvest once (DEV > Analytics); the second does not. Menu > Opts > Controls... shows Share stats: ON; off empties the queue and nothing more is recorded.",
+  "version": 18,
+  "tags": ["farm", "analytics"],
+  "at": {
+    "map": "farm",
+    "tx": 10,
+    "ty": 15,
+    "facing": "down"
+  },
+  "time": {
+    "clock": "08:00"
+  },
+  "crops": [
+    {
+      "crop": "parsnip",
+      "stage": "ripe",
+      "rect": [9, 16, 4, 3]
+    }
+  ],
+  "select": 2
+}

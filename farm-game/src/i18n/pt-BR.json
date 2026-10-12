@@ -846,5 +846,11 @@
     "row": "{n} de {of} madeiras",
     "rowDone": "pronta, a família chega amanhã",
     "step": "{name}: {n} de {of} madeiras"
+  },
+  "privacy": {
+    "ask": "Compartilhar estatísticas anônimas para melhorar o jogo? Sem nomes, sem anúncios. Dá para mudar em Opções.",
+    "yes": "Compartilhar",
+    "no": "Não, obrigado",
+    "toggle": "Estatíst.: {state}"
   }
 }
