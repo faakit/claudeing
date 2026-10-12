@@ -64,8 +64,18 @@ export function drawSlot(
   selected: boolean,
   marked = false,
   kind: 'content' | 'chrome' = 'content',
+  /** A wide slot (the hotbar's cells): its width, `size` being its height. */
+  width = size,
 ): void {
   const t = kind === 'chrome' ? CH : C;
+  if (width !== size) {
+    g.fillStyle(t.ink, 1).fillRect(x, y, width, size);
+    g.fillStyle(selected ? t.select : t.slotRim, 1).fillRect(x + 1, y + 1, width - 2, size - 2);
+    g.fillStyle(t.slot, 1).fillRect(x + 2, y + 2, width - 4, size - 4);
+    g.fillStyle(t.slotRim, 1).fillRect(x + 2, y + 2, width - 4, 2);
+    if (selected) drawSelection(g, x, y, size, t.select, t.ink, width);
+    return;
+  }
   g.fillStyle(t.ink, 1).fillRect(x, y, size, size);
   if (SKIN === 'plum') {
     g.fillStyle(
@@ -95,17 +105,19 @@ export function drawSelection(
   size: number,
   gold: number = C.select,
   ink: number = C.ink,
+  width = size,
 ): void {
+  const w = width;
   g.fillStyle(gold, 1)
-    .fillRect(x + 1, y + 1, size - 2, 1)
+    .fillRect(x + 1, y + 1, w - 2, 1)
     .fillRect(x + 1, y + 1, 1, size - 2)
-    .fillRect(x + size - 2, y + 1, 1, size - 2)
-    .fillRect(x + 1, y + size - 3, size - 2, 2);
+    .fillRect(x + w - 2, y + 1, 1, size - 2)
+    .fillRect(x + 1, y + size - 3, w - 2, 2);
   for (const [cx, cy, dx, dy] of [
     [x + 2, y + 2, 1, 1],
-    [x + size - 3, y + 2, -1, 1],
+    [x + w - 3, y + 2, -1, 1],
     [x + 2, y + size - 4, 1, -1],
-    [x + size - 3, y + size - 4, -1, -1],
+    [x + w - 3, y + size - 4, -1, -1],
   ] as const)
     g.fillStyle(ink, 1)
       .fillRect(cx, cy, 1, 1)
@@ -469,6 +481,11 @@ export abstract class Modal {
 
   get isOpen(): boolean {
     return this.opened;
+  }
+
+  /** The top edge of the sheet at rest (toasts over it keep above). */
+  get top(): number {
+    return GAME_HEIGHT - this.panelH;
   }
 
   /**

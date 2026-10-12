@@ -262,7 +262,15 @@ async function run(p, hand, deviant = false) {
     if (deviant && k.step === 'water' && !rodTested) {
       // ...picks the rod on the hotbar by mistake: the coach asks for the can first.
       rodTested = true;
-      await t.tap(88.5, 383.5, 70);
+      // the rod shares the tool cell (five cells): tap it until the rod is in hand
+      for (let n = 0; n < 4; n++) {
+        const was = await page.evaluate(() => window.__farm.getState().inventory.selected);
+        if (was === 3) break;
+        await t.tap(20, 384, 70);
+        await page.waitForFunction((w) => window.__farm.getState().inventory.selected !== w, was, {
+          timeout: 3000,
+        });
+      }
       await sleep(500);
       const kr = (await coach()).coach;
       check(

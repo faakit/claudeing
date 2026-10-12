@@ -13,6 +13,8 @@ import type { GameState, ItemStack } from '../state/GameState';
 import { planAction, type ActionPlan, type ActionResult, type TileInfo } from './actions';
 import { game } from '../data';
 import { toast } from './events';
+import { followChoice } from './inventory';
+import { runtime } from '../state/runtime';
 import { t } from '../i18n';
 
 /** An item auto tool may pick from the hotbar. Mechanics can register more (see docs/EXTENDING.md). */
@@ -140,9 +142,11 @@ export function chooseAction(
       }
     return out;
   };
-  // What you hold always wins when it can do something; auto tool only fills in when it cannot.
+  // What you hold always wins when it can do something; auto tool only fills in when it cannot (and then the
+  // selection moves to what it used: actOn), and never right after the player picked the slot by hand: that pick
+  // is what Action uses until it has acted (owner: "when we scroll, the item does not change the selected slot").
   const explicit = best([sel]);
-  if (explicit || !autoMode(state)) return explicit;
+  if (explicit || !autoMode(state) || runtime.handPick) return explicit;
   return best(autoSlots(state).filter((s) => s !== sel));
 }
 
@@ -173,7 +177,15 @@ export function actOn(
   const first = candidates[0];
   if (!first) throw new Error('actOn needs at least one candidate tile');
   const choice = chooseAction(state, candidates, opts);
-  if (choice) return { ...performChoice(state, choice), tile: choice.tile, slot: choice.slot };
+  if (choice) {
+    const res = performChoice(state, choice);
+    if (res.ok) {
+      // the highlighted slot is always what Action used: an auto choice moves the selection to it
+      if (choice.auto) followChoice(state, choice.slot);
+      runtime.handPick = false;
+    }
+    return { ...res, tile: choice.tile, slot: choice.slot };
+  }
   const sel = state.inventory.selected;
   const message = refusalFor(state, candidates);
   if (!opts.quiet) toast(message, 'warn');

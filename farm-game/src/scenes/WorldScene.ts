@@ -157,8 +157,6 @@ import {
 import { activeMapKey, preparseMap, takeTilemap } from './mapCache';
 import { guidedTracksDone, tutorialOn, type CoachObject } from '../systems/tutorial';
 import type { CoachScreenWorld } from '../ui/CoachMarks';
-import { npcLocation } from '../systems/npcs';
-import { npcs as npcData } from '../data';
 import { t } from '../i18n';
 
 /** The creek's first morning: how long the water takes down the bed in view, and its banner (the valley slot). */
@@ -956,11 +954,8 @@ export abstract class WorldScene extends Phaser.Scene {
     const drift = valley.weir?.drift;
     if (drift?.map === this.mapId && riverBack(state))
       objects.push({ type: 'slip', tx: drift.slip.bank[0], ty: drift.slip.bank[1], w: 1, h: 1 });
-    const npcs: { id: string; tx: number; ty: number }[] = [];
-    for (const id of Object.keys(npcData)) {
-      const at = npcLocation(id, state.time.minutes, state);
-      if (at && at.map === this.mapId) npcs.push({ id, tx: at.tx, ty: at.ty });
-    }
+    // where the villagers are drawn (a walker by the tile it is crossing), not where the schedule will put them
+    const npcs: { id: string; tx: number; ty: number }[] = this.npcs?.positions() ?? [];
     const screen = (tx: number, ty: number) => ({
       x: tx * TILE_SIZE + TILE_SIZE / 2 - cam.scrollX + cam.x,
       y: ty * TILE_SIZE + TILE_SIZE / 2 - cam.scrollY + cam.y,

@@ -19,6 +19,12 @@ export const runtime = {
   paintWork: false,
   /** From a cast until the fishing sheet closes: the farmer holds the rod out (never a tool swing frame). */
   fishing: false,
+  /**
+   * The player picked the hotbar slot by hand (a tap, a swipe step, the ring, a key, the wheel) since the last
+   * thing Action did; a selection Action moved itself (auto tool, `followChoice`) is not. The HUD names a hand
+   * pick only, so a painted row's tool changes do not pop a name plate on every tile.
+   */
+  handPick: false,
   get blocked(): boolean {
     return this.modals > 0 || this.busy || this.suspended;
   },

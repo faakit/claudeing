@@ -1,0 +1,25 @@
+{
+  "title": "Five cells over a full bag",
+  "about": "Farm, day 9 at 10:00, every hotbar slot filled (seeds, a sprinkler, a scarecrow) and more in the bag. The five cells show the tool cell (hoe, scythe, rod, pickaxe: tap it again for the next), the can and the three item slots; the rest of the bag is one tap on Menu or a flick on Action (the ring) away. Scroll with the Action swipe and press Action at once: the highlighted cell is what is used.",
+  "version": 18,
+  "tags": ["farm", "hotbar", "ui"],
+  "at": {
+    "map": "farm",
+    "tx": 11,
+    "ty": 15,
+    "facing": "down"
+  },
+  "time": {
+    "day": 9,
+    "clock": "10:00"
+  },
+  "items": [
+    { "item": "potato_seed", "qty": 12 },
+    { "item": "sprinkler", "qty": 2 },
+    { "item": "scarecrow", "qty": 1 },
+    { "item": "parsnip", "qty": 7 },
+    { "item": "stone", "qty": 30 },
+    { "item": "fiber", "qty": 14 }
+  ],
+  "goal": "harvest"
+}

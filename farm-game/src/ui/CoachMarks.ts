@@ -45,7 +45,8 @@ import {
 import type { TutorialHud } from '../data';
 import { edgePoint } from './coachGeometry';
 import { fitText, Label } from './font';
-import { HOTBAR_X, HOTBAR_Y, SLOT, SLOT_PITCH } from './Hud';
+import { HOTBAR_X, HOTBAR_Y, hotbarSlotCentre, SLOT, SLOT_PITCH, SLOT_W } from './Hud';
+import { HOTBAR_CELLS } from './hotbarCells';
 import { PLATE_LIP } from './layout';
 import type { DockLayout } from './layout';
 import { C, CH, SKIN } from './theme';
@@ -101,11 +102,11 @@ const HUD_BOX: Record<TutorialHud, { x: number; y: number; w: number; h: number;
   energy: { x: 4, y: 34, w: 95, h: 13, label: 'coach.tagEnergy' },
   water: { x: 101, y: 34, w: 95, h: 13, label: 'coach.tagWater' },
   goal: { x: 3, y: 48, w: 194, h: 25, label: 'coach.tagGoal' },
-  // the eight floating slots, their lips and the selected one's rise
+  // the five floating cells, their lips and the selected one's rise
   hotbar: {
     x: HOTBAR_X - 1,
     y: HOTBAR_Y - 3,
-    w: 7 * SLOT_PITCH + SLOT + 2,
+    w: (HOTBAR_CELLS - 1) * SLOT_PITCH + SLOT_W + 2,
     h: SLOT + PLATE_LIP + 4,
     label: 'coach.tagHotbar',
   },
@@ -178,6 +179,8 @@ export class CoachMarks {
   private stepMs = 0;
   /** A refusal shown in the line instead of a toast, until this time. */
   private flash: { text: string; until: number } | null = null;
+  /** The bottom of the coach line while it shows (toasts over an open sheet go under it), else null. */
+  lineBottom: number | null = null;
   private menuOpen = false;
   private skipArmedUntil = 0;
   /** Where the pointer aims on screen (debug hook; the e2e follows it like a player follows the hand). */
@@ -372,6 +375,7 @@ export class CoachMarks {
     if (show) this.barZone.setInteractive();
     else this.barZone.disableInteractive();
     if (!show || !this.view) {
+      this.lineBottom = null;
       this.aim = null;
       if (this.welcomeParts.length) this.dropWelcome();
       if (this.menuOpen) this.closeMenu();
@@ -459,6 +463,7 @@ export class CoachMarks {
       this.aim = null; // nothing is pointed at while the menu shows
       return;
     }
+    this.lineBottom = y + BAR_H;
     if (this.bubble) this.bubble.setPosition(3, y).setVisible(true);
     else drawPanel(g, 3, y, 194, BAR_H, undefined, undefined, 'chrome');
     const flashing = !!this.flash && this.flash.until > this.scene.time.now;
@@ -525,6 +530,8 @@ export class CoachMarks {
     const L = this.host.layout();
     let at: { x: number; y: number } | null = null;
     let r = 8;
+    /** How far below the target's centre the fingertip rests (on a sheet button: its lower edge, off the label). */
+    let tipDy = 0;
     let edge: { x: number; y: number; ang: number } | null = null;
     if (p.kind === 'tile') {
       const sc = world.screen(p.tx, p.ty);
@@ -559,14 +566,19 @@ export class CoachMarks {
       }
       this.aim = { x: spot.x, y: spot.y, kind: 'tap' };
     } else if (p.kind === 'slot') {
-      at = { x: HOTBAR_X + p.slot * SLOT_PITCH + SLOT / 2, y: HOTBAR_Y + SLOT / 2 };
-      r = 13;
+      // the cell the slot is drawn in (a tool shares the tool cell: a tap there moves on to it)
+      at = hotbarSlotCentre(p.slot, getState().inventory.slots) ?? {
+        x: HOTBAR_X + SLOT_W / 2,
+        y: HOTBAR_Y + SLOT / 2,
+      };
+      r = 15;
       this.aim = { x: Math.round(at.x), y: Math.round(at.y), kind: 'tap' };
     } else if (p.kind === 'button') {
       const b = this.findButton(p.pattern);
       if (b) {
         at = { x: b.x, y: b.y };
         r = Math.max(10, Math.min(18, b.h / 2 + 3));
+        tipDy = Math.round(b.h / 2) - 1; // the hand covered a price's label (critic P1-1)
         this.aim = { x: Math.round(b.x), y: Math.round(b.y), kind: 'tap' };
       }
     } else if (p.kind === 'hud') {
@@ -676,10 +688,10 @@ export class CoachMarks {
       const f = (time % 1400) / 1400;
       const from = { x: L.action.x, y: L.action.y };
       const k = Math.min(1, f / 0.7);
-      this.placeHand(from.x + (at.x - from.x) * k, from.y + (at.y - from.y) * k, left);
+      this.placeHand(from.x + (at.x - from.x) * k, from.y + (at.y + tipDy - from.y) * k, left);
     } else {
       const bob = calm ? 0 : Math.max(0, Math.sin(time / 160)) * 3;
-      this.placeHand(at.x + bob * 0.7, at.y + bob, left);
+      this.placeHand(at.x + bob * 0.7, at.y + tipDy + bob, left);
     }
   }
 

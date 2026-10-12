@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { EVT_INTERACT_TARGET, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../config';
+import { EVT_INTERACT_TARGET, GAME_HEIGHT, GAME_WIDTH, HUD_H, WORLD_VIEW } from '../config';
 import { game, mapsData } from '../data';
 import { NightGlow } from '../fx/NightGlow';
 import { RainLayer } from '../fx/RainLayer';
@@ -265,6 +265,11 @@ export class UIScene extends Phaser.Scene {
       openModal: () => this.allModals().find((m) => m.isOpen) ?? null,
     });
     this.hud.intercept = (text, kind) => this.coach.intercept(text, kind);
+    // a toast over an open sheet goes between the coach line (or the HUD) and the sheet's top
+    this.hud.sheetBand = () => {
+      const m = this.allModals().find((x) => x.isOpen);
+      return m ? { top: Math.max(HUD_H, this.coach.lineBottom ?? 0) + 1, bottom: m.top - 1 } : null;
+    };
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),

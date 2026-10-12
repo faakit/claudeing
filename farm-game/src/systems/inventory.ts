@@ -3,6 +3,7 @@ import type { GameState, ItemStack } from '../state/GameState';
 import { gameEvents } from './events';
 import { discover } from './almanac';
 import { keyOf, refOf, sameRef, type ItemRef } from './itemRef';
+import { runtime } from '../state/runtime';
 
 /** Slots the player owns: the base bag plus a row per Bigger Bag level. */
 export const bagSize = (state: GameState): number =>
@@ -134,6 +135,8 @@ export const selectedStack = (state: GameState): ItemStack | null =>
   state.inventory.slots[state.inventory.selected] ?? null;
 
 export function selectSlot(state: GameState, slot: number): void {
+  // every call here is the player's own pick (Action moves the selection with `followChoice`)
+  runtime.handPick = true;
   const next = Math.max(0, Math.min(game.hotbarSlots - 1, slot));
   if (next === state.inventory.selected) return;
   state.inventory.selected = next;
@@ -170,8 +173,16 @@ export function equipFromBag(state: GameState, slot: number): boolean {
   slots[slot] = slots[target] ?? null;
   slots[target] = moving;
   state.inventory.selected = target;
+  runtime.handPick = true;
   changed();
   return true;
+}
+
+/** Action used another hotbar slot than the one in hand (auto tool): the selection moves there, so it shows. */
+export function followChoice(state: GameState, slot: number): void {
+  if (slot === state.inventory.selected || slot < 0 || slot >= game.hotbarSlots) return;
+  state.inventory.selected = slot;
+  changed();
 }
 
 /** Swap two non-tool slots (inventory rearranging). Merges stacks of the same kind. */

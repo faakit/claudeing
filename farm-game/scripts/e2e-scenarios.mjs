@@ -1942,7 +1942,8 @@ async function actions() {
   // Calm mode: no action frames, the action itself still happens
   await farm.mutate((s) => (s.settings.reduceMotion = true));
   await placeAt(10, 15, 'down');
-  await farm.select(2);
+  // the scythe in hand, not picked by hand (a hand pick would keep auto tool from planting: owner item 6)
+  await farm.mutate((s) => (s.inventory.selected = 2));
   await farm.frames(5);
   await seen();
   const c = await farm.act();
@@ -1957,61 +1958,158 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- the five-cell hotbar (owner items 5-7)
+
+/** Blue pixels in the can's cell on the read-back canvas (its water level bar). */
+const canBluePixels = (farm) =>
+  farm.eval(async () => {
+    const game = window.__farm.game;
+    const hud = game.scene.getScene('UI').hud;
+    const cell = hud.cells.indexOf(1);
+    const img = await new Promise((r) => game.renderer.snapshot(r));
+    const cv = document.createElement('canvas');
+    cv.width = img.width;
+    cv.height = img.height;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const k = img.width / 200;
+    const x0 = Math.floor((1 + cell * 40 + 28) * k);
+    const y0 = Math.floor(370 * k);
+    const d = ctx.getImageData(x0, y0, Math.ceil(6 * k), Math.ceil(28 * k)).data;
+    let n = 0;
+    for (let q = 0; q < d.length; q += 4)
+      if (d[q] === 0x72 && d[q + 1] === 0xaa && d[q + 2] === 0xdc) n++;
+    return n;
+  });
+
+async function hotbar() {
+  for (const profile of ['se', 'i13']) {
+    // 5. the can's water level, live
+    let farm = await openScenario(browser, url, 'hotbar-can-level', { profile });
+    await farm.idle();
+    const full = await canBluePixels(farm);
+    const used = [];
+    for (let i = 0; i < 2; i++) {
+      used.push(await farm.act());
+      await farm.idle();
+    }
+    const drained = await farm.eval(() => window.__farm.getState().water);
+    await farm.frames(2);
+    const dry = await canBluePixels(farm);
+    check(
+      `hotbar-can-level (${profile}): the can's cell shows its water and drains to a dry track as it waters`,
+      full > 0 && drained === 0 && dry === 0 && used.every((u) => u.ok && u.used.plan === 'water'),
+      JSON.stringify({ full, dry, drained, used: used.map((u) => u.used?.plan) }),
+    );
+    await farm.close();
+
+    // 6 and 7. five cells; scroll with the Action swipe, press Action at once: the highlighted slot is what is used
+    farm = await openScenario(browser, url, 'hotbar-full-bag', { profile });
+    await farm.idle();
+    const cells = await farm.eval(() => window.__farm.game.scene.getScene('UI').hud.cells);
+    const targets = (await farm.targets()).filter((t) => /^slot \d$/.test(t.text));
+    check(
+      `hotbar-full-bag (${profile}): five cells (tool, can, three items), each zone at least 60 x 43 CSS px`,
+      cells.length === 5 &&
+        cells[1] === 1 &&
+        targets.length === 5 &&
+        targets.every((t) => t.w * (profile === 'se' ? 1.6175 : 1.9067) >= 60),
+      JSON.stringify({ cells, targets: targets.map((t) => [t.text, t.w, t.h]) }),
+    );
+    const steps = [];
+    for (let i = 0; i < 4; i++) {
+      await farm.eval(() =>
+        window.__farm.game.scene.getScene('UI').actionEvents([{ type: 'step', dir: 1 }]),
+      );
+      const sel = await farm.eval(() => window.__farm.getState().inventory.selected);
+      const r = await farm.act();
+      const after = await farm.eval(() => window.__farm.getState().inventory.selected);
+      steps.push({ sel, used: r.used?.slot, ok: r.ok, after });
+      await farm.idle();
+    }
+    check(
+      `hotbar-full-bag (${profile}): after a scroll, Action uses the highlighted slot (or refuses), never another`,
+      steps.every((x) => (x.ok ? x.used === x.sel : true) && x.after === (x.ok ? x.used : x.sel)),
+      JSON.stringify(steps),
+    );
+    // the tool cell: tapped with its tool in hand, it moves on to the next tool
+    await farm.select(0); // the hoe in hand: the tool cell shows it
+    await farm.tapButton('slot 1');
+    const t0 = await farm.eval(() => window.__farm.getState().inventory.selected);
+    await farm.tapButton(`slot ${t0 + 1}`);
+    const t1 = await farm.eval(() => window.__farm.getState().inventory.selected);
+    check(
+      `hotbar-full-bag (${profile}): taps on the tool cell with its tool in hand go hoe, scythe, rod`,
+      t0 === 2 && t1 === 3,
+      JSON.stringify({ t0, t1 }),
+    );
+    check(`hotbar (${profile}): no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
 // ---------------------------------------------------------------- villagers never pop in or out (owner bug)
 
 /**
  * Run the world `frames` frames (paused loop, stepped one at a time) and report every villager who appeared,
  * vanished or jumped inside the camera's view anywhere but on a door tile.
  */
-const npcWatch = (farm, frames) =>
-  farm.eval((n) => {
-    const f = window.__farm;
-    const d = f.dev;
-    const w = f.game.scene.getScenes(true).find((sc) => sc.grid);
-    const doors = w.objects.filter((o) => o.type === 'door').map((o) => [o.tx, o.ty]);
-    const onDoor = (x, y) =>
-      doors.some(([tx, ty]) => Math.floor(x / 16) === tx && Math.floor((y - 2) / 16) === ty);
-    const seen = (x, y) => {
-      const v = w.cameras.main.worldView;
-      return x + 8 > v.x && x - 8 < v.right && y > v.y && y - 32 < v.bottom;
-    };
-    d.loop.pause();
-    const bad = [];
-    let prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
-    let walked = 0;
-    for (let i = 0; i < n; i++) {
-      d.loop.step(1);
-      for (const e of w.npcs.debug()) {
-        const p = prev.get(e.id);
-        if (e.walking) walked++;
-        if (!p) continue;
-        if (p.visible !== e.visible) {
-          const [x, y] = e.visible ? [e.x, e.y] : [p.x, p.y];
-          if (seen(x, y) && !onDoor(x, y))
-            bad.push(
-              `${e.id} ${e.visible ? 'appeared' : 'vanished'} at ${x | 0},${y | 0} (frame ${i})`,
-            );
-        } else if (
-          e.visible &&
-          Math.hypot(e.x - p.x, e.y - p.y) > 4 &&
-          (seen(e.x, e.y) || seen(p.x, p.y))
-        )
-          bad.push(`${e.id} jumped ${p.x | 0},${p.y | 0} -> ${e.x | 0},${e.y | 0} (frame ${i})`);
+const npcWatch = (farm, frames, start) =>
+  farm.eval(
+    ([n, start]) => {
+      const f = window.__farm;
+      const d = f.dev;
+      const w = f.game.scene.getScenes(true).find((sc) => sc.grid);
+      d.loop.pause();
+      // from the scenario's own minute, everyone placed (a busy machine let the clock run on while loading)
+      f.getState().time.minutes = start;
+      w.npcs.sync(f.getState(), undefined, true);
+      w.lastNpcMinute = start;
+      const doors = w.objects.filter((o) => o.type === 'door').map((o) => [o.tx, o.ty]);
+      const onDoor = (x, y) =>
+        doors.some(([tx, ty]) => Math.floor(x / 16) === tx && Math.floor((y - 2) / 16) === ty);
+      const seen = (x, y) => {
+        const v = w.cameras.main.worldView;
+        return x + 8 > v.x && x - 8 < v.right && y > v.y && y - 32 < v.bottom;
+      };
+      d.loop.pause();
+      const bad = [];
+      let prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
+      let walked = 0;
+      for (let i = 0; i < n; i++) {
+        d.loop.step(1);
+        for (const e of w.npcs.debug()) {
+          const p = prev.get(e.id);
+          if (e.walking) walked++;
+          if (!p) continue;
+          if (p.visible !== e.visible) {
+            const [x, y] = e.visible ? [e.x, e.y] : [p.x, p.y];
+            if (seen(x, y) && !onDoor(x, y))
+              bad.push(
+                `${e.id} ${e.visible ? 'appeared' : 'vanished'} at ${x | 0},${y | 0} (frame ${i})`,
+              );
+          } else if (
+            e.visible &&
+            Math.hypot(e.x - p.x, e.y - p.y) > 4 &&
+            (seen(e.x, e.y) || seen(p.x, p.y))
+          )
+            bad.push(`${e.id} jumped ${p.x | 0},${p.y | 0} -> ${e.x | 0},${e.y | 0} (frame ${i})`);
+        }
+        prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
       }
-      prev = new Map(w.npcs.debug().map((e) => [e.id, e]));
-    }
-    d.loop.resume();
-    return { bad, walked, end: w.npcs.debug(), minutes: f.getState().time.minutes };
-  }, frames);
+      d.loop.resume();
+      return { bad, walked, end: w.npcs.debug(), minutes: f.getState().time.minutes };
+    },
+    [frames, start],
+  );
 
 async function npcPops() {
-  for (const [scenario, frames, who] of [
-    ['npc-schedule-change', 1500, 'rosa'],
-    ['npc-arrive-town', 1500, 'mara'],
+  for (const [scenario, frames, who, start] of [
+    ['npc-schedule-change', 1500, 'rosa', 11 * 60 + 58],
+    ['npc-arrive-town', 1500, 'mara', 7 * 60 + 58],
   ]) {
     const farm = await openScenario(browser, url, scenario, { profile: 'se' });
-    await farm.idle();
-    const r = await npcWatch(farm, frames);
+    const r = await npcWatch(farm, frames, start);
     check(
       `${scenario} (SE): no villager appears, vanishes or jumps on screen (only through a door)`,
       r.bad.length === 0 && r.walked > 0,
@@ -2217,6 +2315,21 @@ async function sheetTaps() {
  */
 const SHEETS = [
   ['hud', 'late-game-farm', () => true],
+  // critic P3-1: a sheet open (the guide's shop on day 2, its coach line showing) and three toasts at once
+  [
+    'sheet.toasts',
+    'town-dry-day2',
+    (ui, f) => {
+      f.gameEvents.emit('openPanel', { type: 'shop' });
+      f.gameEvents.emit('toast', {
+        text: 'New kinds of goods go in Menu > Book. Finish a page for gold.',
+        kind: 'tip',
+      });
+      f.gameEvents.emit('toast', { text: 'Bought 1 Parsnip Seeds', kind: 'good' });
+      f.gameEvents.emit('toast', { text: 'Not enough gold.', kind: 'warn' });
+      return true;
+    },
+  ],
   [
     'banner',
     'farm-variant-dry',
@@ -2320,6 +2433,14 @@ const SHEETS = [
     (ui, f, a) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab(a), true),
     tab,
   ]),
+  // Menu > Opts > Controls (its help text wraps about 10 lines in pt-BR)
+  [
+    'menu.controls',
+    'late-game-farm',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'menu' }), ui.menu.openTab('opts'), true),
+    null,
+    /^Contro(ls|les)/,
+  ],
   ...['wait', 'bite', 'reel', 'done'].map((phase) => [
     `fishing.${phase}`,
     'fishing-spot',
@@ -2767,6 +2888,8 @@ function overflowIn(sceneKey) {
       scene.sys.displayList.list.forEach((ch) => walk(ch, true, false, false));
       // With a sheet open, what is drawn before it (the HUD, the hotbar) sits under its dim on purpose.
       const sheetAt = modal ? order.findIndex((e) => e.o === modal.root) : -1;
+      let sheetEnd = sheetAt;
+      while (sheetEnd + 1 < order.length && order[sheetEnd + 1].m) sheetEnd++;
       // the canvas, read back once (logical px -> device px)
       const img = await new Promise((r) => game.renderer.snapshot(r));
       const cv = document.createElement('canvas');
@@ -2827,7 +2950,8 @@ function overflowIn(sceneKey) {
           bottom: (y0 + bt + 1) / k,
         };
       });
-      // Each line's x-height band (glyph rows 2-6, where every letter has ink), from the font's own character
+      // Each line's glyph band (rows 1-7: capitals' tops and the x-height, without the accent row above or the
+      // descender row below), from the font's own character
       // boxes: two texts overprint when these bands meet. (Layout and cell boxes carry accent and descender rows
       // and line spacing that are empty in most lines, so they "overlap" with no glyph touching.)
       const cores = units.map((u) => {
@@ -2835,8 +2959,8 @@ function overflowIn(sceneKey) {
         const lines = new Map();
         for (const ch of u.t.getTextBounds().characters ?? []) {
           if (!ch.char.trim()) continue;
-          const a = m.transformPoint(ch.x, ch.y + 2);
-          const z = m.transformPoint(ch.x + ch.w, ch.y + 7);
+          const a = m.transformPoint(ch.x, ch.y + 1);
+          const z = m.transformPoint(ch.x + ch.w, ch.y + 8);
           const L = lines.get(ch.line);
           if (!L) lines.set(ch.line, { left: a.x, top: a.y, right: z.x, bottom: z.y });
           else {
@@ -2858,7 +2982,25 @@ function overflowIn(sceneKey) {
           bad.push(`${n.text} [${lb.left | 0}..${lb.right | 0} x ${lb.top | 0}..${lb.bottom | 0}]`);
         if (/\{\w+\}/.test(n.text) || /^[a-z]+\.[a-zA-Z.]+$/.test(n.text))
           bad.push(`raw: ${n.text}`);
-        if (u.inCoach || (sheetAt >= 0 && u.i < sheetAt)) return;
+        if (u.inCoach) return;
+        if (sheetAt >= 0 && u.i < sheetAt) {
+          // under an open sheet's dim (the HUD): only what is drawn over the sheet (a toast) must not cover it
+          // (critic P3-1: toasts over the shop printed over the goal line and the date)
+          for (let j = sheetEnd + 1; j < order.length; j++) {
+            const e = order[j];
+            if (e.c) continue;
+            const o = e.o;
+            const box = e.text ? null : o.getBounds?.();
+            const hit = e.text
+              ? units.some(
+                  (v, vi) =>
+                    v.i === j && cores[vi].some((q) => cores[ui].some((p) => inter(p, q) > 1)),
+                )
+              : !!box && o.alpha > 0.5 && cores[ui].some((p) => inter(p, box) > 4);
+            if (hit) bad.push(`covered over the sheet by ${e.text ? 'text' : o.type}: ${name}`);
+          }
+          return;
+        }
         // cut short with fitText's ".." (a row or button that lost its end): the words must fit or wrap
         if (/[^.]\.\.$/.test(n.text.trim())) bad.push(`cut short: ${name}`);
         // a lower layer of stacked copies of one text (the title's outlined logo): only the top layer is read
@@ -3196,6 +3338,7 @@ try {
         sheetTaps,
         toastTiming,
         npcPops,
+        hotbar,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

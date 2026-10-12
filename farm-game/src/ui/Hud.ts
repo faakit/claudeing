@@ -4,7 +4,7 @@ import { game, npcs, skills } from '../data';
 import { fmtGold, fmtNum, t } from '../i18n';
 import { audio, SFX_IDS, type Sfx } from '../platform/audio';
 import { haptic } from '../platform/haptics';
-import type { GameState } from '../state/GameState';
+import type { GameState, ItemStack } from '../state/GameState';
 import { waterCapacity } from '../systems/actions';
 import { maxEnergy } from '../systems/energy';
 import { gameEvents, type ToastKind } from '../systems/events';
@@ -14,6 +14,7 @@ import { isToolSlot, selectedStack, selectSlot } from '../systems/inventory';
 import { formatClock, seasonLabel } from '../systems/time';
 import { Label } from './font';
 import { HOTBAR, HOTBAR_HIT_Y, HOTBAR_Y, hotbarSlotX, PLATE_LIP } from './layout';
+import { cellOfSlot, HOTBAR_CELLS, hotbarCells, nextTool, toolGroup } from './hotbarCells';
 import { CH, SKIN } from './theme';
 import { drawBar, drawPanel, drawSlot } from './widgets';
 import { displayName, iconKey, refOf } from '../systems/itemRef';
@@ -23,15 +24,25 @@ import { showBanner } from '../fx/hudBand';
 import { valleyStep } from '../systems/valley';
 
 /**
- * The floating hotbar (geometry in ui/layout.ts `HOTBAR`): 22 px slot faces on a 24 px pitch, each on a solid 2 px
- * soil lip, hugging the bottom edge with no band behind them. Every slot's touch zone is the whole pitch wide and runs
- * from just above the faces to the bottom edge (24 x 27 px: 45.8 x 51.5 CSS px on the iPhone 13, 38.8 x 43.7 on the
- * SE), so the zones meet and a tap on the row never falls through to the world.
+ * The floating hotbar (geometry in ui/layout.ts `HOTBAR`, cells in ui/hotbarCells.ts): five 38 x 24 px cell faces on
+ * a 40 px pitch, each on a solid 2 px soil lip, hugging the bottom edge with no band behind them. Every cell's touch
+ * zone is the whole pitch wide and runs from just above the faces to the bottom edge (40 x 29 px: 76.3 x 55.3 CSS px
+ * on the iPhone 13, 64.7 x 46.9 on the SE), so the zones meet and a tap on the row never falls through to the world.
  */
 export const SLOT = HOTBAR.slot;
+export const SLOT_W = HOTBAR.w;
 export const SLOT_PITCH = HOTBAR.pitch;
-export const HOTBAR_X = hotbarSlotX(0, game.hotbarSlots);
+export const HOTBAR_X = hotbarSlotX(0, HOTBAR_CELLS);
 export { HOTBAR_Y };
+
+/** The centre of the cell a hotbar slot is drawn in (the coach's slot pointer), or null for a bag slot. */
+export function hotbarSlotCentre(
+  slot: number,
+  slots: readonly (ItemStack | null | undefined)[],
+): { x: number; y: number } | null {
+  const cell = cellOfSlot(slot, slots);
+  return cell < 0 ? null : { x: HOTBAR_X + cell * SLOT_PITCH + SLOT_W / 2, y: HOTBAR_Y + SLOT / 2 };
+}
 
 interface Toast {
   label: Label;
@@ -45,6 +56,8 @@ interface Toast {
   /** Its reading time (a sticky toast's life grows past it until a touch after it). */
   read: number;
   sticky: boolean;
+  /** A first-time tip waits while a sheet is open. */
+  tip: boolean;
 }
 
 /**
@@ -95,6 +108,12 @@ export class Hud {
   /** Gold has two stars and silver one, so quality reads by count, not only by tint. */
   private hotbarStars2: Phaser.GameObjects.Image[] = [];
   private hotbarZones: Phaser.GameObjects.Zone[] = [];
+  /** The hotbar slot each cell shows (ui/hotbarCells.ts), refreshed on every draw. */
+  cells: number[] = [];
+  /** The tool the tool cell shows while no tool is selected (the last one picked). */
+  private toolPick = 0;
+  /** The can's water when the hotbar was last drawn (its level is drawn on the can's cell). */
+  private drawnWater = -1;
   private readonly nameLabel: Label;
   /** The item name's solid plate: it floats over the world just above the controls, so it needs its own ground. */
   private readonly nameBg: Phaser.GameObjects.Rectangle;
@@ -160,51 +179,58 @@ export class Hud {
       .setDepth(79)
       .setAlpha(0);
     if (SKIN !== 'plum') this.nameBg.setStrokeStyle(1, CH.ink);
-    for (let i = 0; i < game.hotbarSlots; i++) {
+    for (let i = 0; i < HOTBAR_CELLS; i++) {
       const x = HOTBAR_X + i * SLOT_PITCH;
       this.hotbarIcons.push(
         scene.add
-          .image(x + SLOT / 2, HOTBAR_Y + SLOT / 2 + 1, 'ui_coin')
+          .image(x + SLOT_W / 2, HOTBAR_Y + SLOT / 2, 'ui_coin')
           .setDepth(depth + 1)
           .setVisible(false),
       );
       this.hotbarStars.push(
         scene.add
-          .image(x + SLOT - 5, HOTBAR_Y + 5, 'ui_star')
+          .image(x + SLOT_W - 5, HOTBAR_Y + 5, 'ui_star')
           .setDepth(depth + 2)
           .setVisible(false),
       );
       this.hotbarStars2.push(
         scene.add
-          .image(x + SLOT - 11, HOTBAR_Y + 5, 'ui_star')
+          .image(x + SLOT_W - 11, HOTBAR_Y + 5, 'ui_star')
           .setDepth(depth + 2)
           .setTint(0xf4d35e)
           .setVisible(false),
       );
       this.hotbarQty.push(
-        new Label(scene, x + SLOT - 2, HOTBAR_Y + SLOT - 9, '', {
+        new Label(scene, x + SLOT_W - 3, HOTBAR_Y + SLOT - 10, '', {
           align: 'right',
           color: CH.cream,
           outline: CH.ink, // over the item's own icon, whatever its colours
         }).setDepth(depth + 2),
       );
-      new Label(scene, x + 3, HOTBAR_Y + 2, String(i + 1), { color: CH.creamDim, shadow: null })
-        .setDepth(depth + 2)
-        .setAlpha(0.6);
       // The whole pitch wide, from just above the faces to the bottom edge: the zones meet, so no tap on the row
-      // reaches the world, and the 2 px under the lips still pick the slot.
+      // reaches the world, and the 2 px under the lips still pick the cell.
       const zone = scene.add
-        .zone(x - (SLOT_PITCH - SLOT) / 2, HOTBAR_HIT_Y, SLOT_PITCH, GAME_HEIGHT - HOTBAR_HIT_Y)
+        .zone(x - (SLOT_PITCH - SLOT_W) / 2, HOTBAR_HIT_Y, SLOT_PITCH, GAME_HEIGHT - HOTBAR_HIT_Y)
         .setOrigin(0, 0)
         .setDepth(depth + 3)
         .setInteractive();
       this.hotbarZones.push(zone);
       zone.on('pointerdown', () => {
-        selectSlot(this.getState(), i);
+        const s = this.getState();
+        const slot = this.cells[i] ?? i;
+        // the tool cell, tapped while its tool is in hand, moves on to the next tool (hoe, scythe, rod, pickaxe)
+        const pick =
+          i === 0 && s.inventory.selected === slot ? nextTool(s.inventory.slots, slot) : slot;
+        selectSlot(s, pick);
         audio.play('select');
         haptic('tick');
       });
     }
+    this.cells = hotbarCells(
+      this.getState().inventory.slots,
+      this.getState().inventory.selected,
+      0,
+    );
 
     this.savedLabel = new Label(scene, GAME_WIDTH - 5, HUD_H + 3, t('hud.saved'), {
       color: CH.green,
@@ -322,7 +348,12 @@ export class Hud {
     this.drawGoal(s);
     this.drawMeters(s, dt);
     const rising = time - this.selAt < 120;
-    if (this.hotbarDirty || rising || s.inventory.selected !== this.lastSelected)
+    if (
+      this.hotbarDirty ||
+      rising ||
+      s.inventory.selected !== this.lastSelected ||
+      s.water !== this.drawnWater
+    )
       this.drawHotbar(s);
     this.updateToasts(time, dt);
   }
@@ -505,17 +536,25 @@ export class Hud {
     const calm = this.getState().settings.reduceMotion;
     const t = now - this.selAt;
     const half = !calm && t < 60;
-    for (let i = 0; i < game.hotbarSlots; i++) {
+    const slots = s.inventory.slots;
+    if (toolGroup(slots).includes(s.inventory.selected)) this.toolPick = s.inventory.selected;
+    this.cells = hotbarCells(slots, s.inventory.selected, this.toolPick);
+    const fromCell = this.selFrom >= 0 ? cellOfSlot(this.selFrom, slots) : -1;
+    const selCell = cellOfSlot(s.inventory.selected, slots);
+    this.drawnWater = s.water;
+    for (let i = 0; i < HOTBAR_CELLS; i++) {
       const x = HOTBAR_X + i * SLOT_PITCH;
-      const sel = i === s.inventory.selected;
-      const lift = sel ? (half ? 1 : 2) : i === this.selFrom && half ? 1 : 0;
-      // A solid soil lip under the face (its sides in ink), so each slot is its own little plate over any ground; a
-      // rising face shows more of it (the selected slot stands on 4 px of lip).
+      const slot = this.cells[i]!;
+      const sel = i === selCell;
+      const lift = sel ? (half ? 1 : 2) : i === fromCell && half && fromCell !== selCell ? 1 : 0;
+      // A solid soil lip under the face (its sides in ink), so each cell is its own little plate over any ground; a
+      // rising face shows more of it (the selected cell stands on 4 px of lip).
       const lipY = HOTBAR_Y + SLOT - lift;
-      g.fillStyle(CH.ink, 1).fillRect(x, lipY, SLOT, PLATE_LIP + lift);
-      g.fillStyle(CH.panelLight, 1).fillRect(x + 1, lipY, SLOT - 2, PLATE_LIP + lift);
-      drawSlot(g, x, HOTBAR_Y - lift, SLOT, sel, false, 'chrome');
-      const stack = s.inventory.slots[i] ?? null;
+      g.fillStyle(CH.ink, 1).fillRect(x, lipY, SLOT_W, PLATE_LIP + lift);
+      g.fillStyle(CH.panelLight, 1).fillRect(x + 1, lipY, SLOT_W - 2, PLATE_LIP + lift);
+      const top = HOTBAR_Y - lift;
+      drawSlot(g, x, top, SLOT, sel, false, 'chrome', SLOT_W);
+      const stack = slots[slot] ?? null;
       const icon = this.hotbarIcons[i]!;
       const qty = this.hotbarQty[i]!;
       const star = this.hotbarStars[i]!;
@@ -525,27 +564,48 @@ export class Hud {
         icon
           .setTexture(iconKey(ref))
           .setVisible(true)
-          .setY(HOTBAR_Y + SLOT / 2 + 1 - lift);
+          .setY(top + SLOT / 2);
         qty
-          .setText(!isToolSlot(i) && stack.qty > 1 ? String(stack.qty) : '')
-          .setY(HOTBAR_Y + SLOT - 9 - lift);
+          .setText(!isToolSlot(slot) && stack.qty > 1 ? String(stack.qty) : '')
+          .setY(top + SLOT - 10);
         const q = ref.q ?? 0;
         star
           .setVisible(q > 0)
           .setTint(q >= 2 ? 0xf4d35e : 0xc9d3e4)
-          .setY(HOTBAR_Y + 5 - lift);
-        star2.setVisible(q >= 2).setY(HOTBAR_Y + 5 - lift);
+          .setY(top + 5);
+        star2.setVisible(q >= 2).setY(top + 5);
       } else {
         icon.setVisible(false);
         qty.setText('');
         star.setVisible(false);
         star2.setVisible(false);
       }
+      if (i === 0) {
+        // the tool cell's tools as a column of pips at its left, clear of the icon: the one shown in gold
+        const group = toolGroup(slots).filter((k) => !!slots[k]);
+        group.forEach((k, n) => {
+          g.fillStyle(CH.ink, 1).fillRect(x + 3, top + 4 + n * 4, 4, 4);
+          g.fillStyle(k === slot ? CH.gold : CH.slotRim, 1).fillRect(x + 4, top + 5 + n * 4, 2, 2);
+        });
+      }
+      if (stack && i === 1) {
+        // owner: "the watering can should show how much water it has": a solid level bar across its foot, ink when
+        // dry (no water at all reads as an empty ink track)
+        // standing up along its right side, clear of the icon (2 px of blue in a 4 px ink track, filled upward)
+        const cap = waterCapacity(s);
+        const bh = SLOT - 8;
+        const fill = cap > 0 ? Math.round((bh * Math.max(0, Math.min(cap, s.water))) / cap) : 0;
+        g.fillStyle(CH.ink, 1).fillRect(x + SLOT_W - 8, top + 3, 4, bh + 2);
+        if (fill > 0)
+          g.fillStyle(CH.blue, 1).fillRect(x + SLOT_W - 7, top + 4 + bh - fill, 2, fill);
+      }
     }
     if (s.inventory.selected !== this.lastSelected) {
       this.lastSelected = s.inventory.selected;
       const stack = selectedStack(s);
-      this.showName(stack ? displayName(refOf(stack)) : '');
+      // named when the player picked it; when Action moved the selection to what it used (auto tool), the rising
+      // cell shows it without a name plate popping up on every tile of a row
+      if (runtime.handPick || !stack) this.showName(stack ? displayName(refOf(stack)) : '');
     }
   }
 
@@ -601,7 +661,8 @@ export class Hud {
       return;
     }
     if (this.queue.some((q) => q.text === text)) return;
-    if (this.toasts.length >= MAX_TOASTS) {
+    // over the world the lane holds MAX_TOASTS and the rest wait; over a sheet the newest shows at once (alone)
+    if (this.toasts.length >= MAX_TOASTS && runtime.modals === 0) {
       this.queue.push({ text, kind });
       return;
     }
@@ -660,11 +721,30 @@ export class Hud {
       life: readMs(text, calm),
       read: readMs(text, calm),
       sticky: STICKY_TOASTS.includes(kind),
+      tip: kind === 'tip',
     });
   }
 
+  /**
+   * While a sheet is open: the band free for a toast, from under the coach line (or the HUD) to the sheet's top
+   * (UIScene supplies it). Null with no sheet open.
+   */
+  sheetBand: (() => { top: number; bottom: number } | null) | null = null;
+
   private updateToasts(time: number, dt: number): void {
+    // While a sheet is open only one toast shows, the newest that is not a tip, in the band between the coach line
+    // (or the HUD) and the sheet: never over the date, the goal line or another toast (critic P3-1). The others
+    // wait, their clocks held, and show once the sheet closes.
+    const band = runtime.modals > 0 ? (this.sheetBand?.() ?? { top: HUD_H, bottom: HUD_H }) : null;
+    const front = band ? [...this.toasts].reverse().find((t) => !t.tip) : undefined;
     this.toasts = this.toasts.filter((t) => {
+      if (band && t !== front) {
+        t.born += dt; // held: it has not been read yet
+        t.label.setAlpha(0);
+        t.bg.setAlpha(0);
+        t.lit?.setAlpha(0);
+        return true;
+      }
       const age = time - t.born;
       // a sticky toast (a refusal, a tip) stays past its reading time until the screen is touched after it
       if (t.sticky && age >= t.life && !(this.touchedAt > t.born + t.read)) t.life = age;
@@ -681,34 +761,53 @@ export class Hud {
       t.lit?.setAlpha(a);
       return true;
     });
-    while (this.queue.length && this.toasts.length < MAX_TOASTS) {
+    // a sheet closed with more toasts than the lane holds: the older ones wait again (they were held, unread)
+    if (!band)
+      while (this.toasts.length > MAX_TOASTS) {
+        const t = this.toasts.shift()!;
+        this.queue.unshift({ text: t.text, kind: t.tip ? 'tip' : t.sticky ? 'warn' : 'info' });
+        t.label.destroy();
+        t.bg.destroy();
+        t.lit?.destroy();
+      }
+    while (!band && this.queue.length && this.toasts.length < MAX_TOASTS) {
       const q = this.queue.shift()!;
       this.showToast(q.text, q.kind, time);
     }
-    // Newest sits on the bottom; older ones stack upward by their real (wrapped) height. While a sheet is open
-    // the toasts move to the top of the screen, above the dim, so a sheet's own results ("Kept 4 Potato for the
-    // board.", "Order done!") are seen when they happen (critique 10, F1).
-    const sheet = runtime.modals > 0;
-    let y = sheet ? 4 : this.laneBottom();
     // each step is a whole plate and a gap (a step of the text's height let plates overprint: critic P1-2)
     const step = (t: Toast): number => Math.ceil(t.label.textHeight) + 5 + TOAST_GAP;
-    if (sheet) for (const t of this.toasts) y += step(t);
-    for (let i = this.toasts.length - 1; i >= 0; i--) {
-      const t = this.toasts[i]!;
-      y -= step(t);
-      t.label.setDepth(sheet ? 232 : 80);
-      t.bg.setDepth(sheet ? 231 : 79);
-      t.lit?.setDepth(sheet ? 231.5 : 79.5);
-      const born = time - t.born < 140 && !sheet && !this.getState().settings.reduceMotion;
-      const target = born ? y + Math.round(4 * (1 - (time - t.born) / 140)) : y;
-      // Older toasts glide up as a new one arrives, a whole pixel at a time, never stalling short.
-      t.label.y = sheet ? target : tickToward(Math.round(t.label.y), target, dt, 0.3);
+    const place = (t: Toast, y: number, depth: number): void => {
+      t.label.y = y;
+      t.label.setDepth(depth + 1);
+      t.bg.setDepth(depth);
+      t.lit?.setDepth(depth + 0.5);
       t.bg
         .setPosition(t.label.x, t.label.y + t.label.textHeight / 2)
         .setSize(t.label.textWidth + 10, t.label.textHeight + 5);
       t.lit
         ?.setPosition(t.bg.x, Math.round(t.bg.y - t.bg.height / 2) + 1)
         .setSize(t.bg.width - 2, 1);
+    };
+    if (band) {
+      const shown = this.toasts.find((t) => t === front);
+      if (!shown) return;
+      const plate = Math.ceil(shown.label.textHeight) + 5;
+      // centred in the free band; a sheet up to the HUD leaves none, so it sits over the meters row (dimmed),
+      // still clear of the date and the goal line
+      const free = band.bottom - band.top;
+      const top = free >= plate + 2 ? band.top + Math.floor((free - plate) / 2) : 33;
+      place(shown, top + 2, 231);
+      return;
+    }
+    // Newest sits on the bottom of the toast lane; older ones stack upward by their real (wrapped) height.
+    let y = this.laneBottom();
+    for (let i = this.toasts.length - 1; i >= 0; i--) {
+      const t = this.toasts[i]!;
+      y -= step(t);
+      const born = time - t.born < 140 && !this.getState().settings.reduceMotion;
+      const target = born ? y + Math.round(4 * (1 - (time - t.born) / 140)) : y;
+      // Older toasts glide up as a new one arrives, a whole pixel at a time, never stalling short.
+      place(t, tickToward(Math.round(t.label.y), target, dt, 0.3), 79);
     }
   }
 

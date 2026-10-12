@@ -273,10 +273,23 @@ export class NpcRenderer {
     return [...this.shown.values()].filter((s) => s.at).map((s) => [s.at!.tx, s.at!.ty]);
   }
 
-  /** Which villager stands on a tile right now, if any. */
+  /** Which villager is on a tile right now (standing, or walking through it), if any. */
   at(tx: number, ty: number): string | null {
-    for (const [id, s] of this.shown) if (s.at && s.at.tx === tx && s.at.ty === ty) return id;
+    for (const [id, s] of this.shown) {
+      const t = s.at ?? (s.walk ? this.walkTile(s) : null);
+      if (t && t.tx === tx && t.ty === ty) return id;
+    }
     return null;
+  }
+
+  /** Where each villager shown on this map is now (a walker by the tile it is crossing), for the guided start. */
+  positions(): { id: string; tx: number; ty: number }[] {
+    const out: { id: string; tx: number; ty: number }[] = [];
+    for (const [id, s] of this.shown) {
+      const t = s.at ?? (s.walk && s.here ? this.walkTile(s) : null);
+      if (t) out.push({ id, tx: t.tx, ty: t.ty });
+    }
+    return out;
   }
 
   /** Turn a villager toward the player who is talking to them. */

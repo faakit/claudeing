@@ -1797,3 +1797,51 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Owner's polish round (UI lane, polish/owner-round, 2026-10-12)
+
+- **The guided start points inside a villager's own sheet.** The buy step targets Mara; with her sheet open it fell
+  to "a sheet is open but the step wants the world: point at Close", then "tap the lit button", a loop. A step whose
+  villager's sheet is open now points inside it (a shopkeeper's Shop button). `buySeeds` points at a price while the
+  shop is open and stays until the buy goal is done (data: an `alt` for `panel: shop`, done `not goal buy`), so
+  closing the shop early leads back to Mara. The "button not on this page: point at Close" rule was not the cause
+  and is unchanged.
+- **Fishing shows the rod alone.** The fishing sheet opened on the press, freezing the farmer on the rod's wind-up
+  (raised like a pickaxe) behind it, and the rod's drawn swing frame carries the pickaxe's grey swoosh. The sheet now
+  waits for the cast to play out (`castReady`; the farmer is rooted meanwhile, a 900 ms fallback opens it anyway),
+  the farmer holds the reel's first frame (line out) while it is open, the rod's swing frame is skipped (the wind-up
+  holds through it, so the contact frame and timings are unchanged), and facing up casts with the reel backwards.
+  A cast plays the rod's cast whatever is in hand (a bait in hand casts too: depth lane).
+- **Text never hides.** Sheets whose text wraps are flows (`Modal.para`), and a sheet grows once to fit
+  (`wantHeight`): Portuguese is about 25% longer and wrapped into fixed rows. A list row's title or line that does
+  not fit even abbreviated wraps to two lines and the row grows (`rowText`), instead of a ".." cut; the craft tab
+  packs pages by height. Light text on wood is parchment with an ink shadow; counts over icons have a full ink
+  outline (`Label.outline`, four copies that batch with the text). The goal banner has a walnut plate.
+- **The text guard** (`overflowIn` in e2e-scenarios, block `textGuard`) reads every visible text in render order and
+  fails one off the canvas or its sheet, cut short, overprinted (x-height bands from the font's character boxes),
+  covered by something opaque drawn after it (images, rectangles, button faces, Graphics fillRects from the command
+  buffer), covered over an open sheet's dim by a toast, or below a WCAG ratio of 3 (2 for light text on an ink
+  shadow; an outlined text against its outline) on the read-back canvas. It runs about 75 sheet states on the SE and
+  the iPhone 13 in both languages.
+- **Sheets close only from Close (and Android back).** A tap on a sheet's padding, gap or header fell through to the
+  dim, whose tap-outside closed it ("when I click in the menu it closes the menu"). Tap-outside is off everywhere; the
+  dim still swallows the touch, so nothing behind a sheet reacts.
+- **Reading time.** Self-dismissing text stays 1.5 s + 60 ms a character, 2.5-7 s, x1.5 in Calm (`readMs`): toasts,
+  the coach line's refusals, the goal banner, valley moments, the item name. Refusals (`warn`) and first-time tips
+  (`tip`) stay past it until a touch or a key, so nothing the player must act on goes unread. At most 3 toasts over
+  the world (a fourth queues: none is cut mid-read); with a sheet open, one, in the band between the coach line (or
+  the HUD) and the sheet, never over the date or the goal line; tips wait for the sheet to close.
+- **Villagers walk.** A schedule change on the map is walked (3 tiles/s); one off the map walks to the nearest gate
+  or edge door (never the farmer's house door) and goes; one onto the map starts at the exit nearest the spot. With
+  no walk the change waits until both ends are off screen. A scene's first placement (behind its wipe) is instant.
+  Villagers have no walk frames yet: a 1 px step bob stands in (an art lane item).
+- **Five big hotbar cells, eight slots kept.** The save's eight hotbar slots and five tool slots are unchanged (no
+  save change, the guided start's slot targets, auto tool and the ring keep working). Five cells of 38 x 24 px on a
+  40 px pitch show them: a tool cell (hoe, scythe, rod, pickaxe; tapping it with its tool in hand moves on to the
+  next, pips show which), the can, and the three item slots. Zones are 64.7 x 46.9 CSS px on the SE (were 38.8 x
+  43.7). The faces stay 24 px tall because the row's touch zone must start under Interact's touch circle (y 370).
+  The can's cell carries its water level, a solid 2 px blue bar in an ink track, empty when dry.
+- **The highlighted slot is what Action uses.** A slot picked by hand (a tap, the Action swipe, the ring, a key, the
+  wheel) is what Action uses until it has acted: auto tool waits ("when we scroll, the item does not change"). When
+  auto tool does pick another slot, the selection moves to it at the press, so the highlight always shows what was
+  used; the name plate only shows for hand picks. A hand pick is runtime state (a reload starts with auto tool).
