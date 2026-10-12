@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { defaultControlSettings, STATE_VERSION } from '../src/state/GameState';
 import { migrate } from '../src/systems/save';
 import {
@@ -12,6 +12,9 @@ import { measureText } from '../src/ui/fontMetrics';
 import { controlLabels } from '../src/ui/panels/ControlsTab';
 import { LOCALES, setLocale } from '../src/i18n';
 import { newState } from './helpers';
+
+// a failing locale loop must not leave Portuguese set for the tests after it
+afterEach(() => setLocale('en'));
 
 describe('control settings (save v16)', () => {
   it('a real v15 save migrates with the owner defaults on and keeps everything else', () => {

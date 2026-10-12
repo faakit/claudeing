@@ -25,8 +25,9 @@ const DEPTH: Record<string, number> = {
 /**
  * A stage reveal: the map's previous look drawn on top of its new one, then cut away. The first green (systems/
  * valley.ts takeFirstGreenMoment) draws the same map with the dry tileset over the green one; the creek's first
- * morning draws the farm's waking stage (its dry bed) over the restored one, cut from Ilse's gate down. The first green: then cut away in a circle that grows from the farmer with a dithered edge, so the farm turns from
- * straw to green around them. Calm mode crossfades instead. Pure visuals: the overlay goes when it is done.
+ * morning draws the farm's waking stage (its dry bed) over the restored one, cut from Ilse's gate down. The overlay
+ * is cut away in a circle that grows from its start point with a dithered edge, so the farm turns from straw to
+ * green around the farmer. Calm mode crossfades instead. Pure visuals: the overlay goes when it is done.
  */
 export class GreenReveal {
   private readonly map: Phaser.Tilemaps.Tilemap;

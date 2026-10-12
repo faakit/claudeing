@@ -38,6 +38,7 @@ describe('channel tiles', () => {
       ([n]) => !/^(chan:|culvert:|chanmouth:)/.test(n),
     );
     const lastMap = Math.max(...others.map(([, s]) => s));
+    expect(chan.length).toBeGreaterThanOrEqual(16 + 15 + 4); // the masks, the culverts, the mouths
     for (const [n, s] of chan) expect(s, n).toBeGreaterThan(lastMap);
   });
 
@@ -71,7 +72,7 @@ describe('channel tiles', () => {
     expect(isGroundDecal('crown:189:20:10:u:x')).toBe(false);
     expect(isGroundDecal(undefined)).toBe(false);
     const names = namesBySlot(index);
-    expect(names.get(index.tiles['patch_daisies']! + 1)).toBeDefined();
+    expect(names.get(index.tiles['patch_daisies']! + 1)).toBe('patch_daisies');
   });
 
   it('returns null for a tile the tileset does not have', () => {

@@ -8,8 +8,11 @@ import {
   waterFromChannels,
   wateredByChannels,
 } from '../src/systems/channels';
-import type { GameState } from '../src/state/GameState';
-import { newState, grass } from './helpers';
+import { spawnPosition, type GameState } from '../src/state/GameState';
+import { equip, newState, grass } from './helpers';
+import { plots } from '../src/data';
+import { performAction } from '../src/systems/actions';
+import { addItem } from '../src/systems/inventory';
 import '../src/mechanics';
 import { actOn, chooseAction } from '../src/systems/autoTool';
 import { endDay } from '../src/systems/day';
@@ -232,5 +235,38 @@ describe('save v18 (the Dry Year bump)', () => {
     expect(fixed.farm.tiles['21,12']!.crop!.tag).toBeUndefined();
     const old = migrate(JSON.parse(JSON.stringify({ ...newState(), version: 17 })));
     expect(old.settings.strikeOffset).toBeUndefined();
+  });
+});
+
+describe('placing over a channel', () => {
+  it('is refused, and the channel stays (placing used to fill it in for free)', () => {
+    const s = newState();
+    s.stats['place.spring'] = 3;
+    s.stats['valley.farmGreen'] = 1;
+    s.plots = Object.keys(plots);
+    row(s, 10, 5);
+    addItem(s, 'sprinkler', 1);
+    equip(s, 'sprinkler');
+    const r = performAction(s, grass(23, 10));
+    expect(r.ok).toBe(false);
+    expect(s.farm.tiles['23,10']?.channel).toBe(true);
+    expect(s.placed['farm'] ?? []).toHaveLength(0);
+  });
+});
+
+describe('digging on a weed', () => {
+  it('clears the weed, as tilling does (it stayed drawn on the water)', () => {
+    const s = newState();
+    s.stats['place.spring'] = 3;
+    s.stats['valley.farmGreen'] = 1;
+    s.plots = Object.keys(plots);
+    s.player = { map: 'farm', ...spawnPosition(20, 20), facing: 'up' }; // far off: no bank cut
+    s.inventory.slots[4] = { item: 'spade', qty: 1 };
+    s.inventory.selected = 4;
+    s.farm.weeds['25,10'] = true;
+    const r = performAction(s, grass(25, 10));
+    expect(r.ok).toBe(true);
+    expect(s.farm.tiles['25,10']?.channel).toBe(true);
+    expect(s.farm.weeds['25,10']).toBeUndefined();
   });
 });

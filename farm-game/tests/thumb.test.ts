@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { npcs, tips } from '../src/data';
 import { performAction, type TileInfo } from '../src/systems/actions';
@@ -12,6 +12,9 @@ import { giftSub } from '../src/ui/panels/giftText';
 import { LOCALES, setLocale } from '../src/i18n';
 import { SUMMARY_TIPS, summaryTip } from '../src/ui/panels/summaryTips';
 import { equip, grass, newState } from './helpers';
+
+// a failing locale loop must not leave Portuguese set for the tests after it
+afterEach(() => setLocale('en'));
 
 /** A farm tile that knows its neighbours, so area actions (rows) can look along the line. */
 const field = (tx: number, ty: number): TileInfo => ({

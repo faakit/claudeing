@@ -160,15 +160,28 @@ function mergedFor(locale: Locale): { to: Map<string, string>; back: Map<string,
  * current language: whichever language it was stored in, a known data string is shown in today's.
  */
 export function relocalize(text: string): string {
-  let en = text;
+  const whole = relocalizeKnown(text);
+  if (whole !== null) return whole;
+  // a data string with a word after it, kept as one (Rosa's letter and her signature, mechanics/valley.ts)
+  const cut = text.lastIndexOf(' ');
+  const head = cut > 0 ? relocalizeKnown(text.slice(0, cut)) : null;
+  return head === null ? text : `${head} ${relocalize(text.slice(cut + 1))}`;
+}
+
+/** `relocalize` for a whole known data string (English or a translation); null when no overlay knows it. */
+function relocalizeKnown(text: string): string | null {
+  let en: string | null = null;
   for (const l of LOCALES) {
     if (l === 'en') continue;
-    const back = mergedFor(l).back.get(text);
+    const m = mergedFor(l);
+    const back = m.back.get(text);
     if (back !== undefined) {
       en = back;
       break;
     }
+    if (m.to.has(text)) en = text;
   }
+  if (en === null) return null;
   const now = getLocale();
   return now === 'en' ? en : (mergedFor(now).to.get(en) ?? en);
 }

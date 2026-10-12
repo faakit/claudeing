@@ -9,6 +9,8 @@ import { MARKER_COLORS, markerActs, type MarkerKind } from '../ui/targetMarker';
 export const MARKER_DEPTH = 0.95;
 /** The lowest depth any y-sorted world object uses (shadows at 9 + y, y >= 0). */
 export const Y_SORTED_MIN_DEPTH = 9;
+/** How long a press's flash of the marker takes to fade back (ms). */
+const PULSE_MS = 150;
 
 /**
  * Target marker on the tile Action would use. "Will act" is 2 px corner brackets in the action's colour;
@@ -25,6 +27,8 @@ export class TileHighlight {
   private readonly paintGfx: Phaser.GameObjects.Graphics;
   private paintKey = '';
   private kind: MarkerKind | null = null;
+  /** When the last press flashed the marker (scene time); folded into the alpha `update` sets every frame. */
+  private pulseAt = -Infinity;
 
   constructor(private readonly scene: Phaser.Scene) {
     this.gfx = scene.add.graphics().setDepth(MARKER_DEPTH);
@@ -43,7 +47,10 @@ export class TileHighlight {
     }
     this.gfx.setPosition(tile.tx * TILE_SIZE + TILE_SIZE / 2, tile.ty * TILE_SIZE + TILE_SIZE / 2);
     const base = markerActs(kind) ? 1 : 0.85;
-    this.gfx.setAlpha(base * (0.8 + 0.2 * Math.sin(time / 170)));
+    // a press's flash: from 0.35 back to full over 150 ms (Quad out)
+    const k = Math.min(1, Math.max(0, (this.scene.time.now - this.pulseAt) / PULSE_MS));
+    const flash = 0.35 + 0.65 * (1 - (1 - k) * (1 - k));
+    this.gfx.setAlpha(base * (0.8 + 0.2 * Math.sin(time / 170)) * flash);
   }
 
   /** The kind currently drawn (for tests and the debug hook). */
@@ -133,10 +140,9 @@ export class TileHighlight {
 
   /** Brief pop so every press feels acknowledged. */
   pulse(): void {
-    // A flash, not a scale pop: the marker keeps its whole-pixel corners.
-    this.scene.tweens.killTweensOf(this.gfx);
-    this.gfx.setScale(1).setAlpha(0.35);
-    this.scene.tweens.add({ targets: this.gfx, alpha: 1, duration: 150, ease: 'Quad.easeOut' });
+    // A flash, not a scale pop: the marker keeps its whole-pixel corners. Not a tween: `update` sets the alpha
+    // every frame after the tweens have run, which hid it.
+    this.pulseAt = this.scene.time.now;
   }
 
   /**

@@ -273,7 +273,7 @@ export class UIScene extends Phaser.Scene {
       gameEvents.on('levelUp', () => audio.play('level')),
       gameEvents.on('sleepRequest', ({ passedOut }) => void this.runSleep(passedOut)),
       gameEvents.on('settingsChanged', () => this.buildControls()),
-      // A language change (Menu > Opts): the HUD, the coach line and the dock redraw now; every sheet is built
+      // A language change (Menu > Opts): the HUD, the coach line and the floating controls redraw now; every sheet is built
       // from the dictionaries each time it opens, and the open menu rebuilds itself.
       onLocaleChange(() => {
         this.hud.relocalize();

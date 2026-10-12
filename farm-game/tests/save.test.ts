@@ -4,6 +4,8 @@ import { createInitialState, STATE_VERSION } from '../src/state/GameState';
 import { performAction } from '../src/systems/actions';
 import { BACKUP_KEY, loadGame, migrate, SAVE_KEY, saveGame } from '../src/systems/save';
 import { grass, newState } from './helpers';
+import { mail, UNSIGNED } from '../src/data';
+import { sendLetter } from '../src/systems/mail';
 
 describe('save/load', () => {
   it('round trip equals the original state', async () => {
@@ -204,5 +206,41 @@ describe('saveNow ordering', () => {
     enqueue(b);
     await chain;
     expect((await loadGame(slow))?.state.money).toBe(2);
+  });
+});
+
+describe('letters in the save', () => {
+  it('an unsigned letter (Clay sack at the gate) survives a reload with its gift', async () => {
+    const store = new MemoryStore();
+    const s = newState();
+    const def = mail.letters.find((l) => l.from === UNSIGNED)!;
+    expect(def.gift).toBeDefined();
+    sendLetter(s, def);
+    await saveGame(store, s);
+    const loaded = (await loadGame(store))!.state;
+    const kept = loaded.mail.list.find((l) => l.title === def.title);
+    expect(kept?.from).toBe(UNSIGNED);
+    expect(kept?.gift).toEqual(def.gift);
+  });
+});
+
+describe('damaged saves', () => {
+  it('a crop id that names a built-in object property is dropped, not a crash', () => {
+    const raw = JSON.parse(JSON.stringify(newState()));
+    raw.farm.tiles['5,5'] = {
+      watered: false,
+      crop: { cropId: 'constructor', stage: 0, daysInStage: 0 },
+    };
+    const s = migrate(raw);
+    expect(s.farm.tiles['5,5']?.crop).toBeNull();
+  });
+});
+
+describe('the oldest saves', () => {
+  it('a v1 save is an old save: it keeps its river (the weir restored quietly), as every pre-M6 save does', () => {
+    const s = migrate({ version: 1, day: 5, season: 'summer', money: 900 });
+    expect(s.money).toBe(900);
+    expect(s.stats['place.weir']).toBe(3);
+    expect(s.stats['placesDone'] ?? 0).toBe(0);
   });
 });

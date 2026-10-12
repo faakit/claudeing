@@ -3,8 +3,8 @@ import type Phaser from 'phaser';
 /**
  * The see-through hole (art critic, review 9): where a crown, an eave or a tall placed object stands in front of
  * the player or their target, it is cut away in a pixel-art way instead of turning translucent. Fully clear inside
- * about 9 px of the player's body and 10 px of the target tile's centre, with a 2 px checker rim; outside it
- * everything stays opaque, so the player and the target marker are never tinted by foliage.
+ * a 5 px capsule over the player's head and torso and 10 px of the target tile's centre, with a 2 px checker rim;
+ * outside it everything stays opaque, so the player and the target marker are never tinted by foliage.
  *
  * One inverted geometry mask, shared by the overhead layer and any tall sprite that needs it; it is applied only
  * while something actually covers the player, so it costs nothing elsewhere.
@@ -66,13 +66,14 @@ export const NO_HOLE: HoleWant = { body: false, target: false };
 export type Opaque = (x: number, y: number) => boolean;
 
 /**
- * Opaque overhead pixels over the player's lower body: 10 px wide, the 12 rows above the feet (px, py). With feet at
- * tile row ty (py = ty * 16 + 11) that is the player's own tile row, where the generator puts a crown only when its
- * trunk stands further south: the player is behind the tree. Pure.
+ * Opaque overhead pixels over the player's lower body: 10 px wide, the 12 rows up to the feet (px, py). With feet at
+ * tile row ty (py = ty * 16 + 11) that is the player's own tile row (it took the row above too, whose bottom pixel
+ * row could hold an open hole open once he stepped out), where the generator puts a crown only when its trunk
+ * stands further south: the player is behind the tree. Pure.
  */
 export function bodyCover(px: number, py: number, opaque: Opaque): number {
   const x0 = Math.round(px) - 5;
-  const y0 = Math.round(py) - 12;
+  const y0 = Math.round(py) - 11;
   let n = 0;
   for (let y = y0; y < y0 + 12; y++) for (let x = x0; x < x0 + 10; x++) if (opaque(x, y)) n++;
   return n;
@@ -214,7 +215,8 @@ export function boxCoversTile(b: Box, t: { tx: number; ty: number }): boolean {
 export class SeeThrough {
   private readonly g: Phaser.GameObjects.Graphics;
   readonly mask: Phaser.Display.Masks.GeometryMask;
-  private key = '';
+  /** What the hole was last drawn for: feet pixel, target tile, radii (no string built per frame). */
+  private readonly last = [NaN, NaN, NaN, NaN, NaN, NaN];
   private readonly open: HoleOpen = { body: 0, target: 0 };
   private target: { tx: number; ty: number } | undefined;
   /** The hole's pixel runs as last drawn (for the e2e that measures how much of a crown stays). */
@@ -248,9 +250,19 @@ export class SeeThrough {
     const t = this.open.target > 0 ? this.target : undefined;
     const rb = holeRadius(HOLE.body, this.open.body);
     const rt = holeRadius(HOLE.target, this.open.target);
-    const key = `${Math.round(px)},${Math.round(py)},${t?.tx},${t?.ty},${rb},${rt}`;
-    if (key === this.key) return;
-    this.key = key;
+    const x = Math.round(px);
+    const y = Math.round(py);
+    const tx = t?.tx ?? -1;
+    const ty = t?.ty ?? -1;
+    const l = this.last;
+    if (l[0] === x && l[1] === y && l[2] === tx && l[3] === ty && l[4] === rb && l[5] === rt)
+      return;
+    l[0] = x;
+    l[1] = y;
+    l[2] = tx;
+    l[3] = ty;
+    l[4] = rb;
+    l[5] = rt;
     this.g.clear();
     this.g.fillStyle(0xffffff, 1);
     this.runs = holeRuns(holeCircles(px, py, t, this.open));

@@ -1,5 +1,5 @@
 /**
- * Pure touch-gesture rules (no Phaser), shared by the dock buttons and the world touch handler so every
+ * Pure touch-gesture rules (no Phaser), shared by the floating control buttons and the world touch handler so every
  * threshold is defined once and unit tested. Distances are logical px (1 px is ~0.25 to 0.38 mm on the
  * phones we target); times are ms.
  */

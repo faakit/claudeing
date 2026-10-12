@@ -114,7 +114,20 @@ describe('the camera behind the floating controls', () => {
   ];
 
   it('the view reaches the bottom edge and the follow keeps the farmer above the controls', () => {
-    expect(WORLD_VIEW.h - CONTROLS_H).toBe(WORLD_CLEAR.h);
+    // (not WORLD_VIEW.h - CONTROLS_H === WORLD_CLEAR.h: config defines both that way, so it could not fail)
+    expect(WORLD_VIEW.y + WORLD_VIEW.h).toBe(GAME_HEIGHT);
+    expect(WORLD_CLEAR.y).toBe(WORLD_VIEW.y);
+    expect(WORLD_CLEAR.y + WORLD_CLEAR.h).toBe(CONTROLS_Y);
+    // the farmer, snapped anywhere on a big map, is drawn in the part of the view above the controls
+    const cam = fakeCam(WORLD_VIEW.h);
+    const pc = new PixelCamera(asCam(cam), BODY, CONTROLS_H);
+    pc.setMap(480, 704);
+    for (let py = 0; py < 704; py += 16) {
+      pc.snap(240, py);
+      const feet = WORLD_VIEW.y + py - cam.scrollY;
+      expect(feet, `feet at ${py}`).toBeGreaterThanOrEqual(WORLD_CLEAR.y);
+      expect(feet, `feet at ${py}`).toBeLessThan(CONTROLS_Y);
+    }
   });
 
   for (const m of MAPS)

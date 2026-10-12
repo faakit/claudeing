@@ -244,6 +244,25 @@ describe('a new tap while walking (owner bug 2: "it kinda flicks")', () => {
       { tx: 8, ty: 1 },
     ]);
   });
+
+  it('a door is never a start: a tap beside a door, mid-step toward it, does not walk through it', () => {
+    const open = createGrid(10, 10, TS, new Array(100).fill(0));
+    const isDoor = (tx: number, ty: number) => tx === 5 && ty === 5;
+    const c = spawnPosition(5, 6);
+    const pos = { x: c.x, y: c.y - 3 }; // 3 px into the step north, toward the door (not on it yet)
+    expect(playerTile(pos)).toEqual({ tx: 5, ty: 6 });
+    const starts = routeStarts(pos, { axis: 'y', sign: -1 }, open, { h: 6 }, isDoor);
+    const r = replanFrom(
+      starts,
+      (from) => {
+        const path = findPath(open, from, [{ tx: 4, ty: 5 }], { avoid: isDoor });
+        return path ? { path } : null;
+      },
+      TS,
+    );
+    expect(r?.path.some((t) => isDoor(t.tx, t.ty))).toBe(false);
+    expect(r?.path[0]).toEqual({ tx: 5, ty: 6 });
+  });
 });
 
 describe('tap intent', () => {

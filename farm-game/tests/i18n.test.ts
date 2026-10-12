@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   detectLocale,
+  deviceLocale,
   dictionary,
   fmtGold,
   fmtNum,
@@ -121,6 +122,29 @@ describe('i18n core', () => {
     setLocale('pt-BR');
     expect(relocalize(en)).toBe(pt);
     expect(relocalize('A line no data has.')).toBe('A line no data has.');
+  });
+
+  it("Rosa's kept letter (her text and her signature, stored as one) shows in the language of the day", () => {
+    const l = valley.letter;
+    const en = `${l.text} ${l.sign}`; // as mechanics/valley.ts keeps it
+    const pt = `${overlayFor('pt-BR', 'valley')[l.text]!} ${overlayFor('pt-BR', 'valley')[l.sign] ?? l.sign}`;
+    expect(relocalize(pt)).toBe(en);
+    setLocale('pt-BR');
+    expect(relocalize(en)).toBe(pt);
+    expect(relocalize('A line no data has.')).toBe('A line no data has.');
+  });
+});
+
+describe('back to English', () => {
+  it('a label still on screen keeps its English after many other lines were shown (the memo was wiped when full)', () => {
+    setLocale('pt-BR');
+    const read = t('mail.read');
+    // the coach matches a sheet's buttons through toEnglish every frame while new lines keep coming
+    for (let i = 0; i < 2100; i++) {
+      t('fmt.gold', { n: String(i) });
+      if (i % 50 === 0) expect(toEnglish(read), `after ${i}`).toBe('Read');
+    }
+    expect(toEnglish(read)).toBe('Read');
   });
 });
 
@@ -384,5 +408,14 @@ describe('the language at boot', () => {
   it('starts in English (tests and automated browsers rely on it)', () => {
     expect(getLocale()).toBe('en');
     expect(tEn('common.close')).toBe('Close');
+  });
+
+  it('an automated browser starts in English on a Portuguese machine; a person gets the device language', () => {
+    expect(deviceLocale({ webdriver: true, languages: ['pt-BR'] })).toBe('en');
+    expect(deviceLocale({ webdriver: false, languages: ['pt-BR', 'en'] })).toBe('pt-BR');
+    expect(deviceLocale({ language: 'pt-PT' })).toBe('pt-BR');
+    expect(deviceLocale(undefined)).toBe('en');
+    // some WebViews list no languages at all: the one `language` still counts
+    expect(deviceLocale({ languages: [], language: 'pt-BR' })).toBe('pt-BR');
   });
 });

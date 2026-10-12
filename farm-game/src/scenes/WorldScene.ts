@@ -57,7 +57,7 @@ import {
   ACT_ITEM_ANCHORS,
   ACT_ORIGIN_Y,
 } from '../art/manifest';
-import { Effects } from '../fx/Effects';
+import { Effects, RISING_LABEL } from '../fx/Effects';
 import { playActionFx } from '../fx/actionFx';
 import { parseLights, publishGlow } from '../fx/NightGlow';
 import { Ambient, parseBlooms } from '../fx/Ambient';
@@ -250,6 +250,8 @@ export abstract class WorldScene extends Phaser.Scene {
   private heldSeq: { at: number; xy: [number, number] | null }[] = [];
   /** The farmer dips 1 px on a strike without a drawn strike frame (until this time). */
   private dipUntil = 0;
+  /** A refusal's shake, added to the drawn farmer (syncSprite places him every frame, after the tweens ran). */
+  private readonly shakeOff = { x: 0 };
   /** The stick is held back until this many ms after a use (shorter than the use's lock). */
   private moveLock = 0;
   /** A push held while rooted walks the moment the root ends, without a second turn-in-place wait. */
@@ -330,9 +332,12 @@ export abstract class WorldScene extends Phaser.Scene {
     }
     this.transitioning = false;
     this.pose = null; // the scene object is reused across visits; its old images are gone
+    this.held = null; // the item shown in hand went with them (setTexture on it threw and froze the game)
+    this.heldSeq = [];
     this.poseSeq = [];
     this.poseUntil = 0;
     this.dipUntil = 0;
+    this.shakeOff.x = 0;
     this.moveLock = 0;
     this.rootedPush = false;
     this.inputLocked = true;
@@ -844,7 +849,6 @@ export abstract class WorldScene extends Phaser.Scene {
     const onScreen = cx === wx && cy === wy;
     const bob = Math.sin(time / 180) * 2;
     arrow.clear().setVisible(true).setPosition(cx, cy);
-    arrow.fillStyle(0x14101f, 0.7);
     arrow.fillStyle(0xf4d35e, 1);
     if (onScreen) {
       // a down arrow floating over the target tile
@@ -998,7 +1002,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private syncSprite(moving: boolean, delta = 0): void {
     const p = getState().player;
     const now = this.time.now;
-    this.sprite.setPosition(p.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
+    this.sprite.setPosition(p.x + this.shakeOff.x, p.y + (now < this.dipUntil && !moving ? 1 : 0));
     this.sprite.setDepth(10 + p.y);
     const posing = !!this.pose && now < this.poseUntil && !moving;
     this.sprite.setVisible(!posing);
@@ -1535,7 +1539,7 @@ export abstract class WorldScene extends Phaser.Scene {
       this.heldFailed = true;
       audio.play('error');
       haptic('error');
-      this.fx.shake(this.sprite);
+      this.fx.shake(this.shakeOff);
     }
   }
 
@@ -1981,8 +1985,9 @@ export abstract class WorldScene extends Phaser.Scene {
   /**
    * World text never sits under a floating control plate (the world runs under the controls): a label (a plot
    * sign's price, a site's name, a villager's "!") that would be covered rises just above the plate, and settles
-   * back once it is clear. Its owner may move it any frame: a y it did not get from here is its new resting place.
-   * Labels in a tween (rising "+1" lines) are left alone.
+   * back once it is clear. Its owner may move it any frame: a y it did not get from here is its new resting place
+   * (a villager's bobbing "!" is moved by its tween every frame, so it is lifted from wherever the tween put it).
+   * Rising "+1" lines (`RISING_LABEL`) are left to their own tween.
    */
   private keepLabelsClear(): void {
     const ui = this.scene.get('UI') as unknown as { plates?: () => Plate[] } | null;
@@ -1990,7 +1995,7 @@ export abstract class WorldScene extends Phaser.Scene {
     if (!plates) return;
     const cam = this.cameras.main;
     for (const o of this.children.list) {
-      if (!(o instanceof Label) || !o.visible || this.tweens.isTweening(o)) continue;
+      if (!(o instanceof Label) || !o.visible || o.name === RISING_LABEL) continue;
       let lift = this.labelLift.get(o);
       if (!lift || o.y !== lift.set) lift = { base: o.y, set: o.y };
       o.y = lift.base;
@@ -2010,7 +2015,9 @@ export abstract class WorldScene extends Phaser.Scene {
 
   /** Where a walk planned now may start (systems/pathfind routeStarts): mid-step, ahead first. */
   private routeStarts(): RouteStart[] {
-    return routeStarts(getState().player, this.move, this.grid, PLAYER_HITBOX);
+    return routeStarts(getState().player, this.move, this.grid, PLAYER_HITBOX, (tx, ty) =>
+      this.isDoor(tx, ty),
+    );
   }
 
   /** Is the farmer standing on this tile's centre? */
@@ -2283,7 +2290,7 @@ export abstract class WorldScene extends Phaser.Scene {
   }
 
   /**
-   * Through a door: a short dither wipe closes over the world view (the HUD and dock stay), the next map is built
+   * Through a door: a short dither wipe closes over the world view (the HUD and the floating controls stay), the next map is built
    * and the game saved while it is covered, and the new map opens out of it (about 280 ms in all).
    */
   private useDoor(door: WorldObject): void {

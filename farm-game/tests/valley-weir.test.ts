@@ -8,7 +8,14 @@ import { migrate } from '../src/systems/save';
 import { fishFor } from '../src/systems/fishing';
 import { generateOrders, orderCandidates } from '../src/systems/orders';
 import { npcLocation } from '../src/systems/npcs';
-import { completeEvent, linesNow, pendingEvent, POINTS_PER_HEART } from '../src/systems/friendship';
+import {
+  completeEvent,
+  isGiftable,
+  linesNow,
+  pendingEvent,
+  POINTS_PER_HEART,
+} from '../src/systems/friendship';
+import { isShippable } from '../src/systems/economy';
 import {
   askHolds,
   buyPart,
@@ -33,6 +40,7 @@ import { measureText } from '../src/ui/fontMetrics';
 import { valleyLines } from '../src/ui/panels/valleyText';
 import type { GameState } from '../src/state/GameState';
 import { newState } from './helpers';
+import { digChannel } from '../src/systems/channels';
 
 const sleep = (s: GameState) => endDay(s, { passedOut: false, weedCandidates: [] });
 const weir = valley.places['weir']!;
@@ -139,8 +147,9 @@ describe('the Weir: the fund and the sluice gate from Orin', () => {
     expect(countItem(s, 'sluice_gate')).toBe(1);
     expect(partOffer(s, 'orin')).toBeNull(); // one is enough
     // a key item: never sold, shipped or given
-    const gate = s.inventory.slots.find((x) => x?.item === 'sluice_gate');
-    expect(gate && valley.parts?.['sluice_gate']?.npc).toBe('orin');
+    expect(isShippable('sluice_gate')).toBe(false);
+    expect(isGiftable({ item: 'sluice_gate' })).toBe(false);
+    expect(valley.parts?.['sluice_gate']?.npc).toBe('orin');
   });
 
   it('funding takes the gate with the gold and stone, and the offer goes', () => {
@@ -292,11 +301,13 @@ describe('the river and its fish', () => {
       s.stats['place.weir'] = 0;
       const dry = orderCandidates(s).map((r) => r.item);
       for (const f of river) expect(dry, season).not.toContain(f);
+      const posted = generateOrders(s);
+      expect(posted.length, season).toBeGreaterThan(0);
+      for (const o of posted) expect(river, season).not.toContain(o.item.split('|')[0]);
       s.stats['place.weir'] = 3;
       const wet = orderCandidates(s).map((r) => r.item);
       for (const f of fish.filter((x) => river.includes(x.item) && !x.legend))
         if (f.seasons.includes(season)) expect(wet, season).toContain(f.item);
-      for (const o of generateOrders(s)) expect(o.item).toBeTruthy();
     }
   });
 });
@@ -343,8 +354,9 @@ describe('Finn, Clay and the river', () => {
     const dry = pendingEvent(s, 'finn');
     s.stats['place.weir'] = 3;
     const wet = pendingEvent(s, 'finn');
-    expect(dry?.id === 'heron' || dry?.id === 'lake').toBe(true);
-    if (dry?.id === 'heron' && wet?.id === 'heron') expect(dry.lines).not.toEqual(wet.lines);
+    expect(dry?.id).toBe('heron');
+    expect(wet?.id).toBe('heron');
+    expect(dry!.lines).not.toEqual(wet!.lines);
   });
 
   it("an old save's quiet weir counts as a place open, never as a place done", () => {
@@ -441,5 +453,37 @@ describe('saves from before the Weir keep their river (coordinator ruling)', () 
     const back = migrate(JSON.parse(JSON.stringify(o)));
     expect(stageOf(back, 'weir')).toBe(3);
     expect(back.stats['valley.riverSeen']).toBe(1);
+  });
+});
+
+describe('the morning the weir opens', () => {
+  it('the channels already carry the weir flow (64): tiles past 24 are drawn wet and water their soil', () => {
+    const s = newState();
+    s.time.season = 'summer';
+    s.time.day = 20;
+    s.weather = 'sunny';
+    s.forecast = 'sunny';
+    Object.assign(s.stats, {
+      'valley.farmGreen': 1,
+      'valley.greenSeen': 1,
+      'place.spring': 3,
+      'place.spring.opened': 10,
+      'valley.creekSeen': 1,
+      'valley.compost': 1,
+      'place.weir': 2,
+      'site.weir.work': 4,
+      'site.weir.last': 28 + 20,
+      'place.weir.since': 28 + 20,
+    });
+    // a 30-tile channel west from the creek along y 10, then down x 0; soil beside tile 21 and tile 26
+    for (let i = 1; i <= 26; i++) digChannel(s, 26 - i, 10);
+    for (let i = 0; i < 4; i++) digChannel(s, 0, 11 + i);
+    s.farm.tiles['5,9'] = { watered: false, crop: null };
+    s.farm.tiles['0,9'] = { watered: false, crop: null };
+    sleep(s);
+    expect(stageOf(s, 'weir')).toBe(3);
+    expect(channelFlow(s)).toBe(64);
+    expect(s.farm.tiles['5,9']!.watered).toBe(true);
+    expect(s.farm.tiles['0,9']!.watered).toBe(true);
   });
 });

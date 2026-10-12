@@ -1669,3 +1669,21 @@ is unchanged: no control moved and the camera scrolls are identical.
 - A channel hides flowers and tufts on its cell and restores them when filled in (the art critic's ruling); crowns
   stay. Water tiles are static, like the map's other water; the feel lane draws the moving front.
 - The chars atlas split moved only the action frames (they are single-image textures, so any atlas works).
+
+## Code review of dry-year-2 (review lane, review/dry-year-2, 2026-10-12)
+
+- **Channels water after the places open.** `channels:water` moved from morning order 10 to 56, after
+  `valley:places` (55) and before the post (60): the morning the weir opens, the 64-tile flow already waters, as the
+  renderer and the morning run draw it. Nothing between 10 and 55 read the channels' watering.
+- **Placing on a channel is refused** ("Fill the channel in first." / "Aterre a vala primeiro."), as tilling one
+  is: the place handler used to delete the channel for free. A dig also clears a weed on its tile, as tilling does.
+- **A re-planned walk never starts on a door** (`routeStarts` takes the same `avoid` as the path search). A tap on
+  the door itself still walks there, from the tile behind.
+- **Plot sign prices go through `fmtGold`**, so English now reads "1,200g" on the sign, like every other price.
+- **The see-through hole's body box ends on the feet row** (`py - 11 .. py`, still 12 rows, so the 36/10 thresholds
+  stand): it took the bottom pixel row of the tile above, which could hold a hole open after stepping out.
+- **Labels in a tween are lifted clear of the plates too**; only floatText lines (named `RISING_LABEL`) are left to
+  their own tween. A villager's bobbing "!" is lifted from wherever its tween puts it each frame.
+- **A v1 save is an old save** (it keeps its river): `migrateV1` no longer copies a new game's valley markers.
+- The review's findings, fixed and open, are in `agents/out/review-dry-year-2.md` (git-ignored scratch) and the
+  coordinator's summary.

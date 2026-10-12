@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { game, goals, items, placeables, shops } from '../src/data';
 import { performAction } from '../src/systems/actions';
@@ -11,6 +11,9 @@ import { measureText } from '../src/ui/fontMetrics';
 import { shopFacts, shopTabOf, shopTabs } from '../src/ui/panels/shopFacts';
 import { LOCALES, setLocale } from '../src/i18n';
 import { equip, grass, newState } from './helpers';
+
+// a failing locale loop must not leave Portuguese set for the tests after it
+afterEach(() => setLocale('en'));
 
 const bag = shops['town_general_store']!.upgrades.find((u) => u.id === 'bag')!;
 const decorIds = Object.keys(placeables).filter((id) => placeables[id]!.behavior === 'decor');

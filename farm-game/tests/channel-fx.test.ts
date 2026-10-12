@@ -117,7 +117,9 @@ describe('the soil off the spade', () => {
   });
 
   it('lands left and right of a north-south cut', () => {
-    for (const c of clods('down', rng(5))) {
+    const cs = clods('down', rng(5));
+    expect(cs.length).toBeGreaterThan(0);
+    for (const c of cs) {
       expect(Math.abs(c.x1)).toBeGreaterThanOrEqual(8);
       expect(Math.abs(c.y1)).toBeLessThanOrEqual(7);
     }
