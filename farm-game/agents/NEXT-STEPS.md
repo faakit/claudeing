@@ -381,3 +381,19 @@ Measure with `render.mjs`, `measure.py`, `sfxlevels.py` and `seasons.py`; check 
   footprints.
 - **Licensing before any store release:** check Google's terms for the Flow images again (see `ASSETS.md`).
 - **Portuguese naming choices** in `src/i18n/GLOSSARY.md` (gold as "o", the Heron, the Weir, the sheep shed).
+
+## Funnel analytics (release lane, release/analytics, 2026-10-12)
+
+- **True now**: a provider-agnostic layer (`src/platform/analytics/`: closed event schema, random install and
+  session ids, batching, offline queue, consent) wired by `src/game/analyticsWiring.ts`. Off by default (no config:
+  nothing starts). Dev provider for `npm run dev` and `?debug&analytics=dev` (DEV tab > Analytics). Firebase adapter
+  for Android behind `VITE_ANALYTICS=firebase`, no npm dependency until the owner activates it (steps, Data safety
+  rows, privacy text and how to read the funnel, D1/D7/D30 and day of churn: agents/PUBLISHING.md, last section).
+  Consent on the title (production only), opt-out in Options > Controls.... Scenarios `analytics-consent` and
+  `analytics-first-harvest`; `npm run e2e:analytics`; e2e:onboarding checks the tutorial funnel.
+- **Not verified**: the Firebase adapter on a real phone (no google-services.json, no device here); the plugin's
+  consent constants are from its 8.x docs and unit-tested only against a fake plugin.
+- **Next**: once the owner has a Firebase project, run the on-device check in PUBLISHING.md (DebugView), register
+  the custom dimensions (`index`, `id`, `game_day`, `install_day`), and build the funnel exploration. New events go
+  in `SCHEMA` first (the validator refuses anything else), then the wiring, then a line in the Data safety table if
+  it is a new kind of data.
