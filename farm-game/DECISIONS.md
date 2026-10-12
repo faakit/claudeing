@@ -1878,3 +1878,23 @@ player on how to take stone before showing the place that must be fixed with sto
   0/20 (have 0): mine rocks". Every good a project or place asks for has one, and so does house timber (tested).
 - An intro whose target is on another map keeps its own line while the pointer leads to the door. The guided days'
   steps still say "Head back to ...".
+
+### After the new-player critic's reviews (D1-D3)
+
+- **The coach walks the real door chain.** Each map lists the maps its doors lead to (`maps.json` `links`, checked
+  against the map files). An off-map pointer takes the next door on the shortest walk (farm -> town -> woods ->
+  mine). The old fallback (the farm door, then the town door) looped farm <-> town 40 times on the way to the mine.
+  An e2e follows the coach alone from the farm until a rock breaks: 17-18 inputs on the i13 and the SE.
+- **An intro already leading the player to another map keeps the floor** while its moment holds (Clay's town intro
+  waits).
+- **Quiet after the first rock.** The stone intro ends at the first rock. The spring's site intro then waits until
+  its stone is no longer short, or until the next morning (`daysSince`), when the fund line says what is left. One
+  rock out of 20 never walks the player back to the site.
+- **An empty mine says so.** "No rocks today: back tomorrow." (the kind `rocks`), and the coach points at nothing.
+- **Sheets close only from Close (owner rule), the fishing result too.** No tap-anywhere or Action close. With two
+  kinds of bait or more, the bottom row is [Bait: X n >] and [Close], mirrored for the left hand.
+- **A board job row has a button only when there is something to do** (Take, or Turn in once done). A hatched "Turn
+  in" on a job under way read as nothing.
+- **pt-BR job names were shortened** to fit the board row without an ellipsis ("catar 4 do mato", "saudar 3 pessoas").
+- **The paired onboarding gate** (critic, ABBA, 14 configs on this host): base median 171 s, this branch 173.5 s
+  (+2.5 s, bar +5). Removing the day-2 Goal-tab step paid for the board.
