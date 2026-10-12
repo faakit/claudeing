@@ -1,0 +1,47 @@
+{
+  "title": "Store and social: the river's first morning, seen from the river bank",
+  "about": "As river-first-morning (Summer 20, 08:00, the morning the weir opened, the dry town drawn over the river town and dissolving around the farmer under THE RIVER IS BACK), but the farmer arrives on the river's west bank (16,24) so the cracked mud bed turns into running water in frame. For the social clip 'river-back' and the store video (scripts/store-capture.mjs).",
+  "version": 18,
+  "tags": ["store", "town", "valley", "weir"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "place.spring.since": 10,
+    "place.spring.opened": 10,
+    "project.place_spring": 1,
+    "site.spring.work": 3,
+    "site.spring.last": 9,
+    "placesDone": 2,
+    "projectsDone": 2,
+    "shipped": 60,
+    "harvested": 80,
+    "slept": 42,
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "mail.welcome": 1,
+    "place.weir.since": 48,
+    "place.weir.opened": 48,
+    "project.place_weir": 1,
+    "site.weir.work": 4,
+    "site.weir.last": 47
+  },
+  "friends": {
+    "finn": 2
+  },
+  "at": {
+    "map": "town",
+    "tx": 16,
+    "ty": 24,
+    "facing": "right"
+  },
+  "time": {
+    "season": "summer",
+    "day": 20,
+    "clock": "08:00"
+  },
+  "letters": [],
+  "goal": "tree"
+}

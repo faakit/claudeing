@@ -64,20 +64,26 @@ const fishing = (farm) =>
  */
 async function clean(farm, zoom = 1) {
   farm.clean = true;
-  await farm.eval((z) => {
-    const g = window.__farm.game;
-    const world = g.scene.getScenes(true).find((sc) => 'tilemap' in sc && sc.tilemap);
-    if (world) world.cameras.main.setZoom(z);
-    window.__storeClean = () => {
-      const ui = g.scene.getScene('UI');
-      for (const o of ui.children.list) if ((o.depth ?? 0) >= 2.5) o.setVisible(false);
-      // in the world: plot prices, site names, quest marks and the tool strip (labels for play, not for a still)
-      if (world)
-        for (const o of world.children.list)
-          if ((o.depth ?? 0) >= 9000 || typeof o.text === 'string') o.setVisible(false);
-    };
-    window.__storeClean();
-  }, zoom);
+  // STORE_KEEP: UI depths to keep in the clean look (54,55: the valley banners and their plate)
+  const keep = (process.env.STORE_KEEP ?? '').split(',').filter(Boolean).map(Number);
+  await farm.eval(
+    ([z, keep]) => {
+      const g = window.__farm.game;
+      const world = g.scene.getScenes(true).find((sc) => 'tilemap' in sc && sc.tilemap);
+      if (world) world.cameras.main.setZoom(z);
+      window.__storeClean = () => {
+        const ui = g.scene.getScene('UI');
+        for (const o of ui.children.list)
+          if ((o.depth ?? 0) >= 2.5 && !keep.includes(o.depth)) o.setVisible(false);
+        // in the world: plot prices, site names, quest marks and the tool strip (labels for play, not for a still)
+        if (world)
+          for (const o of world.children.list)
+            if ((o.depth ?? 0) >= 9000 || typeof o.text === 'string') o.setVisible(false);
+      };
+      window.__storeClean();
+    },
+    [zoom, keep],
+  );
 }
 /** Frame a tile: the world camera stops following the farmer and centres on (tx, ty). */
 const look = (farm, tx, ty) =>
@@ -366,6 +372,14 @@ const MOMENTS = {
     },
   },
   // ---- the social pack (marketing/social/PLAN.md) ----
+  // The river bed in town the morning the weir opened: cracked mud dissolving into running water.
+  'river-bed': {
+    scenario: 'store-river-reveal',
+    async drive(farm, t) {
+      await clean(farm, 1.6);
+      await t.hold(150);
+    },
+  },
   // The creek's first morning: water running down the dry bed from Ilse's gate.
   creek: {
     scenario: 'farm-creek-first-morning',
@@ -391,7 +405,7 @@ const MOMENTS = {
     scenario: 'store-full-field',
     async drive(farm, t) {
       await goto(farm, 'farm', 13, 16, 'left');
-      await clock(farm, '18:45');
+      await clock(farm, '19:30');
       await clean(farm, 2);
       await t.hold(12);
       for (let k = 0; k < 6; k++) {
@@ -458,10 +472,19 @@ try {
       for (const name of picked) {
         const m = MOMENTS[name];
         if (!m) throw new Error(`no moment "${name}" (have ${Object.keys(MOMENTS).join(', ')})`);
-        const farm = await open(browser, url, m.scenario, lang, { ...PHONE, dpr: m.dpr ?? 4 });
+        // STORE_DPR overrides every moment's scale; STORE_CLEAN_ALL=<zoom> puts every moment in the clean look;
+        // STORE_TAG names the frame folders (the social pack's 6x captures are '<moment>@soc')
+        const dpr = Number(process.env.STORE_DPR ?? m.dpr ?? 4);
+        const farm = await open(browser, url, m.scenario, lang, { ...PHONE, dpr });
         await pause(farm);
         const shotDir = join(OUT, 'raw', lang);
-        const vidDir = join(OUT, 'video', 'frames', lang === 'en' ? name : `${name}@${lang}`);
+        const tag = process.env.STORE_TAG ? `@${process.env.STORE_TAG}` : '';
+        const vidDir = join(
+          OUT,
+          'video',
+          'frames',
+          `${name}${tag}${lang === 'en' ? '' : `@${lang}`}`,
+        );
         mkdirSync(shotDir, { recursive: true });
         if (mode === 'video') {
           rmSync(vidDir, { recursive: true, force: true });
@@ -474,6 +497,8 @@ try {
           await snap(farm, join(shotDir, `${name}.png`));
         };
         const t = timeline(farm, async (n, tl) => {
+          if (process.env.STORE_CLEAN_ALL && !farm.clean)
+            await clean(farm, Number(process.env.STORE_CLEAN_ALL));
           if (mode === 'video') await snap(farm, join(vidDir, `${String(n).padStart(4, '0')}.png`));
           else if (n === m.shotAt || (m.shotAt === undefined && tl.marked && tl.sinceMark() === 0))
             await take();
