@@ -900,6 +900,15 @@
       "alt": [
         {
           "when": {
+            "panel": "shop"
+          },
+          "text": "Tap a price to buy seeds.",
+          "target": {
+            "button": "^[0-9,]+g$"
+          }
+        },
+        {
+          "when": {
             "not": {
               "npc": "mara"
             }
@@ -913,11 +922,9 @@
       ],
       "done": [
         {
-          "panel": "shop"
-        },
-        {
-          "stat": "bought",
-          "min": 1
+          "not": {
+            "goal": "buy"
+          }
         }
       ],
       "leave": true
@@ -934,20 +941,11 @@
       },
       "done": [
         {
-          "all": [
-            {
-              "min": 1,
-              "fresh": "bought"
-            },
-            {
-              "not": {
-                "goal": "buy"
-              }
-            }
-          ]
+          "not": {
+            "goal": "buy"
+          }
         }
       ],
-      "leave": true,
       "optional": true
     },
     {

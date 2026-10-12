@@ -46,6 +46,11 @@ export class NpcPanel extends Modal {
     super(scene, 236);
   }
 
+  /** Whose sheet this is (the guided start points inside it). */
+  get npcId(): string {
+    return this.id;
+  }
+
   openFor(id: string): void {
     if (!npcs[id]) return;
     this.id = id;

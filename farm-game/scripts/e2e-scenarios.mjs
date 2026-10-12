@@ -1957,6 +1957,56 @@ async function actions() {
   await farm.close();
 }
 
+// ---------------------------------------------------------------- the guided start's buy step (owner bug)
+
+/** The coach's view now (step, line, pointer). */
+const coachNow = (farm) => farm.eval(() => window.__farm.game.scene.getScene('UI').coach.debug());
+
+async function coachShop() {
+  // Owner: "Buy 5 items is buggy: when you tap Mara it shows to tap on Close when it should show to tap in the
+  // store." On her sheet the coach points at Shop; in the shop at a price; closed early, back at Mara.
+  for (const lang of ['en', 'pt-BR']) {
+    const farm = await openScenario(browser, url, 'town-dry-day2', {
+      profile: 'se',
+      query: `&lang=${lang}`,
+    });
+    const tag = `town-dry-day2 (SE, ${lang})`;
+    await farm.during('panelOpen', ['npc'], () =>
+      farm.eval(() => window.__farm.gameEvents.emit('talkTo', { id: 'mara' })),
+    );
+    await farm.idle();
+    let c = await coachNow(farm);
+    check(
+      `${tag}: on Mara's sheet the coach points at Shop, never Close`,
+      c?.visible && c.step === 'buySeeds' && c.pointer?.pattern === '^Shop$' && !!c.aim,
+      JSON.stringify(c),
+    );
+    const tapped = await tapSheetButton(farm, lang === 'en' ? /^Shop$/ : /^Loja$/);
+    await farm.panel('shop');
+    await farm.idle();
+    c = await coachNow(farm);
+    check(
+      `${tag}: Shop opens the store and the coach points at a price`,
+      tapped &&
+        c?.visible &&
+        c.pointer?.kind === 'button' &&
+        /g\$/.test(c.pointer.pattern) &&
+        !!c.aim,
+      JSON.stringify(c),
+    );
+    await closeSheet(farm);
+    await farm.idle();
+    c = await coachNow(farm);
+    check(
+      `${tag}: closed before 5 are bought, the coach leads back to Mara`,
+      c?.visible && c.step === 'buySeeds' && c.pointer?.kind !== 'button',
+      JSON.stringify(c),
+    );
+    check(`${tag}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
 // ---------------------------------------------------------------- languages (src/i18n)
 
 /**
@@ -2230,6 +2280,7 @@ try {
         towingLane,
         weirTow,
         lang,
+        coachShop,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

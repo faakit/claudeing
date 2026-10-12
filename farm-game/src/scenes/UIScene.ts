@@ -729,6 +729,7 @@ export class UIScene extends Phaser.Scene {
       panel,
       tab: this.menu.isOpen ? this.menu.currentTab : null,
       interact: this.interactType,
+      npc: this.npc.isOpen ? this.npc.npcId : null,
     };
   }
 

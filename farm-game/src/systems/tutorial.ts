@@ -76,6 +76,8 @@ export interface CoachFacts {
   refused?: number;
   /** What the lit Interact button would open now (`mailbox`, `bed`, `npc:mara`...), if anything. */
   interact?: string | null;
+  /** With `panel: 'npc'`: whose sheet it is. */
+  npc?: string | null;
 }
 
 /** After this many refusals in a row, the row tip gives way to the one-tile pointer. */
@@ -109,6 +111,8 @@ const data = (): TutorialData => tutorial;
 export const COACH_LINE_PX = 184;
 /** The labels sheets give their close button (Modal.closeButton), in English: buttons match through `toEnglish`. */
 export const CLOSE_BUTTON = '^(Close|Done|Not now|Leave it)$'; // i18n-ok: a pattern over English labels
+/** The shopkeeper's sheet's Shop button (NpcPanel), in English. */
+export const SHOP_BUTTON = '^Shop$'; // i18n-ok: a pattern over English labels
 /** The welcome strip's text box (two lines at most). */
 export const WELCOME_PX = 158;
 const DIRS: Direction[] = ['up', 'down', 'left', 'right'];
@@ -832,6 +836,15 @@ export function coachView(
     pointer = { kind: 'ui', id: 'interact', tile: { tx: pointer.tx, ty: pointer.ty } };
     text = t(target?.npc ? 'tutorial.litTalk' : 'tutorial.litOpen');
   }
+  // The step points at a villager whose own sheet is open: the way on is inside it, never Close. A shopkeeper's
+  // sheet leads on through its Shop button (owner bug: "when you tap Mara it shows to tap on Close").
+  const sheetNpc =
+    target?.npc && facts.panel === 'npc' && facts.npc === target.npc ? target.npc : null;
+  if (sheetNpc && npcs[sheetNpc]?.role === 'shop') {
+    pointer = { kind: 'button', pattern: SHOP_BUTTON };
+    text = t('tutorial.tapShop');
+    away = false;
+  }
   // A sheet is open but the step wants the world: say how to get back to it.
   if (
     facts.panel &&
@@ -889,6 +902,7 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
     t('tutorial.litOpen'),
     t('tutorial.litTalk'),
     t('tutorial.closeToCarryOn'),
+    t('tutorial.tapShop'),
     t('tutorial.doorOutside'),
     ...['farm', 'town', 'woods', 'mine'].map((m) => t('tutorial.headBack', { map: mapName(m) })),
   );
