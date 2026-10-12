@@ -78,14 +78,14 @@ be changed afterwards. Update it in three places, then `npm run cap:sync`:
 - **Saves**: native key-value store (SharedPreferences / UserDefaults) via Capacitor Preferences, not IndexedDB. Android auto-backup includes it.
 - **Screen stays on** while playing (long stretches without touches).
 - **No service worker in the apps** (their bundle is already local; a cache-first worker could serve a stale game after an update).
-- **Permissions**: only `INTERNET` (the Capacitor template default; the game makes no network requests). No analytics, no ads, no accounts.
+- **Permissions**: only `INTERNET` (the Capacitor template default). No ads. The only network use is optional: cloud save through Google Play Games (Android, once a Play Games project id is built in) and analytics (see the analytics lane). Their data and Data safety answers are in `agents/PUBLISHING.md` ("Cloud save: data and Data safety", and the shared "Privacy, consent and Data safety"). There are no game accounts; Play Games signs in with the phone's Google account.
 
 ## Store checklist
 
 Prepare early:
 
 - App icon 1024x1024 (`resources/icon.png`), feature graphic (Google Play), 4-8 screenshots per device class, short + long description.
-- **Privacy policy URL**: the game collects no data; say exactly that. Data safety form (Play) and privacy labels (App Store): "no data collected".
+- **Privacy policy URL** and the **Data safety form** (Play): answer from `agents/PUBLISHING.md` ("Cloud save: data and Data safety", and the shared "Privacy, consent and Data safety"). With cloud save configured, the Android app sends the farm's save to Google Play Games, so "no data collected" is no longer true there. The iOS app and the web build have no cloud save; check the analytics section before claiming "no data collected" anywhere.
 - Age rating questionnaires: no violence, no purchases, no user-generated content.
 - Apple **Guideline 4.2 (thin web wrapper)** mitigations already in the app: fully offline, native haptics, native save store, native splash, no browser chrome, lifecycle-aware autosave, back-button handling.
 - Google Play: target API level must be current (set `targetSdkVersion` in `android/variables.gradle`); new personal developer accounts have extra closed-testing requirements, check current rules.

@@ -61,6 +61,10 @@ export interface GameEvents {
   valleyMoment: { text: string; farmerY?: number; delay?: number; cue?: string };
   /** A rebuilt house's window lit for the first time, its family home (audio's `window-lit` sting). Once a house. */
   houseLit: { house: string };
+  /** Cloud save's status changed (game/cloudSync.ts): Options and the title redraw their cloud lines. */
+  cloudChanged: undefined;
+  /** A sync found a cloud save further along than, or diverged from, this phone's: the player must choose. */
+  cloudConflict: undefined;
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;

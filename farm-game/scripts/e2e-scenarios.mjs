@@ -2209,6 +2209,134 @@ async function lang() {
   await ctx.close();
 }
 
+// Cloud save (game/cloudSync.ts) with the fake provider: the conflict dialog both ways, the title's
+// "Continue (cloud)", offline queueing, and no provider at all (the web build: nothing changes).
+const cloudOf = (farm) =>
+  farm.eval(() => JSON.parse(JSON.stringify(window.__farm.dev.cloud.status)));
+const fakeDay = (farm) =>
+  farm.eval(() => {
+    const d = window.__farm.dev.cloud.fake?.data;
+    return d ? JSON.parse(d).time.day : null;
+  });
+async function cloud() {
+  // No provider: Options is exactly as before (the autosave note, no cloud entry), and nothing is ever uploaded.
+  const farm = await openScenario(browser, url, 'ripe-plot', { profile: PROFILE });
+  check(
+    'cloud: without a provider cloud save is unavailable',
+    (await cloudOf(farm)).state === 'unavailable',
+  );
+  await farm.tapButton('MENU');
+  await farm.panel('menu');
+  await farm.tapButton(/^opts?$/i);
+  await farm.idle();
+  const texts = (await liveTargets(farm.page)).map((x) => x.text).join(' | ');
+  check('cloud: without a provider Options shows no cloud entry', !/cloud/i.test(texts), texts);
+  await farm.press('Escape');
+  await farm.panelClosed();
+
+  // The cloud is further along: the dialog opens by itself, nothing goes up, its buttons are one-thumb sized.
+  await farm.load('cloud-conflict');
+  check(
+    'cloud-conflict: the choice dialog opens',
+    (await farm.panel('cloudPanel')) === 'cloudPanel',
+  );
+  const c = await farm.eval(() => window.__farm.dev.cloud.conflict);
+  check(
+    'cloud-conflict: the cloud save is further along and was not overwritten',
+    c?.verdict === 'cloud' && c.cloud.day === 31 && (await fakeDay(farm)) === 3,
+    JSON.stringify(c),
+  );
+  const btns = (await liveTargets(farm.page)).filter((x) =>
+    /phone's|cloud save|later/i.test(x.text),
+  );
+  const k = farm.geo.k;
+  check(
+    'cloud-conflict: three full-width buttons, every one at least 43x38 CSS px, all in the lower half',
+    btns.length === 3 && btns.every((b) => b.w * k >= 43 && b.h * k >= 38 && b.y >= 200),
+    JSON.stringify(
+      btns.map((b) => [b.text, Math.round(b.w * k), Math.round(b.h * k), Math.round(b.y)]),
+    ),
+  );
+  // "Use the cloud save": the game restarts on the cloud's farm (summer 3), saved on this phone.
+  await farm.tapButton(/use the cloud save/i);
+  const s = await farm.until(
+    (st) => st.time.season === 'summer' && st.time.day === 3 && st,
+    null,
+    'the cloud farm',
+  );
+  check('cloud-conflict: "Use the cloud save" restarts on the cloud farm', s.money === 12400);
+  await farm.ready();
+  check(
+    'cloud-conflict: then the phone counts as synced',
+    (await cloudOf(farm)).state === 'synced',
+  );
+
+  // "Keep this phone's": the phone's spring 12 replaces the cloud's summer 3.
+  await farm.load('cloud-conflict');
+  await farm.panel('cloudPanel');
+  await farm.tapButton(/keep this phone/i);
+  const up = await farm.until(
+    (st, f) => {
+      const d = f.dev.cloud.fake?.data;
+      return d && JSON.parse(d).time.season === 'spring' ? JSON.parse(d).time.day : null;
+    },
+    null,
+    "this phone's save to go up",
+  );
+  check('cloud-conflict: "Keep this phone\'s" uploads this phone\'s save', up === 12);
+  check('cloud-conflict: the player stays in the game', (await farm.state()).time.day === 12);
+
+  // Two phones played different days: a conflict, neither card marked ahead.
+  await farm.load('cloud-diverged');
+  await farm.panel('cloudPanel');
+  check(
+    'cloud-diverged: diverged saves ask too',
+    (await farm.eval(() => window.__farm.dev.cloud.conflict?.verdict)) === 'conflict',
+  );
+  await farm.tapButton(/decide later/i);
+  await farm.panelClosed();
+  check(
+    'cloud-diverged: "Decide later" keeps both and pauses uploads',
+    (await cloudOf(farm)).state === 'conflict' && (await fakeDay(farm)) === 14,
+  );
+
+  // Offline: queued, then up once the cloud is back.
+  await farm.load('cloud-offline');
+  check('cloud-offline: the upload waits', (await cloudOf(farm)).state === 'pending');
+  await farm.eval(async () => {
+    window.__farm.dev.cloud.fake.offline = false;
+    await window.__farm.dev.cloud.sync();
+  });
+  check(
+    'cloud-offline: back online, the save goes up',
+    (await cloudOf(farm)).state === 'synced' && (await fakeDay(farm)) === 12,
+  );
+
+  // The title offers a further-along cloud save; "Continue (cloud)" starts it.
+  await farm.load('cloud-title');
+  const titleTexts = await farm.eval(() =>
+    window.__farm.game.scene.getScene('Title').buttons.map((b) => b.text),
+  );
+  check(
+    'cloud-title: "Continue (cloud)" leads, "Continue (this phone)" under it',
+    titleTexts[0] === 'Continue (cloud)' && titleTexts[1] === 'Continue (this phone)',
+    JSON.stringify(titleTexts),
+  );
+  await farm.eval(() => {
+    const t = window.__farm.game.scene.getScene('Title');
+    t.primary();
+  });
+  const fromCloud = await farm.until(
+    (st) => window.__farm.game.scene.isActive('UI') && st.time.season === 'summer' && st,
+    null,
+    'the cloud farm from the title',
+    20000,
+  );
+  check('cloud-title: "Continue (cloud)" starts the cloud farm', fromCloud.time.day === 3);
+  check('cloud: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 try {
   const blocks = SMOKE
     ? [smoke]
@@ -2230,6 +2358,7 @@ try {
         towingLane,
         weirTow,
         lang,
+        cloud,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

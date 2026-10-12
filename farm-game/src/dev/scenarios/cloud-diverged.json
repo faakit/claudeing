@@ -1,0 +1,34 @@
+{
+  "title": "Cloud save: two phones played different days (a real conflict)",
+  "about": "This phone reached spring 20 in 1 h 30 min; the cloud's copy is on spring 14 but was played 4 h. Neither is simply ahead, so the dialog says the two played different days and marks neither card.",
+  "tags": ["cloud", "dialog"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 20,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "cloud": {
+      "account": "Ana",
+      "save": {
+        "day": 14,
+        "money": 6100,
+        "playSec": 14400,
+        "savedMinAgo": 60
+      },
+      "syncOnStart": true
+    }
+  }
+}

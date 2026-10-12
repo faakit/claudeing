@@ -10,7 +10,6 @@ import { createInitialState, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { setState } from '../state/store';
 import { hasNewerSave, loadGame } from '../systems/save';
-import { seasonLabel } from '../systems/time';
 import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
 import { Button, drawPanel } from '../ui/widgets';
@@ -21,12 +20,26 @@ import { WIPE_CLOSE_MS } from '../fx/feel';
 import { prewarmTasks } from '../fx/prewarm';
 import { preparseMap } from './mapCache';
 import { syncDryTiles } from '../art/dryTiles';
-import { fmtGold, onLocaleChange, t } from '../i18n';
+import { onLocaleChange, t } from '../i18n';
 import { chooseLanguage, nextLanguage } from '../game/language';
+import { cloudSync } from '../game/cloudWiring';
+import type { CloudConflict } from '../platform/cloudSave';
+import { summarize } from '../systems/cloudRules';
+import { CloudConflictPanel } from '../ui/panels/CloudConflictPanel';
+import { saveLine } from '../ui/panels/cloudText';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */
 export class TitleScene extends Phaser.Scene {
+  /** A game to start as soon as the title is up (the cloud's save, chosen in game: UIScene). */
+  static startNext: GameState | null = null;
   private loaded: GameState | null = null;
+  /** A cloud save further along than this phone's, or diverged from it (game/cloudSync.ts), or the only one. */
+  private offer: CloudConflict | null = null;
+  private cloudPanel: CloudConflictPanel | null = null;
+  /** The save lines under the Continue buttons (rebuilt with them). */
+  private lines: Label[] = [];
+  /** Rosa's letter, taken down if a cloud save turns up on a first launch. */
+  private letterParts: Phaser.GameObjects.GameObject[] = [];
   private confirmNew = false;
   private newerSave = false;
   private buttons: Button[] = [];
@@ -70,6 +83,10 @@ export class TitleScene extends Phaser.Scene {
     this.wipe = new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
     this.confirmNew = false;
     this.buttons = [];
+    this.lines = [];
+    this.letterParts = [];
+    this.offer = null;
+    this.cloudPanel = null;
     this.cameras.main.setBackgroundColor('#1e2848');
     this.drawBackdrop();
 
@@ -174,7 +191,24 @@ export class TitleScene extends Phaser.Scene {
         this.drawLetter();
       }
       this.buildButtons();
+      // Cloud save: a save further along in the cloud (another phone) is offered as "Continue (cloud)". Without a
+      // provider this resolves null at once and the title is exactly as before.
+      const offer = await cloudSync.load(this.loaded);
+      if (gen !== this.gen || this.starting || !offer) return;
+      this.offer = offer;
+      if (this.firstLaunch) {
+        this.firstLaunch = false;
+        this.letterParts.forEach((o) => o.destroy());
+        this.letterParts = [];
+        subtitle.setVisible(true);
+      }
+      this.buildButtons();
     });
+    const next = TitleScene.startNext;
+    if (next) {
+      TitleScene.startNext = null;
+      this.time.delayedCall(0, () => this.start(next));
+    }
     // The language, one tap away (top right, clear of the letter and the buttons): the title redraws in it.
     new Button(this, GAME_WIDTH - 68, 4, 64, 22, t('lang.name'), () => {
       if (!this.starting) void chooseLanguage(nextLanguage());
@@ -191,46 +225,44 @@ export class TitleScene extends Phaser.Scene {
   private buildButtons(): void {
     this.buttons.forEach((b) => b.destroy());
     this.buttons = [];
-    this.primary = this.loaded
-      ? () => this.start(this.loaded as GameState)
-      : this.newerSave
-        ? null
-        : () => this.start(createInitialState());
+    this.lines.forEach((l) => l.destroy());
+    this.lines = [];
+    const offer = this.offer;
+    const continueCloud = () => this.continueCloud();
+    this.primary = offer
+      ? continueCloud
+      : this.loaded
+        ? () => this.start(this.loaded as GameState)
+        : this.newerSave
+          ? null
+          : () => this.start(createInitialState());
     let y = this.firstLaunch ? letterLayout().buttonY : 200;
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;
-    if (this.loaded) {
-      const time = this.loaded.time;
+    // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
+    // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
+    const saveButton = (label: string, line: string, onClick: () => void, main: boolean) => {
       this.buttons.push(
-        // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
-        // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
-        new Button(
-          this,
-          x,
-          y,
-          w,
-          30,
-          t('title.continue'),
-          () => this.start(this.loaded as GameState),
-          {
-            textColor: INK.green,
-            rim: INK.green,
-          },
-        ),
-      );
-      new Label(
-        this,
-        GAME_WIDTH / 2,
-        y + 36,
-        t('title.saveLine', {
-          season: seasonLabel(time.season),
-          day: time.day,
-          year: time.year,
-          gold: fmtGold(this.loaded.money),
+        new Button(this, x, y, w, 30, label, onClick, {
+          textColor: main ? INK.green : INK.cream,
+          rim: main ? INK.green : INK.rim,
         }),
-        { align: 'center', color: C.creamDim },
+      );
+      this.lines.push(
+        new Label(this, GAME_WIDTH / 2, y + 36, line, { align: 'center', color: C.creamDim }),
       );
       y += 62;
+    };
+    if (offer) saveButton(t('cloud.continueCloud'), saveLine(offer.cloud), continueCloud, true);
+    if (this.loaded) {
+      const local = this.loaded;
+      saveButton(
+        offer ? t('cloud.continuePhone') : t('title.continue'),
+        saveLine(summarize(local)),
+        // with a cloud save further along, this phone's save is never played on without saying so
+        () => (offer ? this.askCloud(offer) : this.start(local)),
+        !offer,
+      );
     }
     this.buttons.push(
       new Button(
@@ -241,7 +273,7 @@ export class TitleScene extends Phaser.Scene {
         30,
         this.confirmNew ? t('title.eraseConfirm') : t('title.newGame'),
         () => {
-          if ((this.loaded || this.newerSave) && !this.confirmNew) {
+          if ((this.loaded || this.newerSave || offer) && !this.confirmNew) {
             this.confirmNew = true;
             this.buildButtons();
             return;
@@ -253,6 +285,33 @@ export class TitleScene extends Phaser.Scene {
     );
   }
 
+  /** "Continue (cloud)": a cloud save simply further along is taken at once; two diverged saves ask first. */
+  private continueCloud(): void {
+    const offer = this.offer;
+    if (!offer || this.starting) return;
+    if (offer.verdict === 'conflict' && this.loaded) return this.askCloud(offer);
+    void this.takeCloud();
+  }
+
+  private async takeCloud(): Promise<void> {
+    if (this.starting) return;
+    const state = await cloudSync.resolve('cloud');
+    if (state) this.start(state);
+  }
+
+  /** The one-thumb choice between the two saves (ui/panels/CloudConflictPanel.ts). */
+  private askCloud(offer: CloudConflict): void {
+    this.cloudPanel ??= new CloudConflictPanel(this, (choice) => {
+      if (choice === 'cloud') void this.takeCloud();
+      else if (choice === 'local' && this.loaded) {
+        const local = this.loaded;
+        void cloudSync.resolve('local');
+        this.start(local);
+      }
+    });
+    this.cloudPanel.show(offer);
+  }
+
   /**
    * Rosa's letter (valley.json), on parchment under the logo (ui/titleLetter.ts lays it out). The paper is the
    * art lane's letter 9-slice (ui/sheetSkin.ts `letterTexture`) when it exists, else a content panel drawn here.
@@ -262,9 +321,10 @@ export class TitleScene extends Phaser.Scene {
     const L = letterLayout();
     const { x, y, w } = LETTER_CARD;
     const paper = letterTexture(this, w, L.h);
-    if (paper) this.add.image(x, y, paper).setOrigin(0).setDepth(3);
+    if (paper) this.letterParts.push(this.add.image(x, y, paper).setOrigin(0).setDepth(3));
     else {
       const g = this.add.graphics().setDepth(3);
+      this.letterParts.push(g);
       drawPanel(g, x, y, w, L.h);
       // a folded-down corner, so it reads as a letter and not as a menu
       g.fillStyle(INK.panelLight, 1).fillTriangle(
@@ -279,14 +339,15 @@ export class TitleScene extends Phaser.Scene {
         .fillRect(x + w - 9, y + 2, 1, 7)
         .fillRect(x + w - 9, y + 9, 7, 1);
     }
-    new Label(this, x + LETTER_PAD, y + LETTER_PAD, L.rows.join('\n'), {
+    const body = new Label(this, x + LETTER_PAD, y + LETTER_PAD, L.rows.join('\n'), {
       color: INK.cream,
     }).setDepth(4);
-    new Label(this, L.signX, L.signY, valley.letter.sign, {
+    const sign = new Label(this, L.signX, L.signY, valley.letter.sign, {
       color: INK.creamDim,
       shadow: null,
       align: 'right',
     }).setDepth(4);
+    this.letterParts.push(body, sign);
   }
 
   update(_time: number, delta: number): void {
@@ -336,6 +397,7 @@ export class TitleScene extends Phaser.Scene {
 
   private enter(state: GameState): void {
     Wipe.carry = true;
+    cloudSync.forgetOffer(); // an offer not taken was about the title's save; the next sync looks again
     setState(state);
     audio.setVolumes(state.settings.music, state.settings.sfx, state.settings.muted);
     setHapticsEnabled(state.settings.vibrate);

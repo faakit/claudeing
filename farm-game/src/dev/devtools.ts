@@ -5,7 +5,11 @@
  */
 import Phaser from 'phaser';
 import { mapsData } from '../data';
-import { saveStore } from '../game/persistence';
+import { saveNow, saveStore } from '../game/persistence';
+import { cloudSync } from '../game/cloudWiring';
+import { CLOUD_BOOK_KEY } from '../game/cloudSync';
+import { FakeCloudProvider } from '../platform/cloud/fake';
+import { saveGame } from '../systems/save';
 import { inputHub } from '../input/InputHub';
 import { MemoryStore } from '../platform/SaveStore';
 import { spawnPosition, type Direction, type GameState } from '../state/GameState';
@@ -21,7 +25,14 @@ import { FrameMeter } from './frameStats';
 import { installLab, standVillagersInLab } from './lab';
 import { LAB_MAP, labMap } from './labDef';
 import { SCENARIOS } from './scenarioIndex';
-import { buildScenarioState, mapInfoFromTiled, scenarioRuntime, type MapInfoFn } from './scenarios';
+import {
+  buildScenarioState,
+  mapInfoFromTiled,
+  scenarioCloudData,
+  scenarioRuntime,
+  type MapInfoFn,
+  type ScenarioCloud,
+} from './scenarios';
 import { DevWaits } from './waits';
 import { getLocale, parseLocale, setLocale } from '../i18n';
 
@@ -94,6 +105,39 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
 
   const titleActive = () => game.scene.isActive('Title');
 
+  /**
+   * Cloud save for a scenario: its fake cloud (`dev.cloud`), or none (the web build has none). The bookkeeping is
+   * reset in the sandbox store first, so one scenario's sync never leaks into the next.
+   */
+  let fake: FakeCloudProvider | null = null;
+  const setupCloud = async (cloud: ScenarioCloud | null, state: GameState): Promise<void> => {
+    await saveStore.remove(CLOUD_BOOK_KEY);
+    if (!cloud) {
+      fake = null;
+      await cloudSync.setProvider(null);
+      return;
+    }
+    const now = Date.now();
+    // this phone's save was written a minute ago, unless the scenario says when
+    state.stats['savedAt'] ??= now - 60_000;
+    if (cloud.off || cloud.lastSyncMinAgo !== undefined)
+      await saveStore.write(
+        CLOUD_BOOK_KEY,
+        JSON.stringify({
+          off: cloud.off === true,
+          pending: false,
+          approved: null,
+          lastSync: cloud.lastSyncMinAgo === undefined ? null : now - cloud.lastSyncMinAgo * 60_000,
+        }),
+      );
+    fake = new FakeCloudProvider({
+      account: cloud.account === undefined ? FakeCloudProvider.DEFAULT_ACCOUNT : cloud.account,
+      data: scenarioCloudData(cloud.save, state, now),
+      offline: cloud.offline === true,
+    });
+    await cloudSync.setProvider(fake);
+  };
+
   /** Back to the title screen (as Quit does from a game), waiting until it has built its buttons. */
   const toTitle = async (): Promise<void> => {
     if (!titleActive()) {
@@ -131,6 +175,27 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
     // on the old title (its buttons still up) was wiped by the restart's create, and the world never opened (any
     // scenario loaded right after a lang-pt title scenario timed out on sceneReady).
     if (getLocale() !== was && titleActive()) await waits.frames(2);
+    // "continue": an empty sandbox, then this phone has the scenario's farm saved
+    if (opts.title === 'continue') mem = new MemoryStore();
+    await setupCloud(opts.cloud, state);
+    if (opts.title === 'continue') {
+      // the title looks for this phone's save (and the cloud's) from scratch
+      await saveGame(saveStore, state);
+      inputHub.clearHeld();
+      await toTitle();
+      game.scene.getScene('Title').scene.restart();
+      await waits.frames(2);
+      await toTitle();
+      if (opts.cloud && typeof opts.cloud.save === 'object')
+        await waits.until(() => {
+          const t = game.scene.getScene('Title') as unknown as Loose;
+          return t['offer'] ?? null;
+        }, 'the title to offer the cloud save');
+      const url = new URL(location.href);
+      url.searchParams.set('scenario', name);
+      history.replaceState(null, '', url);
+      return;
+    }
     if (opts.title === 'first-launch') {
       // A first launch: an empty sandbox (no save), then the title rebuilt from scratch so it looks for none.
       mem = new MemoryStore();
@@ -159,6 +224,11 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
       history.replaceState(null, '', url);
     }
     await waits.sceneReady();
+    if (opts.cloud?.syncOnStart) {
+      // what a sleep or a resume does: this phone's save is written, then the cloud is read and compared
+      await saveNow(true);
+      await cloudSync.save('manual');
+    }
   };
 
   const worldCamera = (): Phaser.Cameras.Scene2D.Camera | null =>
@@ -289,6 +359,19 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
       },
     },
     frameStats: () => meter.stats(),
+    cloud: {
+      get status() {
+        return { ...cloudSync.status };
+      },
+      get conflict() {
+        const c = cloudSync.conflict;
+        return c ? { verdict: c.verdict, local: c.local, cloud: c.cloud } : null;
+      },
+      get fake() {
+        return fake;
+      },
+      sync: () => cloudSync.save('manual'),
+    },
     tow: () => {
       // the active world scene with a towing controller: the lab's spike or the town river (M7)
       const sc = game.scene
@@ -318,6 +401,11 @@ export function installDevTools(game: Phaser.Game): FarmDevApi {
         () => game.canvas,
         import.meta.env.DEV || q.has('scenario') || q.has('devmenu'),
       );
+      // `?debug&cloud=fake`: a game with the fake cloud (signed in, empty), outside any scenario
+      if (q.get('cloud') === 'fake' && !q.get('scenario')) {
+        fake = new FakeCloudProvider();
+        await cloudSync.setProvider(fake);
+      }
       const wanted = new URLSearchParams(location.search).get('scenario');
       if (wanted) await load(wanted);
       readyState = 'ready';

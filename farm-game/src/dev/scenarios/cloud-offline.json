@@ -1,0 +1,29 @@
+{
+  "title": "Cloud save offline: the upload waits and retries",
+  "about": "Signed in, but the cloud cannot be reached. The sync on start queues the upload: Options reads 'Cloud: waiting for a connection'. Set __farm.dev.cloud.fake.offline = false and the next retry (or Sync now) uploads.",
+  "tags": ["cloud", "options"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "cloud": {
+      "account": "Ana",
+      "offline": true,
+      "syncOnStart": true
+    }
+  }
+}

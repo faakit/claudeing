@@ -8,6 +8,9 @@ import { bakeGraphics } from '../fx/bake';
 import { WIPE_OPEN_MS } from '../fx/feel';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
+import { cloudSync } from '../game/cloudWiring';
+import { CloudConflictPanel } from '../ui/panels/CloudConflictPanel';
+import { TitleScene } from './TitleScene';
 import { controlsLog } from '../input/controlsLog';
 import {
   ActionPress,
@@ -168,6 +171,9 @@ export class UIScene extends Phaser.Scene {
   private tint!: Phaser.GameObjects.Rectangle;
   private blackout!: Phaser.GameObjects.Rectangle;
   private menu!: MenuPanel;
+  /** Cloud save found two saves to choose from (game/cloudSync.ts): the dialog opens once nothing else is up. */
+  private cloudAsk = false;
+  private cloudPanel!: CloudConflictPanel;
   private summary!: SummaryPanel;
   private yearEnd!: YearEndPanel;
   private jar!: JarPanel;
@@ -266,6 +272,10 @@ export class UIScene extends Phaser.Scene {
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
+      gameEvents.on('cloudConflict', () => (this.cloudAsk = true)),
+      gameEvents.on('cloudChanged', () => {
+        if (this.menu.isOpen && this.menu.currentTab === 'opts') this.menu.openTab('opts');
+      }),
       gameEvents.on('openProject', ({ id }) => {
         if (!runtime.blocked)
           (this.panels.get('projects') as ProjectPanel | undefined)?.openFor(id);
@@ -350,6 +360,10 @@ export class UIScene extends Phaser.Scene {
     this.updateRingTip(s);
     this.updateIdleHint(delta);
     this.coach.update(time, delta);
+    if (this.cloudAsk && !runtime.blocked) {
+      this.cloudAsk = false;
+      if (cloudSync.conflict) this.cloudPanel.show(cloudSync.conflict);
+    }
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather !== 'sunny';
     const storm = s.weather === 'storm';
@@ -693,6 +707,7 @@ export class UIScene extends Phaser.Scene {
   private buildPanels(): void {
     this.panels.clear();
     this.menu = new MenuPanel(this, () => this.quitToTitle());
+    this.cloudPanel = new CloudConflictPanel(this, (choice) => void this.cloudChoice(choice));
     installMenuTabs(this.menu);
     this.summary = new SummaryPanel(this);
     this.yearEnd = new YearEndPanel(this);
@@ -741,14 +756,16 @@ export class UIScene extends Phaser.Scene {
       this.plot,
       this.summary,
       this.yearEnd,
+      this.cloudPanel,
     ];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
     return (
-      [...this.panels.values(), this.jar, this.move, this.npc, this.plot].find((m) => m.isOpen) ??
-      null
+      [...this.panels.values(), this.jar, this.move, this.npc, this.plot, this.cloudPanel].find(
+        (m) => m.isOpen,
+      ) ?? null
     );
   }
 
@@ -765,6 +782,23 @@ export class UIScene extends Phaser.Scene {
     const open = this.activeModal();
     if (open) open.close();
     else if (!runtime.busy) this.openPanel('menu');
+  }
+
+  /** The cloud dialog's answer. Using the cloud's save restarts the game on it (through the title, as Continue). */
+  private async cloudChoice(choice: 'local' | 'cloud' | 'later'): Promise<void> {
+    if (choice === 'later') return;
+    if (choice === 'local') {
+      await cloudSync.resolve('local');
+      return;
+    }
+    runtime.inGame = false; // no autosave may write this farm over the one being taken from the cloud
+    const next = await cloudSync.resolve('cloud');
+    if (!next) {
+      runtime.inGame = true;
+      return;
+    }
+    TitleScene.startNext = next;
+    this.quitToTitle();
   }
 
   private quitToTitle(): void {

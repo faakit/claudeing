@@ -242,6 +242,19 @@ after a freeing tug, the town stage `marls`, villager `senna`, `valleyMoment` wi
 **Controls:** paint rows have an edge hold (`PAINT_EDGE_HOLD_MS` 180, band `PAINT_EDGE_CSS` 36): resting at the
 screen edge the row points at keeps it growing (a real-phone pass should tune both).
 
+### Cloud save (cloud-save lane, branch `release/cloud-save`)
+
+True now: Android cloud save through Play Games Saved Games, inert until the owner builds in a Play Games project
+id (`agents/PUBLISHING.md`, "Cloud save setup (owner)"). The rules are in `systems/cloudRules.ts`, the sync in
+`game/cloudSync.ts`, the providers in `platform/cloud/`, and the UI in the title, Options > Cloud save... and
+`ui/panels/CloudConflictPanel.ts`. Everything runs on the fake provider in the cloud-* scenarios (unit tests in
+`tests/cloud-save.test.ts` and `tests/cloud-ui.test.ts`, the `cloud` block in `e2e:scenarios`, the probe
+`agents/probes/cloud-save.mjs`). The native plugin is on `release/android` and compiles, but has never run on a
+device. The web build and iOS have no cloud save (DECISIONS.md, "Cloud save").
+
+Open: a two-phone test on an internal track (step 6 of the setup); a web provider (Drive appDataFolder) if the web
+build ever needs it; Game Center for iOS.
+
 ### Game depth and economy
 
 **Now:** a full year loop with farming, quality, foraging, fishing, crafting, machines, animals, five villagers
@@ -380,4 +393,6 @@ Measure with `render.mjs`, `measure.py`, `sfxlevels.py` and `seasons.py`; check 
 - **Decide:** Clay's catch-up crates, goals that step aside after 3 quiet days, the paint step, and bigger building
   footprints.
 - **Licensing before any store release:** check Google's terms for the Flow images again (see `ASSETS.md`).
+- **Cloud save:** create the Play Games Services project and OAuth clients, build in the project id and test on two
+  phones (`agents/PUBLISHING.md`, "Cloud save setup (owner)").
 - **Portuguese naming choices** in `src/i18n/GLOSSARY.md` (gold as "o", the Heron, the Weir, the sheep shed).

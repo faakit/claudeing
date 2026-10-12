@@ -37,6 +37,9 @@ import { buildControlsPage, controlsPage, drawHelpCard } from './ControlsTab';
 import { fmtGold, t } from '../../i18n';
 import { chooseLanguage, nextLanguage } from '../../game/language';
 import { onOff } from './onOff';
+import { cloudSync } from '../../game/cloudWiring';
+import { buildCloudPage, cloudPage } from './CloudTab';
+import { cloudStatusLine } from './cloudText';
 
 /** What a menu tab can draw with. Tabs are plain functions, so new mechanics add a tab, not a panel. */
 export interface MenuTabContext {
@@ -434,6 +437,11 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
       controlsPage.open = false;
       c.rebuild();
     });
+  if (cloudPage.open && cloudSync.usable)
+    return buildCloudPage(c, () => {
+      cloudPage.open = false;
+      c.rebuild();
+    });
   const s = getState();
   const apply = () => audio.setVolumes(s.settings.music, s.settings.sfx, s.settings.muted);
   const volumeRow = (y: number, name: string, key: 'music' | 'sfx') => {
@@ -470,8 +478,22 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
     void chooseLanguage(nextLanguage());
     c.rebuild();
   });
-  c.label(farX, y + 1, t('opts.autosave1'), C.creamDim);
-  c.label(farX, y + 11, t('opts.autosave2'), C.creamDim);
+  if (cloudSync.usable) {
+    // Cloud save (game/cloudSync.ts), where a provider exists: its page beside the language, its state in one line
+    // above the rows. The autosave note moves onto that page. Without a provider Options is exactly as before.
+    const st = cloudSync.status;
+    const out = st.state === 'off' || st.state === 'signedOut' || st.state === 'signingIn';
+    const entry = out ? t('cloud.entrySignIn') : t('cloud.entryOn');
+    const openPage = () => {
+      cloudPage.open = true;
+      c.rebuild();
+    };
+    c.button(farX, y, half, 22, entry, openPage, { textColor: C.gold });
+    c.label(8, y - 11, fitRow(cloudStatusLine(st, Date.now()), 184), C.creamDim);
+  } else {
+    c.label(farX, y + 1, t('opts.autosave1'), C.creamDim);
+    c.label(farX, y + 11, t('opts.autosave2'), C.creamDim);
+  }
 
   const pair = (
     yy: number,

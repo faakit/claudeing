@@ -846,5 +846,59 @@
     "row": "{n} of {of} timber",
     "rowDone": "finished, the family comes tomorrow",
     "step": "{name}: {n} of {of} timber"
+  },
+  "cloud": {
+    "continueCloud": "Continue (cloud)",
+    "continuePhone": "Continue (this phone)",
+    "entrySignIn": "Cloud: sign in",
+    "entryOn": "Cloud save...",
+    "lineOff": "Cloud save is off.",
+    "lineSignedOut": "Cloud save: not signed in.",
+    "lineSynced": "Cloud: synced {ago}",
+    "lineIdle": "Cloud: signed in",
+    "lineSyncing": "Cloud: syncing...",
+    "linePending": "Cloud: waiting for a connection",
+    "lineConflict": "Cloud: two saves to choose from",
+    "lineNewer": "Cloud save is from a newer version.",
+    "lineError": "Cloud: sync failed, trying again",
+    "title": "Cloud save",
+    "signedInAs": "Signed in as {name}",
+    "signedIn": "Signed in to Play Games",
+    "notSignedIn": "Not signed in.",
+    "off": "Cloud save is off on this phone.",
+    "lastSynced": "Last synced {ago}",
+    "neverSynced": "Not synced yet",
+    "privacy": "Only your farm's save is stored, in your Google Play Games account. Nothing else leaves the phone.",
+    "newer": "The cloud save is from a newer version of the game. Update the game to use it.",
+    "signIn": "Sign in",
+    "syncNow": "Sync now",
+    "turnOff": "Turn off",
+    "choose": "Choose a save",
+    "justNow": "just now",
+    "minutesAgo": {
+      "one": "{count} min ago",
+      "other": "{count} min ago"
+    },
+    "hoursAgo": {
+      "one": "{count} h ago",
+      "other": "{count} h ago"
+    },
+    "daysAgo": {
+      "one": "{count} day ago",
+      "other": "{count} days ago"
+    },
+    "playHours": "{h}h {m}m",
+    "playMinutes": "{m} min",
+    "conflictTitle": "Two saves, one farm",
+    "conflictAhead": "The cloud save is further along.",
+    "conflictDiverged": "This phone and the cloud played different days.",
+    "phone": "This phone",
+    "cloud": "Cloud",
+    "ahead": "further along",
+    "played": "Played {time}, saved {ago}",
+    "noSave": "No save on this phone.",
+    "keepPhone": "Keep this phone's",
+    "useCloud": "Use the cloud save",
+    "later": "Decide later"
   }
 }

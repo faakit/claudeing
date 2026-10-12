@@ -1797,3 +1797,66 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Cloud save (cloud-save lane, release/cloud-save, 2026-10-12)
+
+- **Android only, through Play Games Services v2 Saved Games.** The point is not losing a farm when changing phones,
+  and the phones are where the Android app runs. PGS v2 signs players in automatically with the Google account the
+  phone already has, so there is no sign-in screen to build, and Saved Games stores one blob per game per player on
+  Google's servers, which is all we need. Play Games has no sign-out in v2, so "Turn off" is the game's own switch
+  (stored in the save store as `farm.cloud`). It stops syncing on this phone and never touches the local save.
+- **A thin custom plugin, not a community one.** The only Capacitor 8 plugin with Saved Games
+  (`@modbender/capacitor-play-games` 0.5.0) is a month old, has one maintainer and no stars, and forks a repository
+  that no longer exists. Putting the player's Google sign-in behind it is a supply-chain risk for five calls. So
+  `PlayGamesSavesPlugin.java` (about 200 lines, official v2 APIs only: `PlayGamesSdk.initialize`,
+  `GamesSignInClient`, `PlayersClient`, `SnapshotsClient` open, read, write, commit and discard) does it. It lives in
+  `android/` on the Android lane's branch. That lane compiled it with JDK 21 and compileSdk 36, but it has not run on
+  a device. Its only dependency is `play-services-games-v2:22.0.0`. The plugin never touches the Games SDK unless a
+  numeric `game_services_project_id` is built in (from `TINY_ACRE_PGS_PROJECT_ID` or the gitignored
+  `android/local.properties` `pgs.projectId`). The Android lane removed the SDK's auto-init provider and merges the
+  APP_ID meta-data only when an id is set. A build without config therefore behaves exactly as before.
+- **No web cloud save for now (documented, not built).** A web version would need Google Identity Services plus Drive
+  `appDataFolder`. Its tokens expire hourly and can only be refreshed inside a user gesture, so the save on app pause
+  (the important one) would often fail silently. It would load a third-party script into a game that is otherwise
+  fully offline, need an OAuth client and consent screen for the Pages origin, and sync only web to web: Play Games
+  snapshots are not readable from Drive. The `CloudProvider` interface takes a Drive provider later without other
+  changes. iOS has no provider either; Game Center saved games would be the equivalent.
+- **The cloud stores the exact local save JSON, so there is no version bump.** Two stats carry what the rules need:
+  `playSec`, the seconds played (counted each second while a game is open and the app is in front, menus included),
+  and `savedAt`, the write time stamped by `saveNow`. Stats need no migration, and a save from before this feature
+  reads as 0 for both. The Play Games snapshot's metadata is derived from the save: a description, the played time,
+  and a progress value of day x 1e6 + minutes, so Play Games' own rare conflicts resolve by `HIGHEST_PROGRESS`.
+- **"Further along" means day and play time together, never only the timestamp.** A save is ahead when it leads on
+  the absolute day and does not trail on play time, or leads on play time on the same day. When the two disagree
+  (more days but less play), the saves diverged, because two phones played: that is a conflict. Equal progress falls
+  back to the newer write. Both only ever grow, so a save that continues the cloud's always compares as ahead, and
+  one phone uploads freely without any record of the last sync. A cloud save that is further along or diverged is
+  never uploaded over without the player choosing. When the player picks "Keep this phone's", that one cloud save is
+  approved for replacement (by its write time, persisted, so it holds through an offline queue), and the replaced
+  blob is kept on the phone (`farm.save.cloudPrev`). A cloud save from a newer game version is never overwritten
+  (state `newer`). An unreadable one is replaced.
+- **When it syncs:** after sleep (debounced 2 s, behind the save chain), on app pause (at once, because the app may be
+  killed), on resume and when the browser reports it is online again, on sign-in, and on "Sync now". There is no sync
+  on the 60 s local autosave, to keep calls to Google rare. Failures are queued (`pending`, persisted) and retried at
+  15 s, 30 s, 1 min, 2 min, then every 5 min. Play Games also caches commits offline itself.
+- **The dialog:** one bottom sheet in the lower half. It has two cards (this phone, the cloud), each with season, day,
+  year, gold, play time and "saved ... ago", plus a full-width button right under each card ("Keep this phone's",
+  "Use the cloud save"). The card further along is outlined green and says so. "Decide later" sits at the bottom.
+  Tapping the dim does nothing, and Android back counts as "later". Uploads wait until the player chooses, Options
+  offers "Choose a save", and the next sync asks again. Using the cloud's save restarts the game on it through the
+  title's own start, with the old local save kept as the backup.
+- **The title:** when the cloud holds a save further along, or diverged, or the phone has none, "Continue (cloud)"
+  leads with the cloud's save line. Below it, "Continue (this phone)" opens the dialog first. A cloud save simply
+  further along starts at once, and a diverged one asks. An offer the player passes by (New Game) is forgotten when
+  the game starts, and the next sync compares the save actually being played. The title waits at most 6 s for the
+  cloud and draws the local buttons first.
+- **Options:** with no provider, nothing changes. With one, the language row's far button becomes "Cloud: sign in" or
+  "Cloud save...", and a status line sits above the rows ("Cloud: synced 5 min ago", "waiting for a connection"...).
+  The help card keeps its place: the line fits in the gap under it. The autosave note moves onto the cloud page, which
+  shows the account (the Play Games gamer name), the last sync, the privacy line, and Sync now on the thumb's side
+  with Turn off.
+- **Sandbox:** scenarios take `dev.cloud` (account, off, offline, lastSyncMinAgo, the cloud's save as changes to the
+  scenario's own, `same`, `corrupt` or `newer`, plus syncOnStart). `dev.title: "continue"` stops on the title with the
+  scenario as this phone's save. `?debug&cloud=fake` gives a normal game a fake cloud. `window.__farm.dev.cloud`
+  exposes the status, the conflict, the fake and `sync()`. The scenarios are cloud-signed-in, cloud-signed-out,
+  cloud-conflict, cloud-diverged, cloud-title, cloud-offline and lang-pt-cloud-conflict.

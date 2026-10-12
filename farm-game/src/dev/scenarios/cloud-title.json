@@ -1,0 +1,34 @@
+{
+  "title": "Cloud save on the title: 'Continue (cloud)' for a newer save from another phone",
+  "about": "The title with this phone's save (spring 12) and a further-along cloud save (summer 3). 'Continue (cloud)' is the main button with the cloud's save line; 'Continue (this phone)' under it asks first (the dialog); New Game asks before erasing.",
+  "tags": ["cloud", "title"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "title": "continue",
+    "cloud": {
+      "account": "Ana",
+      "save": {
+        "season": "summer",
+        "day": 3,
+        "money": 12400,
+        "playSec": 18000
+      }
+    }
+  }
+}
