@@ -1837,7 +1837,7 @@ What changed:
   - The new row is drawn after the scatter, so no flower or tree moves.
   - Row 15, x 14-17, is solid in every town stage.
   - The stone lantern moved from (15,14) to (18,14), out from under the new eave.
-  - `tests/fixtures/town-before-m6.json` was updated deliberately for those five cells.
+  - `tests/fixtures/town-before-m6.json` was updated deliberately for those six cells (row 15 x 14-17, 15,14 and 18,14).
 - **The store** keeps its three shopdoor cells, its collision and the shop's trigger (4,9, 3 wide). Its art is one
   double door (`f_ddoor_<l|c|r>_*`, scale.py): 30 px wide, centred, with glazed leaves and a hanging shop sign west of
   it. map-art draws a run of exactly three door cells as one double door.
