@@ -34,7 +34,16 @@ export async function playTow(farm, opts = {}) {
     const w = window.__farm;
     const g = w.game;
     const lab = g.scene.getScene('Lab');
-    const out = { draws: 0, jsMax: 0, js: [], gapMax: 0, over33: 0, offWater: [], frames: 0, slow: [] };
+    const out = {
+      draws: 0,
+      jsMax: 0,
+      js: [],
+      gapMax: 0,
+      over33: 0,
+      offWater: [],
+      frames: 0,
+      slow: [],
+    };
     let t0 = 0;
     let last = 0;
     const pre = () => (t0 = performance.now());
@@ -46,7 +55,9 @@ export async function playTow(farm, opts = {}) {
         const js = now - t0;
         out.js.push(js);
         if (js > 25 && out.slow.length < 6)
-          out.slow.push(`${js.toFixed(0)}ms ${t.phase}/${t.state} tugs ${t.tugs} snag ${t.log.snagged}`);
+          out.slow.push(
+            `${js.toFixed(0)}ms ${t.phase}/${t.state} tugs ${t.tugs} snag ${t.log.snagged}`,
+          );
         out.jsMax = Math.max(out.jsMax, js);
         out.draws = Math.max(out.draws, w.dev.frameStats().draws);
         if (last) {
@@ -99,8 +110,10 @@ export async function playTow(farm, opts = {}) {
     });
   const toScreen = (L, wx, wy) => ({ x: wx - L.cam.sx + L.cam.x, y: wy - L.cam.sy + L.cam.y });
   // the floating controls (Action, Interact, Menu, the hotbar) cover some of the world: never aim a world tap there
+  await farm.frames(3); // a left hand's mirrored layout is in place
   const controls = (await farm.targets()).map((c) => ({ ...c, w: c.w ?? 0, h: c.h ?? 0 }));
-  const underControl = (s, m = 6) =>
+  // a person aims a world tap well clear of a button (2.5 sigma of their scatter), or it lands on the button
+  const underControl = (s, m = Math.max(6, 2.5 * sigma)) =>
     controls.some(
       (c) => Math.abs(s.x - c.cx) <= c.w / 2 + m && Math.abs(s.y - c.cy) <= c.h / 2 + m,
     );

@@ -1530,8 +1530,9 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   Action route (it sets a new goal). The Action button shows the verb's icon (hook, slip, tug) while the tow owns it
   (`inputHub.actionIcon`, read by `UIScene.updateActionIcon`): a feel requirement for the go.
 - **Forgiving targets** (critic ruling 4): a water tap within 1.5 tiles of a drifting log hooks it; a tap on the bank
-  while nothing is hooked still walks normally; while towing, a tap on a bush or wall beside the lane means the
-  nearest bank or water within 2 tiles (no silent tap).
+  while nothing is hooked still walks normally; while a log is hooked, a tap on solid land (the hedge round the lane,
+  a wall) means the nearest walkable bank tile out to 8 tiles, the slip's way of the nearest ring (`nearestBank`;
+  critic T5: no silent tap while towing).
 - **A log lies along the lane's current where it is** (`alignAxis`), not along every pull of the rope: hooked from
   straight above, a log in an east-west lane stays east-west. Held against the inside of a bend, the rest of the
   pull carries it downstream until the rope can draw it straight again (`follow(..., along)`), so it never sticks at
@@ -1545,7 +1546,9 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
 - **The lab draws below the UI**: added last at runtime, the lab scene drew over the floating controls (they sit
   inside the world's view since the dock went), so every lab scenario hid the Action plate and the hotbar.
 - **A world tap is read on the world as it was at touch-down** (`inputHub` `touchDown`, `WorldScene.worldPoint`): the
-  camera scrolls while the farmer walks, and reading the tap at the lift moved it about 5 px along the walk.
+  camera scrolls while the farmer walks, and reading the tap at the lift moved it about 5 px along the walk. **Every
+  world tap goes through one point** (`WorldScene.tapPoint`: the thumb-offset correction, then the touch-down
+  camera), the verbs' tap hooks included (critic T6: a log tap was aimed differently from every other tap).
 - **One act per short Action press** (coordinator ruling after the dry-year-2 review; `src/input/actionGate.ts`):
   every press has an id and acts once; only a key the system reports as held (its auto-repeat keydowns) repeats.
   Frame timing plays no part, so a press seen held past the 200 ms lock on a loaded machine (slow frames, a late key

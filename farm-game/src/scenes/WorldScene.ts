@@ -1741,13 +1741,28 @@ export abstract class WorldScene extends Phaser.Scene {
   // ---- tap to move (M4) ----
 
   /** Screen (logical) point -> world point, or null outside the world view. */
-  private worldPoint(x: number, y: number): { x: number; y: number } | null {
+  private worldPoint(
+    x: number,
+    y: number,
+    from: { x: number; y: number } = { x, y },
+  ): { x: number; y: number } | null {
     if (y < WORLD_VIEW.y || y >= WORLD_VIEW.y + WORLD_VIEW.h) return null;
     const cam = this.cameras.main;
-    // the touch at this point read the world as the camera stood when it landed (the view may scroll by the lift)
-    const at =
-      this.touchCam && this.touchCam.x === x && this.touchCam.y === y ? this.touchCam : null;
+    // a touch that landed at `from` reads the world as the camera stood then (the view may scroll by the lift)
+    const t = this.touchCam;
+    const at = t && t.x === from.x && t.y === from.y ? t : null;
     return { x: x - cam.x + (at?.sx ?? cam.scrollX), y: y - cam.y + (at?.sy ?? cam.scrollY) };
+  }
+
+  /**
+   * Where a world tap at (x, y) lands on the world: the thumb-offset correction (compensateTouch, mirrored for a
+   * left hand) and the camera as it stood at touch-down. Every world tap reads this, the verbs' tap hooks included
+   * (feel critic: a log tap was aimed differently from every other tap).
+   */
+  private tapPoint(x: number, y: number): { x: number; y: number } | null {
+    if (!this.worldPoint(x, y)) return null; // outside the world view: not a world tap
+    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
+    return this.worldPoint(c.x, c.y, { x, y }) ?? this.worldPoint(x, y);
   }
 
   /** The world as tap intent sees it. */
@@ -1818,9 +1833,8 @@ export abstract class WorldScene extends Phaser.Scene {
     x: number,
     y: number,
   ): { intent: TapIntent; path: TileCoord[] | null; face: Direction | null } | null {
-    if (!this.worldPoint(x, y)) return null; // outside the world view: not a world tap
-    const c = compensateTouch(x, y, getState().settings.leftHanded, cssPerLogical(this));
-    const w = this.worldPoint(c.x, c.y) ?? this.worldPoint(x, y)!;
+    const w = this.tapPoint(x, y);
+    if (!w) return null; // outside the world view: not a world tap
     const intent = tapIntent(this.tapWorld(), w.x, w.y);
     if (intent.kind === 'none') return { intent, path: null, face: null };
     const here = playerTile(getState().player);
@@ -1890,7 +1904,7 @@ export abstract class WorldScene extends Phaser.Scene {
   private onTap(x: number, y: number): void {
     this.preview = false;
     if (this.transitioning || runtime.blocked) return;
-    const wp = this.tapHook ? this.worldPoint(x, y) : null;
+    const wp = this.tapHook ? this.tapPoint(x, y) : null;
     if (wp && this.tapHook?.(wp.x, wp.y)) return;
     if (!getState().settings.controls.tapToMove) return this.onTapAdjacent(x, y);
     // A new tap replaces a painted row in progress.

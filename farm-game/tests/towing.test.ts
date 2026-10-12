@@ -14,6 +14,7 @@ import {
   makeLog,
   meansSlip,
   NEAR_WATER,
+  nearestBank,
   placeAt,
   ROPE_PX,
   TILE,
@@ -174,6 +175,21 @@ describe('towing: a tap near the slip means the slip', () => {
     expect(meansSlip({ tx: 14, ty: 31 }, slip)).toBe(true); // the water beside it
     expect(meansSlip({ tx: 16, ty: 28 }, slip)).toBe(false);
     expect(meansSlip({ tx: 13, ty: 25 }, slip)).toBe(false);
+  });
+});
+
+describe('towing: a tap on the hedge while towing', () => {
+  // a bank row (y 10, x 0-20) with hedge above it (y < 10) and the lane below
+  const bank = (tx: number, ty: number): boolean => ty === 10 && tx >= 0 && tx <= 20;
+  it('means the nearest walkable bank tile, never nothing', () => {
+    expect(nearestBank(5, 8, bank)).toEqual({ tx: 5, ty: 10 }); // two tiles up in the hedge: straight down
+    expect(nearestBank(5, 10, bank)).toEqual({ tx: 5, ty: 10 }); // the bank itself
+    expect(nearestBank(5, 1, bank)).toBeNull(); // nothing within 8 tiles
+  });
+  it('of the nearest ring, the tile toward the slip (downstream)', () => {
+    // a tap two tiles above the bank: the ring at 2 has x 3-7 on the bank; the slip lies west, or east
+    expect(nearestBank(5, 8, bank, { tx: 0, ty: 10 })).toEqual({ tx: 3, ty: 10 });
+    expect(nearestBank(5, 8, bank, { tx: 20, ty: 10 })).toEqual({ tx: 7, ty: 10 });
   });
 });
 

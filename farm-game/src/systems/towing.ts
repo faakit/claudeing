@@ -356,6 +356,34 @@ export function bankFor(
 }
 
 /**
+ * Where a tap on solid land (a hedge, a wall) beside a tow means "go": the nearest walkable tile, ring by ring out to
+ * `maxR` tiles (either axis), and of the nearest ring the one closest to `toward` (the slip: downstream). While a log
+ * is hooked no world tap is silent (feel critic, T5). Null when nothing walkable is that near.
+ */
+export function nearestBank(
+  tx: number,
+  ty: number,
+  walkable: (tx: number, ty: number) => boolean,
+  toward: { tx: number; ty: number } | null = null,
+  maxR = 8,
+): { tx: number; ty: number } | null {
+  if (walkable(tx, ty)) return { tx, ty };
+  for (let r = 1; r <= maxR; r++) {
+    let best: { tx: number; ty: number; d: number; s: number } | null = null;
+    for (let y = ty - r; y <= ty + r; y++)
+      for (let x = tx - r; x <= tx + r; x++) {
+        if (Math.max(Math.abs(x - tx), Math.abs(y - ty)) !== r || !walkable(x, y)) continue;
+        const d = Math.abs(x - tx) + Math.abs(y - ty);
+        const s2 = toward ? Math.abs(x - toward.tx) + Math.abs(y - toward.ty) : 0;
+        if (!best || s2 < best.s || (s2 === best.s && d < best.d))
+          best = { tx: x, ty: y, d, s: s2 };
+      }
+    if (best) return { tx: best.tx, ty: best.ty };
+  }
+  return null;
+}
+
+/**
  * Where to stand to hook a log: the walkable tile nearest the farmer from which the log is comfortably in reach
  * (a tile's margin inside the rope, since the log drifts while the farmer walks). Null when no bank reaches it.
  */

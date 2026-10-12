@@ -1446,6 +1446,47 @@ async function towingLane() {
     );
     await farm.close();
   }
+  // T5: while a log is hooked, a tap on the hedge round the lane walks to the nearest bank (never silent)
+  {
+    const farm = await openScenario(browser, url, 'tow-lane-long', { profile: PROFILE });
+    await farm.frames(5);
+    await farm.eval(() => window.__farm.controls?.clear?.());
+    await farm.tapButton('ACTION');
+    await farm.until(
+      (_s, w) => w.dev.tow()?.log.hooked,
+      null,
+      'tow-lane-long: hooked by Action',
+      5000,
+    );
+    await farm.until(
+      (_s, w) => w.game.scene.getScene('Lab').actionLock <= 0,
+      null,
+      'the lock',
+      2000,
+    );
+    await farm.tapTile(32, 16); // two tiles up into the hedge, west of the farmer (the slip's way)
+    const r = await farm
+      .until(
+        (_s, w) => {
+          const lab = w.game.scene.getScene('Lab');
+          const g = w.dev.tow()?.goal;
+          return lab.walking && g && g !== 'slip' && lab.walkable(g.tx, g.ty) ? g : null;
+        },
+        null,
+        'a walk after the hedge tap',
+        3000,
+      )
+      .catch(() => null);
+    const silent = await farm.eval(
+      () => window.__farm.controls.entries.filter((e) => e.kind === 'silent').length,
+    );
+    check(
+      'tow-lane-long: a hedge tap while towing walks to the nearest bank, not silent',
+      r !== null && r.ty === 18 && silent === 0,
+      JSON.stringify({ goal: r, silent }),
+    );
+    await farm.close();
+  }
   // Action stays the tool's when the tow's context is not live: far from the lane's water, nothing hooked
   const farm = await openScenario(browser, url, 'tow-lane-long', { profile: PROFILE });
   await farm.eval(() => window.__farm.dev.goto('lab', 13, 15, 'down'));

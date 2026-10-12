@@ -45,6 +45,7 @@ import {
   land,
   makeLog,
   meansSlip,
+  nearestBank,
   ROPE_PX,
   tug,
   type Log,
@@ -355,28 +356,16 @@ export class TowSpike {
 
   /**
    * What a tap on this tile means as a tow destination: the slip (within two tiles of it), a bank tile, or null. A
-   * tap on a bush or a wall beside the lane means the nearest bank or water within two tiles (never a silent tap).
+   * tap on solid land (a hedge, a wall) means the nearest walkable bank, out to 8 tiles, the slip's way of the
+   * nearest (feel critic T5: while a log is hooked no world tap is silent).
    */
-  private towGoal(tx: number, ty: number, near = true): Goal | null {
+  private towGoal(tx: number, ty: number): Goal | null {
     if (meansSlip({ tx, ty }, this.slip)) return { slip: true };
-    if (
-      near &&
-      !this.host.walkable(tx, ty) &&
-      !this.world.water(tx, ty) &&
-      !this.world.snag(tx, ty)
-    ) {
-      for (let r = 1; r <= 2; r++) {
-        let best: { tx: number; ty: number; d: number } | null = null;
-        for (let y = ty - r; y <= ty + r; y++)
-          for (let x = tx - r; x <= tx + r; x++) {
-            if (Math.max(Math.abs(x - tx), Math.abs(y - ty)) !== r) continue;
-            if (!this.host.walkable(x, y) && !this.world.water(x, y)) continue;
-            const d = Math.abs(x - tx) + Math.abs(y - ty);
-            if (!best || d < best.d) best = { tx: x, ty: y, d };
-          }
-        if (best) return this.towGoal(best.tx, best.ty, false);
-      }
-      return null;
+    if (!this.host.walkable(tx, ty) && !this.world.water(tx, ty) && !this.world.snag(tx, ty)) {
+      // solid land (the hedge round the lane): the nearest walkable bank, the slip's way of the nearest (T5)
+      const bank = nearestBank(tx, ty, (x, y) => this.host.walkable(x, y), this.slip.bank);
+      if (!bank) return null;
+      return meansSlip(bank, this.slip) ? { slip: true } : { slip: false, ...bank };
     }
     const water = this.world.water(tx, ty) || this.world.snag(tx, ty);
     const bank = water
