@@ -92,6 +92,14 @@ JINGLES = {
         {"inst": "vibes", "notes": "r:.5 D5:1.5 E5:.5 G5:.5 C6:2"},
         {"inst": "harp", "notes": "C4:.25 G4:.25 D5:1.5 C4:.25 E4:.25 G4:.25 C5:.25 E5:2", "gain": 0.7},
         {"inst": "glock", "notes": "r:3 E6:2", "gain": 0.5}]},
+    # M7: a family comes home (the arrival banner). Senna's turning figure (her motif, below), then up to the
+    # octave over the harp's bloom; the pizz turns like the mill wheel. Priority 4: a `green` landing within a
+    # second gives way to it (the arrival is the bigger moment); it gives way to nothing.
+    "homecoming": {"bpm": 92, "volume": 0.85, "priority": 4, "parts": [
+        {"inst": "vibes", "notes": "G4:.333 C5:.333 E5:.334 G5:.333 E5:.333 C5:.334 E5:.5 G5:.5 C6:2.5"},
+        {"inst": "harp", "notes": "r:2 C4:.25 E4:.25 G4:.25 C5:.25 E5:2.5", "gain": 0.6},
+        {"inst": "pizz", "notes": "C3:1 G2:1 C3:1 G2:1 C3:1.5", "gain": 0.5},
+        {"inst": "glock", "notes": "r:3 G6:2", "gain": 0.45}]},
 }
 
 # Musical moments the engine plays itself (audio.sting / audio.motif), also written in C. Instruments
@@ -138,6 +146,20 @@ STINGS = {
         {"inst": "marimba", "notes": "G5:.25 F#5:.25 G5:.5 E5:.5 A5:.5 C6:1.5"},
         {"inst": "pizz", "notes": "C3:1 G3:1 C3:1.5", "gain": 0.8},
         {"inst": "glock", "notes": "r:2 E6:1.5", "gain": 0.4}]},
+    # Senna (the miller, Mara's sister, home with the Weir): a triplet arc up and round, like the wheel turning;
+    # on vibes like her sister's, the pizz turning under it.
+    "motif-senna": {"bpm": 76, "volume": 0.75, "parts": [
+        {"inst": "vibes", "notes": "G4:.333 C5:.333 E5:.334 G5:.333 E5:.333 C5:.334 E5:2"},
+        {"inst": "pizz", "notes": "C3:1 G2:1 C3:2", "gain": 0.55}]},
+    "motif-senna-heart": {"bpm": 68, "volume": 0.8, "parts": [
+        {"inst": "vibes", "notes": "G4:.333 C5:.333 E5:.334 G5:.333 E5:.333 C5:.334 G5:2.5"},
+        {"inst": "pizz", "notes": "C3:1 G2:1 C3:2.5", "gain": 0.55},
+        {"inst": "glock", "notes": "r:2.5 G6:2", "gain": 0.4}]},
+    # A rebuilt house's window lit for the first time (once per house): a small warm glow, as soft as dawn.
+    "window-lit": {"bpm": 72, "volume": 0.6, "parts": [
+        {"inst": "harp", "notes": "C5:.25 E5:.25 G5:2.5", "gain": 0.7},
+        {"inst": "vibes", "notes": "r:.5 C6:2.5", "gain": 0.55},
+        {"inst": "glock", "notes": "r:.75 E6:2.25", "gain": 0.45}]},
     # Dawn (first time outdoors on the first morning of a week) and dusk (that evening): three each.
     "dawn-1": {"bpm": 100, "volume": 0.4, "parts": [
         {"inst": "harp", "notes": "C4:.25 E4:.25 G4:.25 C5:.25 E5:2"},
@@ -585,6 +607,9 @@ PIECES["spring"]["thin"] = {"drop": ["bass", "shaker", "ncomp"], "db": -0.5}
 PIECES["summer"]["thin"] = {"drop": ["bass", "shaker", "tamb", "nbass"], "db": -3.5}
 PIECES["fall"]["thin"] = {"drop": ["bass"], "swap": {"comp": "arpTripHalf"}, "db": -0.5}
 PIECES["winter"]["thin"] = {"drop": ["bass", "sleigh", "dpad", "nbass"], "db": -0.5}
+# Fall's rainy arrangement loses most of its drive with the percussion (alone it measured -35 LUFS against spring's
+# -31.8, critic D9): it keeps the thinner arrangement but not the usual -2.5 dB cut on top.
+PIECES["fall"]["rainDb"] = 0.8
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))

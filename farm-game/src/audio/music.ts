@@ -291,8 +291,13 @@ export class MusicPlayer {
   }
 
   private levelValue(): number {
-    const thin = this.active?.player.piece.thin;
-    const db = this.rain ? RAIN_DB : this.thinNow && thin ? (thin.db ?? THIN_DB) : 0;
+    const piece = this.active?.player.piece;
+    const thin = piece?.thin;
+    const db = this.rain
+      ? (piece?.rainDb ?? RAIN_DB)
+      : this.thinNow && thin
+        ? (thin.db ?? THIN_DB)
+        : 0;
     return Math.pow(10, db / 20);
   }
 

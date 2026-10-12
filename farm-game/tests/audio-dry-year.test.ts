@@ -22,7 +22,7 @@ const DAY: BarOptions = { indoor: false, day: true, night: false, percHits: () =
 
 /** Stages M6 adds (town dry/river, Wendhead gorge/restored), keyed here already so they play when they land. */
 const PENDING: Record<string, string[]> = {
-  town: ['dry', 'river'],
+  town: ['dry', 'river', 'marls'],
   wendhead: ['gorge', 'restored'],
 };
 
@@ -34,7 +34,7 @@ describe('map stage audio (src/audio/stages.json)', () => {
         const known =
           v === 'default' || mapVariants(map).includes(v) || (PENDING[map] ?? []).includes(v);
         expect(known, `${map}@${v}`).toBe(true);
-        for (const w of stages[v]!.water ?? []) expect(['creek', 'river']).toContain(w.bed);
+        for (const w of stages[v]!.water ?? []) expect(['creek', 'river', 'mill']).toContain(w.bed);
       }
     }
   });
@@ -65,7 +65,7 @@ describe('map stage audio (src/audio/stages.json)', () => {
   });
 
   it('gives Wendhead the creek everywhere once the spring runs, and the town its river (a trickle while dry)', () => {
-    expect(waterBeds('wendhead', 'dry', {}, 5, 5)).toEqual({ creek: 0, river: 0 });
+    expect(waterBeds('wendhead', 'dry', {}, 5, 5)).toEqual({ creek: 0, river: 0, mill: 0 });
     expect(waterBeds('wendhead', 'spring', {}, 1, 1).creek).toBe(1);
     expect(waterBeds('wendhead', 'spring', {}, 20, 26).creek).toBe(1);
     expect(waterBeds('town', 'river', {}, 19, 25).river).toBe(1);

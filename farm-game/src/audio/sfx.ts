@@ -5,6 +5,8 @@ import type { Voice } from './voice';
 
 /** Repeats of one cue closer than this (seconds) count as a held tool. */
 export const REPEAT_WINDOW = 0.35;
+/** A cue played this soon (seconds) after one named in its `softAfter` takes that cue's level change. */
+export const SOFT_AFTER = 0.1;
 
 /** Random spread helper: uniform in [-1, 1]. */
 const spread = (rng: () => number) => rng() * 2 - 1;
@@ -79,9 +81,15 @@ export class SfxPlayer {
       prevAt !== undefined && now - prevAt < (a.repeatWindow ?? REPEAT_WINDOW)
         ? Math.pow(10, (a.repeatDb ?? -4) / 20)
         : 1;
+    let after = 1;
+    for (const [other, db] of Object.entries(a.softAfter ?? {})) {
+      const at = this.lastAt.get(other);
+      if (at !== undefined && now - at >= 0 && now - at < SOFT_AFTER)
+        after *= Math.pow(10, db / 20);
+    }
     this.lastAt.set(cue, now);
     for (const m of a.masks ?? []) this.maskedUntil.set(m, now + (a.maskFor ?? 0.08));
-    const gain = a.gain * repeatDuck * Math.pow(10, (spread(this.rng) * a.vol) / 20);
+    const gain = a.gain * repeatDuck * after * Math.pow(10, (spread(this.rng) * a.vol) / 20);
     live.push(playSample(this.ctx, pick.d!, pick.z, this.dest, { when: now, rate, gain }));
     this.voices.set(cue, live);
     this.stats.played++;

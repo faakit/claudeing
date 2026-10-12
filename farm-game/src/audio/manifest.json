@@ -717,7 +717,11 @@
       "gain": 1.2303,
       "pitch": 1.0,
       "vol": 1.5,
-      "voices": 1
+      "voices": 1,
+      "repeatWindow": 0.5,
+      "softAfter": {
+        "dig": -6
+      }
     },
     "refill": {
       "files": [
@@ -1233,20 +1237,20 @@
         {
           "file": "sfx/logLand-1.mp3",
           "onset": 0.0,
-          "dur": 0.47,
-          "tp": -5.43
+          "dur": 0.63,
+          "tp": -8.18
         },
         {
           "file": "sfx/logLand-2.mp3",
           "onset": 0.0,
-          "dur": 0.59,
-          "tp": -4.97
+          "dur": 0.64,
+          "tp": -5.98
         },
         {
           "file": "sfx/logLand-3.mp3",
           "onset": 0.0,
-          "dur": 0.39,
-          "tp": -5.16
+          "dur": 0.63,
+          "tp": -7.48
         }
       ],
       "gain": 1.122,
@@ -1259,26 +1263,79 @@
         {
           "file": "sfx/logKnock-1.mp3",
           "onset": 0.0,
-          "dur": 0.15,
-          "tp": -5.67
+          "dur": 0.34,
+          "tp": -6.62
         },
         {
           "file": "sfx/logKnock-2.mp3",
           "onset": 0.0,
-          "dur": 0.15,
-          "tp": -5.73
+          "dur": 0.32,
+          "tp": -6.59
         },
         {
           "file": "sfx/logKnock-3.mp3",
           "onset": 0.0,
-          "dur": 0.17,
-          "tp": -5.39
+          "dur": 0.39,
+          "tp": -6.44
         }
       ],
-      "gain": 1.122,
+      "gain": 1.1614,
       "pitch": 1.0,
       "vol": 1.5,
       "voices": 2
+    },
+    "logHook": {
+      "files": [
+        {
+          "file": "sfx/logHook-1.mp3",
+          "onset": 0.0,
+          "dur": 0.24,
+          "tp": -5.6
+        },
+        {
+          "file": "sfx/logHook-2.mp3",
+          "onset": 0.0,
+          "dur": 0.25,
+          "tp": -5.54
+        },
+        {
+          "file": "sfx/logHook-3.mp3",
+          "onset": 0.0,
+          "dur": 0.22,
+          "tp": -5.44
+        }
+      ],
+      "gain": 1.0965,
+      "pitch": 1.0,
+      "vol": 1,
+      "voices": 1
+    },
+    "logTug": {
+      "files": [
+        {
+          "file": "sfx/logTug-1.mp3",
+          "onset": 0.002,
+          "dur": 0.3,
+          "tp": -10.7
+        },
+        {
+          "file": "sfx/logTug-2.mp3",
+          "onset": 0.00136,
+          "dur": 0.3,
+          "tp": -6.57
+        },
+        {
+          "file": "sfx/logTug-3.mp3",
+          "onset": 0.00186,
+          "dur": 0.3,
+          "tp": -6.5
+        }
+      ],
+      "gain": 1.2023,
+      "pitch": 0.8,
+      "vol": 1,
+      "voices": 2,
+      "repeatDb": 0
     }
   },
   "ambience": {
@@ -1616,6 +1673,24 @@
           "onset": 0,
           "dur": 3.6,
           "loop": [0.69998, 3.49998]
+        }
+      ],
+      "gain": 1,
+      "mode": "loop"
+    },
+    "mill": {
+      "files": [
+        {
+          "file": "amb/mill.mp3",
+          "onset": 0,
+          "dur": 10.1,
+          "loop": [1.0, 10.0]
+        },
+        {
+          "file": "amb/mill-2.mp3",
+          "onset": 0,
+          "dur": 7.3,
+          "loop": [1.0, 7.2]
         }
       ],
       "gain": 1,
