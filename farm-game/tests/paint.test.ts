@@ -111,7 +111,7 @@ describe('paint edge hold (coordinator ruling, valley round 6)', () => {
       expect(tiles(p)).toBeGreaterThanOrEqual(grown);
     }
     // leaving the exit band still takes the growth back
-    p.hold({ x: 0, y: 0 }, (t += 16), { x: 0, y: 0 });
+    p.hold({ x: 0, y: 0 }, t + 16, { x: 0, y: 0 });
     expect(tiles(p)).toBeLessThan(grown);
   });
 
