@@ -121,6 +121,7 @@ export function nextBait(state: GameState): string | null {
   const now = currentBait(state);
   const next = owned[(owned.indexOf(now ?? '') + 1) % owned.length]!;
   state.stats[BAIT_PICK] = baitOf(next)!.code;
+  state.stats['baitSwitched'] = (state.stats['baitSwitched'] ?? 0) + 1;
   const slots = state.inventory.slots;
   if (baitOf(slots[state.inventory.selected]?.item)) {
     const onBar = slots.findIndex((st, i) => i < game.hotbarSlots && st?.item === next);
@@ -143,6 +144,20 @@ export function currentBaitOnRod(state: GameState): string | null {
   if (picked && countItem(state, picked) > 0) return picked;
   return baitItems().find((id) => countItem(state, id) > 0) ?? null;
 }
+
+/**
+ * The fishing sheet is showing a catch's result (set by the sheet; read by the guided start's bait intro). Runtime
+ * only, like the coach's context: never saved.
+ */
+let resultShown = false;
+export const noteFishingResult = (shown: boolean): void => {
+  resultShown = shown;
+};
+export const fishingResultShown = (): boolean => resultShown;
+
+/** Kinds of bait carried. */
+export const baitKinds = (state: GameState): number =>
+  baitItems().filter((id) => countItem(state, id) > 0).length;
 
 /** Any bait in the bag at all. */
 export const hasBait = (state: GameState): boolean => currentBait(state) !== null;

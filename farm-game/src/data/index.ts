@@ -732,7 +732,9 @@ export type TutorialKind =
   | 'letterGift'
   | 'emptyCan'
   | 'explicitHand'
-  | 'placeable';
+  | 'placeable'
+  /** any bait in the bag (fishing needs one) */
+  | 'bait';
 /** A condition: every field given must hold (`any`, `all`, `not` combine). */
 export interface TutorialCond {
   /** A lifetime stat, counted from when the guide (re)started. */
@@ -758,14 +760,31 @@ export interface TutorialCond {
   energyBelow?: number;
   /** The clock at or after this minute of the day. */
   minute?: number;
-  /** A job posted today, not yet done, counts this stat. */
+  /** A job of today's, taken at the board and not yet paid, counts this stat. */
   job?: string;
   /** This villager is standing on the current map. */
   npc?: string;
   /** The current goal's id. */
   goal?: string;
-  /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
-  fact?: 'npcNew' | 'forageInView' | 'welcomeJobs';
+  /**
+   * A fact: `npcNew` (a villager you never met is in view), `forageInView`, `welcomeJobs`, `jobsPosted` (a job of
+   * today's waits on the town board), `jobReady` (a taken job is done: turn it in), `baitKinds` (two kinds of bait or
+   * more), `fishResult` (the fishing sheet shows a catch's result), `festivalToday` (a festival not entered yet).
+   */
+  fact?:
+    | 'npcNew'
+    | 'forageInView'
+    | 'welcomeJobs'
+    | 'jobsPosted'
+    | 'jobReady'
+    | 'baitKinds'
+    | 'fishResult'
+    | 'festivalToday';
+  /**
+   * A project's goods are short: what the bag holds plus what was already given is under what it asks
+   * (`{ "project": "place_spring", "item": "stone" }`). Used to teach where a good comes from before the ask.
+   */
+  short?: { project: string; item: string };
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
   touched?: number;
   /** At least this many game minutes have passed since the step first showed. */
@@ -788,7 +807,16 @@ export interface TutorialTarget {
   door?: string;
   /** A long walk to the door that leads to this map: shows a stick drag, then the door once it is near. */
   steer?: string;
-  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot' | 'spadeSlot';
+  ui?:
+    | 'action'
+    | 'menu'
+    | 'interact'
+    | 'seedSlot'
+    | 'canSlot'
+    | 'placeSlot'
+    | 'spadeSlot'
+    | 'hoeSlot'
+    | 'pickSlot';
   gesture?: 'paint' | 'ring';
   /** With `gesture: "paint"`: the Action kinds a row may do (default till, plant, water). */
   work?: string[];
@@ -1412,12 +1440,33 @@ const TUT_KINDS = [
   'forage',
   'unread',
   'placeable',
+  'bait',
 ];
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site', 'creek', 'slip'];
-const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot', 'spadeSlot'];
+const TUT_UI = [
+  'action',
+  'menu',
+  'interact',
+  'seedSlot',
+  'canSlot',
+  'placeSlot',
+  'spadeSlot',
+  'hoeSlot',
+  'pickSlot',
+];
+const TUT_FACTS = [
+  'npcNew',
+  'forageInView',
+  'welcomeJobs',
+  'jobsPosted',
+  'jobReady',
+  'baitKinds',
+  'fishResult',
+  'festivalToday',
+];
 const TUT_COND_KEYS = new Set([
   'stat',
   'touched',
@@ -1438,6 +1487,7 @@ const TUT_COND_KEYS = new Set([
   'npc',
   'goal',
   'fact',
+  'short',
   'after',
   'wet',
   'any',
@@ -1469,6 +1519,12 @@ export function validateTutorial(t: TutorialData): void {
     for (const k of [c.none, c.some])
       if (k !== undefined && !TUT_KINDS.includes(k)) bad(`${where}: unknown kind "${k}"`);
     if (c.has !== undefined && !items[c.has]) bad(`${where}: unknown item "${c.has}"`);
+    if (c.fact !== undefined && !TUT_FACTS.includes(c.fact)) bad(`${where}: unknown fact "${c.fact}"`);
+    if (
+      c.short !== undefined &&
+      !projects[c.short.project]?.items?.some((i) => i.item === c.short!.item)
+    )
+      bad(`${where}: project "${c.short.project}" asks for no "${c.short.item}"`);
     if (c.npc !== undefined && !npcs[c.npc]) bad(`${where}: unknown villager "${c.npc}"`);
     if (c.goal !== undefined && !goals.some((g) => g.id === c.goal))
       bad(`${where}: unknown goal "${c.goal}"`);

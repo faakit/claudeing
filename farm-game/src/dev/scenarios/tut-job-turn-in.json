@@ -1,0 +1,83 @@
+{
+  "title": "Guided start: a finished job to turn in at the board",
+  "about": "Guided game, day 3, 11:00 on the farm by the pond: Finn's fishing job was taken at the board and the fish caught, so the coach says \"Job done! Turn it in at the board.\" and points the way to town; at the board, \"Tap Turn in to get paid.\" on Turn in. Never turned in, it is paid by post tonight.",
+  "tags": ["farm", "onboarding", "board", "jobs"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "day": 3,
+    "clock": "11:00"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "state": {
+    "jobs": {
+      "day": 3,
+      "list": [
+        {
+          "id": "fish",
+          "giver": "finn",
+          "stat": "caught",
+          "base": 0,
+          "n": 1,
+          "reward": 30,
+          "done": false
+        },
+        {
+          "id": "forage",
+          "giver": "rosa",
+          "stat": "foraged",
+          "base": 3,
+          "n": 2,
+          "reward": 24,
+          "done": false
+        },
+        {
+          "id": "chat",
+          "giver": "mara",
+          "stat": "talked",
+          "base": 2,
+          "n": 2,
+          "reward": 24,
+          "done": false
+        }
+      ]
+    }
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.jobBoard": 1,
+    "tut.fish": 1,
+    "tut.cast": 1,
+    "caught": 1,
+    "jobs.takenDay": 3,
+    "jobs.taken": 1,
+    "jobs.told": 1,
+    "jobsTaken": 1
+  },
+  "goal": "job1",
+  "version": 18
+}

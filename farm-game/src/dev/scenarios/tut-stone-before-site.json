@@ -1,0 +1,51 @@
+{
+  "title": "Guided start: stone first, then the spring",
+  "about": "Guided game, spring 9, 08:00 on the farm: the farm has turned green and Rosa has asked for the Old Spring (300g and 20 stone), with no stone in the bag. Before the coach shows the site, it says \"Stone comes from rocks in the mine.\" and points the way there; in the mine, \"Tap a rock: the pickaxe breaks it.\" (\"Pick the pickaxe on the hotbar.\" with auto tool off). After the first rock (+ Stone), the spring's own intro, \"Up through Ilse's gate: the spring.\", follows. With 20 stone already, the stone line is skipped.",
+  "tags": ["farm", "onboarding", "valley", "spring", "mine"],
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 11,
+    "facing": "down"
+  },
+  "time": {
+    "day": 9,
+    "clock": "08:00"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "valley": {
+    "farmGreen": 1,
+    "spring": 1
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 8,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "valley.greenSeen": 1,
+    "place.spring.since": 9,
+    "tut.jobBoard": 1,
+    "tut.welcomeJobs": 1,
+    "tut.board": 1,
+    "mail.welcome": 1
+  },
+  "goal": "fish",
+  "version": 18
+}

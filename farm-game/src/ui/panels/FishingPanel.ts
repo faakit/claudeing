@@ -9,6 +9,7 @@ import {
   currentBait,
   HOOK_WINDOW,
   nextBait,
+  noteFishingResult,
   refundBait,
   newReel,
   outcomeOf,
@@ -58,6 +59,7 @@ export class FishingPanel extends Modal {
   }
 
   start(fishId: string, bait: string): void {
+    noteFishingResult(false);
     this.fishId = fishId;
     this.bait = bait;
     this.phase = 'wait';
@@ -205,7 +207,13 @@ export class FishingPanel extends Modal {
       audio.play('error');
       this.resultText = t('fishing.gotAway');
     }
+    noteFishingResult(true); // the guided start's bait intro waits for this moment
     this.rebuild(); // the bottom button becomes the next-bait switch
+  }
+
+  override close(): void {
+    noteFishingResult(false);
+    super.close();
   }
 
   private resultText = '';

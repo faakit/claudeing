@@ -2012,6 +2012,37 @@ const closeSheet = (farm) =>
     }),
   );
 
+/** The guided start's new intros (bait round): each scenario shows its one line, pointing at one control. */
+async function guidedDepth() {
+  for (const [name, line] of [
+    ['tut-job-board', 'Jobs are on the board: tap it.'],
+    ['tut-job-turn-in', 'Job done! Turn it in at the board.'],
+    ['tut-no-bait', 'No bait: the hoe digs up worms.'],
+    ['tut-stone-before-site', 'Stone comes from rocks in the mine.'],
+  ]) {
+    const farm = await openScenario(browser, url, name, { profile: PROFILE });
+    const shown = await farm
+      .until(
+        (_s, w, want) => {
+          const texts = [];
+          const walk = (n) => {
+            if (typeof n.text === 'string' && n.visible !== false) texts.push(n.text);
+            (n.list ?? []).forEach(walk);
+          };
+          w.game.scene.getScene('UI').children.list.forEach(walk);
+          return texts.some((x) => x.replace(/\s+/g, ' ').includes(want));
+        },
+        line,
+        `the coach line of ${name}`,
+      )
+      .then(() => true)
+      .catch(() => false);
+    check(`${name}: the coach says "${line}"`, shown, shown ? '' : await uiText(farm));
+    check(`${name}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+    await farm.close();
+  }
+}
+
 /** The town board (bait round): jobs are taken there and turned in there; the requests are its other page. */
 async function townBoard() {
   let farm = await openScenario(browser, url, 'town-quest-board', { profile: PROFILE });
@@ -2322,6 +2353,7 @@ try {
         weirTow,
         bait,
         townBoard,
+        guidedDepth,
         lang,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)

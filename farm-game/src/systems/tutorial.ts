@@ -11,7 +11,7 @@
  * The scene supplies a `CoachWorld` (what the world looks like right now) and `CoachFacts` (which sheet is
  * open); `advance` marks steps done and returns the current one, `coachView` says what to show for it.
  */
-import { crops, game, items, jobs as jobDefs, npcs, plots, tools, tutorial } from '../data';
+import { crops, game, items, jobs as jobDefs, npcs, plots, projects, tools, tutorial } from '../data';
 import type {
   TutorialCond,
   TutorialData,
@@ -28,6 +28,10 @@ import { gameEvents } from './events';
 import { isMature, tileKey } from './farming';
 import { addStat, currentGoal, stat } from './goals';
 import { absoluteDay } from './time';
+import { baitKinds, fishingResultShown, hasBait } from './fishing';
+import { festivalToday, hasEntered } from './festivals';
+import { countItem } from './inventory';
+import { isTaken, jobReady, PAID_AT_PAYOUT, postedJobs } from './jobs';
 import { isWet } from './weather';
 import { t, toEnglish, type Key } from '../i18n';
 
@@ -299,6 +303,8 @@ export function hasKind(s: GameState, kind: TutorialKind, world?: CoachWorld): b
       return !autoMode(s);
     case 'placeable':
       return s.inventory.slots.some((st, i) => !!st && i < 8 && items[st.item]?.placeable === true);
+    case 'bait':
+      return hasBait(s);
   }
 }
 
@@ -324,6 +330,12 @@ export function welcomeJobsToday(s: GameState): boolean {
   const day = absoluteDay(s);
   if (!w || w.factor <= 1 || day < w.from || day > w.to) return false;
   return s.jobs.day === day && s.jobs.list.some((j) => !j.done);
+}
+
+/** A project's goods are short: what the bag holds plus what was already given is under what it asks. */
+export function goodsShort(s: GameState, project: string, item: string): boolean {
+  const need = projects[project]?.items?.find((i) => i.item === item)?.qty ?? 0;
+  return countItem(s, item) + (s.stats[`fund.${project}.${item}`] ?? 0) < need;
 }
 
 function forageInView(s: GameState, world: CoachWorld): boolean {
@@ -352,8 +364,21 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   if (c.minute !== undefined && s.time.minutes < c.minute) return false;
   if (c.job !== undefined) {
     const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
-    if (!today.some((j) => !j.done && j.stat === c.job)) return false;
+    if (!today.some((j) => !j.done && j.stat === c.job && isTaken(s, j))) return false;
   }
+  if (c.fact === 'jobsPosted' && postedJobs(s).length === 0) return false;
+  if (
+    c.fact === 'jobReady' &&
+    !s.jobs.list.some((j) => jobReady(s, j) && !PAID_AT_PAYOUT.has(j.stat))
+  )
+    return false;
+  if (c.fact === 'baitKinds' && baitKinds(s) < 2) return false;
+  if (c.fact === 'fishResult' && !fishingResultShown()) return false;
+  if (c.fact === 'festivalToday') {
+    const f = festivalToday(s);
+    if (!f || hasEntered(s, f.id)) return false;
+  }
+  if (c.short !== undefined && !goodsShort(s, c.short.project, c.short.item)) return false;
   if (c.npc !== undefined && !world.npcs.some((n) => n.id === c.npc)) return false;
   if (c.goal !== undefined && currentGoal(s)?.id !== c.goal) return false;
   if (c.fact === 'npcNew' && !newNpcInView(s, world)) return false;
@@ -731,6 +756,11 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     const i = slotOf(s, (it) => it === 'spade');
     return i === null ? null : { kind: 'slot', slot: i };
   }
+  if (g.ui === 'hoeSlot' || g.ui === 'pickSlot') {
+    const action = g.ui === 'hoeSlot' ? 'till' : 'mine';
+    const i = slotOf(s, (it) => tools[items[it]?.tool ?? '']?.action === action);
+    return i === null ? null : { kind: 'slot', slot: i };
+  }
   if (g.ui === 'placeSlot') {
     const i = slotOf(s, (it) => items[it]?.placeable === true);
     return i === null ? null : { kind: 'slot', slot: i };
@@ -804,10 +834,13 @@ export function coachView(
     const d = doorToward(world, wantMap);
     pointer = d ? { kind: 'tile', tx: d.tx, ty: d.ty } : null;
     away = true;
-    text =
-      world.map === 'house'
-        ? t('tutorial.doorOutside')
-        : t('tutorial.headBack', { map: mapName(wantMap) });
+    // A one-off intro keeps its own line (it says why: "Stone comes from rocks in the mine.") while the pointer
+    // leads to the door; the guided days' steps say where to head.
+    if (st.track !== 'intro')
+      text =
+        world.map === 'house'
+          ? t('tutorial.doorOutside')
+          : t('tutorial.headBack', { map: mapName(wantMap) });
   } else if (target) {
     pointer = resolveTarget(s, world, target);
     // The line follows the pointer: with Action not ready, the "else" line says where to go first.
