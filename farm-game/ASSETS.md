@@ -35,6 +35,23 @@
   allow commercial redistribution before a store release. No third-party sprite packs, no scraped images, no
   trademarked characters were used (prompts ask for generic farm objects and original villagers).
 
+## Store and marketing art (`store/`)
+
+- **Google Play screenshots, feature graphic, icon** (`store/play/`): built by `art-src/tools/store_art.py` from
+  real gameplay captured in scenarios by `scripts/store-capture.mjs` (every game pixel is a captured pixel, scaled by
+  a whole number), the game's own pixel font for the captions, and the adaptive icon's layers in `resources/` for
+  the 512 icon. No generated imagery in these files.
+- **Promo video** (kept outside the repo, `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4`):
+  gameplay frames stepped from the game's loop, and the game's own music and sfx rendered offline
+  (`src/audio/render.ts`). No generated footage.
+- **Flow-generated marketing art:** the social-media trailer
+  (`marketing/video/tiny-acre-trailer-social-en.mp4`) opens on a 3.5 s shot generated with Google Flow (model Veo 3.1
+  Fast, the owner's account, 2026-10-12) from a real capture of the dry farm (`marketing/flow-ref/`); the raw output
+  is in `marketing/flow-raw/veo-dry-farm-1.mp4`. It is never used in the Play Store video or screenshots. **Flow-
+  generated marketing art needs the same licence check as the Flow sprites above before release:** the owner must
+  re-verify Google's generative AI terms for commercial and promotional use, and label it as AI-generated where a
+  platform asks.
+
 ## Font
 
 - The pixel font is generated in code (`src/ui/font.ts`); original.

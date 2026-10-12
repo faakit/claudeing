@@ -1,0 +1,43 @@
+{
+  "title": "Store shot: a full summer field on the green farm",
+  "about": "Summer 12, year 1, 08:30, scythe in hand between the Home Plot and the East Field: the farm is green and the creek runs (spring 3, weir 3), the home, west and east fields are full (ripe tomatoes and blueberries, tall corn, melons), sunny. The Google Play screenshot 'a full field' (scripts/store-capture.mjs); a year-1 farm a player reaches by summer.",
+  "version": 18,
+  "tags": ["farm", "harvest", "store"],
+  "valley": {
+    "farmGreen": 1,
+    "spring": 3,
+    "weir": 3
+  },
+  "stats": {
+    "valley.greenSeen": 1,
+    "valley.creekSeen": 1,
+    "valley.riverSeen": 1,
+    "shipped": 140,
+    "harvested": 220,
+    "slept": 40
+  },
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 19,
+    "facing": "left"
+  },
+  "time": {
+    "season": "summer",
+    "day": 12,
+    "clock": "08:30"
+  },
+  "weather": "sunny",
+  "money": 1840,
+  "plots": ["home", "west", "east"],
+  "crops": [
+    { "crop": "tomato", "stage": "ripe", "rect": [9, 16, 4, 4], "watered": true },
+    { "crop": "blueberry", "stage": "ripe", "rect": [9, 20, 4, 4], "watered": true },
+    { "crop": "corn", "stage": "ripe", "rect": [5, 16, 4, 10], "watered": true },
+    { "crop": "melon", "stage": "ripe", "rect": [17, 16, 8, 5], "watered": true },
+    { "crop": "tomato", "stage": 3, "rect": [17, 21, 8, 5], "watered": true }
+  ],
+  "select": 2,
+  "letters": [],
+  "goal": "tree"
+}
