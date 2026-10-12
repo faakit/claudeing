@@ -136,6 +136,17 @@ holding the phone normally. `?devmenu` jumps to any scenario on the phone.
       bug.
 - [ ] Look at the art in sunlight and at night brightness.
 
+**Towing (the Weir's verb, M7)** (scenarios `tow-first-log`, `tow-long-log`, `tow-east-lane`; and the lab's
+`tow-lane-long`)
+
+- [ ] `tow-first-log`: tap the log at the river's head. The farmer walks over and the rope throws out. Tap the slip on
+      the south bank (or the water below the log): the log trails behind, catches on the reeds, a tap or Action
+      tugs it free and he walks on, then hauls it in onto the slip. About 6 s, never a second tap for the same thing.
+- [ ] `tow-long-log`: the long log waits caught on the rock. Two tugs, then he walks it down by himself: 3 timber.
+- [ ] `tow-east-lane`: tap the far log. He walks to the slip and waits for the spur to turn it; it lands by itself.
+- [ ] Each one once with Action only, and once with the other hand. With the left thumb, is any tap a stretch?
+- [ ] Haptics: a tick on the hook and the snag, a firmer one on the tug, success on the landing.
+
 **Sound and device** (see also [docs/MOBILE.md](../docs/MOBILE.md))
 
 - [ ] Listen to each season by day and night, the title, the festival and the mine. Are the touch cues audible but

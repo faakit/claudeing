@@ -58,7 +58,8 @@
   "items": [
     {
       "item": "timber_hook",
-      "qty": 1
+      "qty": 1,
+      "slot": 7
     }
   ]
 }
