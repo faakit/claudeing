@@ -67,7 +67,10 @@ if (!jdk || !sdk) {
 
 const run = (cmd, args, opts = {}) => {
   console.log(`> ${cmd} ${args.join(' ')}`);
-  const r = spawnSync(cmd, args, { stdio: 'inherit', shell: win, ...opts });
+  // Windows runs npm and gradlew.bat through the shell; pass one command line (no unescaped argument list).
+  const r = win
+    ? spawnSync([`"${cmd}"`, ...args].join(' '), { stdio: 'inherit', shell: true, ...opts })
+    : spawnSync(cmd, args, { stdio: 'inherit', ...opts });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
 
@@ -91,7 +94,10 @@ if (devHits.length) {
 }
 
 const env = { ...process.env, JAVA_HOME: jdk, ANDROID_HOME: sdk, ANDROID_SDK_ROOT: sdk };
-run(win ? 'gradlew.bat' : './gradlew', [TASKS[mode], '--console=plain'], { cwd: 'android', env });
+run(resolve('android', win ? 'gradlew.bat' : 'gradlew'), [TASKS[mode], '--console=plain'], {
+  cwd: 'android',
+  env,
+});
 
 const out =
   mode === 'debug'

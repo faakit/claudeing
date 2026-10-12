@@ -9,7 +9,9 @@ export const MIGRATED_KEY = 'native.migrated';
 /**
  * Copy `keys` from the WebView's storage (`web`) into the native store, once per install. A key the native store
  * already holds is never overwritten, and the WebView copy is left in place (nothing is deleted). Returns the keys
- * copied. If the WebView storage cannot be read, the marker is not written and the next launch tries again.
+ * copied. A safety net: native builds have saved to Preferences since M8, so normally there is nothing to copy. The
+ * web store falls back from IndexedDB to localStorage to memory, so an unreadable WebView storage reads as empty and
+ * the marker is still written; only a `web` that throws leaves it unwritten (the next launch tries again).
  */
 export async function migrateWebSave(
   native: SaveStore,

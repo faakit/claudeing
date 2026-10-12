@@ -84,12 +84,12 @@ describe('initNative', () => {
     const confirmQuit = vi.fn(() => answer);
     const beforeExit = vi.fn(() => Promise.resolve());
     initNative(lc, { confirmQuit, beforeExit });
-    // In game with a sheet open: the listener closes it and uses the press.
+    // In play (UIScene's listener always uses the press: closes a sheet or opens the menu): no question.
     const off = lc.on('back', () => true);
     handlers['backButton']!({ canGoBack: false });
     expect(confirmQuit).not.toHaveBeenCalled();
     off();
-    // A listener that did not use the press (nothing open) still leads to the question.
+    // A listener that did not use the press leads to the question, as on the title (no listener at all).
     const off2 = lc.on('back', () => undefined);
     handlers['backButton']!({ canGoBack: false });
     expect(confirmQuit).toHaveBeenCalledTimes(1);
@@ -216,7 +216,7 @@ describe('one-time migration of a WebView save', () => {
     expect(await native.read('farm.save')).toBeNull();
   });
 
-  it('retries next launch when the WebView storage cannot be read, and never blocks saving', async () => {
+  it('leaves the marker unwritten when the WebView store throws, and never blocks saving', async () => {
     const native = new MemoryStore();
     const broken = {
       read: () => Promise.reject(new Error('blocked')),

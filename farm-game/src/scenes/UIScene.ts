@@ -306,9 +306,12 @@ export class UIScene extends Phaser.Scene {
           .find((m) => m.isOpen)
           ?.confirm(),
       ),
-      // Android back: close the open sheet; a scripted flow (sleep, results) swallows it. With nothing open the
-      // press is unused, and the native shell asks before quitting (platform/native.ts).
-      lifecycle.on('back', () => this.closeForBack()),
+      // Android back in play: close the open sheet, else open the menu; swallowed while a scripted flow owns the
+      // screen. Always used, so play never quits by accident: only the title asks to quit (platform/native.ts).
+      lifecycle.on('back', () => {
+        this.toggleMenu();
+        return true;
+      }),
       inputHub.on('slot', (i) => selectSlot(getState(), i)),
       inputHub.on('cycle', (d) => cycleSlot(getState(), d)),
     );
@@ -766,16 +769,6 @@ export class UIScene extends Phaser.Scene {
     const open = this.activeModal();
     if (open) open.close();
     else if (!runtime.busy) this.openPanel('menu');
-  }
-
-  /** The Android back press: true when it was used (a sheet closed, or a scripted flow owns the screen). */
-  private closeForBack(): boolean {
-    const open = this.activeModal();
-    if (open) {
-      open.close();
-      return true;
-    }
-    return runtime.busy;
   }
 
   private quitToTitle(): void {

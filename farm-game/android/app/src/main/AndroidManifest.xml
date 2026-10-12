@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -30,10 +29,14 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Cloud save (release/cloud-save): Play Games Services project id, from the build (empty = off). -->
-        <meta-data
-            android:name="com.google.android.gms.games.APP_ID"
-            android:value="@string/game_services_project_id" />
+        <!-- Cloud save: the Play Games entries live in src/pgs/AndroidManifest.xml, merged only when a project id
+             is configured (app/build.gradle). The Games library's auto-init provider is always removed, so no Games
+             code runs at launch; PlayGamesSavesPlugin initializes the SDK itself, and only with a numeric id. -->
+        <provider
+            android:name="com.google.android.gms.games.provider.PlayGamesInitProvider"
+            android:authorities="${applicationId}.playgamesinitprovider"
+            tools:node="remove"
+        />
 
         <!-- Analytics (release/analytics): Firebase stays off until the in-game consent turns it on, and never
              collects the advertising id. Harmless when Firebase is not installed. -->

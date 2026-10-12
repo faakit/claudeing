@@ -49,7 +49,8 @@ export function initNative(target: Lifecycle = lifecycle, hooks: NativeHooks = {
     ),
   );
   // Registering a backButton listener replaces Android's default "close the app", so route it to the
-  // game first: an open sheet closes. When nothing used the press, ask before quitting, save, then leave.
+  // game first: in play it closes the open sheet or opens the menu. When nothing used the press (the title
+  // screen), ask before quitting, save, then leave.
   const confirmQuit = hooks.confirmQuit ?? (() => window.confirm(t('title.quitConfirm')));
   let quitting = false;
   safely(

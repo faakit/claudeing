@@ -23,7 +23,7 @@
     "cap:ios": "npm run cap:sync && cap open ios",
     "android:debug": "node scripts/android.mjs debug",
     "android:bundle": "node scripts/android.mjs bundle",
-    "assets": "node scripts/make-icons.mjs && capacitor-assets generate --android --ios --iconBackgroundColor '#2a1f4a' --iconBackgroundColorDark '#2a1f4a' --splashBackgroundColor '#1b1530' --splashBackgroundColorDark '#1b1530'",
+    "assets": "node scripts/make-icons.mjs && capacitor-assets generate --android --ios --iconBackgroundColor \"#2a1f4a\" --iconBackgroundColorDark \"#2a1f4a\" --splashBackgroundColor \"#1b1530\" --splashBackgroundColorDark \"#1b1530\"",
     "verify": "node scripts/verify.mjs",
     "e2e:controls": "node scripts/e2e-controls.mjs",
     "bench:thumb": "node scripts/bench-thumb.mjs",
