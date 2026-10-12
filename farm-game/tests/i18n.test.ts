@@ -130,13 +130,22 @@ describe('dictionaries', () => {
   it('every locale has exactly the English keys, with the same {params}', () => {
     for (const locale of LOCALES) {
       const other = leaves(dictionary(locale));
-      expect([...other.keys()].filter((k) => !en.has(k)), `${locale}: keys English lacks`).toEqual([]);
-      expect([...en.keys()].filter((k) => !other.has(k)), `${locale}: missing keys`).toEqual([]);
+      expect(
+        [...other.keys()].filter((k) => !en.has(k)),
+        `${locale}: keys English lacks`,
+      ).toEqual([]);
+      expect(
+        [...en.keys()].filter((k) => !other.has(k)),
+        `${locale}: missing keys`,
+      ).toEqual([]);
       for (const [k, v] of other) {
         // a translation may drop an English-only param (`{s}`, the plural s), never invent one
         const extra = paramSet(v).filter((p) => !paramSet(en.get(k)!).includes(p));
         expect(extra, `${locale} ${k}`).toEqual([]);
-        expect(forms(v).every((x) => x.trim().length > 0), `${locale} ${k} is empty`).toBe(true);
+        expect(
+          forms(v).every((x) => x.trim().length > 0),
+          `${locale} ${k} is empty`,
+        ).toBe(true);
       }
     }
   });
@@ -168,9 +177,10 @@ describe('data overlays', () => {
       for (const file of files) {
         const known = new Set(strings.filter((s) => s.file === file).map((s) => s.text));
         const stale = Object.keys(overlayFor(locale, file)).filter((k) => !known.has(k));
-        expect(stale, `${locale}/${file}.json: English no data file has (edited or removed?)`).toEqual(
-          [],
-        );
+        expect(
+          stale,
+          `${locale}/${file}.json: English no data file has (edited or removed?)`,
+        ).toEqual([]);
       }
     }
   });
@@ -180,7 +190,9 @@ describe('data overlays', () => {
       for (const { file, text } of strings) {
         const tr = overlayFor(locale, file)[text];
         if (!tr) continue;
-        const want = [...new Set(params(text))].sort();
+        const want = [...new Set(params(text))]
+          .filter((p) => !(file === 'jobs' && p === 's'))
+          .sort();
         // jobs.json texts may add the plural `{s}` their English does not need ("catch {n} fish")
         const got = [...new Set(params(tr))].filter((p) => !(file === 'jobs' && p === 's')).sort();
         expect(got, `${locale} ${file}: ${tr}`).toEqual(want);
@@ -205,15 +217,17 @@ describe('Portuguese fits where English is measured', () => {
     inPt(() => {
       for (const g of goals) {
         expect(measureText(g.text), g.text).toBeLessThanOrEqual(182);
-        expect(measureText(t('ui.hint', { hint: g.hint })), g.hint).toBeLessThanOrEqual(184 * 2 - 24);
+        expect(measureText(t('ui.hint', { hint: g.hint })), g.hint).toBeLessThanOrEqual(
+          184 * 2 - 24,
+        );
       }
-      for (const tip of tips) expect(measureText(tip.text), tip.text).toBeLessThanOrEqual(186 * 3 - 30);
+      for (const tip of tips)
+        expect(measureText(tip.text), tip.text).toBeLessThanOrEqual(186 * 3 - 30);
     }));
 
   it("every coach line fits one row and Rosa's welcome two", async () => {
-    const { allLines, COACH_LINE_PX, WELCOME_PX, welcome } = await import(
-      '../src/systems/tutorial'
-    );
+    const { allLines, COACH_LINE_PX, WELCOME_PX, welcome } =
+      await import('../src/systems/tutorial');
     inPt(() => {
       for (const l of allLines()) expect(measureText(l), l).toBeLessThanOrEqual(COACH_LINE_PX);
       expect(measureText(welcome().text)).toBeLessThanOrEqual(WELCOME_PX * 2 - 20);
@@ -263,7 +277,7 @@ describe('Portuguese fits where English is measured', () => {
         expect(measureText(label), label).toBeLessThanOrEqual(half);
       for (const note of [t('opts.autosave1'), t('opts.autosave2')])
         expect(measureText(note), note).toBeLessThanOrEqual(90);
-      expect(measureText(t('lang.name'))).toBeLessThanOrEqual(58 - 8);
+      expect(measureText(t('lang.name'))).toBeLessThanOrEqual(64 - 8);
       for (const label of [t('title.continue'), t('title.newGame'), t('title.eraseConfirm')])
         expect(measureText(label), label).toBeLessThanOrEqual(150 - 8);
       expect(measureText(t('sleep.title'), 2)).toBeLessThanOrEqual(184);
@@ -343,7 +357,7 @@ describe('no hard-coded player-visible strings', () => {
       "label('Close');",
       "t('common.close');",
       "emit('openPanel', { type: 'bag' });",
-      "const s = `${n} more days`;",
+      'const s = `${n} more days`;',
       "if (code === 'Space') go();",
       "toast('Nope.'); // i18n-ok",
       "import x from './Some Thing';",

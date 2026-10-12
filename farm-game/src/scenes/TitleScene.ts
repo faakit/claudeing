@@ -73,12 +73,13 @@ export class TitleScene extends Phaser.Scene {
     this.drawBackdrop();
 
     // The logo is the game's name, the same in every language.
-    const title = new Label(this, GAME_WIDTH / 2, 52, 'TINY', { // i18n-ok: the logo
+    const [logo1, logo2] = ['TINY', 'ACRE']; // i18n-ok: the logo
+    const title = new Label(this, GAME_WIDTH / 2, 52, logo1, {
       scale: 6,
       align: 'center',
       color: C.gold,
     });
-    const title2 = new Label(this, GAME_WIDTH / 2, 98, 'ACRE', { // i18n-ok: the logo
+    const title2 = new Label(this, GAME_WIDTH / 2, 98, logo2, {
       scale: 6,
       align: 'center',
       color: C.gold,
@@ -174,7 +175,7 @@ export class TitleScene extends Phaser.Scene {
       this.buildButtons();
     });
     // The language, one tap away (top right, clear of the letter and the buttons): the title redraws in it.
-    new Button(this, GAME_WIDTH - 62, 4, 58, 22, t('lang.name'), () => {
+    new Button(this, GAME_WIDTH - 68, 4, 64, 22, t('lang.name'), () => {
       if (!this.starting) void chooseLanguage(nextLanguage());
     });
     const offLocale = onLocaleChange(() => {
@@ -202,10 +203,19 @@ export class TitleScene extends Phaser.Scene {
       this.buttons.push(
         // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
         // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
-        new Button(this, x, y, w, 30, t('title.continue'), () => this.start(this.loaded as GameState), {
-          textColor: INK.green,
-          rim: INK.green,
-        }),
+        new Button(
+          this,
+          x,
+          y,
+          w,
+          30,
+          t('title.continue'),
+          () => this.start(this.loaded as GameState),
+          {
+            textColor: INK.green,
+            rim: INK.green,
+          },
+        ),
       );
       new Label(
         this,

@@ -446,7 +446,7 @@ async function runCombo(p, hand) {
       );
       // ...and a tap on the world between the controls (the stick's home, where the dock's wood was) walks there.
       await place(page, 10, 17, 'down');
-      await sleep(300);
+      await page.evaluate(() => window.__farm.dev.wait.idle(3));
       const start = await player(page);
       await t.tap(L.stickHome.x, L.stickHome.y, 70);
       await page
@@ -462,12 +462,12 @@ async function runCombo(p, hand) {
           { timeout: 2000, polling: 50 },
         )
         .catch(() => undefined);
-      const walked = await page.evaluate((p0) => {
+      const walkedGap = await page.evaluate((p0) => {
         const p = window.__farm.getState().player;
         const w = window.__farm.game.scene.getScenes(true).find((s) => s.grid);
         return w.route !== null || Math.floor(p.y / 16) !== p0.ty || Math.floor(p.x / 16) !== p0.tx;
       }, start);
-      check(`${tag}: a tap on the world between the floating controls walks the farmer`, walked);
+      check(`${tag}: a tap on the world between the floating controls walks the farmer`, walkedGap);
       await page.evaluate(() =>
         window.__farm.game.scene
           .getScenes(true)

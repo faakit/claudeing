@@ -418,7 +418,7 @@ describe('map stages: variants differ only inside their delta rects (WORLD-PLAN 
         [8, 17],
         [10, 20],
         [11, 25],
-      ])
+      ] as const)
         expect(isTileBlocked(grid, x, y), `${v} bed ${x},${y}`).toBe(true);
       expect(isTileBlocked(grid, 20, 22), `${v} gorge bridge`).toBe(false);
       expect(isTileBlocked(grid, 10, 22), `${v} creek bridge`).toBe(false);

@@ -167,7 +167,10 @@ describe('scenarios', () => {
     );
     const inBed = { ...base, at: { map: 'farm', tx: 26, ty: 12 } };
     expect(validateScenario(inBed, mapInfo).join()).toMatch(/changes with the valley's stage/);
-    expect(validateScenario({ ...inBed, valley: { farmGreen: 0 } }, mapInfo)).toEqual([]);
+    // pinned, the delta rule is met; the bed is solid at every stage (owner bug 3), so only "blocked" is left
+    expect(validateScenario({ ...inBed, valley: { farmGreen: 0 } }, mapInfo).join()).toMatch(
+      /^at: .*blocked/,
+    );
     // pinned to the restored farm, that tile is water
     expect(
       validateScenario({ ...inBed, valley: { spring: 3, farmGreen: 1 } }, mapInfo).join(),
