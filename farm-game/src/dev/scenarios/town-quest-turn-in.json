@@ -1,0 +1,65 @@
+{
+  "title": "A finished job waiting to be turned in at the town board",
+  "about": "Spring 3, 15:00, facing the town board: Finn's fishing job was taken this morning and two fish were caught since, so it is done and waits to be turned in (the toast said \"Done: Finn: catch 2 fish. Turn it in at the board!\"). The board opens on Jobs; Turn in pays 72g and Finn's thanks. Orin's job is taken and half done; Rosa's is still on the board. A job never turned in is paid by post tonight.",
+  "version": 18,
+  "tags": ["town", "board", "jobs"],
+  "at": {
+    "map": "town",
+    "tx": 14,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "day": 3,
+    "clock": "15:00"
+  },
+  "state": {
+    "jobs": {
+      "day": 3,
+      "list": [
+        {
+          "id": "fish",
+          "giver": "finn",
+          "stat": "caught",
+          "base": 0,
+          "n": 2,
+          "reward": 72,
+          "done": false
+        },
+        {
+          "id": "mine",
+          "giver": "orin",
+          "stat": "mined",
+          "base": 0,
+          "n": 4,
+          "reward": 44,
+          "done": false
+        },
+        {
+          "id": "forage",
+          "giver": "rosa",
+          "stat": "foraged",
+          "base": 3,
+          "n": 3,
+          "reward": 48,
+          "done": false
+        }
+      ]
+    }
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "caught": 2,
+    "mined": 2,
+    "jobs.takenDay": 3,
+    "jobs.taken": 3,
+    "jobs.told": 1
+  },
+  "goal": "job1"
+}

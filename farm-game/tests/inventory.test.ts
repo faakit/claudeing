@@ -65,8 +65,8 @@ describe('inventory', () => {
     addItem(s, 'tomato', 5);
     expect(swapSlots(s, 0, 5)).toBe(false);
     // Produce lands in the bag, past the hotbar, so the seeds keep their hotbar slot.
-    const bag = game.hotbarSlots;
-    expect(s.inventory.slots[bag]?.item).toBe('tomato');
+    const bag = s.inventory.slots.findIndex((x) => x?.item === 'tomato');
+    expect(bag).toBeGreaterThanOrEqual(game.hotbarSlots);
     expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('parsnip_seed');
     swapSlots(s, TOOL_SLOTS, bag);
     expect(s.inventory.slots[TOOL_SLOTS]?.item).toBe('tomato');

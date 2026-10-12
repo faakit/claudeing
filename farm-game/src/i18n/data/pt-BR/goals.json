@@ -13,8 +13,6 @@
   "Go into the house and tap the bed. Any time is fine.": "Entre em casa e toque na cama. Qualquer hora serve.",
   "Buy 5 items at the General Store": "Compre 5 itens no Armazém",
   "Walk south through the gate to town for more seeds.": "Vá para o sul pelo portão até a vila, atrás de sementes.",
-  "Finish a job a villager posts": "Faça um bico de alguém da vila",
-  "Morning news lists today's jobs. Menu > Goal shows them too.": "A manhã traz os bicos do dia. Menu > Meta também mostra.",
   "Harvest 5 crops": "Colha 5 plantas",
   "Ripe crops are full-grown. Press Action on them.": "Planta madura é planta crescida. Use Ação nelas.",
   "Ship 5 items in the bin": "Envie 5 itens pela caixa",
@@ -58,7 +56,6 @@
   "Catch 20 fish": "Pesque 20 peixes",
   "Cast at the pond, town river or woods lake.": "Pesque no lago, no rio da vila ou na lagoa do bosque.",
   "Finish 20 daily jobs": "Faça 20 bicos do dia",
-  "Three new jobs every morning. Menu > Goal shows today's.": "Três bicos novos toda manhã. Menu > Meta mostra os de hoje.",
   "Fill 10 orders on the town board": "Atenda 10 pedidos do mural",
   "Check the board each morning and plan your harvest.": "Olhe o mural toda manhã e planeje a colheita.",
   "Reach 5 hearts with a villager": "Chegue a 5 corações com alguém",
@@ -118,5 +115,8 @@
   "Raise your statue to level 6": "Leve sua estátua ao nível 6",
   "At level 6 the Founder's Statue is gilded.": "No nível 6, a Estátua da Fundação fica dourada.",
   "Catch all four legendary fish": "Pesque os quatro peixes lendários",
-  "One a season. Finn knows where each one hides.": "Um por estação. O Finn sabe onde cada um se esconde."
+  "One a season. Finn knows where each one hides.": "Um por estação. O Finn sabe onde cada um se esconde.",
+  "Do a job from the town board": "Faça um bico do mural da vila",
+  "Take a job at the board in town, do it, then turn it in there.": "Pegue um bico no mural da vila, faça e receba lá.",
+  "Three new jobs on the town board every morning.": "Três bicos novos no mural da vila toda manhã."
 }

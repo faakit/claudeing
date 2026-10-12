@@ -127,6 +127,8 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
       'bait.oldSave': 1,
       'got.worms': 1,
       discoveries: 1,
+      // ...and the job board's marker (a save from before has that day's jobs taken for it)
+      'jobs.boardOn': 1,
     });
     expect(s.shipping).toEqual({});
   });

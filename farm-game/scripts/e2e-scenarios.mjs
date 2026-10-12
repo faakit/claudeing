@@ -2012,6 +2012,53 @@ const closeSheet = (farm) =>
     }),
   );
 
+/** The town board (bait round): jobs are taken there and turned in there; the requests are its other page. */
+async function townBoard() {
+  let farm = await openScenario(browser, url, 'town-quest-board', { profile: PROFILE });
+  await farm.during('panelOpen', ['board'], () => farm.press('KeyE'));
+  let shown = await uiText(farm);
+  check(
+    'town-quest-board: the board opens on its Jobs page with the three jobs and Take',
+    shown.includes('Town Board') && shown.includes('catch 2 fish') && /Take/.test(shown),
+    shown.slice(shown.indexOf('Town Board')),
+  );
+  const took = await tapSheetButton(farm, /^Take$/);
+  await farm.frames(3);
+  let m = await farm.state();
+  check(
+    'town-quest-board: a real tap on Take takes the first job (it counts from now)',
+    took &&
+      m.stats['jobs.taken'] === 1 &&
+      m.stats['jobsTaken'] === 1 &&
+      m.jobs.list[0].base === (m.stats.caught ?? 0),
+    JSON.stringify({ took, taken: m.stats['jobs.taken'] }),
+  );
+  const tab = await tapSheetButton(farm, /^Requests \d+$/);
+  await farm.frames(3);
+  shown = await uiText(farm);
+  check(
+    'town-quest-board: the Requests tab shows the requests page',
+    tab && shown.includes('Town projects'),
+    shown,
+  );
+  check('town-quest-board: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'town-quest-turn-in', { profile: PROFILE });
+  const before = await farm.state();
+  await farm.during('panelOpen', ['board'], () => farm.press('KeyE'));
+  const turned = await tapSheetButton(farm, /^Turn in$/);
+  await farm.frames(3);
+  m = await farm.state();
+  check(
+    'town-quest-turn-in: Turn in pays the finished job once, with the asker thanks',
+    // 72g for the job, and 60g for the goal it finishes (Do a job from the town board)
+    turned && m.money === before.money + 72 + 60 && m.stats.jobsDone === 1 && m.jobs.list[0].done,
+    JSON.stringify({ turned, money: m.money - before.money }),
+  );
+  await farm.close();
+}
+
 /** Bait (bait round): no cast without one, each cast uses one, the bait in hand or used last goes on. */
 async function bait() {
   let farm = await openScenario(browser, url, 'fish-no-bait', { profile: PROFILE });
@@ -2274,6 +2321,7 @@ try {
         towingLane,
         weirTow,
         bait,
+        townBoard,
         lang,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)

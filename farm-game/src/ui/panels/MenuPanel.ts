@@ -10,7 +10,14 @@ import { maxEnergy } from '../../systems/energy';
 import { gameEvents, toast } from '../../systems/events';
 import { asideGoals, goalProgress, recentGoals, stat } from '../../systems/goals';
 import { valleyLines } from './valleyText';
-import { jobLabel, jobProgress, welcomeFactor, welcomeJobsHeader } from '../../systems/jobs';
+import {
+  isTaken,
+  jobLabel,
+  jobProgress,
+  jobReady,
+  welcomeFactor,
+  welcomeJobsHeader,
+} from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
 import { fitRow, measureText } from '../font';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
@@ -128,7 +135,9 @@ export class MenuPanel extends Modal {
       });
     });
     const cr = grid.close;
-    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), { textColor: C.warn });
+    this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), {
+      textColor: C.warn,
+    });
     const ctx: MenuTabContext = {
       width: this.panelW,
       height: this.panelH,
@@ -210,7 +219,11 @@ export function installMenuTabs(menu: MenuPanel): void {
   registerMenuTab({ id: 'craft', label: () => tabLabel('craft'), build: buildCraft });
   registerMenuTab({ id: 'skills', label: () => tabLabel('skills'), build: buildSkills });
   registerMenuTab({ id: 'book', label: () => tabLabel('book'), build: buildAlmanac });
-  registerMenuTab({ id: 'opts', label: () => tabLabel('opts'), build: (c) => buildOptions(c, menu) });
+  registerMenuTab({
+    id: 'opts',
+    label: () => tabLabel('opts'),
+    build: (c) => buildOptions(c, menu),
+  });
 }
 
 function buildBag(c: MenuTabContext, menu: MenuPanel): void {
@@ -301,15 +314,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       c.label(8, dy + 64, t('bag.costs', { gold: fmtGold(def.buyPrice) }), C.creamDim);
   } else {
     c.label(8, dy + 2, t('bag.title'), C.gold);
-    c.label(
-      8,
-      dy + 16,
-      t('bag.help'),
-      C.creamDim,
-      1,
-      'left',
-      184,
-    );
+    c.label(8, dy + 16, t('bag.help'), C.creamDim, 1, 'left', 184);
   }
   const ly = c.top + 84;
   c.label(
@@ -325,15 +330,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   );
   c.label(8, ly + 12, t('bag.gold', { gold: fmt(s.money) }), C.gold);
   // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
-  c.label(
-    8,
-    ly + 24,
-    t('bag.tip'),
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
+  c.label(8, ly + 24, t('bag.tip'), C.creamDim, 1, 'left', 184);
 }
 
 function buildGoals(c: MenuTabContext): void {
@@ -366,7 +363,7 @@ function buildGoals(c: MenuTabContext): void {
   let y = top + 80;
   // Rows below never run into STATS at the bottom (THE VALLEY can push them down).
   const floor = c.bottom - 66;
-  // Today's jobs: small requests that pay on the spot, whatever the goal chain says.
+  // Today's jobs: small requests posted on the town board, whatever the goal chain says.
   const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
   c.label(8, y, welcomeJobsHeader(today.length > 0 ? welcomeFactor(s.jobs.day) : 1), C.gold);
   y += 12;
@@ -375,10 +372,15 @@ function buildGoals(c: MenuTabContext): void {
     y += 11;
   }
   for (const job of today) {
+    // Jobs are taken and turned in at the town board: a job still there says so, a finished one says to turn it in.
     const right = job.done
       ? t('common.done')
-      : `${jobProgress(s, job)}/${job.n} +${fmtGold(job.reward)}`;
-    c.label(192, y, right, job.done ? C.green : C.gold, 1, 'right');
+      : !isTaken(s, job)
+        ? `${t('jobs.atBoard')} +${fmtGold(job.reward)}`
+        : jobReady(s, job)
+          ? `${t('jobs.turnIn')} +${fmtGold(job.reward)}`
+          : `${jobProgress(s, job)}/${job.n} +${fmtGold(job.reward)}`;
+    c.label(192, y, right, job.done ? C.green : isTaken(s, job) ? C.gold : C.creamDim, 1, 'right');
     c.label(
       8,
       y,

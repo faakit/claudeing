@@ -1,7 +1,7 @@
-import { fish as fishTable, items } from '../data';
+import { fish as fishTable, game, items } from '../data';
 import type { BaitDef, FishDef } from '../data';
 import type { GameState } from '../state/GameState';
-import { toast } from './events';
+import { gameEvents, toast } from './events';
 import { addStat } from './goals';
 import { derbyMaps, derbyScore, festivalToday, recordCatch } from './festivals';
 import { addItem, countItem, removeItem, roomFor } from './inventory';
@@ -111,16 +111,30 @@ export function digWorms(state: GameState): number {
 }
 
 /**
- * The fishing sheet's one-tap switch: the next bait you carry (by code, wrapping round) becomes the one the next
- * cast uses, as if it had been cast last. Null when you carry fewer than two kinds (nothing to switch to).
+ * The fishing sheet's one-tap switch: the bait after the one the next cast would use (by code, wrapping round)
+ * goes on instead. It becomes the remembered bait, and with a bait in hand the hand changes too: to that bait's
+ * hotbar slot, else to the rod (the hand always wins, so the switch must move it). Null with fewer than two kinds.
  */
 export function nextBait(state: GameState): string | null {
   const owned = baitItems().filter((id) => countItem(state, id) > 0);
   if (owned.length < 2) return null;
-  const now = currentBaitOnRod(state);
+  const now = currentBait(state);
   const next = owned[(owned.indexOf(now ?? '') + 1) % owned.length]!;
   state.stats[BAIT_PICK] = baitOf(next)!.code;
+  const slots = state.inventory.slots;
+  if (baitOf(slots[state.inventory.selected]?.item)) {
+    const onBar = slots.findIndex((st, i) => i < game.hotbarSlots && st?.item === next);
+    const rod = slots.findIndex((st) => st && items[st.item]?.tool === 'fishing_rod');
+    if (onBar >= 0) state.inventory.selected = onBar;
+    else if (rod >= 0) state.inventory.selected = rod;
+    gameEvents.emit('inventoryChanged', undefined);
+  }
   return next;
+}
+
+/** Give back the bait of a cast that never had a bite (left while waiting). */
+export function refundBait(state: GameState, bait: string): void {
+  if (baitOf(bait)) addItem(state, bait, 1);
 }
 
 /** The bait the rod would use (the remembered one, else the plainest), whatever is in hand. */

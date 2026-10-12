@@ -1,5 +1,6 @@
 import { driftDefaults } from './drift';
 import { baitDefaults } from './fishing';
+import { jobsDefaults } from './jobs';
 import { valleyDefaults, weirDefaults } from './valley';
 import {
   crops,
@@ -716,6 +717,7 @@ export function sanitize(raw: Raw): GameState {
   const cap = maxEnergyOf(out);
   out.energy = int(raw['energy'], cap, 0, cap);
   baitDefaults(out);
+  jobsDefaults(out);
   return out;
 }
 

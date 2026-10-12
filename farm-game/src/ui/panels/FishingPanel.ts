@@ -6,9 +6,10 @@ import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import {
   biteDelay,
-  currentBaitOnRod,
+  currentBait,
   HOOK_WINDOW,
   nextBait,
+  refundBait,
   newReel,
   outcomeOf,
   reelSize,
@@ -97,9 +98,10 @@ export class FishingPanel extends Modal {
     zone.on('pointerout', () => (this.pointerDown = false));
     this.content.add(zone);
     this.hint = this.label(100, this.panelH - 44, '', C.creamDim, 1, 'center', 190);
-    // After the fight, the bottom button switches the next cast's bait in one tap (when you carry two kinds or
-    // more): no screen before a cast, and the bait in hand or on the hotbar still wins (bait round).
-    const next = currentBaitOnRod(getState());
+    // After the fight, the bottom button shows the bait the next cast will really use (the hand included) and
+    // switches it in one tap when you carry two kinds or more: no screen before a cast (bait round). With one kind
+    // it simply closes.
+    const next = currentBait(getState());
     const kinds = new Set(
       getState()
         .inventory.slots.filter((st) => st && items[st.item]?.bait)
@@ -120,6 +122,11 @@ export class FishingPanel extends Modal {
         },
         { textColor: C.green },
       );
+      this.draw();
+      return;
+    }
+    if (this.phase === 'done') {
+      this.closeButton();
       this.draw();
       return;
     }
@@ -177,9 +184,12 @@ export class FishingPanel extends Modal {
     if (this.phase === 'done') return;
     const out = caught ? outcomeOf(this.reel) : { caught: false, perfect: false };
     if (this.phase === 'wait' || this.phase === 'bite') {
-      // Left early or missed the bite: nothing was hooked.
+      // Left early or missed the bite: nothing was hooked. Left before any bite, the bait comes back; a missed bite
+      // cost it, and says so.
+      const was = this.phase;
       this.phase = 'done';
-      if (out.caught === false && this.clock > 0) toast(t('fishing.tooSlow'), 'warn');
+      if (was === 'wait') refundBait(getState(), this.bait);
+      else toast(t('fishing.tookBait'), 'warn');
       this.close();
       return;
     }

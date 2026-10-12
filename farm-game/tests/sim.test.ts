@@ -3,7 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 // Year-long sims take seconds each; never fail on vitest's 5 s default under load (critique 11, F8).
 vi.setConfig({ testTimeout: 60_000 });
 import { crops, game, items, jobs as jobDefs, plots, projects, shops } from '../src/data';
-import { JOBS_PER_DAY, jobProgress, jobReward, openJobs, welcomeFactor } from '../src/systems/jobs';
+import {
+  JOBS_PER_DAY,
+  jobProgress,
+  jobReward,
+  openJobs,
+  takeJob,
+  welcomeFactor,
+} from '../src/systems/jobs';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { craft } from '../src/systems/crafting';
 import { collect, feed, moveIn } from '../src/systems/animals';
@@ -171,6 +178,9 @@ function playDay(
   opts: { keepForBoard?: boolean; fish?: boolean; jobs?: boolean } = {},
 ): void {
   actions.left = budget;
+  // It fills board requests every day, so it is at the town board: it takes the day's jobs there (the board
+  // round). Finished ones it never turns in are paid by post at night.
+  s.jobs.list.forEach((_, i) => takeJob(s, i));
   // A player who does the day's errands (fish, rocks, wild goods, a chat, a gift, weeds): credited, at ten
   // presses each. Shipping, harvest and board jobs happen through the farm work itself.
   if (opts.jobs)

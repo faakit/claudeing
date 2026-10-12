@@ -15,6 +15,7 @@ import {
   digWorms,
   fishOdds,
   nextBait,
+  refundBait,
   reelSize,
   resolveCatch,
 } from '../src/systems/fishing';
@@ -39,11 +40,21 @@ function cast(s: GameState): { ok: boolean; message?: string; bait: string | nul
 }
 
 const dropAll = (s: GameState, item: string) => removeItem(s, item, countItem(s, item));
+/** Put a bait stack on the last hotbar slot (baits go to the bag; a player can move one onto the bar). */
+const toBar = (s: GameState, item: string, qty: number) =>
+  (s.inventory.slots[game.hotbarSlots - 1] = { item, qty });
 
 describe('bait: casting needs one and uses one', () => {
-  it('a new game starts with worms, enough for the day-2 fishing job', () => {
+  it('a new game starts with worms in the bag (not the hotbar), enough for the day-2 fishing job', () => {
     const s = newState();
     expect(countItem(s, 'worms')).toBe(STARTER_BAIT.qty);
+    expect(s.inventory.slots.findIndex((x) => x?.item === 'worms')).toBeGreaterThanOrEqual(
+      game.hotbarSlots,
+    );
+    addItem(s, 'bait', 5); // a bought bait goes to the bag too
+    expect(s.inventory.slots.findIndex((x) => x?.item === 'bait')).toBeGreaterThanOrEqual(
+      game.hotbarSlots,
+    );
     expect(s.stats[BAIT_ON]).toBe(1);
     expect(game.startingItems.some((i) => i.item === 'worms')).toBe(true);
   });
@@ -71,7 +82,7 @@ describe('bait: casting needs one and uses one', () => {
 
   it('a bait in hand casts with that bait; the rod then keeps using it', () => {
     const s = newState();
-    addItem(s, 'glow_grub', 2); // baits go to the hotbar first, like seeds
+    toBar(s, 'glow_grub', 2);
     equip(s, 'glow_grub');
     expect(cast(s).bait).toBe('glow_grub');
     equip(s, 'fishing_rod');
@@ -83,6 +94,8 @@ describe('bait: casting needs one and uses one', () => {
 
   it('a bait in hand away from water says to cast at the water', () => {
     const s = newState();
+    dropAll(s, 'worms');
+    toBar(s, 'worms', STARTER_BAIT.qty);
     equip(s, 'worms');
     const r = performAction(s, {
       map: 'farm',
@@ -128,6 +141,27 @@ describe('bait: the fishing sheet switches the next bait in one tap', () => {
     expect(nextBait(s)).toBe('bait');
     equip(s, 'fishing_rod');
     expect(cast(s).bait).toBe('bait');
+  });
+
+  it('with a bait in hand it switches the hand too, so the next cast really changes', () => {
+    const s = newState();
+    addItem(s, 'bait', 2);
+    toBar(s, 'glow_grub', 2);
+    equip(s, 'glow_grub');
+    expect(currentBait(s)).toBe('glow_grub');
+    // the next after the grub wraps to worms, which are in the bag: the hand goes to the rod
+    expect(nextBait(s)).toBe('worms');
+    expect(currentBait(s)).toBe('worms');
+    expect(s.inventory.slots[s.inventory.selected]?.item).toBe('fishing_rod');
+    expect(cast(s).bait).toBe('worms');
+  });
+
+  it('leaving before a bite gives the bait back', () => {
+    const s = newState();
+    refundBait(s, 'worms');
+    expect(countItem(s, 'worms')).toBe(STARTER_BAIT.qty + 1);
+    refundBait(s, 'carp'); // not a bait: nothing
+    expect(countItem(s, 'carp')).toBe(0);
   });
 });
 
