@@ -4,7 +4,7 @@ import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
 import { Label } from './font';
-import { FACE, fitText, shorten, wrapText } from './fontMetrics';
+import { FACE, fitText, measureText, shorten, wrapText } from './fontMetrics';
 import { rowLayout } from './layout';
 import { getState } from '../state/store';
 import { C, CH, SKIN, SEAM } from './theme';
@@ -331,6 +331,8 @@ export interface RowSpec {
   title: string;
   sub?: string;
   subColor?: number;
+  /** A count on the icon's corner in the small face (the shop's "own 10", critic U-4), when above 0. */
+  count?: number;
   /**
    * A tap on the row itself (anywhere off its buttons): the shop opens an item's card. The row's buttons sit above
    * its zone, so they keep their own taps.
@@ -348,6 +350,10 @@ export interface RowSpec {
 
 /** A list row: a 22 px button beside a title and a line in the body face (13 px lines). */
 export const ROW_H = 28;
+
+/** A button just wide enough for its label with 2 px clear inside its 3 px frame on each side (critic U-1). */
+export const fitButtonW = (label: string, w: number): number =>
+  Math.max(w, measureText(label) + 11);
 /** The body face's line height: a wrapped title or line grows its row by this. */
 export const LINE_H = FACE.body.line;
 
@@ -361,7 +367,7 @@ export function rowText(
   leftHanded: boolean,
   panelW: number = GAME_WIDTH,
 ): { title: string[]; sub: string[]; extra: number } {
-  const widths = (spec.buttons ?? []).map((b) => b.width ?? 44);
+  const widths = (spec.buttons ?? []).map((b) => fitButtonW(b.label, b.width ?? 44));
   const max = rowLayout(panelW, widths, leftHanded).maxText;
   const lines = (text: string): string[] => {
     const w = wrapText(shorten(text, max), max);
@@ -630,7 +636,7 @@ export abstract class Modal {
   /** Lay out one list row at `y`. Returns the y of the next row. */
   protected row(y: number, spec: RowSpec): number {
     // Buttons sit on the thumb's side (mirrored for the left hand); icon and text take the other side.
-    const widths = (spec.buttons ?? []).map((b) => b.width ?? 44);
+    const widths = (spec.buttons ?? []).map((b) => fitButtonW(b.label, b.width ?? 44));
     const L = rowLayout(this.panelW, widths, this.leftHanded);
     // long text wraps and the row grows (rowText); the sheet grows with it (rebuild, wantHeight)
     const { title, sub, extra } = rowText(spec, this.leftHanded, this.panelW);
@@ -652,6 +658,15 @@ export abstract class Modal {
       this.content.add(zone);
     }
     if (spec.icon) this.icon(L.iconX, y + 13, spec.icon);
+    if (spec.icon && spec.count)
+      this.content.add(
+        new Label(this.scene, L.iconX + 9, y + 15, String(spec.count), {
+          align: 'right',
+          color: CH.cream, // parchment on an ink outline, as on the bag's counts
+          outline: CH.ink,
+          face: 'small',
+        }),
+      );
     const NL = '\n';
     this.label(L.textX, y + 1, title.join(NL));
     if (sub.length)

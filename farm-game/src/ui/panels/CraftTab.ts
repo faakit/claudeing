@@ -7,9 +7,8 @@ import { isRecipeUnlocked } from '../../systems/skills';
 import { lockedText, recipeNeed } from './craftText';
 import { C } from '../theme';
 import { ROW_H, rowText, type RowSpec } from '../widgets';
-import { fmt } from './format';
 import type { MenuTabContext } from './MenuPanel';
-import { t } from '../../i18n';
+import { fmtGold, t } from '../../i18n';
 
 const PER_PAGE = 8;
 
@@ -41,7 +40,7 @@ export function buildCraft(c: MenuTabContext): void {
   const pages = book.length;
   page = Math.min(page, pages - 1);
   c.label(8, c.top + 1, t('craft.title'), C.gold);
-  c.label(192, c.top + 1, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+  c.label(192, c.top + 1, fmtGold(s.money), C.gold, 1, 'right');
   let y = c.top + 14;
   for (const id of book[page]!) {
     y = c.row(y, rowSpec(id, c));

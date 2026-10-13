@@ -556,7 +556,7 @@
     "costs": "Custa {gold} na vila",
     "title": "Mochila",
     "help": "As casas de borda azul são sua barra. Toque num item e depois em outra casa para mudar de lugar. Toque na mesma casa para segurar.",
-    "helpDrag": "As casas de borda azul são sua barra. Segure um item e arraste para outra casa. Toque duas vezes para segurar.",
+    "helpDrag": "Os espaços de borda azul são sua barra. Segure um item e arraste para outro espaço. Toque duas vezes para equipar.",
     "meters": "Energia {energy}/{maxEnergy}   Água {water}/{maxWater}",
     "gold": "Ouro {gold}",
     "tip": "Dica: segure Ação e arraste para trabalhar um canteiro inteiro."
@@ -674,8 +674,8 @@
     "jobTonight": "{gold} à noite",
     "jobsNone": "Sem bicos hoje. Novos toda manhã.",
     "jobSub": "{who}  {what}",
-    "jobDoingOf": "{have} de {n} feitos, paga {gold}",
-    "jobReadyIn": "Feito! Entregue e ganhe {gold}"
+    "jobDoingOf": "{have} de {n}, paga {gold}",
+    "jobReadyIn": "Feito! Receba {gold}"
   },
   "craft": {
     "needsKitchen": "Precisa de cozinha",
@@ -779,7 +779,8 @@
       "back": "Voltar"
     },
     "legend": "Toque num item para saber mais.",
-    "factsSells": "{days}d, vale {sell}{again}"
+    "factsSells": "{days}d, vale {sell}{again}",
+    "legendDays": "d = dias até colher. Toque num item para saber mais."
   },
   "skills": {
     "level": "Nv {n}",

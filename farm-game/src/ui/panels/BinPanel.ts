@@ -22,7 +22,7 @@ import {
   type ItemRef,
 } from '../../systems/itemRef';
 import { C } from '../theme';
-import { Modal, ROW_H } from '../widgets';
+import { fitButtonW, Modal, ROW_H } from '../widgets';
 import { boardWants, requestWants, wantedByBoard } from '../../systems/orders';
 import { npcs } from '../../data';
 import { binWantedSub, boardWantsLine, keptLine } from './binText';
@@ -121,7 +121,8 @@ export class BinPanel extends Modal {
     );
     // One tap ships every crop, fish, wild good and product (one-thumb: low in the sheet, by the thumb).
     const produce = list.some((r) => countStack(s, r) > 0 && isProduce(r.item));
-    this.button(left ? 8 : this.panelW - 8 - 92, footerY, 92, 20, t('bin.shipAll'), () => {
+    const shipW = fitButtonW(t('bin.shipAll'), 92);
+    this.button(left ? 8 : this.panelW - 8 - shipW, footerY, shipW, 20, t('bin.shipAll'), () => {
       // Goods the open requests want stay in the bag (critique 9, F2); the row's "All" still ships them.
       const res = shipAllProduce(getState(), boardWants(getState()));
       if (res.count === 0) audio.play('error');

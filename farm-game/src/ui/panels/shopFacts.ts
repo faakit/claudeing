@@ -42,9 +42,9 @@ export function shopFacts(
     const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
     const again = crop.regrowDays ? t('shop.again', { n: crop.regrowDays }) : '';
     const f = { days, sell: fmtGold(sell), again };
-    // labelled first (QA: "explain the market info": "7 days 85g" did not say the 85 is what a crop sells for),
-    // then shorter labelled forms, then the bare facts the sheet's legend explains
-    base = late ? t('shop.tooLateNow') : glass ? t('shop.glassOnly', f) : t('shop.factsRipe', f);
+    // one shape on every row (critic U-4): "7d, sells 85¤", the legend saying d is days to ripen; a regrowing
+    // crop adds ", again 3d" where it fits (the card always says it)
+    base = late ? t('shop.tooLateNow') : glass ? t('shop.glassOnly', f) : t('shop.factsSells', f);
     alts = late
       ? []
       : glass
@@ -54,17 +54,7 @@ export function shopFacts(
             t('shop.glass', { ...f, again: '' }),
             t('shop.glassDays', f),
           ]
-        : [
-            // a regrowing crop keeps "again" as long as any form with it fits (critique 6, F8)
-            t('shop.factsRipeShort', f),
-            t('shop.factsSells', f),
-            t('shop.seedShort', f),
-            t('shop.factsRipe', { ...f, again: '' }),
-            t('shop.factsRipeShort', { ...f, again: '' }),
-            t('shop.factsSells', { ...f, again: '' }),
-            t('shop.seedFacts', f),
-            t('shop.seedShort', { ...f, again: '' }),
-          ];
+        : [t('shop.factsSells', { ...f, again: '' }), t('shop.seedShort', { ...f, again: '' })];
     short = late
       ? t('shop.tooLate')
       : glass
@@ -96,16 +86,24 @@ export type ShopTab = 'seeds' | 'farm' | 'home' | 'upgrades';
 
 const TAB_IDS: ShopTab[] = ['seeds', 'farm', 'home', 'upgrades'];
 /** The English widths; a language whose labels do not fit them gets widths sized to its labels. */
-const TAB_WIDTHS = [42, 40, 40, 56];
-const TABS_W = 184;
+const TAB_WIDTHS = [44, 40, 40, 63];
+/** The tab row: 190 px from x 5, the tabs 1 px apart. */
+export const TABS_X = 5;
+export const TAB_GAP = 1;
+const TABS_W = 190;
+/** A label keeps 2 px clear inside its button's 3 px frame on each side (critic U-2: "Melhorias" touched it). */
+const PAD = 11;
 
-/** Tabs with their labels and button widths (184 px in all, 2 px apart), in the current language. */
+/** Tabs with their labels and button widths (190 px in all, 1 px apart), in the current language. */
 export function shopTabs(): [ShopTab, string, number][] {
   const labels = TAB_IDS.map((id) => t(`shop.tab.${id}` as Key));
-  if (labels.every((l, i) => measureText(l) <= TAB_WIDTHS[i]! - 6))
+  if (labels.every((l, i) => measureText(l) <= TAB_WIDTHS[i]! - PAD))
     return TAB_IDS.map((id, i) => [id, labels[i]!, TAB_WIDTHS[i]!]);
-  const need = labels.map((l) => measureText(l) + 6);
-  const spare = Math.max(0, TABS_W - 2 * (TAB_IDS.length - 1) - need.reduce((a, b) => a + b, 0));
+  const need = labels.map((l) => measureText(l) + PAD);
+  const spare = Math.max(
+    0,
+    TABS_W - TAB_GAP * (TAB_IDS.length - 1) - need.reduce((a, b) => a + b, 0),
+  );
   const each = Math.floor(spare / TAB_IDS.length);
   return TAB_IDS.map((id, i) => [id, labels[i]!, need[i]! + each]);
 }

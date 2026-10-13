@@ -468,7 +468,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       }),
       C.creamDim,
     );
-    line(t('bag.gold', { gold: fmt(s.money) }), C.gold);
+    line(t('bag.gold', { gold: fmtGold(s.money) }), C.gold);
     // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
     line(t('bag.tip'), C.creamDim);
   }

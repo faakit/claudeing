@@ -82,7 +82,7 @@ export class ProjectPanel extends Modal {
   private buildList(): void {
     const s = getState();
     this.label(8, 8, t('project.title'), C.gold);
-    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(192, 8, fmtGold(s.money), C.gold, 1, 'right');
     this.label(8, 20, projectsIntro(), C.creamDim);
     // Open projects first; finished ones on their own pages, so nine projects never push a row under
     // Close or off the screen (critique 6, F1).
@@ -157,7 +157,7 @@ export class ProjectPanel extends Modal {
     const p = projects[id]!;
     this.icon(15, 15, this.landmarkIcon(id));
     this.label(28, 8, p.name, C.gold);
-    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(192, 8, fmtGold(s.money), C.gold, 1, 'right');
     const blurb = this.label(8, 26, p.blurb, C.cream, 1, 'left', 184);
     let y = 26 + blurb.textHeight + 4;
     const glory = !!p.repeat && projectLevel(s, id) >= p.repeat.perkLevels;

@@ -1,4 +1,4 @@
-import { items, shops } from '../../data';
+import { items, placeables, shops } from '../../data';
 import type { UpgradeDef } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
@@ -25,6 +25,8 @@ import {
   shopFactsRoom,
   shopTabOf,
   shopTabs,
+  TAB_GAP,
+  TABS_X,
   tooLate,
   type ShopTab,
 } from './shopFacts';
@@ -34,7 +36,7 @@ import { fmtGold, t } from '../../i18n';
 
 const ROWS = 5;
 /** The list's height: five rows of the body face, the legend, the pager and Close. */
-const SHEET_H = 270;
+const SHEET_H = 284;
 
 export class ShopPanel extends Modal {
   constructor(scene: Phaser.Scene) {
@@ -45,6 +47,8 @@ export class ShopPanel extends Modal {
   private page = 0;
   /** The item whose card is open (a tap on its row), or null for the list. */
   card: string | null = null;
+  /** Where the list's first row starts in the sheet (e2e taps a row by it). */
+  firstRowY = 0;
 
   override open(): void {
     this.card = null;
@@ -62,10 +66,10 @@ export class ShopPanel extends Modal {
     this.label(8, 8, shop.name, C.gold);
     this.icon(this.panelW - 12, 12, 'ui_coin');
     this.label(this.panelW - 20, 8, fmt(s.money), C.gold, 1, 'right');
-    let tx = 8;
+    let tx = TABS_X;
     shopTabs().forEach(([id, text, w]) => {
       const x = tx;
-      tx += w + 2;
+      tx += w + TAB_GAP;
       this.button(
         x,
         20,
@@ -86,10 +90,12 @@ export class ShopPanel extends Modal {
 
     let y = 42;
     if (this.tab !== 'upgrades') {
-      // what a row's tap does (QA: the facts on a row were not explained); the card says them in full
-      this.label(8, y, t('shop.legend'), C.creamDim, 1, 'left', 184);
-      y += 15;
+      // what a row's tap does and, on Seeds, what "7d" means (QA: the facts on a row were not explained; critic
+      // U-4); the card says them in full
+      const legend = this.tab === 'seeds' ? t('shop.legendDays') : t('shop.legend');
+      y = this.para(8, y, legend, C.creamDim, 184, 4);
     }
+    this.firstRowY = y;
     if (this.tab === 'upgrades') {
       this.buildUpgrades(y);
     } else {
@@ -140,8 +146,18 @@ export class ShopPanel extends Modal {
         this.rebuild();
       },
       icon: def.icon,
+      // what you own is a badge on the icon, so every row's facts have one shape (critic U-4); a decoration's line
+      // counts against its cap ("Decor 1/12") and keeps it
+      count: placeables[id]?.behavior === 'decor' ? 0 : own,
       title: def.name,
-      sub: shopFacts(id, own, s.time.day, greenhouse, shopFactsRoom(x5), s.time.season),
+      sub: shopFacts(
+        id,
+        placeables[id]?.behavior === 'decor' ? own : 0,
+        s.time.day,
+        greenhouse,
+        shopFactsRoom(x5),
+        s.time.season,
+      ),
       subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {

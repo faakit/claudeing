@@ -779,7 +779,8 @@
       "back": "Back"
     },
     "legend": "Tap an item to read about it.",
-    "factsSells": "{days}d, sells {sell}{again}"
+    "factsSells": "{days}d, sells {sell}{again}",
+    "legendDays": "d = days to ripen. Tap an item to read about it."
   },
   "skills": {
     "level": "Lv {n}",

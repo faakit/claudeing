@@ -2768,7 +2768,7 @@ async function uiQaOn(profile, hand) {
   const row = await farm.eval(() => {
     const shop = window.__farm.game.scene.getScene('UI').panels.get('shop');
     const left = window.__farm.getState().settings.leftHanded;
-    return { x: left ? 150 : 50, y: shop.root.y + 57 + 6 };
+    return { x: left ? 150 : 50, y: shop.root.y + shop.firstRowY + 6 };
   });
   await farm.thumb.tap(row.x, row.y, 60);
   await farm.frames(4);
@@ -3080,6 +3080,11 @@ function overflowIn(sceneKey) {
           return;
         }
         if (typeof n.bw === 'number' && typeof n.bh === 'number') {
+          // a button's label keeps 2 px clear inside its 3 px frame on each side (critic U-1: "Receber" ran past
+          // its button's edge)
+          const lw = n.label?.textWidth ?? 0;
+          if (n.label?.text?.trim() && lw > n.bw - 10)
+            bad.push(`overflows its button: "${n.label.text}" (${Math.ceil(lw)} px in ${n.bw})`);
           // a Button: its face is Graphics (no bounds); it covers what lies under its footprint
           const mt = n.getWorldTransformMatrix();
           const a = mt.transformPoint(0, 0);

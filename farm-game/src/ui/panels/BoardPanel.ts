@@ -17,7 +17,6 @@ import { wrapText } from '../fontMetrics';
 import { Modal, ROW_H } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
-import { fmt } from './format';
 import { cartStock } from '../../systems/cart';
 import { items } from '../../data';
 import { giveToSpecial, specialGiveCount, specialSub, specialTitle } from '../../systems/specials';
@@ -96,7 +95,7 @@ export class BoardPanel extends Modal {
     this.setHeight(42 + 15 + rows * ROW_H + 34);
     this.panel();
     this.label(8, 8, t('board.townTitle'), C.gold);
-    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(192, 8, fmtGold(s.money), C.gold, 1, 'right');
     this.tabs(s, 20);
     let y = 42;
     this.label(
@@ -200,7 +199,7 @@ export class BoardPanel extends Modal {
     );
     this.panel();
     this.label(8, 8, t('board.townTitle'), C.gold);
-    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(192, 8, fmtGold(s.money), C.gold, 1, 'right');
     this.tabs(s, 20);
     if (score) this.label(8, 42, score, C.cream);
     this.label(8, noticeY, notice, C.creamDim, 1, 'left', 184);
