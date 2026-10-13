@@ -20,6 +20,7 @@ import {
   dock,
   launch,
   liveTargets,
+  mmPerCss,
   openGame,
   sleep,
   startPreview,
@@ -42,6 +43,11 @@ const centreStop = (process.env.STOP ?? 'center') === 'center';
 // unless REACTION_SD is set explicitly.
 const reactionSd = Number(process.env.REACTION_SD ?? 30);
 const sdExplicit = process.env.REACTION_SD !== undefined;
+/**
+ * Paint aim (QA round, plot rows): each row end and step of the 3x3 serpentine is aimed up to this many mm off
+ * (uniform, seeded by SEED), as a thumb reading the live preview would. 0 = exact (the default).
+ */
+const paintMissMm = Number(process.env.PAINT_MISS_MM ?? 0);
 /** Aim spread of world taps in mm (0 = taps land on tile centres). */
 const tapSdMm = Number(process.env.TAP_SD_MM ?? 0);
 let seed = Number(process.env.SEED ?? 7);
@@ -534,9 +540,11 @@ const TASKS = {
       const right = w.hand !== 'left';
       const toMid = right ? -1 : 1;
       // Round 3: a painted path may turn corners, so the whole plot is one serpentine from Action. Stand by the
-      // plot's bottom corner on the thumb's side (right hand: 12,20; left: 8,20) and draw toward the middle of
-      // the screen, then up a row, back, up a row, across: the finger stays in the comfortable arc above Action.
-      const standX = right ? 12 : 8;
+      // plot's bottom corner on the thumb's side and draw toward the middle of the screen, then up a row, back, up a
+      // row, across: the finger stays in the comfortable arc above Action. Both hands stand in the home plot's own
+      // edge column (right hand: 12,20; left: 9,20; QA round: the left stood outside the plot at 8, so its first row
+      // was a 3 of 4 inside the plot while the right hand's ran to the plot's edge) and work the 3 columns beside it.
+      const standX = right ? 12 : 9;
       // The game's own paint geometry, so the bench follows the constants.
       const G = await page.evaluate(() => window.__farm.controls.paintGeometry ?? null);
       const step = G?.step ?? 10;
@@ -599,22 +607,43 @@ const TASKS = {
         }
         await sleep(150); // and sees the preview before lifting
         await w.thumb.up();
+        paints.push(
+          await page.evaluate(
+            () =>
+              window.__farm.controls.entries.filter((e) => e.kind === 'paint').at(-1)?.detail ??
+              null,
+          ),
+        );
         await workDone();
       };
-      // the whole 3x3 (serpentine), or one straight row (older builds)
-      const plotPath = [
-        [toMid * at(3), 0],
-        [toMid * at(3), -at(1, true)],
-        [toMid * (at(3) - at(2, true)), -at(1, true)],
-        [toMid * (at(3) - at(2, true)), -2 * at(1, true)],
-        [toMid * at(3), -2 * at(1, true)],
-      ];
+      // the whole 3x3 (serpentine), or one straight row (older builds); PAINT_MISS_MM aims each row end and step
+      // off by up to that much (a fresh miss per paint)
+      const pxPerMm = 1 / (mmPerCss(w.thumb.p) * w.thumb.geo.k);
+      const miss = () => {
+        const u = ((seed = (seed * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+        return (u * 2 - 1) * paintMissMm * pxPerMm;
+      };
+      const serpPath = () => {
+        const r1 = at(3) + miss();
+        const s1 = at(1, true) + miss();
+        const r2 = at(2, true) + miss();
+        const s2 = at(1, true) + miss();
+        const r3 = at(2, true) + miss();
+        return [
+          [toMid * r1, 0],
+          [toMid * r1, -s1],
+          [toMid * (r1 - r2), -s1],
+          [toMid * (r1 - r2), -s1 - s2],
+          [toMid * (r1 - r2 + r3), -s1 - s2],
+        ];
+      };
+      const paints = [];
       const t0 = Date.now();
       const travelBefore = w.thumb.ledger().travelMm;
       const pass = async () => {
         if (serp) {
           await tapWalk(standX, 20);
-          await paintPath(plotPath);
+          await paintPath(serpPath());
         } else
           for (const ty of [18, 19, 20]) {
             await tapWalk(standX, ty);
@@ -628,7 +657,7 @@ const TASKS = {
       // thumb it is across the screen, so it flicks the tool ring instead.
       if (!right && (await w.hasRing())) await w.ringPick(5);
       else await w.tapSlot(5);
-      await paintPath(serp ? plotPath : [[toMid * 31, 0]]);
+      await paintPath(serp ? serpPath() : [[toMid * 31, 0]]);
       if (!serp)
         for (const ty of [19, 18]) {
           await tapWalk(standX, ty);
@@ -644,6 +673,8 @@ const TASKS = {
       return {
         ok: tilled === 9 && planted === 9 && watered === 9 && harvested >= 9,
         mode: serp ? 'serpentine' : 'action-paint',
+        paints: paints.join(' / '),
+        paintMissMm,
         after1: `${after1.tx},${after1.ty} ${after1.facing}`,
         travelThereMm: travelThere,
         plotTravelMm: w.thumb.ledger().travelMm - travelBefore - travelThere,

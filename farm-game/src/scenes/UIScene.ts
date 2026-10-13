@@ -507,7 +507,8 @@ export class UIScene extends Phaser.Scene {
 
   /** A press on Action: what it becomes (tap, swipe, ring, paint) is decided as the finger moves. */
   private pressAction(): void {
-    this.actionPress = new ActionPress(this.time.now);
+    // a path started in a plot stays inside it, and its serpentine is made of whole rows (QA round)
+    this.actionPress = new ActionPress(this.time.now, this.worldScene()?.paintField());
     this.paintTiles = 0;
   }
 

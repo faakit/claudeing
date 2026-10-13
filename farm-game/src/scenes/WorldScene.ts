@@ -114,7 +114,7 @@ import { spawnPosition, type Direction, type GameState } from '../state/GameStat
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { nodeTiles } from '../systems/mining';
-import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
+import { ownsTile, plotAtTile, plotForSaleAt, signTiles } from '../systems/plots';
 import { landmarkAt, landmarksOn } from '../systems/projects';
 import { mailboxAt } from '../systems/mail';
 import { mail } from '../data';
@@ -2291,6 +2291,22 @@ export abstract class WorldScene extends Phaser.Scene {
       ...t,
       kind: markerKind({ planKind: this.actKindAt(t), interactable: false }),
     }));
+  }
+
+  /**
+   * The field a painted path may not leave (QA round, "stop at the plot's edge"), read at the press: for a cell
+   * (dx, dy) from where the farmer stands, the id of the owned plot it lies in, else null (open ground, channels,
+   * other maps: unbounded). See `ActionPress` in input/gesture.ts.
+   */
+  paintField(): (dx: number, dy: number) => string | null {
+    const farm = mapsData.maps[this.mapId]?.farmland === true;
+    const p = playerTile(getState().player);
+    return (dx, dy) => {
+      if (!farm) return null;
+      const tx = p.tx + dx;
+      const ty = p.ty + dy;
+      return ownsTile(getState(), tx, ty) ? plotAtTile(tx, ty) : null;
+    };
   }
 
   /**

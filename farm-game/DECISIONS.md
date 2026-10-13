@@ -2244,3 +2244,37 @@ QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `age
   costs the bait. Scenario `fish-reel-early`; e2e block `fishEarly` (touch and Action, i13 and SE).
 - Not a penalty on purpose: a cost for an early press would punish a tap meant for the bite, and the whole bite
   window (1.5 s) is unchanged.
+
+### Painting in a plot: the plot's edge, one-tile steps, whole rows ("segurar o toque pra mexer automático com múltiplos tiles tá muito difícil de controlar")
+
+- **What made it hard:** every row end and corner of a painted serpentine was decided by where the thumb happened to
+  be (one tile per 16 px, a corner at 14 px off the line), far from the plot the thumb was looking at. The critic's
+  own models gave a 3x3 at 2 mm of wobble 77% on the iPhone 13 and 45% on the SE, and 25-62% once each row end is
+  aimed a few mm off (a person reading the preview, not a ruler). Failures were rows one tile long or short, the step
+  between rows growing to two tiles, and turns registering a row too late.
+- **Picked (of the QA options):** stopping at the plot's edge, plus snapping the serpentine to its shape, plus a
+  smaller dead zone only where a turn is certain. The rules, in `ActionPress` (`input/gesture.ts`); the world passes
+  `WorldScene.paintField()` (the owned plot under each cell) at the press:
+  - a path whose first tile lies in an owned plot never leaves that plot: dragging on past a row's end does nothing;
+  - the step between two rows is one tile, however far the thumb ran;
+  - rows after the first are as wide as the first (to the box edge) as soon as the thumb turns or lifts;
+  - a turn from a row that has reached its edge, or from a step into the row back, comes at 10 px off the line
+    (`PAINT_TURN_FIELD_PX`) instead of 14.
+  - Not picked: snapping the **first** row to the plot's edge on its turn. It made the bench's left hand (standing
+    outside the 4-wide home plot) paint 4 columns, and in the 8-wide East Field it would force 7-8 tile rows: the
+    width you draw first is the width you get. A slower or confirmable step was not needed once the length decisions
+    were gone; the live preview is unchanged.
+  - Off a plot (channels from the creek, open ground, other maps) painting is exactly as before.
+- **Measured.** Models (`tests/action-press.test.ts`, 200 runs each; a 3x3 beside the farmer's column, as the bench):
+  the critic's 2D human painter with row ends aimed up to 3 mm off, 2 mm wobble: i13 90% (was 62%), SE 77% (was
+  35%); 1 mm: 96% / 90% (83% / 63%). The critic's closed-loop painter (watching the preview): 2 mm 98.5% / 96.5%
+  (88.5% / 85%), 3 mm 80.5% / 84.5% (55% / 49%). A 3-tile row inside a wider plot behaves as before (no extra turns).
+  Bench, plot rows only (`TASKS=plot3x3`, i13 and SE, both hands): exact aim 4/4, 7 gestures as before. With
+  `PAINT_MISS_MM=3` (new: each row end and step aimed up to 3 mm off, seeded) over seeds 7-9: whole plots 9/12
+  (base 2/12), exact paints 20/24 (base about 6/24); the remaining misses are SE first rows drawn a tile short.
+- **Bench stand:** the left hand now stands in the home plot's west column (9,20), mirroring the right hand's east
+  column (12,20); at 8,20 it stood outside the plot, so its first row was a 3 of 4 inside the plot while the right
+  hand's ran to the plot's edge (the 4-wide plot, x 9-12, predates this round).
+- **Cost:** a 3x3 inside a wider plot (not against its edge) still has its first row decided by the thumb; rows after
+  it are whole. Scenario `paint-plot-3x3`; e2e block `paintPlot` (a sloppy serpentine with real touches, both hands,
+  i13 and SE: exactly the 3x3).
