@@ -4,7 +4,7 @@ import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
 import { Label } from './font';
-import { fitText, shorten, wrapText } from './fontMetrics';
+import { FACE, fitText, shorten, wrapText } from './fontMetrics';
 import { rowLayout } from './layout';
 import { getState } from '../state/store';
 import { C, CH, SKIN, SEAM } from './theme';
@@ -215,7 +215,7 @@ export class Button extends Phaser.GameObjects.Container {
       scale: style.scale ?? 1,
       ...(dark ? { shadow: null } : {}),
     });
-    this.label.setY(Math.round((bh - 7 * (style.scale ?? 1)) / 2));
+    this.label.setY(Math.round((bh - this.label.cap) / 2));
     // Grow the touch area to >= 44 CSS px, overlapping the visual edge but never by more than 4px
     // a side so neighbouring rows stay distinguishable.
     const padX = Math.min(4, Math.max(3, (hitSize(scene, bw) - bw) / 2));
@@ -265,7 +265,7 @@ export class Button extends Phaser.GameObjects.Container {
       this.lip.fillStyle(C.ink, 1).fillRect(1, h - 1, w - 2, 1);
     }
     drawPanel(this.bg, 0, dy, w, h - lip, this.down ? C.ink : fill, rim);
-    this.label.setY(Math.round((h - lip - 7 * (style.scale ?? 1)) / 2) + dy);
+    this.label.setY(Math.round((h - lip - this.label.cap) / 2) + dy);
     this.label.setAlpha(this.enabled ? 1 : 0.5);
     if (SKIN !== 'plum') {
       // walnut (critic R1-4): an enabled button always reads in full ink (or the colour asked for, never the
@@ -282,7 +282,7 @@ export class Button extends Phaser.GameObjects.Container {
         const tx0 = Math.floor(w / 2 - tw / 2) - 2;
         const tx1 = Math.ceil(w / 2 + tw / 2) + 2;
         const ty0 = this.label.y - 2;
-        const ty1 = this.label.y + 9 + 2;
+        const ty1 = this.label.y + this.label.cap + 4;
         for (let yy = 3; yy < h - lip - 4; yy += 2)
           for (let xx = 3; xx < w - 4; xx += 2) {
             const band = xx < 7 || xx >= w - 7 || yy < 7 || yy >= h - lip - 7;
@@ -331,6 +331,11 @@ export interface RowSpec {
   title: string;
   sub?: string;
   subColor?: number;
+  /**
+   * A tap on the row itself (anywhere off its buttons): the shop opens an item's card. The row's buttons sit above
+   * its zone, so they keep their own taps.
+   */
+  onTap?: () => void;
   /** Right-aligned buttons, laid out right to left. */
   buttons?: {
     label: string;
@@ -341,7 +346,10 @@ export interface RowSpec {
   }[];
 }
 
-export const ROW_H = 26;
+/** A list row: a 22 px button beside a title and a line in the body face (13 px lines). */
+export const ROW_H = 28;
+/** The body face's line height: a wrapped title or line grows its row by this. */
+export const LINE_H = FACE.body.line;
 
 /**
  * A list row's text, in lines: a title or line too long for its column even abbreviated wraps to a second line
@@ -361,7 +369,7 @@ export function rowText(
   };
   const title = lines(spec.title);
   const sub = spec.sub ? lines(spec.sub) : [];
-  return { title, sub, extra: (title.length - 1 + Math.max(0, sub.length - 1)) * 11 };
+  return { title, sub, extra: (title.length - 1 + Math.max(0, sub.length - 1)) * LINE_H };
 }
 
 /**
@@ -420,6 +428,7 @@ export abstract class Modal {
     this.content.removeAll(true);
     this.wantHeight = 0;
     this.rowGrowth = 0;
+    this.grownTo = 0;
     this.build();
     if (this.rowGrowth > 0)
       this.wantHeight = Math.max(this.wantHeight, this.panelH + this.rowGrowth);
@@ -428,6 +437,8 @@ export abstract class Modal {
     // hidden").
     if (this.wantHeight > this.panelH && this.panelH < this.maxHeight) {
       this.panelH = Math.min(this.maxHeight, this.wantHeight);
+      // a sheet that sizes itself in build() (setHeight) keeps the growth on its second pass
+      this.grownTo = this.panelH;
       this.content.removeAll(true);
       this.wantHeight = 0;
       this.rowGrowth = 0;
@@ -462,8 +473,11 @@ export abstract class Modal {
 
   /** Change the sheet height from inside build(); the sheet stays glued to the bottom edge. */
   protected setHeight(h: number): void {
-    this.panelH = Math.min(h, this.maxHeight);
+    this.panelH = Math.min(Math.max(h, this.grownTo), this.maxHeight);
   }
+
+  /** The height rebuild grew this sheet to for its second pass (0 on the first). */
+  private grownTo = 0;
 
   /**
    * The tallest a sheet may be: up to the bottom of the HUD, so a tall sheet (the bag, Options) never cuts
@@ -620,13 +634,30 @@ export abstract class Modal {
     const L = rowLayout(this.panelW, widths, this.leftHanded);
     // long text wraps and the row grows (rowText); the sheet grows with it (rebuild, wantHeight)
     const { title, sub, extra } = rowText(spec, this.leftHanded, this.panelW);
-    if (spec.icon) this.icon(L.iconX, y + 12, spec.icon);
+    if (spec.onTap) {
+      const tap = spec.onTap;
+      const zone = this.scene.add
+        .zone(0, y - 1, this.panelW, ROW_H + extra)
+        .setOrigin(0, 0)
+        .setInteractive({ useHandCursor: true });
+      let armed = false;
+      zone.on('pointerdown', () => (armed = true));
+      zone.on('pointerout', () => (armed = false));
+      zone.on('pointerup', () => {
+        if (!armed) return;
+        armed = false;
+        audio.play('ui');
+        tap();
+      });
+      this.content.add(zone);
+    }
+    if (spec.icon) this.icon(L.iconX, y + 13, spec.icon);
     const NL = '\n';
-    this.label(L.textX, y + 3, title.join(NL));
+    this.label(L.textX, y + 1, title.join(NL));
     if (sub.length)
       this.label(
         L.textX,
-        y + 14 + (title.length - 1) * 11,
+        y + 1 + LINE_H + (title.length - 1) * LINE_H,
         sub.join(NL),
         spec.subColor ?? C.creamDim,
       );

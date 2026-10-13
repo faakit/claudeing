@@ -1,5 +1,18 @@
 import Phaser from 'phaser';
-import { GAP, GLYPHS, parseGlyph, TALL_GLYPHS, TALL_ROWS } from './fontMetrics';
+import {
+  bodyRows,
+  COIN,
+  COIN_COLOURS,
+  COIN_ROWS,
+  FACE,
+  GAP,
+  GLYPHS,
+  glyphSpec,
+  parseGlyph,
+  TALL_GLYPHS,
+  TALL_ROWS,
+  type Face,
+} from './fontMetrics';
 import { C } from './theme';
 
 const isDark = (c: number): boolean =>
@@ -7,55 +20,97 @@ const isDark = (c: number): boolean =>
 export { fitRow, fitText, measureText } from './fontMetrics';
 
 /**
- * Hand-built 5x7 pixel font, generated into a bitmap font at boot so UI text is
- * perfectly crisp at 200x400. Glyph shapes and text measuring live in fontMetrics.ts.
+ * Hand-built pixel font in two faces (fontMetrics.ts `FACE`), generated into bitmap fonts at boot so UI text is
+ * crisp at 200x400: `body` (the reading size) and `small` (the old 5x7). Glyph shapes and measuring live in
+ * fontMetrics.ts; both faces share every advance width.
  */
 export const FONT_KEY = 'px';
+export const FONT_KEYS: Record<Face, string> = { small: 'px', body: 'pxb' };
 
-/** Build the font texture and register it with Phaser's bitmap font cache. */
+/** Build both faces' textures and register them with Phaser's bitmap font cache. */
 export function generateFont(scene: Phaser.Scene): void {
-  // Regular glyphs are 9 rows; accented capitals (TALL_GLYPHS) have TALL_ROWS more above the cap line, drawn
+  buildFace(scene, 'small');
+  buildFace(scene, 'body');
+}
+
+function buildFace(scene: Phaser.Scene, face: Face): void {
+  // Regular glyphs are `size` rows; accented capitals (TALL_GLYPHS) have TALL_ROWS more above the cap line, drawn
   // with a negative y offset into the line gap, so every line keeps the same height.
+  const H = FACE[face].size;
+  const rowsOf = (ch: string): number[] =>
+    face === 'body'
+      ? bodyRows(ch)
+      : glyphSpec(ch)
+          .split(' ')
+          .map((h) => parseInt(h, 16));
   const glyphs = [
-    ...Object.entries(GLYPHS).map(([ch, spec]) => ({ g: parseGlyph(ch, spec), tall: false })),
-    ...Object.entries(TALL_GLYPHS).map(([ch, spec]) => ({ g: parseGlyph(ch, spec), tall: true })),
-  ];
-  const atlasW = glyphs.reduce((w, { g }) => w + g.width + GAP, 0) + 2;
-  const H = 9;
+    ...Object.keys(GLYPHS).map((ch) => ({ ch, tall: false })),
+    ...Object.keys(TALL_GLYPHS).map((ch) => ({ ch, tall: true })),
+  ].map(({ ch, tall }) => ({ g: parseGlyph(ch, glyphSpec(ch)), rows: rowsOf(ch), tall }));
+  const coin = COIN_ROWS[face];
+  const coinW = coin[0]!.length;
+  const atlasW = glyphs.reduce((w, { g }) => w + g.width + GAP, 0) + coinW + GAP + 2;
   const atlasH = H + TALL_ROWS;
-  const tex = scene.textures.createCanvas('font_px', atlasW, atlasH);
+  const key = `font_${FONT_KEYS[face]}`;
+  const tex = scene.textures.createCanvas(key, atlasW, atlasH);
   if (!tex) throw new Error('Could not create font texture');
   const ctx = tex.getContext();
   ctx.fillStyle = '#ffffff';
   const chars: Record<number, unknown> = {};
+  const add = (
+    code: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    yOffset: number,
+    adv: number,
+    xOffset = 0,
+  ) => {
+    chars[code] = {
+      x,
+      y,
+      width: w,
+      height: h,
+      centerX: w / 2,
+      centerY: h / 2,
+      xOffset,
+      yOffset,
+      xAdvance: adv,
+      data: {},
+      kerning: {},
+      u0: x / atlasW,
+      v0: y / atlasH,
+      u1: (x + w) / atlasW,
+      v1: (y + h) / atlasH,
+    };
+  };
   let x = 0;
-  for (const { g, tall } of glyphs) {
+  for (const { g, rows, tall } of glyphs) {
     const top = tall ? 0 : TALL_ROWS; // texture row of the glyph's first row
     const h = tall ? atlasH : H;
     for (let r = 0; r < h; r++) {
       for (let c = 0; c < g.width; c++) {
-        if ((g.rows[r] ?? 0) & (1 << (4 - (g.min + c)))) ctx.fillRect(x + c, top + r, 1, 1);
+        if ((rows[r] ?? 0) & (1 << (4 - (g.min + c)))) ctx.fillRect(x + c, top + r, 1, 1);
       }
     }
-    chars[g.ch.charCodeAt(0)] = {
-      x,
-      y: top,
-      width: g.width,
-      height: h,
-      centerX: g.width / 2,
-      centerY: h / 2,
-      xOffset: 0,
-      yOffset: tall ? -TALL_ROWS : 0,
-      xAdvance: g.width + 1,
-      data: {},
-      kerning: {},
-      u0: x / atlasW,
-      v0: top / atlasH,
-      u1: (x + g.width) / atlasW,
-      v1: (top + h) / atlasH,
-    };
+    add(g.ch.charCodeAt(0), x, top, g.width, h, tall ? -TALL_ROWS : 0, g.width + 1);
     x += g.width + GAP;
   }
+  // the coin in its own colours, on the x-height (a Label leaves it untinted)
+  const coinTop = TALL_ROWS + 2;
+  coin.forEach((row, r) => {
+    for (let c = 0; c < row.length; c++) {
+      const col = COIN_COLOURS[row[c]!];
+      if (!col) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect(x + c, coinTop + r, 1, 1);
+    }
+  });
+  // the small face's narrower coin is centred in the body face's advance, so measuring stays one function
+  const advance = COIN_ROWS.body[0]!.length + 1;
+  const pad = Math.floor((advance - 1 - coinW) / 2);
+  add(COIN.charCodeAt(0), x, TALL_ROWS, coinW, H, 0, advance, pad);
   chars[32] = {
     x: 0,
     y: 0,
@@ -74,10 +129,10 @@ export function generateFont(scene: Phaser.Scene): void {
     v1: 0,
   };
   tex.refresh();
-  scene.cache.bitmapFont.add(FONT_KEY, {
-    data: { retroFont: true, font: FONT_KEY, size: H, lineHeight: H + 2, chars },
+  scene.cache.bitmapFont.add(FONT_KEYS[face], {
+    data: { retroFont: true, font: FONT_KEYS[face], size: H, lineHeight: FACE[face].line, chars },
     frame: null,
-    texture: 'font_px',
+    texture: key,
   });
 }
 
@@ -93,6 +148,11 @@ export interface LabelStyle {
    * batch with the text and cost no draw call.
    */
   outline?: number;
+  /**
+   * The face (DECISIONS "Type scale"): `body` by default at scale 1, `small` (the old 5x7) for counts over icons
+   * and for 2x display text.
+   */
+  face?: Face;
 }
 
 /** Pixel text with a 1px drop shadow. Anchor follows `align`. */
@@ -104,14 +164,25 @@ export class Label extends Phaser.GameObjects.Container {
   readonly outline: number | null;
   private readonly align: 'left' | 'center' | 'right';
   private color: number;
+  /** The face this label draws in. */
+  readonly face: Face;
+  private tintedCoins = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, text: string, style: LabelStyle = {}) {
     super(scene, x, y);
     const scale = style.scale ?? 1;
     this.align = style.align ?? 'left';
     this.color = style.color ?? C.cream;
+    this.face = style.face ?? (scale === 1 ? 'body' : 'small');
     const make = (color: number) => {
-      const t = new Phaser.GameObjects.BitmapText(scene, 0, 0, FONT_KEY, text, H_SIZE)
+      const t = new Phaser.GameObjects.BitmapText(
+        scene,
+        0,
+        0,
+        FONT_KEYS[this.face],
+        text,
+        FACE[this.face].size,
+      )
         .setTint(color)
         .setScale(scale);
       if (style.maxWidth) t.setMaxWidth(style.maxWidth / scale);
@@ -127,8 +198,22 @@ export class Label extends Phaser.GameObjects.Container {
     this.add(this.rim);
     if (this.shade) this.add(this.shade);
     this.add(this.main);
+    this.coins();
     this.layout();
     scene.add.existing(this);
+  }
+
+  /** The gold coin keeps its own colours in the main text (the shadow and outline copies draw it in theirs). */
+  private coins(): void {
+    const text = this.main.text;
+    const had = this.tintedCoins;
+    this.tintedCoins = text.includes(COIN);
+    if (!had && !this.tintedCoins) return;
+    if (text.length) this.main.setCharacterTint(0, -1, false);
+    // the renderer indexes characters as laid out (line breaks and wrapped spaces are not counted), so take each
+    // coin's index from the layout itself
+    for (const ch of this.main.getTextBounds(true).characters)
+      if (ch.char === COIN) this.main.setCharacterTint(ch.i, 1, false, 0xffffff);
   }
 
   setText(text: string): this {
@@ -136,6 +221,7 @@ export class Label extends Phaser.GameObjects.Container {
     this.main.setText(text);
     this.shade?.setText(text);
     for (const r of this.rim) r.setText(text);
+    this.coins();
     this.layout();
     return this;
   }
@@ -159,6 +245,11 @@ export class Label extends Phaser.GameObjects.Container {
     return this.main.height;
   }
 
+  /** Capital height in screen px (9 in the body face, 7 in the small one, times the scale): centres a label. */
+  get cap(): number {
+    return FACE[this.face].cap * this.main.scaleY;
+  }
+
   private layout(): void {
     const w = this.textWidth;
     const ox = this.align === 'center' ? -w / 2 : this.align === 'right' ? -w : 0;
@@ -168,5 +259,3 @@ export class Label extends Phaser.GameObjects.Container {
     this.rim.forEach((r, i) => r.setPosition(o + [1, -1, 0, 0][i]!, [0, 0, 1, -1][i]!));
   }
 }
-
-const H_SIZE = 9; // must equal the font data size, or Phaser rescales glyphs

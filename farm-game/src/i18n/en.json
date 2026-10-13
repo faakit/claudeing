@@ -1,6 +1,6 @@
 {
   "fmt": {
-    "gold": "{n}g"
+    "gold": "{n}¤"
   },
   "season": {
     "spring": "Spring",
@@ -421,7 +421,8 @@
     "litOpen": "Tap the lit button to open it.",
     "readJobs": "Read your jobs, then tap Close.",
     "closeToCarryOn": "Close this to carry on.",
-    "tapShop": "Tap Shop to see her goods."
+    "tapShop": "Tap Shop to see her goods.",
+    "backToCarryOn": "Tap Back to carry on."
   },
   "dir": {
     "up": "up",
@@ -555,6 +556,7 @@
     "costs": "Costs {gold} in town",
     "title": "Backpack",
     "help": "Blue-edged slots are your hotbar. Tap an item, then another slot to move it. Tap the same slot to equip it.",
+    "helpDrag": "Blue-edged slots are your hotbar. Hold an item, then drag it to another slot. Tap it twice to hold it.",
     "meters": "Energy {energy}/{maxEnergy}   Water {water}/{maxWater}",
     "gold": "Gold {gold}",
     "tip": "Tip: hold Action, then drag, to work a whole plot."
@@ -671,7 +673,9 @@
     "jobReady": "Done! {gold}",
     "jobTonight": "{gold} tonight",
     "jobsNone": "No jobs today. New ones each morning.",
-    "jobSub": "{who}  {what}"
+    "jobSub": "{who}  {what}",
+    "jobDoingOf": "{have} of {n} done, pays {gold}",
+    "jobReadyIn": "Done! Turn in for {gold}"
   },
   "craft": {
     "needsKitchen": "Needs a kitchen",
@@ -728,6 +732,8 @@
     "tooLateNow": "Too late now",
     "glassOnly": "Glass only {days}d {sell}{again}",
     "seedFacts": "{days} days  {sell}{again}",
+    "factsRipe": "Ripe in {days} days, sells {sell}{again}",
+    "factsRipeShort": "Ripe {days}d, sells {sell}{again}",
     "glass": "Glass {days}d {sell}{again}",
     "glassDays": "Glass {days}d",
     "seedShort": "{days}d {sell}{again}",
@@ -758,7 +764,22 @@
     "upgraded": "{name} upgraded!",
     "youNeed": "You need {n} {item}.",
     "moreGoods": "more goods",
-    "alreadyMaxed": "Already maxed."
+    "alreadyMaxed": "Already maxed.",
+    "card": {
+      "grows": "Grows in {seasons}",
+      "ripe": "Ripe in {n} days",
+      "again": "Then a new crop every {n} days",
+      "sells": "Each crop sells for {gold}",
+      "glass": "Out of season: grows only in the greenhouse",
+      "late": "Too late: it can't ripen before the season ends",
+      "fruit": "Bears fruit in {season}",
+      "fruitSells": "Each fruit sells for {gold}",
+      "price": "Price {gold}",
+      "buy": "Buy {gold}",
+      "back": "Back"
+    },
+    "legend": "Tap an item to read about it.",
+    "factsSells": "{days}d, sells {sell}{again}"
   },
   "skills": {
     "level": "Lv {n}",

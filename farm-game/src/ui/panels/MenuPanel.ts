@@ -20,6 +20,8 @@ import {
 } from '../../systems/jobs';
 import { absoluteDay } from '../../systems/time';
 import { fitRow, Label, measureText } from '../font';
+import { wrapText } from '../fontMetrics';
+import { bagGeom, bagSlotAt, LIFT_MS, movedToLift, slotXY, type BagGeom } from '../bagGrid';
 import { equipFromBag, isToolSlot, selectSlot, swapSlots } from '../../systems/inventory';
 import { isShippable } from '../../systems/economy';
 import { dishText, eat, eatGain, foodEnergy, tooFullFor } from '../../systems/food';
@@ -97,6 +99,10 @@ export function registerMenuTab(tab: MenuTab): void {
   else menuTabs.push(tab);
 }
 
+/** A body-face line, and a header line with its gap under it (DECISIONS "Type scale"). */
+const LINE = 13;
+const HEAD = 14;
+
 /** Up to the bottom of the HUD (the sheet height cap in ui/widgets): never over the goal plate. */
 const SHEET_H = 326;
 
@@ -158,6 +164,124 @@ export class MenuPanel extends Modal {
       close: () => this.close(),
     };
     (tabs.find((tab) => tab.id === this.tab) ?? tabs[0])?.build(ctx);
+  }
+
+  /** The bag grid as last drawn (buildBag), for resolving a drop. */
+  bag: BagGeom | null = null;
+  /** A press on a bag slot: a tap until it lifts (held or moved), then a drag carrying the item. */
+  private drag: {
+    from: number;
+    x: number;
+    y: number;
+    live: boolean;
+    ghost: Phaser.GameObjects.Image | null;
+    mark: Phaser.GameObjects.Graphics | null;
+    timer: Phaser.Time.TimerEvent | null;
+  } | null = null;
+
+  /**
+   * A finger down on bag slot `i`. On an item that can move (not a tool), holding it for LIFT_MS or moving it
+   * past LIFT_PX lifts it; a release before that is a tap (tapSlot).
+   */
+  pressSlot(i: number, p: Phaser.Input.Pointer): void {
+    if (this.drag) return;
+    const s = getState();
+    const movable = !!s.inventory.slots[i] && !isToolSlot(i);
+    this.drag = { from: i, x: p.x, y: p.y, live: false, ghost: null, mark: null, timer: null };
+    if (movable) this.drag.timer = this.scene.time.delayedCall(LIFT_MS, () => this.lift(p));
+    this.scene.input.on('pointermove', this.onDragMove, this);
+    this.scene.input.on('pointerup', this.onDragUp, this);
+  }
+
+  /** The bag drag in progress, for tests and the dev tools: the slot it came from and whether it lifted. */
+  get dragging(): { from: number; live: boolean } | null {
+    return this.drag ? { from: this.drag.from, live: this.drag.live } : null;
+  }
+
+  /** The press becomes a drag: the item rides above the finger, at 2x so it shows past the thumb. */
+  private lift(p: Phaser.Input.Pointer): void {
+    const d = this.drag;
+    if (!d || d.live || !this.isOpen) return;
+    const stack = getState().inventory.slots[d.from];
+    if (!stack || isToolSlot(d.from)) return;
+    d.live = true;
+    d.timer?.remove();
+    d.timer = null;
+    d.mark = this.scene.add.graphics().setDepth(219);
+    d.ghost = this.scene.add
+      .image(0, 0, iconKey(refOf(stack)))
+      .setScale(2)
+      .setDepth(220);
+    haptic('tick');
+    audio.play('select');
+    this.follow(p);
+  }
+
+  /** The ghost over the finger and a frame on the slot it would land in (gold, or red where it cannot go). */
+  private follow(p: Phaser.Input.Pointer): void {
+    const d = this.drag;
+    if (!d?.ghost || !d.mark || !this.bag) return;
+    d.ghost.setPosition(Math.round(p.x), Math.round(p.y) - 22);
+    d.mark.clear();
+    const to = bagSlotAt(this.bag, p.x, p.y - this.root.y);
+    if (to === null) return;
+    const { x, y } = slotXY(this.bag, to);
+    const ok = to === d.from || !isToolSlot(to);
+    const top = this.root.y + y;
+    const n = this.bag.size;
+    d.mark
+      .fillStyle(ok ? C.select : C.red, 1)
+      .fillRect(x - 2, top - 2, n + 4, 2)
+      .fillRect(x - 2, top + n, n + 4, 2)
+      .fillRect(x - 2, top, 2, n)
+      .fillRect(x + n, top, 2, n);
+  }
+
+  private onDragMove(p: Phaser.Input.Pointer): void {
+    const d = this.drag;
+    if (!d) return;
+    if (!d.live && d.timer && movedToLift(p.x - d.x, p.y - d.y)) this.lift(p);
+    if (d.live) this.follow(p);
+  }
+
+  private onDragUp(p: Phaser.Input.Pointer): void {
+    const d = this.drag;
+    if (!d) return;
+    this.endDrag();
+    if (!this.isOpen || !this.bag) return;
+    const at = bagSlotAt(this.bag, p.x, p.y - this.root.y);
+    if (!d.live) {
+      // a tap: only where it began (a press that slid off its slot does nothing)
+      if (at === d.from) this.tapSlot(d.from);
+      return;
+    }
+    if (at === null || at === d.from) {
+      this.rebuild();
+      return;
+    }
+    if (swapSlots(getState(), d.from, at)) {
+      audio.play('select');
+      haptic('tick');
+    } else audio.play('error');
+    this.cursor = null;
+    this.rebuild();
+  }
+
+  /** Drop the drag (its ghost, its frame, its listeners), wherever it was. */
+  private endDrag(): void {
+    const d = this.drag;
+    if (!d) return;
+    this.drag = null;
+    d.timer?.remove();
+    d.ghost?.destroy();
+    d.mark?.destroy();
+    this.scene.input.off('pointermove', this.onDragMove, this);
+    this.scene.input.off('pointerup', this.onDragUp, this);
+  }
+
+  override close(): void {
+    this.endDrag();
+    super.close();
   }
 
   // The remaining state the Options tab needs lives here so the tab functions below stay stateless.
@@ -231,19 +355,16 @@ export function installMenuTabs(menu: MenuPanel): void {
 
 function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   const s = getState();
-  const size = 22;
-  const pitch = 23;
-  const x0 = 8;
   // The grid sits at the bottom of the sheet, right above the tabs, where the thumb already is.
   // A Bigger Bag adds whole rows; the grid grows upward so it stays next to the thumb.
-  const rows = Math.ceil(s.inventory.slots.length / 8);
-  const y0 = c.bottom - rows * pitch - 2;
+  const geom = bagGeom(s.inventory.slots.length, c.bottom);
+  menu.bag = geom;
+  const { size, y0 } = geom;
   const g = c.scene.add.graphics();
   c.add(g);
   const cursor = menu.selectedCursor;
   s.inventory.slots.forEach((stack, i) => {
-    const x = x0 + (i % 8) * pitch;
-    const y = y0 + Math.floor(i / 8) * pitch;
+    const { x, y } = slotXY(geom, i);
     drawSlot(g, x, y, size, i === cursor, i < game.hotbarSlots);
     if (i === s.inventory.selected)
       g.lineStyle(1, C.select, 1).strokeRect(x - 1.5, y - 1.5, size + 3, size + 3);
@@ -257,25 +378,25 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
             align: 'right',
             color: CH.cream,
             outline: CH.ink,
+            face: 'small', // a count over an icon keeps the small face
           }),
         );
       // quality stars in the top corner: at the bottom the second one sat on a two-digit count
       if (ref.q) c.icon(x + size - 5, y + 5, 'ui_star').setTint(ref.q >= 2 ? 0xf4d35e : 0xc9d3e4);
       if ((ref.q ?? 0) >= 2) c.icon(x + size - 11, y + 5, 'ui_star').setTint(0xf4d35e);
     }
-    const zone = c.scene.add
-      .zone(x, y, size + 1, size + 1)
-      .setOrigin(0, 0)
-      .setInteractive();
-    zone.on('pointerup', () => menu.tapSlot(i));
+    // the whole pitch, so the zones meet; a press is a tap or the start of a drag (menu.pressSlot)
+    const zone = c.scene.add.zone(x, y, geom.pitch, geom.pitch).setOrigin(0, 0).setInteractive();
+    zone.on('pointerdown', (p: Phaser.Input.Pointer) => menu.pressSlot(i, p));
     c.add(zone);
   });
 
-  const dy = c.top - 4;
   const cur = cursor !== null ? s.inventory.slots[cursor] : null;
   // A dish, wherever it sits: one tap eats it (cooking is how a long day gets longer).
   const gain = eatGain(s, cur?.item);
-  if (cur && cursor !== null && foodEnergy(cur.item) > 0)
+  let floor = y0 - 3;
+  if (cur && cursor !== null && foodEnergy(cur.item) > 0) {
+    floor = y0 - 28;
     c.button(
       110,
       y0 - 26,
@@ -294,8 +415,10 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
         ? { textColor: C.creamDim, rim: C.creamDim }
         : { textColor: C.green, rim: C.green },
     );
+  }
   // A bag item picked: one tap puts it in your hand and closes the menu (no slot juggling).
-  else if (cur && cursor !== null && cursor >= game.hotbarSlots)
+  else if (cur && cursor !== null && cursor >= game.hotbarSlots) {
+    floor = y0 - 28;
     c.button(
       s.settings.leftHanded ? 8 : 110, // on the thumb's side
       y0 - 26,
@@ -310,38 +433,44 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
       },
       { textColor: C.green, rim: C.green },
     );
+  }
+  // The text above the grid is a flow, in priority order: each line shows only while it fits above the grid (and
+  // the Eat / Use button), so a long description or Portuguese never runs into the slots.
+  let y = c.top - 4;
+  const line = (text: string, color: number, x = 8, width = 184): boolean => {
+    const h = wrapText(text, width).length * LINE - 2;
+    if (y + h > floor) return false;
+    c.label(x, y, text, color, 1, 'left', width);
+    y += h + 3;
+    return true;
+  };
   if (cur) {
     const ref = refOf(cur);
     const def = items[cur.item]!;
-    c.icon(16, dy + 8, iconKey(ref));
-    c.label(30, dy + 4, displayName(ref), C.gold, 1, 'left', 160);
+    c.icon(16, y + 6, iconKey(ref));
+    line(displayName(ref), C.gold, 30, 160);
     // A dish says today's energy (less from the 4th dish of a day).
-    const desc = foodEnergy(cur.item) > 0 ? dishText(s, cur.item) : def.description;
-    c.label(8, dy + 20, desc, C.cream, 1, 'left', 184);
+    line(foodEnergy(cur.item) > 0 ? dishText(s, cur.item) : def.description, C.cream);
     // Only say what the bin pays for things the bin takes (machines and decorations are kept, not sold).
-    if (isShippable(ref))
-      c.label(8, dy + 52, t('bag.sellsFor', { gold: fmtGold(sellValue(ref)) }), C.creamDim);
-    if (def.buyPrice)
-      c.label(8, dy + 64, t('bag.costs', { gold: fmtGold(def.buyPrice) }), C.creamDim);
+    if (isShippable(ref)) line(t('bag.sellsFor', { gold: fmtGold(sellValue(ref)) }), C.creamDim);
+    if (def.buyPrice) line(t('bag.costs', { gold: fmtGold(def.buyPrice) }), C.creamDim);
   } else {
-    c.label(8, dy + 2, t('bag.title'), C.gold);
-    c.label(8, dy + 16, t('bag.help'), C.creamDim, 1, 'left', 184);
+    line(t('bag.title'), C.gold);
+    line(t('bag.helpDrag'), C.creamDim);
+    y += 2;
+    line(
+      t('bag.meters', {
+        energy: s.energy,
+        maxEnergy: maxEnergy(s),
+        water: s.water,
+        maxWater: waterCapacity(s),
+      }),
+      C.creamDim,
+    );
+    line(t('bag.gold', { gold: fmt(s.money) }), C.gold);
+    // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
+    line(t('bag.tip'), C.creamDim);
   }
-  const ly = c.top + 84;
-  c.label(
-    8,
-    ly,
-    t('bag.meters', {
-      energy: s.energy,
-      maxEnergy: maxEnergy(s),
-      water: s.water,
-      maxWater: waterCapacity(s),
-    }),
-    C.creamDim,
-  );
-  c.label(8, ly + 12, t('bag.gold', { gold: fmt(s.money) }), C.gold);
-  // Wrapped: on one line it ran 58 px off the sheet (critique 12, F6).
-  c.label(8, ly + 24, t('bag.tip'), C.creamDim, 1, 'left', 184);
 }
 
 function buildGoals(c: MenuTabContext): void {
@@ -352,35 +481,41 @@ function buildGoals(c: MenuTabContext): void {
   let top = c.top + 2;
   if (rows.length > 0) {
     c.label(8, top, t('goals.valley'), C.gold);
-    top += 12;
+    top += HEAD;
     for (const r of rows) {
       c.label(8, top, r, C.cream);
-      top += 11;
+      top += LINE;
     }
-    top += 6;
+    top += 4;
   }
   c.label(8, top, t('goals.current'), C.gold);
+  let y = top + HEAD;
   if (prog) {
-    c.label(8, top + 12, prog.goal.text, C.cream, 1, 'left', 184);
+    // a flow: a goal or hint that wraps pushes what follows down
+    y += c.label(8, y, prog.goal.text, C.cream, 1, 'left', 184).textHeight + 3;
     const g = c.scene.add.graphics();
-    drawBar(g, 8, top + 26, 184, 7, prog.value / prog.goal.target, C.gold);
+    drawBar(g, 8, y, 184, 7, prog.value / prog.goal.target, C.gold);
     c.add(g);
-    c.label(192, top + 38, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold, 1, 'right');
-    c.label(8, top + 38, t('goals.reward', { gold: fmtGold(prog.goal.reward) }), C.green);
-    c.label(8, top + 50, t('ui.hint', { hint: prog.goal.hint }), C.creamDim, 1, 'left', 184);
+    y += 10;
+    c.label(192, y, `${fmt(prog.value)}/${fmt(prog.goal.target)}`, C.gold, 1, 'right');
+    c.label(8, y, t('goals.reward', { gold: fmtGold(prog.goal.reward) }), C.green);
+    y += LINE;
+    y +=
+      c.label(8, y, t('ui.hint', { hint: prog.goal.hint }), C.creamDim, 1, 'left', 184).textHeight +
+      2;
   } else {
-    c.label(8, top + 12, t('goals.allDone'), C.green, 1, 'left', 184);
+    y += c.label(8, y, t('goals.allDone'), C.green, 1, 'left', 184).textHeight + 2;
   }
-  let y = top + 80;
+  y += 6;
   // Rows below never run into STATS at the bottom (THE VALLEY can push them down).
-  const floor = c.bottom - 66;
+  const floor = c.bottom - 4 * LINE - HEAD - 4;
   // Today's jobs: small requests posted on the town board, whatever the goal chain says.
   const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
   c.label(8, y, welcomeJobsHeader(today.length > 0 ? welcomeFactor(s.jobs.day) : 1), C.gold);
-  y += 12;
+  y += HEAD;
   if (today.length === 0) {
     c.label(8, y, t('goals.jobsEveryMorning'), C.creamDim);
-    y += 11;
+    y += LINE;
   }
   for (const job of today) {
     // Jobs are taken and turned in at the town board: a job still there says so, a finished one says to turn it in.
@@ -398,36 +533,36 @@ function buildGoals(c: MenuTabContext): void {
       fitRow(jobLabel(job), 184 - measureText(right) - 6),
       job.done ? C.creamDim : C.cream,
     );
-    y += 11;
+    y += LINE;
   }
-  y += 6;
+  y += 4;
   // A goal the chain does not wait for (a legendary fish) stays in view here while the next one is current.
   const aside = asideGoals(s);
   c.label(8, y, t('goals.completed'), C.gold);
-  y += 12;
+  y += HEAD;
   const done = recentGoals(s, aside.length > 0 ? 1 : 2);
   if (done.length === 0) c.label(8, y, t('goals.nothingYet'), C.creamDim);
   for (const d of done) {
-    if (y + 11 > floor) break;
+    if (y + LINE > floor) break;
     const row = c.label(8, y, `+ ${d.text}`, C.creamDim, 1, 'left', 184);
     y += row.textHeight + 3;
   }
-  if (aside.length > 0 && y + 26 <= floor) {
+  if (aside.length > 0 && y + HEAD + LINE <= floor) {
     y += 3;
     c.label(8, y, t('goals.alsoOpen'), C.gold);
-    y += 12;
+    y += HEAD;
     // Two rows at most: the oldest open goal, then either the next or a count of the rest.
     const shown = aside.length > 2 ? aside.slice(0, 1) : aside;
     for (const g of shown) {
       const right = `${fmt(Math.min(g.target, stat(s, g.stat)))}/${fmt(g.target)}`;
       c.label(192, y, right, C.gold, 1, 'right');
       c.label(8, y, fitRow(g.text, 184 - measureText(right) - 6), C.cream);
-      y += 11;
+      y += LINE;
     }
     if (aside.length > shown.length)
       c.label(8, y, t('goals.moreOpen', { count: aside.length - shown.length }), C.creamDim);
   }
-  y = c.bottom - 62;
+  y = c.bottom - 4 * LINE - HEAD + 2;
   c.label(8, y, t('goals.stats'), C.gold);
   const stats: [string, number][] = [
     [t('stats.earned'), stat(s, 'earned')],
@@ -436,8 +571,8 @@ function buildGoals(c: MenuTabContext): void {
     [t('stats.slept'), stat(s, 'daysSlept')],
   ];
   stats.forEach(([name, v], i) => {
-    c.label(8, y + 12 + i * 11, name, C.creamDim);
-    c.label(192, y + 12 + i * 11, fmt(v), C.cream, 1, 'right');
+    c.label(8, y + HEAD + i * LINE, name, C.creamDim);
+    c.label(192, y + HEAD + i * LINE, fmt(v), C.cream, 1, 'right');
   });
 }
 
@@ -499,9 +634,9 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
       c.rebuild();
     };
     c.button(farX, y, half, 22, entry, openPage, { textColor: C.gold });
-    c.label(8, y - 11, fitRow(cloudStatusLine(st, Date.now()), 184), C.creamDim);
+    c.label(8, y - 14, fitRow(cloudStatusLine(st, Date.now()), 184), C.creamDim);
   } else {
-    c.label(farX, y + 1, t('opts.autosave1'), C.creamDim);
+    c.label(farX, y - 1, t('opts.autosave1'), C.creamDim);
     c.label(farX, y + 11, t('opts.autosave2'), C.creamDim);
   }
 
@@ -570,8 +705,8 @@ function buildOptions(c: MenuTabContext, menu: MenuPanel): void {
         : undefined,
   );
   if (!analytics.enabled && !fullscreenSupported() && isIosSafari()) {
-    c.label(farX, y + 2, t('opts.addHome1'), C.creamDim);
-    c.label(farX, y + 12, t('opts.addHome2'), C.creamDim);
+    c.label(farX, y - 1, t('opts.addHome1'), C.creamDim);
+    c.label(farX, y + 11, t('opts.addHome2'), C.creamDim);
   }
   y += 26;
   // Sound and Vibrate both on the thumb's side, in the two lowest rows (the far column is a stretch there).

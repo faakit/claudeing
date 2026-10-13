@@ -1,7 +1,7 @@
 import { crops, game, items, placeables, trees } from '../../data';
 import { measureText } from '../fontMetrics';
 import { fmtGold, t, type Key } from '../../i18n';
-import { seasonWord } from '../../systems/time';
+import { seasonLabel, seasonWord } from '../../systems/time';
 
 /** True when a seed could not ripen before the season ends (so buying it now is a mistake). */
 export function tooLate(itemId: string, day: number): boolean {
@@ -42,7 +42,9 @@ export function shopFacts(
     const glass = greenhouse && !!season && !crop.seasons.includes(season as never);
     const again = crop.regrowDays ? t('shop.again', { n: crop.regrowDays }) : '';
     const f = { days, sell: fmtGold(sell), again };
-    base = late ? t('shop.tooLateNow') : glass ? t('shop.glassOnly', f) : t('shop.seedFacts', f);
+    // labelled first (QA: "explain the market info": "7 days 85g" did not say the 85 is what a crop sells for),
+    // then shorter labelled forms, then the bare facts the sheet's legend explains
+    base = late ? t('shop.tooLateNow') : glass ? t('shop.glassOnly', f) : t('shop.factsRipe', f);
     alts = late
       ? []
       : glass
@@ -52,7 +54,17 @@ export function shopFacts(
             t('shop.glass', { ...f, again: '' }),
             t('shop.glassDays', f),
           ]
-        : [t('shop.seedShort', f), t('shop.seedShort', { ...f, again: '' })];
+        : [
+            // a regrowing crop keeps "again" as long as any form with it fits (critique 6, F8)
+            t('shop.factsRipeShort', f),
+            t('shop.factsSells', f),
+            t('shop.seedShort', f),
+            t('shop.factsRipe', { ...f, again: '' }),
+            t('shop.factsRipeShort', { ...f, again: '' }),
+            t('shop.factsSells', { ...f, again: '' }),
+            t('shop.seedFacts', f),
+            t('shop.seedShort', { ...f, again: '' }),
+          ];
     short = late
       ? t('shop.tooLate')
       : glass
@@ -73,6 +85,7 @@ export function shopFacts(
   if (own <= 0) return [base, ...alts].find((l) => measureText(l) <= room) ?? base;
   for (const line of [
     t('shop.ownLong', { base, n: own }),
+    ...alts.slice(0, 3).map((a) => t('shop.ownLong', { base: a, n: own })),
     short && t('shop.ownShort', { short, n: own }),
   ])
     if (line && measureText(line) <= room) return line;
@@ -103,4 +116,50 @@ export function shopTabOf(id: string): ShopTab {
   if (t === 'animal' || t === 'feed' || t === 'sapling') return 'farm';
   if (placeables[id]?.behavior === 'decor') return 'home';
   return 'seeds';
+}
+
+/** One line of an item's card in the shop: its text and, for a warning, a colour. */
+export interface CardLine {
+  text: string;
+  warn?: boolean;
+}
+
+/**
+ * The facts on an item's card (QA: "add a description to the shop items"): what it does is the item's own
+ * `description` (data, translated by the overlay), then what the shop row could only abbreviate, each line
+ * labelled: when it grows, how long it takes, what a crop sells for, whether it can still ripen. Pure.
+ */
+export function shopCard(
+  itemId: string,
+  own: number,
+  day: number,
+  greenhouse = false,
+  season?: string,
+): CardLine[] {
+  const def = items[itemId]!;
+  const lines: CardLine[] = [];
+  const crop = def.plants ? crops[def.plants] : undefined;
+  if (crop) {
+    const days = crop.stageDays.reduce((a, b) => a + b, 0);
+    lines.push({
+      text: t('shop.card.grows', { seasons: crop.seasons.map((x) => seasonLabel(x)).join(', ') }),
+    });
+    lines.push({ text: t('shop.card.ripe', { n: days }) });
+    if (crop.regrowDays) lines.push({ text: t('shop.card.again', { n: crop.regrowDays }) });
+    const sell = items[crop.harvestItem]?.sellPrice ?? 0;
+    if (sell > 0) lines.push({ text: t('shop.card.sells', { gold: fmtGold(sell) }) });
+    if (greenhouse && season && !crop.seasons.includes(season as never))
+      lines.push({ text: t('shop.card.glass') });
+    else if (!greenhouse && tooLate(itemId, day))
+      lines.push({ text: t('shop.card.late'), warn: true });
+  } else if (def.type === 'sapling') {
+    const tree = trees[itemId];
+    if (tree) {
+      lines.push({ text: t('shop.card.fruit', { season: seasonLabel(tree.season) }) });
+      const sell = items[tree.fruit]?.sellPrice ?? 0;
+      if (sell > 0) lines.push({ text: t('shop.card.fruitSells', { gold: fmtGold(sell) }) });
+    }
+  } else if (def.type === 'animal') lines.push({ text: t('shop.needsHome') });
+  if (own > 0) lines.push({ text: t('shop.own', { n: own }) });
+  return lines;
 }

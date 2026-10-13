@@ -174,6 +174,7 @@ export class TitleScene extends Phaser.Scene {
     new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 11, t('title.version', { build: __BUILD__ }), {
       align: 'right',
       color: C.creamDim,
+      face: 'small', // the build stamp: not reading text, and the body face ran off the bottom edge
     });
     this.note = new Label(this, GAME_WIDTH / 2, 176, '', {
       align: 'center',

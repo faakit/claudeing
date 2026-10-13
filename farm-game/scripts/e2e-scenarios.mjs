@@ -806,7 +806,7 @@ async function weir() {
   await farm.press('KeyE');
   await farm.panel('npc');
   const offer = await uiText(farm);
-  const bought = await tapSheetButton(farm, /^Sluice Gate 500g$/);
+  const bought = await tapSheetButton(farm, /^Sluice Gate 500[g¤]$/);
   await farm.frames(3);
   let s = await farm.state();
   check(
@@ -2456,6 +2456,27 @@ const SHEETS = [
     (ui, f, a) => (f.gameEvents.emit('openPanel', { type: a }), true),
     type,
   ]),
+  // the jobs page with a job on offer, one under way and one done waiting to be turned in (QA: "the day's odd jobs
+  // aren't readable")
+  [
+    'board.jobs',
+    'town-quest-turn-in',
+    (ui, f) => (f.gameEvents.emit('openPanel', { type: 'board' }), true),
+  ],
+  // an item's card in the shop (QA: "add a description to the shop items")
+  [
+    'shop.card',
+    'late-game-farm',
+    (ui, f) => {
+      const shop = ui.panels.get('shop');
+      shop.tab = 'seeds';
+      shop.page = 0;
+      f.gameEvents.emit('openPanel', { type: 'shop' });
+      shop.card = 'corn_seed';
+      shop.rebuild();
+      return true;
+    },
+  ],
   [
     'festival.day',
     'festival-day',
@@ -2618,6 +2639,186 @@ async function textGuardOn(profile, lang) {
     );
     await farm?.close();
   }
+}
+
+// ---------------------------------------------------------------- QA round (UI lane): bag drag, shop card, job rows
+
+/** Screen centre of bag slot `i` (the bag tab open), from the grid the menu last drew. */
+const bagSlot = (farm, i) =>
+  farm.eval((n) => {
+    const menu = window.__farm.game.scene.getScene('UI').menu;
+    const g = menu.bag;
+    const x = g.x0 + (n % g.cols) * g.pitch + g.size / 2;
+    const y = menu.root.y + g.y0 + Math.floor(n / g.cols) * g.pitch + g.size / 2;
+    return { x, y };
+  }, i);
+
+const slotsOf = (farm) =>
+  farm.eval(() =>
+    window.__farm.getState().inventory.slots.map((s) => (s ? `${s.item}x${s.qty}` : null)),
+  );
+
+const openBag = async (farm) => {
+  await farm.during('panelOpen', ['menu'], () =>
+    farm.eval(() => {
+      const f = window.__farm;
+      f.gameEvents.emit('openPanel', { type: 'menu' });
+      f.game.scene.getScene('UI').menu.openTab('bag');
+    }),
+  );
+  await farm.idle();
+};
+
+/** Wait in the page until the bag's press has lifted into a drag (the long press, or a move past the jitter). */
+const lifted = (farm) =>
+  farm.until(
+    (s, f) => f.game.scene.getScene('UI').menu.dragging?.live === true,
+    null,
+    'the bag item to lift',
+  );
+
+async function uiQaOn(profile, hand) {
+  const tag = `ui-qa (${profile}, ${hand})`;
+  const farm = await openScenario(browser, url, 'ui-bag-drag', { profile, hand });
+  await farm.eval(() =>
+    document.querySelectorAll('.tadev-tab').forEach((e) => (e.style.display = 'none')),
+  );
+  // ---- the bag: a held item drags to another slot
+  await farm.mutate((s) => {
+    s.inventory.slots[8] = { item: 'parsnip', qty: 7 };
+    s.inventory.slots[20] = null;
+    s.inventory.slots[6] = null;
+  });
+  await openBag(farm);
+  const a = await bagSlot(farm, 8);
+  const b = await bagSlot(farm, 20);
+  await farm.thumb.down(a.x, a.y);
+  await lifted(farm); // held still: the long press lifts it
+  for (let k = 1; k <= 6; k++)
+    await farm.thumb.move(a.x + ((b.x - a.x) * k) / 6, a.y + ((b.y - a.y) * k) / 6);
+  await farm.thumb.up();
+  await farm.frames(3);
+  let slots = await slotsOf(farm);
+  check(
+    `${tag}: a long press then a drag moves a bag item`,
+    !slots[8] && slots[20] === 'parsnipx7',
+    JSON.stringify([slots[8], slots[20]]),
+  );
+  // ---- a press that moves at once drags too, here into the hotbar (row one)
+  const h = await bagSlot(farm, 6);
+  const b2 = await bagSlot(farm, 20);
+  await farm.thumb.down(b2.x, b2.y);
+  for (let k = 1; k <= 8; k++)
+    await farm.thumb.move(b2.x + ((h.x - b2.x) * k) / 8, b2.y + ((h.y - b2.y) * k) / 8);
+  await farm.thumb.up();
+  await farm.frames(3);
+  slots = await slotsOf(farm);
+  check(
+    `${tag}: a drag puts a bag item on the hotbar`,
+    slots[6] === 'parsnipx7' && !slots[20],
+    JSON.stringify([slots[6], slots[20]]),
+  );
+  // ---- the hotbar's five cells show it (the cells map hotbar slots; slot 6 is an item cell)
+  const cells = await farm.eval(() => window.__farm.game.scene.getScene('UI').hud.cells);
+  check(
+    `${tag}: the hotbar's five cells still show the item slots`,
+    cells.length === 5 && cells.includes(6),
+    JSON.stringify(cells),
+  );
+  // ---- onto a tool slot: refused, nothing moves
+  const tool = await bagSlot(farm, 0);
+  await farm.thumb.down(h.x, h.y);
+  await lifted(farm);
+  for (let k = 1; k <= 6; k++)
+    await farm.thumb.move(h.x + ((tool.x - h.x) * k) / 6, h.y + ((tool.y - h.y) * k) / 6);
+  await farm.thumb.up();
+  await farm.frames(3);
+  const after = await slotsOf(farm);
+  check(
+    `${tag}: a drop on a tool slot moves nothing`,
+    JSON.stringify(after) === JSON.stringify(slots),
+    JSON.stringify([after[0], after[6]]),
+  );
+  // ---- a tap still selects (and a second tap on a hotbar slot equips, as before)
+  await farm.thumb.tap(h.x, h.y, 60);
+  await farm.frames(3);
+  const cur = await farm.eval(() => window.__farm.game.scene.getScene('UI').menu.selectedCursor);
+  const still = await slotsOf(farm);
+  check(
+    `${tag}: a tap on a bag item selects it`,
+    cur === 6 && still[6] === 'parsnipx7',
+    String(cur),
+  );
+  await farm.eval(() => window.__farm.game.scene.getScene('UI').menu.close());
+  await farm.idle();
+  // ---- the shop: a tap on a row opens the item's card, with what it does and a Buy button
+  await farm.load('ui-shop-card');
+  await farm.idle();
+  await farm.during('panelOpen', ['shop'], () =>
+    farm.eval(() => {
+      const ui = window.__farm.game.scene.getScene('UI');
+      const shop = ui.panels.get('shop');
+      shop.tab = 'seeds';
+      shop.page = 0;
+      window.__farm.gameEvents.emit('openPanel', { type: 'shop' });
+    }),
+  );
+  await farm.idle();
+  // the first row's title (off its buttons): the row tops sit under the legend
+  const row = await farm.eval(() => {
+    const shop = window.__farm.game.scene.getScene('UI').panels.get('shop');
+    const left = window.__farm.getState().settings.leftHanded;
+    return { x: left ? 150 : 50, y: shop.root.y + 57 + 6 };
+  });
+  await farm.thumb.tap(row.x, row.y, 60);
+  await farm.frames(4);
+  const card = await farm.eval(
+    () => window.__farm.game.scene.getScene('UI').panels.get('shop').card,
+  );
+  const texts = (await liveTargets(farm.page)).map((t) => t.text);
+  check(`${tag}: a tap on a shop row opens its card`, !!card, String(card));
+  check(
+    `${tag}: the card has Buy and Back`,
+    texts.some((x) => /^Buy /.test(x)) && texts.includes('Back'),
+    texts.join(', '),
+  );
+  // what the card's item is held as (the scenario's own goals pay gold meanwhile, so count the item, not the purse)
+  const held = () =>
+    farm.eval(
+      (id) =>
+        window.__farm
+          .getState()
+          .inventory.slots.filter((x) => x && x.item === id)
+          .reduce((n, x) => n + x.qty, 0),
+      card,
+    );
+  const n0 = await held();
+  const buy = (await liveTargets(farm.page)).find((t) => /^Buy /.test(t.text));
+  if (buy) await farm.thumb.tap(buy.cx, buy.cy, 60);
+  await farm.frames(4);
+  const n1 = await held();
+  check(`${tag}: Buy on the card buys one`, n1 === n0 + 1, `${n0} -> ${n1}`);
+  const back = (await liveTargets(farm.page)).find((t) => t.text === 'Back');
+  if (back) await farm.thumb.tap(back.cx, back.cy, 60);
+  await farm.frames(4);
+  check(
+    `${tag}: Back returns to the list`,
+    (await farm.eval(() => window.__farm.game.scene.getScene('UI').panels.get('shop').card)) ===
+      null,
+  );
+  await farm.eval(() => window.__farm.game.scene.getScene('UI').panels.get('shop').close());
+  await farm.idle();
+  check(`${tag}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
+async function uiQa() {
+  await Promise.all(
+    [
+      ['se', 'right'],
+      ['i13', 'left'],
+    ].map(([p, h]) => uiQaOn(p, h)),
+  );
 }
 
 // ---------------------------------------------------------------- fishing: the rod alone (owner bug)
@@ -2978,9 +3179,10 @@ function overflowIn(sceneKey) {
           if (!near(c, fg)) continue;
           const xx = (q / 4) % w;
           const yy = Math.floor(q / 4 / w);
-          // only a line's 9 glyph rows: its 2 rows of line spacing may hold the next text's top
+          // only a line's glyph rows (9 in the small face, 11 in the body face): its 2 rows of line spacing may
+          // hold the next text's top
           const row = ((y0 + yy) / k - b.top) / (u.t.scaleY || 1);
-          if (row % 11 >= 9) continue;
+          if (row % u.t.fontData.lineHeight >= u.t.fontData.size) continue;
           l = Math.min(l, xx);
           r = Math.max(r, xx);
           t = Math.min(t, yy);
@@ -3004,7 +3206,7 @@ function overflowIn(sceneKey) {
         for (const ch of u.t.getTextBounds().characters ?? []) {
           if (!ch.char.trim()) continue;
           const a = m.transformPoint(ch.x, ch.y + 1);
-          const z = m.transformPoint(ch.x + ch.w, ch.y + 8);
+          const z = m.transformPoint(ch.x + ch.w, ch.y + u.t.fontData.size - 1);
           const L = lines.get(ch.line);
           if (!L) lines.set(ch.line, { left: a.x, top: a.y, right: z.x, bottom: z.y });
           else {
@@ -3484,7 +3686,7 @@ async function lang() {
   );
   check(
     'lang-pt-farm-hud: the plot signs show their price as gold in Portuguese',
-    prices.length > 0 && prices.every((p) => /^\d[\d.]*o$/.test(p)),
+    prices.length > 0 && prices.every((p) => /^\d[\d.]*¤$/.test(p)),
     JSON.stringify(prices),
   );
   // Menu > Opts: the language switch, one tap, applies at once and the open menu redraws.
@@ -3746,6 +3948,7 @@ try {
         toastTiming,
         npcPops,
         hotbar,
+        uiQa,
       ];
   // BLOCKS=towing,towingLane runs only those blocks (a quick rerun of one area)
   const only = process.env.BLOCKS?.split(',');

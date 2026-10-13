@@ -147,12 +147,12 @@ export class Hud {
     // A dark line along the top, so the HUD reads as its own strip.
     panels.fillStyle(CH.ink, 1).fillRect(0, 0, GAME_WIDTH, 1);
 
-    this.dateLabel = new Label(scene, 10, 5, '', { color: CH.creamDim }).setDepth(depth + 1);
-    this.timeLabel = new Label(scene, 10, 14, '', { scale: 2 }).setDepth(depth + 1);
+    this.dateLabel = new Label(scene, 10, 4, '', { color: CH.creamDim }).setDepth(depth + 1);
+    this.timeLabel = new Label(scene, 10, 16, '', { scale: 2 }).setDepth(depth + 1);
     this.coin = scene.add.image(121, 10, 'ui_coin').setDepth(depth + 1);
-    this.goldLabel = new Label(scene, 130, 6, '', { color: CH.gold }).setDepth(depth + 1);
+    this.goldLabel = new Label(scene, 130, 5, '', { color: CH.gold }).setDepth(depth + 1);
     this.weatherIcon = scene.add.image(121, 25, 'ui_sun').setDepth(depth + 1);
-    this.weatherLabel = new Label(scene, 130, 21, '', { color: CH.creamDim }).setDepth(depth + 1);
+    this.weatherLabel = new Label(scene, 130, 20, '', { color: CH.creamDim }).setDepth(depth + 1);
 
     this.meters = scene.add.graphics().setDepth(depth);
     // 1x: a 0.8 scale dropped a row and a column of the icons' pixels
@@ -160,8 +160,8 @@ export class Hud {
     scene.add.image(107, 41, 'ui_drop').setDepth(depth + 1);
 
     this.goalGfx = scene.add.graphics().setDepth(depth);
-    this.goalLabel = new Label(scene, 9, 52, '', { color: CH.cream }).setDepth(depth + 1);
-    this.goalCount = new Label(scene, 191, 63, '', { color: CH.gold, align: 'right' }).setDepth(
+    this.goalLabel = new Label(scene, 9, 51, '', { color: CH.cream }).setDepth(depth + 1);
+    this.goalCount = new Label(scene, 191, 62, '', { color: CH.gold, align: 'right' }).setDepth(
       depth + 1,
     );
 
@@ -205,6 +205,7 @@ export class Hud {
           align: 'right',
           color: CH.cream,
           outline: CH.ink, // over the item's own icon, whatever its colours
+          face: 'small', // a count over an icon keeps the small face (DECISIONS "Type scale")
         }).setDepth(depth + 2),
       );
       // The whole pitch wide, from just above the faces to the bottom edge: the zones meet, so no tap on the row
@@ -371,7 +372,8 @@ export class Hud {
     if (step) {
       this.goalLabel.setText(step.text).setColor(CH.cream);
       this.goalCount.setText(step.count ? `${step.count[0]}/${step.count[1]}` : '');
-      if (step.count) drawBar(this.goalGfx, 9, 65, 132, 4, step.count[0] / step.count[1], CH.gold);
+      if (step.count)
+        drawBar(this.goalGfx, 9, 65, this.goalBarW(), 4, step.count[0] / step.count[1], CH.gold);
       return;
     }
     if (!prog) {
@@ -381,7 +383,12 @@ export class Hud {
     }
     this.goalLabel.setText(prog.goal.text).setColor(CH.cream);
     this.goalCount.setText(`${fmtNum(prog.value)}/${fmtNum(prog.goal.target)}`);
-    drawBar(this.goalGfx, 9, 65, 132, 4, prog.value / prog.goal.target, CH.gold);
+    drawBar(this.goalGfx, 9, 65, this.goalBarW(), 4, prog.value / prog.goal.target, CH.gold);
+  }
+
+  /** The goal bar runs up to the count beside it (a long count printed over a fixed 132 px bar). */
+  private goalBarW(): number {
+    return Math.min(132, 191 - this.goalCount.textWidth - 6 - 9);
   }
 
   /**

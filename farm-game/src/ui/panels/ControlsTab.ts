@@ -177,7 +177,7 @@ export function drawHelpCard(c: MenuTabContext, x: number, y: number): void {
       }
       g.fillStyle(C.gold, 1).fillCircle(ix, iy + 2, 2.5);
     }
-    c.label(cx + 22, cy + 2, it.lines[0], C.cream);
-    c.label(cx + 22, cy + 12, it.lines[1], C.creamDim);
+    c.label(cx + 22, cy + 1, it.lines[0], C.cream);
+    c.label(cx + 22, cy + 14, it.lines[1], C.creamDim);
   });
 }

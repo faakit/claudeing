@@ -84,7 +84,7 @@ describe('critique 11 F4/F9: year-two text and the winter prize', () => {
     s.time.season = 'spring';
     s.time.day = 1;
     const money = s.money;
-    expect(settleSeason(s)).toContain(`+${BOARD_PRIZE}g`);
+    expect(settleSeason(s)).toContain(`+${BOARD_PRIZE}¤`);
     expect(s.money).toBe(money + BOARD_PRIZE);
   });
 });
@@ -112,7 +112,7 @@ describe('critique 11 F5/F6/F10: small feedback', () => {
     s.time.season = 'summer';
     s.time.day = 1;
     const news = morningSpecial(s) ?? '';
-    expect(news).toMatch(/^The special order ran out\. Paid \d+g for what you brought\./);
+    expect(news).toMatch(/^The special order ran out\. Paid \d+¤ for what you brought\./);
     expect(news).toMatch(/Special order: /);
   });
 

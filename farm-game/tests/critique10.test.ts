@@ -137,10 +137,10 @@ describe('critique 10 F6: text and numbers', () => {
   it('a four-digit reward keeps "last day" on the row', () => {
     const s = board([['cauliflower', 1045]]);
     const sub = orderSub(s, s.orders.list[0]!, 3);
-    expect(sub).toBe('2/2  1,045g  last day');
+    expect(sub).toBe('2/2  1,045¤  last day');
     expect(measureText(sub)).toBeLessThanOrEqual(ORDER_SUB_PX);
     s.orders.list[0]!.reward = 120;
-    expect(orderSub(s, s.orders.list[0]!, 1)).toBe('Have 1/2  120g  last day');
+    expect(orderSub(s, s.orders.list[0]!, 1)).toBe('Have 1/2  120¤  last day');
   });
 
   it("the special's title and line fit, the giver on the second line", () => {
@@ -154,14 +154,14 @@ describe('critique 10 F6: text and numbers', () => {
       due: 1,
     };
     expect(specialTitle(sp)).toBe('Special: 15 Cauliflower');
-    expect(specialSub(sp)).toBe('Rosa 15/15  9,999g');
+    expect(specialSub(sp)).toBe('Rosa 15/15  9,999¤');
     for (const t of [specialTitle(sp), specialSub(sp)])
       expect(measureText(t)).toBeLessThanOrEqual(200 - 8 - 28 - 43 - 2);
   });
 
   it('a cart row shows how many are left once you bought some; out-of-season seeds say Greenhouse', () => {
-    expect(cartSub(900, 5, 'Market Road', cart.limit)).toBe('900g  Market Road');
-    expect(cartSub(900, 2, 'Market Road', cart.limit)).toBe('900g  2 left');
+    expect(cartSub(900, 5, 'Market Road', cart.limit)).toBe('900¤  Market Road');
+    expect(cartSub(900, 2, 'Market Road', cart.limit)).toBe('900¤  2 left');
     const s = newState();
     s.time.season = 'fall';
     expect(cartTag('strawberry_seed', s)).toBe('Greenhouse');

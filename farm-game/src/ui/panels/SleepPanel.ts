@@ -22,7 +22,7 @@ export class SleepPanel extends Modal {
   protected build(): void {
     const s = getState();
     this.panel();
-    this.label(this.panelW / 2, 6, t('sleep.title'), C.gold, 2, 'center');
+    this.label(this.panelW / 2, 8, t('sleep.title'), C.gold, 2, 'center');
     // A flow: each line starts under the last however far it wrapped (pt-BR's explanation takes three lines on
     // the SE and ran over the forecast at its fixed y).
     const mid = this.panelW / 2;

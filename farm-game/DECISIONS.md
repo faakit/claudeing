@@ -1997,19 +1997,20 @@ player on how to take stone before showing the place that must be fixed with sto
 - **Baits are items with a `bait` block** (`items.json`: `code`, `wait`, `rare`, `legend`, `quality`, `reel`; validated
   at load), not a separate table, so shops, recipes, gifts and the bag need nothing new:
 
-  | Bait | Get it | Bite wait | Odds and catch |
-  | --- | --- | --- | --- |
-  | Worms (code 1) | free: the hoe and the scythe dig them up (1 tile in 6, 1 in 3 on a wet day, from day 3); a new game starts with 10 | x1 | plain (the old bare hook) |
-  | Bait Mix (2, the old `bait` item) | Mara 6g, or 3 fiber -> 5 | x0.55 | catch bar +0.06 (what bait did before) |
-  | Fish Chum (3) | 1 carp + 1 fiber -> 5 | x0.75 | harder fish up (`rare` 0.6), legends x1.5, quality +0.08 |
-  | Glow Grub (4) | Mara 35g | x0.5 | `rare` 1, legends x4 (about twice the chance), quality +0.12, bar +0.04 |
+  | Bait                              | Get it                                                                                                             | Bite wait | Odds and catch                                                          |
+  | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------- | ----------------------------------------------------------------------- |
+  | Worms (code 1)                    | free: the hoe and the scythe dig them up (1 tile in 6, 1 in 3 on a wet day, from day 3); a new game starts with 10 | x1        | plain (the old bare hook)                                               |
+  | Bait Mix (2, the old `bait` item) | Mara 6g, or 3 fiber -> 5                                                                                           | x0.55     | catch bar +0.06 (what bait did before)                                  |
+  | Fish Chum (3)                     | 1 carp + 1 fiber -> 5                                                                                              | x0.75     | harder fish up (`rare` 0.6), legends x1.5, quality +0.08                |
+  | Glow Grub (4)                     | Mara 35g                                                                                                           | x0.5      | `rare` 1, legends x4 (about twice the chance), quality +0.12, bar +0.04 |
 
   A fish's weight with a bait is `weight x (1 + rare x difficulty x 3)`, or `weight x legend` for a legend. Fall on the
   river with the weir open: salmon 14% with worms, 19% with chum, 21% with the grub; the summer pond's Sun Carp 4.3% with worms, 8.9% with the grub.
+
 - **Choosing the bait, one thumb and no screen before a cast** (critic rulings): the bait in hand casts with that bait
   (Action at water; the rod is owned from day 1). With the rod, the bait used last goes on (the stat `bait.pick` = its
   code), else the plainest one carried, never a dearer one by surprise. After a catch the fishing sheet's bottom button
-  shows what the next cast will really use, the hand included ("Bait: Glow Grub x2  >"). One tap switches it; with a
+  shows what the next cast will really use, the hand included ("Bait: Glow Grub x2 >"). One tap switches it; with a
   bait in hand it moves the hand too (to that bait's hotbar slot, else the rod). With one kind of bait it is Close.
   Baits go to the bag, not the hotbar (critic D1-2: the hotbar keeps the seeds and the can on the guided days). The bait
   handler sits at priority 42: the generic tool handler at 40 refuses any item that is not a tool.
@@ -2188,3 +2189,84 @@ What changed:
 - **Villagers come and go just past the screen's edge.** An arrival in view starts at the nearest tile out of view
   (a far gate kept the guided start waiting for Rosa), a departure walks to the nearest tile out of view and goes;
   gates are the fallback.
+
+## QA round: readability and UI (UI lane, qa/ui, 2026-10-13)
+
+The QA pass (in pt-BR) asked for bigger text, shop item descriptions, readable odd jobs on the board, drag and drop
+in the bag, a gold coin icon in place of "g"/"o", and an explanation of the "market info". Scenarios: `ui-bag-drag`,
+`ui-shop-card`, `town-quest-turn-in` (the jobs page); e2e: block `uiQa`, and the text guard's new states
+`board.jobs` and `shop.card`.
+
+### Type scale
+
+| Face    | Glyphs                                  | Line  | Used for                                                          |
+| ------- | --------------------------------------- | ----- | ----------------------------------------------------------------- |
+| body    | capitals 9 px, x-height 7, descenders 2 | 13 px | every sheet, toast, coach and HUD line, buttons (the default)     |
+| small   | the old 5x7: capitals 7, x-height 5     | 11 px | counts over icons (the hotbar cells, the bag slots)               |
+| display | the small face at 2x: capitals 14       | -     | the HUD clock, sheet titles (bed, the year's end), valley moments |
+
+On the SE (1.615 CSS px a game px) body capitals are 14.5 CSS px and the x-height 11.3 (they were 11.3 and 8.1); on
+the iPhone 13 (1.907) 17.2 and 13.3. That is above iOS's 17 pt body text, whose x-height is about 9 CSS px.
+
+- **Taller, not wider.** The body face is the 5x7 font with two rows of its x-height band doubled (rows equal to a
+  neighbour first, so stems grow and bars do not), and 22 diagonal or dotted glyphs drawn by hand
+  (`fontMetrics.BODY_GLYPHS`). Every advance width is unchanged, so `measureText` serves both faces and no row,
+  button or tab lost a character of width. Only heights changed: list rows are 28 px (were 26), wrapped lines 13 (11).
+- **Rejected:** scale 2 of the 5x7 font (16-18 characters a row: "Sementes de Pastinaca" would not fit a row title,
+  every row and tab would need rework, and paging would double); a 6 px-wide face (about 17% fewer characters a row,
+  with the same pt-BR rows wrapping). The strokes stay 1 px, like the old text: the 2 px rule (round 5) is for frames
+  and UI lines; text was never part of it.
+- **Layouts:** the HUD keeps its 74 px (no camera or coach geometry moved): the date and the clock moved 1-2 px, and
+  the goal bar now ends before the count beside it (a long count printed over it). Fixed-y lines became flows
+  (`para`, `textHeight`) in the plot sheet, the goals tab, the bag text; the rest moved to 13 px steps. The coach's
+  welcome strip is 68 px (was 60) so its two lines clear its buttons. The shop sheet is 270 px (legend line), the
+  fishing sheet 228 (a two-line hint under the track).
+- **A sheet sized in build() keeps its growth.** `setHeight` in a sheet's build ran again on rebuild's second pass
+  and undid the growth for wrapped rows (the jobs page's last row ran under Close in pt-BR). The second pass now
+  keeps it (`grownTo`).
+- The text guard reads each face's own metrics (`fontData.size` and `lineHeight`), not the 5x7's.
+
+### The gold coin is a character
+
+- `¤` (U+00A4, the currency sign) is a glyph in both faces, drawn in its own colours (ink rim, gold, a lamp
+  highlight, an orange shade), 7 px wide on the body face's x-height. `fmt.gold` is `{n}¤` in both languages, so
+  `fmtGold`, still the one place gold is formatted, puts the coin in every price, reward, the bag, the board and the
+  morning summary. The HUD's purse keeps its 10 px coin image beside the number.
+- A Label leaves the coin untinted (`setCharacterTint` white on that character, its index taken from the layout,
+  since Phaser counts neither line breaks nor wrapped spaces); its shadow and outline copies draw it as a dark
+  silhouette, as they do the letters.
+- Not converted: gold written by hand in data text (goal names like "Earn 100,000g", Clay's letters). Those are the
+  depth lane's strings; a `¤` there draws the coin.
+- The coach's button patterns keep the old mark (`^[0-9,]+g$`): a label's coin is read as "g" when matching.
+
+### Shop: labelled facts, a legend, and an item card
+
+- "Market info" was the shop row's second line ("7 days 85g", "Glass 7d 100g", "13d 80g, again 3d"): nothing said
+  the 85 is what a crop sells for (the price is on the button). Rows now say it in words as far as the room beside
+  the buttons allows: "Ripe in 7 days, sells 85¤", "Ripe 7d, sells 85¤", "7d, sells 85¤", then the old bare form;
+  a regrowing crop keeps "again Nd" first.
+- A legend under the tabs: "Tap an item to read about it." A tap on a row (off its buttons) opens the item's card:
+  its icon at 2x, name, price, its `description` (the existing item field, already in both languages), then each fact
+  on its own labelled line (grows in, ripe in, a new crop every N days, each crop sells for, too late to ripen), with
+  Buy (and x5 on a cheap item) on the thumb's side, Back on the other, and Close. The row's own price and x5 buttons
+  stay, so quick buying and the guided start's price step are unchanged. No new `desc` field: `description` is that
+  field.
+- No first-time coach step (depth lane: the shop first opens on the guided day 2, whose step list the onboarding gate
+  pins). The Guide's Gold topic (depth lane) mirrors the row's wording. A step whose button sits on the list while a
+  card is open points at Back, not Close.
+
+### The board's jobs
+
+- Each job row has an icon for what it counts (a fish, a rock, a leek, a crop, a coin, a heart), its whole label on
+  the first line ("Finn: catch 2 fish", wrapped rather than cut), and where it stands with the pay in words: "Pays
+  48¤", "2 of 4 done, pays 44¤", "Done! Turn in for 72¤", "72¤ tonight".
+
+### Drag and drop in the bag
+
+- A press on an item lifts it after 260 ms held still, or at once when it moves more than 5 px (a tap's jitter on a
+  phone is under it); a release before either is a tap, which selects as before (a second tap holds it). While
+  lifted, the item rides 22 px above the finger at 2x (whole-pixel), and a 2 px frame marks the slot under the finger:
+  gold where it lands, red on a tool slot. A drop swaps or merges the two slots (`swapSlots`, so tools stay put and a
+  stack merges into its own kind); off the grid it goes back. The blue-edged first row is the hotbar, so dragging
+  there puts an item on the hotbar; the five hotbar cells keep showing the item slots.
+- Each slot's zone is its whole 23 px pitch, so the zones meet and a drop on a seam lands.

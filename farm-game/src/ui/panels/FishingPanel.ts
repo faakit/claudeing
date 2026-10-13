@@ -53,7 +53,7 @@ export class FishingPanel extends Modal {
   private hint!: Label;
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 214);
+    super(scene, 228); // room for a two-line hint in the body face under the track
     this.dismissOnDim = false;
     scene.events.on(Phaser.Scenes.Events.UPDATE, (_t: number, dt: number) => this.tick(dt / 1000));
   }

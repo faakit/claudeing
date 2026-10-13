@@ -74,10 +74,10 @@ describe('i18n core', () => {
 
   it('formats numbers and gold the way each language writes them', () => {
     expect(fmtNum(1234)).toBe('1,234');
-    expect(fmtGold(1234)).toBe('1,234g');
+    expect(fmtGold(1234)).toBe('1,234¤');
     setLocale('pt-BR');
     expect(fmtNum(1234)).toBe('1.234');
-    expect(fmtGold(1234)).toBe('1.234o');
+    expect(fmtGold(1234)).toBe('1.234¤');
   });
 
   it('reads the device language: any Portuguese is pt-BR, anything else English', () => {

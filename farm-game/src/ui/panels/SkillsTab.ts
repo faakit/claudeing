@@ -25,35 +25,35 @@ export function buildSkills(c: MenuTabContext): void {
       'right',
     );
     const g = c.scene.add.graphics();
-    drawBar(g, 8, y + 12, 184, 6, prog ? prog.have / prog.need : 1, C.green);
+    drawBar(g, 8, y + 13, 184, 6, prog ? prog.have / prog.need : 1, C.green);
     c.add(g);
     if (prog)
-      c.label(8, y + 21, t('skills.xp', { have: fmt(prog.have), need: fmt(prog.need) }), C.creamDim);
+      c.label(
+        8,
+        y + 22,
+        t('skills.xp', { have: fmt(prog.have), need: fmt(prog.need) }),
+        C.creamDim,
+      );
     const next = Object.entries(def.perks)
       .map(([l, p]) => [Number(l), p] as const)
       .filter(([l]) => l > lvl)
       .sort((a, b) => a[0] - b[0])[0];
-    c.label(
+    const perkLabel = c.label(
       8,
-      y + 33,
+      y + 35,
       next
-        ? t('skills.nextPerk', { level: t('skills.level', { n: next[0] }), perks: perkLine(next[1]) })
+        ? t('skills.nextPerk', {
+            level: t('skills.level', { n: next[0] }),
+            perks: perkLine(next[1]),
+          })
         : t('skills.allPerks'),
       next ? C.green : C.creamDim,
       1,
       'left',
       184,
     );
-    y += 54;
+    y += Math.max(56, 35 + perkLabel.textHeight + 6);
   }
   const bonus = perk(s, 'maxEnergy');
-  c.label(
-    8,
-    c.bottom - 22,
-    t('skills.energyBonus', { n: bonus }),
-    C.creamDim,
-    1,
-    'left',
-    184,
-  );
+  c.label(8, c.bottom - 22, t('skills.energyBonus', { n: bonus }), C.creamDim, 1, 'left', 184);
 }

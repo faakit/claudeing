@@ -45,6 +45,10 @@ import {
 import type { TutorialHud } from '../data';
 import { edgePoint } from './coachGeometry';
 import { fitText, Label } from './font';
+import { COIN } from './fontMetrics';
+
+/** An inner page's way back to its sheet's list (the shop's item card), in English. */
+const BACK_BUTTON = '^Back$'; // i18n-ok: a pattern over English labels
 import { HOTBAR_X, HOTBAR_Y, hotbarSlotCentre, SLOT, SLOT_PITCH, SLOT_W } from './Hud';
 import { HOTBAR_CELLS } from './hotbarCells';
 import { PLATE_LIP } from './layout';
@@ -79,7 +83,8 @@ const MENU_MS = 4000;
 const INFO_MIN_MS = 1200;
 /** The toast when the guide is skipped. */
 export const skippedToast = (): string => t('coach.skipped');
-const WELCOME_H = 60;
+/** The welcome strip: the name, two body-face lines and the Skip / Left hand buttons under them. */
+const WELCOME_H = 68;
 
 /** World view as the coach sees it, plus a tile -> screen mapping. */
 export type CoachScreenWorld = CoachWorld & {
@@ -353,11 +358,18 @@ export class CoachMarks {
     // The button a step points at is not in the open sheet (another page of it): lead out of the sheet instead.
     const v = this.view;
     if (v?.pointer?.kind === 'button' && facts.panel && !this.findButton(v.pointer.pattern))
-      this.view = {
-        ...v,
-        text: t('tutorial.closeToCarryOn'),
-        pointer: { kind: 'button', pattern: CLOSE_BUTTON },
-      };
+      // a sheet's inner page (the shop's item card) leads back to its list before out of the sheet
+      this.view = this.findButton(BACK_BUTTON)
+        ? {
+            ...v,
+            text: t('tutorial.backToCarryOn'),
+            pointer: { kind: 'button', pattern: BACK_BUTTON },
+          }
+        : {
+            ...v,
+            text: t('tutorial.closeToCarryOn'),
+            pointer: { kind: 'button', pattern: CLOSE_BUTTON },
+          };
     // Progress (a count moving, the target changing) restarts the stall clock that escalates the marks.
     const progress = this.view ? `${this.view.count}|${JSON.stringify(this.view.pointer)}` : '';
     if (progress !== this.progressKey) {
@@ -420,7 +432,7 @@ export class CoachMarks {
           .setText(`^ ${t(b.label)}`)
           .setPosition(Math.min(b.x + 4, 160), y)
           .setVisible(true);
-        y += 11;
+        y += 13;
       } else this.tagLabel.setVisible(false);
     } else this.tagLabel.setVisible(false);
     // Welcome strip (the first step only).
@@ -470,7 +482,7 @@ export class CoachMarks {
     this.line
       .setText(fitText(this.lineText(), COACH_LINE_PX))
       .setColor(flashing ? this.ink.flash : this.ink.text)
-      .setPosition(left ? 106 : 94, y + 5)
+      .setPosition(left ? 106 : 94, y + 4)
       .setVisible(true);
     const nextable = !!view.step.optional && this.stepMs >= NEXT_MS;
     const gx = left ? 8 : GAME_WIDTH - 8;
@@ -729,7 +741,9 @@ export class CoachMarks {
         if (found) return;
         if (o instanceof Button) {
           // patterns name English labels (tutorial.json): a translated label is matched by its English
-          if (o.visible && (re.test(o.text) || re.test(toEnglish(o.text)))) found = o;
+          // gold is written with the coin glyph; the patterns keep the old "g" mark ("^[0-9,]+g$")
+          const g = (s: string) => s.split(COIN).join('g');
+          if (o.visible && (re.test(g(o.text)) || re.test(g(toEnglish(o.text))))) found = o;
           return;
         }
         if (o instanceof Phaser.GameObjects.Container) o.list.forEach(walk);
@@ -907,12 +921,12 @@ export class CoachMarks {
   private placeWelcome(y: number): void {
     const [portrait, name, text] = this.welcomeParts as [Phaser.GameObjects.Image, Label, Label];
     const left = this.welcomeLeftHand;
-    portrait.setPosition(18, y + 32);
-    name.setPosition(34, y + 5);
-    text.setPosition(34, y + 15);
+    portrait.setPosition(18, y + 36);
+    name.setPosition(34, y + 4);
+    text.setPosition(34, y + 16);
     // Skip sits farthest from the holding thumb, Left hand nearest it
     const xs = left ? [112, 30] : [30, 112];
-    this.welcomeSkip?.setPosition(xs[0]!, y + 36);
-    this.welcomeLeft?.setPosition(xs[1]!, y + 36);
+    this.welcomeSkip?.setPosition(xs[0]!, y + 44);
+    this.welcomeLeft?.setPosition(xs[1]!, y + 44);
   }
 }

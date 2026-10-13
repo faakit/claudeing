@@ -132,11 +132,110 @@ export const TALL_GLYPHS: Record<string, string> = {
 /** Rows of a tall glyph above the cap line. */
 export const TALL_ROWS = 2;
 
+/**
+ * The gold coin: drawn in its own colours (not tinted with the text; a Label keeps it untinted), one char so
+ * `fmtGold` puts it everywhere gold is written ("120¤"). Each row is a string of palette letters, `.` empty:
+ * K ink, G gold, L lamp (highlight), O orange (shade). The body font's coin sits on the x-height (rows 2-8),
+ * the small font's on rows 2-6.
+ */
+export const COIN = '\u00a4';
+export const COIN_ROWS = {
+  // i18n-ok: pixel rows, not text
+  body: ['..KKK..', '.KGGGK.', 'KGLGGOK', 'KGLGGOK', 'KGGGGOK', '.KOOOK.', '..KKK..'], // i18n-ok: pixel rows
+  small: ['.KKK.', 'KLGGK', 'KGGOK', 'KGOOK', '.KKK.'], // i18n-ok: pixel rows
+} as const;
+export const COIN_COLOURS: Record<string, string> = {
+  K: '#2a1a24',
+  G: '#f4cc3c',
+  L: '#fff0a0',
+  O: '#e48c24',
+};
+
+/**
+ * The two faces of the one pixel font (DECISIONS "Type scale"): `body`, the reading size for every sheet, toast,
+ * line and button (capitals 9 px, x-height 7, 13 px lines), and `small`, the old 5x7 face (capitals 7, 11 px
+ * lines) kept for counts over icons and, at 2x, for display numbers and titles. Both share every advance width,
+ * so measuring is one function for both.
+ */
+export type Face = 'body' | 'small';
+export const FACE = {
+  body: { size: 11, line: 13, cap: 9 },
+  small: { size: 9, line: 11, cap: 7 },
+} as const;
+
+/** Hand-drawn body glyphs where stretching the 5x7 shape reads badly (diagonals, dots, symbols). Same widths. */
+export const BODY_GLYPHS: Record<string, string> = {
+  R: '1e 11 11 11 1e 18 14 12 11',
+  '9': '0e 11 11 11 0f 01 01 02 0c',
+  ':': '00 00 00 0c 0c 00 00 0c 0c',
+  ';': '00 00 00 0c 0c 00 00 0c 0c 08',
+  '.': '00 00 00 00 00 00 00 0c 0c',
+  ',': '00 00 00 00 00 00 00 0c 0c 08',
+  '%': '18 19 02 02 04 08 08 13 03',
+  '*': '00 00 04 15 0e 15 04 00 00',
+  $: '04 0f 14 14 0e 05 05 1e 04',
+  '#': '0a 0a 1f 0a 0a 0a 1f 0a 0a',
+  '&': '0c 12 12 14 08 15 12 12 0d',
+  '+': '00 00 04 04 1f 04 04 00 00',
+  '-': '00 00 00 00 0e 00 00 00 00',
+  '=': '00 00 00 1f 00 1f 00 00 00',
+  '!': '04 04 04 04 04 04 04 00 04',
+  '?': '0e 11 11 01 02 04 04 00 04',
+  '<': '02 04 04 08 10 08 04 04 02',
+  '>': '08 04 04 02 01 02 04 04 08',
+  '/': '01 01 02 02 04 08 08 10 10',
+  '(': '02 04 04 08 08 08 04 04 02',
+  ')': '08 04 04 02 02 02 04 04 08',
+  x: '00 00 11 11 0a 04 0a 11 11',
+};
+
+/**
+ * A 5x7 glyph's rows stretched to the body face: two rows of the x-height band (rows 2-6; for a tall glyph, 4-8)
+ * are doubled, preferring rows equal to a neighbour (a stem, so no bar gets thicker), one in each half; ascender,
+ * accent and descender rows are kept. Capitals grow from 7 to 9 rows and the x-height from 5 to 7.
+ */
+export function stretchRows(rows: readonly number[], tall = false): number[] {
+  const off = tall ? TALL_ROWS : 0;
+  const r = [...rows];
+  while (r.length < 9 + off) r.push(0);
+  const lo = 2 + off;
+  const hi = 6 + off;
+  const mid = lo + 2;
+  const flat: number[] = [];
+  for (let i = lo; i <= hi; i++)
+    if ((i - 1 >= lo && r[i] === r[i - 1]) || (i + 1 <= hi && r[i] === r[i + 1])) flat.push(i);
+  const a = flat.find((i) => i <= mid) ?? lo + 1;
+  let b = [...flat].reverse().find((i) => i >= mid && i !== a) ?? hi - 1;
+  if (b === a) b = a !== hi - 1 ? hi - 1 : lo + 1;
+  const out: number[] = [];
+  for (let i = 0; i < 7 + off; i++) {
+    out.push(r[i]!);
+    if (i === a || i === b) out.push(r[i]!);
+  }
+  return out.concat(r.slice(7 + off, 9 + off));
+}
+
+/** The body face's rows of a character (11, or 13 for an accented capital). */
+export function bodyRows(ch: string): number[] {
+  const own = BODY_GLYPHS[ch];
+  if (own) return own.split(' ').map((h) => parseInt(h, 16));
+  return stretchRows(
+    glyphSpec(ch)
+      .split(' ')
+      .map((h) => parseInt(h, 16)),
+    TALL_GLYPHS[ch] !== undefined,
+  );
+}
+
 /** The glyph spec of a character (regular or tall); unknown characters draw as '?'. */
 export const glyphSpec = (ch: string): string => GLYPHS[ch] ?? TALL_GLYPHS[ch] ?? GLYPHS['?'] ?? '';
 /** True when the font can draw `ch` (a space always). */
 export const hasGlyph = (ch: string): boolean =>
-  ch === ' ' || ch === '\n' || GLYPHS[ch] !== undefined || TALL_GLYPHS[ch] !== undefined;
+  ch === ' ' ||
+  ch === COIN ||
+  ch === '\n' ||
+  GLYPHS[ch] !== undefined ||
+  TALL_GLYPHS[ch] !== undefined;
 
 export const GAP = 1; // blank column between glyphs in the atlas
 
@@ -168,7 +267,8 @@ const widths = new Map<string, number>();
 function glyphWidth(ch: string): number {
   let w = widths.get(ch);
   if (w === undefined) {
-    w = parseGlyph(ch, glyphSpec(ch)).width;
+    // the coin is as wide as the body face's (the small face's is narrower, inside the same advance)
+    w = ch === COIN ? COIN_ROWS.body[0]!.length : parseGlyph(ch, glyphSpec(ch)).width;
     widths.set(ch, w);
   }
   return w;

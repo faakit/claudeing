@@ -14,7 +14,7 @@ import { orderSub } from './boardText';
 import { iconKey, parseKey } from '../../systems/itemRef';
 import { C } from '../theme';
 import { wrapText } from '../fontMetrics';
-import { Modal } from '../widgets';
+import { Modal, ROW_H } from '../widgets';
 import { gameEvents } from '../../systems/events';
 import { festivalToday, hasEntered } from '../../systems/festivals';
 import { fmt } from './format';
@@ -31,8 +31,7 @@ import {
 import { fmtGold, t } from '../../i18n';
 import {
   isTaken,
-  jobGiver,
-  jobText,
+  jobLabel,
   jobProgress,
   jobReady,
   PAID_AT_PAYOUT,
@@ -94,7 +93,7 @@ export class BoardPanel extends Modal {
   private buildJobs(s: GameState): void {
     const list = todaysJobs(s);
     const rows = Math.max(1, list.length);
-    this.setHeight(52 + 12 + rows * 26 + 34);
+    this.setHeight(42 + 15 + rows * ROW_H + 34);
     this.panel();
     this.label(8, 8, t('board.townTitle'), C.gold);
     this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
@@ -106,10 +105,10 @@ export class BoardPanel extends Modal {
       welcomeJobsHeader(list.length > 0 ? welcomeFactor(s.jobs.day) : 1),
       C.creamDim,
     );
-    y += 12;
+    y += 15;
     if (list.length === 0) {
       this.label(8, y + 6, t('board.jobsNone'), C.creamDim, 1, 'left', 184);
-      y += 26;
+      y += ROW_H;
     }
     list.forEach((job, i) => {
       const taken = isTaken(s, job);
@@ -117,20 +116,19 @@ export class BoardPanel extends Modal {
       const tonight = ready && PAID_AT_PAYOUT.has(job.stat);
       const gold = fmtGold(job.reward);
       y = this.row(y, {
-        title: jobText(job),
-        // who asked, then where it stands: "Finn  Pays 22g", "Finn  Doing 1/2  22g", "Finn  Done! Turn in: 22g"
-        sub: t('board.jobSub', {
-          who: jobGiver(job),
-          what: job.done
-            ? t('board.thanks')
-            : tonight
-              ? t('board.jobTonight', { gold })
-              : ready
-                ? t('board.jobReady', { gold })
-                : taken
-                  ? t('board.jobDoing', { have: jobProgress(s, job), n: job.n, gold })
-                  : t('board.jobOffer', { gold }),
-        }),
+        // QA: "the day's odd jobs aren't readable": what to do and who asks on the first line (it wraps rather than
+        // cut), then where it stands and the pay in words: "Pays 22g", "1 of 2 done, pays 22g", "Done! Turn in: 22g"
+        icon: jobIcon(this.scene, job.stat),
+        title: jobLabel(job),
+        sub: job.done
+          ? t('board.thanks')
+          : tonight
+            ? t('board.jobTonight', { gold })
+            : ready
+              ? t('board.jobReadyIn', { gold })
+              : taken
+                ? t('board.jobDoingOf', { have: jobProgress(s, job), n: job.n, gold })
+                : t('board.jobOffer', { gold }),
         subColor: job.done ? C.green : ready ? C.gold : C.creamDim,
         // A button only where there is something to do: Take, or Turn in once it is done. A job under way, paid or
         // paid tonight says so on its second line (a hatched "Turn in" read as nothing; critic D2-3).
@@ -188,13 +186,13 @@ export class BoardPanel extends Modal {
     const score = boardScoreLine(s);
     // Clay's notice wraps (pt-BR ran 59 px past the edge on one line), under the tab row; the rows start under however
     // many lines it takes
-    const noticeY = score ? 52 : 42;
+    const noticeY = score ? 55 : 42;
     const notice = rivalNotice(s);
-    const top = noticeY + wrapText(notice, 184).length * 11 + 3;
+    const top = noticeY + (notice ? wrapText(notice, 184).length * 13 + 2 : 0);
     this.setHeight(
       top +
-        (sp || this.doneSpecial ? 26 : 0) +
-        rows * 26 +
+        (sp || this.doneSpecial ? ROW_H : 0) +
+        rows * ROW_H +
         (festOpen ? 26 : 0) +
         (cartOpen ? 26 : 0) +
         26 +
@@ -204,7 +202,7 @@ export class BoardPanel extends Modal {
     this.label(8, 8, t('board.townTitle'), C.gold);
     this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
     this.tabs(s, 20);
-    if (score) this.label(8, 41, score, C.cream);
+    if (score) this.label(8, 42, score, C.cream);
     this.label(8, noticeY, notice, C.creamDim, 1, 'left', 184);
     let y = top;
     // The requests Clay is after today that would score are marked, so the race is about a known target
@@ -252,7 +250,7 @@ export class BoardPanel extends Modal {
     }
     if (s.orders.list.length === 0) {
       this.label(8, y + 6, t('board.nothing'), C.creamDim, 1, 'left', 184);
-      y += 26;
+      y += ROW_H;
     }
     if (sp) {
       // The special order, in gold: a big seasonal request with a deadline. Its Give keeps back what the
@@ -339,4 +337,22 @@ export class BoardPanel extends Modal {
     });
     this.closeButton();
   }
+}
+
+/** A job's icon, by what it counts (a fish for fishing, a rock for mining), or none when the art is missing. */
+const JOB_ICONS: Record<string, string> = {
+  caught: 'carp',
+  mined: 'stone',
+  foraged: 'wild_leek',
+  harvested: 'parsnip',
+  shipped: 'ui_coin',
+  talked: 'ui_heart',
+  likedGifts: 'ui_heart',
+};
+
+function jobIcon(scene: Phaser.Scene, stat: string): string | undefined {
+  const id = JOB_ICONS[stat];
+  if (!id) return undefined;
+  const key = items[id]?.icon ?? id;
+  return scene.textures.exists(key) ? key : undefined;
 }

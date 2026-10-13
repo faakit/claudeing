@@ -1,6 +1,6 @@
 {
   "fmt": {
-    "gold": "{n}o"
+    "gold": "{n}¤"
   },
   "season": {
     "spring": "Primavera",
@@ -421,7 +421,8 @@
     "litOpen": "Toque no botão aceso para abrir.",
     "readJobs": "Leia seus bicos e toque em Fechar.",
     "closeToCarryOn": "Feche isto para continuar.",
-    "tapShop": "Toque em Loja e veja os produtos."
+    "tapShop": "Toque em Loja e veja os produtos.",
+    "backToCarryOn": "Toque em Voltar para seguir."
   },
   "dir": {
     "up": "para cima",
@@ -555,6 +556,7 @@
     "costs": "Custa {gold} na vila",
     "title": "Mochila",
     "help": "As casas de borda azul são sua barra. Toque num item e depois em outra casa para mudar de lugar. Toque na mesma casa para segurar.",
+    "helpDrag": "As casas de borda azul são sua barra. Segure um item e arraste para outra casa. Toque duas vezes para segurar.",
     "meters": "Energia {energy}/{maxEnergy}   Água {water}/{maxWater}",
     "gold": "Ouro {gold}",
     "tip": "Dica: segure Ação e arraste para trabalhar um canteiro inteiro."
@@ -671,7 +673,9 @@
     "jobReady": "Feito! {gold}",
     "jobTonight": "{gold} à noite",
     "jobsNone": "Sem bicos hoje. Novos toda manhã.",
-    "jobSub": "{who}  {what}"
+    "jobSub": "{who}  {what}",
+    "jobDoingOf": "{have} de {n} feitos, paga {gold}",
+    "jobReadyIn": "Feito! Entregue e ganhe {gold}"
   },
   "craft": {
     "needsKitchen": "Precisa de cozinha",
@@ -728,6 +732,8 @@
     "tooLateNow": "Tarde demais agora",
     "glassOnly": "Só estufa {days}d {sell}{again}",
     "seedFacts": "{days} dias  {sell}{again}",
+    "factsRipe": "Colhe em {days} dias, vale {sell}{again}",
+    "factsRipeShort": "Colhe {days}d, vale {sell}{again}",
     "glass": "Estufa {days}d {sell}{again}",
     "glassDays": "Estufa {days}d",
     "seedShort": "{days}d {sell}{again}",
@@ -758,7 +764,22 @@
     "upgraded": "{name}: melhoria feita!",
     "youNeed": "Você precisa de {n} {item}.",
     "moreGoods": "mais produtos",
-    "alreadyMaxed": "Já está no máximo."
+    "alreadyMaxed": "Já está no máximo.",
+    "card": {
+      "grows": "Cresce em: {seasons}",
+      "ripe": "Colhe em {n} dias",
+      "again": "Depois dá de novo a cada {n} dias",
+      "sells": "Cada colheita vale {gold}",
+      "glass": "Fora de época: só cresce na estufa",
+      "late": "Tarde demais: não amadurece antes do fim da estação",
+      "fruit": "Dá fruta em: {season}",
+      "fruitSells": "Cada fruta vale {gold}",
+      "price": "Preço {gold}",
+      "buy": "Comprar {gold}",
+      "back": "Voltar"
+    },
+    "legend": "Toque num item para saber mais.",
+    "factsSells": "{days}d, vale {sell}{again}"
   },
   "skills": {
     "level": "Nv {n}",

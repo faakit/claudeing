@@ -110,5 +110,5 @@ describe('the projects sheet scales to every project (critique 6, F1)', () => {
 it('the statue row never reads like kilograms', async () => {
   const { repeatSub } = await import('../src/ui/panels/projectText');
   expect(repeatSub(2, 12_000, 67_500)).toBe('Level 2  12k/68k');
-  expect(repeatSub(0, 500, 9_000)).toBe('Level 0  500/9,000g');
+  expect(repeatSub(0, 500, 9_000)).toBe('Level 0  500/9,000¤');
 });

@@ -190,7 +190,7 @@ export class ProjectPanel extends Modal {
       `${p.repeat ? t('project.levelPrefix', { level: projectLevel(s, id) + 1 }) : ''}${t('project.goldOf', { given: fmt(goldGiven(s, id)), price: fmt(price) })}`,
       left > 0 ? C.cream : C.green,
     );
-    y += 12;
+    y += 14;
     for (const n of itemNeeds(s, id)) {
       this.label(
         8,
@@ -198,7 +198,7 @@ export class ProjectPanel extends Modal {
         needLine(needLabel(s, n), items[n.item]?.source, n.given < n.need),
         n.given >= n.need ? C.green : C.creamDim,
       );
-      y += 11;
+      y += 13;
     }
     // Give buttons sit low, next to the thumb: three gold steps, then goods.
     const by = this.panelH - 82;

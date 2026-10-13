@@ -127,8 +127,8 @@ describe('the Weir: the fund and the sluice gate from Orin', () => {
       { item: 'stone', qty: 60 },
       { item: 'sluice_gate', qty: 1 },
     ]);
-    expect(valleyRows(asked())[1]?.next).toBe('fund 2,500g, 60 stone, sluice gate');
-    expect(valleyLines(asked())[1]).toBe('Weir: 2,500g, 60 stone, sluice gate');
+    expect(valleyRows(asked())[1]?.next).toBe('fund 2,500¤, 60 stone, sluice gate');
+    expect(valleyLines(asked())[1]).toBe('Weir: 2,500¤, 60 stone, sluice gate');
   });
 
   it("Orin offers the gate only while the asked weir's fund needs it and the bag holds none", () => {

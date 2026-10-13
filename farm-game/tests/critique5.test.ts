@@ -234,8 +234,8 @@ describe('critique 5 minor fixes', () => {
         expect(line, id).toMatch(/own 99|Own 99|Decor 99/i);
         expect(measureText(line), id).toBeLessThanOrEqual(shopFactsRoom(x5));
       }
-    expect(shopFacts('parsnip_seed', 12, 1)).toBe('4d 35g, own 12');
-    expect(shopFacts('parsnip_seed', 0, 1)).toBe('4 days  35g');
+    expect(shopFacts('parsnip_seed', 12, 1)).toBe('4d 35¤ (own 12)');
+    expect(shopFacts('parsnip_seed', 0, 1)).toBe('4d, sells 35¤');
   });
 
   it('F8: truffles have a Book page', async () => {

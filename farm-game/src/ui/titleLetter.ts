@@ -15,9 +15,9 @@ export const LETTER_CARD = { x: 8, y: 148, w: 184 } as const;
 export const LOGO = { y: [47, 93], scale: 6, depth: 4, bob: 3 } as const;
 /** The logo's lowest drawn row, at the bottom of its bob. */
 export const logoBottom = (): number => LOGO.y[1] + 8 * LOGO.scale + LOGO.depth + LOGO.bob;
-/** Text inset inside the card, and the bitmap font's row pitch. */
+/** Text inset inside the card, and the body face's row pitch. */
 export const LETTER_PAD = 8;
-export const LETTER_ROW = 11;
+export const LETTER_ROW = 13;
 /** Space between the card's bottom and New Game. */
 export const LETTER_GAP = 10;
 /** New Game's height on the title (the same 30 px button as with a save). */

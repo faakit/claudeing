@@ -176,7 +176,7 @@ describe('the Old Spring: the restoration pattern', () => {
 
   it("THE VALLEY's rows say each step and fit the sheet", () => {
     const s = asked();
-    expect(valleyRows(s)[0]?.next).toBe('fund 300g, 20 stone');
+    expect(valleyRows(s)[0]?.next).toBe('fund 300¤, 20 stone');
     fund(s);
     workAt(s, 'spring');
     expect(valleyLines(s)).toEqual(['Old Spring: worked today (1 of 3)']);
