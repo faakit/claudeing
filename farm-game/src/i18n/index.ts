@@ -160,7 +160,7 @@ export const missingKeys = (): string[] => [...missing];
 /** A whole number in the locale's style: 1,234 (en) or 1.234 (pt-BR). */
 export const fmtNum = (n: number): string => numbers.format(n);
 
-/** An amount of gold: "1,234g" (en), "1.234o" (pt-BR, for ouro). */
+/** An amount of gold: "1,234¤" (en), "1.234¤" (pt-BR); ¤ is the font's gold coin (ui/fontMetrics COIN). */
 export const fmtGold = (n: number): string => goldText(fmtNum(n));
 /** A number already written ("12k") with the gold mark. */
 export const goldText = (amount: string): string => t('fmt.gold', { n: amount });

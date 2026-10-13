@@ -1,0 +1,23 @@
+{
+  "title": "Proportions: the store's one double door",
+  "about": "Day 3, 10:00, the dry town: the farmer in the store's forecourt facing its door, Mara at her spot. The store has one double door (30 px wide, a 28 px frame on a 2 px step) over its three door cells and a hanging sign west of it (owner: \"the town store has 3 doors\"); the shop's trigger is still the three cells.",
+  "version": 18,
+  "tags": ["town", "art", "proportions", "shop"],
+  "valley": {
+    "weir": 0
+  },
+  "at": {
+    "map": "town",
+    "tx": 5,
+    "ty": 10,
+    "facing": "up"
+  },
+  "time": {
+    "day": 3,
+    "clock": "10:00"
+  },
+  "weather": "sunny",
+  "energy": "max",
+  "letters": [],
+  "goal": "tree"
+}

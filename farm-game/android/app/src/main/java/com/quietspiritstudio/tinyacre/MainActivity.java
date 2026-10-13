@@ -1,4 +1,4 @@
-package app.tinyacre.farm;
+package com.quietspiritstudio.tinyacre;
 
 import android.os.Bundle;
 import androidx.core.view.WindowCompat;
@@ -9,6 +9,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // The app's own plugins must be registered before the bridge starts in super.onCreate.
+        LanePlugins.register(this);
         super.onCreate(savedInstanceState);
         // Keep the screen on while playing: a farming session has long stretches without touches.
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);

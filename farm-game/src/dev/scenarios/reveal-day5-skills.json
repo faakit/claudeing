@@ -1,0 +1,58 @@
+{
+  "title": "Reveal schedule: day 5 brings the Skill tab",
+  "about": "QA round. A guided game on day 5 at 06:30 at home, Farming at level 2. The coach: \"New: Skill. Tap Menu.\", \"Tap Skill: your four skills.\"; then \"How skills grow: tap Menu.\" leads to the Book's Skills page (what each skill grows from and what levels bring).",
+  "tags": ["house", "reveal", "guide", "skills", "qa"],
+  "at": {
+    "map": "house",
+    "tx": 3,
+    "ty": 3,
+    "facing": "down"
+  },
+  "time": {
+    "day": 5,
+    "clock": "06:30"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "state": {
+    "skills": {
+      "farming": 80
+    }
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.welcomeJobs": 1,
+    "tut.jobBoard": 1,
+    "tut.board": 1,
+    "reveal.guide": 3,
+    "reveal.friends": 4,
+    "reveal.skills": 5,
+    "guide.read.gold": 1,
+    "guide.read.crops": 1,
+    "tut.guideGold": 1,
+    "tut.guideCrops": 1,
+    "level.farming": 2
+  },
+  "letters": ["reveal_skills"],
+  "goal": "harvest",
+  "version": 18
+}

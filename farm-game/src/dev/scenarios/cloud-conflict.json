@@ -1,0 +1,36 @@
+{
+  "title": "Cloud save: the cloud is further along (the choice dialog)",
+  "about": "This phone is on spring 12 (2,150g, 1 h 30 min played); the cloud has summer 3 of year 1 from another phone (12,400g, 5 h played). The sync on start finds it and the one-thumb dialog opens: two cards with day, gold and play time, the cloud one marked 'further along', a full-width button under each, Decide later at the bottom. Nothing is uploaded until the player chooses.",
+  "tags": ["cloud", "dialog"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "cloud": {
+      "account": "Ana",
+      "save": {
+        "season": "summer",
+        "day": 3,
+        "money": 12400,
+        "playSec": 18000,
+        "savedMinAgo": 180
+      },
+      "lastSyncMinAgo": 1440,
+      "syncOnStart": true
+    }
+  }
+}

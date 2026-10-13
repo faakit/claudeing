@@ -197,7 +197,8 @@
     "icon": "item_fiber",
     "color": "#8fbf5a",
     "sellPrice": 2,
-    "description": "Cut from weeds.",
+    "source": "cut weeds, or at Mara's",
+    "description": "Cut weeds or pick up dry grass.",
     "buyPrice": 5
   },
   "wild_leek": {
@@ -251,6 +252,7 @@
     "icon": "item_mushroom",
     "color": "#c9a27a",
     "sellPrice": 45,
+    "source": "the woods, spring and fall",
     "description": "Earthy woodland find.",
     "family": "veg"
   },
@@ -278,6 +280,7 @@
     "icon": "item_carp",
     "color": "#c9a24a",
     "sellPrice": 25,
+    "source": "fish the pond or the lake",
     "description": "Common pond fish."
   },
   "bluegill": {
@@ -358,14 +361,71 @@
     },
     "buyPrice": 35
   },
+  "worms": {
+    "name": "Worms",
+    "type": "bait",
+    "icon": "item_worms",
+    "color": "#b9707a",
+    "sellPrice": 1,
+    "description": "Plain bait. The hoe digs them up.",
+    "bait": {
+      "code": 1,
+      "wait": 1,
+      "rare": 0,
+      "legend": 1,
+      "quality": 0,
+      "reel": 0
+    }
+  },
   "bait": {
-    "name": "Bait",
+    "name": "Bait Mix",
     "type": "bait",
     "icon": "item_bait",
     "color": "#c9a27a",
     "sellPrice": 3,
-    "description": "Fish bite faster. Used automatically.",
-    "buyPrice": 6
+    "description": "Bites come twice as fast.",
+    "buyPrice": 6,
+    "bait": {
+      "code": 2,
+      "wait": 0.55,
+      "rare": 0,
+      "legend": 1,
+      "quality": 0,
+      "reel": 0.06
+    }
+  },
+  "chum": {
+    "name": "Fish Chum",
+    "type": "bait",
+    "icon": "item_chum",
+    "color": "#8a6a5a",
+    "sellPrice": 4,
+    "description": "Draws bigger fish and finer ones.",
+    "bait": {
+      "code": 3,
+      "wait": 0.75,
+      "rare": 0.6,
+      "legend": 1.5,
+      "quality": 0.08,
+      "reel": 0
+    }
+  },
+  "glow_grub": {
+    "name": "Glow Grub",
+    "type": "bait",
+    "icon": "item_glow_grub",
+    "color": "#e8e070",
+    "sellPrice": 12,
+    "description": "Rare fish and legends bite more.",
+    "buyPrice": 35,
+    "bait": {
+      "code": 4,
+      "wait": 0.5,
+      "rare": 1,
+      "legend": 4,
+      "quality": 0.12,
+      "reel": 0.04
+    }
   },
   "sprinkler": {
     "name": "Sprinkler",
@@ -651,6 +711,7 @@
     "icon": "item_cloth",
     "color": "#6a8ad0",
     "sellPrice": 50,
+    "source": "loom, from wool",
     "description": "Woven from wool.",
     "derived": true,
     "sellMultiplier": 1.2,
@@ -680,6 +741,7 @@
     "icon": "item_stone",
     "color": "#8a8694",
     "sellPrice": 3,
+    "source": "mine rocks",
     "description": "Useful for building."
   },
   "copper_ore": {
@@ -688,6 +750,7 @@
     "icon": "item_copper_ore",
     "color": "#c9703a",
     "sellPrice": 20,
+    "source": "mine copper veins",
     "description": "Smelt it in a furnace.",
     "family": "copper"
   },
@@ -706,6 +769,7 @@
     "icon": "item_quartz",
     "color": "#e8f0f4",
     "sellPrice": 45,
+    "source": "mine crystals",
     "description": "A clear crystal."
   },
   "amethyst": {
@@ -722,6 +786,7 @@
     "icon": "item_ruby",
     "color": "#d8304a",
     "sellPrice": 160,
+    "source": "deep mine",
     "description": "Rare and bright."
   },
   "copper_bar": {
@@ -730,6 +795,7 @@
     "icon": "item_copper_bar",
     "color": "#d8803a",
     "sellPrice": 30,
+    "source": "smelt copper",
     "description": "A bar of copper.",
     "derived": true,
     "sellMultiplier": 1,
@@ -741,6 +807,7 @@
     "icon": "item_iron_bar",
     "color": "#aab4c8",
     "sellPrice": 55,
+    "source": "smelt iron",
     "description": "A bar of iron.",
     "derived": true,
     "sellMultiplier": 1,
@@ -1100,6 +1167,7 @@
     "color": "#6e5a44",
     "sellPrice": 0,
     "stackLimit": 1,
+    "source": "Orin makes it",
     "description": "Orin's oak and iron gate for the weir's gap. It goes into the Weir's fund."
   },
   "timber": {
@@ -1108,6 +1176,7 @@
     "icon": "item_timber",
     "color": "#a0703c",
     "sellPrice": 5,
+    "source": "river logs",
     "description": "Drift timber towed in from the river. It rebuilds the houses families come home to."
   },
   "timber_hook": {

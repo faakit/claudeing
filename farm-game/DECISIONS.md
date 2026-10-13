@@ -103,7 +103,7 @@ index yet.
 - **Native saves use Capacitor Preferences, not IndexedDB:** the OS can evict WebView storage; Preferences is durable and in Android auto-backup.
 - **Vibration is a saved setting (default on):** native haptic engine in the apps, `navigator.vibrate` on Android web, nothing on iOS web.
 - **Screen stays awake in the Android app; iOS plays audio regardless of the silent switch:** both small native changes that could not be compiled here (documented in docs/MOBILE.md).
-- **App id `app.tinyacre.farm` is a placeholder to be changed before the first store listing** (procedure in docs/MOBILE.md).
+- **App id `app.tinyacre.farm` is a placeholder to be changed before the first store listing** (procedure in docs/MOBILE.md). Changed to `com.quietspiritstudio.tinyacre` (developer Quiet Spirit Studio, owner decision, 2026-10-12).
 - **Not done / needs a device:** the native projects were generated and synced but not compiled (no Android SDK or Xcode in the sandbox; `dl.google.com` is blocked), and real-phone FPS, audio interruptions and haptics feel are on the manual checklist.
 
 ## Portrait pivot and mechanics layer
@@ -1427,6 +1427,7 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
   requests") and the Options autosave note is now two short lines.
 - **Built blind.** The owner stopped all test runs during this round: the code was written by reading and editing
   only. Nothing was compiled or run; see NEXT-STEPS for the checks that must pass before a merge.
+
 ## The Dry Year, M6: the Weir (depth lane, valley/m6)
 
 - **Old saves keep their river (coordinator ruling).** New games carry `valley.weirOn` from `createInitialState`; a
@@ -1490,7 +1491,6 @@ left-hand westward and a right-hand eastward row reaching 10 tiles on the iPhone
 - **Water beds are positional** by tile distance (full within 1.5 tiles, down to a quarter over 12 more), flat on
   Wendhead; a storm takes them to 0.4.
 - **No new downloads:** the new cues and beds come from members of archives that were already fetched and credited.
-
 
 ## M7 audio: towing and the first homecoming (audio lane, audio/m7, 2026-10-12)
 
@@ -1724,7 +1724,7 @@ is unchanged: no control moved and the camera scrolls are identical.
 ## The Dry Year, M7: towing and the first homecoming (depth lane, valley/m7)
 
 - **The spike was adopted, not rewritten.** The feel lane's controller moved from `src/dev/towSpike.ts` to
-  `src/game/TowController.ts` and now takes a *course* (`TowCourse`: water, snags, slip, how its logs drift, what a
+  `src/game/TowController.ts` and now takes a _course_ (`TowCourse`: water, snags, slip, how its logs drift, what a
   landing gives). The lab's lanes are one course (`towSpike.ts` is now ~90 lines), the town river another
   (`src/game/weirTow.ts`). The controller gained only what the real river needs: several logs on the water (one in
   hand), logs that come to rest, and meeting a drifting log where it will rest. Taps, Action's verb and priority rule,
@@ -1732,7 +1732,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   towing e2e blocks pass unchanged on the refactor.
 - **The lanes were designed by simulating the real river** (x 17-22, y 22-31; the farmer can only walk the west bank
   x 16, the north bank y 21 and the south bank's x 17-18). A towed log trails the farmer down the west bank and hugs
-  column 17, so the only obstacle *in a tow's path* is the reed bed (18,24); the spurs at x 19 and x 21 are only met by a
+  column 17, so the only obstacle _in a tow's path_ is the reed bed (18,24); the spurs at x 19 and x 21 are only met by a
   drifting log. So each lane meets its obstacle differently, and no two consecutive logs share lane or snag:
   - `west` rests at the head under the north bank (18,22) and catches on the reed bed on the way down (a mid-tow snag,
     as in the spike);
@@ -1740,7 +1740,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   - `east` drifts down x 21 out of reach of every bank until the second spur (21,27) turns it west, then rests by the
     mill wheel at (20,30) ("resting against the mill wheel"); it is hooked and hauled from the slip's stand: the
     waiting lane, no snag (`tow-east-lane` 14-19 s, 1-2 inputs).
-  Lanes are waypoint paths in `valley.json` (`weir.drift.lanes`), with a long log's own path (it needs both rows).
+    Lanes are waypoint paths in `valley.json` (`weir.drift.lanes`), with a long log's own path (it needs both rows).
 - **A log that waited caught on a rock** (`snag.drift`): it is hooked from upstream of the rock, so a tug pops it 6 px
   further past the rock, on the farmer's side of the three places past it, the rope pays out (no pull) until the
   farmer is level with it, and he walks it on to the slip by himself. Without these the rope drew it straight back
@@ -1777,7 +1777,7 @@ is unchanged: no control moved and the camera scrolls are identical.
   comes when it is half done. A villager with `arrives` is not drawn, scheduled, written to (birthdays) or counted
   (perks, best hearts) before that morning (`villagerHome`).
 - **The homecoming**: the first step into town on or after the arrival day shows HOME AGAIN with `cue:
-  'homecoming'` (the audio lane's jingle; `green` until its id exists). The first time the player is in town with the
+'homecoming'` (the audio lane's jingle; `green` until its id exists). The first time the player is in town with the
   night glow on after she is home, `houseLit { house }` fires once (audio's window-lit sting). The mill wheel is one
   image swapping `obj_millwheel_0..3` every 180 ms in the `marls` stage, still on frame 0 in Calm mode.
 - **The weir's last work day is a towing beat** (one tap, as every work day; 3.6 s): the water comes through, a log
@@ -1797,3 +1797,674 @@ is unchanged: no control moved and the camera scrolls are identical.
 - **A water tap downstream of the log in hand means the slip** (the town river only; the course's `downstream`): the
   slip is often under the floating controls or below the view on the SE, and the probe's left-thumb "toward the
   slip" taps on the water took 7 inputs. A bank tap still means that bank tile.
+
+## Android app with Capacitor (release lane, release/android, 2026-10-12)
+
+- **Capacitor, not a Trusted Web Activity.** The owner chose Capacitor for its native plugins (Play Billing, Play
+  Games cloud save, notifications). The app wraps the store web build (`build:store`, no dev code) and is never
+  forked from the web game.
+- **Toolchain: JDK 21 and the Android SDK, set per command.** Capacitor 8 compiles with Java 21. The owner approved a
+  portable Microsoft OpenJDK 21 at `C:/Users/andre/dev/tiny-acre/tools/jdk-21`, and accepted the SDK licence
+  himself. `scripts/android.mjs` sets `JAVA_HOME`/`ANDROID_HOME` for the Gradle call only; nothing global changes.
+- **Back button (critic ruling, keeps the M8 owner decision).** In play, back closes the open sheet, or opens the
+  menu when none is open, and is swallowed while a scripted flow (sleep, results) owns the screen: play never quits
+  by accident. On the title (no game listener), back asks "Quit Tiny Acre? Your farm is saved." in a native dialog,
+  then saves (waits at most 1.5 s) and exits. `lifecycle` back listeners return `true` when they use the press.
+- **Saves stay in Preferences, with a one-time copy from the WebView** (save, backup, language) on first use. It
+  never overwrites a native value and deletes nothing. It is a safety net: native builds have used Preferences since
+  M8, so normally nothing is copied. A Chrome/PWA save is another app's storage and cannot be reached; moving that
+  over is cloud save's job.
+- **Version from the commit.** `versionName` is the title's build label (`git log -1 --format="%h %cs"`, e.g.
+  `9547a9f 2026-10-12`). `versionCode` is the commit time in minutes since 2020-01-01: it grows with each newer
+  commit and stays under Play's 2,100,000,000 cap for millennia. `TINY_ACRE_VERSION_CODE`/`_NAME` override it once.
+  Rebuilding an older commit gives a lower code, which Play refuses, and that is intended.
+- **Target API 36** (`targetSdkVersion`, `compileSdk` 36, min 24). Play requires 35 for new apps and updates
+  since 31 Aug 2025 and is moving to 36. 36 also makes Android 15+ edge-to-edge mandatory, which the page already
+  handles.
+- **Edge-to-edge.** `MainActivity` hides the bars (immersive, swipe shows them briefly). Capacitor's SystemBars
+  is set to `insetsHandling: 'css'` with a `cover` hint, so `env(safe-area-inset-*)` (index.html `#frame`) carries the
+  cutout on WebView 140+, and older WebViews get a padded WebView instead. `displayFit` and the floating controls
+  need no change: they already fit inside `#frame`, and Action keeps 12 px from the side edges (back-swipe strip).
+- **Release signing only from outside the repo** (`android/keystore.properties` or `TINY_ACRE_UPLOAD_*` env, both
+  gitignored). Without them `bundleRelease` is unsigned. No keystore is created or committed by agents.
+- **Native plugin seams.** Custom Java lives in `android/app/src/main/java/com/quietspiritstudio/tinyacre/plugins/`, registered
+  with one line each in `LanePlugins.java` before the bridge starts. All of `android/`, Gradle and
+  `capacitor.config.ts` stay on this lane's branch. Cloud save owns the content of `PlayGamesSavesPlugin.java`, its
+  `play-services-games-v2` dependency and the `game_services_project_id` resValue, and changes reach android/ only
+  through this lane. The Games library's auto-init provider is removed, and the `APP_ID` meta-data is merged only
+  when a numeric project id is configured (`src/pgs/AndroidManifest.xml`), so a build without config runs no Games
+  code. Analytics (Firebase, added by the owner later) gets consent-off meta-data now, and the `AD_ID` permission is
+  removed for every library.
+- **Play Billing and notifications: chosen, not installed.** Billing via a Capacitor 8 billing plugin (RevenueCat's
+  `@revenuecat/purchases-capacitor`, or a thin custom `plugins/BillingPlugin.java` on Play Billing Library 7+ if
+  the owner wants no third party). Notifications via `@capacitor/local-notifications` (crops ready, no server; Android
+  13+ asks for permission at the moment it helps, never at launch). Neither ships until the owner asks for it
+  (agents/PUBLISHING.md).
+- **Verified on this machine:** `assembleDebug` and `bundleRelease` build (JDK 21, SDK 36, build-tools 35), the APK
+  manifest (targetSdk 36, portrait, no AD_ID, no Games provider or APP_ID without config) and a configured build's
+  merged manifest (APP_ID present). **Not verified:** any run on an emulator or phone. No emulator is installed: it is
+  outside the packages this lane may install, and it needs the hypervisor setting.
+
+## Cloud save (cloud-save lane, release/cloud-save, 2026-10-12)
+
+- **Android only, through Play Games Services v2 Saved Games.** The point is not losing a farm when changing phones,
+  and the phones are where the Android app runs. PGS v2 signs players in automatically with the Google account the
+  phone already has, so there is no sign-in screen to build, and Saved Games stores one blob per game per player on
+  Google's servers, which is all we need. Play Games has no sign-out in v2, so "Turn off" is the game's own switch
+  (stored in the save store as `farm.cloud`). It stops syncing on this phone and never touches the local save.
+- **A thin custom plugin, not a community one.** The only Capacitor 8 plugin with Saved Games
+  (`@modbender/capacitor-play-games` 0.5.0) is a month old, has one maintainer and no stars, and forks a repository
+  that no longer exists. Putting the player's Google sign-in behind it is a supply-chain risk for five calls. So
+  `PlayGamesSavesPlugin.java` (about 200 lines, official v2 APIs only: `PlayGamesSdk.initialize`,
+  `GamesSignInClient`, `PlayersClient`, `SnapshotsClient` open, read, write, commit and discard) does it. It lives in
+  `android/` on the Android lane's branch. That lane compiled it with JDK 21 and compileSdk 36, but it has not run on
+  a device. Its only dependency is `play-services-games-v2:22.0.0`. The plugin never touches the Games SDK unless a
+  numeric `game_services_project_id` is built in (from `TINY_ACRE_PGS_PROJECT_ID` or the gitignored
+  `android/local.properties` `pgs.projectId`). The Android lane removed the SDK's auto-init provider and merges the
+  APP_ID meta-data only when an id is set. A build without config therefore behaves exactly as before.
+- **No web cloud save for now (documented, not built).** A web version would need Google Identity Services plus Drive
+  `appDataFolder`. Its tokens expire hourly and can only be refreshed inside a user gesture, so the save on app pause
+  (the important one) would often fail silently. It would load a third-party script into a game that is otherwise
+  fully offline, need an OAuth client and consent screen for the Pages origin, and sync only web to web: Play Games
+  snapshots are not readable from Drive. The `CloudProvider` interface takes a Drive provider later without other
+  changes. iOS has no provider either; Game Center saved games would be the equivalent.
+- **The cloud stores the exact local save JSON, so there is no version bump.** Two stats carry what the rules need:
+  `playSec`, the seconds played (counted each second while a game is open and the app is in front, menus included),
+  and `savedAt`, the write time stamped by `saveNow`. Stats need no migration, and a save from before this feature
+  reads as 0 for both. The Play Games snapshot's metadata is derived from the save: a description, the played time,
+  and a progress value of day x 1e6 + minutes, so Play Games' own rare conflicts resolve by `HIGHEST_PROGRESS`.
+  That policy can drop one of two diverged snapshots on Google's side without asking. This is safe: both phones'
+  local saves are untouched, and the next sync on the phone whose save was dropped finds the cloud diverged and asks
+  the player (critic review 4, C4).
+- **"Further along" means day and play time together, never only the timestamp.** A save is ahead when it leads on
+  the absolute day and does not trail on play time, or leads on play time on the same day. When the two disagree
+  (more days but less play), the saves diverged, because two phones played: that is a conflict. Equal progress falls
+  back to the newer write. Both only ever grow, so a save that continues the cloud's always compares as ahead, and
+  one phone uploads freely without any record of the last sync. A cloud save that is further along or diverged is
+  never uploaded over without the player choosing. When the player picks "Keep this phone's", that one cloud save is
+  approved for replacement (by its write time, persisted, so it holds through an offline queue), and the replaced
+  blob is kept on the phone (`farm.save.cloudPrev`, also for an unreadable blob). "Use the cloud save" keeps this
+  phone's farm in its own slot (`farm.save.localPrev`), because the rotating backup would lose it after two saves.
+  A mis-tap on a one-thumb sheet never costs a farm (critic review 4, C2). A cloud save from a newer game version is never overwritten
+  (state `newer`). An unreadable one is replaced.
+- **When it syncs:** after sleep (debounced 2 s, behind the save chain), on app pause (at once, because the app may be
+  killed), on resume and when the browser reports it is online again, on sign-in, and on "Sync now". There is no sync
+  on the 60 s local autosave, to keep calls to Google rare. Failures are queued (`pending`, persisted) and retried at
+  15 s, 30 s, 1 min, 2 min, then every 5 min. Play Games also caches commits offline itself.
+- **The dialog:** one bottom sheet in the lower half. It has two cards (this phone, the cloud), each with season, day,
+  year, gold, play time and "saved ... ago", plus a full-width button right under each card ("Keep this phone's",
+  "Use the cloud save"). The card further along is outlined green and says so. "Decide later" sits at the bottom.
+  Tapping the dim does nothing, and Android back counts as "later". Uploads wait until the player chooses, Options
+  offers "Choose a save", and the next sync asks again. Using the cloud's save restarts the game on it through the
+  title's own start, with the old local save kept as the backup.
+- **The title:** when the cloud holds a save further along, or diverged, or the phone has none, "Continue (cloud)"
+  leads with the cloud's save line. Below it, "Continue (this phone)" opens the dialog first. A cloud save simply
+  further along starts at once, and a diverged one asks. An offer the player passes by (New Game) is forgotten when
+  the game starts, and the next sync compares the save actually being played. The title waits at most 6 s for the
+  cloud and draws the local buttons first.
+- **Options:** with no provider, nothing changes. With one, the language row's far button becomes "Cloud: sign in" or
+  "Cloud save...", and a status line sits above the rows ("Cloud: synced 5 min ago", "waiting for a connection"...).
+  The help card keeps its place: the line fits in the gap under it. The autosave note moves onto the cloud page, which
+  shows the account (the Play Games gamer name), the last sync, the privacy line, and Sync now on the thumb's side
+  with Turn off.
+- **Sandbox:** scenarios take `dev.cloud` (account, off, offline, lastSyncMinAgo, the cloud's save as changes to the
+  scenario's own, `same`, `corrupt` or `newer`, plus syncOnStart). `dev.title: "continue"` stops on the title with the
+  scenario as this phone's save. `?debug&cloud=fake` gives a normal game a fake cloud. `window.__farm.dev.cloud`
+  exposes the status, the conflict, the fake and `sync()`. The scenarios are cloud-signed-in, cloud-signed-out,
+  cloud-conflict, cloud-diverged, cloud-title, cloud-offline and lang-pt-cloud-conflict.
+
+## Funnel analytics (release lane, release/analytics, 2026-10-12)
+
+- **Provider: Google Analytics for Firebase, on Android only, through `@capacitor-firebase/analytics` 8.x.** Its
+  retention cohorts (D1/D7/D30) and funnel explorations are built in and free, its SDK keeps its own offline store,
+  and the Play Data safety rows for it are well documented. The plugin supports Capacitor 8. Alternatives weighed:
+  GameAnalytics (free, game-focused funnels and retention, a JS SDK that would also run on the web) was the runner-up,
+  but it collects device model and OS details by default, has no consent mode, and puts a third party's code in the
+  web bundle. A privacy-light self-hosted counter (Plausible/Umami-style) has no cohort retention without our own
+  server, which the game has never had. Firebase keeps the web bundle untouched: the adapter calls the native plugin
+  through `registerPlugin('FirebaseAnalytics')`, so no Firebase JS is shipped.
+- **Off by default, everywhere.** With no config, `wireAnalytics` returns before anything starts: no storage key, no
+  timer, no consent question, no Options switch, so the game is exactly as before. The production adapter needs all
+  of `VITE_ANALYTICS=firebase` (gitignored `.env.local`), a native build and the plugin present; a scenario sandbox
+  never uses it. The web build (GitHub Pages) never has analytics. No keys live in the repo: Firebase's come from the
+  owner's gitignored `google-services.json`.
+- **No npm dependency until the owner turns it on** (agreed with the Android lane). With the plugin synced and no
+  `google-services.json`, Firebase is not initialised and the native plugin can fail at load, so the
+  `npm i @capacitor-firebase/analytics@^8` line is an owner step beside the json (agents/PUBLISHING.md). The Android
+  lane's manifest (2a21718) keeps collection off until consent, turns off the ad id and ad personalisation, and
+  removes `AD_ID`.
+- **Consent is asked once, of everyone, on the title**, only when a production provider is configured. A stored
+  analytics id needs consent under ePrivacy/GDPR (EU, UK) and LGPD is easiest met with it; the game reads no location,
+  so it can't ask only where the law requires it. The title is the one place every player passes before the guided
+  start, so the funnel's first steps are never lost to a question asked later. It costs one tap, once. Nothing is
+  sent before the answer: events wait in the local queue, delivered on Share, dropped on No thanks. The opt-out is
+  on the main Menu > Opts page, as easy to reach as the consent was to give (critic review 3, N2): it takes the far
+  cell of the Left hand row, Fullscreen's, because a sixth row would push out the help card and the language row's
+  far cell is cloud save's (agreed with that lane). Analytics only runs in native Android builds, where Fullscreen
+  does nothing; with analytics on, Fullscreen moves to Controls..., where Replay guide then shares Back's row so the
+  page keeps four rows of switches. The pt-BR label is "Estatística: SIM/NÃO": "Estatísticas: NÃO" and "Dados de
+  jogo: NÃO" are 91-94 px, over the half button's 86. The consent text says "play stats", not "anonymous": Firebase
+  keeps an app-instance id and a coarse location (N1). Share and No thanks are equal buttons (N5).
+- **Opt-out stops everything.** The queue is emptied at once, nothing more is recorded (not even local session
+  counts), and Firebase is told to stop and reset its app-instance id. Turning it back on starts a new session.
+- **Events are a closed schema** (`src/platform/analytics/schema.ts`): each parameter is a whole number in
+  [0, 10^7], an identifier (`[a-zA-Z][a-zA-Z0-9_]{0,23}`) or a language code; an event off the schema is dropped
+  and counted, never queued. That rules out free text and personal data by construction. Firebase's reserved names
+  get a `ta_` prefix (`ta_first_open`, `ta_session_start`).
+- **The install id is ours, random (128 bits), and stays on the device**: it dates the install (for `install_day`)
+  and would identify a batch for a self-hosted backend; the Firebase adapter does not send it (Firebase has its own
+  app-instance id).
+- **Days are the player's local calendar days**, computed with the offset at each instant (DST-safe); a clock set
+  back counts as day 0. Dn retention is exact-day (active on install day N), as Firebase counts it. Churn is 7 days
+  without a session; its day is the last game day and install day seen.
+- **Sessions follow Firebase's 30-minute rule**: back within 30 minutes continues the session; `session_end` is sent
+  for each foreground stretch of a second or more (a flapping visibility event is not play).
+- **Once means once per install.** Tutorial steps, the completion, the skip and each milestone use a once key in
+  the record, so a guide replay or a second new game sends nothing again. An old save loaded for the first time
+  uses up what it had already done without sending it.
+- **Tutorial steps are reported from the step machine itself** (`finish` and `skipStep` emit `tutorialStep`), and
+  only the day-1 and day-2 tracks are the funnel (16 steps); the one-off intros are not. A skipped single step
+  is sent with `skipped` = 1 (and counted in `tutorial_complete.skipped`), so the documented funnel and a clean
+  completion (`skipped` = 0) leave skips out (critic review 3, N3). `skipTutorial` emits `tutorialSkipped`.
+- **Never per frame.** `track` validates and pushes onto an array (well under 0.1 ms, unit-tested); delivery runs on
+  a 10 s timer, at once for a full batch of 20, and on pause; failures back off to 5 minutes. Milestones are checked
+  on stat changes (the goals' stat watcher), each new morning and on entering a game, never in `update`.
+- **Files outside the lane**: `src/main.ts` (one wiring line and `analytics` on the debug hook), `TitleScene`
+  (the question and a `gameEntered` event), `ControlsTab`, `systems/tutorial.ts` and `systems/events.ts` (the
+  events above), `game/language.ts` (`languageChosen`), `src/dev/devMenu.ts` (the Analytics page),
+  `scripts/e2e-onboarding.mjs` (funnel checks) and `scripts/verify.mjs`.
+
+## The permanent app id and the developer name (owner decision, 2026-10-12)
+
+- **App id `com.quietspiritstudio.tinyacre`**, developer **Quiet Spirit Studio**, replacing the placeholder
+  `app.tinyacre.farm` everywhere: `capacitor.config.ts`, Android `namespace` and `applicationId`, the Java package
+  (`android/app/src/main/java/com/quietspiritstudio/tinyacre/`, with `MainActivity`, `LanePlugins` and
+  `plugins/PlayGamesSavesPlugin`), `strings.xml`, the iOS bundle id, and the docs. It is permanent from the first Play
+  upload, and Play Games and Firebase are registered against it. `package.json` names the author.
+
+## Bait, the town job board, and intros for the first mechanics (depth lane, depth/bait-board, 2026-10-12)
+
+Owner requests: "It should not be possible to fish without a bait. It should have multiple types of baits, each
+making a different chance of fish and different chance of time." "The daily small quests should be taken from a board
+in the city instead of from nowhere." "The tutorial must show these mechanics." "The guided start should guide the
+player on how to take stone before showing the place that must be fixed with stones."
+
+### Bait
+
+- **Every cast needs a bait and uses one.** With none, the cast is refused in one line ("No bait: dig worms or buy at
+  Mara's."), and nothing changes (no energy, no RNG). Left before any bite, the bait comes back. A missed bite cost it:
+  "Too slow! The fish took the bait."
+- **Baits are items with a `bait` block** (`items.json`: `code`, `wait`, `rare`, `legend`, `quality`, `reel`; validated
+  at load), not a separate table, so shops, recipes, gifts and the bag need nothing new:
+
+  | Bait | Get it | Bite wait | Odds and catch |
+  | --- | --- | --- | --- |
+  | Worms (code 1) | free: the hoe and the scythe dig them up (1 tile in 6, 1 in 3 on a wet day, from day 3); a new game starts with 10 | x1 | plain (the old bare hook) |
+  | Bait Mix (2, the old `bait` item) | Mara 6g, or 3 fiber -> 5 | x0.55 | catch bar +0.06 (what bait did before) |
+  | Fish Chum (3) | 1 carp + 1 fiber -> 5 | x0.75 | harder fish up (`rare` 0.6), legends x1.5, quality +0.08 |
+  | Glow Grub (4) | Mara 35g | x0.5 | `rare` 1, legends x4 (about twice the chance), quality +0.12, bar +0.04 |
+
+  A fish's weight with a bait is `weight x (1 + rare x difficulty x 3)`, or `weight x legend` for a legend. Fall on the
+  river with the weir open: salmon 14% with worms, 19% with chum, 21% with the grub; the summer pond's Sun Carp 4.3% with worms, 8.9% with the grub.
+- **Choosing the bait, one thumb and no screen before a cast** (critic rulings): the bait in hand casts with that bait
+  (Action at water; the rod is owned from day 1). With the rod, the bait used last goes on (the stat `bait.pick` = its
+  code), else the plainest one carried, never a dearer one by surprise. After a catch the fishing sheet's bottom button
+  shows what the next cast will really use, the hand included ("Bait: Glow Grub x2  >"). One tap switches it; with a
+  bait in hand it moves the hand too (to that bait's hotbar slot, else the rod). With one kind of bait it is Close.
+  Baits go to the bag, not the hotbar (critic D1-2: the hotbar keeps the seeds and the can on the guided days). The bait
+  handler sits at priority 42: the generic tool handler at 40 refuses any item that is not a tool.
+- **Worms from digging use a hash of the running count, not the RNG**, so the sims' random paths do not move (every
+  farmer sim is unchanged to the gold). No worm finds before day 3, so no toast on the guided days.
+- **Old saves** fished without bait: they get the 10 worms once (`bait.on` marker, no version bump; new games carry it),
+  with Finn's note "Picky fish" the next morning. With a full bag, his letter brings the worms instead (`bait.owed`).
+- **Balance.** Bait is a small sink, not a wall: a bought cast costs 6g against a 25g carp (a test keeps it under a
+  quarter). The fisher sim buys Bait Mix when the worms run out. Its year-one median fell from 378k to 341k (seeds 42, 7,
+  99), under the 2x bound. The farmer sims are unchanged.
+
+### The town job board
+
+- **The jobs live on the existing town board** (DECISIONS: "Daily jobs" put three jobs a morning in the morning note and
+  Menu > Goal, "from nowhere"). It is one physical board with two pages, Jobs and Requests (critic ruling: not a second
+  board). It opens on Jobs while a job waits to be taken or turned in, else on Requests. The Requests page is the old
+  board (orders, Clay's race, the special, festivals, the cart, projects).
+- **Take, then turn in.** A job counts only from when it is taken (its `base` is set then). A finished one says once
+  "Done: Finn: catch 2 fish. Turn it in at the board!" and is turned in there for its gold and the asker's +15
+  friendship. A finished job never turned in is **paid by post at night** ("Jobs not turned in, paid by post"), so
+  nothing is lost by not walking back (pillar 5). Shipping jobs pay only at night, as before. A job left on the board
+  pays nothing.
+- **No save change:** taken and announced jobs are bitmask stats for the jobs' day (`jobs.taken`, `jobs.told`,
+  `jobs.takenDay`). Old saves have the jobs of the day they were saved on taken for them once (`jobs.boardOn`), so a
+  job they were working on is not lost.
+- **Pointing there:** the morning note says "New jobs from Finn, Mara and Rosa on the town board.". The Goal tab says
+  "at board" or "turn in" beside each job. The job goal reads "Do a job from the town board", with a goal-arrow `where`
+  on the board (the open finding "job1 without a where" is closed).
+- **Sims:** the bot fills board requests every day, so it takes the day's jobs there. Five-seed median 253,873 (was
+  252,103), human-paced 173,641 (was 183,980: job gold now comes at turn-in or overnight, not mid-day).
+
+### Intros: what a first player meets
+
+- **Audit.** Already introduced: the guided days, late night, low energy, the settling-in jobs, daily watering, wild
+  goods, Mara and the shop, villagers and gifts, the board's requests, the rod and casting, the mine, placing, Clay's
+  race, the spring's ask and site, channels and towing. With no intro until now: bait, the job board (taking, turning
+  in), where stone comes from before the spring, crafting (Menu > Make), festivals. Left as they are: machines once
+  placed (the goal hint), animals, the special order, the cart, upgrades, the Book (each has a goal or a line on its
+  sheet).
+- **Added, one line each, pointing at one control:** `jobBoard`, `jobTurnIn`, `noBait` (the hoe slot), `baitNext` (the
+  sheet's Bait switch after a catch), `stone`, `craft`, `festival`. `welcomeJobs` now points at the board.
+- **The day-2 Goal-tab step `jobs` is gone** (the jobs are on the board), so day 2 gets shorter. Nothing new can show
+  before town (critic and onboarding gate; a test pins the day-1 and day-2 step lists).
+- **Stone before the site (owner).** When the spring's ask (or the weir's) holds and the bag plus what was given is short
+  of its stone (the condition `short`), the coach first says "Stone comes from rocks in the mine." and leads there.
+  Then "Tap a rock: the pickaxe breaks it." (with auto tool off: "Pick the pickaxe on the hotbar.") until the first
+  rock breaks. The spring's site intro waits for that, or for enough stone. With the stone in hand, it is skipped. The
+  auto tool picks the pickaxe on a rock, so selecting it is taught only when auto tool is off.
+- **Every ask says where.** The fund sheet appends a good's `source` (an item text field) while it is short: "Stone
+  0/20 (have 0): mine rocks". Every good a project or place asks for has one, and so does house timber (tested).
+- An intro whose target is on another map keeps its own line while the pointer leads to the door. The guided days'
+  steps still say "Head back to ...".
+
+### After the new-player critic's reviews (D1-D3)
+
+- **The coach walks the real door chain.** Each map lists the maps its doors lead to (`maps.json` `links`, checked
+  against the map files). An off-map pointer takes the next door on the shortest walk (farm -> town -> woods ->
+  mine). The old fallback (the farm door, then the town door) looped farm <-> town 40 times on the way to the mine.
+  An e2e follows the coach alone from the farm until a rock breaks: 17-18 inputs on the i13 and the SE.
+- **An intro already leading the player to another map keeps the floor** while its moment holds (Clay's town intro
+  waits).
+- **Quiet after the first rock.** The stone intro ends at the first rock. The spring's site intro then waits until
+  its stone is no longer short, or until the next morning (`daysSince`), when the fund line says what is left. One
+  rock out of 20 never walks the player back to the site.
+- **An empty mine says so.** "No rocks today: back tomorrow." (the kind `rocks`), and the coach points at nothing.
+- **Sheets close only from Close (owner rule), the fishing result too.** No tap-anywhere or Action close. With two
+  kinds of bait or more, the bottom row is [Bait: X n >] and [Close], mirrored for the left hand.
+- **A board job row has a button only when there is something to do** (Take, or Turn in once done). A hatched "Turn
+  in" on a job under way read as nothing.
+- **pt-BR job names were shortened** to fit the board row without an ellipsis ("catar 4 do mato", "saudar 3 pessoas").
+- **The paired onboarding gate** (critic, ABBA, 14 configs on this host): base median 171 s, this branch 173.5 s
+  (+2.5 s, bar +5). Removing the day-2 Goal-tab step paid for the board.
+
+## Proportions round 2: the scale rule (art lane, art/proportions, 2026-10-12)
+
+The owner: "some things in the city feel out of proportion. There is a small house above Finn that does not match a
+character size", and "the town store has 3 doors, that is simply strange, it could be a bigger one". The critic
+accepted this rule as the standard it judges against (D35-1). C is the character: a 32 px frame, 26-30 px opaque
+(the player 28, Orin and Clay 30).
+
+- **R1 Doors.** Each facade has one entrance; a shop may have one double door instead. A single door is at least
+  14 px wide, with a frame plus step at least 30 px tall (the tallest villager) and an opening at least 26 px (0.9 of
+  the player). A double door is 28-32 px wide, at the same heights. A 30 px _opening_ was considered and dropped: on a
+  two-row (32 px) wall it leaves no frame or lintel, and a three-row wall would change every footprint. So every tall
+  door's frame rose 4 px: 24 + 2 became 28 + 2, with a 26 px opening. That covers the doors themselves, the boarded
+  ones, the DoorFx open frames and the Marls' house stages.
+- **R2 Walls.** A building people live or work in shows at least two rows (32 px, at least C) of front wall under its
+  eaves, with its windows at head height on the upper row.
+- **R3 Buildings.** At least 3 tiles wide and 4 rows tall (2 wall rows plus 2 roof rows).
+- **R4 Passages people walk through.** The mine portal and the woods' mine mouth need a clear opening at least 24 px
+  wide. The opening is either at least C + 2 (34 px) tall, or it is open at the map's edge, so it reads as running on
+  above it.
+- **R5 Props:**
+  - crates, barrels and furniture: at most 0.6 C;
+  - lamps, and supports that hold up a roof: at least 1.1 C (36 px);
+  - fences: 0.4-0.6 C.
+- **R6 Matching things.** Things that match other things share a size: landed timber shows logs the length of a towed
+  short log (16 px).
+- **Stated exceptions** (not changed this round; each is a follow-up in NEXT-STEPS-ART):
+  - The one-tile placeables (barn, shed, coop, sty, silo) and the project landmarks are tokens on a single-tile
+    footprint that game data sets.
+  - The Heron (30 px long) and the mill wheel (32 px) are pinned by the drift `blocks` in valley.json. Larger art
+    would overlap water that logs float on.
+
+What changed:
+
+- **Rosa's cottage**, the house above Finn's town spot, grew a row north, from (14,16,4,3) to (14,15,4,4). As a
+  four-row block it gets the 32 px wall, the tall door, and its windows at head height (with their night lights)
+  through the existing two-storey facade pass.
+  - The new row is drawn after the scatter, so no flower or tree moves.
+  - Row 15, x 14-17, is solid in every town stage.
+  - The stone lantern moved from (15,14) to (18,14), out from under the new eave.
+  - `tests/fixtures/town-before-m6.json` was updated deliberately for those six cells (row 15 x 14-17, 15,14 and 18,14).
+- **The store** keeps its three shopdoor cells, its collision and the shop's trigger (4,9, 3 wide). Its art is one
+  double door (`f_ddoor_<l|c|r>_*`, scale.py): 30 px wide, centred, with glazed leaves and a hanging shop sign west of
+  it. map-art draws a run of exactly three door cells as one double door.
+- **The mine:**
+  - The exit's portal: posts hugging the 2-tile passage on the rock either side, and a lintel 34 px over the floor
+    (it was 18 px).
+  - The hall's roof supports are 42 px tall (they were 16 x 18 frames).
+- **The woods' mine mouth:** timber jambs and a dark opening the full height of the top row (it was a 12 px arch).
+- **The slip's timber stack:** logs 16 px long (they were 12).
+
+## Owner's polish round (UI lane, polish/owner-round, 2026-10-12)
+
+- **The guided start points inside a villager's own sheet.** The buy step targets Mara; with her sheet open it fell
+  to "a sheet is open but the step wants the world: point at Close", then "tap the lit button", a loop. A step whose
+  villager's sheet is open now points inside it (a shopkeeper's Shop button). `buySeeds` points at a price while the
+  shop is open and stays until the buy goal is done (data: an `alt` for `panel: shop`, done `not goal buy`), so
+  closing the shop early leads back to Mara. The "button not on this page: point at Close" rule was not the cause
+  and is unchanged.
+- **Fishing shows the rod alone.** The fishing sheet opened on the press, freezing the farmer on the rod's wind-up
+  (raised like a pickaxe) behind it, and the rod's drawn swing frame carries the pickaxe's grey swoosh. The sheet now
+  waits for the cast to play out (`castReady`; the farmer is rooted meanwhile, a 900 ms fallback opens it anyway),
+  the farmer holds the reel's first frame (line out) while it is open, the rod's swing frame is skipped (the wind-up
+  holds through it, so the contact frame and timings are unchanged), and facing up casts with the reel backwards.
+  A cast plays the rod's cast whatever is in hand (a bait in hand casts too: depth lane).
+- **Text never hides.** Sheets whose text wraps are flows (`Modal.para`), and a sheet grows once to fit
+  (`wantHeight`): Portuguese is about 25% longer and wrapped into fixed rows. A list row's title or line that does
+  not fit even abbreviated wraps to two lines and the row grows (`rowText`), instead of a ".." cut; the craft tab
+  packs pages by height. Light text on wood is parchment with an ink shadow; counts over icons have a full ink
+  outline (`Label.outline`, four copies that batch with the text). The goal banner has a walnut plate.
+- **The text guard** (`overflowIn` in e2e-scenarios, block `textGuard`) reads every visible text in render order and
+  fails one off the canvas or its sheet, cut short, overprinted (x-height bands from the font's character boxes),
+  covered by something opaque drawn after it (images, rectangles, button faces, Graphics fillRects from the command
+  buffer), covered over an open sheet's dim by a toast, or below a WCAG ratio of 3 (2 for light text on an ink
+  shadow; an outlined text against its outline) on the read-back canvas. It runs about 75 sheet states on the SE and
+  the iPhone 13 in both languages.
+- **Sheets close only from Close (and Android back).** A tap on a sheet's padding, gap or header fell through to the
+  dim, whose tap-outside closed it ("when I click in the menu it closes the menu"). Tap-outside is off everywhere; the
+  dim still swallows the touch, so nothing behind a sheet reacts.
+- **Reading time.** Self-dismissing text stays 1.5 s + 60 ms a character, 2.5-7 s, x1.5 in Calm (`readMs`): toasts,
+  the coach line's refusals, the goal banner, valley moments, the item name. Refusals (`warn`) and first-time tips
+  (`tip`) stay past it until a touch or a key, so nothing the player must act on goes unread. At most 3 toasts over
+  the world (a fourth queues: none is cut mid-read); with a sheet open, one, in the band between the coach line (or
+  the HUD) and the sheet, never over the date or the goal line; tips wait for the sheet to close.
+- **Villagers walk.** A schedule change on the map is walked (3 tiles/s); one off the map walks to the nearest gate
+  or edge door (never the farmer's house door) and goes; one onto the map starts at the exit nearest the spot. With
+  no walk the change waits until both ends are off screen. A scene's first placement (behind its wipe) is instant.
+  Villagers have no walk frames yet: a 1 px step bob stands in (an art lane item).
+- **Five big hotbar cells, eight slots kept.** The save's eight hotbar slots and five tool slots are unchanged (no
+  save change, the guided start's slot targets, auto tool and the ring keep working). Five cells of 38 x 24 px on a
+  40 px pitch show them: a tool cell (hoe, scythe, rod, pickaxe; tapping it with its tool in hand moves on to the
+  next, pips show which), the can, and the three item slots. Zones are 64.7 x 46.9 CSS px on the SE (were 38.8 x
+  43.7). The faces stay 24 px tall because the row's touch zone must start under Interact's touch circle (y 370).
+  The can's cell carries its water level, a solid 2 px blue bar in an ink track, empty when dry.
+- **The highlighted slot is what Action uses.** A slot picked by hand (a tap, the Action swipe, the ring, a key, the
+  wheel) is what the next Action press uses: auto tool waits ("when we scroll, the item does not change"). The pick
+  lasts one press (done or refused) and ends on a tap on the world, a painted row or a map change (critic rulings);
+  while the guided start's line shows it never holds auto tool back, so a step's target is always doable. When auto
+  tool uses another slot on a single press, the selection moves to it, so the highlight shows what was used (not
+  along a painted row, whose tools take turns and whose seeds in hand stay the ones it sows); the name plate shows
+  for hand picks only. A hand pick is runtime state (a reload starts with auto tool).
+- **An Action press is never lost in the last act's lock.** A press that lands within the 200-280 ms lock (act, tap
+  a slot, press again) used to vanish about half the time; it is kept and acts when the lock ends, within 450 ms.
+- **Villagers come and go just past the screen's edge.** An arrival in view starts at the nearest tile out of view
+  (a far gate kept the guided start waiting for Rosa), a departure walks to the nearest tile out of view and goes;
+  gates are the fallback.
+
+## QA round: readability and UI (UI lane, qa/ui, 2026-10-13)
+
+The QA pass (in pt-BR) asked for bigger text, shop item descriptions, readable odd jobs on the board, drag and drop
+in the bag, a gold coin icon in place of "g"/"o", and an explanation of the "market info". Scenarios: `ui-bag-drag`,
+`ui-shop-card`, `town-quest-turn-in` (the jobs page); e2e: block `uiQa`, and the text guard's new states
+`board.jobs` and `shop.card`.
+
+### Type scale
+
+| Face    | Glyphs                                  | Line  | Used for                                                          |
+| ------- | --------------------------------------- | ----- | ----------------------------------------------------------------- |
+| body    | capitals 9 px, x-height 7, descenders 2 | 13 px | every sheet, toast, coach and HUD line, buttons (the default)     |
+| small   | the old 5x7: capitals 7, x-height 5     | 11 px | counts over icons (the hotbar cells, the bag slots)               |
+| display | the small face at 2x: capitals 14       | -     | the HUD clock, sheet titles (bed, the year's end), valley moments |
+
+On the SE (1.615 CSS px a game px) body capitals are 14.5 CSS px and the x-height 11.3 (they were 11.3 and 8.1); on
+the iPhone 13 (1.907) 17.2 and 13.3. That is above iOS's 17 pt body text, whose x-height is about 9 CSS px.
+
+- **Taller, not wider.** The body face is the 5x7 font with two rows of its x-height band doubled (rows equal to a
+  neighbour first, so stems grow and bars do not), and 22 diagonal or dotted glyphs drawn by hand
+  (`fontMetrics.BODY_GLYPHS`). Every advance width is unchanged, so `measureText` serves both faces and no row,
+  button or tab lost a character of width. Only heights changed: list rows are 28 px (were 26), wrapped lines 13 (11).
+- **Rejected:** scale 2 of the 5x7 font (16-18 characters a row: "Sementes de Pastinaca" would not fit a row title,
+  every row and tab would need rework, and paging would double); a 6 px-wide face (about 17% fewer characters a row,
+  with the same pt-BR rows wrapping). The strokes stay 1 px, like the old text: the 2 px rule (round 5) is for frames
+  and UI lines; text was never part of it.
+- **Layouts:** the HUD keeps its 74 px (no camera or coach geometry moved): the date and the clock moved 1-2 px, and
+  the goal bar now ends before the count beside it (a long count printed over it). Fixed-y lines became flows
+  (`para`, `textHeight`) in the plot sheet, the goals tab, the bag text; the rest moved to 13 px steps. The coach's
+  welcome strip is 68 px (was 60) so its two lines clear its buttons. The shop sheet is 270 px (legend line), the
+  fishing sheet 228 (a two-line hint under the track).
+- **A sheet sized in build() keeps its growth.** `setHeight` in a sheet's build ran again on rebuild's second pass
+  and undid the growth for wrapped rows (the jobs page's last row ran under Close in pt-BR). The second pass now
+  keeps it (`grownTo`).
+- The text guard reads each face's own metrics (`fontData.size` and `lineHeight`), not the 5x7's.
+
+### The gold coin is a character
+
+- `¤` (U+00A4, the currency sign) is a glyph in both faces, drawn in its own colours (ink rim, gold, a lamp
+  highlight, an orange shade), 7 px wide on the body face's x-height. `fmt.gold` is `{n}¤` in both languages, so
+  `fmtGold`, still the one place gold is formatted, puts the coin in every price, reward, the bag, the board and the
+  morning summary. The HUD's purse keeps its 10 px coin image beside the number.
+- A Label leaves the coin untinted (`setCharacterTint` white on that character, its index taken from the layout,
+  since Phaser counts neither line breaks nor wrapped spaces); its shadow and outline copies draw it as a dark
+  silhouette, as they do the letters.
+- Not converted: gold written by hand in data text (goal names like "Earn 100,000g", Clay's letters). Those are the
+  depth lane's strings; a `¤` there draws the coin.
+- The coach's button patterns keep the old mark (`^[0-9,]+g$`): a label's coin is read as "g" when matching.
+
+### Shop: labelled facts, a legend, and an item card
+
+- "Market info" was the shop row's second line ("7 days 85g", "Glass 7d 100g", "13d 80g, again 3d"): nothing said
+  the 85 is what a crop sells for (the price is on the button). Rows now say it in words as far as the room beside
+  the buttons allows: "Ripe in 7 days, sells 85¤", "Ripe 7d, sells 85¤", "7d, sells 85¤", then the old bare form;
+  a regrowing crop keeps "again Nd" first.
+- A legend under the tabs: "Tap an item to read about it." A tap on a row (off its buttons) opens the item's card:
+  its icon at 2x, name, price, its `description` (the existing item field, already in both languages), then each fact
+  on its own labelled line (grows in, ripe in, a new crop every N days, each crop sells for, too late to ripen), with
+  Buy (and x5 on a cheap item) on the thumb's side, Back on the other, and Close. The row's own price and x5 buttons
+  stay, so quick buying and the guided start's price step are unchanged. No new `desc` field: `description` is that
+  field.
+- No first-time coach step (depth lane: the shop first opens on the guided day 2, whose step list the onboarding gate
+  pins). The Guide's Gold topic (depth lane) mirrors the row's wording. A step whose button sits on the list while a
+  card is open points at Back, not Close.
+
+### The board's jobs
+
+- Each job row has an icon for what it counts (a fish, a rock, a leek, a crop, a coin, a heart), its whole label on
+  the first line ("Finn: catch 2 fish", wrapped rather than cut), and where it stands with the pay in words: "Pays
+  48¤", "2 of 4 done, pays 44¤", "Done! Turn in for 72¤", "72¤ tonight".
+
+### Drag and drop in the bag
+
+- A press on an item lifts it after 260 ms held still, or at once when it moves more than 5 px (a tap's jitter on a
+  phone is under it); a release before either is a tap, which selects as before (a second tap holds it). While
+  lifted, the item rides 22 px above the finger at 2x (whole-pixel), and a 2 px frame marks the slot under the finger:
+  gold where it lands, red on a tool slot. A drop swaps or merges the two slots (`swapSlots`, so tools stay put and a
+  stack merges into its own kind); off the grid it goes back. The blue-edged first row is the hotbar, so dragging
+  there puts an item on the hotbar; the five hotbar cells keep showing the item slots.
+- Each slot's zone is its whole 23 px pitch, so the zones meet and a drop on a seam lands.
+
+## QA round: teaching, balance and pacing (depth lane, qa/depth, 2026-10-13)
+
+QA feedback (pt-BR, owner's QA): a guide to gold, the planting cycle and skills; "fiber is too hard to get"; "hearts
+are too easy to max and give little incentive"; phase the game's depth over days and weeks.
+
+### Fiber
+
+- **Weeds give two fiber** (`FIBER_PER_WEED`), as much as the bag takes; the float text says "+2 Fiber".
+- **Dry grass in the wild.** A forage entry may now be a bundle of a material (`forage.json` `qty`; validated: only a
+  material is a bundle, and a bundle has a qty). Dry grass is `fiber` x3, weight 3 on the farm, in town and in the
+  woods in every season (about a quarter of wild spawns), drawn as the fiber icon with the wild-good ring. A bundle
+  has no quality, counts as one pickup (the day-1 errand and the forage jobs count pickups) and gives foraging XP as
+  one item. The RNG draws per pickup are the same as for a wild good, so nothing else in a run moves.
+- **Saves keep bundles** (the forage sanitizer accepted only `forage` items) and scenarios may place them.
+- **Where fiber comes from is said where it is asked.** Its `source` is "cut weeds, or at Mara's" (fund sheets); a
+  craft row short of an ingredient appends that ingredient's source ("3 Fiber: cut weeds, or at Mara's"); carp,
+  mushroom and copper ore got sources too. The craft tab's footer names all three ways. Mara still sells it (5g).
+- Measured: a woods visit finds about one bundle a day (3 fiber) plus the farm's 4 weeds (8): about 11 fiber a day
+  for free, against 3-6 before. The bait mix (3 fiber) and chum (1 fiber) are a day's walk, not a purchase. The sims
+  buy their fiber and do not forage, so their gold is unchanged.
+
+### Friendship: slower, and every heart worth having
+
+- **A rising curve** (`systems/hearts.ts`): hearts at 100, 250, 450, 700 and 1,000 points (was 50 a heart, 250 max).
+- **Talk counts for less once friends:** 10 a day, 6 from two hearts (x2 on a birthday).
+- **Gifts:** love 80, like 40 (was 45), neutral 10 (was 15), dislike -20. At most **two a week per villager** (days
+  1-7, 8-14, ...; stats `giftWeek.<id>`, `giftWeekN.<id>`), still one a day; a birthday present is always welcome
+  and never uses one up. **The same present within 14 days is worth half** ("Daffodils again? Thanks.";
+  `giftDay.<id>.<item>`). A silver or gold present is worth x1.25 / x1.5. Dislikes are never softened.
+- **Pace (tested, `tests/friendship-curve.test.ts`):** daily chats alone take past the first year's summer to reach
+  five hearts; two loved gifts a week plus chats take four to seven weeks (was three days with a daily daffodil).
+  The jobs' +15 and the specials' friendship are unchanged. The farmer sims do not court anyone, so every gold pin
+  is unchanged.
+- **Story gates keep their old effort** (critic ruling D3-1: QA asked for slower hearts, not a slower story). The
+  weir's ask wanted Finn at 2 hearts, 100 points on the old curve; it now wants 1 heart, which is 100 points: ten
+  daily chats then and now, so the weir is asked on the same day as before (summer 15, or the morning after the
+  forge, once the spring is open). It is the only villager-hearts ask in `valley.json`. Finn's sheet names it as
+  what his next heart brings ("Next heart: a letter, help with the Weir"). WORLD-PLAN.md still says "Finn at 2
+  hearts" (design lane's file: proposed change in the handover).
+- **Old saves** are rescaled once (`friend.curve2` marker, no version bump, the bait round's pattern): the same
+  hearts and the same share of the way to the next. New games carry the marker.
+- **Every heart brings something, and the sheet says what** ("Next heart: 5% off shop prices, recipe: Preserve Jar,
+  a scene"; `heartRewards`, `ui/panels/heartText.ts`; a test proves every villager has something at every heart):
+  - heart 1: a letter with a Dry Year beat and a small gift (Mara's ledger of the families who left, Finn's *Heron*
+    on the mud, Rosa on Ilse's hands, Orin's cold forge, Clay's grudging "Hm.", Senna's mill);
+  - heart 2-5: the existing scenes and perks, plus **recipes villagers teach** (`recipes.json` `friend`; with a
+    skill unlock either opens it): Mara the preserve jar at 2, Rosa rich fertilizer at 2, Finn a new Glow Grub
+    recipe (1 mushroom + 2 fiber -> 2) at 3, Orin the furnace at 3, Clay the coop at 3;
+  - heart 3: daily gifts and their favourites, as before, and a letter (Clay and Senna got theirs);
+  - **help on the farm:** Rosa at five hearts waters up to 8 dry crops on a dry morning (perk `waterHelp`, a
+    morning note; no random draw); Senna's mill pays a little more for what you ship (sell +1/+2/+2% at 2/4/5).
+- The bar on the sheet fills toward the next heart's cost; the note beside Gift says "2 a week", "1 more this
+  week", "Tomorrow." or "Again next week.".
+
+### The reveal schedule: depth over days and weeks
+
+- **The schedule** (`src/data/reveal.json`, rules in `systems/reveal.ts`, the table in `docs/EXTENDING.md` section 13):
+  day 3 the Book and its Guide (gold, the planting cycle, jobs), day 4 friends and hearts, day 5 the Skill tab, day 6
+  the Make tab, day 7 fishing and bait, day 9 the mine, day 10 sprinklers and jars, day 14 animals, day 21 cooking,
+  and the valley with the first green. One feature a morning by the calendar; the Clay race (day 8) and crows (day 7)
+  keep their days.
+- **Only the introduction is scheduled, never the game.** A feature arrives early the moment play needs it: the goal
+  chain reaches its goal (craft, fish, place, chicken) or the player already uses it (a catch, a rock, a level 3
+  skill, the kitchen). So a fast player is never locked out; a slow one is not shown six systems on day 1.
+- **What is gated:** the Menu's Make, Skill and Book tabs (day 1-2 menu: Bag, Goal, Opts); first-time tips that name
+  one (`tips.json` `reveal`); Guide pages; and the
+  morning note, letter and coach intro each feature brings. Rules, shops, recipes and maps are not gated (the shop's
+  animal tab is the UI lane's file and stays as it is: the animals page and Mara's letter arrive on day 14).
+- **Days 1 and 2 are untouched:** no feature may be scheduled before day 3 (validated), `markRevealed` does nothing
+  before day 3, and the intros all need an arrived feature. The only day-1/2 change is the shorter tab row.
+- **Who follows it:** saves with `reveal.on`, set by `startTutorial` for a guided game. Every save from before
+  (no marker), a bare `?tutorial=0` game and sandbox scenarios see everything, with no reveal letters or intros:
+  "old saves already past those days see everything". A guided game whose guide was skipped keeps the schedule (its
+  tabs still arrive by day, with notes and letters, without coach marks).
+- **Introductions, one line each, one control each:** `guideGold` (day 3: Menu, Book, Gold), `guideCrops` (the next
+  morning: Menu, Book, The planting cycle), `skillsNew` (Menu, Skill) then `skillsGuide` (Menu, Book, Skills),
+  `craftNew` (Menu, Make; the existing `craft` intro covers a craft goal reached first). All optional (Next after
+  45 s) and done by looking, never by doing. Each feature's morning note says what is new, and its letter (Rosa,
+  Mara, Orin, Finn) says it in their voice, two with a small gift (10 fiber, 5 worms).
+
+### The Guide: explanations to reread
+
+- **Where:** the Book tab has two pages, Guide and Goods (the almanac), switched at its top like the board's Jobs
+  and Requests. It opens on the Guide while a page is unread. No seventh tab (agreed with the UI lane, which owns
+  the look; `ui/panels/GuideTab.ts` draws it plainly).
+- **What:** twelve short pages (`src/data/guide.json`), each arriving with its feature and marked NEW until opened:
+  Gold (how it is earned, the bin paying at dawn, what to spend it on, what a seed row's numbers mean), The planting
+  cycle (till, plant, water daily, a day of growth per watered night, rain and sprinklers, days to ripen, regrowing
+  crops, seasons of 28 days, out-of-season crops withering, fertilizer and quality), Jobs and requests, Friends and
+  hearts (the new rules), Skills (what each of the four grows from, what levels bring, recipes they open), Making
+  things (fiber's three sources), Fishing and bait, The mine, Sprinklers and jars, Animals, Cooking, Mending the
+  valley. A page runs over to More when it does not fit; Back returns to the list.
+- **Not a wall of text:** each page is reached by the player (the coach points at it once, the day it matters) and
+  is 3-7 paragraphs of one to three lines.
+
+## QA controls round (controls lane, qa/controls, 2026-10-13)
+
+QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `agents/probes/` stage each one.
+
+### The floating stick holds its anchor along the walk, and turns at the same slide however hard it pushed ("travar o joystick quando puxar pra andar")
+
+- **What was wrong** (`agents/probes/joystick-lock.mjs`, scenario `joystick-walk`, i13 and SE, both hands): past the
+  rim the stick's anchor was dragged along behind the thumb (3-8 anchor moves per drag). A thumb that pushed and
+  then eased back, as thumbs do once the farmer is walking, came back near the moved anchor: a push 40 px up eased
+  to 16 px stopped the farmer for about 2 s (114 frames), and a 60 px drag left eased to 26 px stopped and then
+  walked him right, the wrong way, while the thumb was still well left of where it landed. 8 of 16 gestures
+  steered another way before the lift. Rolling the pad 2 mm sideways and a thumb's arc were already fine.
+- **Now (after the QA critic's review C2-1):** a fully fixed anchor fixed the ease-back but made a turn need a
+  sideways slide that grew with how hard the thumb had pushed (a 50 px push, then a 60 px slide: never turned).
+  The rule is `StickSteer` in `input/gesture.ts` (unit tested in `tests/joystick-lock.test.ts`):
+  - along the walk axis the anchor trails the finger on a 26 px leash (`STICK_LEASH`), so easing back while the
+    finger is still out on the walk's side never stops him, and once it has trailed the dead band does not stop the
+    walk either: a thumb coming back about 31 px reverses straight over, with no stop on the way;
+  - across the walk axis the anchor never moves, and a turn is judged with the walk axis counted at most 16 px
+    (`STICK_TURN_CAP`) against the usual 1.6 hysteresis, so a turn takes about 26-28 px of sideways slide however
+    hard the thumb pushed; on a turn the anchor takes the finger's place across the new axis;
+  - the knob is drawn at the finger, held inside the rim. The 9 px deadzone (so taps and Action's paint gestures),
+    the two-speed half push and the stick sizes are unchanged.
+- **Measured** (`agents/probes/joystick-lock.mjs`, the critic's four turn gestures included; i13 and SE, both hands):
+  ease-backs, rolls and arcs 16/16 steady; a turn after a 50 px or a 22 px push 26-27 px (base 30-32, never on the
+  fully fixed anchor), right round to down 27-28 px (base 25), a reverse after a 40 px push 32 px with no stop
+  (base 30, with a stop on the way).
+- **Cost:** an ease-back is a relaxation up to about 26 px; a thumb that comes back 31 px or more along the walk
+  means the other way (the critic's reverse is that movement at the same speed, so no rule can tell them apart).
+  A sideways drift of 26 px (about 8 mm on an iPhone 13) now turns where the old stick needed 32 after a firm push.
+
+### The home plot covers its whole field ("os dois tiles de baixo estão bugados no terreno inicial")
+
+- **Root cause:** data, not art or the camera. The map draws the starter fields as 10 rows of dirt (y 16-25), the
+  West and East Fields are 10 rows, but the Home Plot was 8 (`plots.json` `[9, 16, 4, 8]`, since the plots were
+  added). Its bottom two rows (x 9-12, y 24-25) looked like the farmer's land (no for-sale dim) but every till
+  said "Not your land", and no sign ever sold them. They sit at screen y 254-270 on the SE with the farmer in the
+  plot, above the controls (288), so nothing hid them (`agents/probes/start-plot.mjs`, scenario `day1-fresh`).
+- **Now:** the Home Plot is `[9, 16, 4, 10]` (40 tiles, was 32). Old saves get the two rows too (plots are looked
+  up by id). `tests/land-tools.test.ts` fails if any farm dirt tile lies in no plot. Sims and balance tests are
+  unchanged by it (weeds may now sprout on the two rows, as on the rest of the plot).
+
+### A press before the bite reels the line in ("puxar a vara se apertar antes de fisgar")
+
+- **Before:** a tap on the fishing sheet (or Action) while waiting for a bite did nothing at all, and a press held
+  into the bite did not hook either (only a new press does), so an impatient player saw no answer and then lost the
+  bait to "Too slow!".
+- **Now:** a press while waiting reels the empty line in. The bobber is pulled up the track to the rod's tip over
+  350 ms (`REEL_IN_S`, a tick and the select sound), the sheet closes, the farmer plays the reel pose
+  (`gameEvents` `lineReeled`, the same frames a catch plays), the bait comes back (the ruling for leaving before a
+  bite), and one line says so: "Too soon: line reeled in, bait kept." Leave before a bite now plays the reel pose
+  too, without the line. The waiting hint says it ("Tap when it bites. Sooner reels it in."). A missed bite still
+  costs the bait. Scenario `fish-reel-early`; e2e block `fishEarly` (touch and Action, i13 and SE).
+- Not a penalty on purpose: a cost for an early press would punish a tap meant for the bite, and the whole bite
+  window (1.5 s) is unchanged.
+
+### Painting in a plot: the plot's edge, one-tile steps, whole rows ("segurar o toque pra mexer automático com múltiplos tiles tá muito difícil de controlar")
+
+- **What made it hard:** every row end and corner of a painted serpentine was decided by where the thumb happened to
+  be (one tile per 16 px, a corner at 14 px off the line), far from the plot the thumb was looking at. The critic's
+  own models gave a 3x3 at 2 mm of wobble 77% on the iPhone 13 and 45% on the SE, and 25-62% once each row end is
+  aimed a few mm off (a person reading the preview, not a ruler). Failures were rows one tile long or short, the step
+  between rows growing to two tiles, and turns registering a row too late.
+- **Picked (of the QA options):** stopping at the plot's edge, plus snapping the serpentine to its shape, plus a
+  smaller dead zone only where a turn is certain. The rules, in `ActionPress` (`input/gesture.ts`); the world passes
+  `WorldScene.paintField()` (the owned plot under each cell) at the press:
+  - a path whose first tile lies in owned farmland never leaves the connected piece of owned farmland it lies in
+    (owned tillable tiles flood-filled 4 ways across plot borders, `ownedRegions` in systems/plots.ts; critic ruling
+    C3-1): dragging on past a row's end does nothing, and the Home Plot with a bought West Field beside it is one
+    8-wide field, so a row from 12 to 5 runs all 8 tiles (a single-plot clamp stopped it dead at x 9);
+  - the step between two rows is one tile, however far the thumb ran;
+  - rows after the first are as wide as the first (to the box edge) as soon as the thumb turns or lifts;
+  - a turn from a row that has reached its edge, or from a step into the row back, comes at 10 px off the line
+    (`PAINT_TURN_FIELD_PX`) instead of 14.
+  - Not picked: snapping the **first** row to the plot's edge on its turn. It made the bench's left hand (standing
+    outside the 4-wide home plot) paint 4 columns, and in the 8-wide East Field it would force 7-8 tile rows: the
+    width you draw first is the width you get. A slower or confirmable step was not needed once the length decisions
+    were gone; the live preview is unchanged.
+  - Off a plot (channels from the creek, open ground, other maps) painting is exactly as before.
+- **Measured.** Models (`tests/action-press.test.ts`, 200 runs each; a 3x3 beside the farmer's column, as the bench):
+  the critic's 2D human painter with row ends aimed up to 3 mm off, 2 mm wobble: i13 90% (was 62%), SE 77% (was
+  35%); 1 mm: 96% / 90% (83% / 63%). The critic's closed-loop painter (watching the preview): 2 mm 98.5% / 96.5%
+  (88.5% / 85%), 3 mm 80.5% / 84.5% (55% / 49%). A 3-tile row inside a wider plot behaves as before (no extra turns).
+  Bench, plot rows only (`TASKS=plot3x3`, i13 and SE, both hands): exact aim 4/4, 7 gestures as before. With
+  `PAINT_MISS_MM=3` (new: each row end and step aimed up to 3 mm off, seeded), seeds 7-9, whole plots and exact
+  paints, against the paint code before this round:
+
+  | stand | i13 | SE |
+  | --- | --- | --- |
+  | right hand in the plot's east column (12,20) | 3/3, 6/6 (base 0/3, 1/6) | 2/3, 5/6 (0/3, 2/6) |
+  | left hand in the plot's west column (9,20, `plot3x3Inside`) | 3/3, 6/6 (0/3, 1/6) | 2/3, 5/6 (0/3, 2/6) |
+  | left hand just outside the plot (8,20, `plot3x3`) | 2/3, 5/6 (1/3, 3/6) | 0/3, 1/6 (0/3, 1/6) |
+
+  The right-hand rows are from the run before C3-1 (one field there either way). Standing outside the plot the first
+  row is 3 of the plot's 4 columns, so its length is the thumb's call: on the SE a 3 mm miss is about 0.75 of a tile
+  and that row is no better than before (its later rows are whole and its steps one tile).
+- **Bench stands:** `plot3x3` keeps the left hand just outside the plot (8,20), a real left-handed stand; the new
+  `plot3x3Inside` stands it in the plot's west column (9,20), mirroring the right hand (12,20).
+- **Cost:** a 3x3 inside a wider plot (not against its edge) still has its first row decided by the thumb; rows after
+  it are whole. Scenarios `paint-plot-3x3` and `paint-plot-two-fields`; e2e block `paintPlot` (a sloppy serpentine
+  with real touches gives exactly the 3x3, and a row across Home and the West Field works all 8 tiles; both hands,
+  i13 and SE). Unit: `tests/land-tools.test.ts` (Home + West, 12 to 5: 8 tiles; Home alone: 4; Home and East across
+  the road: two fields).

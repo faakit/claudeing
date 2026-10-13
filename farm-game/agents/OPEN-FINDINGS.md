@@ -35,8 +35,6 @@ When you close an item, delete it. When you add one, cite the scenario that show
 - **minor. A burst of tips right after the first purchase on day 2.** Three held tip toasts fire within 3 s, on top
   of the coach line. Release them one at a time, at most one per in-game hour (`checkTips` and the
   `holdTipsWhile` release in `systems/goals.ts`).
-- **minor. The `job1` goal has no `where`.** After "Buy", a player stood in town on day 2 for about 5 minutes with
-  no arrow. Point it at the board, or at the villager who posted the job (`src/data/goals.json`).
 - **minor. "+1 Wild Leek" overlaps the "GOAL COMPLETE" banner** at the top of the world view. This belongs to
   Hud/FX, not the guide.
 - **nit. "Buy 5 items" completes after one purchase.** Check which stat the goal counts.

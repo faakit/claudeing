@@ -1,4 +1,4 @@
-import { items, shops } from '../../data';
+import { items, placeables, shops } from '../../data';
 import type { UpgradeDef } from '../../data';
 import { audio } from '../../platform/audio';
 import { haptic } from '../../platform/haptics';
@@ -19,31 +19,57 @@ import { ownsGreenhouse } from '../../systems/plots';
 import { C } from '../theme';
 import { Modal, ROW_H } from '../widgets';
 import { fmt, SHOP_ID } from './format';
-import { shopFacts, shopFactsRoom, shopTabOf, shopTabs, tooLate, type ShopTab } from './shopFacts';
+import {
+  shopCard,
+  shopFacts,
+  shopFactsRoom,
+  shopTabOf,
+  shopTabs,
+  TAB_GAP,
+  TABS_X,
+  tooLate,
+  type ShopTab,
+} from './shopFacts';
+import { measureText } from '../fontMetrics';
 import Phaser from 'phaser';
 import { fmtGold, t } from '../../i18n';
 
 const ROWS = 5;
+/** The list's height: five rows of the body face, the legend, the pager and Close. */
+const SHEET_H = 284;
 
 export class ShopPanel extends Modal {
   constructor(scene: Phaser.Scene) {
-    super(scene, 250);
+    super(scene, SHEET_H);
   }
 
   private tab: ShopTab = 'seeds';
   private page = 0;
+  /** The item whose card is open (a tap on its row), or null for the list. */
+  card: string | null = null;
+  /** Where the list's first row starts in the sheet (e2e taps a row by it). */
+  firstRowY = 0;
+
+  override open(): void {
+    this.card = null;
+    super.open();
+  }
 
   protected build(): void {
     const s = getState();
     const shop = shops[SHOP_ID]!;
     this.panel();
+    if (this.card && items[this.card]) {
+      this.buildCard(this.card);
+      return;
+    }
     this.label(8, 8, shop.name, C.gold);
     this.icon(this.panelW - 12, 12, 'ui_coin');
     this.label(this.panelW - 20, 8, fmt(s.money), C.gold, 1, 'right');
-    let tx = 8;
+    let tx = TABS_X;
     shopTabs().forEach(([id, text, w]) => {
       const x = tx;
-      tx += w + 2;
+      tx += w + TAB_GAP;
       this.button(
         x,
         20,
@@ -62,7 +88,14 @@ export class ShopPanel extends Modal {
       );
     });
 
-    let y = 44;
+    let y = 42;
+    if (this.tab !== 'upgrades') {
+      // what a row's tap does and, on Seeds, what "7d" means (QA: the facts on a row were not explained; critic
+      // U-4); the card says them in full
+      const legend = this.tab === 'seeds' ? t('shop.legendDays') : t('shop.legend');
+      y = this.para(8, y, legend, C.creamDim, 184, 4);
+    }
+    this.firstRowY = y;
     if (this.tab === 'upgrades') {
       this.buildUpgrades(y);
     } else {
@@ -108,9 +141,23 @@ export class ShopPanel extends Modal {
     const greenhouse = ownsGreenhouse(s);
     const x5 = !(def.type === 'animal' || price > X5_MAX_PRICE);
     return this.row(y, {
+      onTap: () => {
+        this.card = id;
+        this.rebuild();
+      },
       icon: def.icon,
+      // what you own is a badge on the icon, so every row's facts have one shape (critic U-4); a decoration's line
+      // counts against its cap ("Decor 1/12") and keeps it
+      count: placeables[id]?.behavior === 'decor' ? 0 : own,
       title: def.name,
-      sub: shopFacts(id, own, s.time.day, greenhouse, shopFactsRoom(x5), s.time.season),
+      sub: shopFacts(
+        id,
+        placeables[id]?.behavior === 'decor' ? own : 0,
+        s.time.day,
+        greenhouse,
+        shopFactsRoom(x5),
+        s.time.season,
+      ),
       subColor: !greenhouse && tooLate(id, s.time.day) ? C.red : undefined,
       buttons: [
         {
@@ -136,12 +183,62 @@ export class ShopPanel extends Modal {
     });
   }
 
+  /**
+   * An item's card: its icon, name and price, what it does (the item's description), the facts the row could only
+   * abbreviate, and Buy (and x5 on a cheap item) on the thumb's side, Back on the other. Close still closes the shop.
+   */
+  private buildCard(id: string): void {
+    const s = getState();
+    const def = items[id]!;
+    const price = priceFor(s, id);
+    const lim = placeLimit(s, id);
+    const own = lim ? lim.have : countItem(s, id);
+    this.icon(24, 26, def.icon, 2);
+    this.label(46, 10, def.name, C.gold, 1, 'left', 146);
+    let y = 24;
+    if (measureText(def.name) > 146) y += 13;
+    this.label(46, y, t('shop.card.price', { gold: fmtGold(price) }), C.creamDim);
+    y = Math.max(46, y + 18);
+    y = this.para(8, y, def.description, C.cream, 184, 6);
+    const greenhouse = ownsGreenhouse(s);
+    for (const line of shopCard(id, own, s.time.day, greenhouse, s.time.season))
+      y = this.para(8, y, line.text, line.warn ? C.red : C.creamDim, 184, 2);
+    // buttons: Buy (and x5) on the thumb's side, Back on the other, above Close
+    const by = this.panelH - 56;
+    this.wantHeight = Math.max(this.wantHeight, y + 4 + 56);
+    const x5 = !(def.type === 'animal' || price > X5_MAX_PRICE);
+    const full = !!lim && lim.have >= lim.max;
+    const left = this.leftHanded;
+    const buyW = x5 ? 92 : 124;
+    const buyX = left ? 8 : this.panelW - 8 - buyW;
+    this.button(
+      buyX,
+      by,
+      buyW,
+      22,
+      t('shop.card.buy', { gold: fmtGold(price) }),
+      () => this.buy(id, 1),
+      {
+        textColor: s.money >= price ? C.gold : C.red,
+      },
+    ).setEnabled(!full);
+    if (x5)
+      this.button(left ? buyX + buyW + 4 : buyX - 32, by, 28, 22, 'x5', () => this.buy(id, 5), {
+        textColor: s.money >= price * 5 ? C.cream : C.creamDim,
+      }).setEnabled(!lim || lim.have + 5 <= lim.max);
+    this.button(left ? this.panelW - 8 - 56 : 8, by, 56, 22, t('shop.card.back'), () => {
+      this.card = null;
+      this.rebuild();
+    });
+    this.closeButton();
+  }
+
   private buildUpgrades(y: number): void {
     const s = getState();
     const shop = shops[SHOP_ID]!;
     for (const up of shop.upgrades.filter((u) => u.tab !== 'home')) y = this.upgradeRow(y, up);
     if (perkDiscount(s) > 0)
-      this.label(
+      this.para(
         8,
         y + 6,
         t('shop.friendDiscount', { n: Math.round(perkDiscount(s) * 100) }),
@@ -181,17 +278,20 @@ export class ShopPanel extends Modal {
       });
       if (next?.needs) {
         // Bars are part of the price: show them on their own line so the effect text stays readable.
-        this.label(
-          28,
-          y - 1,
-          t('shop.needs', {
-            n: next.needs.qty,
-            item: items[next.needs.item]?.name ?? next.needs.item,
-            have,
-          }),
-          missing ? C.red : C.green,
-        );
-        y += 10;
+        // wrapped inside the sheet (pt-BR ran 11 px past the edge), the next row under however many lines
+        y =
+          this.para(
+            28,
+            y - 1,
+            t('shop.needs', {
+              n: next.needs.qty,
+              item: items[next.needs.item]?.name ?? next.needs.item,
+              have,
+            }),
+            missing ? C.red : C.green,
+            this.panelW - 36,
+            0,
+          ) - 1;
       }
     }
     return y;

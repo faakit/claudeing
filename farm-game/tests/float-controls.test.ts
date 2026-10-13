@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { HOTBAR_CELLS } from '../src/ui/hotbarCells';
 import { describe, expect, it } from 'vitest';
 import {
   CONTROLS_H,
@@ -8,7 +9,6 @@ import {
   WORLD_CLEAR,
   WORLD_VIEW,
 } from '../src/config';
-import { game } from '../src/data';
 import { PixelCamera } from '../src/fx/PixelCamera';
 import { displayFit } from '../src/platform/displayFit';
 import {
@@ -61,26 +61,27 @@ describe('floating controls (DECISIONS.md "Floating controls")', () => {
     });
   }
 
-  it('the hotbar is a slim centred row hugging the bottom edge, the world showing between its faces', () => {
-    const n = game.hotbarSlots;
+  it('the hotbar is a slim centred row of five big cells hugging the bottom edge, the world showing between', () => {
+    const n = HOTBAR_CELLS;
+    expect(n).toBe(5);
     const x0 = hotbarSlotX(0, n);
-    const x1 = hotbarSlotX(n - 1, n) + HOTBAR.slot;
-    expect(x0).toBeGreaterThanOrEqual(4);
-    expect(GAME_WIDTH - x1).toBeGreaterThanOrEqual(4);
+    const x1 = hotbarSlotX(n - 1, n) + HOTBAR.w;
+    expect(x0).toBeGreaterThanOrEqual(1);
+    expect(GAME_WIDTH - x1).toBeGreaterThanOrEqual(1);
     expect(Math.abs(x0 - (GAME_WIDTH - x1))).toBeLessThanOrEqual(1);
     expect(HOTBAR_Y + HOTBAR.slot + PLATE_LIP + HOTBAR.bottom).toBe(GAME_HEIGHT);
-    // the whole row, touch zones included, is at most 28 px tall (the old dock band was 112)
-    expect(GAME_HEIGHT - HOTBAR_HIT_Y).toBeLessThanOrEqual(28);
-    expect(HOTBAR.pitch - HOTBAR.slot).toBeGreaterThanOrEqual(2);
+    // the whole row, touch zones included, is at most 30 px tall (the old dock band was 112)
+    expect(GAME_HEIGHT - HOTBAR_HIT_Y).toBeLessThanOrEqual(30);
+    expect(HOTBAR.pitch - HOTBAR.w).toBeGreaterThanOrEqual(2);
   });
 
-  it('hotbar zones meet each other and the touch floors: 43 CSS px on the iPhone 13, 38 on the SE', () => {
+  it('hotbar zones meet each other and are comfortably over the touch floors (about 9 mm wide on the SE)', () => {
     const w = HOTBAR.pitch; // each zone is the whole pitch wide, so neighbours meet with no gap
     const h = GAME_HEIGHT - HOTBAR_HIT_Y;
-    expect(w * I13).toBeGreaterThanOrEqual(43);
+    expect(w * I13).toBeGreaterThanOrEqual(70);
     expect(h * I13).toBeGreaterThanOrEqual(43);
-    expect(w * SE).toBeGreaterThanOrEqual(38);
-    expect(h * SE).toBeGreaterThanOrEqual(38);
+    expect(w * SE).toBeGreaterThanOrEqual(60); // 64.7 CSS px: 9.6 mm at the SE's 163 CSS px per inch
+    expect(h * SE).toBeGreaterThanOrEqual(43);
   });
 });
 

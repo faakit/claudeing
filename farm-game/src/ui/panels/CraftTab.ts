@@ -4,12 +4,11 @@ import { craft, craftBatch, craftBlock, plainBatch } from '../../systems/craftin
 import { countItem } from '../../systems/inventory';
 import { audio } from '../../platform/audio';
 import { isRecipeUnlocked } from '../../systems/skills';
-import { lockedText, recipeNeed } from './craftText';
+import { lockedText, recipeNeedLine } from './craftText';
 import { C } from '../theme';
-import { ROW_H } from '../widgets';
-import { fmt } from './format';
+import { ROW_H, rowText, type RowSpec } from '../widgets';
 import type { MenuTabContext } from './MenuPanel';
-import { t } from '../../i18n';
+import { fmtGold, t } from '../../i18n';
 
 const PER_PAGE = 8;
 
@@ -23,58 +22,28 @@ export function buildCraft(c: MenuTabContext): void {
     const ub = isRecipeUnlocked(s, recipes[b]!) ? 0 : 1;
     return ua - ub;
   });
-  const pages = Math.max(1, Math.ceil(ids.length / PER_PAGE));
+  // Pages packed by height: a row whose name wraps (pt-BR) is taller, and the menu cannot grow past its cap.
+  const room = c.bottom - 24 - 2 - (c.top + 14);
+  const book: string[][] = [[]];
+  let used = 0;
+  for (const id of ids) {
+    const h = ROW_H + rowText(rowSpec(id), getState().settings.leftHanded).extra;
+    const cur = book[book.length - 1]!;
+    if (cur.length && (used + h > room || cur.length >= PER_PAGE)) {
+      book.push([id]);
+      used = h;
+    } else {
+      cur.push(id);
+      used += h;
+    }
+  }
+  const pages = book.length;
   page = Math.min(page, pages - 1);
   c.label(8, c.top + 1, t('craft.title'), C.gold);
-  c.label(192, c.top + 1, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+  c.label(192, c.top + 1, fmtGold(s.money), C.gold, 1, 'right');
   let y = c.top + 14;
-  for (const id of ids.slice(page * PER_PAGE, (page + 1) * PER_PAGE)) {
-    const r = recipes[id]!;
-    const unlocked = isRecipeUnlocked(s, r);
-    const need = recipeNeed(r);
-    const block = craftBlock(s, id);
-    const batch = plainBatch(s, id, 5);
-    y = c.row(y, {
-      icon: items[r.output.item]?.icon,
-      title: `${r.name}${r.output.qty > 1 ? ` x${r.output.qty}` : ''}`,
-      sub: unlocked ? need : lockedText(s, r),
-      subColor: !unlocked
-        ? C.warn
-        : block === 'no_items' || block === 'no_gold'
-          ? C.red
-          : C.creamDim,
-      buttons: [
-        // Make is always the outermost button, on every row (critique 10: the same column means the same thing).
-        {
-          label: t('craft.make'),
-          width: 38,
-          enabled: block === null,
-          color: block === null ? C.green : C.creamDim,
-          onClick: () => {
-            if (craft(getState(), id) === 'ok') audio.play('buy');
-            else audio.play('error');
-            c.rebuild();
-          },
-        },
-        // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five. The slot is
-        // always there, inside Make (a dim "x1" when fewer than two can be made), so nothing slides under the
-        // thumb after a batch (critique 9, F4).
-        ...(r.kitchen && unlocked
-          ? [
-              {
-                label: batch >= 2 && block === null ? `x${batch}` : 'x1',
-                width: 24,
-                enabled: batch >= 2 && block === null,
-                color: batch >= 2 && block === null ? C.cream : C.creamDim,
-                onClick: () => {
-                  audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
-                  c.rebuild();
-                },
-              },
-            ]
-          : []),
-      ],
-    });
+  for (const id of book[page]!) {
+    y = c.row(y, rowSpec(id, c));
   }
   if (pages > 1) {
     const by = c.bottom - 24;
@@ -98,5 +67,51 @@ export function buildCraft(c: MenuTabContext): void {
       184,
     );
   }
-  void ROW_H;
+}
+
+/** One recipe's row. Without a tab context (packing pages by height) the buttons do nothing. */
+function rowSpec(id: string, c?: MenuTabContext): RowSpec {
+  const s = getState();
+  const r = recipes[id]!;
+  const unlocked = isRecipeUnlocked(s, r);
+  const need = recipeNeedLine(s, r);
+  const block = craftBlock(s, id);
+  const batch = plainBatch(s, id, 5);
+  return {
+    icon: items[r.output.item]?.icon,
+    title: `${r.name}${r.output.qty > 1 ? ` x${r.output.qty}` : ''}`,
+    sub: unlocked ? need : lockedText(s, r),
+    subColor: !unlocked ? C.warn : block === 'no_items' || block === 'no_gold' ? C.red : C.creamDim,
+    buttons: [
+      // Make is always the outermost button, on every row (critique 10: the same column means the same thing).
+      {
+        label: t('craft.make'),
+        width: 38,
+        enabled: block === null,
+        color: block === null ? C.green : C.creamDim,
+        onClick: () => {
+          if (craft(getState(), id) === 'ok') audio.play('buy');
+          else audio.play('error');
+          c?.rebuild();
+        },
+      },
+      // Dishes come in batches: "x3" cooks as many as your plain ingredients make, up to five. The slot is
+      // always there, inside Make (a dim "x1" when fewer than two can be made), so nothing slides under the
+      // thumb after a batch (critique 9, F4).
+      ...(r.kitchen && unlocked
+        ? [
+            {
+              label: batch >= 2 && block === null ? `x${batch}` : 'x1',
+              width: 24,
+              enabled: batch >= 2 && block === null,
+              color: batch >= 2 && block === null ? C.cream : C.creamDim,
+              onClick: () => {
+                audio.play(craftBatch(getState(), id, batch) > 0 ? 'buy' : 'error');
+                c?.rebuild();
+              },
+            },
+          ]
+        : []),
+    ],
+  };
 }

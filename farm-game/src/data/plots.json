@@ -1,7 +1,7 @@
 {
   "home": {
     "name": "Home Plot",
-    "rect": [9, 16, 4, 8],
+    "rect": [9, 16, 4, 10],
     "price": 0,
     "sign": null
   },

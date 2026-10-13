@@ -56,7 +56,7 @@ export function playActionFx(
       break;
     case 'clear':
       fx.leaves(x, y);
-      fx.floatText(player.x, above, t('fx.fiber'), 0x7fc96b);
+      fx.floatText(player.x, above, t('fx.fiber', { n: Number(res['qty'] ?? 1) }), 0x7fc96b);
       audio.play('cut');
       break;
     case 'plant':

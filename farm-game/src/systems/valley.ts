@@ -10,6 +10,7 @@
  * when a map is built (a scene start: mornings start in the house, so an overnight change is seen on stepping out),
  * never at a door: the stats it reads only change overnight.
  */
+import { heartsFor } from './hearts';
 import {
   crops,
   items,
@@ -395,9 +396,6 @@ const setStage = (s: GameState, id: string, stage: number): void => {
   s.stats[`place.${id}.since`] = absoluteDay(s);
 };
 
-/** Friendship points per heart (systems/friendship.ts POINTS_PER_HEART; not imported, which would be a cycle). */
-export const HEART_POINTS = 50;
-
 /**
  * Does a place's ask hold? A stat condition, a villager's hearts (`npc` + `hearts`), an absolute day (`day`, on or
  * after), nested with `all` / `any`.
@@ -405,8 +403,7 @@ export const HEART_POINTS = 50;
 export function askHolds(s: Pick<GameState, 'stats' | 'friends' | 'time'>, w: AskWhen): boolean {
   if (w.all) return w.all.every((x) => askHolds(s, x));
   if (w.any) return w.any.some((x) => askHolds(s, x));
-  if (w.npc !== undefined)
-    return Math.floor((s.friends[w.npc]?.points ?? 0) / HEART_POINTS) >= (w.hearts ?? 1);
+  if (w.npc !== undefined) return heartsFor(s.friends[w.npc]?.points ?? 0) >= (w.hearts ?? 1);
   if (w.day !== undefined) return absoluteDay(s as GameState) >= w.day;
   return stageWhenHolds(s, w);
 }

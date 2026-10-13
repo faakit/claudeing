@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { EVT_INTERACT_TARGET, GAME_HEIGHT, GAME_WIDTH, WORLD_VIEW } from '../config';
+import { EVT_INTERACT_TARGET, GAME_HEIGHT, GAME_WIDTH, HUD_H, WORLD_VIEW } from '../config';
 import { game, mapsData } from '../data';
 import { NightGlow } from '../fx/NightGlow';
 import { RainLayer } from '../fx/RainLayer';
@@ -8,6 +8,9 @@ import { bakeGraphics } from '../fx/bake';
 import { WIPE_OPEN_MS } from '../fx/feel';
 import { forageCandidates, oreCandidates, weedCandidates } from '../game/farmInfo';
 import { saveNow, wireAutosave } from '../game/persistence';
+import { cloudSync } from '../game/cloudWiring';
+import { CloudConflictPanel } from '../ui/panels/CloudConflictPanel';
+import { TitleScene } from './TitleScene';
 import { controlsLog } from '../input/controlsLog';
 import {
   ActionPress,
@@ -84,6 +87,8 @@ import { onLocaleChange, t } from '../i18n';
 
 /** Silence before a hint appears. */
 const IDLE_HINT_MS = 40_000;
+/** The fishing sheet opens by this long after a cast even if no world announced the cast landing. */
+const CAST_FALLBACK_MS = 900;
 const CREAM = 0xf4ead2;
 const INK = 0x14101f;
 // The Interact icons below are solid (no alpha): they sit on the floating plates, and a semi-alpha pixel at the iPhone
@@ -168,6 +173,9 @@ export class UIScene extends Phaser.Scene {
   private tint!: Phaser.GameObjects.Rectangle;
   private blackout!: Phaser.GameObjects.Rectangle;
   private menu!: MenuPanel;
+  /** Cloud save found two saves to choose from (game/cloudSync.ts): the dialog opens once nothing else is up. */
+  private cloudAsk = false;
+  private cloudPanel!: CloudConflictPanel;
   private summary!: SummaryPanel;
   private yearEnd!: YearEndPanel;
   private jar!: JarPanel;
@@ -263,9 +271,18 @@ export class UIScene extends Phaser.Scene {
       openModal: () => this.allModals().find((m) => m.isOpen) ?? null,
     });
     this.hud.intercept = (text, kind) => this.coach.intercept(text, kind);
+    // a toast over an open sheet goes between the coach line (or the HUD) and the sheet's top
+    this.hud.sheetBand = () => {
+      const m = this.allModals().find((x) => x.isOpen);
+      return m ? { top: Math.max(HUD_H, this.coach.lineBottom ?? 0) + 1, bottom: m.top - 1 } : null;
+    };
 
     this.cleanup.push(
       gameEvents.on('openPanel', ({ type }) => this.openPanel(type)),
+      gameEvents.on('cloudConflict', () => (this.cloudAsk = true)),
+      gameEvents.on('cloudChanged', () => {
+        if (this.menu.isOpen && this.menu.currentTab === 'opts') this.menu.openTab('opts');
+      }),
       gameEvents.on('openProject', ({ id }) => {
         if (!runtime.blocked)
           (this.panels.get('projects') as ProjectPanel | undefined)?.openFor(id);
@@ -296,18 +313,27 @@ export class UIScene extends Phaser.Scene {
         inputHub.clearHeld();
         this.npc.openFor(id);
       }),
+      // The sheet opens once the farmer's cast has played out (the world says so with castReady), never over
+      // the rod's wind-up frozen mid-swing; a fallback opens it anyway if no world answers.
       gameEvents.on('startFishing', ({ fish, bait }) => {
         inputHub.clearHeld();
-        this.fishing.start(fish, bait);
+        runtime.fishing = true;
+        this.pendingCast = { fish, bait };
+        this.time.delayedCall(CAST_FALLBACK_MS, () => this.openCast());
       }),
+      gameEvents.on('castReady', () => this.openCast()),
       inputHub.on('menu', () => this.toggleMenu()),
       inputHub.on('confirm', () =>
         this.allModals()
           .find((m) => m.isOpen)
           ?.confirm(),
       ),
-      // Android back: close the open dialog, otherwise open the menu (never kill the game by accident).
-      lifecycle.on('back', () => this.toggleMenu()),
+      // Android back in play: close the open sheet, else open the menu; swallowed while a scripted flow owns the
+      // screen. Always used, so play never quits by accident: only the title asks to quit (platform/native.ts).
+      lifecycle.on('back', () => {
+        this.toggleMenu();
+        return true;
+      }),
       inputHub.on('slot', (i) => selectSlot(getState(), i)),
       inputHub.on('cycle', (d) => cycleSlot(getState(), d)),
     );
@@ -350,6 +376,10 @@ export class UIScene extends Phaser.Scene {
     this.updateRingTip(s);
     this.updateIdleHint(delta);
     this.coach.update(time, delta);
+    if (this.cloudAsk && !runtime.blocked) {
+      this.cloudAsk = false;
+      if (cloudSync.conflict) this.cloudPanel.show(cloudSync.conflict);
+    }
     const indoors = !mapsData.maps[s.player.map]?.outdoor;
     const raining = s.weather !== 'sunny';
     const storm = s.weather === 'storm';
@@ -477,7 +507,8 @@ export class UIScene extends Phaser.Scene {
 
   /** A press on Action: what it becomes (tap, swipe, ring, paint) is decided as the finger moves. */
   private pressAction(): void {
-    this.actionPress = new ActionPress(this.time.now);
+    // a path started in a plot stays inside it, and its serpentine is made of whole rows (QA round)
+    this.actionPress = new ActionPress(this.time.now, this.worldScene()?.paintField());
     this.paintTiles = 0;
   }
 
@@ -693,6 +724,7 @@ export class UIScene extends Phaser.Scene {
   private buildPanels(): void {
     this.panels.clear();
     this.menu = new MenuPanel(this, () => this.quitToTitle());
+    this.cloudPanel = new CloudConflictPanel(this, (choice) => void this.cloudChoice(choice));
     installMenuTabs(this.menu);
     this.summary = new SummaryPanel(this);
     this.yearEnd = new YearEndPanel(this);
@@ -714,6 +746,21 @@ export class UIScene extends Phaser.Scene {
     this.jarPanels = { jar: this.jar, [MOVE_PANEL]: this.move };
     for (const m of [...this.panels.values(), this.jar, this.move, this.npc, this.plot])
       m.onClosed = () => void saveNow(true);
+    this.fishing.onClosed = () => {
+      runtime.fishing = false;
+      void saveNow(true);
+    };
+  }
+
+  /** The fishing mini-game a cast started, waiting for the cast to land. */
+  private pendingCast: { fish: string; bait: string } | null = null;
+
+  private openCast(): void {
+    const c = this.pendingCast;
+    if (!c) return;
+    this.pendingCast = null;
+    inputHub.clearHeld();
+    this.fishing.start(c.fish, c.bait);
   }
 
   /** Which sheet is open (by panel type) and the menu tab, for the guided start. */
@@ -729,6 +776,7 @@ export class UIScene extends Phaser.Scene {
       panel,
       tab: this.menu.isOpen ? this.menu.currentTab : null,
       interact: this.interactType,
+      npc: this.npc.isOpen ? this.npc.npcId : null,
     };
   }
 
@@ -741,14 +789,16 @@ export class UIScene extends Phaser.Scene {
       this.plot,
       this.summary,
       this.yearEnd,
+      this.cloudPanel,
     ];
   }
 
   /** The dismissible modal (not the sleep results, which must be acknowledged). */
   private activeModal(): Modal | null {
     return (
-      [...this.panels.values(), this.jar, this.move, this.npc, this.plot].find((m) => m.isOpen) ??
-      null
+      [...this.panels.values(), this.jar, this.move, this.npc, this.plot, this.cloudPanel].find(
+        (m) => m.isOpen,
+      ) ?? null
     );
   }
 
@@ -765,6 +815,24 @@ export class UIScene extends Phaser.Scene {
     const open = this.activeModal();
     if (open) open.close();
     else if (!runtime.busy) this.openPanel('menu');
+  }
+
+  /** The cloud dialog's answer. Using the cloud's save restarts the game on it (through the title, as Continue). */
+  private async cloudChoice(choice: 'local' | 'cloud' | 'later'): Promise<void> {
+    if (choice === 'later') return;
+    if (choice === 'local') {
+      await cloudSync.resolve('local');
+      return;
+    }
+    await saveNow(true); // this farm as it is now goes into the phone's keep slot (game/cloudSync.ts)
+    runtime.inGame = false; // no autosave may write this farm over the one being taken from the cloud
+    const next = await cloudSync.resolve('cloud');
+    if (!next) {
+      runtime.inGame = true;
+      return;
+    }
+    TitleScene.startNext = next;
+    this.quitToTitle();
   }
 
   private quitToTitle(): void {

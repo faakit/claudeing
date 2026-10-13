@@ -1,0 +1,17 @@
+{
+  "title": "Fiber: dry grass in the woods clearing",
+  "about": "QA round (\"fiber is too hard to get\"). Spring 6, 10:00 in the woods clearing with three dry-grass bundles (fiber, golden ring like any wild good) and a wild leek. Each bundle gives 3 fiber and counts as one pickup. Open Menu > Make: a recipe short of fiber says where it comes from (\"3 Fiber: cut weeds, or at Mara's\").",
+  "version": 18,
+  "tags": ["woods", "forage", "fiber", "qa"],
+  "at": { "map": "woods", "tx": 8, "ty": 8, "facing": "right" },
+  "time": { "day": 6, "clock": "10:00" },
+  "energy": "max",
+  "forage": [
+    { "item": "fiber", "tx": 9, "ty": 8, "map": "woods" },
+    { "item": "fiber", "tx": 10, "ty": 9, "map": "woods" },
+    { "item": "fiber", "tx": 12, "ty": 8, "map": "woods" },
+    { "item": "wild_leek", "tx": 11, "ty": 10, "map": "woods" }
+  ],
+  "items": [{ "item": "fiber", "qty": 1 }],
+  "goal": "craft"
+}

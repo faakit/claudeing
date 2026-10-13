@@ -3,7 +3,7 @@ import '../src/mechanics';
 import { npcs, tips } from '../src/data';
 import { performAction, type TileInfo } from '../src/systems/actions';
 import { till, getSoil } from '../src/systems/farming';
-import { giveGift, knownReaction, POINTS_PER_HEART } from '../src/systems/friendship';
+import { giveGift, knownReaction, pointsForHearts } from '../src/systems/friendship';
 import { addItem, countItem } from '../src/systems/inventory';
 import { placeObject } from '../src/systems/placeables';
 import { idleMachines, jarContents, loadAll } from '../src/systems/preserves';
@@ -37,7 +37,7 @@ describe('gifts are never blind twice', () => {
 
   it('from 3 hearts every favourite is known without trying', () => {
     const s = newState();
-    s.friends['finn'] = { points: 3 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends['finn'] = { points: pointsForHearts(3), talkedDay: 0, giftedDay: 0 };
     expect(knownReaction(s, 'finn', { item: npcs['finn']!.loves[1]! })).toBe('love');
     expect(knownReaction(s, 'finn', { item: 'stone' })).toBeNull();
   });

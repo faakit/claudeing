@@ -22,7 +22,7 @@ import {
   type ItemRef,
 } from '../../systems/itemRef';
 import { C } from '../theme';
-import { Modal, ROW_H } from '../widgets';
+import { fitButtonW, Modal, ROW_H } from '../widgets';
 import { boardWants, requestWants, wantedByBoard } from '../../systems/orders';
 import { npcs } from '../../data';
 import { binWantedSub, boardWantsLine, keptLine } from './binText';
@@ -52,16 +52,7 @@ export class BinPanel extends Modal {
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
 
-    if (list.length === 0)
-      this.label(
-        8,
-        50,
-        t('bin.empty'),
-        C.creamDim,
-        1,
-        'left',
-        184,
-      );
+    if (list.length === 0) this.label(8, 50, t('bin.empty'), C.creamDim, 1, 'left', 184);
     let y = 34;
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const have = countStack(s, ref);
@@ -98,7 +89,7 @@ export class BinPanel extends Modal {
         ],
       });
     }
-    const footerY = 34 + ROWS * ROW_H + 4;
+    const footerY = Math.max(y, 34 + ROWS * ROW_H) + 4; // under the rows, however tall they grew
     // Left-handed: Ship all on the left (by the thumb), the page arrows on the right.
     const left = this.leftHanded;
     const pagerX = left ? this.panelW - 60 : 8;
@@ -130,7 +121,8 @@ export class BinPanel extends Modal {
     );
     // One tap ships every crop, fish, wild good and product (one-thumb: low in the sheet, by the thumb).
     const produce = list.some((r) => countStack(s, r) > 0 && isProduce(r.item));
-    this.button(left ? 8 : this.panelW - 8 - 92, footerY, 92, 20, t('bin.shipAll'), () => {
+    const shipW = fitButtonW(t('bin.shipAll'), 92);
+    this.button(left ? 8 : this.panelW - 8 - shipW, footerY, shipW, 20, t('bin.shipAll'), () => {
       // Goods the open requests want stay in the bag (critique 9, F2); the row's "All" still ships them.
       const res = shipAllProduce(getState(), boardWants(getState()));
       if (res.count === 0) audio.play('error');

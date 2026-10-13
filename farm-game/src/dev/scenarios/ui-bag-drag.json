@@ -1,0 +1,25 @@
+{
+  "title": "Drag and drop in the bag",
+  "about": "Farm, day 9 at 10:00, seeds, a sprinkler and a scarecrow on the hotbar and goods in the bag. Open Menu > Bag: hold an item (or press and slide it) and drag it to another slot; a gold frame shows where it lands, a red one on a tool slot, where it cannot go. Drop it on a hotbar slot (the blue-edged row) to put it on the hotbar; drop it on a full slot to swap the two. A tap still picks an item and a second tap holds it.",
+  "version": 18,
+  "tags": ["farm", "bag", "hotbar", "ui"],
+  "at": {
+    "map": "farm",
+    "tx": 11,
+    "ty": 15,
+    "facing": "down"
+  },
+  "time": {
+    "day": 9,
+    "clock": "10:00"
+  },
+  "items": [
+    { "item": "potato_seed", "qty": 12 },
+    { "item": "sprinkler", "qty": 2 },
+    { "item": "scarecrow", "qty": 1 },
+    { "item": "parsnip", "qty": 7 },
+    { "item": "stone", "qty": 30 },
+    { "item": "fiber", "qty": 14 }
+  ],
+  "goal": "harvest"
+}

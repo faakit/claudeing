@@ -182,7 +182,7 @@ const COMPOSITION = {
       ['p_flowerpot', 18, 18],
       ['p_trellis', 19, 18],
       // a stone lantern across the road from the square
-      ['p_stonelantern', 15, 14],
+      ['p_stonelantern', 18, 14], // proportions round: Rosa's cottage's roof now reaches row 14 at x 14-17
       // Clay's house
       ['p_wheelbarrow', 20, 5],
       // Finn's things by the river (M7: row 32 x 18-19 is the log slip and its stand)
@@ -309,8 +309,6 @@ const COMPOSITION = {
       ['p_torch', 18, 25, 'rock'],
       ['p_torch', 6, 1, 'rock'],
       ['p_torch', 13, 1, 'rock'],
-      ['t_beams', 8, 28, 'rock'],
-      ['t_beams', 11, 28, 'rock'],
       ['t_beams', 6, 24],
       ['t_beams', 12, 24],
       ['p_stalagmite', 2, 10],
@@ -327,7 +325,8 @@ const COMPOSITION = {
       [2, 24, 1, 2],
       [16, 27, 2, 1],
     ],
-    lintel: [9, 27, 2],
+    // the exit's portal (proportions round): opening x 9-10, lintel on row 26, posts on 8 and 11 down to row 28
+    lintel: [9, 26, 2],
     // the cart's track: from the cart by the west wall, across the hall and up toward the ore
     rails: [
       [5, 26, 'h'],
@@ -1170,13 +1169,27 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
         const row = cy === eaveRow - 1 ? 'b' : cy === top ? 't' : 'm';
         set('roof', cx, cy, `roof_${style}_${row}${col}`);
       }
-      // tall doors over the two wall rows: the lower half replaces the door tile's art, the top sits above it
+      // tall doors over the two wall rows: the lower half replaces the door tile's art, the top sits above it.
+      // Proportions round (owner: "the town store has 3 doors"): a run of three door cells is one double door over
+      // all three (`f_ddoor_<l|c|r>_*`); the cells, their collision and the shop's trigger are unchanged.
+      const isDoor = (cx, cy) =>
+        inBlock(cx, cy) && (kind(cx, cy) === 'door' || kind(cx, cy) === 'shopdoor');
       if (wallRows === 2)
-        for (const [cx, cy] of cells)
-          if (cy === bottom && (kind(cx, cy) === 'door' || kind(cx, cy) === 'shopdoor')) {
+        for (const [cx, cy] of cells) {
+          if (cy !== bottom || !isDoor(cx, cy)) continue;
+          const run3 = (x0) =>
+            [0, 1, 2].every((d) => isDoor(x0 + d, cy)) &&
+            !isDoor(x0 - 1, cy) &&
+            !isDoor(x0 + 3, cy);
+          const col = run3(cx) ? 'l' : run3(cx - 1) ? 'c' : run3(cx - 2) ? 'r' : null;
+          if (col && has(`f_ddoor_${col}_low_${style}`)) {
+            set('props', cx, cy, `f_ddoor_${col}_low_${style}`);
+            set('props', cx, cy - 1, `f_ddoor_${col}_top_${style}`);
+          } else {
             set('props', cx, cy, `f_doorlow_${style}`);
             set('props', cx, cy - 1, `f_doortop_${style}`);
           }
+        }
     }
   for (const [x, y] of C.chimney ?? []) {
     if (cold.has(`${x},${y}`)) continue; // nobody home: no chimney, no smoke
@@ -1278,14 +1291,27 @@ export function artLayers(name, m, objects, extraReserved = [], opts = {}) {
   for (const [x, y, n] of C.rails ?? [])
     if (kind(x, y) === 'stone') set('shade', x, y, `rail_${n}`);
   if (C.lintel) {
+    // the mine exit's timber portal over a 2-tile opening at lx..lx+1, row ly (proportions round: posts hugging the
+    // passage on the rock either side, the lintel's underside 34 px over the floor below it): the lintel row and the
+    // posts' upper row go overhead, the posts' feet on the rock (already solid) under the player
     const [lx, ly, lw] = C.lintel;
-    for (let i = 0; i < lw; i++)
-      set(
-        'overhead',
-        lx + i,
-        ly,
-        lw === 1 ? 'lintel_c' : i === 0 ? 'lintel_l' : i === lw - 1 ? 'lintel_r' : 'lintel_c',
-      );
+    if (lw === 2 && has('portal_l')) {
+      set('overhead', lx - 1, ly, 'portal_l');
+      set('overhead', lx, ly, 'portal_c');
+      set('overhead', lx + 1, ly, 'portal_c2');
+      set('overhead', lx + 2, ly, 'portal_r');
+      set('overhead', lx - 1, ly + 1, 'portal_post_l');
+      set('overhead', lx + 2, ly + 1, 'portal_post_r');
+      set('props', lx - 1, ly + 2, 'portal_base_l');
+      set('props', lx + 2, ly + 2, 'portal_base_r');
+    } else
+      for (let i = 0; i < lw; i++)
+        set(
+          'overhead',
+          lx + i,
+          ly,
+          lw === 1 ? 'lintel_c' : i === 0 ? 'lintel_l' : i === lw - 1 ? 'lintel_r' : 'lintel_c',
+        );
   }
 
   // --- hand-placed props (solid) ---

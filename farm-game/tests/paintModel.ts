@@ -1,8 +1,15 @@
 import { ActionPress, PAINT_ARM_MS, type ActionEvent } from '../src/input/gesture';
 
-/** Replay a press: [time, dx, dy] moves, frames every 16 ms, lift at `upAt`. Returns every event. */
-export function play(moves: [number, number, number][], upAt: number): ActionEvent[] {
-  const p = new ActionPress(0);
+/**
+ * Replay a press: [time, dx, dy] moves, frames every 16 ms, lift at `upAt`. Returns every event. `fieldOf` is the
+ * world's field reading (a plot's id per cell relative to the farmer), as UIScene passes it.
+ */
+export function play(
+  moves: [number, number, number][],
+  upAt: number,
+  fieldOf?: (dx: number, dy: number) => string | null,
+): ActionEvent[] {
+  const p = new ActionPress(0, fieldOf);
   const out: ActionEvent[] = [];
   let mi = 0;
   for (let t = 0; t <= upAt; t += 4) {
@@ -196,7 +203,12 @@ export function humanPath(
  */
 export function closedLoop(
   legs: { dx: number; dy: number; n: number }[],
-  o: { pxPerMm: number; sigmaMm: number; seed: number },
+  o: {
+    pxPerMm: number;
+    sigmaMm: number;
+    seed: number;
+    fieldOf?: (dx: number, dy: number) => string | null;
+  },
 ): { path: string[] | null; ticks: number } {
   let x = o.seed >>> 0 || 1;
   const u = () => ((x = (x * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
@@ -219,7 +231,7 @@ export function closedLoop(
     x: sig * (0.8 * Math.sin((6.283 * s) / lx + px0) + 0.3 * nz(kx, s)),
     y: sig * (0.8 * Math.sin((6.283 * s) / ly + py0) + 0.3 * nz(ky, s)),
   });
-  const press = new ActionPress(0);
+  const press = new ActionPress(0, o.fieldOf);
   press.update(PAINT_ARM_MS + 20);
   const w0 = wob(0);
   let t = PAINT_ARM_MS + 40;

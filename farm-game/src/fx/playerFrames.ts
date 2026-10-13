@@ -29,6 +29,12 @@ const TOOL_ANIMS: Record<string, { tool: string; dirs: readonly Direction[] }> =
 };
 /** Frames per tool use: 0 wind-up, 1 swing, 2 contact (the impact), 3 follow-through. */
 export const TOOL_FRAMES = 4;
+/**
+ * Tools whose swing frame (1) is not drawn for them: the rod's frame 1 carries the pickaxe's grey swoosh arc over
+ * the head, which reads as a pickaxe in hand (owner: "the character should not start with the pickaxe"). Their
+ * wind-up holds through the swing instead, so the contact frame and every timing stay where they were.
+ */
+const NO_SWING_FRAME = new Set(['rod']);
 export const TOOL_CONTACT_FRAME = 2;
 /**
  * Per-frame times (ms) per tool. The art suggested 90/50/110/80 for the hoe; the wind-up is shortened so the
@@ -85,7 +91,8 @@ export class PlayerFrames {
     if (!t || !t.dirs.includes(dir)) return null;
     const frames: FrameRef[] = [];
     for (let i = 0; i < TOOL_FRAMES; i++) {
-      const key = `player_tool_${t.tool}_${dir}_${i}`;
+      const drawn = i === 1 && NO_SWING_FRAME.has(t.tool) ? 0 : i;
+      const key = `player_tool_${t.tool}_${dir}_${drawn}`;
       if (!this.has(key)) return null;
       frames.push({ texture: key, frame: '__BASE', flipX: false });
     }
@@ -109,6 +116,22 @@ export class PlayerFrames {
     // the last frame is the rest: it takes the rest time whatever the count
     const ms = frames.map((_, i) => (i === n - 1 ? ACT_MS[4] : ACT_MS[Math.min(i, 3)]!));
     return { frames, ms };
+  }
+
+  /**
+   * The rod's cast where no cast is drawn (facing up): the reel's frames backwards, rod raised to rod out, so
+   * every facing casts with the rod alone. Null when the reel is not drawn for that facing.
+   */
+  castFromReel(dir: Direction): { frames: FrameRef[]; ms: number[] } | null {
+    const reel = this.act('reel', dir);
+    if (!reel) return null;
+    const frames = [...reel.frames].reverse();
+    return { frames, ms: frames.map((_, i) => TOOL_TIMING['rod']![Math.min(i, 3)]!) };
+  }
+
+  /** The pose held while the line is out (the fishing sheet open): the reel's first frame, the rod held out. */
+  lineOut(dir: Direction): FrameRef | null {
+    return this.act('reel', dir)?.frames[0] ?? null;
   }
 
   /** A tall facade door opening (0 closed .. 3 open), or null when not drawn. */

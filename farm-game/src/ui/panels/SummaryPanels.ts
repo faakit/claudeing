@@ -94,10 +94,18 @@ export class SummaryPanel extends WaitModal {
     this.content.removeAll(true);
     this.setHeight(end + 40);
     this.draw(this.summary, withTip, maxNotes, maxSales);
-    this.button(8, this.panelH - 30, this.panelW - 16, 24, t('summary.wakeUp'), () => this.finish(), {
-      textColor: C.green,
-      rim: C.green,
-    });
+    this.button(
+      8,
+      this.panelH - 30,
+      this.panelW - 16,
+      24,
+      t('summary.wakeUp'),
+      () => this.finish(),
+      {
+        textColor: C.green,
+        rim: C.green,
+      },
+    );
   }
 
   /** Morning notes; a guided first morning keeps only one (the letter, which the guide points at next). */
@@ -142,7 +150,8 @@ export class SummaryPanel extends WaitModal {
       { x: mid, align: 'center', gap: 9 },
     );
     y += text(t('summary.sold'), C.gold, { gap: 4 });
-    if (lines.length === 0) y += text(t('summary.nothingShipped'), C.creamDim, { wrap: 184, gap: 4 });
+    if (lines.length === 0)
+      y += text(t('summary.nothingShipped'), C.creamDim, { wrap: 184, gap: 4 });
     for (const l of lines) {
       this.label(192, y, fmtGold(l.gold), C.gold, 1, 'right');
       y += text(`${displayName(parseKey(l.item))} x${l.qty}`, C.cream, { wrap: 130 });
@@ -185,9 +194,13 @@ export class SummaryPanel extends WaitModal {
     if (notes.length > maxNotes)
       y += text(t('summary.andMore', { n: notes.length - maxNotes }), C.creamDim, { gap: 4 });
     if (withTip && !guided)
-      y += text(t('summary.tip', { tip: summaryTip(s.time.season, s.time.day, s.time.year) }), C.creamDim, {
-        wrap: 184,
-      });
+      y += text(
+        t('summary.tip', { tip: summaryTip(s.time.season, s.time.day, s.time.year) }),
+        C.creamDim,
+        {
+          wrap: 184,
+        },
+      );
     return y;
   }
 }
@@ -227,10 +240,18 @@ export class YearEndPanel extends WaitModal {
     this.label(this.panelW / 2, 112, t('yearEnd.rank'), C.creamDim, 1, 'center');
     this.label(this.panelW / 2, 124, rankTitle(earned).toUpperCase(), C.green, 2, 'center');
     this.label(this.panelW / 2, 150, t('yearEnd.newSpring'), C.cream, 1, 'center');
-    this.button(8, this.panelH - 30, this.panelW - 16, 24, t('yearEnd.keepPlaying'), () => this.finish(), {
-      textColor: C.green,
-      rim: C.green,
-    });
+    this.button(
+      8,
+      this.panelH - 30,
+      this.panelW - 16,
+      24,
+      t('yearEnd.keepPlaying'),
+      () => this.finish(),
+      {
+        textColor: C.green,
+        rim: C.green,
+      },
+    );
   }
 }
 

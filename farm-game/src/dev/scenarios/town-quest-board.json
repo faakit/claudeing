@@ -1,0 +1,60 @@
+{
+  "title": "The town board with the morning's jobs posted",
+  "about": "Spring 3, 09:00, facing the town board with three jobs posted and none taken (Finn: catch 2 fish, Orin: break 4 mine rocks, Rosa: pick 3 wild goods; day 3 pays double). Interact opens the board on its Jobs page; Take starts a job (it counts from then), the Requests tab has the orders, the special, the festival and the projects as before. The Goal tab says \"at board\" beside each job until it is taken.",
+  "version": 18,
+  "tags": ["town", "board", "jobs"],
+  "at": {
+    "map": "town",
+    "tx": 14,
+    "ty": 12,
+    "facing": "up"
+  },
+  "time": {
+    "day": 3,
+    "clock": "09:00"
+  },
+  "state": {
+    "jobs": {
+      "day": 3,
+      "list": [
+        {
+          "id": "fish",
+          "giver": "finn",
+          "stat": "caught",
+          "base": 0,
+          "n": 2,
+          "reward": 72,
+          "done": false
+        },
+        {
+          "id": "mine",
+          "giver": "orin",
+          "stat": "mined",
+          "base": 0,
+          "n": 4,
+          "reward": 44,
+          "done": false
+        },
+        {
+          "id": "forage",
+          "giver": "rosa",
+          "stat": "foraged",
+          "base": 3,
+          "n": 3,
+          "reward": 48,
+          "done": false
+        }
+      ]
+    }
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5
+  },
+  "goal": "job1"
+}

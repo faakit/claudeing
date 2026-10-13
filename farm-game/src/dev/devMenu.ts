@@ -14,9 +14,11 @@ import { mapVariants } from '../systems/valley';
 import { getState } from '../state/store';
 import { formatClock, seasonLabel } from '../systems/time';
 import type { FarmDevApi } from './api';
+import { analytics } from '../platform/analytics';
+import { analyticsDebug } from '../game/analyticsWiring';
 import type { FrameMeter } from './frameStats';
 
-type Page = 'main' | 'scenarios' | 'maps';
+type Page = 'main' | 'scenarios' | 'maps' | 'analytics';
 
 const CSS = `
 .tadev-tab{position:fixed;z-index:1000;padding:4px 8px;font:700 11px/1 ui-monospace,monospace;color:#f4ead2;
@@ -182,7 +184,11 @@ export class DevMenu {
         },
         { on: this.showTiles, sub: 'grid + coords' },
       );
-      btn('Next day', () => api.time.skipDays(1), { sub: 'full rollover' });
+      btn('Next day', () => void api.time.skipDays(1), { sub: 'full rollover' });
+      if (analytics.enabled)
+        btn('Analytics', () => this.open('analytics'), {
+          sub: `${analytics.providerId} · ${analytics.consent}`,
+        });
       this.status = document.createElement('div');
       this.status.className = 'tadev-status';
       sheet.appendChild(this.status);
@@ -223,6 +229,8 @@ export class DevMenu {
         },
         { to: nav },
       );
+    } else if (page === 'analytics') {
+      this.analyticsPage(title, sheet, btn);
     } else {
       title.textContent = 'Go to map (keeps the game)';
       for (const id of Object.keys(mapsData.maps))
@@ -242,6 +250,71 @@ export class DevMenu {
     document.body.appendChild(sheet);
     this.sheet = sheet;
     this.place();
+  }
+
+  /**
+   * Analytics (game/analyticsWiring.ts): the install's retention and churn as the layer computes them, the queue,
+   * and the last events the dev provider received. Consent, offline (sends fail, the queue holds) and flush.
+   */
+  private analyticsPage(
+    title: HTMLElement,
+    sheet: HTMLElement,
+    btn: (text: string, fn: () => void, opts?: { on?: boolean; sub?: string }) => HTMLButtonElement,
+  ): void {
+    const sum = analytics.summary();
+    const dev = analyticsDebug.dev();
+    title.textContent = `Analytics · ${analytics.providerId}`;
+    const granted = analytics.consent === 'granted';
+    btn(
+      granted ? 'Consent on' : 'Consent off',
+      () => {
+        analytics.setConsent(!granted);
+        this.open('analytics');
+      },
+      { on: granted, sub: analytics.consent },
+    );
+    if (dev)
+      btn(
+        dev.offline ? 'Offline' : 'Online',
+        () => {
+          dev.offline = !dev.offline;
+          this.open('analytics');
+        },
+        { on: !dev.offline, sub: 'sends fail when off' },
+      );
+    btn('Flush', () => void analytics.flush().then(() => this.open('analytics')), {
+      sub: `${sum?.queued ?? 0} queued`,
+    });
+    btn('Refresh', () => this.open('analytics'));
+    if (dev) btn('Clear log', () => (dev.clear(), this.open('analytics')));
+    btn('Back', () => this.open('main'));
+    const pre = document.createElement('pre');
+    pre.className = 'tadev-status';
+    pre.style.cssText = 'max-height:40vh;overflow:auto;white-space:pre-wrap;margin:6px 0 0';
+    const r = sum?.retention;
+    const c = sum?.churn;
+    const head = sum
+      ? [
+          `install ${sum.installId.slice(0, 8)} · day ${sum.installDay} · ${sum.sessions} sessions`,
+          `active days ${sum.active.join(',') || '-'}`,
+          `D1 ${r?.d1 ? 'yes' : 'no'} · D7 ${r?.d7 ? 'yes' : 'no'} · D30 ${r?.d30 ? 'yes' : 'no'}`,
+          `last seen install day ${c?.lastInstallDay} · game day ${c?.lastGameDay} · away ${c?.daysAway}${c?.churned ? ' (churned)' : ''}`,
+          `queued ${sum.queued} · dropped ${sum.dropped} · rejected ${sum.rejected}${sum.lastError ? ` · ${sum.lastError}` : ''}`,
+          '',
+        ]
+      : ['loading...'];
+    const events = (dev?.log ?? [])
+      .slice(-14)
+      .reverse()
+      .map((e) => {
+        const p = Object.entries(e.params)
+          .filter(([k]) => k !== 'install_day')
+          .map(([k, v]) => `${k}=${v}`)
+          .join(' ');
+        return `#${e.seq} ${e.name} ${p}`;
+      });
+    pre.textContent = [...head, ...events].join('\n');
+    sheet.appendChild(pre);
   }
 
   close(): void {

@@ -4,3 +4,11 @@ coverage
 .bench-dist
 .bench-*-dist
 __pycache__/
+# Secrets and per-owner config: signing keys, Firebase config, local env (agents/PUBLISHING.md)
+*.jks
+*.keystore
+*.p12
+keystore.properties
+key.properties
+google-services.json
+.env*.local

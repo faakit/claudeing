@@ -1,0 +1,27 @@
+{
+  "title": "Cloud save: available but not signed in",
+  "about": "Play Games is there but nobody is signed in. Menu > Opts shows 'Cloud: sign in' beside the language and 'Cloud save: not signed in.' above the rows; the page's one button signs in (the fake accepts as Farmer) and syncs at once.",
+  "tags": ["cloud", "options"],
+  "version": 18,
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 12,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "09:00"
+  },
+  "money": 2150,
+  "stats": {
+    "valley.farmGreen": 1,
+    "valley.greenSeen": 1,
+    "playSec": 5400
+  },
+  "dev": {
+    "cloud": {
+      "account": null
+    }
+  }
+}

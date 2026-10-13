@@ -1,0 +1,7 @@
+{
+  "title": "Analytics: the consent question on a first launch",
+  "about": "Open with &analytics=dev&consent=ask (the dev provider asking as the production one does). No save: Rosa's letter, and where New Game goes, the question with Share and No thanks. Nothing is delivered until it is answered (DEV > Analytics shows the queue); No thanks empties the queue, then New Game shows. Without those URL flags the title is exactly today's.",
+  "version": 18,
+  "tags": ["title", "analytics"],
+  "dev": { "title": "first-launch" }
+}

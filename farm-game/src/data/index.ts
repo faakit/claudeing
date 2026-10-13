@@ -28,6 +28,8 @@ import mailRaw from './mail.json';
 import specialsRaw from './specials.json';
 import tutorialRaw from './tutorial.json';
 import valleyRaw from './valley.json';
+import revealRaw from './reveal.json';
+import guideRaw from './guide.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -39,6 +41,8 @@ export interface MapDef {
   outdoor?: boolean;
   /** This map holds the farm's soil, crops and weeds. Farm actions are refused elsewhere. */
   farmland?: boolean;
+  /** The maps its doors lead to (the guided start routes an off-map pointer through them; a test checks the maps). */
+  links?: string[];
 }
 export interface SpawnDef {
   map: string;
@@ -67,7 +71,7 @@ export interface StageWhen {
 }
 /**
  * When a place is asked for: a stat condition, or a villager's hearts (`npc` + `hearts`), or an absolute day on or
- * after `day`; nested with `all` / `any` (the weir: the spring open, the forge lit or summer 15, Finn at 2 hearts).
+ * after `day`; nested with `all` / `any` (the weir: the spring open, the forge lit or summer 15, Finn at 1 heart).
  */
 export interface AskWhen extends StageWhen {
   all?: AskWhen[];
@@ -222,8 +226,26 @@ export interface ItemDef {
   nameTemplate?: string;
   /** Food: energy restored when eaten. */
   energy?: number;
+  /** Where it comes from, said beside a fund's ask while it is short ("rocks in the mine"). */
+  source?: string;
   /** Taken from a letter together with it (the journal tucked in the seed tin). */
   comesWith?: { item: string; qty: number }[];
+  /** Bait (type `bait`): what one cast with it changes. Casting needs one; each cast uses one. */
+  bait?: BaitDef;
+}
+/**
+ * One bait's effect on a cast (`systems/fishing.ts`). `code` is its stable number (the remembered bait is the stat
+ * `bait.pick`, so codes are never reused; the lowest owned code is the fallback). `wait` multiplies the bite wait,
+ * `rare` lifts harder fish (weight x (1 + rare x difficulty x 3)), `legend` multiplies a legend's weight,
+ * `quality` is added to the catch's quality roll and `reel` widens the catch bar.
+ */
+export interface BaitDef {
+  code: number;
+  wait: number;
+  rare: number;
+  legend: number;
+  quality: number;
+  reel: number;
 }
 export interface CropDef {
   seasons: Season[];
@@ -278,6 +300,8 @@ export interface TipDef {
   stat: string;
   min: number;
   text: string;
+  /** Wait until this reveal feature has arrived (the tip names a menu tab it brings). */
+  reveal?: string;
 }
 export interface SkillDef {
   name: string;
@@ -293,6 +317,11 @@ export interface RecipeDef {
   ingredients: { item: string; qty: number }[];
   gold: number;
   unlock: { skill: string; level: number } | null;
+  /**
+   * A villager teaches it at a heart level (QA round: hearts worth having). With `unlock` too, either opens it; with
+   * no `unlock`, only the friendship does.
+   */
+  friend?: { npc: string; hearts: number };
   /** A dish: cooked at the workbench once the house has a kitchen (a Home upgrade). */
   kitchen?: boolean;
 }
@@ -308,7 +337,11 @@ export interface PlaceableDef {
 export interface ForageDef {
   perDay: Record<string, number>;
   cap: Record<string, number>;
-  table: { item: string; seasons: Season[]; maps?: string[]; weight: number }[];
+  /**
+   * `qty`: a bundle of a material lying in the wild (dry grass: 3 fiber), picked up whole. Only a material may be a
+   * bundle; a wild good (type `forage`) is always one.
+   */
+  table: { item: string; seasons: Season[]; maps?: string[]; weight: number; qty?: number }[];
 }
 export interface FishDef {
   item: string;
@@ -716,7 +749,11 @@ export type TutorialKind =
   | 'letterGift'
   | 'emptyCan'
   | 'explicitHand'
-  | 'placeable';
+  | 'placeable'
+  /** any bait in the bag (fishing needs one) */
+  | 'bait'
+  /** a rock (stone) on this map today */
+  | 'rocks';
 /** A condition: every field given must hold (`any`, `all`, `not` combine). */
 export interface TutorialCond {
   /** A lifetime stat, counted from when the guide (re)started. */
@@ -742,20 +779,43 @@ export interface TutorialCond {
   energyBelow?: number;
   /** The clock at or after this minute of the day. */
   minute?: number;
-  /** A job posted today, not yet done, counts this stat. */
+  /** A job of today's, taken at the board and not yet paid, counts this stat. */
   job?: string;
   /** This villager is standing on the current map. */
   npc?: string;
   /** The current goal's id. */
   goal?: string;
-  /** A fact of the screen: `npcNew` (a villager you never met is in view), `forageInView`. */
-  fact?: 'npcNew' | 'forageInView' | 'welcomeJobs';
+  /**
+   * A fact: `npcNew` (a villager you never met is in view), `forageInView`, `welcomeJobs`, `jobsPosted` (a job of
+   * today's waits on the town board), `jobReady` (a taken job is done: turn it in), `baitKinds` (two kinds of bait or
+   * more), `fishResult` (the fishing sheet shows a catch's result), `festivalToday` (a festival not entered yet).
+   */
+  fact?:
+    | 'npcNew'
+    | 'forageInView'
+    | 'welcomeJobs'
+    | 'jobsPosted'
+    | 'jobReady'
+    | 'baitKinds'
+    | 'fishResult'
+    | 'festivalToday';
+  /**
+   * A project's goods are short: what the bag holds plus what was already given is under what it asks
+   * (`{ "project": "place_spring", "item": "stone" }`). Used to teach where a good comes from before the ask.
+   */
+  short?: { project: string; item: string };
+  /** At least `min` mornings have passed since that step first showed ("the next morning"). */
+  daysSince?: { step: string; min: number };
   /** The player touched the screen this many times since the step showed (an info line goes on the next). */
   touched?: number;
   /** At least this many game minutes have passed since the step first showed. */
   after?: number;
   /** Rain or storm today (true) or a dry day (false). */
   wet?: boolean;
+  /** A feature of the reveal schedule has arrived, in a save that follows it (systems/reveal.ts). */
+  revealed?: string;
+  /** A Guide topic was opened. */
+  read?: string;
   any?: TutorialCond[];
   all?: TutorialCond[];
   not?: TutorialCond;
@@ -772,7 +832,16 @@ export interface TutorialTarget {
   door?: string;
   /** A long walk to the door that leads to this map: shows a stick drag, then the door once it is near. */
   steer?: string;
-  ui?: 'action' | 'menu' | 'interact' | 'seedSlot' | 'canSlot' | 'placeSlot' | 'spadeSlot';
+  ui?:
+    | 'action'
+    | 'menu'
+    | 'interact'
+    | 'seedSlot'
+    | 'canSlot'
+    | 'placeSlot'
+    | 'spadeSlot'
+    | 'hoeSlot'
+    | 'pickSlot';
   gesture?: 'paint' | 'ring';
   /** With `gesture: "paint"`: the Action kinds a row may do (default till, plant, water). */
   work?: string[];
@@ -1057,6 +1126,69 @@ export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 export const tutorial = tutorialRaw as unknown as TutorialData;
 
+/**
+ * The reveal schedule (QA round: phase the game's depth): when each system is introduced to a guided new game, by
+ * day or earlier when play needs it. See systems/reveal.ts.
+ */
+export interface RevealFeature {
+  id: string;
+  /** Absolute day it is introduced on (its morning); absent: only by `early`. */
+  day?: number;
+  /** Menu tabs hidden until then (`book`, `craft`, `skills`). */
+  tabs?: string[];
+  /** Any of these introduces it before its day: a lifetime stat at `min`, or the goal chain at `goal` or past it. */
+  early?: { stat?: string; min?: number; goal?: string }[];
+  /** The morning note on the day it arrives. */
+  note: string;
+}
+export interface RevealData {
+  features: RevealFeature[];
+}
+export const reveal = revealRaw as unknown as RevealData;
+
+/** The Guide: short pages the player can reread (the Book's Guide page), each arriving with its feature. */
+export interface GuideTopic {
+  id: string;
+  /** The reveal feature that brings it. */
+  reveal: string;
+  title: string;
+  paras: string[];
+}
+export interface GuideData {
+  topics: GuideTopic[];
+}
+export const guide = guideRaw as unknown as GuideData;
+
+/** Reveal features and Guide topics point at real things (goals, features), ids are unique, days are ordered. */
+export function validateReveal(r: RevealData, g: GuideData, goalIds: readonly string[]): void {
+  const bad = (msg: string): never => fail('reveal', msg);
+  const ids = r.features.map((f) => f.id);
+  if (new Set(ids).size !== ids.length) bad('two features share an id');
+  const tabs = new Set(['book', 'craft', 'skills']);
+  for (const f of r.features) {
+    if (f.day !== undefined && !(Number.isInteger(f.day) && f.day >= 3))
+      bad(`"${f.id}": a feature arrives on day 3 or later (days 1 and 2 are the guided start)`);
+    if (f.day === undefined && !f.early?.length)
+      bad(`"${f.id}" has neither a day nor an early way in`);
+    for (const t of f.tabs ?? []) if (!tabs.has(t)) bad(`"${f.id}" hides an unknown tab "${t}"`);
+    for (const e of f.early ?? []) {
+      if (!e.stat && !e.goal) bad(`"${f.id}": an early way in needs a stat or a goal`);
+      if (e.goal && !goalIds.includes(e.goal)) bad(`"${f.id}": unknown goal "${e.goal}"`);
+    }
+    if (!f.note) bad(`"${f.id}" has no note`);
+  }
+  for (const tip of tips)
+    if (tip.reveal !== undefined && !ids.includes(tip.reveal))
+      fail('tips', `"${tip.id}" waits for an unknown feature "${tip.reveal}"`);
+  const topicIds = g.topics.map((t) => t.id);
+  if (new Set(topicIds).size !== topicIds.length) fail('guide', 'two topics share an id');
+  for (const t of g.topics) {
+    if (!ids.includes(t.reveal))
+      fail('guide', `"${t.id}" arrives with an unknown feature "${t.reveal}"`);
+    if (!t.title || t.paras.length === 0) fail('guide', `"${t.id}" needs a title and a paragraph`);
+  }
+}
+
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
   for (const [id, it] of Object.entries(items)) {
@@ -1125,6 +1257,8 @@ export function validateContent(): void {
       if (!items[ing.item]) fail('recipes', `"${id}" needs unknown item "${ing.item}"`);
     if (r.unlock && !skills[r.unlock.skill])
       fail('recipes', `"${id}" unlocks with unknown skill "${r.unlock.skill}"`);
+    if (r.friend && (!npcs[r.friend.npc] || !(r.friend.hearts >= 1 && r.friend.hearts <= 5)))
+      fail('recipes', `"${id}" is taught by an unknown villager or at a bad heart level`);
     if (r.output.qty < 1 || r.gold < 0) fail('recipes', `"${id}" has a bad quantity or price`);
   }
   for (const [id, pl] of Object.entries(placeables)) {
@@ -1137,9 +1271,29 @@ export function validateContent(): void {
       fail('items', `placeable item "${id}" has no entry in placeables.json`);
     if (it.type === 'fertilizer' && !it.fertilizer)
       fail('items', `fertilizer "${id}" needs a "fertilizer" block`);
+    if ((it.type === 'bait') !== !!it.bait)
+      fail('items', `"${id}": every bait needs a "bait" block, and only baits have one`);
+    const b = it.bait;
+    if (
+      b &&
+      (!Number.isInteger(b.code) ||
+        b.code < 1 ||
+        !(b.wait > 0) ||
+        b.rare < 0 ||
+        !(b.legend > 0) ||
+        b.quality < 0 ||
+        b.reel < 0)
+    )
+      fail('items', `bait "${id}" has a bad code, wait, rare, legend, quality or reel`);
   }
+  const baitCodes = Object.values(items).flatMap((it) => (it.bait ? [it.bait.code] : []));
+  if (new Set(baitCodes).size !== baitCodes.length) fail('items', 'two baits share a code');
   for (const e of forage.table) {
-    if (items[e.item]?.type !== 'forage') fail('forage', `"${e.item}" is not a forage item`);
+    const type = items[e.item]?.type;
+    if (type !== 'forage' && !(type === 'material' && (e.qty ?? 0) >= 1))
+      fail('forage', `"${e.item}" is not a forage item (or a material bundle with a qty)`);
+    if (type === 'forage' && e.qty !== undefined)
+      fail('forage', `"${e.item}": only a bundle has a qty`);
     for (const m of e.maps ?? []) if (!mapIds.includes(m)) fail('forage', `unknown map "${m}"`);
   }
   for (const m of [...Object.keys(forage.perDay), ...Object.keys(forage.cap)]) {
@@ -1363,6 +1517,11 @@ export function validateContent(): void {
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');
   validateTutorial(tutorial);
+  validateReveal(
+    reveal,
+    guide,
+    goals.map((g) => g.id),
+  );
 }
 
 const TUT_KINDS = [
@@ -1380,13 +1539,37 @@ const TUT_KINDS = [
   'forage',
   'unread',
   'placeable',
+  'bait',
+  'rocks',
 ];
 const TUT_FINDS = ['ripe', 'dry', 'emptySoil', 'workable', 'forage', 'node', 'npcNew', 'water'];
 const WORK_KINDS = ['till', 'plant', 'water', 'dig'];
 const TUT_HUD = ['goal', 'hotbar', 'water', 'energy', 'gold', 'clock'];
 const TUT_OBJECTS = ['bin', 'bed', 'mailbox', 'board', 'shop', 'site', 'creek', 'slip'];
-const TUT_UI = ['action', 'menu', 'interact', 'seedSlot', 'canSlot', 'placeSlot', 'spadeSlot'];
+const TUT_UI = [
+  'action',
+  'menu',
+  'interact',
+  'seedSlot',
+  'canSlot',
+  'placeSlot',
+  'spadeSlot',
+  'hoeSlot',
+  'pickSlot',
+];
+const TUT_FACTS = [
+  'npcNew',
+  'forageInView',
+  'welcomeJobs',
+  'jobsPosted',
+  'jobReady',
+  'baitKinds',
+  'fishResult',
+  'festivalToday',
+];
 const TUT_COND_KEYS = new Set([
+  'revealed',
+  'read',
   'stat',
   'touched',
   'fresh',
@@ -1406,6 +1589,8 @@ const TUT_COND_KEYS = new Set([
   'npc',
   'goal',
   'fact',
+  'short',
+  'daysSince',
   'after',
   'wet',
   'any',
@@ -1437,7 +1622,18 @@ export function validateTutorial(t: TutorialData): void {
     for (const k of [c.none, c.some])
       if (k !== undefined && !TUT_KINDS.includes(k)) bad(`${where}: unknown kind "${k}"`);
     if (c.has !== undefined && !items[c.has]) bad(`${where}: unknown item "${c.has}"`);
+    if (c.fact !== undefined && !TUT_FACTS.includes(c.fact))
+      bad(`${where}: unknown fact "${c.fact}"`);
+    if (
+      c.short !== undefined &&
+      !projects[c.short.project]?.items?.some((i) => i.item === c.short!.item)
+    )
+      bad(`${where}: project "${c.short.project}" asks for no "${c.short.item}"`);
     if (c.npc !== undefined && !npcs[c.npc]) bad(`${where}: unknown villager "${c.npc}"`);
+    if (c.revealed !== undefined && !reveal.features.some((f) => f.id === c.revealed))
+      bad(`${where}: unknown reveal feature "${c.revealed}"`);
+    if (c.read !== undefined && !guide.topics.some((g) => g.id === c.read))
+      bad(`${where}: unknown Guide topic "${c.read}"`);
     if (c.goal !== undefined && !goals.some((g) => g.id === c.goal))
       bad(`${where}: unknown goal "${c.goal}"`);
     if ((c.min !== undefined || c.max !== undefined) && !c.stat && !c.fresh)

@@ -1,6 +1,6 @@
 {
   "fmt": {
-    "gold": "{n}g"
+    "gold": "{n}¤"
   },
   "season": {
     "spring": "Spring",
@@ -29,7 +29,7 @@
     "current": "CURRENT GOAL",
     "reward": "Reward: +{gold}",
     "allDone": "Every goal is done. You are a Harvest Legend!",
-    "jobsEveryMorning": "New jobs every morning.",
+    "jobsEveryMorning": "New jobs on the board each day.",
     "completed": "COMPLETED",
     "nothingYet": "Nothing yet. You can do it!",
     "alsoOpen": "ALSO OPEN",
@@ -205,19 +205,22 @@
     "derbyBest": "Derby best! {fish}. Score {score}.",
     "legend": "A legend! You caught the {fish}!",
     "castAtWater": "Cast at the water.",
+    "needBait": "No bait: dig worms or buy at Mara's.",
+    "dugWorms": "Dug up worms! +{n}",
+    "nextBait": "Bait: {bait} {n} >",
     "nothingBites": "Nothing bites here right now.",
     "title": "Fishing",
-    "baitOn": "Bait on!",
-    "noBait": "No bait",
     "leave": "Reel in & leave",
-    "tooSlow": "Too slow!",
+    "tookBait": "Too slow! The fish took the bait.",
     "perfect": " (perfect!)",
     "waiting": "Waiting for a bite...",
     "tapNow": "! TAP NOW !",
     "anyTap": "Any tap on the sheet hooks it.",
+    "reeledEarly": "Too soon: line reeled in, bait kept.",
+    "reelingIn": "Reeling in...",
+    "waitHint": "Tap when it bites. Sooner reels it in.",
     "keepGreen": "Keep the fish in the green!",
-    "holdLift": "Hold to lift, let go to sink.",
-    "tapToContinue": "Tap to continue."
+    "holdLift": "Hold to lift, let go to sink."
   },
   "food": {
     "restoresNow": "Restores {n} now: dish {nth} today.",
@@ -265,17 +268,31 @@
     "partOffer": "The weir wants a {part}. I can make you one.",
     "partNoGold": "Not enough gold: {gold}.",
     "partBagFull": "Your bag is full.",
-    "partBought": "{part} in your bag. Take it to the site."
+    "partBought": "{part} in your bag. Take it to the site.",
+    "reactAgain": "{item} again? Thanks.",
+    "waterHelpNote": "Rosa watered {n} dry crops at dawn.",
+    "nextHeart": "Next heart: {list}",
+    "heartScene": "a scene",
+    "heartLetter": "a letter",
+    "heartDaily": "a small gift a day",
+    "heartFavs": "their favourites",
+    "heartRecipe": "recipe: {name}",
+    "giftsWeek": "Gifts this week: {n}/{max}",
+    "heartPlace": "help with the {place}"
   },
   "jobs": {
     "headerDouble": "TODAY'S JOBS: DOUBLE PAY",
     "headerFactor": "TODAY'S JOBS: {factor}x PAY",
     "header": "TODAY'S JOBS",
     "done": "Job done! {job} +{gold}",
-    "newWelcome": "New jobs from {who}: {pay} pay while you settle in. See Menu > Goal.",
+    "newWelcome": "New jobs from {who} on the town board: {pay} pay while you settle in.",
     "double": "double",
     "factor": "{factor}x",
-    "newNote": "New jobs from {who}. See Menu > Goal."
+    "newNote": "New jobs from {who} on the town board.",
+    "ready": "Done: {job}. Turn it in at the board!",
+    "byPost": "Jobs not turned in, paid by post: +{gold}",
+    "atBoard": "at board",
+    "turnIn": "turn in"
   },
   "mail": {
     "festTitle": "{festival} tomorrow",
@@ -325,7 +342,8 @@
     "notEnough": "Not enough yet",
     "allGold": "All the gold is in!",
     "giveGoods": "Give goods",
-    "need": "{item} {given}/{need} (have {have})"
+    "need": "{item} {given}/{need} (have {have})",
+    "needFrom": "{line}: {source}"
   },
   "silo": {
     "hungry": "The {house} went hungry: the silo needs {n} {feed}.",
@@ -415,7 +433,9 @@
     "litTalk": "Tap the lit button to talk.",
     "litOpen": "Tap the lit button to open it.",
     "readJobs": "Read your jobs, then tap Close.",
-    "closeToCarryOn": "Close this to carry on."
+    "closeToCarryOn": "Close this to carry on.",
+    "tapShop": "Tap Shop to see her goods.",
+    "backToCarryOn": "Tap Back to carry on."
   },
   "dir": {
     "up": "up",
@@ -526,7 +546,8 @@
     "continue": "Continue",
     "saveLine": "{season} {day}, year {year}  {gold}",
     "eraseConfirm": "Erase save? Tap again",
-    "newGame": "New Game"
+    "newGame": "New Game",
+    "quitConfirm": "Quit Tiny Acre? Your farm is saved."
   },
   "tab": {
     "bag": "Bag",
@@ -548,6 +569,7 @@
     "costs": "Costs {gold} in town",
     "title": "Backpack",
     "help": "Blue-edged slots are your hotbar. Tap an item, then another slot to move it. Tap the same slot to equip it.",
+    "helpDrag": "Blue-edged slots are your hotbar. Hold an item, then drag it to another slot. Tap it twice to hold it.",
     "meters": "Energy {energy}/{maxEnergy}   Water {water}/{maxWater}",
     "gold": "Gold {gold}",
     "tip": "Tip: hold Action, then drag, to work a whole plot."
@@ -653,7 +675,20 @@
     "specialDone": "Special done! Thanks!",
     "enterFestival": "Enter the {festival}!",
     "cartHere": "The traveling cart is here!",
-    "projects": "Town projects"
+    "projects": "Town projects",
+    "townTitle": "Town Board",
+    "tabJobs": "Jobs {n}",
+    "tabRequests": "Requests {n}",
+    "take": "Take",
+    "turnIn": "Turn in",
+    "jobOffer": "Pays {gold}",
+    "jobDoing": "{have}/{n}  {gold}",
+    "jobReady": "Done! {gold}",
+    "jobTonight": "{gold} tonight",
+    "jobsNone": "No jobs today. New ones each morning.",
+    "jobSub": "{who}  {what}",
+    "jobDoingOf": "{have} of {n} done, pays {gold}",
+    "jobReadyIn": "Done! Turn in for {gold}"
   },
   "craft": {
     "needsKitchen": "Needs a kitchen",
@@ -661,9 +696,11 @@
     "needsLevel": "{skill} Lv {level} (you: {have})",
     "title": "WORKBENCH",
     "make": "Make",
-    "fiber": "You carry {n} fiber. Cut weeds with the scythe.",
+    "fiber": "Fiber: {n}. Cut weeds (2 each), pick up dry grass, or buy at Mara's.",
     "made": "Made {n} {item}",
-    "madeOne": "Made {item}"
+    "madeOne": "Made {item}",
+    "needsFriend": "{name} teaches it at {count} hearts",
+    "orFriend": "{skill} Lv {level}, or {name} at {count} hearts"
   },
   "gift": {
     "loves": "Loves it!",
@@ -674,7 +711,13 @@
     "notTried": "Not tried yet",
     "oneADayShort": "1 a day.",
     "oneADay": "1 gift a day.",
-    "tomorrow": "Tomorrow."
+    "tomorrow": "Tomorrow.",
+    "perWeek": "2 gifts a week.",
+    "perWeekShort": "2 a week.",
+    "oneLeft": "1 more this week.",
+    "oneLeftShort": "1 left.",
+    "nextWeek": "Again next week.",
+    "nextWeekShort": "Next week."
   },
   "perk": {
     "qualityBonus": "+{n}% better quality",
@@ -696,7 +739,8 @@
     },
     "rivalPolite": "{name} spares your farm goods",
     "rivalOff": "{name} stops taking requests",
-    "festivalPrize": "+{n}% festival prizes"
+    "festivalPrize": "+{n}% festival prizes",
+    "waterHelp": "she waters {n} crops on dry mornings"
   },
   "plot": {
     "size": "{n} tiles of workable land.",
@@ -710,6 +754,8 @@
     "tooLateNow": "Too late now",
     "glassOnly": "Glass only {days}d {sell}{again}",
     "seedFacts": "{days} days  {sell}{again}",
+    "factsRipe": "Ripe in {days} days, sells {sell}{again}",
+    "factsRipeShort": "Ripe {days}d, sells {sell}{again}",
     "glass": "Glass {days}d {sell}{again}",
     "glassDays": "Glass {days}d",
     "seedShort": "{days}d {sell}{again}",
@@ -719,7 +765,6 @@
     "dailyFood": "Daily food",
     "growsFast": "Grows fast",
     "finerCrops": "Finer crops",
-    "fasterBites": "Faster bites",
     "forCrafting": "For crafting",
     "decor": "Decor {n}/{max}",
     "ownLong": "{base} (own {n})",
@@ -741,7 +786,23 @@
     "upgraded": "{name} upgraded!",
     "youNeed": "You need {n} {item}.",
     "moreGoods": "more goods",
-    "alreadyMaxed": "Already maxed."
+    "alreadyMaxed": "Already maxed.",
+    "card": {
+      "grows": "Grows in {seasons}",
+      "ripe": "Ripe in {n} days",
+      "again": "Then a new crop every {n} days",
+      "sells": "Each crop sells for {gold}",
+      "glass": "Out of season: grows only in the greenhouse",
+      "late": "Too late: it can't ripen before the season ends",
+      "fruit": "Bears fruit in {season}",
+      "fruitSells": "Each fruit sells for {gold}",
+      "price": "Price {gold}",
+      "buy": "Buy {gold}",
+      "back": "Back"
+    },
+    "legend": "Tap an item to read about it.",
+    "factsSells": "{days}d, sells {sell}{again}",
+    "legendDays": "d = days to ripen. Tap an item to read about it."
   },
   "skills": {
     "level": "Lv {n}",
@@ -810,11 +871,11 @@
     "weeds": "Weeds sprout in the field. Cut them with the scythe for fiber.",
     "wither": "Crops left in the field when the season changes will wither.",
     "bin": "The shipping bin pays the next morning, so ship before bed.",
-    "jobs": "Villagers post small jobs each morning. They pay on the spot."
+    "jobs": "Villagers post small jobs on the town board each morning."
   },
   "fx": {
     "refilled": "Refilled!",
-    "fiber": "+1 Fiber",
+    "fiber": "+{n} Fiber",
     "goldQuality": "Gold quality!",
     "silverQuality": "Silver quality!"
   },
@@ -846,5 +907,72 @@
     "row": "{n} of {of} timber",
     "rowDone": "finished, the family comes tomorrow",
     "step": "{name}: {n} of {of} timber"
+  },
+  "cloud": {
+    "continueCloud": "Continue (cloud)",
+    "continuePhone": "Continue (this phone)",
+    "entrySignIn": "Cloud: sign in",
+    "entryOn": "Cloud save...",
+    "lineOff": "Cloud save is off.",
+    "lineSignedOut": "Cloud save: not signed in.",
+    "lineSynced": "Cloud: synced {ago}",
+    "lineIdle": "Cloud: signed in",
+    "lineSyncing": "Cloud: syncing...",
+    "linePending": "Cloud: waiting for a connection",
+    "lineConflict": "Cloud: two saves to choose from",
+    "lineNewer": "Cloud save is from a newer version.",
+    "lineError": "Cloud: sync failed, trying again",
+    "title": "Cloud save",
+    "signedInAs": "Signed in as {name}",
+    "signedIn": "Signed in to Play Games",
+    "notSignedIn": "Not signed in.",
+    "off": "Cloud save is off on this phone.",
+    "lastSynced": "Last synced {ago}",
+    "neverSynced": "Not synced yet",
+    "privacy": "Cloud save stores only your farm's save, in your Google Play Games account.",
+    "newer": "The cloud save is from a newer version of the game. Update the game to use it.",
+    "signIn": "Sign in",
+    "syncNow": "Sync now",
+    "turnOff": "Turn off",
+    "choose": "Choose a save",
+    "justNow": "just now",
+    "minutesAgo": {
+      "one": "{count} min ago",
+      "other": "{count} min ago"
+    },
+    "hoursAgo": {
+      "one": "{count} h ago",
+      "other": "{count} h ago"
+    },
+    "daysAgo": {
+      "one": "{count} day ago",
+      "other": "{count} days ago"
+    },
+    "playHours": "{h}h {m}m",
+    "playMinutes": "{m} min",
+    "conflictTitle": "Two saves, one farm",
+    "conflictAhead": "The cloud save is further along.",
+    "conflictDiverged": "This phone and the cloud played different days.",
+    "phone": "This phone",
+    "cloud": "Cloud",
+    "ahead": "further along",
+    "played": "Played {time}, saved {ago}",
+    "noSave": "No save on this phone.",
+    "keepPhone": "Keep this phone's",
+    "useCloud": "Use the cloud save",
+    "later": "Decide later"
+  },
+  "privacy": {
+    "ask": "Share play stats to help improve the game? No names, no ads. You can change it in Options.",
+    "yes": "Share",
+    "no": "No thanks",
+    "toggle": "Share stats: {state}"
+  },
+  "guide": {
+    "pageGuide": "Guide",
+    "pageGoods": "Goods",
+    "empty": "Pages arrive here as you play.",
+    "new": "NEW",
+    "more": "More"
   }
 }

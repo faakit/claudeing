@@ -1,0 +1,24 @@
+{
+  "title": "The shop's item cards and labelled facts",
+  "about": "Spring 5, 10:00, at Mara's store door with 600g (the gold coin glyph is drawn wherever gold is written). Interact opens the shop: each seed row says how long the crop takes and what one sells for (\"Ripe 4d, sells 35g\", or \"4d, sells 35g\" where the buttons leave less room), and the legend under the tabs says a tap on an item tells more. Tap a row off its buttons: its card shows what it does, when it grows, how long it takes, what a crop sells for and whether it can still ripen, with Buy (and x5 on a cheap item) on the thumb's side and Back.",
+  "version": 18,
+  "tags": ["town", "shop", "ui"],
+  "valley": {
+    "weir": 0
+  },
+  "at": {
+    "map": "town",
+    "tx": 5,
+    "ty": 10,
+    "facing": "up"
+  },
+  "time": {
+    "day": 5,
+    "clock": "10:00"
+  },
+  "weather": "sunny",
+  "energy": "max",
+  "money": 600,
+  "letters": [],
+  "goal": "tree"
+}

@@ -34,9 +34,10 @@ vi.mock('@capacitor/preferences', () => ({
 
 import { haptic, registerHapticsDriver, setHapticsEnabled } from '../src/platform/haptics';
 import { Lifecycle } from '../src/platform/lifecycle';
-import { hideSplash, initNative } from '../src/platform/native';
+import { EXIT_WAIT_MS, hideSplash, initNative } from '../src/platform/native';
 import { NativeStore } from '../src/platform/NativeStore';
-import { createSaveStore } from '../src/platform/store';
+import { MIGRATED_KEY, createSaveStore, migrateWebSave } from '../src/platform/store';
+import { MemoryStore } from '../src/platform/SaveStore';
 import { createInitialState } from '../src/state/GameState';
 import { loadGame, saveGame } from '../src/systems/save';
 
@@ -77,15 +78,52 @@ describe('initNative', () => {
     expect(resume).toHaveBeenCalledTimes(1);
   });
 
-  it('routes the Android back button to the game, and exits only when nothing handles it', () => {
+  it('routes the Android back button to the game, and asks before quitting when nothing used it', async () => {
     const lc = new Lifecycle();
-    initNative(lc);
+    let answer = false;
+    const confirmQuit = vi.fn(() => answer);
+    const beforeExit = vi.fn(() => Promise.resolve());
+    initNative(lc, { confirmQuit, beforeExit });
+    // In play (UIScene's listener always uses the press: closes a sheet or opens the menu): no question.
+    const off = lc.on('back', () => true);
     handlers['backButton']!({ canGoBack: false });
-    expect(mocks.exitApp).toHaveBeenCalledTimes(1); // title screen: nobody listening
-    const off = lc.on('back', vi.fn());
-    handlers['backButton']!({ canGoBack: false });
-    expect(mocks.exitApp).toHaveBeenCalledTimes(1); // in game: handled, no exit
+    expect(confirmQuit).not.toHaveBeenCalled();
     off();
+    // A listener that did not use the press leads to the question, as on the title (no listener at all).
+    const off2 = lc.on('back', () => undefined);
+    handlers['backButton']!({ canGoBack: false });
+    expect(confirmQuit).toHaveBeenCalledTimes(1);
+    off2();
+    // "No" stays in the game.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mocks.exitApp).not.toHaveBeenCalled();
+    expect(beforeExit).not.toHaveBeenCalled();
+    // "Yes" saves first, then exits once.
+    answer = true;
+    handlers['backButton']!({ canGoBack: false });
+    expect(beforeExit).toHaveBeenCalledTimes(1);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mocks.exitApp).toHaveBeenCalledTimes(1);
+    handlers['backButton']!({ canGoBack: false });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mocks.exitApp).toHaveBeenCalledTimes(1);
+  });
+
+  it('quits even when the last save never settles', async () => {
+    vi.useFakeTimers();
+    try {
+      initNative(new Lifecycle(), {
+        confirmQuit: () => true,
+        beforeExit: () => new Promise(() => undefined),
+      });
+      handlers['backButton']!({ canGoBack: false });
+      await vi.advanceTimersByTimeAsync(EXIT_WAIT_MS - 10);
+      expect(mocks.exitApp).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(20);
+      expect(mocks.exitApp).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('hides the status bar and registers the real haptic engine', () => {
@@ -126,8 +164,7 @@ describe('initNative', () => {
 
 describe('native save store', () => {
   it('is chosen on native and round-trips a full game through Preferences', async () => {
-    const store = createSaveStore();
-    expect(store).toBeInstanceOf(NativeStore);
+    const store = createSaveStore(['farm.save']);
     expect(store.persistent).toBe(true);
     const state = createInitialState();
     state.money = 4321;
@@ -142,11 +179,61 @@ describe('native save store', () => {
     expect(createSaveStore()).not.toBeInstanceOf(NativeStore);
   });
 
+  it('writes through to Preferences', async () => {
+    const store = createSaveStore([]);
+    await store.write('k', 'v');
+    expect(mocks.prefs.get('k')).toBe('v');
+  });
+
   it('remove deletes the key', async () => {
     const store = new NativeStore();
     await store.write('k', 'v');
     expect(await store.read('k')).toBe('v');
     await store.remove('k');
     expect(await store.read('k')).toBeNull();
+  });
+});
+
+describe('one-time migration of a WebView save', () => {
+  it('copies the save keys once, never overwrites a native save, and keeps the web copy', async () => {
+    const native = new MemoryStore();
+    const web = new MemoryStore();
+    await web.write('farm.save', 'WEB');
+    await web.write('farm.save.bak', 'WEBBAK');
+    await web.write('other', 'x');
+    await native.write('farm.save.bak', 'NATIVEBAK');
+    const copied = await migrateWebSave(native, web, ['farm.save', 'farm.save.bak', 'lang']);
+    expect(copied).toEqual(['farm.save']);
+    expect(await native.read('farm.save')).toBe('WEB');
+    expect(await native.read('farm.save.bak')).toBe('NATIVEBAK');
+    expect(await native.read('other')).toBeNull();
+    expect(await web.read('farm.save')).toBe('WEB');
+    expect(await native.read(MIGRATED_KEY)).toBe('1');
+    // A second launch copies nothing, even if the web copy changed.
+    await web.write('farm.save', 'WEB2');
+    await native.remove('farm.save');
+    expect(await migrateWebSave(native, web, ['farm.save'])).toEqual([]);
+    expect(await native.read('farm.save')).toBeNull();
+  });
+
+  it('leaves the marker unwritten when the WebView store throws, and never blocks saving', async () => {
+    const native = new MemoryStore();
+    const broken = {
+      read: () => Promise.reject(new Error('blocked')),
+      write: () => Promise.reject(new Error('blocked')),
+      remove: () => Promise.reject(new Error('blocked')),
+    };
+    await expect(migrateWebSave(native, broken, ['farm.save'])).rejects.toThrow('blocked');
+    expect(await native.read(MIGRATED_KEY)).toBeNull();
+    // Through the real store the failure is swallowed: the game saves to Preferences regardless.
+    const store = createSaveStore(['farm.save']);
+    await store.write('farm.save', 'NEW');
+    expect(mocks.prefs.get('farm.save')).toBe('NEW');
+  });
+
+  it('a fresh native install with an empty WebView marks itself migrated on first use', async () => {
+    const store = createSaveStore(['farm.save']);
+    expect(await store.read('farm.save')).toBeNull();
+    expect(mocks.prefs.get(MIGRATED_KEY)).toBe('1');
   });
 });

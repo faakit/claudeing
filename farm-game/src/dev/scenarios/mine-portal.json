@@ -1,0 +1,19 @@
+{
+  "title": "Proportions: the mine's exit portal and roof supports",
+  "about": "Day 3, 11:00, just inside the mine's exit: the farmer under the timber portal (its lintel 34 px over the floor, posts hugging the 2-tile passage) with the hall's roof supports (42 px tall) behind. Proportions round.",
+  "version": 18,
+  "tags": ["mine", "art", "proportions"],
+  "at": {
+    "map": "mine",
+    "tx": 9,
+    "ty": 27,
+    "facing": "down"
+  },
+  "time": {
+    "day": 3,
+    "clock": "11:00"
+  },
+  "energy": "max",
+  "letters": [],
+  "goal": "tree"
+}

@@ -11,30 +11,36 @@
       "file": "assets/maps/farm.tmj",
       "tillable": [1, 2],
       "outdoor": true,
-      "farmland": true
+      "farmland": true,
+      "links": ["house", "town", "wendhead"]
     },
     "house": {
       "scene": "House",
-      "file": "assets/maps/house.tmj"
+      "file": "assets/maps/house.tmj",
+      "links": ["farm"]
     },
     "town": {
       "scene": "Town",
       "file": "assets/maps/town.tmj",
-      "outdoor": true
+      "outdoor": true,
+      "links": ["farm", "woods"]
     },
     "woods": {
       "scene": "Woods",
       "file": "assets/maps/woods.tmj",
-      "outdoor": true
+      "outdoor": true,
+      "links": ["town", "mine"]
     },
     "mine": {
       "scene": "Mine",
-      "file": "assets/maps/mine.tmj"
+      "file": "assets/maps/mine.tmj",
+      "links": ["woods"]
     },
     "wendhead": {
       "scene": "Wendhead",
       "file": "assets/maps/wendhead.tmj",
-      "outdoor": true
+      "outdoor": true,
+      "links": ["farm"]
     }
   },
   "wake": {

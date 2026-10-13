@@ -6,7 +6,11 @@ import { haptic } from '../../platform/haptics';
 import { getState } from '../../state/store';
 import {
   biteDelay,
+  currentBait,
   HOOK_WINDOW,
+  nextBait,
+  noteFishingResult,
+  refundBait,
   newReel,
   outcomeOf,
   reelSize,
@@ -17,12 +21,17 @@ import {
 import { gameEvents, toast } from '../../systems/events';
 import { displayName } from '../../systems/itemRef';
 import { random } from '../../systems/rng';
+import { countItem } from '../../systems/inventory';
 import type { Label } from '../font';
 import { C } from '../theme';
 import { drawBar, drawPanel, Modal } from '../widgets';
 import { t } from '../../i18n';
 
-type Phase = 'wait' | 'bite' | 'reel' | 'done';
+/** `reelIn`: a press before the bite pulls the empty line back (QA: "puxar a vara se apertar antes de fisgar"). */
+type Phase = 'wait' | 'reelIn' | 'bite' | 'reel' | 'done';
+
+/** How long the empty line takes to come back up the track before the sheet closes (s). */
+export const REEL_IN_S = 0.35;
 
 const TRACK = { x: 78, y: 40, w: 24, h: 116 };
 
@@ -35,7 +44,8 @@ export class FishingPanel extends Modal {
   private clock = 0;
   private delay = 0;
   private fishId = 'carp';
-  private bait = false;
+  /** The bait on this cast (shown top right; it sets the bite wait, the odds and the catch bar). */
+  private bait = 'worms';
   private reel: Reel = newReel(0.3, 0.3);
   private pointerDown = false;
   private wasHolding = false;
@@ -47,12 +57,13 @@ export class FishingPanel extends Modal {
   private hint!: Label;
 
   constructor(scene: Phaser.Scene) {
-    super(scene, 214);
+    super(scene, 228); // room for a two-line hint in the body face under the track
     this.dismissOnDim = false;
     scene.events.on(Phaser.Scenes.Events.UPDATE, (_t: number, dt: number) => this.tick(dt / 1000));
   }
 
-  start(fishId: string, bait: boolean): void {
+  start(fishId: string, bait: string): void {
+    noteFishingResult(false);
     this.fishId = fishId;
     this.bait = bait;
     this.phase = 'wait';
@@ -70,14 +81,7 @@ export class FishingPanel extends Modal {
   protected build(): void {
     this.panel();
     this.label(8, 8, t('fishing.title'), C.gold);
-    this.label(
-      192,
-      8,
-      this.bait ? t('fishing.baitOn') : t('fishing.noBait'),
-      this.bait ? C.green : C.creamDim,
-      1,
-      'right',
-    );
+    this.label(192, 8, items[this.bait]?.name ?? this.bait, C.green, 1, 'right');
     this.status = this.label(100, 22, '', C.cream, 1, 'center');
     this.gfx = this.scene.add.graphics();
     this.content.add(this.gfx);
@@ -100,6 +104,51 @@ export class FishingPanel extends Modal {
     zone.on('pointerout', () => (this.pointerDown = false));
     this.content.add(zone);
     this.hint = this.label(100, this.panelH - 44, '', C.creamDim, 1, 'center', 190);
+    // After the fight, the bottom button shows the bait the next cast will really use (the hand included) and
+    // switches it in one tap when you carry two kinds or more: no screen before a cast (bait round). With one kind
+    // it simply closes.
+    const next = currentBait(getState());
+    const kinds = new Set(
+      getState()
+        .inventory.slots.filter((st) => st && items[st.item]?.bait)
+        .map((st) => st!.item),
+    );
+    // The sheet closes only from Close (owner rule; critic D3-2): with two kinds of bait or more, the bottom row is
+    // [Bait: X n >] wide and [Close] narrow on the thumb's side (mirrored for the left hand).
+    if (this.phase === 'done' && next && kinds.size >= 2) {
+      const closeW = 40;
+      const baitW = this.panelW - 16 - closeW - 4;
+      const left = this.leftHanded;
+      this.button(
+        left ? 8 + closeW + 4 : 8,
+        this.panelH - 28,
+        baitW,
+        22,
+        t('fishing.nextBait', { bait: items[next]?.name ?? next, n: countItem(getState(), next) }),
+        () => {
+          nextBait(getState());
+          audio.play('select');
+          this.rebuild();
+        },
+        { textColor: C.green },
+      );
+      this.button(
+        left ? 8 : 8 + baitW + 4,
+        this.panelH - 28,
+        closeW,
+        22,
+        t('common.close'),
+        () => this.close(),
+        { textColor: C.warn },
+      );
+      this.draw();
+      return;
+    }
+    if (this.phase === 'done') {
+      this.closeButton();
+      this.draw();
+      return;
+    }
     this.button(
       8,
       this.panelH - 28,
@@ -114,9 +163,14 @@ export class FishingPanel extends Modal {
     this.draw();
   }
 
+  /** The hint sits on the Leave button, however many lines it wraps to (pt-BR wrapped under the button). */
+  private setHint(text: string): void {
+    this.hint.setText(text);
+    this.hint.setY(this.panelH - 31 - Math.ceil(this.hint.textHeight));
+  }
+
   private onRelease(): void {
     this.pointerDown = false;
-    if (this.phase === 'done' && this.clock > 0.6) this.close();
   }
 
   private holding(): boolean {
@@ -130,7 +184,20 @@ export class FishingPanel extends Modal {
     this.tapped = false;
     this.wasHolding = down;
     this.clock += dt;
-    if (this.phase === 'wait' && this.clock >= this.delay) {
+    if (this.phase === 'wait' && pressed) {
+      // Pressed before anything bit: reel the empty line back in (the bait comes back, as Leave does), never a
+      // silent press and never a cost.
+      this.phase = 'reelIn';
+      this.clock = 0;
+      audio.play('select');
+      haptic('tick');
+    } else if (this.phase === 'reelIn') {
+      if (this.clock >= REEL_IN_S) {
+        this.finish(false);
+        toast(t('fishing.reeledEarly'));
+        return;
+      }
+    } else if (this.phase === 'wait' && this.clock >= this.delay) {
       this.phase = 'bite';
       this.clock = 0;
       audio.play('select');
@@ -144,8 +211,6 @@ export class FishingPanel extends Modal {
     } else if (this.phase === 'reel') {
       stepReel(this.reel, Math.min(dt, 0.05), down, () => random(getState()));
       if (this.reel.result) this.finish(outcomeOf(this.reel).caught);
-    } else if (this.phase === 'done' && pressed && this.clock > 0.5) {
-      this.close();
     }
     this.draw();
   }
@@ -153,16 +218,20 @@ export class FishingPanel extends Modal {
   private finish(caught: boolean): void {
     if (this.phase === 'done') return;
     const out = caught ? outcomeOf(this.reel) : { caught: false, perfect: false };
-    if (this.phase === 'wait' || this.phase === 'bite') {
-      // Left early or missed the bite: nothing was hooked.
+    if (this.phase === 'wait' || this.phase === 'reelIn' || this.phase === 'bite') {
+      // Left early, reeled in early or missed the bite: nothing was hooked. Before any bite the bait comes back; a
+      // missed bite cost it, and says so. The farmer reels the empty line in once the sheet has closed.
+      const was = this.phase;
       this.phase = 'done';
-      if (out.caught === false && this.clock > 0) toast(t('fishing.tooSlow'), 'warn');
+      if (was === 'bite') toast(t('fishing.tookBait'), 'warn');
+      else refundBait(getState(), this.bait);
       this.close();
+      gameEvents.emit('lineReeled', undefined);
       return;
     }
     this.phase = 'done';
     this.clock = 0;
-    const res = resolveCatch(getState(), this.fishId, out);
+    const res = resolveCatch(getState(), this.fishId, out, this.bait);
     if (res.ok) {
       audio.play('harvest');
       haptic('success');
@@ -172,6 +241,13 @@ export class FishingPanel extends Modal {
       audio.play('error');
       this.resultText = t('fishing.gotAway');
     }
+    noteFishingResult(true); // the guided start's bait intro waits for this moment
+    this.rebuild(); // the bottom button becomes the next-bait switch
+  }
+
+  override close(): void {
+    noteFishingResult(false);
+    super.close();
   }
 
   private resultText = '';
@@ -183,7 +259,21 @@ export class FishingPanel extends Modal {
     const { x, y, w, h } = TRACK;
     const secs = this.scene.time.now / 1000;
     drawPanel(g, x - 4, y - 4, w + 8, h + 8, 0x1d3a52, C.blue);
-    if (this.phase === 'wait' || this.phase === 'bite') {
+    if (this.phase === 'reelIn') {
+      // The empty line comes back: the bobber rises up the track to the rod's tip, one splash ring where it left.
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      const f = Math.min(1, this.clock / REEL_IN_S);
+      const by = Math.round(cy - (cy - y - 4) * f * f);
+      g.lineStyle(1, 0xffffff, 0.6 * (1 - f)).strokeCircle(cx, cy, 4 + f * 12);
+      g.lineStyle(1, 0xf4ead2, 0.8).lineBetween(cx, y, cx, by - 4);
+      g.fillStyle(0xe0574a, 1).fillRect(cx - 2, by - 4, 4, 4);
+      g.fillStyle(0xf4ead2, 1).fillRect(cx - 2, by, 4, 3);
+      this.fishIcon.setVisible(false);
+      this.status.setText(t('fishing.reelingIn'));
+      this.status.setColor(C.cream);
+      this.setHint('');
+    } else if (this.phase === 'wait' || this.phase === 'bite') {
       // Ripples and a bobber.
       const cx = x + w / 2;
       const cy = y + h / 2;
@@ -197,7 +287,7 @@ export class FishingPanel extends Modal {
       this.fishIcon.setVisible(false);
       this.status.setText(this.phase === 'wait' ? t('fishing.waiting') : t('fishing.tapNow'));
       this.status.setColor(this.phase === 'bite' ? C.gold : C.cream);
-      this.hint.setText(t('fishing.anyTap'));
+      this.setHint(t(this.phase === 'wait' ? 'fishing.waitHint' : 'fishing.anyTap'));
     } else if (this.phase === 'reel') {
       const r = this.reel;
       const barTop = y + h - (r.bar + r.size) * h;
@@ -207,12 +297,12 @@ export class FishingPanel extends Modal {
       drawBar(g, x + w + 14, y, 8, h, r.progress, C.gold, true);
       this.status.setText(t('fishing.keepGreen'));
       this.status.setColor(C.cream);
-      this.hint.setText(t('fishing.holdLift'));
+      this.setHint(t('fishing.holdLift'));
     } else {
       this.fishIcon.setVisible(false);
       this.status.setText(this.resultText);
       this.status.setColor(this.resultText === t('fishing.gotAway') ? C.warn : C.green);
-      this.hint.setText(t('fishing.tapToContinue'));
+      this.setHint('');
     }
   }
 }

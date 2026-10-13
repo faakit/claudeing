@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
 import { JOYSTICK, THUMB_ZONE_Y } from '../config';
-import { dominantDirection } from '../systems/direction';
 import type { Direction } from '../state/GameState';
 import type { InputHub } from './InputHub';
 import { CH } from '../ui/theme';
-import { GESTURE } from './gesture';
+import { GESTURE, StickSteer } from './gesture';
 
 const FADE_MS = 120;
 
@@ -12,6 +11,7 @@ const FADE_MS = 120;
 export class VirtualJoystick {
   private pointerId: number | null = null;
   private origin = new Phaser.Math.Vector2();
+  private steer = new StickSteer(JOYSTICK.radius, JOYSTICK.axisBias);
   private current: Direction | null = null;
   private readonly gfx: Phaser.GameObjects.Graphics;
   private readonly thumb: Phaser.GameObjects.Graphics;
@@ -79,37 +79,31 @@ export class VirtualJoystick {
     this.pointerId = p.id;
     this.engaged = false;
     this.origin.set(p.x, p.y);
+    this.steer = new StickSteer(this.radius, JOYSTICK.axisBias);
     this.current = null;
   }
 
   private onMove(p: Phaser.Input.Pointer): void {
     if (p.id !== this.pointerId) return;
-    const { axisBias } = JOYSTICK;
-    const radius = this.radius;
-    const deadzone = GESTURE.stickDeadzone;
-    let dx = p.x - this.origin.x;
-    let dy = p.y - this.origin.y;
-    const len = Math.hypot(dx, dy);
+    const dx = p.x - this.origin.x;
+    const dy = p.y - this.origin.y;
     if (!this.engaged) {
       // Until the thumb travels past the deadzone this touch may still be a tap: never walk.
-      if (len < deadzone) return;
+      if (Math.hypot(dx, dy) < GESTURE.stickDeadzone) return;
       this.engaged = true;
     }
-    if (len > radius) {
-      // Dragging past the rim drags the whole stick along, so recentering is never needed.
-      this.origin.x += (dx / len) * (len - radius);
-      this.origin.y += (dy / len) * (len - radius);
-      dx = p.x - this.origin.x;
-      dy = p.y - this.origin.y;
-    }
-    // Once engaged, the stick only stops when the thumb comes back near its centre.
-    this.current = dominantDirection(dx, dy, deadzone / 2, axisBias, this.current);
+    // The anchor holds along the walk and never drifts across it (StickSteer): easing back never stops or turns the
+    // walk, and a turn takes the same sideways slide however hard the thumb pushed.
+    const steer = this.steer.move(dx, dy);
+    this.current = steer.dir;
     this.hub.setStick(this.current);
-    this.hub.stickSlow = Math.hypot(dx, dy) < radius * 0.5;
+    this.hub.stickSlow = steer.slow;
     // Only reveal the stick once it is actually being used, so quick taps stay clean.
-    if (!this.shown && len >= deadzone) this.fade(true);
-    this.gfx.setPosition(this.origin.x, this.origin.y);
-    this.thumb.setPosition(this.origin.x + dx, this.origin.y + dy);
+    if (!this.shown) this.fade(true);
+    const ox = this.origin.x + this.steer.ax;
+    const oy = this.origin.y + this.steer.ay;
+    this.gfx.setPosition(ox, oy);
+    this.thumb.setPosition(ox + steer.knobX, oy + steer.knobY);
   }
 
   private onUp(p: Phaser.Input.Pointer): void {

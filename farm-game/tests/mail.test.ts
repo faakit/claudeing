@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { game, mail, npcs } from '../src/data';
 import { endDay } from '../src/systems/day';
-import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { pointsForHearts } from '../src/systems/friendship';
 import { countItem } from '../src/systems/inventory';
 import {
   deliverCalendarLetters,
@@ -39,7 +39,7 @@ describe('mail', () => {
   it('milestones and friendship send letters once, the next morning', () => {
     const s = newState();
     s.stats['caught'] = 1;
-    s.friends['rosa'] = { points: 3 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends['rosa'] = { points: pointsForHearts(3), talkedDay: 0, giftedDay: 0 };
     expect(deliverDueLetters(s)).toBeGreaterThanOrEqual(2);
     const titles = s.mail.list.map((l) => l.title);
     expect(titles).toContain('A fellow angler');

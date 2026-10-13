@@ -1,0 +1,21 @@
+{
+  "title": "Painting across the Home Plot and a bought West Field",
+  "about": "Spring 2, 08:00, the West Field (x 5-8) bought beside the Home Plot (x 9-12): one 8-wide field of grass, y 16-25. Standing on the grass east of it at 13,20 facing west, hoe in hand. Hold Action and drag west far past the field: the row runs all 8 tiles, 12 to 5, and stops at the field's west edge, not at the border between the two plots (critic ruling C3-1: a painted path stays in the connected owned farmland of its first tile). Left hand: stand at 4,20 and draw east. QA item: \"segurar o toque pra mexer automatico com multiplos tiles ta muito dificil de controlar\".",
+  "version": 18,
+  "tags": ["farm", "controls", "paint"],
+  "at": {
+    "map": "farm",
+    "tx": 13,
+    "ty": 20,
+    "facing": "left"
+  },
+  "time": {
+    "day": 2,
+    "clock": "08:00"
+  },
+  "energy": "max",
+  "tutorial": "off",
+  "hints": "off",
+  "plots": ["west"],
+  "select": 0
+}

@@ -16,7 +16,7 @@ export type PanelType =
   | 'cart';
 
 export interface GameEvents {
-  toast: { text: string; kind?: 'info' | 'warn' | 'good' };
+  toast: { text: string; kind?: ToastKind };
   inventoryChanged: undefined;
   moneyChanged: { delta: number };
   energyChanged: undefined;
@@ -38,8 +38,13 @@ export interface GameEvents {
   placedPanel: { panel: string; id: number };
   /** A fish was landed (the farmer's reel animation plays when the sheet closes). */
   fishCaught: undefined;
+  /** The line came back with nothing on it (an early press, or Leave before a bite): the reel animation plays too. */
+  lineReeled: undefined;
   /** Start the fishing mini-game; resolve with the outcome. */
-  startFishing: { map: string; fish: string; bait: boolean };
+  /** `bait`: the bait item on this cast (every cast uses one). */
+  startFishing: { map: string; fish: string; bait: string };
+  /** The cast has landed (the farmer holds the line out): the fishing sheet opens now. */
+  castReady: undefined;
   /** Ask the UI to run the sleep flow (bed confirmed, or the clock hit 02:00). */
   sleepRequest: { passedOut: boolean };
   /** A villager's friendship reached a new heart (for a flourish). */
@@ -61,6 +66,18 @@ export interface GameEvents {
   valleyMoment: { text: string; farmerY?: number; delay?: number; cue?: string };
   /** A rebuilt house's window lit for the first time, its family home (audio's `window-lit` sting). Once a house. */
   houseLit: { house: string };
+  /** Cloud save's status changed (game/cloudSync.ts): Options and the title redraw their cloud lines. */
+  cloudChanged: undefined;
+  /** A sync found a cloud save further along than, or diverged from, this phone's: the player must choose. */
+  cloudConflict: undefined;
+  /** A game was entered from the title (New Game, Continue or a scenario): the state is set, the world opening. */
+  gameEntered: undefined;
+  /** A guided-start step was finished or passed (systems/tutorial.ts); `skipped` when the player skipped it. */
+  tutorialStep: { id: string; track: string; skipped: boolean };
+  /** The player skipped the whole guided start (the coach line's menu). */
+  tutorialSkipped: undefined;
+  /** The player picked a language (Menu > Opts or the title), not the boot-time choice. */
+  languageChosen: { lang: string };
 }
 
 type Listener<K extends keyof GameEvents> = (payload: GameEvents[K]) => void;
@@ -83,5 +100,11 @@ export class TypedEmitter {
 
 export const gameEvents = new TypedEmitter();
 
-export const toast = (text: string, kind: 'info' | 'warn' | 'good' = 'info'): void =>
+/**
+ * A toast's kind: `info` and `good` go by themselves after their reading time; `warn` (a refusal, which often says
+ * what to do) and `tip` (a first-time tip, which teaches) stay until the screen is touched (ui/readTime.ts).
+ */
+export type ToastKind = 'info' | 'warn' | 'good' | 'tip';
+
+export const toast = (text: string, kind: ToastKind = 'info'): void =>
   gameEvents.emit('toast', { text, kind });

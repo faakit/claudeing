@@ -2,7 +2,7 @@ import { recipes, skills } from '../data';
 import type { RecipeDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents } from './events';
-import { friendPerk } from './friendship';
+import { friendPerk, heartsOf } from './friendship';
 
 export const skillIds = (): string[] => Object.keys(skills);
 
@@ -72,8 +72,15 @@ export function perk(state: GameState, key: string): number {
 export const hasKitchen = (state: GameState): boolean =>
   (state.stats['upgraded.kitchen'] ?? 0) >= 1;
 
+/** Taught by a villager at their heart level (`friend`)? */
+export const friendTaught = (state: GameState, recipe: RecipeDef): boolean =>
+  !!recipe.friend && heartsOf(state, recipe.friend.npc) >= recipe.friend.hearts;
+
+/** A skill level opens it, or (`friend`) a villager teaches it; a dish needs the kitchen as well. */
 export const isRecipeUnlocked = (state: GameState, recipe: RecipeDef): boolean =>
-  (!recipe.unlock || levelOf(state, recipe.unlock.skill) >= recipe.unlock.level) &&
+  (recipe.unlock
+    ? levelOf(state, recipe.unlock.skill) >= recipe.unlock.level || friendTaught(state, recipe)
+    : !recipe.friend || friendTaught(state, recipe)) &&
   (!recipe.kitchen || hasKitchen(state));
 
 export const unlockedRecipes = (state: GameState): string[] =>

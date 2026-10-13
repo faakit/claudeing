@@ -1,0 +1,71 @@
+{
+  "title": "Guided start: stone first, then the spring",
+  "about": "Guided game, spring 9, 08:00 on the farm: the farm has turned green and Rosa has asked for the Old Spring (300g and 20 stone), with no stone in the bag. Before the coach shows the site, it says \"Stone comes from rocks in the mine.\" and leads there through the door chain (farm, town, woods, mine); in the mine, \"Tap a rock: the pickaxe breaks it.\" (\"Pick the pickaxe on the hotbar.\" with auto tool off). After the first rock it goes quiet: the spring's own intro waits until the stone is all gathered or the next morning. The mine has three rocks today. With 20 stone already, the stone line is skipped.",
+  "tags": ["farm", "onboarding", "valley", "spring", "mine"],
+  "at": {
+    "map": "farm",
+    "tx": 14,
+    "ty": 11,
+    "facing": "down"
+  },
+  "time": {
+    "day": 9,
+    "clock": "08:00"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "valley": {
+    "farmGreen": 1,
+    "spring": 1
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 8,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "valley.greenSeen": 1,
+    "place.spring.since": 9,
+    "tut.jobBoard": 1,
+    "tut.welcomeJobs": 1,
+    "tut.board": 1,
+    "mail.welcome": 1
+  },
+  "goal": "fish",
+  "version": 18,
+  "nodes": [
+    {
+      "node": "rock_node",
+      "tx": 11,
+      "ty": 24,
+      "map": "mine"
+    },
+    {
+      "node": "rock_node",
+      "tx": 8,
+      "ty": 20,
+      "map": "mine"
+    },
+    {
+      "node": "copper_node",
+      "tx": 9,
+      "ty": 23,
+      "map": "mine"
+    }
+  ]
+}

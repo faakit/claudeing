@@ -538,13 +538,13 @@ describe('saves from before M7 keep everything (no version bump)', () => {
 describe("Clay's turn at the weir (WORLD-PLAN 5.1 step 5)", () => {
   it('his rounds start late once the river is back, even below 2 hearts; never twice at 2 hearts', async () => {
     const { perk } = await import('../src/systems/skills');
-    const { POINTS_PER_HEART } = await import('../src/systems/friendship');
+    const { pointsForHearts } = await import('../src/systems/friendship');
     const s = river();
     s.stats['place.weir'] = 2;
     expect(perk(s, 'rivalLate')).toBe(0);
     s.stats['place.weir'] = 3;
     expect(perk(s, 'rivalLate')).toBe(180);
-    s.friends['clay'] = { points: 2 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends['clay'] = { points: pointsForHearts(2), talkedDay: 0, giftedDay: 0 };
     expect(perk(s, 'rivalLate')).toBe(180);
   });
 });

@@ -33,14 +33,14 @@ DATA = os.path.normpath(os.path.join(HERE, "..", "..", "src", "data"))
 
 # ---------------------------------------------------------------- doors
 
-# the baked tall door (tiles_extra.py, f_doortop_* rows 6..15 + f_doorlow_* rows 0..15) in drawn.CHARS letters
+# the baked tall door (tiles_extra.py, f_doortop_* rows 2..15 + f_doorlow_* rows 0..15) in drawn.CHARS letters
 DOOR_TOP = ["...KKKKKKKKKK...", "..KEwwwwwwwwEK..", ".KwwwwwwwwwwwwK."]
 PLANK = ".KEwowwoowwowEK."
 DOOR_LOW_TAIL = [".KEwwwwwwwwwwEK.", ".KKKKKKKKKKKKKK.", "KxxxxxxxxxxxxxxK", "KzzzzzzzzzzzzzzK"]
 
 
 def _door_closed() -> list[str]:
-    rows = ["." * 16] * 6 + DOOR_TOP + [PLANK] * 7  # top tile
+    rows = ["." * 16] * 2 + DOOR_TOP + [PLANK] * 11  # top tile (proportions round: 4 px taller)
     rows += [PLANK] * 5 + [".KEwowwoowYowEK."] + [PLANK] * 6 + DOOR_LOW_TAIL  # ground tile
     return rows
 
@@ -51,20 +51,20 @@ def _door_open(names, leaf: int) -> np.ndarray:
     rows = [list(r) for r in _door_closed()]
     if leaf >= 10:
         return grid(names, ["".join(r) for r in rows])
-    # the opening follows the closed leaf's own arch: row 7 x 4..11, rows 8..27 x 3..12. The outline, the jamb
-    # (`E` columns), the arch's wooden shoulders (row 8, x 2 and 13) and the step stay pixel-identical.
+    # the opening follows the closed leaf's own arch: row 3 x 4..11, rows 4..27 x 3..12. The outline, the jamb
+    # (`E` columns), the arch's wooden shoulders (row 4, x 2 and 13) and the step stay pixel-identical.
     def inside(y: int) -> range:
-        return range(4, 12) if y == 7 else range(3, 13)
+        return range(4, 12) if y == 3 else range(3, 13)
 
-    for y in range(7, 28):
+    for y in range(3, 28):
         for x in inside(y):
-            rows[y][x] = "N" if y < 10 else ("P" if y < 26 else "E")
+            rows[y][x] = "N" if y < 6 else ("P" if y < 26 else "E")
     # the leaf: hinged at x 3, planks foreshortened to `leaf` columns, a dark edge where it turns away
     cols = "woowwowwoo"
-    for y in range(8, 28):
+    for y in range(4, 28):
         for i in range(leaf):
             x = 3 + i
-            rows[y][x] = "K" if i == leaf - 1 else ("E" if y == 8 else cols[int(i * 10 / max(1, leaf - 1)) % 10])
+            rows[y][x] = "K" if i == leaf - 1 else ("E" if y == 4 else cols[int(i * 10 / max(1, leaf - 1)) % 10])
     if leaf >= 4:  # the knob, at the leaf's free edge
         rows[21][3 + leaf - 2] = "Y"
     return grid(names, ["".join(r) for r in rows])

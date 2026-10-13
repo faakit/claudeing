@@ -11,7 +11,18 @@
  * The scene supplies a `CoachWorld` (what the world looks like right now) and `CoachFacts` (which sheet is
  * open); `advance` marks steps done and returns the current one, `coachView` says what to show for it.
  */
-import { crops, game, items, jobs as jobDefs, npcs, plots, tools, tutorial } from '../data';
+import {
+  crops,
+  game,
+  items,
+  jobs as jobDefs,
+  mapsData,
+  npcs,
+  plots,
+  projects,
+  tools,
+  tutorial,
+} from '../data';
 import type {
   TutorialCond,
   TutorialData,
@@ -28,7 +39,12 @@ import { gameEvents } from './events';
 import { isMature, tileKey } from './farming';
 import { addStat, currentGoal, stat } from './goals';
 import { absoluteDay } from './time';
+import { baitKinds, fishingResultShown, hasBait } from './fishing';
+import { festivalToday, hasEntered } from './festivals';
+import { countItem } from './inventory';
+import { isTaken, jobReady, PAID_AT_PAYOUT, postedJobs } from './jobs';
 import { isWet } from './weather';
+import { isRevealed, revealOn, startReveal, topicRead } from './reveal';
 import { t, toEnglish, type Key } from '../i18n';
 
 export interface Tile {
@@ -76,6 +92,8 @@ export interface CoachFacts {
   refused?: number;
   /** What the lit Interact button would open now (`mailbox`, `bed`, `npc:mara`...), if anything. */
   interact?: string | null;
+  /** With `panel: 'npc'`: whose sheet it is. */
+  npc?: string | null;
 }
 
 /** After this many refusals in a row, the row tip gives way to the one-tile pointer. */
@@ -109,6 +127,8 @@ const data = (): TutorialData => tutorial;
 export const COACH_LINE_PX = 184;
 /** The labels sheets give their close button (Modal.closeButton), in English: buttons match through `toEnglish`. */
 export const CLOSE_BUTTON = '^(Close|Done|Not now|Leave it)$'; // i18n-ok: a pattern over English labels
+/** The shopkeeper's sheet's Shop button (NpcPanel), in English. */
+export const SHOP_BUTTON = '^Shop$'; // i18n-ok: a pattern over English labels
 /** The welcome strip's text box (two lines at most). */
 export const WELCOME_PX = 158;
 const DIRS: Direction[] = ['up', 'down', 'left', 'right'];
@@ -171,8 +191,11 @@ export function layGift(s: GameState): boolean {
 
 /** Start the guide on a new game (or not, `on` false), laying out the gift unless `gift` is false. */
 export function startTutorial(s: GameState, opts: { on: boolean; gift: boolean }): void {
-  if (opts.on) s.stats['tut.on'] = 1;
-  else s.stats['tut.off'] = 1;
+  if (opts.on) {
+    s.stats['tut.on'] = 1;
+    // a guided game meets its systems over days and weeks (systems/reveal.ts); a bare game sees them all
+    startReveal(s);
+  } else s.stats['tut.off'] = 1;
   if (opts.gift) layGift(s);
   // Day 2 is the letter and the walk to town: a rain morning waters day 1's crops (the sleep sheet says
   // "Tomorrow: Rain. No watering needed."), and daily watering is taught on the first dry morning instead.
@@ -183,11 +206,15 @@ export function startTutorial(s: GameState, opts: { on: boolean; gift: boolean }
 export function skipTutorial(s: GameState): void {
   s.stats['tut.off'] = 1;
   s.stats['tut.on'] = 1;
+  gameEvents.emit('tutorialSkipped', undefined);
 }
 
 /** Skip just this step (offered after a long stall on an optional step). */
 export function skipStep(s: GameState, id: string): void {
+  if (stepDone(s, id)) return;
   s.stats[`tut.${id}`] = 1;
+  const st = tutorialStep(id);
+  if (st) gameEvents.emit('tutorialStep', { id, track: st.track, skipped: true });
 }
 
 /**
@@ -299,6 +326,10 @@ export function hasKind(s: GameState, kind: TutorialKind, world?: CoachWorld): b
       return !autoMode(s);
     case 'placeable':
       return s.inventory.slots.some((st, i) => !!st && i < 8 && items[st.item]?.placeable === true);
+    case 'bait':
+      return hasBait(s);
+    case 'rocks':
+      return Object.values(s.nodes[world?.map ?? 'mine'] ?? {}).some((n) => n === 'rock_node');
   }
 }
 
@@ -324,6 +355,12 @@ export function welcomeJobsToday(s: GameState): boolean {
   const day = absoluteDay(s);
   if (!w || w.factor <= 1 || day < w.from || day > w.to) return false;
   return s.jobs.day === day && s.jobs.list.some((j) => !j.done);
+}
+
+/** A project's goods are short: what the bag holds plus what was already given is under what it asks. */
+export function goodsShort(s: GameState, project: string, item: string): boolean {
+  const need = projects[project]?.items?.find((i) => i.item === item)?.qty ?? 0;
+  return countItem(s, item) + (s.stats[`fund.${project}.${item}`] ?? 0) < need;
 }
 
 function forageInView(s: GameState, world: CoachWorld): boolean {
@@ -352,7 +389,24 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   if (c.minute !== undefined && s.time.minutes < c.minute) return false;
   if (c.job !== undefined) {
     const today = s.jobs.day === absoluteDay(s) ? s.jobs.list : [];
-    if (!today.some((j) => !j.done && j.stat === c.job)) return false;
+    if (!today.some((j) => !j.done && j.stat === c.job && isTaken(s, j))) return false;
+  }
+  if (c.fact === 'jobsPosted' && postedJobs(s).length === 0) return false;
+  if (
+    c.fact === 'jobReady' &&
+    !s.jobs.list.some((j) => jobReady(s, j) && !PAID_AT_PAYOUT.has(j.stat))
+  )
+    return false;
+  if (c.fact === 'baitKinds' && baitKinds(s) < 2) return false;
+  if (c.fact === 'fishResult' && !fishingResultShown()) return false;
+  if (c.fact === 'festivalToday') {
+    const f = festivalToday(s);
+    if (!f || hasEntered(s, f.id)) return false;
+  }
+  if (c.short !== undefined && !goodsShort(s, c.short.project, c.short.item)) return false;
+  if (c.daysSince !== undefined) {
+    const at = s.stats[`tut.at.${c.daysSince.step}.clock`];
+    if (at === undefined || absoluteDay(s) - Math.floor(at / 1440) < c.daysSince.min) return false;
   }
   if (c.npc !== undefined && !world.npcs.some((n) => n.id === c.npc)) return false;
   if (c.goal !== undefined && currentGoal(s)?.id !== c.goal) return false;
@@ -365,6 +419,8 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   if (c.fact === 'forageInView' && !forageInView(s, world)) return false;
   if (c.fact === 'welcomeJobs' && !welcomeJobsToday(s)) return false;
   if (c.wet !== undefined && isWet(s.weather) !== c.wet) return false;
+  if (c.revealed !== undefined && !(revealOn(s) && isRevealed(s, c.revealed))) return false;
+  if (c.read !== undefined && !topicRead(s, c.read)) return false;
   if (c.after !== undefined) {
     const at = s.stats[`tut.at.${step.id}.clock`];
     if (at === undefined || clockNow(s) - at < c.after) return false;
@@ -401,7 +457,12 @@ function markSeen(s: GameState, st: TutorialStep): boolean {
 function finish(s: GameState, st: TutorialStep, out: string[]): void {
   s.stats[`tut.${st.id}`] = 1;
   out.push(st.id);
+  gameEvents.emit('tutorialStep', { id: st.id, track: st.track, skipped: false });
 }
+
+/** The guided steps (the day-1 and day-2 tracks, not the one-off intros) in order: the tutorial funnel. */
+export const guidedStepIds = (steps: readonly TutorialStep[] = data().steps): string[] =>
+  steps.filter((st) => st.track !== 'intro').map((st) => st.id);
 
 /** Mark finished steps done; return the step to show now (null: nothing to coach) and what finished. */
 export function advance(
@@ -428,7 +489,25 @@ export function advance(
       return { current: st, completed };
     }
   }
-  // No track step to show: one-off introductions, the first that applies.
+  // No track step to show: one-off introductions. One already leading the player to another map (shown, not done,
+  // its target on a map) keeps the floor while its moment holds, so an intro on the way (Clay's in town) cannot
+  // hijack the walk to the mine (critic D2-4). Otherwise the first that applies.
+  const leading = steps.filter(
+    (st) =>
+      st.track === 'intro' &&
+      !stepDone(s, st.id) &&
+      s.stats[`tut.seen.${st.id}`] &&
+      (st.target?.map ?? st.target?.else?.map) !== undefined,
+  );
+  for (const st of leading) {
+    const ctx: Ctx = { s, world, facts, step: st };
+    if (st.when && !holds(st.when, ctx)) continue;
+    if ((st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx))) {
+      finish(s, st, completed);
+      continue;
+    }
+    return { current: st, completed };
+  }
   for (const st of steps) {
     if (st.track !== 'intro' || stepDone(s, st.id)) continue;
     // at most one new valley intro a morning: another waits for tomorrow (it is not marked seen meanwhile)
@@ -731,6 +810,11 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
     const i = slotOf(s, (it) => it === 'spade');
     return i === null ? null : { kind: 'slot', slot: i };
   }
+  if (g.ui === 'hoeSlot' || g.ui === 'pickSlot') {
+    const action = g.ui === 'hoeSlot' ? 'till' : 'mine';
+    const i = slotOf(s, (it) => tools[items[it]?.tool ?? '']?.action === action);
+    return i === null ? null : { kind: 'slot', slot: i };
+  }
   if (g.ui === 'placeSlot') {
     const i = slotOf(s, (it) => items[it]?.placeable === true);
     return i === null ? null : { kind: 'slot', slot: i };
@@ -747,9 +831,32 @@ export function resolveTarget(s: GameState, world: CoachWorld, g: TutorialTarget
 }
 
 /** The door from this map toward `map` (direct, else back through the farm, else the town). */
+/** The next map on the shortest walk from `from` to `to` through the maps' doors (`maps.json` links), if any. */
+export function nextMapToward(from: string, to: string): string | null {
+  if (from === to) return null;
+  const prev = new Map<string, string>([[from, from]]);
+  const queue = [from];
+  while (queue.length > 0) {
+    const at = queue.shift()!;
+    for (const next of mapsData.maps[at]?.links ?? []) {
+      if (prev.has(next)) continue;
+      prev.set(next, at);
+      if (next === to) {
+        let hop = next;
+        while (prev.get(hop) !== from) hop = prev.get(hop)!;
+        return hop;
+      }
+      queue.push(next);
+    }
+  }
+  return null;
+}
+
 function doorToward(world: CoachWorld, map: string): CoachObject | null {
   const doors = world.objects.filter((o) => o.type === 'door');
-  for (const to of [map, 'farm', 'town']) {
+  // the door on the way (farm -> town -> woods -> mine), never a door back the way you came (critic D2-1)
+  const hop = nextMapToward(world.map, map);
+  for (const to of hop ? [hop] : [map, 'farm', 'town']) {
     const d = nearest(
       world.tile,
       doors.filter((o) => o.to === to),
@@ -804,10 +911,13 @@ export function coachView(
     const d = doorToward(world, wantMap);
     pointer = d ? { kind: 'tile', tx: d.tx, ty: d.ty } : null;
     away = true;
-    text =
-      world.map === 'house'
-        ? t('tutorial.doorOutside')
-        : t('tutorial.headBack', { map: mapName(wantMap) });
+    // A one-off intro keeps its own line (it says why: "Stone comes from rocks in the mine.") while the pointer
+    // leads to the door; the guided days' steps say where to head.
+    if (st.track !== 'intro')
+      text =
+        world.map === 'house'
+          ? t('tutorial.doorOutside')
+          : t('tutorial.headBack', { map: mapName(wantMap) });
   } else if (target) {
     pointer = resolveTarget(s, world, target);
     // The line follows the pointer: with Action not ready, the "else" line says where to go first.
@@ -831,6 +941,15 @@ export function coachView(
   ) {
     pointer = { kind: 'ui', id: 'interact', tile: { tx: pointer.tx, ty: pointer.ty } };
     text = t(target?.npc ? 'tutorial.litTalk' : 'tutorial.litOpen');
+  }
+  // The step points at a villager whose own sheet is open: the way on is inside it, never Close. A shopkeeper's
+  // sheet leads on through its Shop button (owner bug: "when you tap Mara it shows to tap on Close").
+  const sheetNpc =
+    target?.npc && facts.panel === 'npc' && facts.npc === target.npc ? target.npc : null;
+  if (sheetNpc && npcs[sheetNpc]?.role === 'shop') {
+    pointer = { kind: 'button', pattern: SHOP_BUTTON };
+    text = t('tutorial.tapShop');
+    away = false;
   }
   // A sheet is open but the step wants the world: say how to get back to it.
   if (
@@ -889,6 +1008,7 @@ export function allLines(steps: readonly TutorialStep[] = data().steps): string[
     t('tutorial.litOpen'),
     t('tutorial.litTalk'),
     t('tutorial.closeToCarryOn'),
+    t('tutorial.tapShop'),
     t('tutorial.doorOutside'),
     ...['farm', 'town', 'woods', 'mine'].map((m) => t('tutorial.headBack', { map: mapName(m) })),
   );

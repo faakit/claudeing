@@ -132,7 +132,11 @@ export class FakeAudioContext {
     return n;
   }
   createBiquadFilter() {
-    const n = new FakeNode(this, 'filter') as FakeNode & { type: string; frequency: FakeParam; Q: FakeParam };
+    const n = new FakeNode(this, 'filter') as FakeNode & {
+      type: string;
+      frequency: FakeParam;
+      Q: FakeParam;
+    };
     n.type = 'lowpass';
     n.frequency = new FakeParam(1000);
     n.Q = new FakeParam(1);

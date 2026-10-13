@@ -129,10 +129,11 @@ describe('shop rows', () => {
       setLocale(locale);
       let w = 0;
       for (const [id, label, width] of shopTabs()) {
-        expect(measureText(label), `${locale} ${id}`).toBeLessThanOrEqual(width - 6);
-        w += width + 2;
+        // 2 px clear inside each 3 px frame (critic U-2)
+        expect(measureText(label), `${locale} ${id}`).toBeLessThanOrEqual(width - 10);
+        w += width + 1;
       }
-      expect(w - 2, locale).toBeLessThanOrEqual(184);
+      expect(w - 1, locale).toBeLessThanOrEqual(190);
     }
     setLocale('en');
   });

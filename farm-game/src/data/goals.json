@@ -92,11 +92,16 @@
   },
   {
     "id": "job1",
-    "text": "Finish a job a villager posts",
+    "text": "Do a job from the town board",
     "stat": "jobsDone",
     "target": 1,
     "reward": 60,
-    "hint": "Morning news lists today's jobs. Menu > Goal shows them too."
+    "hint": "Take a job at the board in town, do it, then turn it in there.",
+    "where": {
+      "town": [14, 12],
+      "farm": [14, 42],
+      "house": [5, 8]
+    }
   },
   {
     "id": "harvest",
@@ -210,7 +215,7 @@
   },
   {
     "id": "earn1k",
-    "text": "Earn 1,000g in all",
+    "text": "Earn 1,000¤ in all",
     "stat": "earned",
     "target": 1000,
     "reward": 100,
@@ -234,7 +239,7 @@
   },
   {
     "id": "earn5k",
-    "text": "Earn 5,000g in all",
+    "text": "Earn 5,000¤ in all",
     "stat": "earned",
     "target": 5000,
     "reward": 250,
@@ -293,7 +298,7 @@
     "stat": "jobsDone",
     "target": 20,
     "reward": 600,
-    "hint": "Three new jobs every morning. Menu > Goal shows today's."
+    "hint": "Three new jobs on the town board every morning."
   },
   {
     "id": "orders10",
@@ -383,7 +388,7 @@
   },
   {
     "id": "earn20k",
-    "text": "Earn 20,000g: Harvest Legend",
+    "text": "Earn 20,000¤: Harvest Legend",
     "stat": "earned",
     "target": 20000,
     "reward": 1000,
@@ -399,7 +404,7 @@
   },
   {
     "id": "earn50k",
-    "text": "Earn 50,000g: Master Farmer",
+    "text": "Earn 50,000¤: Master Farmer",
     "stat": "earned",
     "target": 50000,
     "reward": 2500,
@@ -407,7 +412,7 @@
   },
   {
     "id": "earn100k",
-    "text": "Earn 100,000g: Tiny Tycoon",
+    "text": "Earn 100,000¤: Tiny Tycoon",
     "stat": "earned",
     "target": 100000,
     "reward": 5000,

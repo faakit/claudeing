@@ -15,7 +15,9 @@ export function buildAlmanac(c: MenuTabContext): void {
   const s = getState();
   let y = c.top;
   const all = Object.entries(collections);
-  const screens = Math.max(1, Math.ceil(all.length / BOOK_PER_SCREEN));
+  // as many pages as fit above the paging row (the Book's Guide/Goods toggle takes the top since the QA round)
+  const per = Math.max(1, Math.min(BOOK_PER_SCREEN, Math.floor((c.bottom - 24 - c.top) / 38)));
+  const screens = Math.max(1, Math.ceil(all.length / per));
   screen = Math.min(screen, screens - 1);
   if (screens > 1) {
     const by = c.bottom - 22;
@@ -29,7 +31,7 @@ export function buildAlmanac(c: MenuTabContext): void {
       c.rebuild();
     });
   }
-  for (const [id, page] of all.slice(screen * BOOK_PER_SCREEN, (screen + 1) * BOOK_PER_SCREEN)) {
+  for (const [id, page] of all.slice(screen * per, (screen + 1) * per)) {
     const { have, total } = pageProgress(s, id);
     const done = pageDone(s, id);
     c.label(8, y, page.name.toUpperCase(), done ? C.green : C.gold);

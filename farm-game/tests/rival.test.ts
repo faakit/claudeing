@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { festivals, game, npcs } from '../src/data';
 import { enterBasket } from '../src/systems/festivals';
-import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { pointsForHearts } from '../src/systems/friendship';
 import { addItem } from '../src/systems/inventory';
 import { deliverOrder, ensureOrders, generateOrders } from '../src/systems/orders';
 import {
@@ -32,7 +32,7 @@ function boardDay(): GameState {
   return s;
 }
 const hearts = (s: GameState, n: number) =>
-  (s.friends[game.rival.npc] = { points: n * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 });
+  (s.friends[game.rival.npc] = { points: pointsForHearts(n), talkedDay: 0, giftedDay: 0 });
 
 describe('the rival farmer', () => {
   it('stays away during the first week', () => {

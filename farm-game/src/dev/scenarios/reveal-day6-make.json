@@ -1,0 +1,62 @@
+{
+  "title": "Reveal schedule: day 6 brings Make",
+  "about": "QA round. A guided game on day 6 at 06:30 at home, 8 fiber in the bag. The coach: \"New: Make. Tap Menu.\", \"Tap Make: fiber into things.\". Orin's letter brings 10 fiber. The Guide's \"Making things\" page says where fiber comes from.",
+  "tags": ["house", "reveal", "crafting", "qa"],
+  "at": {
+    "map": "house",
+    "tx": 3,
+    "ty": 3,
+    "facing": "down"
+  },
+  "time": {
+    "day": 6,
+    "clock": "06:30"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "items": [
+    {
+      "item": "fiber",
+      "qty": 8
+    }
+  ],
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.welcomeJobs": 1,
+    "tut.jobBoard": 1,
+    "tut.board": 1,
+    "reveal.guide": 3,
+    "reveal.friends": 4,
+    "reveal.skills": 5,
+    "reveal.crafting": 6,
+    "guide.read.gold": 1,
+    "guide.read.crops": 1,
+    "guide.read.skills": 1,
+    "tut.guideGold": 1,
+    "tut.guideCrops": 1,
+    "tut.skillsNew": 1,
+    "tut.skillsGuide": 1
+  },
+  "letters": ["reveal_crafting"],
+  "goal": "harvest",
+  "version": 18
+}

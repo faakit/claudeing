@@ -95,14 +95,14 @@ describe('critique 9 F1: the season score against Clay', () => {
 
   it('the stakes are said before anyone wins: the intro letter and the losing letter name the prize', () => {
     const intro = mail.letters.find((l) => l.id === 'clay_intro')!;
-    expect(intro.text).toContain(`${BOARD_PRIZE}g`);
+    expect(intro.text).toContain(`${BOARD_PRIZE}¤`); // a data letter, written by hand (¤ draws the coin)
     expect(intro.text).toMatch(/trophy/);
     const s = newState();
     s.stats['board.s0.rival'] = 4;
     s.time.season = 'summer';
     s.time.day = 1;
     settleSeason(s);
-    expect(s.mail.list.at(-1)?.text).toContain(`${BOARD_PRIZE}g`);
+    expect(s.mail.list.at(-1)?.text).toContain(`${BOARD_PRIZE}¤`);
     expect(measureText(s.mail.list.at(-1)!.text)).toBeLessThanOrEqual(184 * 8);
   });
 

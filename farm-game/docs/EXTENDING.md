@@ -56,7 +56,7 @@ and the equipped item and answers with a plan (`{ plan: { kind, tx, ty, run } }`
 (`{ refusal: 'text' }`) or `null` ("not mine"). Planning changes nothing; `run` does the work. The first handler
 (highest priority first) with an answer wins.
 
-Priorities in use: harvest 100, forage 95, seed / fertilize / place 50, tool 40. One-thumb targeting asks every
+Priorities in use: harvest 100, forage 95, seed / fertilize / place 50, eat 45, bait 42 (a bait in hand casts), tool 40. One-thumb targeting asks every
 nearby tile and acts where the **highest priority** plan exists, so picking things up beats planting beats
 tilling without the player aiming.
 
@@ -159,6 +159,16 @@ reading a new perk anywhere works the same no matter where it comes from. Town p
 A job is a row in `jobs.json`: who asks (`giver`), the lifetime `stat` it counts, a `qty` range, gold
 (`base + perUnit x n`), a `weight`, and optionally `introDay` (always posted that day) and `requires`
 (a stat that must be reached first). Any stat that `addStat` increments works, so a new job is data only.
+Jobs are posted on the town board's Jobs page: one counts from when it is taken there (`takeJob`), a finished one is
+turned in there (`turnInJob`), and one never turned in is paid by post at night (`systems/jobs.ts`).
+
+### Bait
+
+A bait is an item of type `bait` with a `bait` block in `items.json`: `code` (a stable number, never reused; the
+remembered bait is the stat `bait.pick`), `wait` (bite-wait multiplier), `rare` (harder fish weigh
+`1 + rare x difficulty x 3` times more), `legend` (a legend's weight multiplier), `quality` (added to the catch's roll)
+and `reel` (catch-bar width). Sell it in `shops.json`, make it in `recipes.json`: no code. Every cast needs one
+(`currentBait` in `systems/fishing.ts`).
 Code that should react to stat changes registers `registerStatWatcher(id, fn)` (see `mechanics/jobs.ts`).
 
 ### Letters
@@ -283,21 +293,28 @@ one target, and a one-word tag on a HUD element. It is data: `src/data/tutorial.
   `when` stopped holding is finished) and `optional` (its line offers Next after a long stall).
 - **Conditions** read the state and what the screen shows: `stat`/`fresh` with `min`/`max` (counted from the
   guide's start or the step's first showing), `map`, `day`, `panel`, `tab`, `selected`, `has`, `none`/`some`
-  (ripe, dry, crops, wetCrop, emptySoil, seeds, shippable, forage, unread, readLetter, placeable), `energyBelow`,
-  `minute`, `job`, `npc`, `goal`, `fact` (npcNew, forageInView), `touched` (screen touches since it showed),
+  (ripe, dry, crops, wetCrop, emptySoil, seeds, shippable, forage, unread, readLetter, placeable, bait,
+  rocks), `energyBelow`,
+  `minute`, `job` (a taken job counts it), `npc`, `goal`, `fact` (npcNew, forageInView, welcomeJobs, jobsPosted,
+  jobReady, baitKinds, fishResult, festivalToday), `short` (a project's goods are short:
+  `{ "project": "place_spring", "item": "stone" }`), `daysSince` (mornings since another step first showed:
+  `{ "step": "stone", "min": 1 }`), `touched` (screen touches since it showed),
   `after` (game minutes since it first showed), `wet` (rain or storm today), and `any`/`all`/`not`.
 - **Targets:** `find` (nearest ripe, dry, emptySoil, workable, forage, node, npcNew; `stand` points at a free
   tile beside it), `npc`, `object` (bin, bed, mailbox, board, shop), `door` (the door to a map), `ui` (action,
-  menu, interact, seedSlot, placeSlot), `gesture` (paint, ring; a paint tip is an unbroken row straight ahead of
+  menu, interact, seedSlot, canSlot, placeSlot, spadeSlot, hoeSlot, pickSlot), `gesture` (paint, ring; a paint tip is an unbroken row straight ahead of
   the farmer, and `work` limits its kinds, e.g. `["water"]` while watering), `button` (a regular expression for a button in
   the open sheet; `a||b` lists them by priority), `hud`, and `action` + `else` (Action when it would do one of
-  these kinds right now, else the `else` target). A target with a `map` the player is not on points at the door
-  that leads there; with a sheet open and a world target, the coach points at the sheet's close button. An
+  these kinds right now, else the `else` target). A target with a `map` the player is not on points at the next door on
+  the shortest walk there (each map's `links` in `maps.json`, which a test checks against the map files); with a sheet open and a world target, the coach points at the sheet's close button. An
   off-screen target's arrow sits on the walk to it (the scene's `route`), so tapping the arrow walks the way.
 - **`day2Weather`** (top level): a guided new game's second morning (`rain`: day 2 is the letter and the town,
   not a watering chore; daily watering is the `waterDaily` intro on the first dry morning).
 - **A new feature's introduction** is one `intro` step: a `when` for the moment it matters, a target, a `done`
-  for the action it teaches, and `leave: true`. No code.
+  for the action it teaches, and `leave: true`. No code. An intro whose target is on another map keeps its own line
+  while the pointer leads to the door. A place or project that asks for goods is preceded by an intro that says where
+  they come from (the `stone` intro and `short`), and the good's `source` (an item text field) shows on the fund sheet
+  while it is short.
 - **State:** progress is stats only (`tut.<id>`, `tut.on`, `tut.off`, `tut.seen.<id>`, `tut.at.<id>.<stat>`,
   `tut.base.<stat>`, `tut.gift`). `?tutorial=0` in the URL starts a bare new game (automated checks use it).
 
@@ -397,6 +414,42 @@ every sheet is built from the dictionaries when it opens. Scenarios: `lang-pt-ti
    abbreviations to `SHORTER` there.
 4. Give it a glossary, a `lang-es-*` scenario per area and an e2e block like `lang` in `scripts/e2e-scenarios.mjs`.
 
+## 13. The reveal schedule and the Guide
+
+A guided new game meets its systems over days and weeks, not all on day 1 (QA round). The rules are
+`systems/reveal.ts`, the schedule is `src/data/reveal.json`, and the Guide's pages are `src/data/guide.json`
+(translations in `src/i18n/data/pt-BR/reveal.json` and `guide.json`).
+
+| Day         | Feature                                             | What arrives                                                              | How it is introduced                                                                                   |
+| ----------- | --------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 1-2         | the guided start                                    | farming, the bin, energy, the clock, town, Mara's shop, villagers, mail   | the guided steps (unchanged; nothing new may show)                                                     |
+| 3           | `guide`                                             | the **Book** tab, Guide pages Gold, The planting cycle, Jobs and requests | morning note, Rosa's letter, coach: Menu > Book > Gold; next morning: Menu > Book > The planting cycle |
+| 4           | `friends`                                           | Guide page Friends and hearts                                             | morning note, Mara's letter                                                                            |
+| 5           | `skills` (or any skill at level 3)                  | the **Skill** tab, Guide page Skills                                      | morning note, Orin's letter, coach: Menu > Skill, then Menu > Book > Skills                            |
+| 6           | `crafting` (or the craft goal, or anything crafted) | the **Make** tab, Guide page Making things                                | morning note, Orin's letter (10 fiber), coach: Menu > Make                                             |
+| 7           | `fishing` (or the fish goal, or a catch)            | Guide page Fishing and bait                                               | morning note, Finn's letter (5 worms)                                                                  |
+| 9           | `mine` (or a rock broken)                           | Guide page The mine                                                       | morning note, Orin's letter                                                                            |
+| 10          | `machines` (or the place goal, or anything placed)  | Guide page Sprinklers and jars                                            | morning note, Rosa's letter                                                                            |
+| 14          | `animals` (or the chicken goal, or an animal)       | Guide page Animals                                                        | morning note, Mara's letter                                                                            |
+| 21          | `cooking` (or the kitchen bought)                   | Guide page Cooking                                                        | morning note, Mara's letter                                                                            |
+| first green | `valley`                                            | Guide page Mending the valley                                             | morning note (the first-green letter is Rosa's already)                                                |
+
+Rules:
+
+- **Only the introduction is scheduled.** A feature arrives early the moment play needs it (its goal, or the thing
+  already used), so nothing is ever locked away. Gameplay itself is never gated: only menu tabs (`tabs`), Guide pages,
+  notes, letters and intros.
+- **Days 1 and 2 never change** (the onboarding gate): no feature may have a day under 3 (validated), and nothing is
+  marked or announced before day 3.
+- **Who follows it:** a save with the stat `reveal.on`, set when the guided start begins. Saves from before the QA
+  round, bare `?tutorial=0` games and sandbox scenarios (unless `"reveal": "schedule"`, or `tutorial` `on`/`day2`)
+  see everything at once and get no reveal letters or intros.
+- **State:** stats only: `reveal.<id>` (the day it was introduced), `guide.read.<topic>`.
+- **Add a system:** a feature in `reveal.json` (a day of its own, `early` ways in, a one-line `note`), a page in
+  `guide.json` (`reveal`: its feature; short paragraphs, the Book pages them), a letter in `mail.json`
+  (`when: {stat: "reveal.<id>"}`), and, if it needs a coach mark, an `intro` step with `{"revealed": "<id>"}` and a
+  done condition the player meets by looking (`{"read": "<topic>"}` or `{"tab": "<tab>"}`).
+
 ## Checklist for a new mechanic
 
 - [ ] The scenario(s) that stage it, in `src/dev/scenarios/` (lab or real map), cited in the commit and the critique
@@ -408,5 +461,6 @@ every sheet is built from the dictionaries when it opens. Scenarios: `lang-pt-ti
 - [ ] Every new player-visible string in both dictionaries, and new data text in `src/i18n/data/pt-BR/` (section 12)
 - [ ] A goal in `goals.json` that introduces it
 - [ ] An `intro` step in `tutorial.json` if it needs showing the first time
+- [ ] Its place in the reveal schedule and a Guide page (section 13)
 - [ ] e2e checks on those scenarios with the await helpers (`scripts/lib/farm.mjs`), no fixed waits
 - [ ] `npm run verify`

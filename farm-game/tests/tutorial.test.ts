@@ -3,6 +3,7 @@ import { goals, tutorial, validateTutorial, type TutorialData } from '../src/dat
 import { GOALS_V16, migrate } from '../src/systems/save';
 import {
   CLOSE_BUTTON,
+  SHOP_BUTTON,
   COACH_LINE_PX,
   WELCOME_PX,
   advance,
@@ -311,7 +312,8 @@ describe('guided start: the step machine', () => {
     // nothing dry and no letter: those two pass at once, the Menu is next
     expect(step(s)).toBe('menu');
     expect(stepDone(s, 'water2') && stepDone(s, 'mail')).toBe(true);
-    expect(step(s, world(s), { panel: 'menu', tab: 'bag' })).toBe('jobs');
+    // then the walk to town (the day's jobs are on the town board now: no Goal-tab step; bait round)
+    expect(step(s, world(s), { panel: 'menu', tab: 'bag' })).toBe('town');
   });
 
   it('the first guided morning keeps one note: the letter', () => {
@@ -875,7 +877,7 @@ describe('guided start: review 6', () => {
 });
 
 describe('guided start: depth round 4 introductions', () => {
-  it('on the settling-in days an open job gets one line: Menu, then Goal', async () => {
+  it('on the settling-in days an open job gets one line: the town board, then Take', async () => {
     const { game } = await import('../src/data');
     const g = game as { welcomeJobs?: { from: number; to: number; factor: number } };
     const before = g.welcomeJobs;
@@ -892,10 +894,15 @@ describe('guided start: depth round 4 introductions', () => {
       const house = world(s, { map: 'house', objects: [] });
       expect(step(s, house)).toBe('welcomeJobs');
       const cur = tutorial.steps.find((x) => x.id === 'welcomeJobs')!;
-      expect(coachView(s, house, NO_SHEET, cur).pointer).toEqual({ kind: 'ui', id: 'menu' });
-      const menu: CoachFacts = { panel: 'menu', tab: 'bag' };
-      expect(coachView(s, house, menu, cur).pointer).toEqual({ kind: 'button', pattern: '^Goal$' });
-      step(s, house, { panel: 'menu', tab: 'goals' });
+      // in the house it heads for town (the board is there)
+      expect(coachView(s, house, NO_SHEET, cur).away).toBe(true);
+      const town = world(s, {
+        map: 'town',
+        objects: [{ type: 'board', tx: 14, ty: 11, w: 1, h: 1 }],
+      });
+      const board: CoachFacts = { panel: 'board', tab: null };
+      expect(coachView(s, town, board, cur).pointer).toEqual({ kind: 'button', pattern: '^Take$' });
+      step(s, town, board);
       expect(stepDone(s, 'welcomeJobs')).toBe(true);
       // without settling-in days in the data, it never shows
       g.welcomeJobs = undefined;
@@ -972,5 +979,60 @@ describe('guided start: review 7', () => {
     expect(step(s, town, shop)).toBe('shop');
     s.goalIndex += 1;
     expect(step(s, town, shop)).not.toBe('shop');
+  });
+});
+
+describe('guided start: buy 5 items (owner bug: "when you tap Mara it shows to tap on Close")', () => {
+  function atBuy(): { s: GameState; town: CoachWorld } {
+    const s = freshGuided();
+    for (const st of tutorial.steps) {
+      if (st.id === 'buySeeds') break;
+      s.stats[`tut.${st.id}`] = 1;
+    }
+    s.goalIndex = goals.findIndex((g) => g.id === 'buy');
+    const town = world(s, {
+      map: 'town',
+      tile: { tx: 6, ty: 12 },
+      objects: [{ type: 'shop', tx: 5, ty: 9, w: 2, h: 1 }],
+      npcs: [{ id: 'mara', tx: 6, ty: 10 }],
+    });
+    return { s, town };
+  }
+
+  it("Mara's own sheet points at its Shop button, never Close", () => {
+    const { s, town } = atBuy();
+    const cur = advance(s, town, NO_SHEET).current!;
+    expect(cur.id).toBe('buySeeds');
+    expect(coachView(s, town, NO_SHEET, cur).pointer?.kind).not.toBe('button');
+    const sheet: CoachFacts = { panel: 'npc', tab: null, npc: 'mara' };
+    expect(advance(s, town, sheet).current?.id).toBe('buySeeds');
+    const v = coachView(s, town, sheet, cur);
+    expect(v.pointer).toEqual({ kind: 'button', pattern: SHOP_BUTTON });
+    expect(v.pointer).not.toEqual({ kind: 'button', pattern: CLOSE_BUTTON });
+    // another villager's sheet still leads out of it
+    const other = coachView(s, town, { panel: 'npc', tab: null, npc: 'clay' }, cur);
+    expect(other.pointer).toEqual({ kind: 'button', pattern: CLOSE_BUTTON });
+  });
+
+  it('the shop points at a price; closed before 5 are bought, the coach leads back to Mara', () => {
+    const { s, town } = atBuy();
+    const shop: CoachFacts = { panel: 'shop', tab: null };
+    const inShop = advance(s, town, shop).current!;
+    expect(inShop.id).toBe('buySeeds');
+    expect(coachView(s, town, shop, inShop).pointer).toEqual({
+      kind: 'button',
+      pattern: '^[0-9,]+g$',
+    });
+    addStat(s, 'bought', 2);
+    const back = advance(s, town, NO_SHEET).current!;
+    expect(back.id).toBe('buySeeds');
+    expect(coachView(s, town, NO_SHEET, back).pointer?.kind).not.toBe('button');
+    addStat(s, 'bought', 3);
+    checkTips(s);
+    s.goalIndex = goals.findIndex((g) => g.id === 'buy') + 1;
+    advance(s, town, shop);
+    advance(s, town, NO_SHEET);
+    expect(stepDone(s, 'buySeeds')).toBe(true);
+    expect(stepDone(s, 'shop')).toBe(true);
   });
 });

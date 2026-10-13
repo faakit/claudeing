@@ -7,9 +7,8 @@ import { gameEvents } from '../../systems/events';
 import { toast } from '../../systems/events';
 import { C } from '../theme';
 import { Modal } from '../widgets';
-import { fmt } from './format';
 import { cartBought, cartIntro, cartSub } from './cartText';
-import { t } from '../../i18n';
+import { fmtGold, t } from '../../i18n';
 
 /** The traveling cart's sheet: a few rows, one Buy button each, low on the screen. */
 export class CartPanel extends Modal {
@@ -21,7 +20,7 @@ export class CartPanel extends Modal {
     const s = getState();
     this.panel();
     this.label(8, 8, t('cart.title'), C.gold);
-    this.label(192, 8, t('bag.gold', { gold: fmt(s.money) }), C.gold, 1, 'right');
+    this.label(192, 8, fmtGold(s.money), C.gold, 1, 'right');
     this.label(8, 20, cartIntro(), C.creamDim);
     let y = 34;
     const stock = cartStock(s);

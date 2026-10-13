@@ -3,7 +3,8 @@ import { GAME_HEIGHT, GAME_WIDTH, HUD_H } from '../config';
 import { audio } from '../platform/audio';
 import { hitSize } from './hit';
 import { runtime } from '../state/runtime';
-import { fitRow, Label } from './font';
+import { Label } from './font';
+import { FACE, fitText, measureText, shorten, wrapText } from './fontMetrics';
 import { rowLayout } from './layout';
 import { getState } from '../state/store';
 import { C, CH, SKIN, SEAM } from './theme';
@@ -63,8 +64,18 @@ export function drawSlot(
   selected: boolean,
   marked = false,
   kind: 'content' | 'chrome' = 'content',
+  /** A wide slot (the hotbar's cells): its width, `size` being its height. */
+  width = size,
 ): void {
   const t = kind === 'chrome' ? CH : C;
+  if (width !== size) {
+    g.fillStyle(t.ink, 1).fillRect(x, y, width, size);
+    g.fillStyle(selected ? t.select : t.slotRim, 1).fillRect(x + 1, y + 1, width - 2, size - 2);
+    g.fillStyle(t.slot, 1).fillRect(x + 2, y + 2, width - 4, size - 4);
+    g.fillStyle(t.slotRim, 1).fillRect(x + 2, y + 2, width - 4, 2);
+    if (selected) drawSelection(g, x, y, size, t.select, t.ink, width);
+    return;
+  }
   g.fillStyle(t.ink, 1).fillRect(x, y, size, size);
   if (SKIN === 'plum') {
     g.fillStyle(
@@ -94,17 +105,19 @@ export function drawSelection(
   size: number,
   gold: number = C.select,
   ink: number = C.ink,
+  width = size,
 ): void {
+  const w = width;
   g.fillStyle(gold, 1)
-    .fillRect(x + 1, y + 1, size - 2, 1)
+    .fillRect(x + 1, y + 1, w - 2, 1)
     .fillRect(x + 1, y + 1, 1, size - 2)
-    .fillRect(x + size - 2, y + 1, 1, size - 2)
-    .fillRect(x + 1, y + size - 3, size - 2, 2);
+    .fillRect(x + w - 2, y + 1, 1, size - 2)
+    .fillRect(x + 1, y + size - 3, w - 2, 2);
   for (const [cx, cy, dx, dy] of [
     [x + 2, y + 2, 1, 1],
-    [x + size - 3, y + 2, -1, 1],
+    [x + w - 3, y + 2, -1, 1],
     [x + 2, y + size - 4, 1, -1],
-    [x + size - 3, y + size - 4, -1, -1],
+    [x + w - 3, y + size - 4, -1, -1],
   ] as const)
     g.fillStyle(ink, 1)
       .fillRect(cx, cy, 1, 1)
@@ -202,7 +215,7 @@ export class Button extends Phaser.GameObjects.Container {
       scale: style.scale ?? 1,
       ...(dark ? { shadow: null } : {}),
     });
-    this.label.setY(Math.round((bh - 7 * (style.scale ?? 1)) / 2));
+    this.label.setY(Math.round((bh - this.label.cap) / 2));
     // Grow the touch area to >= 44 CSS px, overlapping the visual edge but never by more than 4px
     // a side so neighbouring rows stay distinguishable.
     const padX = Math.min(4, Math.max(3, (hitSize(scene, bw) - bw) / 2));
@@ -252,7 +265,7 @@ export class Button extends Phaser.GameObjects.Container {
       this.lip.fillStyle(C.ink, 1).fillRect(1, h - 1, w - 2, 1);
     }
     drawPanel(this.bg, 0, dy, w, h - lip, this.down ? C.ink : fill, rim);
-    this.label.setY(Math.round((h - lip - 7 * (style.scale ?? 1)) / 2) + dy);
+    this.label.setY(Math.round((h - lip - this.label.cap) / 2) + dy);
     this.label.setAlpha(this.enabled ? 1 : 0.5);
     if (SKIN !== 'plum') {
       // walnut (critic R1-4): an enabled button always reads in full ink (or the colour asked for, never the
@@ -261,15 +274,23 @@ export class Button extends Phaser.GameObjects.Container {
       const dim = asked === C.creamDim || asked === C.warn; // Close used the warn tone: it read as disabled
       this.label.setColor(this.enabled ? (dim ? C.cream : asked) : C.creamDim);
       this.label.setAlpha(1);
-      if (!this.enabled && !this.down)
+      if (!this.enabled && !this.down) {
         // hatch only a band inside the frame, so the glyphs stay clean: solid 2 px blocks on a diagonal (no
-        // semi-alpha, no 1 px checker that a fractional display scale breaks up)
+        // semi-alpha, no 1 px checker that a fractional display scale breaks up), and never under the label
+        // with a 2 px margin (the band ran through "Fazer" on a narrow button and hid it)
+        const tw = this.label.textWidth;
+        const tx0 = Math.floor(w / 2 - tw / 2) - 2;
+        const tx1 = Math.ceil(w / 2 + tw / 2) + 2;
+        const ty0 = this.label.y - 2;
+        const ty1 = this.label.y + this.label.cap + 4;
         for (let yy = 3; yy < h - lip - 4; yy += 2)
           for (let xx = 3; xx < w - 4; xx += 2) {
             const band = xx < 7 || xx >= w - 7 || yy < 7 || yy >= h - lip - 7;
-            if (band && ((xx >> 1) + (yy >> 1)) % 3 === 0)
+            const onText = xx + 2 > tx0 && xx < tx1 && yy + 2 > ty0 && yy < ty1;
+            if (band && !onText && ((xx >> 1) + (yy >> 1)) % 3 === 0)
               this.bg.fillStyle(C.slotRim, 1).fillRect(xx, yy, 2, 2);
           }
+      }
     }
   }
 
@@ -310,6 +331,13 @@ export interface RowSpec {
   title: string;
   sub?: string;
   subColor?: number;
+  /** A count on the icon's corner in the small face (the shop's "own 10", critic U-4), when above 0. */
+  count?: number;
+  /**
+   * A tap on the row itself (anywhere off its buttons): the shop opens an item's card. The row's buttons sit above
+   * its zone, so they keep their own taps.
+   */
+  onTap?: () => void;
   /** Right-aligned buttons, laid out right to left. */
   buttons?: {
     label: string;
@@ -320,7 +348,35 @@ export interface RowSpec {
   }[];
 }
 
-export const ROW_H = 26;
+/** A list row: a 22 px button beside a title and a line in the body face (13 px lines). */
+export const ROW_H = 28;
+
+/** A button just wide enough for its label with 2 px clear inside its 3 px frame on each side (critic U-1). */
+export const fitButtonW = (label: string, w: number): number =>
+  Math.max(w, measureText(label) + 11);
+/** The body face's line height: a wrapped title or line grows its row by this. */
+export const LINE_H = FACE.body.line;
+
+/**
+ * A list row's text, in lines: a title or line too long for its column even abbreviated wraps to a second line
+ * (a ".." cut lost the words: "Caminho de ped.."), and the row grows by 11 px a line. Pure, so a paged list can
+ * pack its pages by height.
+ */
+export function rowText(
+  spec: Pick<RowSpec, 'title' | 'sub' | 'buttons'>,
+  leftHanded: boolean,
+  panelW: number = GAME_WIDTH,
+): { title: string[]; sub: string[]; extra: number } {
+  const widths = (spec.buttons ?? []).map((b) => fitButtonW(b.label, b.width ?? 44));
+  const max = rowLayout(panelW, widths, leftHanded).maxText;
+  const lines = (text: string): string[] => {
+    const w = wrapText(shorten(text, max), max);
+    return w.length <= 2 ? w : [w[0]!, fitText(w.slice(1).join(' '), max)];
+  };
+  const title = lines(spec.title);
+  const sub = spec.sub ? lines(spec.sub) : [];
+  return { title, sub, extra: (title.length - 1 + Math.max(0, sub.length - 1)) * LINE_H };
+}
 
 /**
  * A bottom sheet: full-width dialog anchored to the bottom of the screen, where the thumb is.
@@ -334,8 +390,13 @@ export abstract class Modal {
   private readonly dim: Phaser.GameObjects.Rectangle;
   private opened = false;
   private dimPressed = false;
-  /** Tapping outside the sheet closes it. Flows that must be acknowledged turn this off. */
-  protected dismissOnDim = true;
+  /**
+   * Tapping outside the sheet closes it: off for every sheet (owner: "when I click in the menu it closes the menu.
+   * It should only close with the Close button"). A tap on a sheet's padding, a gap between rows or a header fell
+   * through to the dim behind the sheet and closed it. Only Close (and Android back) close a sheet now; the dim
+   * still takes the touch, so nothing behind a sheet reacts to it.
+   */
+  protected dismissOnDim = false;
   onClosed: (() => void) | null = null;
 
   protected constructor(
@@ -343,6 +404,7 @@ export abstract class Modal {
     panelH: number,
   ) {
     this.panelH = Math.min(panelH, GAME_HEIGHT - HUD_H);
+    this.baseH = this.panelH;
     this.dim = scene.add
       .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, C.ink, 0.6)
       .setOrigin(0)
@@ -370,14 +432,58 @@ export abstract class Modal {
 
   protected rebuild(): void {
     this.content.removeAll(true);
+    this.wantHeight = 0;
+    this.rowGrowth = 0;
+    this.grownTo = 0;
     this.build();
+    if (this.rowGrowth > 0)
+      this.wantHeight = Math.max(this.wantHeight, this.panelH + this.rowGrowth);
+    // A flowing sheet whose text wrapped longer than its height (Portuguese runs about 25% longer) grows once to
+    // fit, up to its cap, rather than let lines run under its buttons (owner: "many of the texts are getting
+    // hidden").
+    if (this.wantHeight > this.panelH && this.panelH < this.maxHeight) {
+      this.panelH = Math.min(this.maxHeight, this.wantHeight);
+      // a sheet that sizes itself in build() (setHeight) keeps the growth on its second pass
+      this.grownTo = this.panelH;
+      this.content.removeAll(true);
+      this.wantHeight = 0;
+      this.rowGrowth = 0;
+      this.build();
+    }
     if (this.opened) this.root.y = GAME_HEIGHT - this.panelH;
+  }
+
+  /** The height this sheet was made with; each opening starts from it (a grown sheet shrinks back). */
+  private readonly baseH: number;
+  /** Set during build() by a flowing sheet: the height its content needs (rebuild grows the sheet to it). */
+  protected wantHeight = 0;
+  /** Px the rows of this build grew by (titles or lines wrapped to two lines). */
+  private rowGrowth = 0;
+
+  /**
+   * A paragraph in the flow: a label at (x, y), wrapped to `maxWidth`, returning the y under it (plus `gap`), so
+   * the next line starts below however many lines this one wrapped to. Nothing in a flow sits at a fixed y.
+   */
+  protected para(
+    x: number,
+    y: number,
+    text: string,
+    color: number = C.cream,
+    maxWidth = this.panelW - 16,
+    gap = 3,
+    align: 'left' | 'center' | 'right' = 'left',
+  ): number {
+    const l = this.label(x, y, text, color, 1, align, maxWidth);
+    return y + Math.ceil(l.textHeight) + gap;
   }
 
   /** Change the sheet height from inside build(); the sheet stays glued to the bottom edge. */
   protected setHeight(h: number): void {
-    this.panelH = Math.min(h, this.maxHeight);
+    this.panelH = Math.min(Math.max(h, this.grownTo), this.maxHeight);
   }
+
+  /** The height rebuild grew this sheet to for its second pass (0 on the first). */
+  private grownTo = 0;
 
   /**
    * The tallest a sheet may be: up to the bottom of the HUD, so a tall sheet (the bag, Options) never cuts
@@ -397,6 +503,11 @@ export abstract class Modal {
     return this.opened;
   }
 
+  /** The top edge of the sheet at rest (toasts over it keep above). */
+  get top(): number {
+    return GAME_HEIGHT - this.panelH;
+  }
+
   /**
    * Slides up from the bottom edge (190 ms, easing out, whole-pixel steps) over a dim that fades in. Calm mode:
    * the sheet is simply there and only the dim fades. Its buttons work from the first frame.
@@ -408,6 +519,7 @@ export abstract class Modal {
     runtime.modals += 1;
     this.scene.tweens.killTweensOf(this.root);
     this.scene.tweens.killTweensOf(this.dim);
+    this.panelH = this.baseH;
     this.rebuild();
     const calm = getState().settings.reduceMotion;
     const top = GAME_HEIGHT - this.panelH;
@@ -524,17 +636,52 @@ export abstract class Modal {
   /** Lay out one list row at `y`. Returns the y of the next row. */
   protected row(y: number, spec: RowSpec): number {
     // Buttons sit on the thumb's side (mirrored for the left hand); icon and text take the other side.
-    const widths = (spec.buttons ?? []).map((b) => b.width ?? 44);
+    const widths = (spec.buttons ?? []).map((b) => fitButtonW(b.label, b.width ?? 44));
     const L = rowLayout(this.panelW, widths, this.leftHanded);
-    if (spec.icon) this.icon(L.iconX, y + 12, spec.icon);
-    this.label(L.textX, y + 3, fitRow(spec.title, L.maxText));
-    if (spec.sub)
-      this.label(L.textX, y + 14, fitRow(spec.sub, L.maxText), spec.subColor ?? C.creamDim);
+    // long text wraps and the row grows (rowText); the sheet grows with it (rebuild, wantHeight)
+    const { title, sub, extra } = rowText(spec, this.leftHanded, this.panelW);
+    if (spec.onTap) {
+      const tap = spec.onTap;
+      const zone = this.scene.add
+        .zone(0, y - 1, this.panelW, ROW_H + extra)
+        .setOrigin(0, 0)
+        .setInteractive({ useHandCursor: true });
+      let armed = false;
+      zone.on('pointerdown', () => (armed = true));
+      zone.on('pointerout', () => (armed = false));
+      zone.on('pointerup', () => {
+        if (!armed) return;
+        armed = false;
+        audio.play('ui');
+        tap();
+      });
+      this.content.add(zone);
+    }
+    if (spec.icon) this.icon(L.iconX, y + 13, spec.icon);
+    if (spec.icon && spec.count)
+      this.content.add(
+        new Label(this.scene, L.iconX + 9, y + 15, String(spec.count), {
+          align: 'right',
+          color: CH.cream, // parchment on an ink outline, as on the bag's counts
+          outline: CH.ink,
+          face: 'small',
+        }),
+      );
+    const NL = '\n';
+    this.label(L.textX, y + 1, title.join(NL));
+    if (sub.length)
+      this.label(
+        L.textX,
+        y + 1 + LINE_H + (title.length - 1) * LINE_H,
+        sub.join(NL),
+        spec.subColor ?? C.creamDim,
+      );
     (spec.buttons ?? []).forEach((b, i) => {
       this.button(L.buttonXs[i]!, y, widths[i]!, 22, b.label, b.onClick, {
         textColor: b.color ?? C.cream,
       }).setEnabled(b.enabled !== false);
     });
-    return y + ROW_H;
+    this.rowGrowth += extra;
+    return y + ROW_H + extra;
   }
 }

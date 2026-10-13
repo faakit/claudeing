@@ -1,0 +1,18 @@
+{
+  "title": "Pressing before a fish bites",
+  "about": "Spring 4, 10:00, on the farm pond bank facing the water with the rod in hand and a new game's 10 worms. Press Action to cast (the worms drop to 9), then tap the fishing sheet (or press Action) before anything bites: the bobber is pulled up the track, the sheet closes, the farmer reels the empty line in, \"Too soon: line reeled in, bait kept.\" shows, and the worms are back at 10. QA item: \"Puxar a vara se o usuário apertar antes de fisgar o peixe\".",
+  "version": 18,
+  "tags": ["farm", "fishing", "bait", "controls"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "day": 4,
+    "clock": "10:00"
+  },
+  "select": "fishing_rod",
+  "goal": "fish"
+}

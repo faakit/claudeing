@@ -487,6 +487,9 @@ function town(v) {
     rect(x, y, 1, 1, T.tree);
   scatter(m, T.flower, 40, 11, () => true);
   scatter(m, T.tree, 8, 3, (x) => x < 9 || x > 14);
+  // proportions round: Rosa's cottage grows a row north (14-17, 15), so as a four-row block it gets the 32 px wall and
+  // the tall door; drawn after the scatter, so every flower and tree stays where it was
+  rect(14, 15, 4, 1, T.wall);
   // the dry stage: the river's bed laid bare (drawn after the scatter, so the rest of the town is as it always was)
   if (v === 'dry') rect(17, 22, 4, 10, T.stone);
   const objects = [

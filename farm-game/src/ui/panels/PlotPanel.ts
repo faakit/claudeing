@@ -27,23 +27,19 @@ export class PlotPanel extends Modal {
     const s = getState();
     const p = plots[this.id]!;
     this.panel();
-    this.label(8, 8, p.name, C.gold);
-    this.label(8, 22, t('plot.size', { n: plotSize(this.id) }), C.cream);
-    this.label(
+    // a flow: Portuguese wraps longer, and every line sits under the one before it
+    let y = this.para(8, 8, p.name, C.gold, 184, 2);
+    y = this.para(8, y, t('plot.size', { n: plotSize(this.id) }), C.cream, 184, 2);
+    y = this.para(8, y, t('plot.more'), C.creamDim, 184, 4);
+    y = this.para(
       8,
-      36,
-      t('plot.more'),
-      C.creamDim,
-      1,
-      'left',
-      184,
-    );
-    this.label(
-      8,
-      66,
+      y,
       t('plot.price', { price: fmtGold(p.price), have: fmtGold(s.money) }),
       s.money >= p.price ? C.green : C.red,
+      184,
+      2,
     );
+    this.wantHeight = y + 64;
     this.button(
       8,
       this.panelH - 62,

@@ -18,6 +18,7 @@ export const PERK_TEXT: Record<string, (v: number) => string> = {
   rivalPolite: () => t('perk.rivalPolite', { name: rivalName() }),
   rivalOff: () => t('perk.rivalOff', { name: rivalName() }),
   festivalPrize: (v) => t('perk.festivalPrize', { n: pct(v) }),
+  waterHelp: (v) => t('perk.waterHelp', { n: v }),
 };
 
 export const perkLine = (perks: Record<string, number>): string =>

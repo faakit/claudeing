@@ -22,27 +22,23 @@ export class SleepPanel extends Modal {
   protected build(): void {
     const s = getState();
     this.panel();
-    this.label(this.panelW / 2, 6, t('sleep.title'), C.gold, 2, 'center');
-    this.label(
-      this.panelW / 2,
+    this.label(this.panelW / 2, 8, t('sleep.title'), C.gold, 2, 'center');
+    // A flow: each line starts under the last however far it wrapped (pt-BR's explanation takes three lines on
+    // the SE and ran over the forecast at its fixed y).
+    const mid = this.panelW / 2;
+    let y = this.para(
+      mid,
       30,
       t('sleep.itIs', { time: formatClock(s.time.minutes) }),
       C.cream,
-      1,
-      'center',
-    );
-    this.label(
-      this.panelW / 2,
-      42,
-      t('sleep.explain'),
-      C.creamDim,
-      1,
-      'center',
       184,
+      2,
+      'center',
     );
-    this.label(
-      this.panelW / 2,
-      66,
+    y = this.para(mid, y, t('sleep.explain'), C.creamDim, 184, 4, 'center');
+    y = this.para(
+      mid,
+      y,
       t('sleep.tomorrow', {
         forecast: forecastText(s.forecast),
         extra:
@@ -53,14 +49,16 @@ export class SleepPanel extends Modal {
               : '',
       }),
       s.forecast === 'sunny' ? C.creamDim : C.blue,
-      1,
-      'center',
       184,
+      6,
+      'center',
     );
-    this.button(8, 94, this.panelW - 16, 24, t('sleep.sleep'), () => this.confirm(), {
+    y = Math.max(y, 94);
+    this.button(8, y, this.panelW - 16, 24, t('sleep.sleep'), () => this.confirm(), {
       textColor: C.green,
       rim: C.green,
     });
-    this.button(8, 122, this.panelW - 16, 22, t('sleep.notYet'), () => this.close());
+    this.button(8, y + 28, this.panelW - 16, 22, t('sleep.notYet'), () => this.close());
+    this.wantHeight = y + 28 + 22 + 10;
   }
 }

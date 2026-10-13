@@ -122,6 +122,15 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
       'valley.weirOn': 1,
       'place.weir': 3,
       'valley.riverSeen': 1,
+      // ...and its starter worms, given once (fishing needs bait since the bait round)
+      'bait.on': 1,
+      'bait.oldSave': 1,
+      'got.worms': 1,
+      discoveries: 1,
+      // ...and the job board's marker (a save from before has that day's jobs taken for it)
+      'jobs.boardOn': 1,
+      // ...and friendship on the QA round's curve (its points rescaled once)
+      'friend.curve2': 1,
     });
     expect(s.shipping).toEqual({});
   });

@@ -88,7 +88,8 @@ export interface FarmDevApi {
       year?: number;
     }): void;
     /** Live through n nights (full rollover, no sleep screens). The player wakes in bed unless wake is false. */
-    skipDays(n?: number, opts?: { wake?: boolean }): void;
+    /** Resolves once the restarted world is ready (at once with no world, or with the loop paused). */
+    skipDays(n?: number, opts?: { wake?: boolean }): Promise<void>;
   };
   /**
    * Show a map in one of its stages (map stages, M2): sets the valley stats that pick that variant (keeping the rest
@@ -139,4 +140,20 @@ export interface FarmDevApi {
    * or null where nothing tows.
    */
   tow(): import('../game/TowController').TowMetrics | null;
+
+  // ---- cloud save (game/cloudSync.ts) ----
+  cloud: {
+    /** Status as Options shows it. */
+    readonly status: import('../platform/cloudSave').CloudStatus;
+    /** The pending choice, if any (its two saves' summaries). */
+    readonly conflict: {
+      verdict: string;
+      local: import('../systems/cloudRules').SaveSummary | null;
+      cloud: import('../systems/cloudRules').SaveSummary;
+    } | null;
+    /** The fake provider in use (a cloud scenario or `?cloud=fake`), or null. */
+    readonly fake: import('../platform/cloud/fake').FakeCloudProvider | null;
+    /** Run a sync now ("Sync now"); resolves when it is done. */
+    sync(): Promise<void>;
+  };
 }

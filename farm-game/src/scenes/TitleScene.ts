@@ -10,23 +10,38 @@ import { createInitialState, type GameState } from '../state/GameState';
 import { runtime } from '../state/runtime';
 import { setState } from '../state/store';
 import { hasNewerSave, loadGame } from '../systems/save';
-import { seasonLabel } from '../systems/time';
+import { gameEvents } from '../systems/events';
+import { analytics } from '../platform/analytics';
 import { Label } from '../ui/font';
 import { C as INK, CH as C } from '../ui/theme';
 import { Button, drawPanel } from '../ui/widgets';
-import { LETTER_CARD, LETTER_PAD, letterLayout } from '../ui/titleLetter';
+import { CONSENT_TEXT_W, LETTER_CARD, LETTER_PAD, letterLayout, LOGO } from '../ui/titleLetter';
 import { letterTexture } from '../ui/sheetSkin';
 import { Wipe } from '../fx/Wipe';
 import { WIPE_CLOSE_MS } from '../fx/feel';
 import { prewarmTasks } from '../fx/prewarm';
 import { preparseMap } from './mapCache';
 import { syncDryTiles } from '../art/dryTiles';
-import { fmtGold, onLocaleChange, t } from '../i18n';
+import { onLocaleChange, t } from '../i18n';
 import { chooseLanguage, nextLanguage } from '../game/language';
+import { cloudSync } from '../game/cloudWiring';
+import type { CloudConflict } from '../platform/cloudSave';
+import { summarize } from '../systems/cloudRules';
+import { CloudConflictPanel } from '../ui/panels/CloudConflictPanel';
+import { saveLine } from '../ui/panels/cloudText';
 
 /** Title screen: animated dusk farm backdrop, Continue / New Game. */
 export class TitleScene extends Phaser.Scene {
+  /** A game to start as soon as the title is up (the cloud's save, chosen in game: UIScene). */
+  static startNext: GameState | null = null;
   private loaded: GameState | null = null;
+  /** A cloud save further along than this phone's, or diverged from it (game/cloudSync.ts), or the only one. */
+  private offer: CloudConflict | null = null;
+  private cloudPanel: CloudConflictPanel | null = null;
+  /** The save lines under the Continue buttons (rebuilt with them). */
+  private lines: Label[] = [];
+  /** Rosa's letter, taken down if a cloud save turns up on a first launch. */
+  private letterParts: Phaser.GameObjects.GameObject[] = [];
   private confirmNew = false;
   private newerSave = false;
   private buttons: Button[] = [];
@@ -48,6 +63,9 @@ export class TitleScene extends Phaser.Scene {
   private firstLaunch = false;
   /** Counts the title's builds (create), so a stale save lookup never draws on a newer one. */
   private gen = 0;
+  /** The analytics question's text while it is asked. */
+  private consentText: Label | null = null;
+  private consentPlate: Phaser.GameObjects.Graphics | null = null;
 
   constructor() {
     super('Title');
@@ -70,18 +88,24 @@ export class TitleScene extends Phaser.Scene {
     this.wipe = new Wipe(this, { x: 0, y: 0, w: GAME_WIDTH, h: GAME_HEIGHT }, 1000);
     this.confirmNew = false;
     this.buttons = [];
+    this.lines = [];
+    this.letterParts = [];
+    this.offer = null;
+    this.cloudPanel = null;
+    this.consentText = null;
+    this.consentPlate = null;
     this.cameras.main.setBackgroundColor('#1e2848');
     this.drawBackdrop();
 
     // The logo is the game's name, the same in every language.
     const [logo1, logo2] = ['TINY', 'ACRE']; // i18n-ok: the logo
-    const title = new Label(this, GAME_WIDTH / 2, 52, logo1, {
-      scale: 6,
+    const title = new Label(this, GAME_WIDTH / 2, LOGO.y[0], logo1, {
+      scale: LOGO.scale,
       align: 'center',
       color: C.gold,
     });
-    const title2 = new Label(this, GAME_WIDTH / 2, 98, logo2, {
-      scale: 6,
+    const title2 = new Label(this, GAME_WIDTH / 2, LOGO.y[1], logo2, {
+      scale: LOGO.scale,
       align: 'center',
       color: C.gold,
     });
@@ -89,8 +113,8 @@ export class TitleScene extends Phaser.Scene {
     // foot, and the valley's carved sprout standing on the I of TINY
     const layers: Label[] = [];
     for (const [word, y] of [
-      ['TINY', 52], // i18n-ok: the logo
-      ['ACRE', 98], // i18n-ok: the logo
+      ['TINY', LOGO.y[0]], // i18n-ok: the logo
+      ['ACRE', LOGO.y[1]], // i18n-ok: the logo
     ] as const)
       for (const [dy, color] of [
         [4, 0x2a1a24],
@@ -99,7 +123,7 @@ export class TitleScene extends Phaser.Scene {
         [1, 0xe48c24],
       ] as const) {
         const l = new Label(this, GAME_WIDTH / 2, y + dy, word, {
-          scale: 6,
+          scale: LOGO.scale,
           align: 'center',
           color,
           shadow: null,
@@ -112,7 +136,7 @@ export class TitleScene extends Phaser.Scene {
     const sprout = this.add.graphics().setDepth(2);
     {
       const ix = Math.round(GAME_WIDTH / 2 - title.textWidth / 2 + (title.textWidth / 4) * 1.5);
-      const sy = 44;
+      const sy = LOGO.y[0] - 8;
       sprout.fillStyle(0x2a1a24, 1).fillRect(ix - 1, sy - 2, 3, 9);
       sprout.fillStyle(0x2e6a3e, 1).fillRect(ix, sy - 1, 1, 7);
       sprout
@@ -136,7 +160,7 @@ export class TitleScene extends Phaser.Scene {
     ] as Phaser.GameObjects.Components.Transform[]) {
       this.tweens.add({
         targets: t,
-        y: t.y + 3,
+        y: t.y + LOGO.bob,
         duration: 1800,
         yoyo: true,
         repeat: -1,
@@ -147,9 +171,10 @@ export class TitleScene extends Phaser.Scene {
       align: 'center',
       color: C.cream,
     });
-    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 10, t('title.version', { build: __BUILD__ }), {
+    new Label(this, GAME_WIDTH - 4, GAME_HEIGHT - 11, t('title.version', { build: __BUILD__ }), {
       align: 'right',
       color: C.creamDim,
+      face: 'small', // the build stamp: not reading text, and the body face ran off the bottom edge
     });
     this.note = new Label(this, GAME_WIDTH / 2, 176, '', {
       align: 'center',
@@ -159,7 +184,8 @@ export class TitleScene extends Phaser.Scene {
 
     // A language change restarts the title: a look for the save from before the restart draws nothing.
     const gen = ++this.gen;
-    void loadGame(saveStore).then(async (res) => {
+    // The analytics record is read beside the save (at once when analytics is off): the title may have to ask first.
+    void Promise.all([loadGame(saveStore), analytics.ready()]).then(async ([res]) => {
       if (gen !== this.gen) return;
       this.loaded = res?.state ?? null;
       if (!this.loaded && (await hasNewerSave(saveStore))) {
@@ -174,7 +200,24 @@ export class TitleScene extends Phaser.Scene {
         this.drawLetter();
       }
       this.buildButtons();
+      // Cloud save: a save further along in the cloud (another phone) is offered as "Continue (cloud)". Without a
+      // provider this resolves null at once and the title is exactly as before.
+      const offer = await cloudSync.load(this.loaded);
+      if (gen !== this.gen || this.starting || !offer) return;
+      this.offer = offer;
+      if (this.firstLaunch) {
+        this.firstLaunch = false;
+        this.letterParts.forEach((o) => o.destroy());
+        this.letterParts = [];
+        subtitle.setVisible(true);
+      }
+      this.buildButtons();
     });
+    const next = TitleScene.startNext;
+    if (next) {
+      TitleScene.startNext = null;
+      this.time.delayedCall(0, () => this.start(next));
+    }
     // The language, one tap away (top right, clear of the letter and the buttons): the title redraws in it.
     new Button(this, GAME_WIDTH - 68, 4, 64, 22, t('lang.name'), () => {
       if (!this.starting) void chooseLanguage(nextLanguage());
@@ -191,46 +234,50 @@ export class TitleScene extends Phaser.Scene {
   private buildButtons(): void {
     this.buttons.forEach((b) => b.destroy());
     this.buttons = [];
-    this.primary = this.loaded
-      ? () => this.start(this.loaded as GameState)
-      : this.newerSave
-        ? null
-        : () => this.start(createInitialState());
+    this.lines.forEach((l) => l.destroy());
+    this.lines = [];
+    this.consentText?.destroy();
+    this.consentText = null;
+    this.consentPlate?.destroy();
+    this.consentPlate = null;
+    // The analytics question comes first (critic ruling): the cloud offer shows only once it is answered.
+    if (analytics.needsConsent) return this.buildConsent();
+    const offer = this.offer;
+    const continueCloud = () => this.continueCloud();
+    this.primary = offer
+      ? continueCloud
+      : this.loaded
+        ? () => this.start(this.loaded as GameState)
+        : this.newerSave
+          ? null
+          : () => this.start(createInitialState());
     let y = this.firstLaunch ? letterLayout().buttonY : 200;
     const w = 150;
     const x = (GAME_WIDTH - w) / 2;
-    if (this.loaded) {
-      const time = this.loaded.time;
+    // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
+    // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
+    const saveButton = (label: string, line: string, onClick: () => void, main: boolean) => {
       this.buttons.push(
-        // Button faces are sand, so their labels use the content (ink-on-paper) tokens like every in-game button.
-        // Chrome's light parchment text got an ink drop shadow on the sand face: the doubled "New Game" (R6-2).
-        new Button(
-          this,
-          x,
-          y,
-          w,
-          30,
-          t('title.continue'),
-          () => this.start(this.loaded as GameState),
-          {
-            textColor: INK.green,
-            rim: INK.green,
-          },
-        ),
-      );
-      new Label(
-        this,
-        GAME_WIDTH / 2,
-        y + 36,
-        t('title.saveLine', {
-          season: seasonLabel(time.season),
-          day: time.day,
-          year: time.year,
-          gold: fmtGold(this.loaded.money),
+        new Button(this, x, y, w, 30, label, onClick, {
+          textColor: main ? INK.green : INK.cream,
+          rim: main ? INK.green : INK.rim,
         }),
-        { align: 'center', color: C.creamDim },
+      );
+      this.lines.push(
+        new Label(this, GAME_WIDTH / 2, y + 36, line, { align: 'center', color: C.creamDim }),
       );
       y += 62;
+    };
+    if (offer) saveButton(t('cloud.continueCloud'), saveLine(offer.cloud), continueCloud, true);
+    if (this.loaded) {
+      const local = this.loaded;
+      saveButton(
+        offer ? t('cloud.continuePhone') : t('title.continue'),
+        saveLine(summarize(local)),
+        // with a cloud save further along, this phone's save is never played on without saying so
+        () => (offer ? this.askCloud(offer) : this.start(local)),
+        !offer,
+      );
     }
     this.buttons.push(
       new Button(
@@ -241,7 +288,7 @@ export class TitleScene extends Phaser.Scene {
         30,
         this.confirmNew ? t('title.eraseConfirm') : t('title.newGame'),
         () => {
-          if ((this.loaded || this.newerSave) && !this.confirmNew) {
+          if ((this.loaded || this.newerSave || offer) && !this.confirmNew) {
             this.confirmNew = true;
             this.buildButtons();
             return;
@@ -250,6 +297,67 @@ export class TitleScene extends Phaser.Scene {
         },
         { textColor: this.confirmNew ? INK.red : INK.cream },
       ),
+    );
+  }
+
+  /** "Continue (cloud)": a cloud save simply further along is taken at once; two diverged saves ask first. */
+  private continueCloud(): void {
+    const offer = this.offer;
+    if (!offer || this.starting) return;
+    if (offer.verdict === 'conflict' && this.loaded) return this.askCloud(offer);
+    void this.takeCloud();
+  }
+
+  private async takeCloud(): Promise<void> {
+    if (this.starting) return;
+    const state = await cloudSync.resolve('cloud');
+    if (state) this.start(state);
+  }
+
+  /** The one-thumb choice between the two saves (ui/panels/CloudConflictPanel.ts). */
+  private askCloud(offer: CloudConflict): void {
+    this.cloudPanel ??= new CloudConflictPanel(this, (choice) => {
+      if (choice === 'cloud') void this.takeCloud();
+      else if (choice === 'local' && this.loaded) {
+        const local = this.loaded;
+        void cloudSync.resolve('local');
+        this.start(local);
+      }
+    });
+    this.cloudPanel.show(offer);
+  }
+
+  /**
+   * The analytics question, once, where the buttons go (only with a production provider configured: DECISIONS.md).
+   * Nothing is sent until it is answered; Menu > Opts > Share stats changes the answer later.
+   */
+  private buildConsent(): void {
+    this.primary = null;
+    const y = this.firstLaunch ? letterLayout().buttonY : 200;
+    this.consentText = new Label(this, GAME_WIDTH / 2, y, t('privacy.ask'), {
+      align: 'center',
+      color: C.cream,
+      maxWidth: CONSENT_TEXT_W,
+    });
+    const by = y + this.consentText.textHeight + 6;
+    // An ink plate under the question, so it reads over the backdrop's field as the letter does on its paper.
+    this.consentPlate = this.add
+      .graphics()
+      .fillStyle(0x1b1530, 0.94)
+      .fillRect(6, y - 4, GAME_WIDTH - 12, by - y + 2);
+    this.consentText.setDepth(1);
+    const answer = (granted: boolean) => {
+      if (this.starting) return;
+      analytics.setConsent(granted);
+      this.buildButtons();
+    };
+    const w = 88;
+    const gap = 4;
+    const x = (GAME_WIDTH - w * 2 - gap) / 2;
+    this.buttons.push(
+      // Two equal buttons: neither answer is pushed.
+      new Button(this, x, by, w, 30, t('privacy.yes'), () => answer(true)),
+      new Button(this, x + w + gap, by, w, 30, t('privacy.no'), () => answer(false)),
     );
   }
 
@@ -262,9 +370,10 @@ export class TitleScene extends Phaser.Scene {
     const L = letterLayout();
     const { x, y, w } = LETTER_CARD;
     const paper = letterTexture(this, w, L.h);
-    if (paper) this.add.image(x, y, paper).setOrigin(0).setDepth(3);
+    if (paper) this.letterParts.push(this.add.image(x, y, paper).setOrigin(0).setDepth(3));
     else {
       const g = this.add.graphics().setDepth(3);
+      this.letterParts.push(g);
       drawPanel(g, x, y, w, L.h);
       // a folded-down corner, so it reads as a letter and not as a menu
       g.fillStyle(INK.panelLight, 1).fillTriangle(
@@ -279,14 +388,15 @@ export class TitleScene extends Phaser.Scene {
         .fillRect(x + w - 9, y + 2, 1, 7)
         .fillRect(x + w - 9, y + 9, 7, 1);
     }
-    new Label(this, x + LETTER_PAD, y + LETTER_PAD, L.rows.join('\n'), {
+    const body = new Label(this, x + LETTER_PAD, y + LETTER_PAD, L.rows.join('\n'), {
       color: INK.cream,
     }).setDepth(4);
-    new Label(this, L.signX, L.signY, valley.letter.sign, {
+    const sign = new Label(this, L.signX, L.signY, valley.letter.sign, {
       color: INK.creamDim,
       shadow: null,
       align: 'right',
     }).setDepth(4);
+    this.letterParts.push(body, sign);
   }
 
   update(_time: number, delta: number): void {
@@ -336,6 +446,7 @@ export class TitleScene extends Phaser.Scene {
 
   private enter(state: GameState): void {
     Wipe.carry = true;
+    cloudSync.forgetOffer(); // an offer not taken was about the title's save; the next sync looks again
     setState(state);
     audio.setVolumes(state.settings.music, state.settings.sfx, state.settings.muted);
     setHapticsEnabled(state.settings.vibrate);
@@ -343,6 +454,7 @@ export class TitleScene extends Phaser.Scene {
     runtime.inGame = true;
     runtime.busy = false;
     runtime.modals = 0;
+    gameEvents.emit('gameEntered', undefined);
     // The HUD and controls are built on one frame and the world on the next, both under the wipe, so neither build
     // makes a frame long enough to see (or to feel, if a touch lands on it).
     this.scene.launch('UI');

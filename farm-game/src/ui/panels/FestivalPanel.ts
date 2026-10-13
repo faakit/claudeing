@@ -58,26 +58,18 @@ export class FestivalPanel extends Modal {
     this.panel();
     if (!today) {
       this.label(8, 8, t('festival.noneToday'), C.gold);
-      this.label(
-        8,
-        24,
-        t('festival.onceASeason'),
-        C.creamDim,
-        1,
-        'left',
-        184,
-      );
+      this.label(8, 24, t('festival.onceASeason'), C.creamDim, 1, 'left', 184);
       this.closeButton();
       return;
     }
     const { def, id } = today;
     this.label(8, 8, def.name, C.gold);
-    this.label(8, 20, def.blurb, C.creamDim);
+    this.label(8, 21, def.blurb, C.creamDim);
     // The best rival score is the rival farmer's.
     const sorted = [...rivalScores(s, def)].sort((a, b) => b - a);
     this.label(
       8,
-      32,
+      34,
       t('festival.rivals', {
         name: rivalName(),
         top: fmt(sorted[0] ?? 0),
@@ -89,15 +81,7 @@ export class FestivalPanel extends Modal {
       184,
     );
     if (this.result || hasEntered(s, id)) {
-      this.label(
-        8,
-        60,
-        this.result || t('festival.alreadyEntered'),
-        C.green,
-        1,
-        'left',
-        184,
-      );
+      this.label(8, 60, this.result || t('festival.alreadyEntered'), C.green, 1, 'left', 184);
     } else if (modeOf(def) === 'derby') this.buildDerby();
     else this.buildEntries();
     this.closeButton();
@@ -114,7 +98,7 @@ export class FestivalPanel extends Modal {
       const c = best[i];
       this.label(
         8,
-        64 + i * 12,
+        64 + i * 13,
         `${i + 1}. ${c ? `${c.ref ? `${displayName(c.ref)} ` : ''}${t('festival.points', { n: fmt(c.value) })}` : '-'}`,
         C.creamDim,
       );
@@ -123,13 +107,13 @@ export class FestivalPanel extends Modal {
     const place = placeFor(s, today.def, score);
     this.label(
       8,
-      64 + slots * 12 + 6,
+      64 + slots * 13 + 4,
       t('festival.score', { n: fmt(score), place: placeText(place) }),
       C.gold,
     );
     this.label(
       8,
-      64 + slots * 12 + 20,
+      64 + slots * 13 + 19,
       t('festival.handInBeforeBed', { hint: derbyHint(s, today.def) }),
       C.creamDim,
       1,
@@ -147,10 +131,7 @@ export class FestivalPanel extends Modal {
       () => {
         if (early) {
           this.sure = true;
-          toast(
-            t('festival.handInEarly', { time: formatClock(DERBY_SURE_BEFORE) }),
-            'info',
-          );
+          toast(t('festival.handInEarly', { time: formatClock(DERBY_SURE_BEFORE) }), 'info');
           audio.play('select');
           return this.rebuild();
         }
@@ -175,16 +156,8 @@ export class FestivalPanel extends Modal {
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
     if (list.length === 0)
-      this.label(
-        8,
-        60,
-        t('festival.nothingToEnter'),
-        C.creamDim,
-        1,
-        'left',
-        184,
-      );
-    let y = 46;
+      this.label(8, 60, t('festival.nothingToEnter'), C.creamDim, 1, 'left', 184);
+    let y = 48;
     if (basketMode) {
       const picked = this.basket.map((k) => kinds.get(k)!);
       const score = basketScore(def, picked);
@@ -201,7 +174,7 @@ export class FestivalPanel extends Modal {
         }),
         C.gold,
       );
-      y += 12;
+      y += 14;
     }
     for (const ref of list.slice(this.page * ROWS, (this.page + 1) * ROWS)) {
       const key = keyOf(ref);

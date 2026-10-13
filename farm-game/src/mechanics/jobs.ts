@@ -3,10 +3,10 @@ import { registerStatWatcher } from '../systems/goals';
 import { npcs } from '../data';
 import { checkJobs, generateJobs, welcomeFactor } from '../systems/jobs';
 import { absoluteDay } from '../systems/time';
-import { t } from '../i18n';
+import { fmtGold, t } from '../i18n';
 
-// Every morning villagers post a few small jobs. They give the hours after the chores a purpose and
-// point new players at fishing, the mine and the board.
+// Every morning villagers post a few small jobs on the town board (taken and turned in there). They give the hours
+// after the chores a purpose and point new players at fishing, the mine and town.
 registerDayHook({
   id: 'jobs:post',
   phase: 'morning',
@@ -28,12 +28,16 @@ registerDayHook({
   },
 });
 
-// Shipping jobs pay at the night's payout, for goods that stayed in the bin.
+// At the night's payout every finished job not turned in is paid by post (shipping jobs only then, for goods that
+// stayed in the bin): nothing is lost by not walking back to the board.
 registerDayHook({
   id: 'jobs:payout',
   phase: 'payout',
   order: -10,
-  run: (state) => checkJobs(state, true),
+  run(state, ctx) {
+    const gold = checkJobs(state, true);
+    if (gold > 0) ctx.notes.push(t('jobs.byPost', { gold: fmtGold(gold) }));
+  },
 });
 
 function listOf(names: string[]): string {

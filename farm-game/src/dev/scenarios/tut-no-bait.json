@@ -1,0 +1,75 @@
+{
+  "title": "Guided start: the rod in hand and no bait",
+  "about": "Guided game, day 4, 10:00 on the farm pond bank with the rod in hand and every worm used up. The coach says \"No bait: the hoe digs up worms.\" and rings the hoe on the hotbar; Action at the water refuses with \"No bait: dig worms or buy at Mara's.\". It ends once any bait is in the bag.",
+  "tags": ["farm", "onboarding", "fishing", "bait"],
+  "at": {
+    "map": "farm",
+    "tx": 18,
+    "ty": 31,
+    "facing": "right"
+  },
+  "time": {
+    "day": 4,
+    "clock": "10:00"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "state": {
+    "inventory": {
+      "slots": [
+        {
+          "item": "hoe",
+          "qty": 1
+        },
+        {
+          "item": "watering_can",
+          "qty": 1
+        },
+        {
+          "item": "scythe",
+          "qty": 1
+        },
+        {
+          "item": "fishing_rod",
+          "qty": 1
+        },
+        {
+          "item": "pickaxe",
+          "qty": 1
+        },
+        {
+          "item": "parsnip_seed",
+          "qty": 4
+        }
+      ],
+      "selected": 3
+    }
+  },
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.cast": 1,
+    "tut.fish": 1,
+    "caught": 3
+  },
+  "goal": "fish20",
+  "version": 18
+}

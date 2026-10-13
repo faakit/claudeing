@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { game, goals, mail } from '../src/data';
-import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { pointsForHearts } from '../src/systems/friendship';
 import { boardWants, requestWants } from '../src/systems/orders';
 import { BOARD_PRIZE, crateDue, rivalCrate, rivalNotice, settleSeason } from '../src/systems/rival';
 import { morningSpecial } from '../src/systems/specials';
@@ -12,7 +12,7 @@ import type { GameState, Order } from '../src/state/GameState';
 import { newState } from './helpers';
 
 const friend = (s: GameState) =>
-  (s.friends['clay'] = { points: 5 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 });
+  (s.friends['clay'] = { points: pointsForHearts(5), talkedDay: 0, giftedDay: 0 });
 
 describe("critique 11 F1/F2: Clay's crates are said, keep up with a leader, and never end a season", () => {
   it('a week after the race starts, then counted from his last crate (critique 12 cadence), never on day 28', () => {
@@ -84,7 +84,7 @@ describe('critique 11 F4/F9: year-two text and the winter prize', () => {
     s.time.season = 'spring';
     s.time.day = 1;
     const money = s.money;
-    expect(settleSeason(s)).toContain(`+${BOARD_PRIZE}g`);
+    expect(settleSeason(s)).toContain(`+${BOARD_PRIZE}¤`);
     expect(s.money).toBe(money + BOARD_PRIZE);
   });
 });
@@ -112,7 +112,7 @@ describe('critique 11 F5/F6/F10: small feedback', () => {
     s.time.season = 'summer';
     s.time.day = 1;
     const news = morningSpecial(s) ?? '';
-    expect(news).toMatch(/^The special order ran out\. Paid \d+g for what you brought\./);
+    expect(news).toMatch(/^The special order ran out\. Paid \d+¤ for what you brought\./);
     expect(news).toMatch(/Special order: /);
   });
 

@@ -1,4 +1,5 @@
 import { goals, tips } from '../data';
+import { isRevealed } from './reveal';
 import type { GoalDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
@@ -136,8 +137,10 @@ export function checkTips(state: GameState): void {
   for (const tip of tips) {
     const key = `tip.${tip.id}`;
     if (state.stats[key] || stat(state, tip.stat) < tip.min) continue;
+    // a tip naming a menu tab waits for the reveal schedule to bring that tab (QA round)
+    if (tip.reveal && !isRevealed(state, tip.reveal)) continue;
     state.stats[key] = 1;
-    toast(tip.text, 'info');
+    toast(tip.text, 'tip');
     return; // one at a time; the next waits for the next check
   }
 }

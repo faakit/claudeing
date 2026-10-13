@@ -1090,7 +1090,8 @@ async function runCombo(p, hand) {
       );
 
       // --- Auto tool (M3): the scythe in hand (nothing to cut), tilled soil in front, parsnips planted before
-      // -> Action shows and uses the seeds, and the scythe stays selected.
+      // -> Action shows and uses the seeds, and the selection moves to the seeds it used (owner item 6: the
+      // highlighted slot is what Action used; it was the scythe's before).
       await place(
         page,
         10,
@@ -1115,8 +1116,8 @@ async function runCombo(p, hand) {
         () => !!window.__farm.getState().farm.tiles['10,18']?.crop,
       );
       check(
-        `${tag}: auto tool shows the seeds on Action and plants with the scythe still selected`,
-        planted && (await selected(page)) === 2 && icon !== 'item_scythe',
+        `${tag}: auto tool shows the seeds on Action, plants, and the selection moves to the seeds`,
+        planted && (await selected(page)) === 5 && icon !== 'item_scythe',
         `icon ${icon} (seed icon ${seedIcon}), planted ${planted}, slot ${await selected(page)}`,
       );
 
@@ -1327,7 +1328,7 @@ async function runCombo(p, hand) {
           () => {
             window.__probeOk = () => window.__farm.getState().inventory.selected === 1;
           },
-          () => t.down(40.5, 383.5),
+          () => t.down(60, 384), // the can's cell (five cells: src/ui/hotbarCells.ts)
           async () => {
             await t.up();
             await page.evaluate(() => (window.__farm.getState().inventory.selected = 0));

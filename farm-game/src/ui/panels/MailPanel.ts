@@ -49,16 +49,7 @@ export class MailPanel extends Modal {
       'right',
     );
     const list = [...s.mail.list].reverse();
-    if (list.length === 0)
-      this.label(
-        8,
-        30,
-        t('mail.none'),
-        C.creamDim,
-        1,
-        'left',
-        184,
-      );
+    if (list.length === 0) this.label(8, 30, t('mail.none'), C.creamDim, 1, 'left', 184);
     const pages = Math.max(1, Math.ceil(list.length / ROWS));
     this.page = Math.min(this.page, pages - 1);
     let y = 24;
@@ -123,7 +114,7 @@ export class MailPanel extends Modal {
       this.button(
         8,
         by,
-        90,
+        94,
         22,
         t('mail.takeGift'),
         () => {
@@ -140,7 +131,7 @@ export class MailPanel extends Modal {
         },
         { textColor: C.green, rim: C.green },
       );
-    this.button(102, by, 90, 22, t('common.back'), () => {
+    this.button(106, by, 86, 22, t('common.back'), () => {
       this.id = null;
       this.rebuild();
     });
