@@ -216,6 +216,9 @@
     "waiting": "Waiting for a bite...",
     "tapNow": "! TAP NOW !",
     "anyTap": "Any tap on the sheet hooks it.",
+    "reeledEarly": "Too soon: line reeled in, bait kept.",
+    "reelingIn": "Reeling in...",
+    "waitHint": "Tap when it bites. Sooner reels it in.",
     "keepGreen": "Keep the fish in the green!",
     "holdLift": "Hold to lift, let go to sink."
   },

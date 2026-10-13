@@ -3373,6 +3373,80 @@ async function bait() {
   await farm.close();
 }
 
+/**
+ * QA "puxar a vara se apertar antes de fisgar": a press before the bite reels the empty line in (the bobber rises, the
+ * sheet closes, the farmer plays the reel, one line says so) and the bait comes back. Touch on the sheet, and Action.
+ */
+async function fishEarly() {
+  for (const profile of ['i13', 'se']) {
+    const farm = await openScenario(browser, url, 'fish-reel-early', { profile });
+    await farm.eval(() => {
+      const sc = window.__farm.game.scene.getScene('Farm');
+      window.__acts = new Set();
+      sc.events.on('postupdate', () => {
+        const p = sc.pose;
+        if (p && p.visible && p.texture.key.startsWith('player_act_reel'))
+          window.__acts.add(p.texture.key);
+      });
+    });
+    const worms = (st) =>
+      st.inventory.slots.reduce((n, x) => (x?.item === 'worms' ? n + x.qty : n), 0);
+    for (const how of ['touch', 'action']) {
+      await farm.during('panelOpen', ['fishing'], () => farm.press('Space'));
+      const cast = await farm.state();
+      // nothing will bite while the check runs: the press is early by construction
+      const phase0 = await farm.eval(() => {
+        const f = window.__farm.game.scene.getScene('UI').fishing;
+        f.delay = 1e9;
+        return f.phase;
+      });
+      const pressedAt = Date.now();
+      await farm.during('panelClosed', [], async () => {
+        if (how === 'touch') await farm.thumb.tap(100, 300, 70);
+        else await farm.press('Space');
+        // the line comes back up the track before the sheet closes
+        await farm.until(
+          () => window.__farm.game.scene.getScene('UI').fishing.phase !== 'wait',
+          null,
+          'the early press to register',
+        );
+      });
+      const closedMs = Date.now() - pressedAt;
+      await farm.frames(40);
+      const m = await farm.state();
+      const shown = await uiText(farm);
+      const reel = await farm.eval(() => {
+        const out = [...window.__acts];
+        window.__acts.clear();
+        return out;
+      });
+      check(
+        `fish-reel-early (${profile}, ${how}): an early press reels the line in, says so once, and gives the worm back`,
+        phase0 === 'wait' &&
+          worms(cast) === worms(m) - 1 &&
+          shown.includes('Too soon: line reeled in, bait kept.') &&
+          !shown.includes('Too slow') &&
+          reel.length > 0 &&
+          (await farm.openSheet()) !== 'fishing',
+        JSON.stringify({
+          phase0,
+          worms: [worms(cast), worms(m)],
+          reel,
+          closedMs,
+          shown: shown.slice(-160),
+        }),
+      );
+      await farm.idle(30);
+    }
+    check(
+      `fish-reel-early (${profile}): no page errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+}
+
 async function lang() {
   // The title in Portuguese at a first launch, on the smallest phone.
   let farm = await openScenario(browser, url, 'lang-pt-title', { profile: 'se' });
@@ -3737,6 +3811,7 @@ try {
         towingLane,
         weirTow,
         bait,
+        fishEarly,
         townBoard,
         guidedDepth,
         lang,

@@ -625,6 +625,7 @@ export abstract class WorldScene extends Phaser.Scene {
       gameEvents.on('farmChanged', () => (this.farmDirty = true)),
       // art round 5: the reel plays once the fishing sheet has closed (the world is frozen while it is open)
       gameEvents.on('fishCaught', () => (this.pendingAct = 'reel')),
+      gameEvents.on('lineReeled', () => (this.pendingAct = 'reel')),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
       gameEvents.on('heartUp', () => {

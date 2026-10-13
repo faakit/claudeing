@@ -2219,3 +2219,17 @@ QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `age
 - **Now:** the Home Plot is `[9, 16, 4, 10]` (40 tiles, was 32). Old saves get the two rows too (plots are looked
   up by id). `tests/land-tools.test.ts` fails if any farm dirt tile lies in no plot. Sims and balance tests are
   unchanged by it (weeds may now sprout on the two rows, as on the rest of the plot).
+
+### A press before the bite reels the line in ("puxar a vara se apertar antes de fisgar")
+
+- **Before:** a tap on the fishing sheet (or Action) while waiting for a bite did nothing at all, and a press held
+  into the bite did not hook either (only a new press does), so an impatient player saw no answer and then lost the
+  bait to "Too slow!".
+- **Now:** a press while waiting reels the empty line in. The bobber is pulled up the track to the rod's tip over
+  350 ms (`REEL_IN_S`, a tick and the select sound), the sheet closes, the farmer plays the reel pose
+  (`gameEvents` `lineReeled`, the same frames a catch plays), the bait comes back (the ruling for leaving before a
+  bite), and one line says so: "Too soon: line reeled in, bait kept." Leave before a bite now plays the reel pose
+  too, without the line. The waiting hint says it ("Tap when it bites. Sooner reels it in."). A missed bite still
+  costs the bait. Scenario `fish-reel-early`; e2e block `fishEarly` (touch and Action, i13 and SE).
+- Not a penalty on purpose: a cost for an early press would punish a tap meant for the bite, and the whole bite
+  window (1.5 s) is unchanged.
