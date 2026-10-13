@@ -15,7 +15,7 @@ import {
   placedAt,
   setPickupClock,
 } from '../src/systems/placeables';
-import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { pointsForHearts } from '../src/systems/friendship';
 import { applyRival, isFarmGood, rivalMinute, rivalNotice, rivalPicks } from '../src/systems/rival';
 import { migrate } from '../src/systems/save';
 import { siloStock } from '../src/systems/silo';
@@ -123,7 +123,7 @@ describe('critique 5 fixes', () => {
 
   it('F1: Clay is in town when his 2-heart perk says he comes (5 PM)', () => {
     const s = rivalDay();
-    s.friends[game.rival.npc] = { points: 2 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends[game.rival.npc] = { points: pointsForHearts(2), talkedDay: 0, giftedDay: 0 };
     expect(npcLocation(game.rival.npc, game.rival.minute)?.map).toBe('town');
     expect(npcLocation(game.rival.npc, rivalMinute(s))?.map).toBe('town');
   });

@@ -265,7 +265,16 @@
     "partOffer": "The weir wants a {part}. I can make you one.",
     "partNoGold": "Not enough gold: {gold}.",
     "partBagFull": "Your bag is full.",
-    "partBought": "{part} in your bag. Take it to the site."
+    "partBought": "{part} in your bag. Take it to the site.",
+    "reactAgain": "{item} again? Thanks.",
+    "waterHelpNote": "Rosa watered {n} dry crops at dawn.",
+    "nextHeart": "Next heart: {list}",
+    "heartScene": "a scene",
+    "heartLetter": "a letter",
+    "heartDaily": "a small gift a day",
+    "heartFavs": "their favourites",
+    "heartRecipe": "recipe: {name}",
+    "giftsWeek": "Gifts this week: {n}/{max}"
   },
   "jobs": {
     "headerDouble": "TODAY'S JOBS: DOUBLE PAY",
@@ -679,9 +688,11 @@
     "needsLevel": "{skill} Lv {level} (you: {have})",
     "title": "WORKBENCH",
     "make": "Make",
-    "fiber": "You carry {n} fiber. Cut weeds with the scythe.",
+    "fiber": "Fiber: {n}. Cut weeds (2 each), pick up dry grass, or buy at Mara's.",
     "made": "Made {n} {item}",
-    "madeOne": "Made {item}"
+    "madeOne": "Made {item}",
+    "needsFriend": "{name} teaches it at {count} hearts",
+    "orFriend": "{skill} Lv {level}, or {name} at {count} hearts"
   },
   "gift": {
     "loves": "Loves it!",
@@ -692,7 +703,13 @@
     "notTried": "Not tried yet",
     "oneADayShort": "1 a day.",
     "oneADay": "1 gift a day.",
-    "tomorrow": "Tomorrow."
+    "tomorrow": "Tomorrow.",
+    "perWeek": "2 gifts a week.",
+    "perWeekShort": "2 a week.",
+    "oneLeft": "1 more this week.",
+    "oneLeftShort": "1 left.",
+    "nextWeek": "Again next week.",
+    "nextWeekShort": "Next week."
   },
   "perk": {
     "qualityBonus": "+{n}% better quality",
@@ -714,7 +731,8 @@
     },
     "rivalPolite": "{name} spares your farm goods",
     "rivalOff": "{name} stops taking requests",
-    "festivalPrize": "+{n}% festival prizes"
+    "festivalPrize": "+{n}% festival prizes",
+    "waterHelp": "she waters {n} crops on dry mornings"
   },
   "plot": {
     "size": "{n} tiles of workable land.",
@@ -831,7 +849,7 @@
   },
   "fx": {
     "refilled": "Refilled!",
-    "fiber": "+1 Fiber",
+    "fiber": "+{n} Fiber",
     "goldQuality": "Gold quality!",
     "silverQuality": "Silver quality!"
   },

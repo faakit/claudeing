@@ -78,7 +78,17 @@ export function clearForage(state: GameState): void {
 }
 
 export type CollectResult =
-  { ok: true; item: string; qty: number; q: number } | { ok: false; reason: 'none' | 'full' };
+  | { ok: true; item: string; qty: number; q: number; bundle: boolean }
+  | { ok: false; reason: 'none' | 'full' };
+
+/**
+ * How many a wild pickup of this item gives: a bundle of a material (dry grass: 3 fiber, QA round) gives its `qty`,
+ * a wild good one. Null when the item is a plain wild good.
+ */
+export function bundleQty(item: string): number | null {
+  const qty = forage.table.find((e) => e.item === item && e.qty)?.qty;
+  return qty ?? null;
+}
 
 /** Pick up the forageable at a tile. A foraging perk can double it; quality can roll up. */
 export function collectForage(
@@ -91,13 +101,22 @@ export function collectForage(
   const item = state.forage[map]?.[key];
   if (!item) return { ok: false, reason: 'none' };
   if (roomFor(state, item, 1) < 1) return { ok: false, reason: 'full' };
-  const qty = random(state) < perk(state, 'forageDouble') && roomFor(state, item, 2) >= 2 ? 2 : 1;
-  const q = rollQuality(state, 0, 'forageQuality');
+  const doubled = random(state) < perk(state, 'forageDouble');
+  const rolled = rollQuality(state, 0, 'forageQuality');
+  // A bundle (dry grass) is a material: no quality, and as much of it as the bag takes (the RNG draws stay the same).
+  const bundle = bundleQty(item);
+  const qty =
+    bundle !== null
+      ? Math.min(bundle * (doubled ? 2 : 1), roomFor(state, item, bundle * 2))
+      : doubled && roomFor(state, item, 2) >= 2
+        ? 2
+        : 1;
+  const q = bundle !== null ? 0 : rolled;
   addItem(state, q > 0 ? { item, q } : item, qty);
   delete state.forage[map]![key];
   if (Object.keys(state.forage[map]!).length === 0) delete state.forage[map];
   gameEvents.emit('forageChanged', { map });
-  return { ok: true, item, qty, q };
+  return { ok: true, item, qty, q, bundle: bundle !== null };
 }
 
 export const forageValue = (item: string): number => items[item]?.sellPrice ?? 0;

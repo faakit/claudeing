@@ -197,8 +197,8 @@
     "icon": "item_fiber",
     "color": "#8fbf5a",
     "sellPrice": 2,
-    "source": "at Mara's",
-    "description": "Cut from weeds.",
+    "source": "cut weeds, or at Mara's",
+    "description": "Cut weeds or pick up dry grass.",
     "buyPrice": 5
   },
   "wild_leek": {
@@ -252,6 +252,7 @@
     "icon": "item_mushroom",
     "color": "#c9a27a",
     "sellPrice": 45,
+    "source": "the woods, spring and fall",
     "description": "Earthy woodland find.",
     "family": "veg"
   },
@@ -279,6 +280,7 @@
     "icon": "item_carp",
     "color": "#c9a24a",
     "sellPrice": 25,
+    "source": "fish the pond or the lake",
     "description": "Common pond fish."
   },
   "bluegill": {
@@ -748,6 +750,7 @@
     "icon": "item_copper_ore",
     "color": "#c9703a",
     "sellPrice": 20,
+    "source": "mine copper veins",
     "description": "Smelt it in a furnace.",
     "family": "copper"
   },

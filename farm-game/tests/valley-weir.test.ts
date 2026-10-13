@@ -13,7 +13,7 @@ import {
   isGiftable,
   linesNow,
   pendingEvent,
-  POINTS_PER_HEART,
+  pointsForHearts,
 } from '../src/systems/friendship';
 import { isShippable } from '../src/systems/economy';
 import {
@@ -21,7 +21,6 @@ import {
   buyPart,
   channelFlow,
   dryMaps,
-  HEART_POINTS,
   interactSite,
   partOffer,
   revealPending,
@@ -57,7 +56,7 @@ function farmer(day = SUMMER_15 - 1, hearts = 2): GameState {
   s.stats['place.spring.opened'] = 10;
   s.stats['valley.creekSeen'] = 1;
   s.stats['mail.welcome'] = 1;
-  s.friends['finn'] = { points: hearts * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+  s.friends['finn'] = { points: pointsForHearts(hearts), talkedDay: 0, giftedDay: 0 };
   return s;
 }
 /** Finn asked for the weir this morning. */
@@ -99,7 +98,6 @@ describe('the Weir: asked by Finn', () => {
     expect(askHolds(forge, weir.ask)).toBe(false);
     forge.stats['place.forge'] = 3;
     expect(askHolds(forge, weir.ask)).toBe(true);
-    expect(HEART_POINTS).toBe(POINTS_PER_HEART);
   });
 
   it("is asked once, the morning summer 15 comes, with Finn's letter and the HUD line that day", () => {
@@ -349,7 +347,7 @@ describe('Finn, Clay and the river', () => {
       expect(e.reward).toEqual({ item: 'catfish', qty: 2 });
     }
     const s = newState();
-    s.friends['finn'] = { points: 4 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends['finn'] = { points: pointsForHearts(4), talkedDay: 0, giftedDay: 0 };
     s.stats['friend.finn.lake'] = 1;
     s.stats['event.finn.lake'] = 1;
     const dry = pendingEvent(s, 'finn');
@@ -371,7 +369,7 @@ describe('Finn, Clay and the river', () => {
   it('a save that saw "A secret spot" sees "The Heron" without its catfish again', () => {
     const play = (sawSecret: boolean) => {
       const s = newState();
-      s.friends['finn'] = { points: 4 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+      s.friends['finn'] = { points: pointsForHearts(4), talkedDay: 0, giftedDay: 0 };
       for (const ev of npcs['finn']!.events!)
         if (ev.id !== 'heron' && ev.hearts <= 4) s.stats[`event.finn.${ev.id}`] = 1;
       if (sawSecret) s.stats['event.finn.secret'] = 1;

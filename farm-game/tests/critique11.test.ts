@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
 import { game, goals, mail } from '../src/data';
-import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { pointsForHearts } from '../src/systems/friendship';
 import { boardWants, requestWants } from '../src/systems/orders';
 import { BOARD_PRIZE, crateDue, rivalCrate, rivalNotice, settleSeason } from '../src/systems/rival';
 import { morningSpecial } from '../src/systems/specials';
@@ -12,7 +12,7 @@ import type { GameState, Order } from '../src/state/GameState';
 import { newState } from './helpers';
 
 const friend = (s: GameState) =>
-  (s.friends['clay'] = { points: 5 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 });
+  (s.friends['clay'] = { points: pointsForHearts(5), talkedDay: 0, giftedDay: 0 });
 
 describe("critique 11 F1/F2: Clay's crates are said, keep up with a leader, and never end a season", () => {
   it('a week after the race starts, then counted from his last crate (critique 12 cadence), never on day 28', () => {

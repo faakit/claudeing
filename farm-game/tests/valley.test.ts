@@ -20,7 +20,7 @@ import {
   linesNow,
   lineText,
   pendingEvent,
-  POINTS_PER_HEART,
+  pointsForHearts,
 } from '../src/systems/friendship';
 import { countItem } from '../src/systems/inventory';
 import { sellValue } from '../src/systems/itemRef';
@@ -375,7 +375,7 @@ describe('villager lines that fit the valley', () => {
 
   it('events: a variant per valley state, and seeing one sees both', () => {
     const s = newState();
-    s.friends['rosa'] = { points: POINTS_PER_HEART * 5, talkedDay: 0, giftedDay: 0 };
+    s.friends['rosa'] = { points: pointsForHearts(5), talkedDay: 0, giftedDay: 0 };
     for (const ev of ['soil', 'orchard']) s.stats[`event.rosa.${ev}`] = 1;
     const dry = pendingEvent(s, 'rosa');
     expect(dry?.id).toBe('harvest');

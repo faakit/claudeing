@@ -1,0 +1,12 @@
+{
+  "title": "Friendship: Rosa at five hearts waters a few crops",
+  "about": "QA round (hearts worth having). Spring 12, 22:00 on the farm, Rosa at five hearts, twelve dry parsnips growing, tomorrow sunny. Sleep: the morning summary says \"Rosa watered 8 dry crops at dawn.\" and eight of them are dark soil. On a rain morning she does nothing.",
+  "version": 18,
+  "tags": ["farm", "villagers", "friendship", "qa"],
+  "at": { "map": "farm", "tx": 11, "ty": 15, "facing": "down" },
+  "time": { "day": 12, "clock": "22:00" },
+  "forecast": "sunny",
+  "friends": { "rosa": 5 },
+  "crops": [{ "crop": "parsnip", "stage": 1, "rect": [9, 16, 4, 3] }],
+  "goal": "harvest"
+}

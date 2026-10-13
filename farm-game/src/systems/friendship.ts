@@ -5,25 +5,37 @@ import { gameEvents, toast } from './events';
 import { addStat, checkGoals } from './goals';
 import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
-import { items } from '../data';
+import { items, mail, recipes } from '../data';
 import { villagerHome } from './houses';
 import { absoluteDay } from './time';
 import { openingLine, openingScene, valleyHolds } from './valley';
 import { isWet } from './weather';
+import { isMature } from './farming';
 import { t } from '../i18n';
+import { heartProgress, heartsFor, MAX_HEARTS, MAX_POINTS, rescaleOldPoints } from './hearts';
 
-export const POINTS_PER_HEART = 50;
-export const MAX_HEARTS = 5;
-const MAX_POINTS = POINTS_PER_HEART * MAX_HEARTS;
+export { HEART_AT, MAX_HEARTS, MAX_POINTS, pointsForHearts } from './hearts';
 
+/** A chat's friendship: the first talk of a day. Once you are friends (2 hearts) talk alone counts for less. */
 export const CHAT_POINTS = 10;
+export const CHAT_POINTS_FRIEND = 6;
+export const CHAT_FRIEND_HEARTS = 2;
 export type Reaction = 'love' | 'like' | 'neutral' | 'dislike';
+/** A gift's friendship by reaction (QA round: what they love matters far more than any present). */
 export const GIFT_POINTS: Record<Reaction, number> = {
   love: 80,
-  like: 45,
-  neutral: 15,
+  like: 40,
+  neutral: 10,
   dislike: -20,
 };
+/** Gifts a villager takes a week (days 1-7, 8-14, ...); a birthday gift never counts toward it. */
+export const GIFTS_PER_WEEK = 2;
+/** The same present again within this many days is worth half ("Daffodils again?"). */
+export const REPEAT_DAYS = 14;
+/** A silver or gold present means more: x1.25, x1.5 (liked and loved gifts only). */
+export const QUALITY_GIFT = [1, 1.25, 1.5] as const;
+/** This save counts friendship on the QA-round curve (new games carry it; older saves are rescaled once). */
+export const FRIEND_CURVE = 'friend.curve2';
 
 export const npcIds = (): string[] => Object.keys(npcs);
 /** The villagers in the valley now (a returning one counts from the morning they come home). */
@@ -34,8 +46,35 @@ const blank = (): Friendship => ({ points: 0, talkedDay: 0, giftedDay: 0 });
 export const friendOf = (state: GameState, id: string): Friendship => state.friends[id] ?? blank();
 
 export const pointsOf = (state: GameState, id: string): number => friendOf(state, id).points;
-export const heartsOf = (state: GameState, id: string): number =>
-  Math.min(MAX_HEARTS, Math.floor(pointsOf(state, id) / POINTS_PER_HEART));
+export const heartsOf = (state: GameState, id: string): number => heartsFor(pointsOf(state, id));
+/** Points into the current heart and what the next costs (the sheet's bar); null at five hearts. */
+export const heartBar = (state: GameState, id: string): { have: number; need: number } | null =>
+  heartProgress(pointsOf(state, id));
+
+/**
+ * Saves from before the QA round counted 50 points a heart: rescale them once (no version bump, the bait round's
+ * marker pattern), keeping every villager's hearts and how far they were toward the next.
+ */
+export function friendCurveDefaults(state: GameState): GameState {
+  if (state.stats[FRIEND_CURVE]) return state;
+  state.stats[FRIEND_CURVE] = 1;
+  for (const f of Object.values(state.friends)) f.points = rescaleOldPoints(f.points);
+  return state;
+}
+
+/** The week of the calendar a day falls in (days 1-7 are week 0). */
+const weekOf = (state: GameState): number => Math.floor((absoluteDay(state) - 1) / 7);
+const weekKey = (id: string): string => `giftWeek.${id}`;
+const weekCountKey = (id: string): string => `giftWeekN.${id}`;
+
+/** Gifts given to this villager this week (birthday gifts not counted). */
+export function giftsThisWeek(state: GameState, id: string): number {
+  return state.stats[weekKey(id)] === weekOf(state) + 1 ? (state.stats[weekCountKey(id)] ?? 0) : 0;
+}
+
+/** Gifts this villager will still take this week, not counting a birthday's. */
+export const giftsLeft = (state: GameState, id: string): number =>
+  Math.max(0, GIFTS_PER_WEEK - giftsThisWeek(state, id));
 
 /** Is it this villager's birthday today? Chats and gifts count extra. */
 export const isBirthday = (state: GameState, id: string): boolean => {
@@ -45,8 +84,14 @@ export const isBirthday = (state: GameState, id: string): boolean => {
 
 export const canChat = (state: GameState, id: string): boolean =>
   friendOf(state, id).talkedDay !== absoluteDay(state);
-export const canGift = (state: GameState, id: string): boolean =>
-  friendOf(state, id).giftedDay !== absoluteDay(state);
+/** Why a gift cannot be given now: one was given today, or this week's are given (a birthday is always open). */
+export function giftBlock(state: GameState, id: string): 'today' | 'week' | null {
+  if (friendOf(state, id).giftedDay === absoluteDay(state)) return 'today';
+  if (giftsLeft(state, id) <= 0 && !isBirthday(state, id)) return 'week';
+  return null;
+}
+/** One gift a day, and at most `GIFTS_PER_WEEK` a week (a birthday present is always welcome). */
+export const canGift = (state: GameState, id: string): boolean => giftBlock(state, id) === null;
 
 /** Friendship from outside chats and gifts (a finished job, an event). */
 export function befriend(state: GameState, id: string, points: number): void {
@@ -139,7 +184,8 @@ export function chat(state: GameState, id: string): ChatResult {
   const def = npcs[id] as NpcDef;
   const f = (state.friends[id] ??= blank());
   f.talkedDay = absoluteDay(state);
-  const chatPoints = isBirthday(state, id) ? CHAT_POINTS * 2 : CHAT_POINTS;
+  const base = heartsOf(state, id) >= CHAT_FRIEND_HEARTS ? CHAT_POINTS_FRIEND : CHAT_POINTS;
+  const chatPoints = isBirthday(state, id) ? base * 2 : base;
   addPoints(state, id, chatPoints);
   addStat(state, 'talked');
   let gift: ChatResult['gift'] = null;
@@ -160,27 +206,57 @@ export function chat(state: GameState, id: string): ChatResult {
 }
 
 export type GiftResult =
-  { ok: true; reaction: Reaction; points: number } | { ok: false; reason: 'today' | 'invalid' };
+  | { ok: true; reaction: Reaction; points: number; repeat: boolean }
+  | { ok: false; reason: 'today' | 'week' | 'invalid' };
 
-/** Give one item. Once a day per villager; favourites are worth a lot, dislikes cost friendship. */
+const lastGiftKey = (id: string, item: string): string => `giftDay.${id}.${item}`;
+
+/** Was this item given to this villager in the last `REPEAT_DAYS` days? */
+export function isRepeatGift(state: GameState, id: string, item: string): boolean {
+  const last = state.stats[lastGiftKey(id, item)];
+  return last !== undefined && absoluteDay(state) - last < REPEAT_DAYS;
+}
+
+/** What a gift is worth now: the reaction, then its quality, half for a repeat, x3 on a birthday (welcome ones). */
+export function giftPoints(state: GameState, id: string, ref: ItemRef): number {
+  const base = GIFT_POINTS[reactionTo(id, ref)];
+  if (base <= 0) return base;
+  let points = base * (QUALITY_GIFT[ref.q ?? 0] ?? 1);
+  if (isRepeatGift(state, id, ref.item)) points /= 2;
+  if (isBirthday(state, id)) points *= 3;
+  return Math.round(points);
+}
+
+/**
+ * Give one item: once a day and twice a week per villager (a birthday present is extra). Favourites are worth a
+ * lot, the same present twice in two weeks half as much, and dislikes cost friendship.
+ */
 export function giveGift(state: GameState, id: string, ref: ItemRef): GiftResult {
-  if (!canGift(state, id)) return { ok: false, reason: 'today' };
-  if (!isGiftable(ref) || !removeStack(state, ref, 1)) return { ok: false, reason: 'invalid' };
+  const block = giftBlock(state, id);
+  if (block) return { ok: false, reason: block };
+  if (!isGiftable(ref)) return { ok: false, reason: 'invalid' };
   const reaction = reactionTo(id, ref);
-  const base = GIFT_POINTS[reaction];
-  const points = isBirthday(state, id) && base > 0 ? base * 3 : base;
+  const repeat = GIFT_POINTS[reaction] > 0 && isRepeatGift(state, id, ref.item);
+  const points = giftPoints(state, id, ref);
+  if (!removeStack(state, ref, 1)) return { ok: false, reason: 'invalid' };
   (state.friends[id] ??= blank()).giftedDay = absoluteDay(state);
+  if (!isBirthday(state, id)) {
+    const n = giftsThisWeek(state, id);
+    state.stats[weekKey(id)] = weekOf(state) + 1;
+    state.stats[weekCountKey(id)] = n + 1;
+  }
+  state.stats[lastGiftKey(id, ref.item)] = absoluteDay(state);
   state.stats[giftKey(id, ref.item)] = REACTION_CODE[reaction];
   addPoints(state, id, points);
   addStat(state, 'gifted');
   if (reaction === 'love' || reaction === 'like') addStat(state, 'likedGifts');
-  toast(
-    `${npcs[id]?.name}: ${REACTION_TEXT[reaction](displayName(ref))}`,
-    reaction === 'dislike' ? 'warn' : 'good',
-  );
+  const said = repeat
+    ? t('npc.reactAgain', { item: displayName(ref) })
+    : REACTION_TEXT[reaction](displayName(ref));
+  toast(`${npcs[id]?.name}: ${said}`, reaction === 'dislike' ? 'warn' : 'good');
   gameEvents.emit('friendsChanged', undefined);
   checkGoals(state);
-  return { ok: true, reaction, points };
+  return { ok: true, reaction, points, repeat };
 }
 
 export const REACTION_TEXT: Record<Reaction, (name: string) => string> = {
@@ -201,6 +277,47 @@ export function nextPerk(
     .filter((e) => e.hearts > hearts)
     .sort((a, b) => a.hearts - b.hearts)[0];
   return next ?? null;
+}
+
+/** Everything one heart level with a villager brings (QA round: every heart is worth having, and says so). */
+export interface HeartRewards {
+  hearts: number;
+  perks: Record<string, number>;
+  /** A heart scene plays (their `events`). */
+  scene: boolean;
+  /** A letter arrives (a `mail.json` letter on that heart). */
+  letter: boolean;
+  /** They start handing over a small gift on your first chat of the day. */
+  dailyGift: boolean;
+  /** Their favourites show on their sheet and in the gift list. */
+  favourites: boolean;
+  /** Recipes they teach (ids). */
+  recipes: string[];
+}
+
+/** The heart at which a villager's loved gifts are known to you (systems/friendship.ts `knownReaction`). */
+export const FAVOURITES_HEARTS = 3;
+
+/** What reaching `hearts` with this villager brings. */
+export function heartRewards(id: string, hearts: number): HeartRewards {
+  const def = npcs[id] as NpcDef;
+  return {
+    hearts,
+    perks: def.perks[String(hearts)] ?? {},
+    scene: (def.events ?? []).some((e) => e.hearts === hearts),
+    letter: mail.letters.some((l) => l.when.npc === id && (l.when.hearts ?? 1) === hearts),
+    dailyGift: def.giftHearts === hearts && def.gifts.length > 0,
+    favourites: hearts === FAVOURITES_HEARTS,
+    recipes: Object.entries(recipes)
+      .filter(([, r]) => r.friend?.npc === id && r.friend.hearts === hearts)
+      .map(([rid]) => rid),
+  };
+}
+
+/** The next heart's rewards with this villager, or null at five hearts. */
+export function nextHeart(state: GameState, id: string): HeartRewards | null {
+  const hearts = heartsOf(state, id);
+  return hearts >= MAX_HEARTS ? null : heartRewards(id, hearts + 1);
 }
 
 /** Sum of a perk across every villager's reached heart levels. Used by `perk()` in skills.ts. */
@@ -254,4 +371,23 @@ export function completeEvent(state: GameState, id: string): EventResult {
   gameEvents.emit('friendsChanged', undefined);
   const item = retold ? null : (ev.reward.item ?? null);
   return { ok: true, gold, item, qty: item ? qty : 0 };
+}
+
+/**
+ * A friend's help on the farm (perk `waterHelp`, Rosa at five hearts): on a dry morning she waters up to that many
+ * dry, growing crops, in a fixed order (no random draw). Returns how many she watered.
+ */
+export function waterHelp(state: GameState): number {
+  const n = Math.floor(friendPerk(state, 'waterHelp'));
+  if (n <= 0 || isWet(state.weather)) return 0;
+  let done = 0;
+  for (const key of Object.keys(state.farm.tiles).sort()) {
+    if (done >= n) break;
+    const soil = state.farm.tiles[key]!;
+    if (!soil.crop || soil.watered || isMature(soil.crop)) continue;
+    soil.watered = true;
+    done += 1;
+  }
+  if (done > 0) gameEvents.emit('farmChanged', undefined);
+  return done;
 }

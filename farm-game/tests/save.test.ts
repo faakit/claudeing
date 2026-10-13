@@ -129,6 +129,8 @@ describe('save sanitising (corrupt-but-parseable saves must never crash the game
       discoveries: 1,
       // ...and the job board's marker (a save from before has that day's jobs taken for it)
       'jobs.boardOn': 1,
+      // ...and friendship on the QA round's curve (its points rescaled once)
+      'friend.curve2': 1,
     });
     expect(s.shipping).toEqual({});
   });

@@ -1,0 +1,14 @@
+{
+  "title": "Friendship: Finn teaches the Glow Grub at three hearts",
+  "about": "QA round (hearts worth having: recipes). Summer 3, 18:00 at home, Finn at three hearts, a mushroom and fiber in the bag. Menu > Make: Glow Grub x2 (1 Mushroom, 2 Fiber) can be made. Rosa at one heart: Rich Fertilizer reads \"Fishing Lv 2, or Rosa at 2 hearts\".",
+  "version": 18,
+  "tags": ["house", "crafting", "friendship", "qa"],
+  "at": { "map": "house", "tx": 3, "ty": 3, "facing": "down" },
+  "time": { "season": "summer", "day": 3, "clock": "18:00" },
+  "friends": { "finn": 3, "rosa": 1 },
+  "items": [
+    { "item": "mushroom", "qty": 1 },
+    { "item": "fiber", "qty": 6 }
+  ],
+  "goal": "craft"
+}

@@ -313,6 +313,11 @@ export interface RecipeDef {
   ingredients: { item: string; qty: number }[];
   gold: number;
   unlock: { skill: string; level: number } | null;
+  /**
+   * A villager teaches it at a heart level (QA round: hearts worth having). With `unlock` too, either opens it; with
+   * no `unlock`, only the friendship does.
+   */
+  friend?: { npc: string; hearts: number };
   /** A dish: cooked at the workbench once the house has a kitchen (a Home upgrade). */
   kitchen?: boolean;
 }
@@ -328,7 +333,11 @@ export interface PlaceableDef {
 export interface ForageDef {
   perDay: Record<string, number>;
   cap: Record<string, number>;
-  table: { item: string; seasons: Season[]; maps?: string[]; weight: number }[];
+  /**
+   * `qty`: a bundle of a material lying in the wild (dry grass: 3 fiber), picked up whole. Only a material may be a
+   * bundle; a wild good (type `forage`) is always one.
+   */
+  table: { item: string; seasons: Season[]; maps?: string[]; weight: number; qty?: number }[];
 }
 export interface FishDef {
   item: string;
@@ -1177,6 +1186,8 @@ export function validateContent(): void {
       if (!items[ing.item]) fail('recipes', `"${id}" needs unknown item "${ing.item}"`);
     if (r.unlock && !skills[r.unlock.skill])
       fail('recipes', `"${id}" unlocks with unknown skill "${r.unlock.skill}"`);
+    if (r.friend && (!npcs[r.friend.npc] || !(r.friend.hearts >= 1 && r.friend.hearts <= 5)))
+      fail('recipes', `"${id}" is taught by an unknown villager or at a bad heart level`);
     if (r.output.qty < 1 || r.gold < 0) fail('recipes', `"${id}" has a bad quantity or price`);
   }
   for (const [id, pl] of Object.entries(placeables)) {
@@ -1207,7 +1218,11 @@ export function validateContent(): void {
   const baitCodes = Object.values(items).flatMap((it) => (it.bait ? [it.bait.code] : []));
   if (new Set(baitCodes).size !== baitCodes.length) fail('items', 'two baits share a code');
   for (const e of forage.table) {
-    if (items[e.item]?.type !== 'forage') fail('forage', `"${e.item}" is not a forage item`);
+    const type = items[e.item]?.type;
+    if (type !== 'forage' && !(type === 'material' && (e.qty ?? 0) >= 1))
+      fail('forage', `"${e.item}" is not a forage item (or a material bundle with a qty)`);
+    if (type === 'forage' && e.qty !== undefined)
+      fail('forage', `"${e.item}": only a bundle has a qty`);
     for (const m of e.maps ?? []) if (!mapIds.includes(m)) fail('forage', `unknown map "${m}"`);
   }
   for (const m of [...Object.keys(forage.perDay), ...Object.keys(forage.cap)]) {

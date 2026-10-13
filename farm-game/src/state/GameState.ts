@@ -276,7 +276,14 @@ export function createInitialState(): GameState {
     // `valley.weirOn`: it plays the dry town and the Weir (M6); saves from before keep their river.
     // `bait.on`: it fishes with bait from the start (its worms are in `startingItems`); saves from before get theirs once.
     // `jobs.boardOn`: its jobs are taken at the town board; a save from before has that day's jobs taken for it once.
-    stats: { 'valley.on': 1, 'valley.weirOn': 1, 'bait.on': 1, 'jobs.boardOn': 1 },
+    // `friend.curve2`: friendship counts on the QA round's curve (systems/hearts.ts); older saves are rescaled once.
+    stats: {
+      'valley.on': 1,
+      'valley.weirOn': 1,
+      'bait.on': 1,
+      'jobs.boardOn': 1,
+      'friend.curve2': 1,
+    },
     goalIndex: 0,
     settings: {
       music: 0.6,

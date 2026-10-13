@@ -23,11 +23,15 @@ registerActionHandler({
         run: () => {
           const res = collectForage(state, tile.map, tile.tx, tile.ty);
           if (!res.ok) throw new Error('forage was planned but failed');
-          addStat(state, 'foraged', res.qty);
+          // a bundle of dry grass is one pickup however much fiber it held (the day-1 errand counts pickups)
+          addStat(state, 'foraged', res.bundle ? 1 : res.qty);
           addXp(
             state,
             'foraging',
-            Math.max(3, Math.round(sellValue({ item: res.item }) * 0.2 * res.qty)),
+            Math.max(
+              3,
+              Math.round(sellValue({ item: res.item }) * 0.2 * (res.bundle ? 1 : res.qty)),
+            ),
           );
           return { item: res.item, qty: res.qty, q: res.q };
         },
@@ -52,8 +56,6 @@ registerDayHook({
     }
     const total = Object.values(spawned).reduce((a, b) => a + b, 0);
     if (total > 0)
-      ctx.notes.push(
-        spawned['woods'] ? t('forage.woodsNote') : t('forage.sproutedNote'),
-      );
+      ctx.notes.push(spawned['woods'] ? t('forage.woodsNote') : t('forage.sproutedNote'));
   },
 });

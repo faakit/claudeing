@@ -12,6 +12,7 @@ import {
   giveGift,
   heartsOf,
   lineFor,
+  pointsForHearts,
   reactionTo,
 } from '../src/systems/friendship';
 import { addItem, countItem } from '../src/systems/inventory';
@@ -105,7 +106,7 @@ describe('villagers', () => {
     expect(reactionTo('mara', { item: 'jam', of: 'tomato' })).toBe('love');
     const res = giveGift(s, 'mara', { item: 'daffodil' });
     expect(res).toMatchObject({ ok: true, reaction: 'love', points: 80 });
-    expect(heartsOf(s, 'mara')).toBe(1);
+    expect(heartsOf(s, 'mara')).toBe(0); // the first heart takes 100 since the QA round
     expect(canGift(s, 'mara')).toBe(false);
     expect(giveGift(s, 'mara', { item: 'fiber' })).toEqual({ ok: false, reason: 'today' });
     s.time.day += 1;
@@ -119,7 +120,7 @@ describe('villagers', () => {
   });
   it('friends hand over a daily gift once they are close enough', () => {
     const s = newState();
-    s.friends['finn'] = { points: 150, talkedDay: 0, giftedDay: 0 };
+    s.friends['finn'] = { points: pointsForHearts(3), talkedDay: 0, giftedDay: 0 };
     const res = chat(s, 'finn');
     expect(res.gift).toEqual({ item: 'bait', qty: 3 });
     expect(countItem(s, 'bait')).toBe(3);
@@ -128,10 +129,10 @@ describe('villagers', () => {
     const s = newState();
     expect(friendPerk(s, 'shopDiscount')).toBe(0);
     const full = priceFor(s, 'chicken_feed');
-    s.friends['mara'] = { points: 100, talkedDay: 0, giftedDay: 0 };
+    s.friends['mara'] = { points: pointsForHearts(2), talkedDay: 0, giftedDay: 0 };
     expect(perk(s, 'shopDiscount')).toBeCloseTo(0.05);
     expect(priceFor(s, 'chicken_feed')).toBeLessThanOrEqual(full);
-    s.friends['mara']!.points = 250;
+    s.friends['mara']!.points = pointsForHearts(5);
     expect(perk(s, 'shopDiscount')).toBeCloseTo(0.15);
     s.money = 10000;
     const money = s.money;
@@ -167,7 +168,7 @@ describe('save v4', () => {
       ghost: { points: 10, talkedDay: 0, giftedDay: 0 },
     };
     const again = migrate(raw);
-    expect(again.friends['mara']!.points).toBe(250);
+    expect(again.friends['mara']!.points).toBe(pointsForHearts(5));
     expect(again.friends['ghost']).toBeUndefined();
   });
 });
@@ -249,7 +250,7 @@ describe('the blacksmith', () => {
     const tonic = ups.find((u) => u.id === 'stamina')!;
     const s = newState();
     const full = nextUpgrade(s, hoe)!.price;
-    s.friends['orin'] = { points: 250, talkedDay: 0, giftedDay: 0 };
+    s.friends['orin'] = { points: pointsForHearts(5), talkedDay: 0, giftedDay: 0 };
     expect(nextUpgrade(s, hoe)!.price).toBe(Math.round(full * 0.85));
     expect(nextUpgrade(s, tonic)!.price).toBe(tonic.levels[0]!.price);
   });
@@ -260,13 +261,13 @@ describe('heart events', () => {
     const { pendingEvent, completeEvent } = await import('../src/systems/friendship');
     const s = newState();
     expect(pendingEvent(s, 'mara')).toBeNull();
-    s.friends['mara'] = { points: 100, talkedDay: 0, giftedDay: 0 };
+    s.friends['mara'] = { points: pointsForHearts(2), talkedDay: 0, giftedDay: 0 };
     expect(pendingEvent(s, 'mara')?.id).toBe('shelf');
     const res = completeEvent(s, 'mara');
     expect(res).toMatchObject({ ok: true, item: 'cauliflower_seed', qty: 5 });
     expect(countItem(s, 'cauliflower_seed')).toBe(5);
     expect(pendingEvent(s, 'mara')).toBeNull();
-    s.friends['mara']!.points = 250;
+    s.friends['mara']!.points = pointsForHearts(5);
     expect(pendingEvent(s, 'mara')?.id).toBe('ledger');
     const gold = s.money;
     completeEvent(s, 'mara');
@@ -277,7 +278,7 @@ describe('heart events', () => {
   it('wait for room in the bag instead of losing the reward', async () => {
     const { pendingEvent, completeEvent } = await import('../src/systems/friendship');
     const s = newState();
-    s.friends['finn'] = { points: 100, talkedDay: 0, giftedDay: 0 };
+    s.friends['finn'] = { points: pointsForHearts(2), talkedDay: 0, giftedDay: 0 };
     addItem(s, 'carp', FULL_INVENTORY);
     expect(completeEvent(s, 'finn')).toEqual({ ok: false, reason: 'full' });
     expect(pendingEvent(s, 'finn')?.id).toBe('lake');

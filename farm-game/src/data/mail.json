@@ -275,6 +275,118 @@
         "item": "worms",
         "qty": 10
       }
+    },
+    {
+      "id": "mara_heart1",
+      "from": "mara",
+      "title": "The ledger",
+      "text": "I keep a ledger of every family that left: where they went, what they grew. Since you came, I've started writing to them again. A few bulbs from the back shelf.",
+      "when": {
+        "npc": "mara",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "tulip_seed",
+        "qty": 3
+      }
+    },
+    {
+      "id": "finn_heart1",
+      "from": "finn",
+      "title": "The Heron",
+      "text": "My father's boat still sits on the mud where the river was. Some evenings I sit in her and listen. Don't tell Mara. Worms, for your hook.",
+      "when": {
+        "npc": "finn",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "worms",
+        "qty": 10
+      }
+    },
+    {
+      "id": "rosa_heart1",
+      "from": "rosa",
+      "title": "Ilse's hands",
+      "text": "You hold a hoe the way Ilse did, low and patient. She'd be glad. She always put parsnips in first. So should you.",
+      "when": {
+        "npc": "rosa",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "parsnip_seed",
+        "qty": 5
+      }
+    },
+    {
+      "id": "orin_heart1",
+      "from": "orin",
+      "title": "A cold forge",
+      "text": "The wheel that worked my bellows stopped when the river left. A cold forge still mends hinges. Stone for your paths.",
+      "when": {
+        "npc": "orin",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "stone",
+        "qty": 15
+      }
+    },
+    {
+      "id": "clay_heart1",
+      "from": "clay",
+      "title": "Hm.",
+      "text": "Didn't think you'd last the month. You might. Here. Don't get used to it.",
+      "when": {
+        "npc": "clay",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "fertilizer",
+        "qty": 3
+      }
+    },
+    {
+      "id": "senna_heart1",
+      "from": "senna",
+      "title": "Flour dust",
+      "text": "The mill still smells of old flour. When the wheel turns I'll bake for the whole valley. That's a promise.",
+      "when": {
+        "npc": "senna",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "corn",
+        "qty": 3
+      }
+    },
+    {
+      "id": "clay_friend",
+      "from": "clay",
+      "title": "My brother",
+      "text": "Told my brother about you. He laughed. Then he asked if you needed a hand. Seeds from my own row.",
+      "when": {
+        "npc": "clay",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "corn_seed",
+        "qty": 5
+      }
+    },
+    {
+      "id": "senna_friend",
+      "from": "senna",
+      "title": "First bake",
+      "text": "First tart out of the old oven. It came out lopsided. It's yours anyway.",
+      "when": {
+        "npc": "senna",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "berry_tart",
+        "qty": 2
+      }
     }
   ]
 }

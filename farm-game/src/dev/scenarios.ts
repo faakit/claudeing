@@ -37,8 +37,9 @@ import {
   type Settings,
   type Weather,
 } from '../state/GameState';
-import { POINTS_PER_HEART } from '../systems/friendship';
+import { pointsForHearts } from '../systems/friendship';
 import { addItem, bagSize } from '../systems/inventory';
+import { bundleQty } from '../systems/forage';
 import { letterDue } from '../systems/mail';
 import { migrate } from '../systems/save';
 import {
@@ -405,7 +406,8 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
     if (mapOk(map, 'placed')) tileOk(map, o.tx, o.ty, `placed ${o.type}`, true);
   }
   for (const f of d.forage ?? []) {
-    if (itemOk(f.item, 'forage') && items[f.item]?.type !== 'forage')
+    // a wild good, or a bundle of a material lying in the wild (dry grass: forage.json `qty`)
+    if (itemOk(f.item, 'forage') && items[f.item]?.type !== 'forage' && bundleQty(f.item) === null)
       p.push(`forage: "${f.item}" is not a forage good`);
     const map = f.map ?? playerMap;
     if (mapOk(map, 'forage')) tileOk(map, f.tx, f.ty, `forage ${f.item}`, true);
@@ -537,7 +539,7 @@ export function buildScenarioState(def: ScenarioDef, mapInfo?: MapInfoFn): GameS
   for (const [k, v] of Object.entries(def.valley ?? {})) s.stats[valleyStatKey(k)] = v;
   const today = ((s.time.year - 1) * 4 + SEASONS.indexOf(s.time.season)) * 28 + s.time.day; // absolute day
   for (const [id, hearts] of Object.entries(def.friends ?? {}))
-    s.friends[id] = { points: Math.round(hearts * POINTS_PER_HEART), talkedDay: 0, giftedDay: 0 };
+    s.friends[id] = { points: pointsForHearts(hearts), talkedDay: 0, giftedDay: 0 };
   for (const it of def.items ?? []) {
     const ref = { item: it.item, ...(it.q ? { q: it.q } : {}), ...(it.of ? { of: it.of } : {}) };
     if (it.slot !== undefined) s.inventory.slots[it.slot] = { ...ref, qty: it.qty ?? 1 };

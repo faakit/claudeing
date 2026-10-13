@@ -4,7 +4,7 @@ import { craft, craftBatch, craftBlock, plainBatch } from '../../systems/craftin
 import { countItem } from '../../systems/inventory';
 import { audio } from '../../platform/audio';
 import { isRecipeUnlocked } from '../../systems/skills';
-import { lockedText, recipeNeed } from './craftText';
+import { lockedText, recipeNeedLine } from './craftText';
 import { C } from '../theme';
 import { ROW_H, rowText, type RowSpec } from '../widgets';
 import { fmt } from './format';
@@ -75,7 +75,7 @@ function rowSpec(id: string, c?: MenuTabContext): RowSpec {
   const s = getState();
   const r = recipes[id]!;
   const unlocked = isRecipeUnlocked(s, r);
-  const need = recipeNeed(r);
+  const need = recipeNeedLine(s, r);
   const block = craftBlock(s, id);
   const batch = plainBatch(s, id, 5);
   return {

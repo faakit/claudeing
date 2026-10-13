@@ -2188,3 +2188,51 @@ What changed:
 - **Villagers come and go just past the screen's edge.** An arrival in view starts at the nearest tile out of view
   (a far gate kept the guided start waiting for Rosa), a departure walks to the nearest tile out of view and goes;
   gates are the fallback.
+
+## QA round: teaching, balance and pacing (depth lane, qa/depth, 2026-10-13)
+
+QA feedback (pt-BR, owner's QA): a guide to gold, the planting cycle and skills; "fiber is too hard to get"; "hearts
+are too easy to max and give little incentive"; phase the game's depth over days and weeks.
+
+### Fiber
+
+- **Weeds give two fiber** (`FIBER_PER_WEED`), as much as the bag takes; the float text says "+2 Fiber".
+- **Dry grass in the wild.** A forage entry may now be a bundle of a material (`forage.json` `qty`; validated: only a
+  material is a bundle, and a bundle has a qty). Dry grass is `fiber` x3, weight 3 on the farm, in town and in the
+  woods in every season (about a quarter of wild spawns), drawn as the fiber icon with the wild-good ring. A bundle
+  has no quality, counts as one pickup (the day-1 errand and the forage jobs count pickups) and gives foraging XP as
+  one item. The RNG draws per pickup are the same as for a wild good, so nothing else in a run moves.
+- **Saves keep bundles** (the forage sanitizer accepted only `forage` items) and scenarios may place them.
+- **Where fiber comes from is said where it is asked.** Its `source` is "cut weeds, or at Mara's" (fund sheets); a
+  craft row short of an ingredient appends that ingredient's source ("3 Fiber: cut weeds, or at Mara's"); carp,
+  mushroom and copper ore got sources too. The craft tab's footer names all three ways. Mara still sells it (5g).
+- Measured: a woods visit finds about one bundle a day (3 fiber) plus the farm's 4 weeds (8): about 11 fiber a day
+  for free, against 3-6 before. The bait mix (3 fiber) and chum (1 fiber) are a day's walk, not a purchase. The sims
+  buy their fiber and do not forage, so their gold is unchanged.
+
+### Friendship: slower, and every heart worth having
+
+- **A rising curve** (`systems/hearts.ts`): hearts at 100, 250, 450, 700 and 1,000 points (was 50 a heart, 250 max).
+- **Talk counts for less once friends:** 10 a day, 6 from two hearts (x2 on a birthday).
+- **Gifts:** love 80, like 40 (was 45), neutral 10 (was 15), dislike -20. At most **two a week per villager** (days
+  1-7, 8-14, ...; stats `giftWeek.<id>`, `giftWeekN.<id>`), still one a day; a birthday present is always welcome
+  and never uses one up. **The same present within 14 days is worth half** ("Daffodils again? Thanks.";
+  `giftDay.<id>.<item>`). A silver or gold present is worth x1.25 / x1.5. Dislikes are never softened.
+- **Pace (tested, `tests/friendship-curve.test.ts`):** daily chats alone take past the first year's summer to reach
+  five hearts; two loved gifts a week plus chats take four to seven weeks (was three days with a daily daffodil).
+  The jobs' +15 and the specials' friendship are unchanged. The farmer sims do not court anyone, so every gold pin
+  is unchanged; the weir's "Finn at 2 hearts" (250 points) is reached by day 43 on chats alone.
+- **Old saves** are rescaled once (`friend.curve2` marker, no version bump, the bait round's pattern): the same
+  hearts and the same share of the way to the next. New games carry the marker.
+- **Every heart brings something, and the sheet says what** ("Next heart: 5% off shop prices, recipe: Preserve Jar,
+  a scene"; `heartRewards`, `ui/panels/heartText.ts`; a test proves every villager has something at every heart):
+  - heart 1: a letter with a Dry Year beat and a small gift (Mara's ledger of the families who left, Finn's *Heron*
+    on the mud, Rosa on Ilse's hands, Orin's cold forge, Clay's grudging "Hm.", Senna's mill);
+  - heart 2-5: the existing scenes and perks, plus **recipes villagers teach** (`recipes.json` `friend`; with a
+    skill unlock either opens it): Mara the preserve jar at 2, Rosa rich fertilizer at 2, Finn a new Glow Grub
+    recipe (1 mushroom + 2 fiber -> 2) at 3, Orin the furnace at 3, Clay the coop at 3;
+  - heart 3: daily gifts and their favourites, as before, and a letter (Clay and Senna got theirs);
+  - **help on the farm:** Rosa at five hearts waters up to 8 dry crops on a dry morning (perk `waterHelp`, a
+    morning note; no random draw); Senna's mill pays a little more for what you ship (sell +1/+2/+2% at 2/4/5).
+- The bar on the sheet fills toward the next heart's cost; the note beside Gift says "2 a week", "1 more this
+  week", "Tomorrow." or "Again next week.".
