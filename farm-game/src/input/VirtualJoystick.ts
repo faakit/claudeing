@@ -3,7 +3,7 @@ import { JOYSTICK, THUMB_ZONE_Y } from '../config';
 import type { Direction } from '../state/GameState';
 import type { InputHub } from './InputHub';
 import { CH } from '../ui/theme';
-import { GESTURE, stickSteer } from './gesture';
+import { GESTURE, StickSteer } from './gesture';
 
 const FADE_MS = 120;
 
@@ -11,6 +11,7 @@ const FADE_MS = 120;
 export class VirtualJoystick {
   private pointerId: number | null = null;
   private origin = new Phaser.Math.Vector2();
+  private steer = new StickSteer(JOYSTICK.radius, JOYSTICK.axisBias);
   private current: Direction | null = null;
   private readonly gfx: Phaser.GameObjects.Graphics;
   private readonly thumb: Phaser.GameObjects.Graphics;
@@ -78,6 +79,7 @@ export class VirtualJoystick {
     this.pointerId = p.id;
     this.engaged = false;
     this.origin.set(p.x, p.y);
+    this.steer = new StickSteer(this.radius, JOYSTICK.axisBias);
     this.current = null;
   }
 
@@ -90,15 +92,18 @@ export class VirtualJoystick {
       if (Math.hypot(dx, dy) < GESTURE.stickDeadzone) return;
       this.engaged = true;
     }
-    // The anchor stays where the thumb landed until the lift (stickSteer): easing back never stops or turns the walk.
-    const steer = stickSteer(dx, dy, this.radius, JOYSTICK.axisBias, this.current);
+    // The anchor holds along the walk and never drifts across it (StickSteer): easing back never stops or turns the
+    // walk, and a turn takes the same sideways slide however hard the thumb pushed.
+    const steer = this.steer.move(dx, dy);
     this.current = steer.dir;
     this.hub.setStick(this.current);
     this.hub.stickSlow = steer.slow;
     // Only reveal the stick once it is actually being used, so quick taps stay clean.
     if (!this.shown) this.fade(true);
-    this.gfx.setPosition(this.origin.x, this.origin.y);
-    this.thumb.setPosition(this.origin.x + steer.knobX, this.origin.y + steer.knobY);
+    const ox = this.origin.x + this.steer.ax;
+    const oy = this.origin.y + this.steer.ay;
+    this.gfx.setPosition(ox, oy);
+    this.thumb.setPosition(ox + steer.knobX, oy + steer.knobY);
   }
 
   private onUp(p: Phaser.Input.Pointer): void {

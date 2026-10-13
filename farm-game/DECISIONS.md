@@ -2193,7 +2193,7 @@ What changed:
 
 QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `agents/probes/` stage each one.
 
-### The floating stick's anchor stays put while it steers ("travar o joystick quando puxar pra andar")
+### The floating stick holds its anchor along the walk, and turns at the same slide however hard it pushed ("travar o joystick quando puxar pra andar")
 
 - **What was wrong** (`agents/probes/joystick-lock.mjs`, scenario `joystick-walk`, i13 and SE, both hands): past the
   rim the stick's anchor was dragged along behind the thumb (3-8 anchor moves per drag). A thumb that pushed and
@@ -2201,13 +2201,24 @@ QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `age
   to 16 px stopped the farmer for about 2 s (114 frames), and a 60 px drag left eased to 26 px stopped and then
   walked him right, the wrong way, while the thumb was still well left of where it landed. 8 of 16 gestures
   steered another way before the lift. Rolling the pad 2 mm sideways and a thumb's arc were already fine.
-- **Now:** the anchor is where the thumb landed and stays there until the lift (`stickSteer` in `input/gesture.ts`,
-  unit tested in `tests/joystick-lock.test.ts`). The knob is drawn at the finger, held inside the rim. Only a thumb
-  back within 4.5 px of its landing point stops the walk, and crossing it reverses, as before. The axis hysteresis
-  (1.6), the 9 px deadzone (so taps and Action's paint gestures), the two-speed half push and the stick sizes are
-  unchanged. Probe: 16/16 gestures steer one way from engage to lift, 0 anchor moves.
-- **Cost:** a reversal after a long drag now means coming back across the landing point (a 60 px drag is about
-  18 mm on an iPhone 13); the drag-along let a thumb reverse from wherever it was. Drags in play are 20-30 px.
+- **Now (after the QA critic's review C2-1):** a fully fixed anchor fixed the ease-back but made a turn need a
+  sideways slide that grew with how hard the thumb had pushed (a 50 px push, then a 60 px slide: never turned).
+  The rule is `StickSteer` in `input/gesture.ts` (unit tested in `tests/joystick-lock.test.ts`):
+  - along the walk axis the anchor trails the finger on a 26 px leash (`STICK_LEASH`), so easing back while the
+    finger is still out on the walk's side never stops him, and once it has trailed the dead band does not stop the
+    walk either: a thumb coming back about 31 px reverses straight over, with no stop on the way;
+  - across the walk axis the anchor never moves, and a turn is judged with the walk axis counted at most 16 px
+    (`STICK_TURN_CAP`) against the usual 1.6 hysteresis, so a turn takes about 26-28 px of sideways slide however
+    hard the thumb pushed; on a turn the anchor takes the finger's place across the new axis;
+  - the knob is drawn at the finger, held inside the rim. The 9 px deadzone (so taps and Action's paint gestures),
+    the two-speed half push and the stick sizes are unchanged.
+- **Measured** (`agents/probes/joystick-lock.mjs`, the critic's four turn gestures included; i13 and SE, both hands):
+  ease-backs, rolls and arcs 16/16 steady; a turn after a 50 px or a 22 px push 26-27 px (base 30-32, never on the
+  fully fixed anchor), right round to down 27-28 px (base 25), a reverse after a 40 px push 32 px with no stop
+  (base 30, with a stop on the way).
+- **Cost:** an ease-back is a relaxation up to about 26 px; a thumb that comes back 31 px or more along the walk
+  means the other way (the critic's reverse is that movement at the same speed, so no rule can tell them apart).
+  A sideways drift of 26 px (about 8 mm on an iPhone 13) now turns where the old stick needed 32 after a firm push.
 
 ### The home plot covers its whole field ("os dois tiles de baixo estão bugados no terreno inicial")
 

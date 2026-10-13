@@ -18,28 +18,78 @@ export const GESTURE = {
   dominance: 1.5,
 } as const;
 
+/** How far the stick's anchor may trail the finger along the walk axis (logical px; QA review C2-1). */
+export const STICK_LEASH = 26;
+/** The walk axis counts at most this much when the stick decides whether a sideways slide is a turn. */
+export const STICK_TURN_CAP = 16;
+
+const horizontal = (d: Direction): boolean => d === 'left' || d === 'right';
+
 /**
- * The floating stick's steering for a finger `dx, dy` from its anchor (QA, "lock the joystick when dragging to
- * walk"). The anchor is where the finger landed and stays there until the lift: a thumb that pushed hard and then
- * eased back (as thumbs do once the farmer is moving) still walks the same way, and only coming back within half the
- * deadzone of where it landed stops him. The knob is drawn at the finger, held inside the rim. Before, the anchor was
- * dragged along past the rim, so easing back stopped or reversed the walk (agents/probes/joystick-lock.mjs).
+ * The floating stick's steering for one touch (QA, "lock the joystick when dragging to walk"; critic review C2-1).
+ * Offsets are logical px from where the finger landed.
+ *
+ * - Along the walk axis the anchor stays put until the finger is more than `STICK_LEASH` ahead of it, then trails it
+ *   at that distance. Easing the thumb back never stops or turns the walk while the finger is still out on the walk's
+ *   side; after a firm push (the anchor trailed) the dead band does not stop it either, so a thumb coming back about
+ *   31 px reverses straight over, with no stop on the way. (Until this round the anchor was dragged along at the rim,
+ *   24 px, so an ease-back stopped or reversed the farmer: agents/probes/joystick-lock.mjs.)
+ * - Across it the anchor never moves, and a turn is judged with the walk axis capped at `STICK_TURN_CAP`, so the
+ *   sideways slide needed to turn (about 26-29 px) does not grow with how hard the thumb pushed.
+ * - On a turn the anchor takes the finger's place across the new axis, so the old push is not a sideways drift.
+ *
+ * The knob is drawn at the finger, held inside the rim around the anchor.
  */
-export function stickSteer(
-  dx: number,
-  dy: number,
-  radius: number,
-  bias: number,
-  current: Direction | null,
-): { dir: Direction | null; slow: boolean; knobX: number; knobY: number } {
-  const len = Math.hypot(dx, dy);
-  const k = len > radius ? radius / len : 1;
-  return {
-    dir: dominantDirection(dx, dy, GESTURE.stickDeadzone / 2, bias, current),
-    slow: len < radius * 0.5,
-    knobX: dx * k,
-    knobY: dy * k,
-  };
+export class StickSteer {
+  ax = 0;
+  ay = 0;
+  dir: Direction | null = null;
+  /** The anchor has trailed the finger along the walk (a firm push): the dead band then never stops the walk. */
+  private trailed = false;
+
+  constructor(
+    private readonly radius: number,
+    private readonly bias: number,
+  ) {}
+
+  move(
+    fx: number,
+    fy: number,
+  ): { dir: Direction | null; slow: boolean; knobX: number; knobY: number } {
+    const cur = this.dir;
+    if (cur) {
+      const s = cur === 'right' || cur === 'down' ? 1 : -1;
+      if (horizontal(cur)) {
+        if ((fx - this.ax) * s > STICK_LEASH) {
+          this.ax = fx - s * STICK_LEASH;
+          this.trailed = true;
+        }
+      } else if ((fy - this.ay) * s > STICK_LEASH) {
+        this.ay = fy - s * STICK_LEASH;
+        this.trailed = true;
+      }
+    }
+    const dx = fx - this.ax;
+    const dy = fy - this.ay;
+    const cap = (v: number): number => Math.sign(v) * Math.min(Math.abs(v), STICK_TURN_CAP);
+    const tx = cur && horizontal(cur) ? cap(dx) : dx;
+    const ty = cur && !horizontal(cur) ? cap(dy) : dy;
+    // after a firm push the walk goes straight from one way to the other: no stall in the dead band on the way back
+    const next =
+      dominantDirection(tx, ty, GESTURE.stickDeadzone / 2, this.bias, cur) ??
+      (this.trailed ? cur : null);
+    if (next && cur && horizontal(next) !== horizontal(cur)) {
+      if (horizontal(next)) this.ay = fy;
+      else this.ax = fx;
+      this.trailed = false;
+    }
+    this.dir = next;
+    const kx = fx - this.ax;
+    const ky = fy - this.ay;
+    const len = Math.hypot(kx, ky);
+    const k = len > this.radius ? this.radius / len : 1;
+    return { dir: next, slow: len < this.radius * 0.5, knobX: kx * k, knobY: ky * k };
+  }
 }
 
 /** Tracks one pointer from touch-down: how far it has strayed at most, and whether it ever moved. */
