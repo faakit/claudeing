@@ -1,0 +1,44 @@
+{
+  "title": "Reveal schedule: day 2's menu has three tabs",
+  "about": "QA round (phase the game's depth). A guided game on day 2 at 11:00 in town, its guided steps done. Open the Menu: Bag, Goal and Opts only. Make, Skill and the Book arrive on days 6, 5 and 3 (or the moment play needs them). The onboarding gate's day 1 and 2 are otherwise as before.",
+  "tags": ["town", "onboarding", "reveal", "qa"],
+  "at": {
+    "map": "town",
+    "tx": 13,
+    "ty": 15,
+    "facing": "up"
+  },
+  "time": {
+    "day": 2,
+    "clock": "11:00"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.welcomeJobs": 1,
+    "tut.jobBoard": 1,
+    "tut.board": 1
+  },
+  "goal": "job1",
+  "version": 18
+}

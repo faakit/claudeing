@@ -3716,6 +3716,106 @@ async function cloud() {
   await farm.close();
 }
 
+/**
+ * QA round (depth lane): the reveal schedule's tabs, the Guide reached through the coach, the villager sheet's
+ * next-heart line and a dry-grass bundle. Scenarios: reveal-day2-tabs, reveal-old-save, reveal-day3-guide,
+ * friend-next-heart, fiber-dry-grass.
+ */
+async function qaDepth() {
+  const tabsOf = async (farm) => {
+    await farm.tapButton('MENU');
+    await farm.panel('menu');
+    const names = (await farm.targets()).map((t) => t.text);
+    return ['Bag', 'Goal', 'Make', 'Skill', 'Book', 'Opts'].filter((n) => names.includes(n));
+  };
+  let farm = await openScenario(browser, url, 'reveal-day2-tabs', { profile: PROFILE });
+  let tabs = await tabsOf(farm);
+  check(
+    'reveal-day2-tabs: day 2 shows Bag, Goal and Opts only',
+    tabs.join() === 'Bag,Goal,Opts',
+    tabs.join(),
+  );
+  await farm.close();
+  farm = await openScenario(browser, url, 'reveal-old-save', { profile: PROFILE });
+  tabs = await tabsOf(farm);
+  check('reveal-old-save: an old save shows all six tabs', tabs.length === 6, tabs.join());
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'reveal-day3-guide', { profile: PROFILE });
+  const coachSays = (want) =>
+    farm
+      .until(
+        (_s, w, line) => {
+          const texts = [];
+          const walk = (n) => {
+            if (typeof n.text === 'string' && n.visible !== false) texts.push(n.text);
+            (n.list ?? []).forEach(walk);
+          };
+          w.game.scene.getScene('UI').children.list.forEach(walk);
+          return texts.some((x) => x.replace(/\s+/g, ' ').includes(line));
+        },
+        want,
+        `the coach line "${want}"`,
+      )
+      .then(() => true)
+      .catch(() => false);
+  check(
+    'reveal-day3-guide: the coach says "New: a Guide. Tap Menu."',
+    await coachSays('New: a Guide. Tap Menu.'),
+  );
+  await farm.tapButton('MENU');
+  await farm.panel('menu');
+  check(
+    'reveal-day3-guide: then "Tap Book: the new Guide."',
+    await coachSays('Tap Book: the new Guide.'),
+  );
+  await farm.tapButton('Book');
+  check(
+    'reveal-day3-guide: then "Tap Gold: how money works."',
+    await coachSays('Tap Gold: how money works.'),
+  );
+  await farm.tapButton(/^Gold$/);
+  const read = await farm
+    .until(
+      (s) => s.stats['guide.read.gold'] === 1 && s.stats['tut.guideGold'] === 1,
+      null,
+      'the Gold page read',
+    )
+    .then(() => true)
+    .catch(() => false);
+  check('reveal-day3-guide: the Gold page opens and the intro ends', read, await uiText(farm));
+  check('reveal-day3-guide: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'friend-next-heart', { profile: PROFILE });
+  await farm.interact();
+  await farm.panel('npc');
+  const sheet = await uiText(farm);
+  check(
+    'friend-next-heart: the sheet says what the next heart brings',
+    /Next heart: a letter/.test(sheet),
+    sheet,
+  );
+  await farm.close();
+
+  farm = await openScenario(browser, url, 'fiber-dry-grass', { profile: PROFILE });
+  await farm.tapTile(9, 8);
+  const got = await farm
+    .until(
+      () =>
+        window.__farm
+          .getState()
+          .inventory.slots.reduce((n, st) => n + (st?.item === 'fiber' ? st.qty : 0), 0) >= 4,
+      null,
+      'three fiber from the bundle',
+    )
+    .then(() => true)
+    .catch(() => false);
+  check('fiber-dry-grass: a bundle of dry grass gives three fiber', got);
+  check('fiber-dry-grass: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  await farm.close();
+}
+
 try {
   const blocks = SMOKE
     ? [smoke]
@@ -3739,6 +3839,7 @@ try {
         bait,
         townBoard,
         guidedDepth,
+        qaDepth,
         lang,
         cloud,
         coachShop,

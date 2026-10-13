@@ -414,6 +414,42 @@ every sheet is built from the dictionaries when it opens. Scenarios: `lang-pt-ti
    abbreviations to `SHORTER` there.
 4. Give it a glossary, a `lang-es-*` scenario per area and an e2e block like `lang` in `scripts/e2e-scenarios.mjs`.
 
+## 13. The reveal schedule and the Guide
+
+A guided new game meets its systems over days and weeks, not all on day 1 (QA round). The rules are
+`systems/reveal.ts`, the schedule is `src/data/reveal.json`, and the Guide's pages are `src/data/guide.json`
+(translations in `src/i18n/data/pt-BR/reveal.json` and `guide.json`).
+
+| Day         | Feature                                             | What arrives                                                              | How it is introduced                                                                                   |
+| ----------- | --------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 1-2         | the guided start                                    | farming, the bin, energy, the clock, town, Mara's shop, villagers, mail   | the guided steps (unchanged; nothing new may show)                                                     |
+| 3           | `guide`                                             | the **Book** tab, Guide pages Gold, The planting cycle, Jobs and requests | morning note, Rosa's letter, coach: Menu > Book > Gold; next morning: Menu > Book > The planting cycle |
+| 4           | `friends`                                           | Guide page Friends and hearts                                             | morning note, Mara's letter                                                                            |
+| 5           | `skills` (or any skill at level 3)                  | the **Skill** tab, Guide page Skills                                      | morning note, Orin's letter, coach: Menu > Skill, then Menu > Book > Skills                            |
+| 6           | `crafting` (or the craft goal, or anything crafted) | the **Make** tab, Guide page Making things                                | morning note, Orin's letter (10 fiber), coach: Menu > Make                                             |
+| 7           | `fishing` (or the fish goal, or a catch)            | Guide page Fishing and bait                                               | morning note, Finn's letter (5 worms)                                                                  |
+| 9           | `mine` (or a rock broken)                           | Guide page The mine                                                       | morning note, Orin's letter                                                                            |
+| 10          | `machines` (or the place goal, or anything placed)  | Guide page Sprinklers and jars                                            | morning note, Rosa's letter                                                                            |
+| 14          | `animals` (or the chicken goal, or an animal)       | Guide page Animals                                                        | morning note, Mara's letter                                                                            |
+| 21          | `cooking` (or the kitchen bought)                   | Guide page Cooking                                                        | morning note, Mara's letter                                                                            |
+| first green | `valley`                                            | Guide page Mending the valley                                             | morning note (the first-green letter is Rosa's already)                                                |
+
+Rules:
+
+- **Only the introduction is scheduled.** A feature arrives early the moment play needs it (its goal, or the thing
+  already used), so nothing is ever locked away. Gameplay itself is never gated: only menu tabs (`tabs`), Guide pages,
+  notes, letters and intros.
+- **Days 1 and 2 never change** (the onboarding gate): no feature may have a day under 3 (validated), and nothing is
+  marked or announced before day 3.
+- **Who follows it:** a save with the stat `reveal.on`, set when the guided start begins. Saves from before the QA
+  round, bare `?tutorial=0` games and sandbox scenarios (unless `"reveal": "schedule"`, or `tutorial` `on`/`day2`)
+  see everything at once and get no reveal letters or intros.
+- **State:** stats only: `reveal.<id>` (the day it was introduced), `guide.read.<topic>`.
+- **Add a system:** a feature in `reveal.json` (a day of its own, `early` ways in, a one-line `note`), a page in
+  `guide.json` (`reveal`: its feature; short paragraphs, the Book pages them), a letter in `mail.json`
+  (`when: {stat: "reveal.<id>"}`), and, if it needs a coach mark, an `intro` step with `{"revealed": "<id>"}` and a
+  done condition the player meets by looking (`{"read": "<topic>"}` or `{"tab": "<tab>"}`).
+
 ## Checklist for a new mechanic
 
 - [ ] The scenario(s) that stage it, in `src/dev/scenarios/` (lab or real map), cited in the commit and the critique
@@ -425,5 +461,6 @@ every sheet is built from the dictionaries when it opens. Scenarios: `lang-pt-ti
 - [ ] Every new player-visible string in both dictionaries, and new data text in `src/i18n/data/pt-BR/` (section 12)
 - [ ] A goal in `goals.json` that introduces it
 - [ ] An `intro` step in `tutorial.json` if it needs showing the first time
+- [ ] Its place in the reveal schedule and a Guide page (section 13)
 - [ ] e2e checks on those scenarios with the await helpers (`scripts/lib/farm.mjs`), no fixed waits
 - [ ] `npm run verify`

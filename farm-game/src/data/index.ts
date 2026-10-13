@@ -28,6 +28,8 @@ import mailRaw from './mail.json';
 import specialsRaw from './specials.json';
 import tutorialRaw from './tutorial.json';
 import valleyRaw from './valley.json';
+import revealRaw from './reveal.json';
+import guideRaw from './guide.json';
 import type { Direction, Season } from '../state/GameState';
 
 export interface MapDef {
@@ -808,6 +810,10 @@ export interface TutorialCond {
   after?: number;
   /** Rain or storm today (true) or a dry day (false). */
   wet?: boolean;
+  /** A feature of the reveal schedule has arrived, in a save that follows it (systems/reveal.ts). */
+  revealed?: string;
+  /** A Guide topic was opened. */
+  read?: string;
   any?: TutorialCond[];
   all?: TutorialCond[];
   not?: TutorialCond;
@@ -1117,6 +1123,66 @@ export const specials = specialsRaw as unknown as SpecialDef[];
 export const tips = tipsRaw as unknown as TipDef[];
 export const npcs = npcsRaw as unknown as Record<string, NpcDef>;
 export const tutorial = tutorialRaw as unknown as TutorialData;
+
+/**
+ * The reveal schedule (QA round: phase the game's depth): when each system is introduced to a guided new game, by
+ * day or earlier when play needs it. See systems/reveal.ts.
+ */
+export interface RevealFeature {
+  id: string;
+  /** Absolute day it is introduced on (its morning); absent: only by `early`. */
+  day?: number;
+  /** Menu tabs hidden until then (`book`, `craft`, `skills`). */
+  tabs?: string[];
+  /** Any of these introduces it before its day: a lifetime stat at `min`, or the goal chain at `goal` or past it. */
+  early?: { stat?: string; min?: number; goal?: string }[];
+  /** The morning note on the day it arrives. */
+  note: string;
+}
+export interface RevealData {
+  features: RevealFeature[];
+}
+export const reveal = revealRaw as unknown as RevealData;
+
+/** The Guide: short pages the player can reread (the Book's Guide page), each arriving with its feature. */
+export interface GuideTopic {
+  id: string;
+  /** The reveal feature that brings it. */
+  reveal: string;
+  title: string;
+  paras: string[];
+}
+export interface GuideData {
+  topics: GuideTopic[];
+}
+export const guide = guideRaw as unknown as GuideData;
+
+/** Reveal features and Guide topics point at real things (goals, features), ids are unique, days are ordered. */
+export function validateReveal(r: RevealData, g: GuideData, goalIds: readonly string[]): void {
+  const bad = (msg: string): never => fail('reveal', msg);
+  const ids = r.features.map((f) => f.id);
+  if (new Set(ids).size !== ids.length) bad('two features share an id');
+  const tabs = new Set(['book', 'craft', 'skills']);
+  for (const f of r.features) {
+    if (f.day !== undefined && !(Number.isInteger(f.day) && f.day >= 3))
+      bad(`"${f.id}": a feature arrives on day 3 or later (days 1 and 2 are the guided start)`);
+    if (f.day === undefined && !f.early?.length)
+      bad(`"${f.id}" has neither a day nor an early way in`);
+    for (const t of f.tabs ?? []) if (!tabs.has(t)) bad(`"${f.id}" hides an unknown tab "${t}"`);
+    for (const e of f.early ?? []) {
+      if (!e.stat && !e.goal) bad(`"${f.id}": an early way in needs a stat or a goal`);
+      if (e.goal && !goalIds.includes(e.goal)) bad(`"${f.id}": unknown goal "${e.goal}"`);
+    }
+    if (!f.note) bad(`"${f.id}" has no note`);
+  }
+  const topicIds = g.topics.map((t) => t.id);
+  if (new Set(topicIds).size !== topicIds.length) fail('guide', 'two topics share an id');
+  for (const t of g.topics) {
+    if (!ids.includes(t.reveal))
+      fail('guide', `"${t.id}" arrives with an unknown feature "${t.reveal}"`);
+    if (!t.title || t.paras.length === 0) fail('guide', `"${t.id}" needs a title and a paragraph`);
+  }
+}
 
 /** Cross-reference every data file so a typo fails loudly at load, not mid-game. */
 export function validateContent(): void {
@@ -1446,6 +1512,11 @@ export function validateContent(): void {
   if (toolItems.length !== game.toolSlots)
     fail('game', 'toolSlots must equal the number of tool items');
   validateTutorial(tutorial);
+  validateReveal(
+    reveal,
+    guide,
+    goals.map((g) => g.id),
+  );
 }
 
 const TUT_KINDS = [
@@ -1492,6 +1563,8 @@ const TUT_FACTS = [
   'festivalToday',
 ];
 const TUT_COND_KEYS = new Set([
+  'revealed',
+  'read',
   'stat',
   'touched',
   'fresh',
@@ -1552,6 +1625,10 @@ export function validateTutorial(t: TutorialData): void {
     )
       bad(`${where}: project "${c.short.project}" asks for no "${c.short.item}"`);
     if (c.npc !== undefined && !npcs[c.npc]) bad(`${where}: unknown villager "${c.npc}"`);
+    if (c.revealed !== undefined && !reveal.features.some((f) => f.id === c.revealed))
+      bad(`${where}: unknown reveal feature "${c.revealed}"`);
+    if (c.read !== undefined && !guide.topics.some((g) => g.id === c.read))
+      bad(`${where}: unknown Guide topic "${c.read}"`);
     if (c.goal !== undefined && !goals.some((g) => g.id === c.goal))
       bad(`${where}: unknown goal "${c.goal}"`);
     if ((c.min !== undefined || c.max !== undefined) && !c.stat && !c.fresh)

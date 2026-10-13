@@ -2242,3 +2242,43 @@ are too easy to max and give little incentive"; phase the game's depth over days
     morning note; no random draw); Senna's mill pays a little more for what you ship (sell +1/+2/+2% at 2/4/5).
 - The bar on the sheet fills toward the next heart's cost; the note beside Gift says "2 a week", "1 more this
   week", "Tomorrow." or "Again next week.".
+
+### The reveal schedule: depth over days and weeks
+
+- **The schedule** (`src/data/reveal.json`, rules in `systems/reveal.ts`, the table in `docs/EXTENDING.md` section 13):
+  day 3 the Book and its Guide (gold, the planting cycle, jobs), day 4 friends and hearts, day 5 the Skill tab, day 6
+  the Make tab, day 7 fishing and bait, day 9 the mine, day 10 sprinklers and jars, day 14 animals, day 21 cooking,
+  and the valley with the first green. One feature a morning by the calendar; the Clay race (day 8) and crows (day 7)
+  keep their days.
+- **Only the introduction is scheduled, never the game.** A feature arrives early the moment play needs it: the goal
+  chain reaches its goal (craft, fish, place, chicken) or the player already uses it (a catch, a rock, a level 3
+  skill, the kitchen). So a fast player is never locked out; a slow one is not shown six systems on day 1.
+- **What is gated:** the Menu's Make, Skill and Book tabs (day 1-2 menu: Bag, Goal, Opts); Guide pages; and the
+  morning note, letter and coach intro each feature brings. Rules, shops, recipes and maps are not gated (the shop's
+  animal tab is the UI lane's file and stays as it is: the animals page and Mara's letter arrive on day 14).
+- **Days 1 and 2 are untouched:** no feature may be scheduled before day 3 (validated), `markRevealed` does nothing
+  before day 3, and the intros all need an arrived feature. The only day-1/2 change is the shorter tab row.
+- **Who follows it:** saves with `reveal.on`, set by `startTutorial` for a guided game. Every save from before
+  (no marker), a bare `?tutorial=0` game and sandbox scenarios see everything, with no reveal letters or intros:
+  "old saves already past those days see everything". A guided game whose guide was skipped keeps the schedule (its
+  tabs still arrive by day, with notes and letters, without coach marks).
+- **Introductions, one line each, one control each:** `guideGold` (day 3: Menu, Book, Gold), `guideCrops` (the next
+  morning: Menu, Book, The planting cycle), `skillsNew` (Menu, Skill) then `skillsGuide` (Menu, Book, Skills),
+  `craftNew` (Menu, Make; the existing `craft` intro covers a craft goal reached first). All optional (Next after
+  45 s) and done by looking, never by doing. Each feature's morning note says what is new, and its letter (Rosa,
+  Mara, Orin, Finn) says it in their voice, two with a small gift (10 fiber, 5 worms).
+
+### The Guide: explanations to reread
+
+- **Where:** the Book tab has two pages, Guide and Goods (the almanac), switched at its top like the board's Jobs
+  and Requests. It opens on the Guide while a page is unread. No seventh tab (agreed with the UI lane, which owns
+  the look; `ui/panels/GuideTab.ts` draws it plainly).
+- **What:** twelve short pages (`src/data/guide.json`), each arriving with its feature and marked NEW until opened:
+  Gold (how it is earned, the bin paying at dawn, what to spend it on, what a seed row's numbers mean), The planting
+  cycle (till, plant, water daily, a day of growth per watered night, rain and sprinklers, days to ripen, regrowing
+  crops, seasons of 28 days, out-of-season crops withering, fertilizer and quality), Jobs and requests, Friends and
+  hearts (the new rules), Skills (what each of the four grows from, what levels bring, recipes they open), Making
+  things (fiber's three sources), Fishing and bait, The mine, Sprinklers and jars, Animals, Cooking, Mending the
+  valley. A page runs over to More when it does not fit; Back returns to the list.
+- **Not a wall of text:** each page is reached by the player (the coach points at it once, the day it matters) and
+  is 3-7 paragraphs of one to three lines.

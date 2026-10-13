@@ -1616,6 +1616,218 @@
           "panel": "festival"
         }
       ]
+    },
+    {
+      "id": "guideGold",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "revealed": "guide"
+      },
+      "text": "New: a Guide. Tap Menu.",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "tab": "book"
+          },
+          "text": "Tap Gold: how money works.",
+          "target": {
+            "button": "^Gold$"
+          }
+        },
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Book: the new Guide.",
+          "target": {
+            "button": "^Book$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "read": "gold"
+        }
+      ]
+    },
+    {
+      "id": "guideCrops",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "revealed": "guide"
+          },
+          {
+            "read": "gold"
+          },
+          {
+            "daysSince": {
+              "step": "guideGold",
+              "min": 1
+            }
+          }
+        ]
+      },
+      "text": "How crops grow: tap Menu.",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "tab": "book"
+          },
+          "text": "Tap The planting cycle.",
+          "target": {
+            "button": "^The planting cycle$"
+          }
+        },
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Book: how crops grow.",
+          "target": {
+            "button": "^Book$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "read": "crops"
+        }
+      ]
+    },
+    {
+      "id": "skillsNew",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "revealed": "skills"
+      },
+      "text": "New: Skill. Tap Menu.",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Skill: your four skills.",
+          "target": {
+            "button": "^Skill$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "tab": "skills"
+        }
+      ]
+    },
+    {
+      "id": "skillsGuide",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "revealed": "skills"
+          },
+          {
+            "stat": "tut.skillsNew",
+            "min": 1
+          }
+        ]
+      },
+      "text": "How skills grow: tap Menu.",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "tab": "book"
+          },
+          "text": "Tap Skills to read it.",
+          "target": {
+            "button": "^Skills$"
+          }
+        },
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Book: how skills grow.",
+          "target": {
+            "button": "^Book$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "read": "skills"
+        }
+      ]
+    },
+    {
+      "id": "craftNew",
+      "track": "intro",
+      "optional": true,
+      "leave": true,
+      "when": {
+        "all": [
+          {
+            "revealed": "crafting"
+          },
+          {
+            "not": {
+              "goal": "craft"
+            }
+          },
+          {
+            "not": {
+              "stat": "tut.craft",
+              "min": 1
+            }
+          }
+        ]
+      },
+      "text": "New: Make. Tap Menu.",
+      "target": {
+        "ui": "menu"
+      },
+      "alt": [
+        {
+          "when": {
+            "panel": "menu"
+          },
+          "text": "Tap Make: fiber into things.",
+          "target": {
+            "button": "^Make$"
+          }
+        }
+      ],
+      "done": [
+        {
+          "tab": "craft"
+        },
+        {
+          "stat": "crafted",
+          "min": 1
+        }
+      ]
     }
   ],
   "refusals": {

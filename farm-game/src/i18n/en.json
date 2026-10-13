@@ -942,5 +942,12 @@
     "yes": "Share",
     "no": "No thanks",
     "toggle": "Share stats: {state}"
+  },
+  "guide": {
+    "pageGuide": "Guide",
+    "pageGoods": "Goods",
+    "empty": "Pages arrive here as you play.",
+    "new": "NEW",
+    "more": "More"
   }
 }

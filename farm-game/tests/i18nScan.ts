@@ -64,7 +64,11 @@ function calleeName(call: ts.CallExpression | ts.NewExpression): string {
 }
 
 function quiet(node: ts.Node): boolean {
-  for (let p: ts.Node | undefined = node.parent, child: ts.Node = node; p; child = p, p = p.parent) {
+  for (
+    let p: ts.Node | undefined = node.parent, child: ts.Node = node;
+    p;
+    child = p, p = p.parent
+  ) {
     if (ts.isImportDeclaration(p) || ts.isExportDeclaration(p)) return true;
     if (ts.isLiteralTypeNode(p) || ts.isTypeNode(p)) return true;
     if (ts.isPropertyAssignment(p) && p.name === child) return true;
@@ -75,10 +79,9 @@ function quiet(node: ts.Node): boolean {
     if (ts.isCaseClause(p) && p.expression === child) return true;
     if (
       ts.isBinaryExpression(p) &&
-      [
-        ts.SyntaxKind.EqualsEqualsEqualsToken,
-        ts.SyntaxKind.ExclamationEqualsEqualsToken,
-      ].includes(p.operatorToken.kind)
+      [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken].includes(
+        p.operatorToken.kind,
+      )
     )
       return true;
     if (ts.isStatement(p) || ts.isClassElement(p)) return false;

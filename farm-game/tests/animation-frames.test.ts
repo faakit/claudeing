@@ -94,7 +94,9 @@ const atlas = (g: string) => {
 };
 // the characters span two atlases (the first is full at 512x1024; actions and new frames go in chars2)
 const charSheets = [atlas('chars'), atlas('chars2')];
-const chars = { frames: Object.assign({}, ...charSheets.map((a) => a.frames)) as (typeof charSheets)[0]['frames'] };
+const chars = {
+  frames: Object.assign({}, ...charSheets.map((a) => a.frames)) as (typeof charSheets)[0]['frames'],
+};
 const sheetOf = (name: string) => charSheets.find((a) => a.frames[name]) ?? charSheets[0]!;
 
 /** A frame as rows of 'rrggbbaa' strings ('' for transparent). */

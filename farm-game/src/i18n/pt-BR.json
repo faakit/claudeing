@@ -942,5 +942,12 @@
     "yes": "Compartilhar",
     "no": "Não, obrigado",
     "toggle": "Estatística: {state}"
+  },
+  "guide": {
+    "pageGuide": "Guia",
+    "pageGoods": "Achados",
+    "empty": "As páginas chegam aqui conforme você joga.",
+    "new": "NOVO",
+    "more": "Mais"
   }
 }
