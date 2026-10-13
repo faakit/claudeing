@@ -2,7 +2,7 @@
   "catch {n} fish": "pescar {n} peixe{s}",
   "break {n} mine rock{s}": "quebrar {n} pedra{s}",
   "fill {n} board request{s}": "atender {n} pedido{s}",
-  "pick {n} wild good{s}": "catar {n} do mato",
+  "pick {n} wild good{s}": "catar {n} achado{s}",
   "greet {n} villager{s}": "saudar {n} pessoa{s}",
   "give a gift they like": "presente que agrade",
   "ship {n} good{s}": "enviar {n} produto{s}",
@@ -10,5 +10,5 @@
   "cut {n} weed{s}": "cortar {n} moita{s}",
   "get {n} animal good{s}": "coletar {n} de animais",
   "load {n} machine{s}": "carregar {n} máquina{s}",
-  "craft {n} thing{s}": "fabricar {n} coisa{s}"
+  "craft {n} thing{s}": "fazer {n} coisa{s}"
 }

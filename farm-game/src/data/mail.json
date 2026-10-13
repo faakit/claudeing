@@ -180,7 +180,7 @@
       "id": "clay_intro",
       "from": "clay",
       "title": "Nothing personal",
-      "text": "I've fed this town alone seven years. Board requests left to their last day are mine at 2 PM. Crops, eggs and what you make of them count; fish and wild goods don't. I ship a crate a week, more often while you lead. Beat me in a season: 300g and a trophy for your house.",
+      "text": "I've fed this town alone seven years. Board requests left to their last day are mine at 2 PM. Crops, eggs and what you make of them count; fish and wild goods don't. I ship a crate a week, more often while you lead. Beat me in a season: 300¤ and a trophy for your house.",
       "when": {
         "day": 7
       }
@@ -236,7 +236,7 @@
       "id": "timber_hook",
       "from": "orin",
       "title": "Drift timber",
-      "text": "The river's bringing timber down from the hills. I've made you a hook on a rope for it, 250g. Hook a log from the bank, walk it to the slip on the south bank. Houses want timber.",
+      "text": "The river's bringing timber down from the hills. I've made you a hook on a rope for it, 250¤. Hook a log from the bank, walk it to the slip on the south bank. Houses want timber.",
       "when": {
         "stat": "place.weir",
         "min": 3

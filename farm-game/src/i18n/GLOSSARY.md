@@ -96,3 +96,24 @@ text uses the bare name.
 | ON / OFF                    | SIM / NÃO                |                                                            |
 | festival / Flower Show / Fishing Derby / Harvest Fair / Winter Feast | festival / Mostra de Flores / Torneio de Pesca / Feira da Colheita / Ceia de Inverno | festival names mix genders: never put an article before `{festival}` |
 | guided start / guide        | guia                     |                                                            |
+
+## Second-pass decisions (QA)
+
+One word per idea, in the UI and in every data file:
+
+| English            | pt-BR                          | Note                                                          |
+| ------------------ | ------------------------------ | ------------------------------------------------------------- |
+| job (daily)        | bico                           | never "tarefa"; the goal plate's "errand" is a "meta"          |
+| turn in a job      | receber                        | "Receber" on the button, "Receba no mural" in text            |
+| Make (menu/button) | Criar                          | tab "Criar", button "Criar", result "Fez {item}"              |
+| bait               | isca                           | "Isca mista", "minhocas"; never "engodo"                       |
+| board              | mural                          | "mural da vila"; requests are "pedidos"                       |
+| Green Thumb        | Dedo Verde                     | the Brazilian idiom ("ter dedo verde")                                    |
+| Quality Sprinkler  | Aspersor reforçado             |                                                               |
+| bag slot / tile    | espaço                         | never "casa" for a square                                     |
+| gate (Ilse's)      | porteira                       | also in letters ("Um saco na porteira")                       |
+| sign in (cloud)    | login / entrar                 | never "conectado/a": it genders the player                    |
+| thanks (from the player) | valeu                    | never "obrigado/a"; also "Não, valeu"                         |
+| left hand          | Canhoto (Opts) / Mão esquerda (guide tag) | "Mão esquerda" does not fit the Opts button |
+| season in a sentence | "Fora de época ({season})"   | avoid "no(a)" article hacks: seasons differ in gender         |
+| thanks to a NPC    | Rosa and Clay use "Tá", "pra"  | casual spelling only in villager lines, "para" in UI          |
