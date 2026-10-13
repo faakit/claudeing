@@ -267,7 +267,8 @@ function lineAt(leg: Leg, along: number): number {
  *   a clear sideways move of 14 px turns a corner into a new leg (serpentine). The path is contiguous, never
  *   revisits a tile and stops at 16 tiles; dragging back un-paints tile by tile, round corners too. Lifting
  *   commits; lifting back at the start cancels.
- * - **in a plot** (QA round, `fieldOf`): a path whose first tile lies in an owned plot never leaves it, so dragging
+ * - **in a plot** (QA round, `fieldOf`): a path whose first tile lies in owned farmland never leaves that connected
+ *   field (the Home Plot and a bought West Field beside it are one), so dragging
  *   on past a row's end does nothing; the step between two rows is one tile; rows after the first are as wide as
  *   the first however soon the thumb turned or lifted; and a turn from a whole row (or from a step into the row
  *   back) comes at 10 px instead of 14. The first row is as long as it was drawn (up to the plot's edge).
@@ -295,7 +296,8 @@ export class ActionPress {
   private boostAt = 0;
 
   /**
-   * @param fieldOf which field a cell (relative to the farmer) belongs to, from the world: an owned plot's id, or null
+   * @param fieldOf which field a cell (relative to the farmer) belongs to, from the world: the connected owned
+   *   farmland's id (`ownedRegions`), or null
    *   for open ground. A path whose first tile lies in a field never leaves it (QA round: "stop at the plot's
    *   edge"), so dragging on past a row's end does nothing. Without it (or on open ground) paths are unbounded.
    */

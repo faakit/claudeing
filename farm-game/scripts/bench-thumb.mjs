@@ -515,10 +515,17 @@ const ripen = (page) =>
 
 const TASKS = {
   /**
+   * plot3x3 with the left hand standing in the home plot's west column (9,20) instead of just outside it (QA round,
+   * critic C3-1): its first row then runs to the plot's east edge, as the right hand's runs to the west edge.
+   */
+  plot3x3Inside(w, page) {
+    return TASKS.plot3x3(w, page, 9);
+  },
+  /**
    * Till, plant and water a 3x3 plot (home plot 9-11 x 18-20), then harvest it when ripe: the core loop,
    * played the way this build plays best (M1-M2: walk, hold Action, switch tools on the hotbar).
    */
-  async plot3x3(w, page) {
+  async plot3x3(w, page, leftX = 8) {
     await fresh(page);
     const pass = async () => {
       for (const y of [17, 18, 19]) {
@@ -541,10 +548,10 @@ const TASKS = {
       const toMid = right ? -1 : 1;
       // Round 3: a painted path may turn corners, so the whole plot is one serpentine from Action. Stand by the
       // plot's bottom corner on the thumb's side and draw toward the middle of the screen, then up a row, back, up a
-      // row, across: the finger stays in the comfortable arc above Action. Both hands stand in the home plot's own
-      // edge column (right hand: 12,20; left: 9,20; QA round: the left stood outside the plot at 8, so its first row
-      // was a 3 of 4 inside the plot while the right hand's ran to the plot's edge) and work the 3 columns beside it.
-      const standX = right ? 12 : 9;
+      // row, across: the finger stays in the comfortable arc above Action. The right hand stands in the home plot's
+      // east column (12,20), so its first row runs to the plot's west edge; the left hand stands just outside the
+      // plot (8,20), so its first row is 3 of the plot's 4 columns (plot3x3Inside stands it in the west column, 9,20).
+      const standX = right ? 12 : leftX;
       // The game's own paint geometry, so the bench follows the constants.
       const G = await page.evaluate(() => window.__farm.controls.paintGeometry ?? null);
       const step = G?.step ?? 10;

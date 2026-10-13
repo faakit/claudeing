@@ -41,6 +41,45 @@ export function ownsTile(state: GameState, tx: number, ty: number): boolean {
 }
 
 /**
+ * The connected piece of owned farmland each farm tile belongs to (critic ruling C3-1, QA round): owned tiles that
+ * `usable` allows (the world passes "tillable"), flood-filled 4 ways across plot borders, so the Home Plot and a
+ * bought West Field beside it are one field. Returns a reader giving a region's id per tile (null off owned land);
+ * regions are found lazily and remembered, so read it fresh for each press. A painted path stays inside the region
+ * of its first tile (`ActionPress`, input/gesture.ts).
+ */
+export function ownedRegions(
+  state: GameState,
+  usable: (tx: number, ty: number) => boolean = () => true,
+): (tx: number, ty: number) => string | null {
+  const region = new Map<string, string>();
+  const ok = (tx: number, ty: number) => ownsTile(state, tx, ty) && usable(tx, ty);
+  return (tx, ty) => {
+    const key = `${tx},${ty}`;
+    const known = region.get(key);
+    if (known !== undefined) return known;
+    if (!ok(tx, ty)) return null;
+    const id = `field@${key}`;
+    region.set(key, id);
+    const todo: [number, number][] = [[tx, ty]];
+    for (let next = todo.pop(); next; next = todo.pop()) {
+      const [x, y] = next;
+      for (const [nx, ny] of [
+        [x + 1, y],
+        [x - 1, y],
+        [x, y + 1],
+        [x, y - 1],
+      ] as const) {
+        const k = `${nx},${ny}`;
+        if (region.has(k) || !ok(nx, ny)) continue;
+        region.set(k, id);
+        todo.push([nx, ny]);
+      }
+    }
+    return id;
+  };
+}
+
+/**
  * Is a plot's "for sale" sign up yet? The cheapest unbought plot always is; a dearer one appears once the
  * player has earned half its price or holds half of it, so day one is not two 2,000g signs at the door.
  */

@@ -2255,7 +2255,10 @@ QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `age
 - **Picked (of the QA options):** stopping at the plot's edge, plus snapping the serpentine to its shape, plus a
   smaller dead zone only where a turn is certain. The rules, in `ActionPress` (`input/gesture.ts`); the world passes
   `WorldScene.paintField()` (the owned plot under each cell) at the press:
-  - a path whose first tile lies in an owned plot never leaves that plot: dragging on past a row's end does nothing;
+  - a path whose first tile lies in owned farmland never leaves the connected piece of owned farmland it lies in
+    (owned tillable tiles flood-filled 4 ways across plot borders, `ownedRegions` in systems/plots.ts; critic ruling
+    C3-1): dragging on past a row's end does nothing, and the Home Plot with a bought West Field beside it is one
+    8-wide field, so a row from 12 to 5 runs all 8 tiles (a single-plot clamp stopped it dead at x 9);
   - the step between two rows is one tile, however far the thumb ran;
   - rows after the first are as wide as the first (to the box edge) as soon as the thumb turns or lifts;
   - a turn from a row that has reached its edge, or from a step into the row back, comes at 10 px off the line
@@ -2270,11 +2273,22 @@ QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `age
   35%); 1 mm: 96% / 90% (83% / 63%). The critic's closed-loop painter (watching the preview): 2 mm 98.5% / 96.5%
   (88.5% / 85%), 3 mm 80.5% / 84.5% (55% / 49%). A 3-tile row inside a wider plot behaves as before (no extra turns).
   Bench, plot rows only (`TASKS=plot3x3`, i13 and SE, both hands): exact aim 4/4, 7 gestures as before. With
-  `PAINT_MISS_MM=3` (new: each row end and step aimed up to 3 mm off, seeded) over seeds 7-9: whole plots 9/12
-  (base 2/12), exact paints 20/24 (base about 6/24); the remaining misses are SE first rows drawn a tile short.
-- **Bench stand:** the left hand now stands in the home plot's west column (9,20), mirroring the right hand's east
-  column (12,20); at 8,20 it stood outside the plot, so its first row was a 3 of 4 inside the plot while the right
-  hand's ran to the plot's edge (the 4-wide plot, x 9-12, predates this round).
+  `PAINT_MISS_MM=3` (new: each row end and step aimed up to 3 mm off, seeded), seeds 7-9, whole plots and exact
+  paints, against the paint code before this round:
+
+  | stand | i13 | SE |
+  | --- | --- | --- |
+  | right hand in the plot's east column (12,20) | 3/3, 6/6 (base 0/3, 1/6) | 2/3, 5/6 (0/3, 2/6) |
+  | left hand in the plot's west column (9,20, `plot3x3Inside`) | 3/3, 6/6 (0/3, 1/6) | 2/3, 5/6 (0/3, 2/6) |
+  | left hand just outside the plot (8,20, `plot3x3`) | 2/3, 5/6 (1/3, 3/6) | 0/3, 1/6 (0/3, 1/6) |
+
+  The right-hand rows are from the run before C3-1 (one field there either way). Standing outside the plot the first
+  row is 3 of the plot's 4 columns, so its length is the thumb's call: on the SE a 3 mm miss is about 0.75 of a tile
+  and that row is no better than before (its later rows are whole and its steps one tile).
+- **Bench stands:** `plot3x3` keeps the left hand just outside the plot (8,20), a real left-handed stand; the new
+  `plot3x3Inside` stands it in the plot's west column (9,20), mirroring the right hand (12,20).
 - **Cost:** a 3x3 inside a wider plot (not against its edge) still has its first row decided by the thumb; rows after
-  it are whole. Scenario `paint-plot-3x3`; e2e block `paintPlot` (a sloppy serpentine with real touches, both hands,
-  i13 and SE: exactly the 3x3).
+  it are whole. Scenarios `paint-plot-3x3` and `paint-plot-two-fields`; e2e block `paintPlot` (a sloppy serpentine
+  with real touches gives exactly the 3x3, and a row across Home and the West Field works all 8 tiles; both hands,
+  i13 and SE). Unit: `tests/land-tools.test.ts` (Home + West, 12 to 5: 8 tiles; Home alone: 4; Home and East across
+  the road: two fields).

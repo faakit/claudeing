@@ -3529,6 +3529,59 @@ async function paintPlot() {
       );
       await farm.close();
     }
+  // Two plots side by side are one field (critic C3-1): a row dragged far past it runs all 8 tiles, 12 to 5 (the left
+  // thumb from 4,20 draws east, 5 to 12), across the border between the Home Plot and the West Field.
+  for (const profile of ['i13', 'se'])
+    for (const hand of ['right', 'left']) {
+      const farm = await openScenario(browser, url, 'paint-plot-two-fields', { profile, hand });
+      const right = hand === 'right';
+      if (!right)
+        await farm.mutate((s) => {
+          s.player.x = 4 * 16 + 8;
+          s.player.facing = 'right';
+        });
+      await farm.idle();
+      const action = (await farm.targets()).find((t) => t.text === 'ACTION');
+      const toMid = right ? -1 : 1;
+      const path = async (ms, pts) => {
+        const t0 = Date.now();
+        for (;;) {
+          const f = Math.min(1, (Date.now() - t0) / ms);
+          const [x, y] = pts(f);
+          await farm.thumb.move(action.cx + x, action.cy + y);
+          if (f >= 1) break;
+          await sleep(8);
+        }
+      };
+      await farm.thumb.down(action.cx, action.cy);
+      await path(360, () => [0, 0]); // held still: arms painting
+      await path(1100, (f) => [toMid * 150 * f, 0]); // 8 tiles need 128 px: the finger goes on
+      await path(200, () => [toMid * 150, 0]);
+      await farm.thumb.up();
+      await farm.until(
+        (_s, w) => {
+          const sc = w.game.scene.getScenes(true).find((x) => x.grid);
+          return sc.work === null && sc.route === null && sc.painting === null;
+        },
+        null,
+        'the painted row to be worked',
+        30000,
+      );
+      const m = await farm.state();
+      const got = Object.keys(m.farm.tiles).sort();
+      const want = [5, 6, 7, 8, 9, 10, 11, 12].map((x) => `${x},20`).sort();
+      check(
+        `paint-plot-two-fields (${profile}, ${hand}): a row across the Home Plot and the West Field works all 8 tiles`,
+        JSON.stringify(got) === JSON.stringify(want),
+        JSON.stringify({ got }),
+      );
+      check(
+        `paint-plot-two-fields (${profile}, ${hand}): no page errors`,
+        farm.errors.length === 0,
+        farm.errors.join(' | '),
+      );
+      await farm.close();
+    }
 }
 
 async function lang() {

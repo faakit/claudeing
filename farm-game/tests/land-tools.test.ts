@@ -230,3 +230,31 @@ describe("the farm dirt the map draws belongs to a plot (QA: the starting field'
       for (let tx = 9; tx <= 12; tx++) expect(ownsTile(s, tx, ty), `${tx},${ty}`).toBe(true);
   });
 });
+
+describe('a painted path stays in the connected owned farmland (critic C3-1, QA round)', () => {
+  it('Home and the West Field beside it are one field: a row from 12 to 5 paints all 8 tiles', async () => {
+    const { ownedRegions } = await import('../src/systems/plots');
+    const { PAINT_ARM_MS, PAINT_DEADZONE, PAINT_STEP_PX } = await import('../src/input/gesture');
+    const { play, drawPath, committed } = await import('./paintModel');
+    const from = { tx: 13, ty: 20 }; // on the grass east of the Home Plot, facing west
+    const drag = drawPath([[-(PAINT_DEADZONE + PAINT_STEP_PX * 10), 0]]); // on past x 5
+    const paint = (owned: string[]) => {
+      const s = newState();
+      s.plots = owned;
+      const region = ownedRegions(s);
+      return committed(
+        play(drag, PAINT_ARM_MS + 4000, (dx, dy) => region(from.tx + dx, from.ty + dy)),
+      );
+    };
+    expect(paint(['home', 'west'])).toBe(Array(8).fill('left').join(' '));
+    // the Home Plot alone stops at its edge (x 9)
+    expect(paint(['home'])).toBe(Array(4).fill('left').join(' '));
+    // two owned plots that do not touch are two fields: Home (x 9-12) and the East Field (x 17-24) across the road
+    const s = newState();
+    s.plots = ['home', 'east'];
+    const region = ownedRegions(s);
+    expect(region(12, 20)).toBe(region(9, 25));
+    expect(region(17, 20)).not.toBe(region(12, 20));
+    expect(region(13, 20)).toBeNull();
+  });
+});
