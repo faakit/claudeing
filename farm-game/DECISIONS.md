@@ -1997,20 +1997,19 @@ player on how to take stone before showing the place that must be fixed with sto
 - **Baits are items with a `bait` block** (`items.json`: `code`, `wait`, `rare`, `legend`, `quality`, `reel`; validated
   at load), not a separate table, so shops, recipes, gifts and the bag need nothing new:
 
-  | Bait                              | Get it                                                                                                             | Bite wait | Odds and catch                                                          |
-  | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------- | ----------------------------------------------------------------------- |
-  | Worms (code 1)                    | free: the hoe and the scythe dig them up (1 tile in 6, 1 in 3 on a wet day, from day 3); a new game starts with 10 | x1        | plain (the old bare hook)                                               |
-  | Bait Mix (2, the old `bait` item) | Mara 6g, or 3 fiber -> 5                                                                                           | x0.55     | catch bar +0.06 (what bait did before)                                  |
-  | Fish Chum (3)                     | 1 carp + 1 fiber -> 5                                                                                              | x0.75     | harder fish up (`rare` 0.6), legends x1.5, quality +0.08                |
-  | Glow Grub (4)                     | Mara 35g                                                                                                           | x0.5      | `rare` 1, legends x4 (about twice the chance), quality +0.12, bar +0.04 |
+  | Bait | Get it | Bite wait | Odds and catch |
+  | --- | --- | --- | --- |
+  | Worms (code 1) | free: the hoe and the scythe dig them up (1 tile in 6, 1 in 3 on a wet day, from day 3); a new game starts with 10 | x1 | plain (the old bare hook) |
+  | Bait Mix (2, the old `bait` item) | Mara 6g, or 3 fiber -> 5 | x0.55 | catch bar +0.06 (what bait did before) |
+  | Fish Chum (3) | 1 carp + 1 fiber -> 5 | x0.75 | harder fish up (`rare` 0.6), legends x1.5, quality +0.08 |
+  | Glow Grub (4) | Mara 35g | x0.5 | `rare` 1, legends x4 (about twice the chance), quality +0.12, bar +0.04 |
 
   A fish's weight with a bait is `weight x (1 + rare x difficulty x 3)`, or `weight x legend` for a legend. Fall on the
   river with the weir open: salmon 14% with worms, 19% with chum, 21% with the grub; the summer pond's Sun Carp 4.3% with worms, 8.9% with the grub.
-
 - **Choosing the bait, one thumb and no screen before a cast** (critic rulings): the bait in hand casts with that bait
   (Action at water; the rod is owned from day 1). With the rod, the bait used last goes on (the stat `bait.pick` = its
   code), else the plainest one carried, never a dearer one by surprise. After a catch the fishing sheet's bottom button
-  shows what the next cast will really use, the hand included ("Bait: Glow Grub x2 >"). One tap switches it; with a
+  shows what the next cast will really use, the hand included ("Bait: Glow Grub x2  >"). One tap switches it; with a
   bait in hand it moves the hand too (to that bait's hotbar slot, else the rod). With one kind of bait it is Close.
   Baits go to the bag, not the hotbar (critic D1-2: the hotbar keeps the seeds and the can on the guided days). The bait
   handler sits at priority 42: the generic tool handler at 40 refuses any item that is not a tool.
