@@ -274,7 +274,8 @@
     "heartDaily": "a small gift a day",
     "heartFavs": "their favourites",
     "heartRecipe": "recipe: {name}",
-    "giftsWeek": "Gifts this week: {n}/{max}"
+    "giftsWeek": "Gifts this week: {n}/{max}",
+    "heartPlace": "help with the {place}"
   },
   "jobs": {
     "headerDouble": "TODAY'S JOBS: DOUBLE PAY",

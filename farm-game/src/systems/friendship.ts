@@ -5,7 +5,8 @@ import { gameEvents, toast } from './events';
 import { addStat, checkGoals } from './goals';
 import { addItem, removeStack, roomFor } from './inventory';
 import { displayName, type ItemRef } from './itemRef';
-import { items, mail, recipes } from '../data';
+import { items, mail, recipes, valley } from '../data';
+import type { AskWhen } from '../data';
 import { villagerHome } from './houses';
 import { absoluteDay } from './time';
 import { openingLine, openingScene, valleyHolds } from './valley';
@@ -293,6 +294,15 @@ export interface HeartRewards {
   favourites: boolean;
   /** Recipes they teach (ids). */
   recipes: string[];
+  /** Valley places whose ask waits on this heart with them (the weir on Finn's first). */
+  places: string[];
+}
+
+/** Does a place's ask name this villager at this heart level (anywhere in its all/any tree)? */
+function askNames(w: AskWhen | undefined, id: string, hearts: number): boolean {
+  if (!w) return false;
+  if (w.npc === id && (w.hearts ?? 1) === hearts) return true;
+  return [...(w.all ?? []), ...(w.any ?? [])].some((x) => askNames(x, id, hearts));
 }
 
 /** The heart at which a villager's loved gifts are known to you (systems/friendship.ts `knownReaction`). */
@@ -311,6 +321,9 @@ export function heartRewards(id: string, hearts: number): HeartRewards {
     recipes: Object.entries(recipes)
       .filter(([, r]) => r.friend?.npc === id && r.friend.hearts === hearts)
       .map(([rid]) => rid),
+    places: Object.entries(valley.places)
+      .filter(([, p]) => askNames(p.ask, id, hearts))
+      .map(([pid]) => pid),
   };
 }
 

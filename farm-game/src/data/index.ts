@@ -69,7 +69,7 @@ export interface StageWhen {
 }
 /**
  * When a place is asked for: a stat condition, or a villager's hearts (`npc` + `hearts`), or an absolute day on or
- * after `day`; nested with `all` / `any` (the weir: the spring open, the forge lit or summer 15, Finn at 2 hearts).
+ * after `day`; nested with `all` / `any` (the weir: the spring open, the forge lit or summer 15, Finn at 1 heart).
  */
 export interface AskWhen extends StageWhen {
   all?: AskWhen[];

@@ -1,4 +1,4 @@
-import { recipes } from '../../data';
+import { recipes, valley } from '../../data';
 import type { GameState } from '../../state/GameState';
 import { nextHeart, type HeartRewards } from '../../systems/friendship';
 import { t } from '../../i18n';
@@ -8,6 +8,8 @@ import { perkLine } from './perkText';
 export function heartRewardList(r: HeartRewards): string {
   const parts: string[] = [];
   if (r.letter) parts.push(t('npc.heartLetter'));
+  for (const id of r.places)
+    parts.push(t('npc.heartPlace', { place: valley.places[id]?.name ?? id }));
   const perks = perkLine(r.perks);
   if (perks) parts.push(perks);
   for (const id of r.recipes) parts.push(t('npc.heartRecipe', { name: recipes[id]?.name ?? id }));

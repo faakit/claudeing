@@ -244,3 +244,11 @@ describe('every heart is worth having', () => {
     expect(countItem(s, 'worms')).toBe(10); // the starter worms; the letter's wait in the mailbox
   });
 });
+
+describe('story gates keep their effort (critic D3-1)', () => {
+  it("the weir waits on Finn's first heart, and his sheet says so", () => {
+    expect(heartRewards('finn', 1).places).toEqual(['weir']);
+    expect(heartRewardList(heartRewards('finn', 1))).toBe('a letter, help with the Weir');
+    expect(heartRewards('finn', 2).places).toEqual([]);
+  });
+});

@@ -91,7 +91,8 @@ export class NpcPanel extends Modal {
     const g = this.scene.add.graphics();
     this.content.add(g);
     const bar = heartBar(s, this.id);
-    drawBar(g, 148, 20, 48, 5, bar ? bar.have / bar.need : 1, C.red);
+    // under the hearts and inside the sheet's frame (the QA critic: 148 + 48 ran past the border on an SE)
+    drawBar(g, 150, 20, 42, 5, bar ? bar.have / bar.need : 1, C.red);
 
     if (this.mode === 'event') this.buildEvent();
     else if (this.mode === 'talk') this.buildTalk(hearts);

@@ -84,7 +84,7 @@ function opened(): GameState {
 }
 
 describe('the Weir: asked by Finn', () => {
-  it('needs the spring open, Finn at 2 hearts, and the forge lit or summer 15', () => {
+  it('needs the spring open, Finn at 1 heart (100 points, as 2 hearts were before the QA round), and the forge lit or summer 15', () => {
     const base = farmer();
     expect(askHolds(base, weir.ask)).toBe(false); // the night before summer 15
     base.time.day += 1;
@@ -92,7 +92,8 @@ describe('the Weir: asked by Finn', () => {
     const noSpring = farmer(SUMMER_15);
     noSpring.stats['place.spring'] = 2;
     expect(askHolds(noSpring, weir.ask)).toBe(false);
-    expect(askHolds(farmer(SUMMER_15, 1), weir.ask)).toBe(false);
+    expect(askHolds(farmer(SUMMER_15, 0.99), weir.ask)).toBe(false);
+    expect(askHolds(farmer(SUMMER_15, 1), weir.ask)).toBe(true);
     // the forge lit asks earlier (M5, optional)
     const forge = farmer(20);
     expect(askHolds(forge, weir.ask)).toBe(false);

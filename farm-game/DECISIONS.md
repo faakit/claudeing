@@ -2221,7 +2221,13 @@ are too easy to max and give little incentive"; phase the game's depth over days
 - **Pace (tested, `tests/friendship-curve.test.ts`):** daily chats alone take past the first year's summer to reach
   five hearts; two loved gifts a week plus chats take four to seven weeks (was three days with a daily daffodil).
   The jobs' +15 and the specials' friendship are unchanged. The farmer sims do not court anyone, so every gold pin
-  is unchanged; the weir's "Finn at 2 hearts" (250 points) is reached by day 43 on chats alone.
+  is unchanged.
+- **Story gates keep their old effort** (critic ruling D3-1: QA asked for slower hearts, not a slower story). The
+  weir's ask wanted Finn at 2 hearts, 100 points on the old curve; it now wants 1 heart, which is 100 points: ten
+  daily chats then and now, so the weir is asked on the same day as before (summer 15, or the morning after the
+  forge, once the spring is open). It is the only villager-hearts ask in `valley.json`. Finn's sheet names it as
+  what his next heart brings ("Next heart: a letter, help with the Weir"). WORLD-PLAN.md still says "Finn at 2
+  hearts" (design lane's file: proposed change in the handover).
 - **Old saves** are rescaled once (`friend.curve2` marker, no version bump, the bait round's pattern): the same
   hearts and the same share of the way to the next. New games carry the marker.
 - **Every heart brings something, and the sheet says what** ("Next heart: 5% off shop prices, recipe: Preserve Jar,
