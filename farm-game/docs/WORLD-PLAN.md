@@ -226,7 +226,7 @@ changes.
 - **Story.** In Wendhead's gorge a stone weir split the Wend: most of it into the valley. The flood broke the weir and
   buried the valley side, so the whole river went east. Finn's *Heron*, built by his father, has sat on the town mud
   ever since; Finn scrapes her hull every spring anyway.
-- **Restore.** Ask: the spring open, the forge lit (or summer 15 without it) and Finn at 2 hearts ("I walked up to the
+- **Restore.** Ask: the spring open, the forge lit (or summer 15 without it) and Finn at 1 heart (the QA friendship curve: 100 points, as 2 hearts were before) ("I walked up to the
   gorge today. It's only stones. Stones can be moved."). Gather: 2,500g, 60 stone and a sluice gate. Work: 4 days with
   Finn (Orin on the last). *Taste:* on the last day the water comes through and the first log drifts down; you hook it
   and walk it into the weir's gap as its last beam.
