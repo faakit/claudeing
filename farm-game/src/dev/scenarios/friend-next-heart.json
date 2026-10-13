@@ -1,0 +1,14 @@
+{
+  "title": "Friendship: Mara's sheet says what the next heart brings",
+  "about": "QA round (\"hearts are too easy and give little\"). Spring 9 at noon, facing Mara at the counter, just short of her first heart, a daffodil (loved) and a parsnip in the bag. Talk: the sheet reads \"Next heart: a letter\" under her line, and the bar fills toward 100 points. Give the daffodil: one heart, and the next line names a 5% discount, a recipe and a scene. The note beside Gift says the week takes two.",
+  "version": 18,
+  "tags": ["town", "villagers", "friendship", "qa"],
+  "at": { "map": "town", "tx": 8, "ty": 11, "facing": "up" },
+  "time": { "day": 9, "clock": "12:00" },
+  "friends": { "mara": 0.85 },
+  "items": [
+    { "item": "daffodil", "qty": 1 },
+    { "item": "parsnip", "qty": 2 }
+  ],
+  "goal": "harvest"
+}

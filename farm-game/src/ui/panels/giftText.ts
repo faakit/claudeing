@@ -14,6 +14,13 @@ export const knownText = (r: Reaction): string => t(KNOWN_KEY[r]);
 export const giftSub = (have: number, known: Reaction | null): string =>
   t('gift.sub', { n: have, known: known ? knownText(known) : t('gift.notTried') });
 
-/** The short line beside the Gift button. Pure, so a test proves both widths fit. */
-export const giftNote = (can: boolean, narrow: boolean): string =>
-  t(can ? (narrow ? 'gift.oneADayShort' : 'gift.oneADay') : narrow ? 'gift.tomorrow' : 'common.backTomorrow');
+/**
+ * The short line beside the Gift button: how many gifts the week still takes, or when the next one can be given
+ * (QA round: two a week). Pure, so a test proves both widths fit.
+ */
+export const giftNote = (block: 'today' | 'week' | null, left: number, narrow: boolean): string => {
+  if (block === 'today') return t(narrow ? 'gift.tomorrow' : 'common.backTomorrow');
+  if (block === 'week') return t(narrow ? 'gift.nextWeekShort' : 'gift.nextWeek');
+  if (left === 1) return t(narrow ? 'gift.oneLeftShort' : 'gift.oneLeft');
+  return t(narrow ? 'gift.perWeekShort' : 'gift.perWeek');
+};

@@ -428,7 +428,8 @@
         "qualityBonus": 0.03
       },
       "5": {
-        "qualityBonus": 0.03
+        "qualityBonus": 0.03,
+        "waterHelp": 8
       }
     },
     "birthday": {
@@ -902,7 +903,17 @@
       }
     ],
     "giftHearts": 3,
-    "perks": {},
+    "perks": {
+      "2": {
+        "sellBonus": 0.01
+      },
+      "4": {
+        "sellBonus": 0.02
+      },
+      "5": {
+        "sellBonus": 0.02
+      }
+    },
     "birthday": {
       "season": "spring",
       "day": 24

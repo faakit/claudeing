@@ -4,7 +4,7 @@ import { cart, game, items } from '../src/data';
 import { cartTag } from '../src/systems/cart';
 import { endDay } from '../src/systems/day';
 import { shipAllProduce } from '../src/systems/economy';
-import { POINTS_PER_HEART } from '../src/systems/friendship';
+import { pointsForHearts } from '../src/systems/friendship';
 import { addItem, countItem } from '../src/systems/inventory';
 import { boardWants } from '../src/systems/orders';
 import {
@@ -91,7 +91,7 @@ describe('critique 10 F2: Clay plays to win', () => {
 describe('critique 10 F3: at 5 hearts the race goes on without his takes', () => {
   it('the score stays on the board, seasons still settle, the trophy can still be won', () => {
     const s = newState();
-    s.friends['clay'] = { points: 5 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends['clay'] = { points: pointsForHearts(5), talkedDay: 0, giftedDay: 0 };
     s.time.day = 20;
     s.stats['rival.crate'] = 19; // his last crate was last night
     expect(boardScoreLine(s)).toBe('This season: you 0, Clay 0.');

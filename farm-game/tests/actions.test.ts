@@ -73,7 +73,7 @@ describe('performAction', () => {
     s.farm.weeds['5,5'] = true;
     s.inventory.selected = 2;
     expect(performAction(s, grass(5, 5))).toMatchObject({ ok: true, kind: 'clear' });
-    expect(countItem(s, 'fiber')).toBe(1);
+    expect(countItem(s, 'fiber')).toBe(2); // two a weed since the QA round
     expect(s.energy).toBe(99);
     expect(performAction(s, grass(5, 5)).ok).toBe(false);
   });

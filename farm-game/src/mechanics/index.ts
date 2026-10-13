@@ -33,3 +33,4 @@ import './valley';
 import './mapStages';
 import './channels';
 import './weir';
+import './reveal';

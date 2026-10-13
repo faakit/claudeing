@@ -1,5 +1,8 @@
 import { driftDefaults } from './drift';
 import { baitDefaults } from './fishing';
+import { bundleQty } from './forage';
+import { friendCurveDefaults } from './friendship';
+import { MAX_POINTS } from './hearts';
 import { jobsDefaults } from './jobs';
 import { valleyDefaults, weirDefaults } from './valley';
 import {
@@ -554,7 +557,12 @@ export function sanitize(raw: Raw): GameState {
     if (!mapsData.maps[mapId]) continue;
     const out: Record<string, string> = {};
     for (const [key, item] of Object.entries(obj(tilesRaw))) {
-      if (TILE_KEY.test(key) && typeof item === 'string' && items[item]?.type === 'forage')
+      // a wild good, or a bundle of a material in the wild (dry grass)
+      if (
+        TILE_KEY.test(key) &&
+        typeof item === 'string' &&
+        (items[item]?.type === 'forage' || bundleQty(item) !== null)
+      )
         out[key] = item;
     }
     if (Object.keys(out).length) forageOut[mapId] = out;
@@ -597,7 +605,7 @@ export function sanitize(raw: Raw): GameState {
   for (const [id, f] of Object.entries(obj(raw['friends']))) {
     if (!npcs[id] || !isObj(f)) continue;
     friends[id] = {
-      points: int(f['points'], 0, 0, 250),
+      points: int(f['points'], 0, 0, MAX_POINTS),
       talkedDay: int(f['talkedDay'], 0, 0, 1e7),
       giftedDay: int(f['giftedDay'], 0, 0, 1e7),
     };
@@ -718,6 +726,7 @@ export function sanitize(raw: Raw): GameState {
   out.energy = int(raw['energy'], cap, 0, cap);
   baitDefaults(out);
   jobsDefaults(out);
+  friendCurveDefaults(out);
   return out;
 }
 

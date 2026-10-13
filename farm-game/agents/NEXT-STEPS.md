@@ -379,6 +379,36 @@ bitmask stats (`jobs.taken`, one bit per job of the day) are save data: never re
 3. Run the paired gate (base vs branch, ABBA) for any change to day 1 or 2: the median must stay within 5 s of base
    and under 173 s.
 
+### QA round: teaching, balance and pacing (depth lane, `qa/depth`, 2026-10-13)
+
+**Now:**
+
+- **Reveal schedule** (`systems/reveal.ts`, `data/reveal.json`, table in `docs/EXTENDING.md` section 13): a guided
+  game meets one system a morning from day 3: the Book and Guide on day 3, friends on day 4, Skill tab on day 5,
+  Make tab on day 6, fishing on day 7, the mine on day 9, machines on day 10, animals on day 14, cooking on day 21,
+  and the valley at the first green. Each arrives early when play needs it. Days 1-2 show Bag, Goal and Opts only.
+  Old saves (no `reveal.on`), `?tutorial=0` games and sandbox scenarios see everything.
+- **The Guide:** the Book's Guide page (`data/guide.json`, `ui/panels/GuideTab.ts`), 12 rereadable pages that are
+  NEW until opened. Coach intros: `guideGold`, `guideCrops`, `skillsNew`, `skillsGuide`, `craftNew`. Each feature
+  also has a morning note and a letter.
+- **Fiber:** 2 per weed, dry-grass bundles (3) in the wild, and sources named on craft rows and fund sheets.
+- **Friendship:** hearts at 100/250/450/700/1000 points, two gifts a week, repeats worth half, quality counts. Every
+  heart brings something: letters, perks, recipes villagers teach, scenes, Rosa's watering help. The sheet names
+  the next heart's rewards. Story gates keep their old effort: the weir wants Finn at 1 heart.
+- Scenarios: `fiber-*`, `friend-*`, `reveal-*`, `guide-book`.
+
+**Open:**
+
+- `docs/WORLD-PLAN.md` still says the weir wants "Finn at 2 hearts". It is now 1 heart on the new curve (the same
+  100 points). Design lane: please update it.
+- The shop's animal tab is not gated (the UI lane's file); the animals page and letter arrive on day 14.
+- The Guide is drawn plainly; the UI lane owns its look, and the 3- to 5-tab menu grids.
+
+**Next:**
+
+1. Watch play for which Guide pages are opened (an analytics event per page would tell).
+2. A coach intro for the crafting page's fiber line, if players still miss it.
+
 ### One-thumb controls
 
 **Now:** tap to walk and act, a forgiving tool ring, and Action press-and-lift. Holding Action and dragging paints

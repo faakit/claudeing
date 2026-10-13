@@ -91,8 +91,7 @@ registerActionHandler({
     if (late && !inGreenhouse(state, tile.tx, tile.ty))
       return { refusal: t('farm.tooLateSeason', { n: grow }) };
     // Under glass the season does not matter, except that regrowing plants are spent when it ends.
-    if (late && lastsOneSeason(cropId))
-      return { refusal: t('farm.tooLateGlass', { n: grow }) };
+    if (late && lastsOneSeason(cropId)) return { refusal: t('farm.tooLateGlass', { n: grow }) };
     // Seeds follow the hoe: a hoe that tills N in a row lets you sow the same row in one press.
     const row = lineFrom(tile, state.player.facing, upgradeLvl(state, 'hoe'))
       .filter((t) => t.farmland && checkPlant(state, t.tx, t.ty, cropId) === 'ok')
@@ -152,16 +151,13 @@ registerActionHandler({
     // where the map changes with the valley's stage (the old creek bed), nothing may be placed (WORLD-PLAN 4.2.2)
     const stageOnly = deltaRefusal(tile.map, tile.tx, tile.ty);
     if (stageOnly) return { refusal: stageOnly };
-    if (!tile.farmland || !tile.tillable || tile.blocked)
-      return { refusal: t('farm.cantPlace') };
+    if (!tile.farmland || !tile.tillable || tile.blocked) return { refusal: t('farm.cantPlace') };
     const soil = state.farm.tiles[tileKey(tile.tx, tile.ty)];
     if (soil?.crop) return { refusal: t('farm.cantPlaceCrop') };
     // a channel is filled in with the spade (its energy), never for free under a sprinkler
     if (isChannel(soil)) return { refusal: t('farm.cantPlaceChannel') };
-    if (placedAt(state, tile.map, tile.tx, tile.ty))
-      return { refusal: t('farm.somethingHere') };
-    if (villagerSpot(tile.map, tile.tx, tile.ty))
-      return { refusal: t('farm.someoneStands') };
+    if (placedAt(state, tile.map, tile.tx, tile.ty)) return { refusal: t('farm.somethingHere') };
+    if (villagerSpot(tile.map, tile.tx, tile.ty)) return { refusal: t('farm.someoneStands') };
     // Land for sale (or a project's site) is not yours yet: placing is refused just like tilling.
     const plot = tile.map === 'farm' ? plotAtTile(tile.tx, tile.ty) : null;
     if (plot && !ownsPlot(state, plot))
@@ -252,8 +248,7 @@ registerToolAction('till', ({ state, tile, tool }) => {
   if (stageOnly) return { refusal: stageOnly };
   if (tile.farmland && state.farm.tiles[tileKey(tile.tx, tile.ty)])
     return { refusal: t('farm.tilled') };
-  if (tile.farmland && tile.owned === false)
-    return { refusal: t('farm.notYourLand') };
+  if (tile.farmland && tile.owned === false) return { refusal: t('farm.notYourLand') };
   if (!canTill(state, tile)) return { refusal: t('farm.cantTill') };
   if (!canAfford(state, tool.energyCost)) return { refusal: tiredText(state) };
   // A better hoe breaks several tiles in a row for the same energy.
@@ -321,6 +316,9 @@ registerToolAction('water', ({ state, tile, tool }) => {
   };
 });
 
+/** Fiber a cut weed gives (the sickle's yield; dry-grass bundles in the wild give 3: forage.json). */
+export const FIBER_PER_WEED = 2;
+
 registerToolAction('clear', ({ state, tile, tool }) => {
   const key = tileKey(tile.tx, tile.ty);
   if (!tile.farmland || !state.farm.weeds[key]) return { refusal: t('farm.nothingToCut') };
@@ -334,10 +332,12 @@ registerToolAction('clear', ({ state, tile, tool }) => {
       run: () => {
         spendEnergy(state, tool.energyCost);
         delete state.farm.weeds[key];
-        addItem(state, 'fiber', 1);
+        // two fiber a weed (QA round: fiber was too slow to gather), as much as the bag takes
+        const qty = Math.min(FIBER_PER_WEED, roomFor(state, 'fiber', FIBER_PER_WEED));
+        addItem(state, 'fiber', qty);
         gameEvents.emit('farmChanged', undefined);
         addStat(state, 'cleared');
-        return { item: 'fiber', qty: 1 };
+        return { item: 'fiber', qty };
       },
     },
   };

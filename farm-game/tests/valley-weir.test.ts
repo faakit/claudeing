@@ -13,7 +13,7 @@ import {
   isGiftable,
   linesNow,
   pendingEvent,
-  POINTS_PER_HEART,
+  pointsForHearts,
 } from '../src/systems/friendship';
 import { isShippable } from '../src/systems/economy';
 import {
@@ -21,7 +21,6 @@ import {
   buyPart,
   channelFlow,
   dryMaps,
-  HEART_POINTS,
   interactSite,
   partOffer,
   revealPending,
@@ -57,7 +56,7 @@ function farmer(day = SUMMER_15 - 1, hearts = 2): GameState {
   s.stats['place.spring.opened'] = 10;
   s.stats['valley.creekSeen'] = 1;
   s.stats['mail.welcome'] = 1;
-  s.friends['finn'] = { points: hearts * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+  s.friends['finn'] = { points: pointsForHearts(hearts), talkedDay: 0, giftedDay: 0 };
   return s;
 }
 /** Finn asked for the weir this morning. */
@@ -85,7 +84,7 @@ function opened(): GameState {
 }
 
 describe('the Weir: asked by Finn', () => {
-  it('needs the spring open, Finn at 2 hearts, and the forge lit or summer 15', () => {
+  it('needs the spring open, Finn at 1 heart (100 points, as 2 hearts were before the QA round), and the forge lit or summer 15', () => {
     const base = farmer();
     expect(askHolds(base, weir.ask)).toBe(false); // the night before summer 15
     base.time.day += 1;
@@ -93,13 +92,13 @@ describe('the Weir: asked by Finn', () => {
     const noSpring = farmer(SUMMER_15);
     noSpring.stats['place.spring'] = 2;
     expect(askHolds(noSpring, weir.ask)).toBe(false);
-    expect(askHolds(farmer(SUMMER_15, 1), weir.ask)).toBe(false);
+    expect(askHolds(farmer(SUMMER_15, 0.99), weir.ask)).toBe(false);
+    expect(askHolds(farmer(SUMMER_15, 1), weir.ask)).toBe(true);
     // the forge lit asks earlier (M5, optional)
     const forge = farmer(20);
     expect(askHolds(forge, weir.ask)).toBe(false);
     forge.stats['place.forge'] = 3;
     expect(askHolds(forge, weir.ask)).toBe(true);
-    expect(HEART_POINTS).toBe(POINTS_PER_HEART);
   });
 
   it("is asked once, the morning summer 15 comes, with Finn's letter and the HUD line that day", () => {
@@ -349,7 +348,7 @@ describe('Finn, Clay and the river', () => {
       expect(e.reward).toEqual({ item: 'catfish', qty: 2 });
     }
     const s = newState();
-    s.friends['finn'] = { points: 4 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+    s.friends['finn'] = { points: pointsForHearts(4), talkedDay: 0, giftedDay: 0 };
     s.stats['friend.finn.lake'] = 1;
     s.stats['event.finn.lake'] = 1;
     const dry = pendingEvent(s, 'finn');
@@ -371,7 +370,7 @@ describe('Finn, Clay and the river', () => {
   it('a save that saw "A secret spot" sees "The Heron" without its catfish again', () => {
     const play = (sawSecret: boolean) => {
       const s = newState();
-      s.friends['finn'] = { points: 4 * POINTS_PER_HEART, talkedDay: 0, giftedDay: 0 };
+      s.friends['finn'] = { points: pointsForHearts(4), talkedDay: 0, giftedDay: 0 };
       for (const ev of npcs['finn']!.events!)
         if (ev.id !== 'heron' && ev.hearts <= 4) s.stats[`event.finn.${ev.id}`] = 1;
       if (sawSecret) s.stats['event.finn.secret'] = 1;

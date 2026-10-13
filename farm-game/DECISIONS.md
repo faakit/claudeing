@@ -2269,3 +2269,98 @@ the iPhone 13 (1.907) 17.2 and 13.3. That is above iOS's 17 pt body text, whose 
   stack merges into its own kind); off the grid it goes back. The blue-edged first row is the hotbar, so dragging
   there puts an item on the hotbar; the five hotbar cells keep showing the item slots.
 - Each slot's zone is its whole 23 px pitch, so the zones meet and a drop on a seam lands.
+
+## QA round: teaching, balance and pacing (depth lane, qa/depth, 2026-10-13)
+
+QA feedback (pt-BR, owner's QA): a guide to gold, the planting cycle and skills; "fiber is too hard to get"; "hearts
+are too easy to max and give little incentive"; phase the game's depth over days and weeks.
+
+### Fiber
+
+- **Weeds give two fiber** (`FIBER_PER_WEED`), as much as the bag takes; the float text says "+2 Fiber".
+- **Dry grass in the wild.** A forage entry may now be a bundle of a material (`forage.json` `qty`; validated: only a
+  material is a bundle, and a bundle has a qty). Dry grass is `fiber` x3, weight 3 on the farm, in town and in the
+  woods in every season (about a quarter of wild spawns), drawn as the fiber icon with the wild-good ring. A bundle
+  has no quality, counts as one pickup (the day-1 errand and the forage jobs count pickups) and gives foraging XP as
+  one item. The RNG draws per pickup are the same as for a wild good, so nothing else in a run moves.
+- **Saves keep bundles** (the forage sanitizer accepted only `forage` items) and scenarios may place them.
+- **Where fiber comes from is said where it is asked.** Its `source` is "cut weeds, or at Mara's" (fund sheets); a
+  craft row short of an ingredient appends that ingredient's source ("3 Fiber: cut weeds, or at Mara's"); carp,
+  mushroom and copper ore got sources too. The craft tab's footer names all three ways. Mara still sells it (5g).
+- Measured: a woods visit finds about one bundle a day (3 fiber) plus the farm's 4 weeds (8): about 11 fiber a day
+  for free, against 3-6 before. The bait mix (3 fiber) and chum (1 fiber) are a day's walk, not a purchase. The sims
+  buy their fiber and do not forage, so their gold is unchanged.
+
+### Friendship: slower, and every heart worth having
+
+- **A rising curve** (`systems/hearts.ts`): hearts at 100, 250, 450, 700 and 1,000 points (was 50 a heart, 250 max).
+- **Talk counts for less once friends:** 10 a day, 6 from two hearts (x2 on a birthday).
+- **Gifts:** love 80, like 40 (was 45), neutral 10 (was 15), dislike -20. At most **two a week per villager** (days
+  1-7, 8-14, ...; stats `giftWeek.<id>`, `giftWeekN.<id>`), still one a day; a birthday present is always welcome
+  and never uses one up. **The same present within 14 days is worth half** ("Daffodils again? Thanks.";
+  `giftDay.<id>.<item>`). A silver or gold present is worth x1.25 / x1.5. Dislikes are never softened.
+- **Pace (tested, `tests/friendship-curve.test.ts`):** daily chats alone take past the first year's summer to reach
+  five hearts; two loved gifts a week plus chats take four to seven weeks (was three days with a daily daffodil).
+  The jobs' +15 and the specials' friendship are unchanged. The farmer sims do not court anyone, so every gold pin
+  is unchanged.
+- **Story gates keep their old effort** (critic ruling D3-1: QA asked for slower hearts, not a slower story). The
+  weir's ask wanted Finn at 2 hearts, 100 points on the old curve; it now wants 1 heart, which is 100 points: ten
+  daily chats then and now, so the weir is asked on the same day as before (summer 15, or the morning after the
+  forge, once the spring is open). It is the only villager-hearts ask in `valley.json`. Finn's sheet names it as
+  what his next heart brings ("Next heart: a letter, help with the Weir"). WORLD-PLAN.md still says "Finn at 2
+  hearts" (design lane's file: proposed change in the handover).
+- **Old saves** are rescaled once (`friend.curve2` marker, no version bump, the bait round's pattern): the same
+  hearts and the same share of the way to the next. New games carry the marker.
+- **Every heart brings something, and the sheet says what** ("Next heart: 5% off shop prices, recipe: Preserve Jar,
+  a scene"; `heartRewards`, `ui/panels/heartText.ts`; a test proves every villager has something at every heart):
+  - heart 1: a letter with a Dry Year beat and a small gift (Mara's ledger of the families who left, Finn's *Heron*
+    on the mud, Rosa on Ilse's hands, Orin's cold forge, Clay's grudging "Hm.", Senna's mill);
+  - heart 2-5: the existing scenes and perks, plus **recipes villagers teach** (`recipes.json` `friend`; with a
+    skill unlock either opens it): Mara the preserve jar at 2, Rosa rich fertilizer at 2, Finn a new Glow Grub
+    recipe (1 mushroom + 2 fiber -> 2) at 3, Orin the furnace at 3, Clay the coop at 3;
+  - heart 3: daily gifts and their favourites, as before, and a letter (Clay and Senna got theirs);
+  - **help on the farm:** Rosa at five hearts waters up to 8 dry crops on a dry morning (perk `waterHelp`, a
+    morning note; no random draw); Senna's mill pays a little more for what you ship (sell +1/+2/+2% at 2/4/5).
+- The bar on the sheet fills toward the next heart's cost; the note beside Gift says "2 a week", "1 more this
+  week", "Tomorrow." or "Again next week.".
+
+### The reveal schedule: depth over days and weeks
+
+- **The schedule** (`src/data/reveal.json`, rules in `systems/reveal.ts`, the table in `docs/EXTENDING.md` section 13):
+  day 3 the Book and its Guide (gold, the planting cycle, jobs), day 4 friends and hearts, day 5 the Skill tab, day 6
+  the Make tab, day 7 fishing and bait, day 9 the mine, day 10 sprinklers and jars, day 14 animals, day 21 cooking,
+  and the valley with the first green. One feature a morning by the calendar; the Clay race (day 8) and crows (day 7)
+  keep their days.
+- **Only the introduction is scheduled, never the game.** A feature arrives early the moment play needs it: the goal
+  chain reaches its goal (craft, fish, place, chicken) or the player already uses it (a catch, a rock, a level 3
+  skill, the kitchen). So a fast player is never locked out; a slow one is not shown six systems on day 1.
+- **What is gated:** the Menu's Make, Skill and Book tabs (day 1-2 menu: Bag, Goal, Opts); first-time tips that name
+  one (`tips.json` `reveal`); Guide pages; and the
+  morning note, letter and coach intro each feature brings. Rules, shops, recipes and maps are not gated (the shop's
+  animal tab is the UI lane's file and stays as it is: the animals page and Mara's letter arrive on day 14).
+- **Days 1 and 2 are untouched:** no feature may be scheduled before day 3 (validated), `markRevealed` does nothing
+  before day 3, and the intros all need an arrived feature. The only day-1/2 change is the shorter tab row.
+- **Who follows it:** saves with `reveal.on`, set by `startTutorial` for a guided game. Every save from before
+  (no marker), a bare `?tutorial=0` game and sandbox scenarios see everything, with no reveal letters or intros:
+  "old saves already past those days see everything". A guided game whose guide was skipped keeps the schedule (its
+  tabs still arrive by day, with notes and letters, without coach marks).
+- **Introductions, one line each, one control each:** `guideGold` (day 3: Menu, Book, Gold), `guideCrops` (the next
+  morning: Menu, Book, The planting cycle), `skillsNew` (Menu, Skill) then `skillsGuide` (Menu, Book, Skills),
+  `craftNew` (Menu, Make; the existing `craft` intro covers a craft goal reached first). All optional (Next after
+  45 s) and done by looking, never by doing. Each feature's morning note says what is new, and its letter (Rosa,
+  Mara, Orin, Finn) says it in their voice, two with a small gift (10 fiber, 5 worms).
+
+### The Guide: explanations to reread
+
+- **Where:** the Book tab has two pages, Guide and Goods (the almanac), switched at its top like the board's Jobs
+  and Requests. It opens on the Guide while a page is unread. No seventh tab (agreed with the UI lane, which owns
+  the look; `ui/panels/GuideTab.ts` draws it plainly).
+- **What:** twelve short pages (`src/data/guide.json`), each arriving with its feature and marked NEW until opened:
+  Gold (how it is earned, the bin paying at dawn, what to spend it on, what a seed row's numbers mean), The planting
+  cycle (till, plant, water daily, a day of growth per watered night, rain and sprinklers, days to ripen, regrowing
+  crops, seasons of 28 days, out-of-season crops withering, fertilizer and quality), Jobs and requests, Friends and
+  hearts (the new rules), Skills (what each of the four grows from, what levels bring, recipes they open), Making
+  things (fiber's three sources), Fishing and bait, The mine, Sprinklers and jars, Animals, Cooking, Mending the
+  valley. A page runs over to More when it does not fit; Back returns to the list.
+- **Not a wall of text:** each page is reached by the player (the coach points at it once, the day it matters) and
+  is 3-7 paragraphs of one to three lines.

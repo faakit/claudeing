@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { pointsForHearts } from '../src/systems/hearts';
 import { describe, expect, it } from 'vitest';
 import { goals, mapsData } from '../src/data';
 import { STATE_VERSION } from '../src/state/GameState';
@@ -92,7 +93,7 @@ describe('scenarios', () => {
       watered: true,
       crop: { cropId: 'tomato', stage: 4 },
     });
-    expect(s.friends['rosa']?.points).toBe(150);
+    expect(s.friends['rosa']?.points).toBe(pointsForHearts(3));
     expect(goals[s.goalIndex]?.id).toBe('ship');
     expect(s.settings.leftHanded).toBe(true);
     expect(s.settings.controls.tapToMove).toBe(false);

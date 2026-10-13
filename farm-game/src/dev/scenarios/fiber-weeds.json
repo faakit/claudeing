@@ -1,0 +1,14 @@
+{
+  "title": "Fiber: weeds on the farm give two each",
+  "about": "QA round (\"fiber is too hard to get\"). Spring 5, 09:00 on the farm, the scythe in hand, a row of four weeds below the farmer. Each cut shows \"+2 Fiber\" and puts two in the bag. The fund and craft rows name the source while fiber is short.",
+  "version": 18,
+  "tags": ["farm", "fiber", "qa"],
+  "at": { "map": "farm", "tx": 10, "ty": 13, "facing": "down" },
+  "time": { "day": 5, "clock": "09:00" },
+  "energy": "max",
+  "select": "scythe",
+  "state": {
+    "farm": { "weeds": { "10,14": true, "11,14": true, "12,14": true, "13,14": true } }
+  },
+  "goal": "craft"
+}

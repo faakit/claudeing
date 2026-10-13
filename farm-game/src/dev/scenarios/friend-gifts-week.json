@@ -1,0 +1,31 @@
+{
+  "title": "Friendship: this week's gifts to Finn are given",
+  "about": "QA round. Spring 11 (week 2), 15:30 by the woods lake facing Finn, two gifts given to him this week (days 8 and 10), a trout (loved) in the bag. Gift is greyed and the note says \"Again next week.\" (pt-BR: \"Semana que vem.\"). On day 15 it opens again. The same present twice in 14 days is worth half (\"Trout again? Thanks.\").",
+  "version": 18,
+  "tags": ["woods", "villagers", "friendship", "qa"],
+  "at": {
+    "map": "woods",
+    "tx": 11,
+    "ty": 18,
+    "facing": "up"
+  },
+  "time": {
+    "day": 11,
+    "clock": "15:30"
+  },
+  "friends": {
+    "finn": 1.5
+  },
+  "items": [
+    {
+      "item": "trout",
+      "qty": 2
+    }
+  ],
+  "stats": {
+    "giftWeek.finn": 2,
+    "giftWeekN.finn": 2,
+    "giftDay.finn.trout": 10
+  },
+  "goal": "harvest"
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Reveal schedule: an old save sees everything",
+  "about": "QA round. A save from before the reveal schedule (no reveal.on), on day 2 in town: the Menu has all six tabs, the Book opens on the Guide with every page (all NEW), and no reveal letter or intro ever comes.",
+  "tags": ["town", "reveal", "save", "qa"],
+  "at": {
+    "map": "town",
+    "tx": 13,
+    "ty": 15,
+    "facing": "up"
+  },
+  "time": {
+    "day": 2,
+    "clock": "11:00"
+  },
+  "reveal": "all",
+  "goal": "job1",
+  "version": 18
+}

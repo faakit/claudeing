@@ -44,6 +44,7 @@ import { festivalToday, hasEntered } from './festivals';
 import { countItem } from './inventory';
 import { isTaken, jobReady, PAID_AT_PAYOUT, postedJobs } from './jobs';
 import { isWet } from './weather';
+import { isRevealed, revealOn, startReveal, topicRead } from './reveal';
 import { t, toEnglish, type Key } from '../i18n';
 
 export interface Tile {
@@ -190,8 +191,11 @@ export function layGift(s: GameState): boolean {
 
 /** Start the guide on a new game (or not, `on` false), laying out the gift unless `gift` is false. */
 export function startTutorial(s: GameState, opts: { on: boolean; gift: boolean }): void {
-  if (opts.on) s.stats['tut.on'] = 1;
-  else s.stats['tut.off'] = 1;
+  if (opts.on) {
+    s.stats['tut.on'] = 1;
+    // a guided game meets its systems over days and weeks (systems/reveal.ts); a bare game sees them all
+    startReveal(s);
+  } else s.stats['tut.off'] = 1;
   if (opts.gift) layGift(s);
   // Day 2 is the letter and the walk to town: a rain morning waters day 1's crops (the sleep sheet says
   // "Tomorrow: Rain. No watering needed."), and daily watering is taught on the first dry morning instead.
@@ -415,6 +419,8 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   if (c.fact === 'forageInView' && !forageInView(s, world)) return false;
   if (c.fact === 'welcomeJobs' && !welcomeJobsToday(s)) return false;
   if (c.wet !== undefined && isWet(s.weather) !== c.wet) return false;
+  if (c.revealed !== undefined && !(revealOn(s) && isRevealed(s, c.revealed))) return false;
+  if (c.read !== undefined && !topicRead(s, c.read)) return false;
   if (c.after !== undefined) {
     const at = s.stats[`tut.at.${step.id}.clock`];
     if (at === undefined || clockNow(s) - at < c.after) return false;

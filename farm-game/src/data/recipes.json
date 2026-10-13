@@ -48,6 +48,29 @@
     "gold": 0,
     "unlock": null
   },
+  "glow_grub": {
+    "name": "Glow Grub",
+    "output": {
+      "item": "glow_grub",
+      "qty": 2
+    },
+    "ingredients": [
+      {
+        "item": "mushroom",
+        "qty": 1
+      },
+      {
+        "item": "fiber",
+        "qty": 2
+      }
+    ],
+    "gold": 0,
+    "unlock": null,
+    "friend": {
+      "npc": "finn",
+      "hearts": 3
+    }
+  },
   "sprinkler": {
     "name": "Sprinkler",
     "output": {
@@ -82,6 +105,10 @@
     "unlock": {
       "skill": "farming",
       "level": 2
+    },
+    "friend": {
+      "npc": "mara",
+      "hearts": 2
     }
   },
   "speed_gro": {
@@ -126,6 +153,10 @@
     "unlock": {
       "skill": "fishing",
       "level": 2
+    },
+    "friend": {
+      "npc": "rosa",
+      "hearts": 2
     }
   },
   "quality_sprinkler": {
@@ -166,6 +197,10 @@
     "unlock": {
       "skill": "farming",
       "level": 3
+    },
+    "friend": {
+      "npc": "clay",
+      "hearts": 3
     }
   },
   "barn": {
@@ -278,6 +313,10 @@
     "unlock": {
       "skill": "mining",
       "level": 2
+    },
+    "friend": {
+      "npc": "orin",
+      "hearts": 3
     }
   },
   "silo": {

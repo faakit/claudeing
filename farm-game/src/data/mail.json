@@ -275,6 +275,216 @@
         "item": "worms",
         "qty": 10
       }
+    },
+    {
+      "id": "mara_heart1",
+      "from": "mara",
+      "title": "The ledger",
+      "text": "I keep a ledger of every family that left: where they went, what they grew. Since you came, I've started writing to them again. A few bulbs from the back shelf.",
+      "when": {
+        "npc": "mara",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "tulip_seed",
+        "qty": 3
+      }
+    },
+    {
+      "id": "finn_heart1",
+      "from": "finn",
+      "title": "The Heron",
+      "text": "My father's boat still sits on the mud where the river was. Some evenings I sit in her and listen. Don't tell Mara. Worms, for your hook.",
+      "when": {
+        "npc": "finn",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "worms",
+        "qty": 10
+      }
+    },
+    {
+      "id": "rosa_heart1",
+      "from": "rosa",
+      "title": "Ilse's hands",
+      "text": "You hold a hoe the way Ilse did, low and patient. She'd be glad. She always put parsnips in first. So should you.",
+      "when": {
+        "npc": "rosa",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "parsnip_seed",
+        "qty": 5
+      }
+    },
+    {
+      "id": "orin_heart1",
+      "from": "orin",
+      "title": "A cold forge",
+      "text": "The wheel that worked my bellows stopped when the river left. A cold forge still mends hinges. Stone for your paths.",
+      "when": {
+        "npc": "orin",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "stone",
+        "qty": 15
+      }
+    },
+    {
+      "id": "clay_heart1",
+      "from": "clay",
+      "title": "Hm.",
+      "text": "Didn't think you'd last the month. You might. Here. Don't get used to it.",
+      "when": {
+        "npc": "clay",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "fertilizer",
+        "qty": 3
+      }
+    },
+    {
+      "id": "senna_heart1",
+      "from": "senna",
+      "title": "Flour dust",
+      "text": "The mill still smells of old flour. When the wheel turns I'll bake for the whole valley. That's a promise.",
+      "when": {
+        "npc": "senna",
+        "hearts": 1
+      },
+      "gift": {
+        "item": "corn",
+        "qty": 3
+      }
+    },
+    {
+      "id": "clay_friend",
+      "from": "clay",
+      "title": "My brother",
+      "text": "Told my brother about you. He laughed. Then he asked if you needed a hand. Seeds from my own row.",
+      "when": {
+        "npc": "clay",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "corn_seed",
+        "qty": 5
+      }
+    },
+    {
+      "id": "senna_friend",
+      "from": "senna",
+      "title": "First bake",
+      "text": "First tart out of the old oven. It came out lopsided. It's yours anyway.",
+      "when": {
+        "npc": "senna",
+        "hearts": 3
+      },
+      "gift": {
+        "item": "berry_tart",
+        "qty": 2
+      }
+    },
+    {
+      "id": "reveal_guide",
+      "from": "rosa",
+      "title": "Ilse's notes",
+      "text": "Ilse kept notes on how a farm pays its way. I copied the useful bits into a Guide for you: Menu, then Book. Gold first, then crops.",
+      "when": {
+        "stat": "reveal.guide",
+        "min": 1
+      }
+    },
+    {
+      "id": "reveal_friends",
+      "from": "mara",
+      "title": "Getting to know folks",
+      "text": "Folks here warm up slowly! A chat a day helps, and a gift they love helps more. Every heart brings something: my sheet tells you what's next.",
+      "when": {
+        "stat": "reveal.friends",
+        "min": 1
+      }
+    },
+    {
+      "id": "reveal_skills",
+      "from": "orin",
+      "title": "Practice",
+      "text": "Hands learn. Every harvest, cast and swing teaches you something. Menu, then Skill, shows where you stand.",
+      "when": {
+        "stat": "reveal.skills",
+        "min": 1
+      }
+    },
+    {
+      "id": "reveal_crafting",
+      "from": "orin",
+      "title": "A workbench",
+      "text": "You'll want bait, fertilizer, sprinklers. Menu, then Make. Fiber comes from weeds and dry grass. Here's a start.",
+      "when": {
+        "stat": "reveal.crafting",
+        "min": 1
+      },
+      "gift": {
+        "item": "fiber",
+        "qty": 10
+      }
+    },
+    {
+      "id": "reveal_fishing",
+      "from": "finn",
+      "title": "Bait",
+      "text": "Fish won't take a bare hook. The hoe digs up worms. Mara sells Bait Mix. Mornings bite best.",
+      "when": {
+        "stat": "reveal.fishing",
+        "min": 1
+      },
+      "gift": {
+        "item": "worms",
+        "qty": 5
+      }
+    },
+    {
+      "id": "reveal_mine",
+      "from": "orin",
+      "title": "The mine",
+      "text": "Past the woods there's a mine. Rocks give stone, veins give ore. Bring a pickaxe and something to eat.",
+      "when": {
+        "stat": "reveal.mine",
+        "min": 1
+      }
+    },
+    {
+      "id": "reveal_machines",
+      "from": "rosa",
+      "title": "Let the farm work",
+      "text": "A sprinkler waters while you sleep. A jar turns fruit into jam worth more. Both are made from fiber: Menu, then Make.",
+      "when": {
+        "stat": "reveal.machines",
+        "min": 1
+      }
+    },
+    {
+      "id": "reveal_animals",
+      "from": "mara",
+      "title": "Hens in stock",
+      "text": "I've chickens in stock now! Build a coop first (Menu, then Make), then come and see me. Eggs every morning!",
+      "when": {
+        "stat": "reveal.animals",
+        "min": 1
+      }
+    },
+    {
+      "id": "reveal_cooking",
+      "from": "mara",
+      "title": "Home cooking",
+      "text": "A kitchen (the Home tab at my shop) lets you cook. A good dish gives you energy back, and some folks love one!",
+      "when": {
+        "stat": "reveal.cooking",
+        "min": 1
+      }
     }
   ]
 }

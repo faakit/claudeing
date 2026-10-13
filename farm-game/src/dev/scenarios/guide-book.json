@@ -1,0 +1,51 @@
+{
+  "title": "The Guide: the Book's pages on day 12",
+  "about": "QA round. A guided game on spring 12 at 20:00 at home: the Guide holds gold, crops, jobs, friends, skills, making things, fishing and the mine (sprinklers and jars arrived early with the place goal). Gold and crops are read; the rest show NEW. Open a page: its title, short paragraphs, Back and (when it runs over) More. Toggle Goods for the almanac.",
+  "tags": ["house", "guide", "qa"],
+  "at": {
+    "map": "house",
+    "tx": 3,
+    "ty": 3,
+    "facing": "down"
+  },
+  "time": {
+    "day": 12,
+    "clock": "20:00"
+  },
+  "tutorial": "day2",
+  "hints": "off",
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.welcomeJobs": 1,
+    "tut.jobBoard": 1,
+    "tut.board": 1,
+    "guide.read.gold": 1,
+    "guide.read.crops": 1,
+    "tut.guideGold": 1,
+    "tut.guideCrops": 1,
+    "tut.skillsNew": 1,
+    "tut.skillsGuide": 1,
+    "tut.craftNew": 1
+  },
+  "goal": "place",
+  "version": 18
+}

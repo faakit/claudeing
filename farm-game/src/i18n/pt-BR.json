@@ -254,7 +254,7 @@
     "loves": "Adora: {items}",
     "reachHearts": "Chegue a 3 corações para saber os favoritos.",
     "gift": "Presente",
-    "gifted": "Já deu",
+    "gifted": "Já dei",
     "shop": "Loja",
     "giftFor": "Um presente para {name}?",
     "nothingToGive": "Nada para dar. Colha ou cate algo no mato!",
@@ -265,7 +265,17 @@
     "partOffer": "O açude precisa de uma {part}. Eu faço uma para você.",
     "partNoGold": "Ouro insuficiente: {gold}.",
     "partBagFull": "Sua mochila está cheia.",
-    "partBought": "{part} na mochila. Leve até a obra."
+    "partBought": "{part} na mochila. Leve até a obra.",
+    "reactAgain": "{item} de novo? Valeu.",
+    "waterHelpNote": "A Rosa regou {n} plantas secas de manhã cedo.",
+    "nextHeart": "Próximo coração: {list}",
+    "heartScene": "uma cena",
+    "heartLetter": "uma carta",
+    "heartDaily": "um mimo por dia",
+    "heartFavs": "os favoritos",
+    "heartRecipe": "receita: {name}",
+    "giftsWeek": "Presentes na semana: {n}/{max}",
+    "heartPlace": "ajuda com: {place}"
   },
   "jobs": {
     "headerDouble": "BICOS DE HOJE: PAGA EM DOBRO",
@@ -683,20 +693,28 @@
     "needsLevel": "{skill} nv {level} (você: {have})",
     "title": "BANCADA",
     "make": "Fazer",
-    "fiber": "Você tem {n} de fibra. Corte o mato com a foice.",
+    "fiber": "Fibra: {n}. Corte o mato (2 cada), cate capim seco ou compre na Mara.",
     "made": "Fez {n} {item}",
-    "madeOne": "Fez {item}"
+    "madeOne": "Fez {item}",
+    "needsFriend": "{name} ensina com {count} corações",
+    "orFriend": "{skill} nv {level}, ou {name} com {count} corações"
   },
   "gift": {
     "loves": "Adora!",
     "likes": "Gosta",
     "neutral": "Tanto faz",
     "dislikes": "Não gosta",
-    "sub": "Tem {n}  {known}",
+    "sub": "Tem {n}. {known}",
     "notTried": "Nunca deu",
     "oneADayShort": "1 por dia.",
     "oneADay": "1 presente por dia.",
-    "tomorrow": "Amanhã."
+    "tomorrow": "Amanhã.",
+    "perWeek": "2 por semana.",
+    "perWeekShort": "2/semana",
+    "oneLeft": "Mais 1 na semana.",
+    "oneLeftShort": "Resta 1.",
+    "nextWeek": "Semana que vem.",
+    "nextWeekShort": "Já deu 2."
   },
   "perk": {
     "qualityBonus": "+{n}% de qualidade",
@@ -718,7 +736,8 @@
     },
     "rivalPolite": "{name} poupa seus produtos da roça",
     "rivalOff": "{name} para de pegar pedidos",
-    "festivalPrize": "+{n}% nos prêmios de festa"
+    "festivalPrize": "+{n}% nos prêmios de festa",
+    "waterHelp": "ela rega {n} plantas nas manhãs secas"
   },
   "plot": {
     "size": "{n} espaços de terra boa.",
@@ -853,7 +872,7 @@
   },
   "fx": {
     "refilled": "Cheio!",
-    "fiber": "+1 Fibra",
+    "fiber": "+{n} Fibra",
     "goldQuality": "Qualidade ouro!",
     "silverQuality": "Qualidade prata!"
   },
@@ -945,5 +964,12 @@
     "yes": "Compartilhar",
     "no": "Não, obrigado",
     "toggle": "Estatística: {state}"
+  },
+  "guide": {
+    "pageGuide": "Guia",
+    "pageGoods": "Achados",
+    "empty": "As páginas chegam aqui conforme você joga.",
+    "new": "NOVO",
+    "more": "Mais"
   }
 }

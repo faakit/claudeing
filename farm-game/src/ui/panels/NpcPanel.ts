@@ -7,17 +7,17 @@ import {
   canGift,
   chat,
   completeEvent,
+  giftBlock,
+  giftsLeft,
   giveGift,
+  heartBar,
   heartsOf,
   isBirthday,
   isGiftable,
   knownReaction,
   lineFor,
   MAX_HEARTS,
-  nextPerk,
   pendingEvent,
-  POINTS_PER_HEART,
-  pointsOf,
 } from '../../systems/friendship';
 import { keyOf, displayName, iconKey, refOf, sellValue, type ItemRef } from '../../systems/itemRef';
 import { countStack } from '../../systems/inventory';
@@ -25,7 +25,7 @@ import { gameEvents, toast } from '../../systems/events';
 import { buyPart, partOffer } from '../../systems/valley';
 import { C } from '../theme';
 import { drawBar, Modal } from '../widgets';
-import { perkLine } from './perkText';
+import { nextHeartLine } from './heartText';
 import { giftNote, giftSub } from './giftText';
 import { fmtGold, fmtNum, t } from '../../i18n';
 
@@ -90,8 +90,9 @@ export class NpcPanel extends Modal {
       this.icon(150 + i * 9, 13, 'ui_heart').setTint(i < hearts ? 0xe0574a : 0x4a4560);
     const g = this.scene.add.graphics();
     this.content.add(g);
-    const into = pointsOf(s, this.id) % POINTS_PER_HEART;
-    drawBar(g, 148, 20, 48, 5, hearts >= MAX_HEARTS ? 1 : into / POINTS_PER_HEART, C.red);
+    const bar = heartBar(s, this.id);
+    // under the hearts and inside the sheet's frame (the QA critic: 148 + 48 ran past the border on an SE)
+    drawBar(g, 150, 20, 42, 5, bar ? bar.have / bar.need : 1, C.red);
 
     if (this.mode === 'event') this.buildEvent();
     else if (this.mode === 'talk') this.buildTalk(hearts);
@@ -164,14 +165,12 @@ export class NpcPanel extends Modal {
     fy = Math.max(fy, 66 + this.dy);
     if (this.gained > 0)
       fy = this.para(8, fy, t('npc.friendship', { n: this.gained }), C.green, 184, 5);
-    const next = nextPerk(s, this.id);
+    // what the next heart brings (QA round: every heart is worth having, and the sheet says what)
     fy = this.para(
       8,
       fy,
-      next
-        ? t('npc.atHearts', { count: next.hearts, perks: perkLine(next.perks) })
-        : t('npc.bestFriends'),
-      next ? C.creamDim : C.green,
+      nextHeartLine(s, this.id),
+      hearts < MAX_HEARTS ? C.creamDim : C.green,
       184,
       3,
     );
@@ -222,7 +221,7 @@ export class NpcPanel extends Modal {
     this.label(
       x,
       y + 4,
-      giftNote(canGift(s, this.id), def.role === 'shop'),
+      giftNote(giftBlock(s, this.id), giftsLeft(s, this.id), def.role === 'shop'),
       C.creamDim,
       1,
       'left',

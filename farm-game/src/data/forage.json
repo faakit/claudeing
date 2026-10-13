@@ -48,6 +48,12 @@
       "weight": 2
     },
     {
+      "item": "fiber",
+      "seasons": ["spring", "summer", "fall", "winter"],
+      "weight": 3,
+      "qty": 3
+    },
+    {
       "item": "winter_root",
       "seasons": ["winter"],
       "weight": 4

@@ -1,0 +1,46 @@
+{
+  "title": "Reveal schedule: day 3 brings the Book and its Guide",
+  "about": "QA round. A guided game on day 3 at 06:30, waking at home; the morning brought the Book (\"New in the Menu: the Book, with a Guide to gold and crops.\") and Rosa's letter. The coach: \"New: a Guide. Tap Menu.\", then \"Tap Book: the new Guide.\", then \"Tap Gold: how money works.\" on the Gold page's button. Reading Gold ends it; the planting cycle's intro comes the next morning.",
+  "tags": ["house", "reveal", "guide", "qa"],
+  "at": {
+    "map": "house",
+    "tx": 3,
+    "ty": 3,
+    "facing": "down"
+  },
+  "time": {
+    "day": 3,
+    "clock": "06:30"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.menu": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.shop": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.giving": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.welcomeJobs": 1,
+    "tut.jobBoard": 1,
+    "tut.board": 1,
+    "reveal.guide": 3
+  },
+  "letters": ["reveal_guide"],
+  "goal": "job1",
+  "version": 18
+}

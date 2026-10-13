@@ -37,8 +37,10 @@ import {
   type Settings,
   type Weather,
 } from '../state/GameState';
-import { POINTS_PER_HEART } from '../systems/friendship';
+import { pointsForHearts } from '../systems/friendship';
 import { addItem, bagSize } from '../systems/inventory';
+import { bundleQty } from '../systems/forage';
+import { REVEAL_ON } from '../systems/reveal';
 import { letterDue } from '../systems/mail';
 import { migrate } from '../systems/save';
 import {
@@ -128,6 +130,12 @@ export interface ScenarioDef {
    * unless the URL says `?tutorial=0`). "on": the guide runs from its first undone step. "day2": day 1 is done.
    */
   tutorial?: 'off' | 'fresh' | 'on' | 'day2';
+  /**
+   * The reveal schedule (systems/reveal.ts): "schedule" follows it as a guided new game does (tabs and Guide pages
+   * arrive by day); "all" shows everything, as an old save. Default: "schedule" with `tutorial` "on" or "day2" (a
+   * "fresh" game decides itself), else "all", so a sandbox scenario keeps every tab.
+   */
+  reveal?: 'schedule' | 'all';
   /** First-run tips and hints. "off" (default) marks them seen so they never cover a screenshot. */
   hints?: 'off' | 'on';
   settings?: Partial<Omit<Settings, 'controls'>> & { controls?: Partial<ControlSettings> };
@@ -254,6 +262,7 @@ const KEYS = new Set([
   'stats',
   'valley',
   'tutorial',
+  'reveal',
   'hints',
   'settings',
   'plots',
@@ -405,7 +414,8 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
     if (mapOk(map, 'placed')) tileOk(map, o.tx, o.ty, `placed ${o.type}`, true);
   }
   for (const f of d.forage ?? []) {
-    if (itemOk(f.item, 'forage') && items[f.item]?.type !== 'forage')
+    // a wild good, or a bundle of a material lying in the wild (dry grass: forage.json `qty`)
+    if (itemOk(f.item, 'forage') && items[f.item]?.type !== 'forage' && bundleQty(f.item) === null)
       p.push(`forage: "${f.item}" is not a forage good`);
     const map = f.map ?? playerMap;
     if (mapOk(map, 'forage')) tileOk(map, f.tx, f.ty, `forage ${f.item}`, true);
@@ -423,6 +433,8 @@ export function validateScenario(input: unknown, mapInfo?: MapInfoFn): string[] 
     p.push(`goal: unknown goal "${d.goal}"`);
   if (d.tutorial !== undefined && !['off', 'fresh', 'on', 'day2'].includes(d.tutorial))
     p.push(`tutorial must be off, fresh, on or day2`);
+  if (d.reveal !== undefined && !['schedule', 'all'].includes(d.reveal))
+    p.push(`reveal must be schedule or all`);
   if (d.plots !== undefined && d.plots !== 'all')
     for (const id of d.plots) if (!plots[id]) p.push(`plots: unknown plot "${id}"`);
   for (const id of d.letters ?? [])
@@ -523,6 +535,9 @@ export function buildScenarioState(def: ScenarioDef, mapInfo?: MapInfoFn): GameS
   const tut = def.tutorial ?? 'off';
   if (tut === 'off') s.stats['tut.off'] = 1;
   else if (tut === 'on' || tut === 'day2') s.stats['tut.on'] = 1;
+  if ((def.reveal ?? (tut === 'on' || tut === 'day2' ? 'schedule' : 'all')) === 'schedule')
+    s.stats[REVEAL_ON] = 1;
+  else if (tut !== 'fresh') delete s.stats[REVEAL_ON];
   if (tut === 'day2') {
     s.stats['tut.gift'] = 1;
     for (const st of tutorialData.steps) if (st.track === 'day1') s.stats[`tut.${st.id}`] = 1;
@@ -537,7 +552,7 @@ export function buildScenarioState(def: ScenarioDef, mapInfo?: MapInfoFn): GameS
   for (const [k, v] of Object.entries(def.valley ?? {})) s.stats[valleyStatKey(k)] = v;
   const today = ((s.time.year - 1) * 4 + SEASONS.indexOf(s.time.season)) * 28 + s.time.day; // absolute day
   for (const [id, hearts] of Object.entries(def.friends ?? {}))
-    s.friends[id] = { points: Math.round(hearts * POINTS_PER_HEART), talkedDay: 0, giftedDay: 0 };
+    s.friends[id] = { points: pointsForHearts(hearts), talkedDay: 0, giftedDay: 0 };
   for (const it of def.items ?? []) {
     const ref = { item: it.item, ...(it.q ? { q: it.q } : {}), ...(it.of ? { of: it.of } : {}) };
     if (it.slot !== undefined) s.inventory.slots[it.slot] = { ...ref, qty: it.qty ?? 1 };

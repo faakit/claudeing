@@ -1,0 +1,69 @@
+{
+  "features": [
+    {
+      "id": "guide",
+      "day": 3,
+      "tabs": ["book"],
+      "note": "New in the Menu: the Book, with a Guide to gold and crops."
+    },
+    {
+      "id": "friends",
+      "day": 4,
+      "note": "New in the Guide: friends and hearts."
+    },
+    {
+      "id": "skills",
+      "day": 5,
+      "tabs": ["skills"],
+      "early": [
+        { "stat": "level.farming", "min": 3 },
+        { "stat": "level.foraging", "min": 3 },
+        { "stat": "level.fishing", "min": 3 },
+        { "stat": "level.mining", "min": 3 }
+      ],
+      "note": "New in the Menu: Skill. Work makes you better at it."
+    },
+    {
+      "id": "crafting",
+      "day": 6,
+      "tabs": ["craft"],
+      "early": [{ "goal": "craft" }, { "stat": "crafted", "min": 1 }],
+      "note": "New in the Menu: Make. Craft from fiber and stone."
+    },
+    {
+      "id": "fishing",
+      "day": 7,
+      "early": [{ "goal": "fish" }, { "stat": "caught", "min": 1 }],
+      "note": "New in the Guide: fishing and bait."
+    },
+    {
+      "id": "mine",
+      "day": 9,
+      "early": [{ "stat": "mined", "min": 1 }],
+      "note": "New in the Guide: the mine."
+    },
+    {
+      "id": "machines",
+      "day": 10,
+      "early": [{ "goal": "place" }, { "stat": "placed", "min": 1 }],
+      "note": "New in the Guide: sprinklers and jars."
+    },
+    {
+      "id": "animals",
+      "day": 14,
+      "early": [{ "goal": "chicken" }, { "stat": "animalsAdded", "min": 1 }],
+      "note": "New in the Guide: animals."
+    },
+    {
+      "id": "cooking",
+      "day": 21,
+      "early": [{ "stat": "upgraded.kitchen", "min": 1 }],
+      "note": "New in the Guide: cooking."
+    },
+    {
+      "id": "valley",
+      "early": [{ "stat": "valley.farmGreen", "min": 1 }],
+      "note": "New in the Guide: mending the valley."
+    }
+  ]
+}

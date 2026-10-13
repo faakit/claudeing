@@ -36,7 +36,8 @@ import {
 import { C, CH } from '../theme';
 import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from '../widgets';
 import { fmt } from './format';
-import { buildAlmanac } from './AlmanacTab';
+import { buildBook } from './GuideTab';
+import { tabHidden } from '../../systems/reveal';
 import { tabLabel } from './tabLabels';
 import { menuTabGrid } from '../layout';
 import { buildCraft } from './CraftTab';
@@ -118,9 +119,9 @@ export class MenuPanel extends Modal {
     super(scene, SHEET_H);
   }
 
-  /** Jump to a tab by id (e.g. the goal tracker opens "goals"). */
+  /** Jump to a tab by id (e.g. the goal tracker opens "goals"). A tab not introduced yet opens the bag. */
   openTab(id: string): void {
-    this.tab = id;
+    this.tab = tabHidden(getState(), id) ? 'bag' : id;
     this.cursor = null;
     if (this.isOpen) this.rebuild();
     else this.open();
@@ -128,7 +129,8 @@ export class MenuPanel extends Modal {
 
   protected build(): void {
     this.panel();
-    const tabs = menuTabs;
+    // tabs of systems the reveal schedule has not introduced yet stay hidden (systems/reveal.ts, QA round)
+    const tabs = menuTabs.filter((tab) => !tabHidden(getState(), tab.id));
     // Tabs and Close share a two-row grid at the bottom (the thumb's resting place on a tall phone): 48 px tabs
     // instead of six crowded 30 px ones, Close on the thumb's side of the bottom row (ui/layout menuTabGrid).
     // the two rows 4 px apart, as buttons stack elsewhere (8 px read as an empty strip between them)
@@ -346,7 +348,7 @@ export function installMenuTabs(menu: MenuPanel): void {
   registerMenuTab({ id: 'goals', label: () => tabLabel('goals'), build: buildGoals });
   registerMenuTab({ id: 'craft', label: () => tabLabel('craft'), build: buildCraft });
   registerMenuTab({ id: 'skills', label: () => tabLabel('skills'), build: buildSkills });
-  registerMenuTab({ id: 'book', label: () => tabLabel('book'), build: buildAlmanac });
+  registerMenuTab({ id: 'book', label: () => tabLabel('book'), build: buildBook });
   registerMenuTab({
     id: 'opts',
     label: () => tabLabel('opts'),

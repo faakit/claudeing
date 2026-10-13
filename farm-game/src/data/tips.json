@@ -39,7 +39,8 @@
     "id": "skills",
     "stat": "level.farming",
     "min": 2,
-    "text": "Skills unlock recipes and perks. See Menu > Make and Skill."
+    "text": "Skills unlock recipes and perks. See Menu > Make and Skill.",
+    "reveal": "crafting"
   },
   {
     "id": "perfect",
@@ -51,7 +52,8 @@
     "id": "book",
     "stat": "discoveries",
     "min": 1,
-    "text": "New kinds of goods go in Menu > Book. Finish a page for gold."
+    "text": "New kinds of goods go in Menu > Book. Finish a page for gold.",
+    "reveal": "guide"
   },
   {
     "id": "mining",
