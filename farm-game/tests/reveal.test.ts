@@ -149,3 +149,18 @@ describe('the Guide', () => {
       for (const p of t.paras) expect(measureText(p), `${t.id}: ${p}`).toBeLessThanOrEqual(184 * 8);
   });
 });
+
+describe('first-time tips that name a tab', () => {
+  it('wait until the reveal schedule brings that tab', async () => {
+    const { checkTips } = await import('../src/systems/goals');
+    const s = guided();
+    for (const st of tutorial.steps) s.stats[`tut.${st.id}`] = 1; // the guided days are over: tips may show
+    s.stats['level.farming'] = 2;
+    toDay(s, 4);
+    checkTips(s);
+    expect(s.stats['tip.skills']).toBeUndefined();
+    toDay(s, 6); // Make (day 6) and Skill (day 5) are both in the Menu now
+    for (let i = 0; i < 10 && !s.stats['tip.skills']; i++) checkTips(s);
+    expect(s.stats['tip.skills']).toBe(1);
+  });
+});

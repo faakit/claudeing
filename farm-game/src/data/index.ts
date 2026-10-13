@@ -300,6 +300,8 @@ export interface TipDef {
   stat: string;
   min: number;
   text: string;
+  /** Wait until this reveal feature has arrived (the tip names a menu tab it brings). */
+  reveal?: string;
 }
 export interface SkillDef {
   name: string;
@@ -1175,6 +1177,9 @@ export function validateReveal(r: RevealData, g: GuideData, goalIds: readonly st
     }
     if (!f.note) bad(`"${f.id}" has no note`);
   }
+  for (const tip of tips)
+    if (tip.reveal !== undefined && !ids.includes(tip.reveal))
+      fail('tips', `"${tip.id}" waits for an unknown feature "${tip.reveal}"`);
   const topicIds = g.topics.map((t) => t.id);
   if (new Set(topicIds).size !== topicIds.length) fail('guide', 'two topics share an id');
   for (const t of g.topics) {

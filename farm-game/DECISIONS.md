@@ -2253,7 +2253,8 @@ are too easy to max and give little incentive"; phase the game's depth over days
 - **Only the introduction is scheduled, never the game.** A feature arrives early the moment play needs it: the goal
   chain reaches its goal (craft, fish, place, chicken) or the player already uses it (a catch, a rock, a level 3
   skill, the kitchen). So a fast player is never locked out; a slow one is not shown six systems on day 1.
-- **What is gated:** the Menu's Make, Skill and Book tabs (day 1-2 menu: Bag, Goal, Opts); Guide pages; and the
+- **What is gated:** the Menu's Make, Skill and Book tabs (day 1-2 menu: Bag, Goal, Opts); first-time tips that name
+  one (`tips.json` `reveal`); Guide pages; and the
   morning note, letter and coach intro each feature brings. Rules, shops, recipes and maps are not gated (the shop's
   animal tab is the UI lane's file and stays as it is: the animals page and Mara's letter arrive on day 14).
 - **Days 1 and 2 are untouched:** no feature may be scheduled before day 3 (validated), `markRevealed` does nothing
