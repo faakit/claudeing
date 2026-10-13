@@ -66,6 +66,24 @@ Owner reports fixed, each with its scenario and e2e block (rulings in DECISIONS.
 call) and BoardPanel (tabs move the requests header). After the merge, add the fishing result to `TAP_SHEETS` and run
 `BLOCKS=textGuard SHEETS=board,fishing`.
 
+### QA round: readability and UI (UI lane, qa/ui, 2026-10-13)
+
+The tester's six UI items, each with its scenario (rulings in DECISIONS.md "QA round: readability and UI"):
+
+- **Bigger text:** a body face (capitals 9 px, x-height 7, 13 px lines) is the default everywhere; the 5x7 stays for
+  counts over icons and, at 2x, the clock and titles. Same widths, so only heights moved (rows 28 px). The text guard
+  reads each face's metrics and passes 260 states (`board.jobs` and `shop.card` added).
+- **Gold coin:** `¤` is a coloured glyph in both faces; `fmtGold` writes `{n}¤` in both languages.
+- **Shop:** labelled row facts ("Ripe 7d, sells 85¤"), a legend, and an item card on a row tap (`ui-shop-card`).
+- **Board jobs:** icon, full label, progress and pay in words (`town-quest-turn-in`).
+- **Bag drag and drop:** hold or slide an item, drop on any slot or the hotbar row (`ui-bag-drag`, e2e block `uiQa`).
+- **Market info:** the shop row's facts; the depth lane's Guide (Book > Guide, Gold topic) explains them too.
+
+**Open:** gold written by hand in data (goal names "Earn 100,000g", Clay's letters) still reads g/o (depth lane
+data; `¤` there draws the coin). The full `verify`, `bench:thumb` and perf were not run (owner order); no real phone.
+After the depth merge, check the 3-, 4- and 5-tab menu grids on `reveal-day2-tabs` and the Guide pages in the body
+face.
+
 ### Code review (review/dry-year-2, merged and deployed 2026-10-12)
 
 26 fixes, among them a game-loop freeze on a second placement after any map change (report: `agents/out/` on the
