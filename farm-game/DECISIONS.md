@@ -2188,3 +2188,34 @@ What changed:
 - **Villagers come and go just past the screen's edge.** An arrival in view starts at the nearest tile out of view
   (a far gate kept the guided start waiting for Rosa), a departure walks to the nearest tile out of view and goes;
   gates are the fallback.
+
+## QA controls round (controls lane, qa/controls, 2026-10-13)
+
+QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `agents/probes/` stage each one.
+
+### The floating stick's anchor stays put while it steers ("travar o joystick quando puxar pra andar")
+
+- **What was wrong** (`agents/probes/joystick-lock.mjs`, scenario `joystick-walk`, i13 and SE, both hands): past the
+  rim the stick's anchor was dragged along behind the thumb (3-8 anchor moves per drag). A thumb that pushed and
+  then eased back, as thumbs do once the farmer is walking, came back near the moved anchor: a push 40 px up eased
+  to 16 px stopped the farmer for about 2 s (114 frames), and a 60 px drag left eased to 26 px stopped and then
+  walked him right, the wrong way, while the thumb was still well left of where it landed. 8 of 16 gestures
+  steered another way before the lift. Rolling the pad 2 mm sideways and a thumb's arc were already fine.
+- **Now:** the anchor is where the thumb landed and stays there until the lift (`stickSteer` in `input/gesture.ts`,
+  unit tested in `tests/joystick-lock.test.ts`). The knob is drawn at the finger, held inside the rim. Only a thumb
+  back within 4.5 px of its landing point stops the walk, and crossing it reverses, as before. The axis hysteresis
+  (1.6), the 9 px deadzone (so taps and Action's paint gestures), the two-speed half push and the stick sizes are
+  unchanged. Probe: 16/16 gestures steer one way from engage to lift, 0 anchor moves.
+- **Cost:** a reversal after a long drag now means coming back across the landing point (a 60 px drag is about
+  18 mm on an iPhone 13); the drag-along let a thumb reverse from wherever it was. Drags in play are 20-30 px.
+
+### The home plot covers its whole field ("os dois tiles de baixo estão bugados no terreno inicial")
+
+- **Root cause:** data, not art or the camera. The map draws the starter fields as 10 rows of dirt (y 16-25), the
+  West and East Fields are 10 rows, but the Home Plot was 8 (`plots.json` `[9, 16, 4, 8]`, since the plots were
+  added). Its bottom two rows (x 9-12, y 24-25) looked like the farmer's land (no for-sale dim) but every till
+  said "Not your land", and no sign ever sold them. They sit at screen y 254-270 on the SE with the farmer in the
+  plot, above the controls (288), so nothing hid them (`agents/probes/start-plot.mjs`, scenario `day1-fresh`).
+- **Now:** the Home Plot is `[9, 16, 4, 10]` (40 tiles, was 32). Old saves get the two rows too (plots are looked
+  up by id). `tests/land-tools.test.ts` fails if any farm dirt tile lies in no plot. Sims and balance tests are
+  unchanged by it (weeds may now sprout on the two rows, as on the rest of the plot).

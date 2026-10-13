@@ -209,3 +209,24 @@ describe('tool upgrades in the shop and on the water', () => {
     expect(biteDelay(0.5, 'worms', 3)).toBeLessThan(biteDelay(0.5, 'worms', 0));
   });
 });
+
+describe("the farm dirt the map draws belongs to a plot (QA: the starting field's bottom two rows)", () => {
+  it('every dirt tile on the farm lies inside a plot, and the home dirt is all owned on a new game', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { tileKind } = await import('../src/config');
+    const raw = JSON.parse(
+      readFileSync(new URL('../public/assets/maps/farm.tmj', import.meta.url), 'utf8'),
+    ) as { width: number; height: number; layers: { name: string; data?: number[] }[] };
+    const ground = raw.layers.find((l) => l.name === 'ground')?.data ?? [];
+    const orphans: string[] = [];
+    for (let ty = 0; ty < raw.height; ty++)
+      for (let tx = 0; tx < raw.width; tx++)
+        if (tileKind(ground[ty * raw.width + tx] ?? 0) === 'dirt' && plotAtTile(tx, ty) === null)
+          orphans.push(`${tx},${ty}`);
+    expect(orphans).toEqual([]);
+    // the home field's dirt (x 9-12 beside the road, y 16-25) is the player's from day one
+    const s = newState();
+    for (let ty = 16; ty <= 25; ty++)
+      for (let tx = 9; tx <= 12; tx++) expect(ownsTile(s, tx, ty), `${tx},${ty}`).toBe(true);
+  });
+});
