@@ -1,0 +1,20 @@
+{
+  "title": "Painting a 3x3 in the home plot with one thumb",
+  "about": "Spring 2, 08:00, grass in the home plot (x 9-12, y 16-25), standing in its east column at 12,20 facing west with parsnip seeds in hand: the bench's 3x3 (x 9-11, y 18-20). Hold Action, drag toward the middle of the screen, up a row, back, up a row, back: the rows never leave the plot (dragging on past its edge does nothing), the step between rows is one tile, rows after the first are as wide as the first however soon the thumb turns, and a turn at a row's end comes at 10 px instead of 14. Left hand: stand at 9,20 and draw east. QA item: \"segurar o toque pra mexer automatico com multiplos tiles ta muito dificil de controlar\".",
+  "version": 18,
+  "tags": ["farm", "controls", "paint"],
+  "at": {
+    "map": "farm",
+    "tx": 12,
+    "ty": 20,
+    "facing": "left"
+  },
+  "time": {
+    "day": 2,
+    "clock": "08:00"
+  },
+  "energy": "max",
+  "tutorial": "off",
+  "hints": "off",
+  "select": "parsnip_seed"
+}

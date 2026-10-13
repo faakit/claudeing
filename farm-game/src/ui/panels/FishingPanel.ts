@@ -27,7 +27,11 @@ import { C } from '../theme';
 import { drawBar, drawPanel, Modal } from '../widgets';
 import { t } from '../../i18n';
 
-type Phase = 'wait' | 'bite' | 'reel' | 'done';
+/** `reelIn`: a press before the bite pulls the empty line back (QA: "puxar a vara se apertar antes de fisgar"). */
+type Phase = 'wait' | 'reelIn' | 'bite' | 'reel' | 'done';
+
+/** How long the empty line takes to come back up the track before the sheet closes (s). */
+export const REEL_IN_S = 0.35;
 
 const TRACK = { x: 78, y: 40, w: 24, h: 116 };
 
@@ -180,7 +184,20 @@ export class FishingPanel extends Modal {
     this.tapped = false;
     this.wasHolding = down;
     this.clock += dt;
-    if (this.phase === 'wait' && this.clock >= this.delay) {
+    if (this.phase === 'wait' && pressed) {
+      // Pressed before anything bit: reel the empty line back in (the bait comes back, as Leave does), never a
+      // silent press and never a cost.
+      this.phase = 'reelIn';
+      this.clock = 0;
+      audio.play('select');
+      haptic('tick');
+    } else if (this.phase === 'reelIn') {
+      if (this.clock >= REEL_IN_S) {
+        this.finish(false);
+        toast(t('fishing.reeledEarly'));
+        return;
+      }
+    } else if (this.phase === 'wait' && this.clock >= this.delay) {
       this.phase = 'bite';
       this.clock = 0;
       audio.play('select');
@@ -201,14 +218,15 @@ export class FishingPanel extends Modal {
   private finish(caught: boolean): void {
     if (this.phase === 'done') return;
     const out = caught ? outcomeOf(this.reel) : { caught: false, perfect: false };
-    if (this.phase === 'wait' || this.phase === 'bite') {
-      // Left early or missed the bite: nothing was hooked. Left before any bite, the bait comes back; a missed bite
-      // cost it, and says so.
+    if (this.phase === 'wait' || this.phase === 'reelIn' || this.phase === 'bite') {
+      // Left early, reeled in early or missed the bite: nothing was hooked. Before any bite the bait comes back; a
+      // missed bite cost it, and says so. The farmer reels the empty line in once the sheet has closed.
       const was = this.phase;
       this.phase = 'done';
-      if (was === 'wait') refundBait(getState(), this.bait);
-      else toast(t('fishing.tookBait'), 'warn');
+      if (was === 'bite') toast(t('fishing.tookBait'), 'warn');
+      else refundBait(getState(), this.bait);
       this.close();
+      gameEvents.emit('lineReeled', undefined);
       return;
     }
     this.phase = 'done';
@@ -241,7 +259,21 @@ export class FishingPanel extends Modal {
     const { x, y, w, h } = TRACK;
     const secs = this.scene.time.now / 1000;
     drawPanel(g, x - 4, y - 4, w + 8, h + 8, 0x1d3a52, C.blue);
-    if (this.phase === 'wait' || this.phase === 'bite') {
+    if (this.phase === 'reelIn') {
+      // The empty line comes back: the bobber rises up the track to the rod's tip, one splash ring where it left.
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      const f = Math.min(1, this.clock / REEL_IN_S);
+      const by = Math.round(cy - (cy - y - 4) * f * f);
+      g.lineStyle(1, 0xffffff, 0.6 * (1 - f)).strokeCircle(cx, cy, 4 + f * 12);
+      g.lineStyle(1, 0xf4ead2, 0.8).lineBetween(cx, y, cx, by - 4);
+      g.fillStyle(0xe0574a, 1).fillRect(cx - 2, by - 4, 4, 4);
+      g.fillStyle(0xf4ead2, 1).fillRect(cx - 2, by, 4, 3);
+      this.fishIcon.setVisible(false);
+      this.status.setText(t('fishing.reelingIn'));
+      this.status.setColor(C.cream);
+      this.setHint('');
+    } else if (this.phase === 'wait' || this.phase === 'bite') {
       // Ripples and a bobber.
       const cx = x + w / 2;
       const cy = y + h / 2;
@@ -255,7 +287,7 @@ export class FishingPanel extends Modal {
       this.fishIcon.setVisible(false);
       this.status.setText(this.phase === 'wait' ? t('fishing.waiting') : t('fishing.tapNow'));
       this.status.setColor(this.phase === 'bite' ? C.gold : C.cream);
-      this.setHint(t('fishing.anyTap'));
+      this.setHint(t(this.phase === 'wait' ? 'fishing.waitHint' : 'fishing.anyTap'));
     } else if (this.phase === 'reel') {
       const r = this.reel;
       const barTop = y + h - (r.bar + r.size) * h;

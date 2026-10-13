@@ -1,3 +1,5 @@
+import type { Direction } from '../state/GameState';
+import { dominantDirection } from '../systems/direction';
 /**
  * Pure touch-gesture rules (no Phaser), shared by the floating control buttons and the world touch handler so every
  * threshold is defined once and unit tested. Distances are logical px (1 px is ~0.25 to 0.38 mm on the
@@ -15,6 +17,80 @@ export const GESTURE = {
   /** A sideways flick must be this many times more horizontal than vertical. */
   dominance: 1.5,
 } as const;
+
+/** How far the stick's anchor may trail the finger along the walk axis (logical px; QA review C2-1). */
+export const STICK_LEASH = 26;
+/** The walk axis counts at most this much when the stick decides whether a sideways slide is a turn. */
+export const STICK_TURN_CAP = 16;
+
+const horizontal = (d: Direction): boolean => d === 'left' || d === 'right';
+
+/**
+ * The floating stick's steering for one touch (QA, "lock the joystick when dragging to walk"; critic review C2-1).
+ * Offsets are logical px from where the finger landed.
+ *
+ * - Along the walk axis the anchor stays put until the finger is more than `STICK_LEASH` ahead of it, then trails it
+ *   at that distance. Easing the thumb back never stops or turns the walk while the finger is still out on the walk's
+ *   side; after a firm push (the anchor trailed) the dead band does not stop it either, so a thumb coming back about
+ *   31 px reverses straight over, with no stop on the way. (Until this round the anchor was dragged along at the rim,
+ *   24 px, so an ease-back stopped or reversed the farmer: agents/probes/joystick-lock.mjs.)
+ * - Across it the anchor never moves, and a turn is judged with the walk axis capped at `STICK_TURN_CAP`, so the
+ *   sideways slide needed to turn (about 26-29 px) does not grow with how hard the thumb pushed.
+ * - On a turn the anchor takes the finger's place across the new axis, so the old push is not a sideways drift.
+ *
+ * The knob is drawn at the finger, held inside the rim around the anchor.
+ */
+export class StickSteer {
+  ax = 0;
+  ay = 0;
+  dir: Direction | null = null;
+  /** The anchor has trailed the finger along the walk (a firm push): the dead band then never stops the walk. */
+  private trailed = false;
+
+  constructor(
+    private readonly radius: number,
+    private readonly bias: number,
+  ) {}
+
+  move(
+    fx: number,
+    fy: number,
+  ): { dir: Direction | null; slow: boolean; knobX: number; knobY: number } {
+    const cur = this.dir;
+    if (cur) {
+      const s = cur === 'right' || cur === 'down' ? 1 : -1;
+      if (horizontal(cur)) {
+        if ((fx - this.ax) * s > STICK_LEASH) {
+          this.ax = fx - s * STICK_LEASH;
+          this.trailed = true;
+        }
+      } else if ((fy - this.ay) * s > STICK_LEASH) {
+        this.ay = fy - s * STICK_LEASH;
+        this.trailed = true;
+      }
+    }
+    const dx = fx - this.ax;
+    const dy = fy - this.ay;
+    const cap = (v: number): number => Math.sign(v) * Math.min(Math.abs(v), STICK_TURN_CAP);
+    const tx = cur && horizontal(cur) ? cap(dx) : dx;
+    const ty = cur && !horizontal(cur) ? cap(dy) : dy;
+    // after a firm push the walk goes straight from one way to the other: no stall in the dead band on the way back
+    const next =
+      dominantDirection(tx, ty, GESTURE.stickDeadzone / 2, this.bias, cur) ??
+      (this.trailed ? cur : null);
+    if (next && cur && horizontal(next) !== horizontal(cur)) {
+      if (horizontal(next)) this.ay = fy;
+      else this.ax = fx;
+      this.trailed = false;
+    }
+    this.dir = next;
+    const kx = fx - this.ax;
+    const ky = fy - this.ay;
+    const len = Math.hypot(kx, ky);
+    const k = len > this.radius ? this.radius / len : 1;
+    return { dir: next, slow: len < this.radius * 0.5, knobX: kx * k, knobY: ky * k };
+  }
+}
 
 /** Tracks one pointer from touch-down: how far it has strayed at most, and whether it ever moved. */
 export class PressTrack {
@@ -83,6 +159,12 @@ export const PAINT_BIAS = 1.6;
  * The new leg's first tile comes at this distance from the old line, one more per PAINT_STEP_PX.
  */
 export const PAINT_TURN_PX = 14;
+/**
+ * In a field (a plot) a serpentine's expected turns (a row into the step on the first step's side, a step into the
+ * row back) come this far off the line instead (QA round): its rows are whole however soon it turns, so turning
+ * early costs nothing, and a thumb's wobble at 2 mm on an SE swung past a 14 px corner before it registered.
+ */
+export const PAINT_TURN_FIELD_PX = 10;
 /**
  * Past this distance off the line the finger may be heading for a corner: where it runs from here on
  * (averaged) is where the corner goes, so a wobble there cannot add or drop a tile.
@@ -185,6 +267,11 @@ function lineAt(leg: Leg, along: number): number {
  *   a clear sideways move of 14 px turns a corner into a new leg (serpentine). The path is contiguous, never
  *   revisits a tile and stops at 16 tiles; dragging back un-paints tile by tile, round corners too. Lifting
  *   commits; lifting back at the start cancels.
+ * - **in a plot** (QA round, `fieldOf`): a path whose first tile lies in owned farmland never leaves that connected
+ *   field (the Home Plot and a bought West Field beside it are one), so dragging
+ *   on past a row's end does nothing; the step between two rows is one tile; rows after the first are as wide as
+ *   the first however soon the thumb turned or lifted; and a turn from a whole row (or from a step into the row
+ *   back) comes at 10 px instead of 14. The first row is as long as it was drawn (up to the plot's edge).
  *
  * Anything else (a swipe or flick cut short) does nothing on release and says so (`reject`).
  */
@@ -208,7 +295,16 @@ export class ActionPress {
   private boostDir: PaintDir | null = null;
   private boostAt = 0;
 
-  constructor(private readonly t0: number) {}
+  /**
+   * @param fieldOf which field a cell (relative to the farmer) belongs to, from the world: the connected owned
+   *   farmland's id (`ownedRegions`), or null
+   *   for open ground. A path whose first tile lies in a field never leaves it (QA round: "stop at the plot's
+   *   edge"), so dragging on past a row's end does nothing. Without it (or on open ground) paths are unbounded.
+   */
+  constructor(
+    private readonly t0: number,
+    private readonly fieldOf?: (dx: number, dy: number) => string | null,
+  ) {}
 
   get armed(): boolean {
     return this.phase === 'armed';
@@ -332,6 +428,10 @@ export class ActionPress {
     const py = this.last.y - this.armAt.y + boost * v.y;
     const along = (px - leg.ox) * v.x + (py - leg.oy) * v.y;
     leg.tiles = Math.max(leg.tiles, this.room(i, along));
+    // In a field the last row of a serpentine is whole too (to the box edge, as every row before it).
+    const v0 = VEC[this.legs[0]!.dir];
+    if (i >= 2 && v.x * v0.y - v.y * v0.x === 0 && this.bounded())
+      leg.tiles = Math.max(leg.tiles, this.room(i, Infinity));
   }
 
   private paintMove(dx: number, dy: number): ActionEvent[] {
@@ -407,16 +507,55 @@ export class ActionPress {
     const v0 = VEC[this.legs[0]!.dir];
     const boxed = i > 0 && v.x * v0.y - v.y * v0.x === 0;
     const span = this.legs[0]!.tiles;
+    // In a field, the step between two rows of a serpentine is one tile, however far the finger ran on.
+    const most = i > 0 && !boxed && this.bounded() ? 1 : Infinity;
     let tiles = 0;
-    while (tiles < want && done.n + tiles < PAINT_MAX_TILES) {
+    while (tiles < want && tiles < most && done.n + tiles < PAINT_MAX_TILES) {
       const nx = done.x + v.x * (tiles + 1);
       const ny = done.y + v.y * (tiles + 1);
       if (done.seen.has(`${nx},${ny}`)) break;
+      if (!this.inField(nx, ny)) break;
       const along0 = nx * v0.x + ny * v0.y;
       if (boxed && (along0 < 1 || along0 > span)) break;
       tiles++;
     }
     return tiles;
+  }
+
+  /** The field of the path's first tile (null: no bound), read once the first leg has a direction. */
+  private field: string | null | undefined = undefined;
+
+  /** May the path cover this cell (relative to the farmer)? Only inside the field its first tile lies in. */
+  private inField(x: number, y: number): boolean {
+    if (!this.fieldOf) return true;
+    const first = VEC[this.legs[0]!.dir];
+    if (this.field === undefined || this.fieldDir !== this.legs[0]!.dir) {
+      this.field = this.fieldOf(first.x, first.y);
+      this.fieldDir = this.legs[0]!.dir;
+    }
+    return this.field === null || this.fieldOf(x, y) === this.field;
+  }
+  private fieldDir: PaintDir | null = null;
+
+  /** In a field, is a turn from leg `i` toward `dir` the serpentine's next one? */
+  private expected(i: number, dir: PaintDir): boolean {
+    if (!this.bounded()) return false;
+    const v0 = VEC[this.legs[0]!.dir];
+    const v = VEC[this.legs[i]!.dir];
+    // a row into its step, once the row is whole (at its field or box edge): a short row in a wide plot keeps 14 px
+    if (v.x * v0.y - v.y * v0.x === 0)
+      return (
+        (i === 0 || this.legs[1]?.dir === dir) && this.legs[i]!.tiles >= this.room(i, Infinity)
+      );
+    const prev = this.legs[i - 1]!.dir; // a step into the row back
+    return VEC[dir].x === -VEC[prev].x && VEC[dir].y === -VEC[prev].y;
+  }
+
+  /** The path started in a field (a plot): its serpentine is made of whole rows (QA round). */
+  private bounded(): boolean {
+    if (!this.fieldOf || !this.legs.length) return false;
+    this.inField(0, 0);
+    return this.field !== null && this.field !== undefined;
   }
 
   /** Follow the finger with the newest leg: grow or shrink it, undo it round its corner, or turn a new one. */
@@ -484,8 +623,9 @@ export class ActionPress {
       }
       // A corner: the leg is locked and has its tiles, the finger is a clear 14 px off its line, and it got
       // there moving sideways, not by wobbling or drifting along the line.
-      if (!this.locked() || leg.tiles === 0 || Math.abs(off) < PAINT_TURN_PX || !wentSideways)
-        return;
+      const side = off > 0 ? CW[leg.dir] : CCW[leg.dir];
+      const turnPx = this.expected(i, side) ? PAINT_TURN_FIELD_PX : PAINT_TURN_PX;
+      if (!this.locked() || leg.tiles === 0 || Math.abs(off) < turnPx || !wentSideways) return;
       // The corner sits where the finger ran while it veered off (a wobble there cannot add or drop a tile).
       const veer = leg.veer;
       const cornerAlong = veer && veer.w > 0 ? veer.sum / veer.w : along;
@@ -496,9 +636,9 @@ export class ActionPress {
       leg.tiles = Math.max(1, leg.tiles, this.room(i, cornerAlong));
       const v0 = VEC[this.legs[0]!.dir];
       if (i >= 2 && v.x * v0.y - v.y * v0.x === 0) {
-        // A row of a serpentine turning into the next U-turn: one tile short of the box edge means the edge.
-        const edge = this.room(i, Infinity);
-        if (edge - leg.tiles === 1) leg.tiles = edge;
+        // A row of a serpentine turning into the next U-turn runs to the box edge (QA round: "full rows"; it was
+        // only one tile short of it before): the rows of a plot are whole however soon the thumb turned.
+        leg.tiles = Math.max(leg.tiles, this.room(i, Infinity));
       }
       if (
         i >= 1 &&
@@ -516,7 +656,7 @@ export class ActionPress {
       const cx = leg.ox + v.x * cornerAlong - v.y * cref;
       const cy = leg.oy + v.y * cornerAlong + v.x * cref;
       leg.veer = null;
-      this.legs.push(newLeg(dir, cx, cy, PAINT_TURN_PX, px, py, 4));
+      this.legs.push(newLeg(dir, cx, cy, turnPx, px, py, 4));
     }
   }
 

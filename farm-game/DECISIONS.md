@@ -2364,3 +2364,107 @@ are too easy to max and give little incentive"; phase the game's depth over days
   valley. A page runs over to More when it does not fit; Back returns to the list.
 - **Not a wall of text:** each page is reached by the player (the coach points at it once, the day it matters) and
   is 3-7 paragraphs of one to three lines.
+
+## QA controls round (controls lane, qa/controls, 2026-10-13)
+
+QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `agents/probes/` stage each one.
+
+### The floating stick holds its anchor along the walk, and turns at the same slide however hard it pushed ("travar o joystick quando puxar pra andar")
+
+- **What was wrong** (`agents/probes/joystick-lock.mjs`, scenario `joystick-walk`, i13 and SE, both hands): past the
+  rim the stick's anchor was dragged along behind the thumb (3-8 anchor moves per drag). A thumb that pushed and
+  then eased back, as thumbs do once the farmer is walking, came back near the moved anchor: a push 40 px up eased
+  to 16 px stopped the farmer for about 2 s (114 frames), and a 60 px drag left eased to 26 px stopped and then
+  walked him right, the wrong way, while the thumb was still well left of where it landed. 8 of 16 gestures
+  steered another way before the lift. Rolling the pad 2 mm sideways and a thumb's arc were already fine.
+- **Now (after the QA critic's review C2-1):** a fully fixed anchor fixed the ease-back but made a turn need a
+  sideways slide that grew with how hard the thumb had pushed (a 50 px push, then a 60 px slide: never turned).
+  The rule is `StickSteer` in `input/gesture.ts` (unit tested in `tests/joystick-lock.test.ts`):
+  - along the walk axis the anchor trails the finger on a 26 px leash (`STICK_LEASH`), so easing back while the
+    finger is still out on the walk's side never stops him, and once it has trailed the dead band does not stop the
+    walk either: a thumb coming back about 31 px reverses straight over, with no stop on the way;
+  - across the walk axis the anchor never moves, and a turn is judged with the walk axis counted at most 16 px
+    (`STICK_TURN_CAP`) against the usual 1.6 hysteresis, so a turn takes about 26-28 px of sideways slide however
+    hard the thumb pushed; on a turn the anchor takes the finger's place across the new axis;
+  - the knob is drawn at the finger, held inside the rim. The 9 px deadzone (so taps and Action's paint gestures),
+    the two-speed half push and the stick sizes are unchanged.
+- **Measured** (`agents/probes/joystick-lock.mjs`, the critic's four turn gestures included; i13 and SE, both hands):
+  ease-backs, rolls and arcs 16/16 steady; a turn after a 50 px or a 22 px push 26-27 px (base 30-32, never on the
+  fully fixed anchor), right round to down 27-28 px (base 25), a reverse after a 40 px push 32 px with no stop
+  (base 30, with a stop on the way).
+- **Cost:** an ease-back is a relaxation up to about 26 px; a thumb that comes back 31 px or more along the walk
+  means the other way (the critic's reverse is that movement at the same speed, so no rule can tell them apart).
+  A sideways drift of 26 px (about 8 mm on an iPhone 13) now turns where the old stick needed 32 after a firm push.
+
+### The home plot covers its whole field ("os dois tiles de baixo estão bugados no terreno inicial")
+
+- **Root cause:** data, not art or the camera. The map draws the starter fields as 10 rows of dirt (y 16-25), the
+  West and East Fields are 10 rows, but the Home Plot was 8 (`plots.json` `[9, 16, 4, 8]`, since the plots were
+  added). Its bottom two rows (x 9-12, y 24-25) looked like the farmer's land (no for-sale dim) but every till
+  said "Not your land", and no sign ever sold them. They sit at screen y 254-270 on the SE with the farmer in the
+  plot, above the controls (288), so nothing hid them (`agents/probes/start-plot.mjs`, scenario `day1-fresh`).
+- **Now:** the Home Plot is `[9, 16, 4, 10]` (40 tiles, was 32). Old saves get the two rows too (plots are looked
+  up by id). `tests/land-tools.test.ts` fails if any farm dirt tile lies in no plot. Sims and balance tests are
+  unchanged by it (weeds may now sprout on the two rows, as on the rest of the plot).
+
+### A press before the bite reels the line in ("puxar a vara se apertar antes de fisgar")
+
+- **Before:** a tap on the fishing sheet (or Action) while waiting for a bite did nothing at all, and a press held
+  into the bite did not hook either (only a new press does), so an impatient player saw no answer and then lost the
+  bait to "Too slow!".
+- **Now:** a press while waiting reels the empty line in. The bobber is pulled up the track to the rod's tip over
+  350 ms (`REEL_IN_S`, a tick and the select sound), the sheet closes, the farmer plays the reel pose
+  (`gameEvents` `lineReeled`, the same frames a catch plays), the bait comes back (the ruling for leaving before a
+  bite), and one line says so: "Too soon: line reeled in, bait kept." Leave before a bite now plays the reel pose
+  too, without the line. The waiting hint says it ("Tap when it bites. Sooner reels it in."). A missed bite still
+  costs the bait. Scenario `fish-reel-early`; e2e block `fishEarly` (touch and Action, i13 and SE).
+- Not a penalty on purpose: a cost for an early press would punish a tap meant for the bite, and the whole bite
+  window (1.5 s) is unchanged.
+
+### Painting in a plot: the plot's edge, one-tile steps, whole rows ("segurar o toque pra mexer automático com múltiplos tiles tá muito difícil de controlar")
+
+- **What made it hard:** every row end and corner of a painted serpentine was decided by where the thumb happened to
+  be (one tile per 16 px, a corner at 14 px off the line), far from the plot the thumb was looking at. The critic's
+  own models gave a 3x3 at 2 mm of wobble 77% on the iPhone 13 and 45% on the SE, and 25-62% once each row end is
+  aimed a few mm off (a person reading the preview, not a ruler). Failures were rows one tile long or short, the step
+  between rows growing to two tiles, and turns registering a row too late.
+- **Picked (of the QA options):** stopping at the plot's edge, plus snapping the serpentine to its shape, plus a
+  smaller dead zone only where a turn is certain. The rules, in `ActionPress` (`input/gesture.ts`); the world passes
+  `WorldScene.paintField()` (the owned plot under each cell) at the press:
+  - a path whose first tile lies in owned farmland never leaves the connected piece of owned farmland it lies in
+    (owned tillable tiles flood-filled 4 ways across plot borders, `ownedRegions` in systems/plots.ts; critic ruling
+    C3-1): dragging on past a row's end does nothing, and the Home Plot with a bought West Field beside it is one
+    8-wide field, so a row from 12 to 5 runs all 8 tiles (a single-plot clamp stopped it dead at x 9);
+  - the step between two rows is one tile, however far the thumb ran;
+  - rows after the first are as wide as the first (to the box edge) as soon as the thumb turns or lifts;
+  - a turn from a row that has reached its edge, or from a step into the row back, comes at 10 px off the line
+    (`PAINT_TURN_FIELD_PX`) instead of 14.
+  - Not picked: snapping the **first** row to the plot's edge on its turn. It made the bench's left hand (standing
+    outside the 4-wide home plot) paint 4 columns, and in the 8-wide East Field it would force 7-8 tile rows: the
+    width you draw first is the width you get. A slower or confirmable step was not needed once the length decisions
+    were gone; the live preview is unchanged.
+  - Off a plot (channels from the creek, open ground, other maps) painting is exactly as before.
+- **Measured.** Models (`tests/action-press.test.ts`, 200 runs each; a 3x3 beside the farmer's column, as the bench):
+  the critic's 2D human painter with row ends aimed up to 3 mm off, 2 mm wobble: i13 90% (was 62%), SE 77% (was
+  35%); 1 mm: 96% / 90% (83% / 63%). The critic's closed-loop painter (watching the preview): 2 mm 98.5% / 96.5%
+  (88.5% / 85%), 3 mm 80.5% / 84.5% (55% / 49%). A 3-tile row inside a wider plot behaves as before (no extra turns).
+  Bench, plot rows only (`TASKS=plot3x3`, i13 and SE, both hands): exact aim 4/4, 7 gestures as before. With
+  `PAINT_MISS_MM=3` (new: each row end and step aimed up to 3 mm off, seeded), seeds 7-9, whole plots and exact
+  paints, against the paint code before this round:
+
+  | stand | i13 | SE |
+  | --- | --- | --- |
+  | right hand in the plot's east column (12,20) | 3/3, 6/6 (base 0/3, 1/6) | 2/3, 5/6 (0/3, 2/6) |
+  | left hand in the plot's west column (9,20, `plot3x3Inside`) | 3/3, 6/6 (0/3, 1/6) | 2/3, 5/6 (0/3, 2/6) |
+  | left hand just outside the plot (8,20, `plot3x3`) | 2/3, 5/6 (1/3, 3/6) | 0/3, 1/6 (0/3, 1/6) |
+
+  The right-hand rows are from the run before C3-1 (one field there either way). Standing outside the plot the first
+  row is 3 of the plot's 4 columns, so its length is the thumb's call: on the SE a 3 mm miss is about 0.75 of a tile
+  and that row is no better than before (its later rows are whole and its steps one tile).
+- **Bench stands:** `plot3x3` keeps the left hand just outside the plot (8,20), a real left-handed stand; the new
+  `plot3x3Inside` stands it in the plot's west column (9,20), mirroring the right hand (12,20).
+- **Cost:** a 3x3 inside a wider plot (not against its edge) still has its first row decided by the thumb; rows after
+  it are whole. Scenarios `paint-plot-3x3` and `paint-plot-two-fields`; e2e block `paintPlot` (a sloppy serpentine
+  with real touches gives exactly the 3x3, and a row across Home and the West Field works all 8 tiles; both hands,
+  i13 and SE). Unit: `tests/land-tools.test.ts` (Home + West, 12 to 5: 8 tiles; Home alone: 4; Home and East across
+  the road: two fields).

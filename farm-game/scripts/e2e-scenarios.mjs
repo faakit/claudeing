@@ -3580,6 +3580,217 @@ async function bait() {
   await farm.close();
 }
 
+/**
+ * QA "puxar a vara se apertar antes de fisgar": a press before the bite reels the empty line in (the bobber rises, the
+ * sheet closes, the farmer plays the reel, one line says so) and the bait comes back. Touch on the sheet, and Action.
+ */
+async function fishEarly() {
+  for (const profile of ['i13', 'se']) {
+    const farm = await openScenario(browser, url, 'fish-reel-early', { profile });
+    await farm.eval(() => {
+      const sc = window.__farm.game.scene.getScene('Farm');
+      window.__acts = new Set();
+      sc.events.on('postupdate', () => {
+        const p = sc.pose;
+        if (p && p.visible && p.texture.key.startsWith('player_act_reel'))
+          window.__acts.add(p.texture.key);
+      });
+    });
+    const worms = (st) =>
+      st.inventory.slots.reduce((n, x) => (x?.item === 'worms' ? n + x.qty : n), 0);
+    for (const how of ['touch', 'action']) {
+      await farm.during('panelOpen', ['fishing'], () => farm.press('Space'));
+      const cast = await farm.state();
+      // nothing will bite while the check runs: the press is early by construction
+      const phase0 = await farm.eval(() => {
+        const f = window.__farm.game.scene.getScene('UI').fishing;
+        f.delay = 1e9;
+        return f.phase;
+      });
+      const pressedAt = Date.now();
+      await farm.during('panelClosed', [], async () => {
+        if (how === 'touch') await farm.thumb.tap(100, 300, 70);
+        else await farm.press('Space');
+        // the line comes back up the track before the sheet closes
+        await farm.until(
+          () => window.__farm.game.scene.getScene('UI').fishing.phase !== 'wait',
+          null,
+          'the early press to register',
+        );
+      });
+      const closedMs = Date.now() - pressedAt;
+      await farm.frames(40);
+      const m = await farm.state();
+      const shown = await uiText(farm);
+      const reel = await farm.eval(() => {
+        const out = [...window.__acts];
+        window.__acts.clear();
+        return out;
+      });
+      check(
+        `fish-reel-early (${profile}, ${how}): an early press reels the line in, says so once, and gives the worm back`,
+        phase0 === 'wait' &&
+          worms(cast) === worms(m) - 1 &&
+          shown.includes('Too soon: line reeled in, bait kept.') &&
+          !shown.includes('Too slow') &&
+          reel.length > 0 &&
+          (await farm.openSheet()) !== 'fishing',
+        JSON.stringify({
+          phase0,
+          worms: [worms(cast), worms(m)],
+          reel,
+          closedMs,
+          shown: shown.slice(-160),
+        }),
+      );
+      await farm.idle(30);
+    }
+    check(
+      `fish-reel-early (${profile}): no page errors`,
+      farm.errors.length === 0,
+      farm.errors.join(' | '),
+    );
+    await farm.close();
+  }
+}
+
+/**
+ * QA "segurar o toque pra mexer automatico com multiplos tiles": a painted serpentine in a plot, drawn sloppily with
+ * real touches (the first row dragged two tiles past the plot's edge, the second turned a tile early, the last run
+ * on), works exactly the 3x3 beside the farmer's column: rows stop at the plot edge, steps are one tile, rows after
+ * the first are whole. Scenario paint-plot-3x3; both hands, i13 and SE.
+ */
+async function paintPlot() {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  for (const profile of ['i13', 'se'])
+    for (const hand of ['right', 'left']) {
+      const farm = await openScenario(browser, url, 'paint-plot-3x3', { profile, hand });
+      const right = hand === 'right';
+      // the left thumb stands in the plot's west column and draws east (the bench's stands)
+      if (!right)
+        await farm.mutate((s) => {
+          s.player.x = 9 * 16 + 8;
+          s.player.facing = 'right';
+        });
+      await farm.idle();
+      const action = (await farm.targets()).find((t) => t.text === 'ACTION');
+      const toMid = right ? -1 : 1;
+      const path = async (ms, pts) => {
+        const t0 = Date.now();
+        for (;;) {
+          const f = Math.min(1, (Date.now() - t0) / ms);
+          const [x, y] = pts(f);
+          await farm.thumb.move(action.cx + x, action.cy + y);
+          if (f >= 1) break;
+          await sleep(8);
+        }
+      };
+      // row 1: 3 tiles fit, the finger goes on for 5; up a row; row 2 turned after 1 of 2; up; row 3 run on
+      const legs = [
+        [toMid * 88, 0],
+        [toMid * 88, -24],
+        [toMid * (88 - 22), -24],
+        [toMid * (88 - 22), -48],
+        [toMid * (88 + 30), -48],
+      ];
+      await farm.thumb.down(action.cx, action.cy);
+      await path(360, () => [0, 0]); // held still: arms painting
+      let prev = [0, 0];
+      for (const c of legs) {
+        const from = prev;
+        await path(Math.hypot(c[0] - from[0], c[1] - from[1]) * 7, (f) => [
+          from[0] + (c[0] - from[0]) * f,
+          from[1] + (c[1] - from[1]) * f,
+        ]);
+        prev = c;
+      }
+      await farm.thumb.up();
+      await farm.until(
+        (_s, w) => {
+          const sc = w.game.scene.getScenes(true).find((x) => x.grid);
+          return sc.work === null && sc.route === null && sc.painting === null;
+        },
+        null,
+        'the painted plot to be worked',
+        30000,
+      );
+      const m = await farm.state();
+      const xs = right ? [9, 10, 11] : [10, 11, 12];
+      const want = xs.flatMap((x) => [18, 19, 20].map((y) => `${x},${y}`)).sort();
+      const got = Object.entries(m.farm.tiles)
+        .filter(([, t]) => t.crop)
+        .map(([k]) => k)
+        .sort();
+      const log = await farm.eval(() =>
+        window.__farm.controls.entries.filter((e) => e.kind === 'paint').map((e) => e.detail),
+      );
+      check(
+        `paint-plot-3x3 (${profile}, ${hand}): a sloppy serpentine plants exactly the 3x3`,
+        JSON.stringify(got) === JSON.stringify(want),
+        JSON.stringify({ got, log }),
+      );
+      check(
+        `paint-plot-3x3 (${profile}, ${hand}): no page errors`,
+        farm.errors.length === 0,
+        farm.errors.join(' | '),
+      );
+      await farm.close();
+    }
+  // Two plots side by side are one field (critic C3-1): a row dragged far past it runs all 8 tiles, 12 to 5 (the left
+  // thumb from 4,20 draws east, 5 to 12), across the border between the Home Plot and the West Field.
+  for (const profile of ['i13', 'se'])
+    for (const hand of ['right', 'left']) {
+      const farm = await openScenario(browser, url, 'paint-plot-two-fields', { profile, hand });
+      const right = hand === 'right';
+      if (!right)
+        await farm.mutate((s) => {
+          s.player.x = 4 * 16 + 8;
+          s.player.facing = 'right';
+        });
+      await farm.idle();
+      const action = (await farm.targets()).find((t) => t.text === 'ACTION');
+      const toMid = right ? -1 : 1;
+      const path = async (ms, pts) => {
+        const t0 = Date.now();
+        for (;;) {
+          const f = Math.min(1, (Date.now() - t0) / ms);
+          const [x, y] = pts(f);
+          await farm.thumb.move(action.cx + x, action.cy + y);
+          if (f >= 1) break;
+          await sleep(8);
+        }
+      };
+      await farm.thumb.down(action.cx, action.cy);
+      await path(360, () => [0, 0]); // held still: arms painting
+      await path(1100, (f) => [toMid * 150 * f, 0]); // 8 tiles need 128 px: the finger goes on
+      await path(200, () => [toMid * 150, 0]);
+      await farm.thumb.up();
+      await farm.until(
+        (_s, w) => {
+          const sc = w.game.scene.getScenes(true).find((x) => x.grid);
+          return sc.work === null && sc.route === null && sc.painting === null;
+        },
+        null,
+        'the painted row to be worked',
+        30000,
+      );
+      const m = await farm.state();
+      const got = Object.keys(m.farm.tiles).sort();
+      const want = [5, 6, 7, 8, 9, 10, 11, 12].map((x) => `${x},20`).sort();
+      check(
+        `paint-plot-two-fields (${profile}, ${hand}): a row across the Home Plot and the West Field works all 8 tiles`,
+        JSON.stringify(got) === JSON.stringify(want),
+        JSON.stringify({ got }),
+      );
+      check(
+        `paint-plot-two-fields (${profile}, ${hand}): no page errors`,
+        farm.errors.length === 0,
+        farm.errors.join(' | '),
+      );
+      await farm.close();
+    }
+}
+
 async function lang() {
   // The title in Portuguese at a first launch, on the smallest phone.
   let farm = await openScenario(browser, url, 'lang-pt-title', { profile: 'se' });
@@ -4044,6 +4255,8 @@ try {
         towingLane,
         weirTow,
         bait,
+        fishEarly,
+        paintPlot,
         townBoard,
         guidedDepth,
         qaDepth,

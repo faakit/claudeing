@@ -365,3 +365,160 @@ describe('serpentine paint (owner decision, round 3)', () => {
     }
   });
 });
+
+/**
+ * QA round ("segurar o toque pra mexer automático com múltiplos tiles tá muito difícil de controlar"): a path that
+ * starts in a plot never leaves it, and its serpentine is made of whole rows with one-tile steps, so a 3x3 at the
+ * plot's edge depends only on turning, not on where the thumb stops. The field here is a 3x3 plot right of the
+ * farmer (x 1-3, y 0-2), as the bench's plot beside the farmer's column.
+ */
+describe('painting in a plot: the plot edge and whole rows', () => {
+  const plot3 = (x: number, y: number) => (x >= 1 && x <= 3 && y >= 0 && y <= 2 ? 'home' : null);
+  const wide = (x: number, y: number) => (x >= 1 && x <= 4 && y >= -5 && y <= 4 ? 'home' : null);
+
+  it('a row dragged on past the plot edge stops there', () => {
+    const e = play(drawPath([[at(6), 0]]), PAINT_ARM_MS + 3000, plot3);
+    expect(committed(e)).toBe('right right right');
+    // the same drag on open ground runs on, as before
+    expect(committed(play(drawPath([[at(6), 0]]), PAINT_ARM_MS + 3000))).toBe(
+      'right right right right right right',
+    );
+  });
+
+  it('rows after the first are whole and steps one tile, however soon or late the thumb turned', () => {
+    const U = at(1, true);
+    for (const [row1, step, row2, row3] of [
+      [at(3), U, at(1, true), at(1, true)], // the later rows turned or lifted a tile early
+      [at(5), at(2, true), at(4, true), at(5, true)], // every row and step run on past the plot
+    ] as const) {
+      const corners: [number, number][] = [
+        [row1, 0],
+        [row1, step],
+        [row1 - row2, step],
+        [row1 - row2, 2 * step],
+        [row1 - row2 + row3, 2 * step],
+      ];
+      expect(committed(play(drawPath(corners), PAINT_ARM_MS + 5000, plot3))).toBe(SERP_PATH);
+    }
+  });
+
+  it('the first row is as wide as it was drawn: one short of the edge stays short, and sets the box', () => {
+    const U = at(1, true);
+    const corners: [number, number][] = [
+      [at(2), 0],
+      [at(2), U],
+      [at(2) - at(3, true), U],
+      [at(2) - at(3, true), 2 * U],
+      [at(2), 2 * U],
+    ];
+    expect(committed(play(drawPath(corners), PAINT_ARM_MS + 5000, plot3))).toBe(
+      'right right down left down right',
+    );
+  });
+
+  it('a straight row lifted short of the edge keeps its length, and a short row in a wide plot turns as before', () => {
+    expect(committed(play(drawPath([[at(2), 0]]), PAINT_ARM_MS + 3000, plot3))).toBe('right right');
+    expect(committed(play(drawPath([[at(3), 0]]), PAINT_ARM_MS + 3000, wide))).toBe(
+      'right right right',
+    );
+  });
+
+  it("the critic's 2D human model with sloppy row ends: a 3x3 serpentine in a plot", () => {
+    // each row end aimed up to +-3 mm off, 0-4 mm overshoot at the lift. Before this round (no plot edge, rows as
+    // long as the finger went): 2 mm 77% on the i13 and 35-45% on the SE.
+    for (const [id, s1, s2] of [
+      ['i13', 94, 85],
+      ['se', 87, 72],
+    ] as const) {
+      const mm = logicalPerMm(PHONES.find((x) => x.id === id)!);
+      for (const [sigma, need] of [
+        [1, s1],
+        [2, s2],
+      ] as const) {
+        let exact = 0;
+        let x = 12345;
+        const u = () => ((x = (x * 1664525 + 1013904223) >>> 0) + 0.5) / 4294967296;
+        for (let k = 0; k < 200; k++) {
+          const j = () => (u() * 2 - 1) * 3 * mm;
+          const a3 = at(3) + j();
+          const r2 = at(2, true) + j();
+          const r3 = at(2, true) + j();
+          const m = humanPath(
+            [
+              [a3, 0],
+              [a3, U],
+              [a3 - r2, U],
+              [a3 - r2, 2 * U],
+              [a3 - r2 + r3, 2 * U],
+            ],
+            { pxPerMm: mm, sigmaMm: sigma, cornerMm: 2, seed: k * 31 + 7, overshootMm: u() * 4 },
+          );
+          const c = play(m, m.at(-1)![0] + 150, plot3).at(-1);
+          if (c?.type === 'commit' && c.path.join(' ') === SERP_PATH) exact++;
+        }
+        expect(exact / 2, `${id} sigma ${sigma}`).toBeGreaterThanOrEqual(need);
+      }
+    }
+  });
+
+  it("the critic's closed-loop painter (watching the preview) in a plot", () => {
+    const legs = [
+      { dx: -1, dy: 0, n: 3 },
+      { dx: 0, dy: 1, n: 1 },
+      { dx: 1, dy: 0, n: 2 },
+      { dx: 0, dy: 1, n: 1 },
+      { dx: -1, dy: 0, n: 2 },
+    ];
+    const left3 = (x: number, y: number) =>
+      x >= -3 && x <= -1 && y >= 0 && y <= 2 ? 'home' : null;
+    const want = 'left left left down right right down left left';
+    // open ground (no plot) for comparison: 2 mm 85-88%, 3 mm 49-55%
+    for (const id of ['i13', 'se']) {
+      const mm = logicalPerMm(PHONES.find((x) => x.id === id)!);
+      for (const [sigma, need] of [
+        [1, 200],
+        [2, 190],
+        [3, 155],
+      ] as const) {
+        let exact = 0;
+        for (let k = 0; k < 200; k++)
+          if (
+            closedLoop(legs, {
+              pxPerMm: mm,
+              sigmaMm: sigma,
+              seed: k * 31 + 7,
+              fieldOf: left3,
+            }).path?.join(' ') === want
+          )
+            exact++;
+        expect(exact, `${id} sigma ${sigma}`).toBeGreaterThanOrEqual(need);
+      }
+    }
+  });
+
+  it('straight rows under wobble: to the plot edge they are exact more often, in a wide plot as before', () => {
+    for (const id of ['i13', 'se']) {
+      const mm = logicalPerMm(PHONES.find((x) => x.id === id)!);
+      let edge = 0;
+      let short = 0;
+      let turns = 0;
+      for (let k = 0; k < 100; k++) {
+        const lateral = () => wobble(2 * mm, k * 7 + 1);
+        if (
+          committed(
+            play(drawPath([[A3, 0]], { lateral: lateral() }), PAINT_ARM_MS + 3000, plot3),
+          ) === 'right right right'
+        )
+          edge++;
+        const got = committed(
+          play(drawPath([[A3, 0]], { lateral: lateral() }), PAINT_ARM_MS + 3000, wide),
+        );
+        if (got === 'right right right') short++;
+        if (typeof got === 'string' && /up|down/.test(got)) turns++;
+      }
+      expect(edge, `${id} to the edge`).toBeGreaterThanOrEqual(95);
+      expect(short, `${id} short row in a wide plot`).toBeGreaterThanOrEqual(95);
+      expect(turns, `${id} short row turns`).toBe(0);
+    }
+  });
+});

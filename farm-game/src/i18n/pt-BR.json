@@ -216,6 +216,9 @@
     "waiting": "Esperando beliscar...",
     "tapNow": "! TOQUE JÁ !",
     "anyTap": "Qualquer toque na janela fisga o peixe.",
+    "reeledEarly": "Cedo demais: linha recolhida, isca de volta.",
+    "reelingIn": "Recolhendo...",
+    "waitHint": "Toque quando morder. Antes, recolhe a linha.",
     "keepGreen": "Mantenha o peixe no verde!",
     "holdLift": "Segure para subir, solte para descer."
   },

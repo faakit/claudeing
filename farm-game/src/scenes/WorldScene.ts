@@ -114,7 +114,7 @@ import { spawnPosition, type Direction, type GameState } from '../state/GameStat
 import { runtime } from '../state/runtime';
 import { getState } from '../state/store';
 import { nodeTiles } from '../systems/mining';
-import { ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
+import { ownedRegions, ownsTile, plotForSaleAt, signTiles } from '../systems/plots';
 import { landmarkAt, landmarksOn } from '../systems/projects';
 import { mailboxAt } from '../systems/mail';
 import { mail } from '../data';
@@ -625,6 +625,7 @@ export abstract class WorldScene extends Phaser.Scene {
       gameEvents.on('farmChanged', () => (this.farmDirty = true)),
       // art round 5: the reel plays once the fishing sheet has closed (the world is frozen while it is open)
       gameEvents.on('fishCaught', () => (this.pendingAct = 'reel')),
+      gameEvents.on('lineReeled', () => (this.pendingAct = 'reel')),
       gameEvents.on('mailChanged', () => this.things?.syncMailbox(getState())),
       // Flourishes: a heart gained and a level reached are celebrated where the player stands.
       gameEvents.on('heartUp', () => {
@@ -2290,6 +2291,22 @@ export abstract class WorldScene extends Phaser.Scene {
       ...t,
       kind: markerKind({ planKind: this.actKindAt(t), interactable: false }),
     }));
+  }
+
+  /**
+   * The field a painted path may not leave (QA round, "stop at the plot's edge"; critic C3-1), read at the press:
+   * for a cell (dx, dy) from where the farmer stands, the connected piece of owned tillable farmland it lies in (the
+   * Home Plot and a bought West Field beside it are one field), else null (open ground, channels, other maps:
+   * unbounded). See `ActionPress` in input/gesture.ts and `ownedRegions` in systems/plots.ts.
+   */
+  paintField(): (dx: number, dy: number) => string | null {
+    const farm = mapsData.maps[this.mapId]?.farmland === true;
+    const p = playerTile(getState().player);
+    const region = ownedRegions(
+      getState(),
+      (tx, ty) => this.inMap({ tx, ty }) && this.tileInfo({ tx, ty }).tillable,
+    );
+    return (dx, dy) => (farm ? region(p.tx + dx, p.ty + dy) : null);
   }
 
   /**

@@ -38,6 +38,8 @@ export interface GameEvents {
   placedPanel: { panel: string; id: number };
   /** A fish was landed (the farmer's reel animation plays when the sheet closes). */
   fishCaught: undefined;
+  /** The line came back with nothing on it (an early press, or Leave before a bite): the reel animation plays too. */
+  lineReeled: undefined;
   /** Start the fishing mini-game; resolve with the outcome. */
   /** `bait`: the bait item on this cast (every cast uses one). */
   startFishing: { map: string; fish: string; bait: string };
