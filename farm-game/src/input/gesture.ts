@@ -1,3 +1,5 @@
+import type { Direction } from '../state/GameState';
+import { dominantDirection } from '../systems/direction';
 /**
  * Pure touch-gesture rules (no Phaser), shared by the floating control buttons and the world touch handler so every
  * threshold is defined once and unit tested. Distances are logical px (1 px is ~0.25 to 0.38 mm on the
@@ -15,6 +17,30 @@ export const GESTURE = {
   /** A sideways flick must be this many times more horizontal than vertical. */
   dominance: 1.5,
 } as const;
+
+/**
+ * The floating stick's steering for a finger `dx, dy` from its anchor (QA, "lock the joystick when dragging to
+ * walk"). The anchor is where the finger landed and stays there until the lift: a thumb that pushed hard and then
+ * eased back (as thumbs do once the farmer is moving) still walks the same way, and only coming back within half the
+ * deadzone of where it landed stops him. The knob is drawn at the finger, held inside the rim. Before, the anchor was
+ * dragged along past the rim, so easing back stopped or reversed the walk (agents/probes/joystick-lock.mjs).
+ */
+export function stickSteer(
+  dx: number,
+  dy: number,
+  radius: number,
+  bias: number,
+  current: Direction | null,
+): { dir: Direction | null; slow: boolean; knobX: number; knobY: number } {
+  const len = Math.hypot(dx, dy);
+  const k = len > radius ? radius / len : 1;
+  return {
+    dir: dominantDirection(dx, dy, GESTURE.stickDeadzone / 2, bias, current),
+    slow: len < radius * 0.5,
+    knobX: dx * k,
+    knobY: dy * k,
+  };
+}
 
 /** Tracks one pointer from touch-down: how far it has strayed at most, and whether it ever moved. */
 export class PressTrack {
