@@ -8,7 +8,7 @@
   "ship {n} good{s}": "enviar {n} produto{s}",
   "harvest {n} crop{s}": "colher {n} planta{s}",
   "cut {n} weed{s}": "cortar {n} moita{s}",
-  "get {n} animal good{s}": "pegar {n} produto{s} de bicho",
+  "get {n} animal good{s}": "coletar {n} de animais",
   "load {n} machine{s}": "carregar {n} máquina{s}",
   "craft {n} thing{s}": "fazer {n} coisa{s}"
 }
