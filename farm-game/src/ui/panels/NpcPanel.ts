@@ -78,20 +78,20 @@ export class NpcPanel extends Modal {
     // the blurb wraps beside the hearts bar (x 148; one line cut Clay's short), and the body moves down under it
     const blurbEnd = this.para(
       8,
-      21,
+      20,
       isBirthday(s, this.id) ? t('npc.birthdayToday') : def.blurb,
       isBirthday(s, this.id) ? C.gold : C.creamDim,
       136,
       0,
     );
-    this.dy = Math.max(0, blurbEnd - 32);
+    this.dy = Math.max(0, blurbEnd - 31);
     const hearts = heartsOf(s, this.id);
     for (let i = 0; i < MAX_HEARTS; i++)
       this.icon(150 + i * 9, 13, 'ui_heart').setTint(i < hearts ? 0xe0574a : 0x4a4560);
     const g = this.scene.add.graphics();
     this.content.add(g);
     const into = pointsOf(s, this.id) % POINTS_PER_HEART;
-    drawBar(g, 148, 21, 44, 5, hearts >= MAX_HEARTS ? 1 : into / POINTS_PER_HEART, C.red);
+    drawBar(g, 148, 20, 48, 5, hearts >= MAX_HEARTS ? 1 : into / POINTS_PER_HEART, C.red);
 
     if (this.mode === 'event') this.buildEvent();
     else if (this.mode === 'talk') this.buildTalk(hearts);
