@@ -37,26 +37,32 @@
 
 ## Store and marketing art (`store/`)
 
-- **Google Play screenshots and icon** (`store/play/`): built by `art-src/tools/store_art.py`. Inside every frame is
-  real gameplay captured in scenarios by `scripts/store-capture.mjs` (every game pixel is a captured pixel, scaled by
-  a whole number); captions use the game's own pixel font; the 512 icon is the adaptive icon's layers in
-  `resources/`. **Around** the frames, the backdrop is painted key art generated with Google Flow (model Nano
-  Banana 2.1, the owner's account, 2026-10-12) from real screenshots (`marketing/flow-ref/`), raw output
-  `marketing/flow-raw/backdrop-1.jpg`.
+- **Google Play screenshots and icon** (`store/play/`): built by `art-src/tools/store_art.py`.
+  - Inside every frame is real gameplay captured in scenarios by `scripts/store-capture.mjs`. Every game pixel is a
+    captured pixel, scaled by a whole number.
+  - Captions use the game's own pixel font. The 512 icon is the adaptive icon's layers in `resources/`.
+  - Around the frames is a painted backdrop, generated with Google Flow (model Nano Banana 2.1, the owner's account,
+    2026-10-13). Its references were the current build's own captures and the feature graphic's key art
+    (`marketing/flow-ref-r4/`). Raw output: `marketing/flow-raw/r4/bd-a2.jpg`.
 - **Feature graphic** (`store/play/feature-graphic*.png`): key art generated with Google Flow (Nano Banana 2.1,
-  2026-10-12) from a real dry/green capture and the title screen (`marketing/flow-raw/key-split-2.jpg`), cropped and
-  scaled, with the logo set in the game's font. It shows only things that are in the game (the dry and green farm,
-  the creek, the farmhouse), drawn as illustration.
-- **Promo video** (kept outside the repo, `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-en.mp4`):
-  gameplay frames stepped from the game's loop, and the game's own music and sfx rendered offline
-  (`src/audio/render.ts`), set over the Flow backdrop; the end card uses the Flow key art. No generated footage.
-- **Flow-generated marketing art:** the social-media trailer
-  (`marketing/video/tiny-acre-trailer-social-en.mp4`) opens on a 3.5 s shot generated with Google Flow (model Veo 3.1
-  Fast, the owner's account, 2026-10-12) from a real capture of the dry farm (`marketing/flow-ref/`); the raw output
-  is in `marketing/flow-raw/veo-dry-farm-1.mp4`. It is never used in the Play Store video or screenshots. **Flow-
-  generated marketing art needs the same licence check as the Flow sprites above before release:** the owner must
-  re-verify Google's generative AI terms for commercial and promotional use, and label it as AI-generated where a
-  platform asks.
+  2026-10-13).
+  - References: real captures of the dry farm, the green farm and the town river from the current build.
+  - The raw output is `marketing/flow-raw/r4/key-b2.jpg`. Flow painted a rowboat the game doesn't have, which was
+    removed by hand (`key-b2-noboat.png`).
+  - The image is cropped and scaled, with the logo set in the game's font. It shows only things that are in the game:
+    the dry and green farm, the dry creek bed, crops, the river, the farmer.
+- **Promo videos** (kept outside the repo, `C:/Users/andre/dev/tiny-acre/marketing/video/tiny-acre-promo-{en,pt-BR}.mp4`):
+  - The pictures are gameplay frames stepped from the game's loop. The sound is the game's own music and sfx,
+    rendered offline (`src/audio/render.ts`).
+  - The frames are set over the Flow backdrop, and the end card uses the Flow key art. There is no generated footage.
+- **Flow-generated video:** the social-media trailers (`marketing/video/tiny-acre-trailer-social-{en,pt-BR}.mp4`)
+  open on a 2.3 s shot.
+  - It was generated with Google Flow (model Veo 3.1 Fast, the owner's account, 2026-10-13) from a real capture of the
+    dry farm. The raw output is `marketing/flow-raw/r4/veo-c1.mp4`.
+  - The shot is labelled "AI-assisted intro" on screen. It is never used in the Play Store video or screenshots.
+- **Licence check:** Flow-generated marketing art needs the same licence check as the Flow sprites above before
+  release. The owner must re-verify Google's generative AI terms for commercial and promotional use, and label the
+  footage as AI-generated where a platform asks.
 
 ## Font
 

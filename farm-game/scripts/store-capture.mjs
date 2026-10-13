@@ -79,6 +79,18 @@ async function clean(farm, zoom = 1) {
         if (world)
           for (const o of world.children.list)
             if ((o.depth ?? 0) >= 9000 || typeof o.text === 'string') o.setVisible(false);
+        // The game lets the view run past a map's last row (behind the floating thumb controls, PixelCamera
+        // inset). The clean look has no controls, so the capture is clamped to the map and drawn again: never the void
+        if (world && world.tilemap) {
+          const cam = world.cameras.main;
+          const maxY = world.tilemap.heightInPixels - cam.height / 2 - cam.height / (2 * cam.zoom);
+          if (cam.scrollY > maxY) {
+            cam.setScroll(cam.scrollX, Math.floor(maxY));
+            g.renderer.preRender();
+            g.scene.render(g.renderer);
+            g.renderer.postRender();
+          }
+        }
       };
       window.__storeClean();
     },
@@ -101,6 +113,24 @@ const look = (farm, tx, ty) =>
 const clock = (farm, hhmm) => farm.eval((c) => window.__farm.dev.time.set({ clock: c }), hhmm);
 /** A capture: the whole 200x400 screen, or only the world view in the clean look. */
 async function snap(farm, path) {
+  if (farm.noLabels)
+    await farm.eval(() => {
+      const world = window.__farm.game.scene
+        .getScenes(true)
+        .find((sc) => 'tilemap' in sc && sc.tilemap);
+      const hide = (list) => {
+        for (const o of list) {
+          if (typeof o.text === 'string') o.setVisible(false);
+          if (o.list) hide(o.list);
+        }
+      };
+      if (world) hide(world.children.list);
+      // draw once more, so a label made in the last step is gone from this capture too
+      const g = window.__farm.game;
+      g.renderer.preRender();
+      g.scene.render(g.renderer);
+      g.renderer.postRender();
+    });
   if (!farm.clean) return farm.page.screenshot({ path });
   await farm.eval(() => window.__storeClean?.());
   return farm.page.screenshot({ path, clip: { x: 0, y: 74, width: 200, height: 326 } });
@@ -295,8 +325,11 @@ const MOMENTS = {
   hand: {
     scenario: 'store-full-field',
     dpr: 3,
+    // the swing and the tomato in the air (round 4: world labels and popups hidden, so no text cut by the edge)
     shotAt: 30,
     async drive(farm, t) {
+      // the world's own labels (plot prices, site names) are hidden as in the clean look; the HUD stays
+      farm.noLabels = true;
       await goto(farm, 'farm', 13, 18, 'left');
       await clock(farm, '18:30');
       await t.hold(20);
@@ -442,7 +475,8 @@ function timeline(farm, onFrame) {
     },
     sinceMark: () => n - markAt,
     async frame() {
-      await step(farm, 2);
+      // STORE_STEP=1: one game frame per video frame, a half-speed capture (the promo's slowed first green)
+      await step(farm, Number(process.env.STORE_STEP ?? 2));
       await onFrame(n, t);
       n++;
     },

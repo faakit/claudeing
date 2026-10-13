@@ -38,20 +38,20 @@ UM ANO INTEIRO DE FAZENDA
 - 14 cultivos em quatro estações, uma estufa e árvores frutíferas
 - Galinhas, vacas, ovelhas e porcos
 - Potes de conserva, barris, colmeias, um tear e uma fornalha
-- Pesca no lago da fazenda, na lagoa do bosque e no rio restaurado
+- Pesca com isca que você cava ou compra, no lago da fazenda, na lagoa do bosque e no rio restaurado
 - Uma mina com minério para cavar e ferramentas para melhorar
 - Fabricação de aspersores, adubo e construções da fazenda, e alguns pratos caseiros
 - Quatro festivais: a Mostra de Flores, o Torneio de Pesca, a Feira da Colheita e a Ceia de Inverno
-- Vizinhos para fazer amizade: Rosa, Mara, Finn, Orin, Clay e Senna, cada um com sua história
+- Vizinhos para fazer amizade: Rosa, Mara, Finn, Orin, Clay e Senna, cada um com sua história. Cada coração que você ganha traz algo: uma cena, uma carta, um presentinho.
 
 FEITO PARA UM POLEGAR
-Toque para andar, toque para trabalhar, arraste para arar ou plantar uma fileira inteira. Um único botão de Ação faz a coisa certa para onde você está. Há um modo para canhotos e um modo mais calmo, com menos movimento, nas opções.
+Toque para andar, toque para trabalhar, arraste para arar ou plantar uma fileira inteira. Um único botão de Ação faz a coisa certa para onde você está. Há um modo para canhotos e um modo mais calmo, com menos movimento, nas opções, e o Guia do seu livro guarda cada dica para você reler.
 
 ACONCHEGANTE, NUNCA PUNITIVO
 Não há cronômetro para vencer. Ninguém vai embora porque você demorou. O vale espera por você.
 
 JOGA OFFLINE
-Sem anúncios, sem compras no app. Joga offline; sua fazenda fica salva no seu celular, com backup opcional na nuvem pelo Google Play Games. Estatísticas anônimas de jogo ajudam a melhorar o jogo, e você pode desligá-las nas Opções.
+Sem anúncios, sem compras no app. Joga offline; sua fazenda fica salva no seu celular, com backup opcional na nuvem pelo Google Play Games. Estatísticas de jogo ajudam a melhorar o jogo, e você pode desligá-las nas Opções.
 
 Disponível em português do Brasil e em inglês.
 

@@ -51,8 +51,15 @@ STORY = [
     ('hand', ('hand',), None,
      {'en': 'Made for one hand', 'pt-BR': 'Feito para jogar com uma mão'}),
 ]
-FLOW = os.path.join(os.path.dirname(RAW), 'flow-raw')
+FLOW = os.environ.get('STORE_FLOW', os.path.join(os.path.dirname(RAW), 'flow-raw'))
 FEATURE = {'en': 'The Dry Year', 'pt-BR': 'O Ano Seco'}
+# The feature graphic's key art (round 4: Nano Banana from the current build's dry and green farm captures and the
+# town river; the extra rowboat it painted was removed, so only things the game has are in it) and its crop's top row
+KEY_ART = os.path.join('r4', 'key-b2-noboat.png')
+KEY_TOP = 0
+# The backdrop behind every screenshot (round 4: Nano Banana from the key art and the same two captures): straw down
+# the left edge, green and the river down the right, so the frame sits on the valley's change
+BACKDROP = os.environ.get('STORE_BACKDROP', os.path.join('r4', 'bd-a2.jpg'))
 
 
 # ---- the font ---------------------------------------------------------------------------------------------------
@@ -188,13 +195,13 @@ PANEL_AT = ((W - PANEL[0]) // 2, 500)
 
 def backdrop():
     """The painted key art behind every frame (Google Flow, Nano Banana, from real screenshots): atmosphere only."""
-    bd = Image.open(os.path.join(FLOW, 'backdrop-1.jpg')).convert('RGB')
+    bd = Image.open(os.path.join(FLOW, BACKDROP)).convert('RGB')
     k = W / bd.width
     bd = bd.resize((W, round(bd.height * k)), Image.LANCZOS).crop((0, 0, W, H))
     # an ink veil over the sky so the caption reads at any size
     veil = Image.new('L', (1, H), 0)
-    for y in range(470):
-        veil.putpixel((0, y), int(170 * (1 - y / 470) ** 1.3))
+    for y in range(490):
+        veil.putpixel((0, y), int(215 * (1 - y / 490) ** 0.8))
     veil = veil.resize((W, H))
     return Image.composite(Image.new('RGB', (W, H), INK), bd, veil)
 
@@ -338,8 +345,8 @@ def bayer(n=4):
 def feature(locale='en'):
     """1024x500: one evocative image, the valley half straw and half green under a dusk sky (key art painted with
     Google Flow, Nano Banana, from real screenshots), with the TINY ACRE logo carved in the game's own font."""
-    art = Image.open(os.path.join(FLOW, 'key-split-2.jpg')).convert('RGB')
-    art = art.crop((0, 0, 1376, 672)).resize((1024, 500), Image.LANCZOS)
+    art = Image.open(os.path.join(FLOW, KEY_ART)).convert('RGB')
+    art = art.crop((0, KEY_TOP, 1376, KEY_TOP + 672)).resize((1024, 500), Image.LANCZOS)
     veil = Image.new('L', (1024, 500), 0)
     ImageDraw.Draw(veil).ellipse([230, -70, 794, 150], fill=120)
     veil = veil.filter(ImageFilter.GaussianBlur(28))
@@ -370,24 +377,28 @@ def icon():
 # ---- contact sheet ----------------------------------------------------------------------------------------------
 
 def sheet():
-    cols = len(STORY)
-    tw, th = 216, 384
-    img = Image.new('RGB', (cols * (tw + 8) + 8, 2 * (th + 8) + 8 + 280), INK)
-    for r, locale in enumerate(('en', 'pt-BR')):
+    """One contact sheet per language: the 7 screenshots, that language's feature graphic at full and Play-card size,
+    and the icon at 512 and at launcher size. Written next to raw/ as contact-sheet-<locale>.png."""
+    tw, th = 270, 480
+    paths = []
+    for locale in ('en', 'pt-BR'):
+        img = Image.new('RGB', (len(STORY) * (tw + 8) + 8, th + 16 + 516), INK)
         for c, (name, *_) in enumerate(STORY):
-            s = Image.open(os.path.join(OUT, 'screenshots', locale, f'{c + 1:02d}-{name}.png'))
-            img.paste(s.resize((tw, th), Image.LANCZOS), (8 + c * (tw + 8), 8 + r * (th + 8)))
-    y = 2 * (th + 8) + 8
-    for k, f in enumerate(('feature-graphic.png', 'feature-graphic.pt-BR.png')):
-        fg = Image.open(os.path.join(OUT, f)).resize((512, 250), Image.LANCZOS)
-        img.paste(fg, (8 + k * 520, y))
-    ic = Image.open(os.path.join(OUT, 'icon-512.png')).convert('RGB').resize((250, 250), Image.LANCZOS)
-    img.paste(ic, (1048, y))
-    small = Image.open(os.path.join(OUT, 'feature-graphic.png')).resize((256, 125), Image.LANCZOS)
-    img.paste(small, (1306, y))
-    p = os.path.join(os.path.dirname(RAW), 'contact-sheet.png')
-    img.save(p)
-    return p
+            sh = Image.open(os.path.join(OUT, 'screenshots', locale, f'{c + 1:02d}-{name}.png'))
+            img.paste(sh.resize((tw, th), Image.LANCZOS), (8 + c * (tw + 8), 8))
+        y = th + 16
+        f = 'feature-graphic.png' if locale == 'en' else f'feature-graphic.{locale}.png'
+        fg = Image.open(os.path.join(OUT, f)).convert('RGB')
+        img.paste(fg, (8, y))
+        img.paste(fg.resize((256, 125), Image.LANCZOS), (1040, y))
+        ic = Image.open(os.path.join(OUT, 'icon-512.png')).convert('RGB')
+        img.paste(ic.resize((256, 256), Image.LANCZOS), (1040, y + 135))
+        img.paste(ic.resize((96, 96), Image.LANCZOS), (1306, y + 135))
+        img.paste(ic.resize((48, 48), Image.LANCZOS), (1412, y + 135))
+        p = os.path.join(os.path.dirname(RAW), f'contact-sheet-{locale}.png')
+        img.save(p)
+        paths.append(p)
+    return paths
 
 
 if __name__ == '__main__':

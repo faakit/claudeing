@@ -38,20 +38,20 @@ A FULL FARMING YEAR
 - 14 crops across four seasons, a greenhouse, and fruit trees
 - Chickens, cows, sheep and pigs
 - Preserve jars, kegs, bee houses, a loom and a furnace
-- Fishing in the farm pond, the woods lake and the restored river
+- Fishing with bait you dig up or buy, in the farm pond, the woods lake and the restored river
 - A mine with ore to dig and tools to upgrade
 - Crafting sprinklers, fertilizer and farm buildings, and a few home-cooked dishes
 - Four festivals: the Flower Show, the Fishing Derby, the Harvest Fair and the Winter Feast
-- Neighbours to befriend: Rosa, Mara, Finn, Orin, Clay and Senna, each with their own story
+- Neighbours to befriend: Rosa, Mara, Finn, Orin, Clay and Senna, each with their own story. Every heart you earn brings something: a scene, a letter, a small gift.
 
 MADE FOR ONE THUMB
-Tap to walk, tap to work, drag to till or plant a whole row. A single Action button does the right thing for where you stand. A left-handed layout and a calmer, reduced-motion mode are in the options.
+Tap to walk, tap to work, drag to till or plant a whole row. A single Action button does the right thing for where you stand. A left-handed layout and a calmer, reduced-motion mode are in the options, and the Guide in your book keeps every tip to reread.
 
 COZY, NEVER PUNISHING
 There are no timers to beat. Nobody leaves because you were slow. The valley waits for you.
 
 PLAYS OFFLINE
-No ads, no in-app purchases. Plays offline; your farm saves on your phone, with optional cloud backup through Google Play Games. Anonymous gameplay statistics help improve the game, and you can turn them off in Options.
+No ads, no in-app purchases. Plays offline; your farm saves on your phone, with optional cloud backup through Google Play Games. Gameplay statistics help improve the game, and you can turn them off in Options.
 
 Available in English and Brazilian Portuguese.
 
