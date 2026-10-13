@@ -131,8 +131,9 @@ export class MenuPanel extends Modal {
     const tabs = menuTabs;
     // Tabs and Close share a two-row grid at the bottom (the thumb's resting place on a tall phone): 48 px tabs
     // instead of six crowded 30 px ones, Close on the thumb's side of the bottom row (ui/layout menuTabGrid).
+    // the two rows 4 px apart, as buttons stack elsewhere (8 px read as an empty strip between them)
     const grid = menuTabGrid(tabs.length, this.leftHanded, this.panelW, [
-      this.panelH - 58,
+      this.panelH - 54,
       this.panelH - 28,
     ]);
     tabs.forEach((tab, i) => {
@@ -436,7 +437,7 @@ function buildBag(c: MenuTabContext, menu: MenuPanel): void {
   }
   // The text above the grid is a flow, in priority order: each line shows only while it fits above the grid (and
   // the Eat / Use button), so a long description or Portuguese never runs into the slots.
-  let y = c.top - 4;
+  let y = c.top - 1;
   const line = (text: string, color: number, x = 8, width = 184): boolean => {
     const h = wrapText(text, width).length * LINE - 2;
     if (y + h > floor) return false;
