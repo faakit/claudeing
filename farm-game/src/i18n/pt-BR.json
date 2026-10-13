@@ -24,12 +24,12 @@
   },
   "goals": {
     "completeToast": "Meta cumprida! +{gold}",
-    "stallNote": "Nova meta: {next}. \"{waits}\" pode esperar em Menu > Metas.",
+    "stallNote": "Nova meta: {next}. \"{waits}\" pode esperar em Menu > Meta.",
     "valley": "O VALE",
     "current": "META ATUAL",
     "reward": "Prêmio: +{gold}",
     "allDone": "Todas as metas cumpridas. Você é uma lenda da colheita!",
-    "jobsEveryMorning": "Bicos novos no mural cada manhã.",
+    "jobsEveryMorning": "Bicos novos no mural toda manhã.",
     "completed": "CUMPRIDAS",
     "nothingYet": "Nada ainda. Você consegue!",
     "alsoOpen": "TAMBÉM ABERTAS",
@@ -48,19 +48,19 @@
     "nothingToDo": "Nada a fazer aqui.",
     "noSeed": "Escolha sementes na barra primeiro.",
     "somethingHere": "Já tem algo aqui.",
-    "notYourLand": "Ainda não é sua terra. Compre numa placa.",
+    "notYourLand": "Essa terra ainda não é sua. Compre na placa.",
     "willStand": "Aqui vai ficar: {name}.",
     "glassSpent": {
-      "one": "{count} planta que rebrota na estufa se esgotou: elas duram uma estação.",
-      "other": "{count} plantas que rebrotam na estufa se esgotaram: elas duram uma estação."
+      "one": "{count} planta de rebrota na estufa acabou: dura uma estação.",
+      "other": "{count} plantas de rebrota na estufa acabaram: duram uma estação."
     },
-    "seedsSoil": "Sementes precisam da terra da sua fazenda.",
+    "seedsSoil": "Plante só na terra da sua fazenda.",
     "tillFirst": "Prepare a terra primeiro.",
     "growingHere": "Já tem algo crescendo aqui.",
-    "outOfSeason": "Não cresce no(a) {season}. Plante: {when}.",
-    "tooLateSeason": "Não amadurece a tempo ({n} dias). Guarde para a próxima estação.",
+    "outOfSeason": "Fora de época ({season}). Plante: {when}.",
+    "tooLateSeason": "Não amadurece a tempo ({n} dias). Deixe para a próxima estação.",
     "tooLateGlass": "Tarde demais ({n} dias). Plantas que rebrotam duram uma estação, até aqui.",
-    "fertSoil": "Adubo precisa da terra da sua fazenda.",
+    "fertSoil": "Só dá para adubar a terra da sua fazenda.",
     "fertilized": "Já está adubado.",
     "cantPlace": "Não dá para pôr isso aqui.",
     "cantPlaceCrop": "Não dá para pôr em cima de uma planta.",
@@ -77,8 +77,8 @@
     "canEmpty": "Regador vazio. Encha no lago.",
     "nothingToCut": "Nada para cortar.",
     "skipped": {
-      "one": "{count} espaço já não tinha nada a fazer.",
-      "other": "{count} espaços já não tinham nada a fazer."
+      "one": "{count} espaço sem nada para fazer.",
+      "other": "{count} espaços sem nada para fazer."
     }
   },
   "almanac": {
@@ -155,7 +155,7 @@
     "all": "Tudo",
     "give": "Dar",
     "buy": "Comprar",
-    "notEnoughGold": "Ouro insuficiente.",
+    "notEnoughGold": "Falta ouro.",
     "makeRoom": "Abra espaço na mochila primeiro.",
     "notNow": "Agora não",
     "cantBuy": "Não dá para comprar isso."
@@ -172,7 +172,7 @@
     "rivalTitle": "Sobre a festa",
     "rivalText": "Primeiro lugar: {festival}. Tá, você mereceu. Aproveita enquanto dura!",
     "placeToast": "{festival}: lugar {place}! +{gold}",
-    "joinToast": "{festival}: obrigado por participar! +{gold}",
+    "joinToast": "{festival}: valeu por participar! +{gold}",
     "castAnywhere": "Pesque onde quiser: lago, rio ou lagoa.",
     "stocked": "Hoje tem {fish} {where}!",
     "todayNote": "Hoje tem {festival}! Passe no mural da vila.",
@@ -186,7 +186,7 @@
     "points": "{n} pontos",
     "score": "Pontos {n}  {place}",
     "handInBeforeBed": "{hint} Entregue antes de dormir.",
-    "sureHandIn": "Certeza? Toque e entregue",
+    "sureHandIn": "Certeza? Toque de novo",
     "handIn": "Entregar minhas pescas",
     "handInEarly": "Entregar encerra seu torneio. Pescar até as {time}?",
     "nothingToEnter": "Você não tem nada para inscrever. Volte com as coisas certas da próxima vez.",
@@ -197,7 +197,7 @@
     "enter": "Inscrever",
     "present": "Apresentar a cesta",
     "resultPlace": "Lugar {place} com {n} pontos! Você ganhou {gold}.",
-    "resultJoin": "Obrigado por participar! {gold} pela participação."
+    "resultJoin": "Valeu por participar! {gold} pela participação."
   },
   "fishing": {
     "gotAway": "Escapou...",
@@ -208,7 +208,7 @@
     "needBait": "Sem isca: cave minhocas ou compre.",
     "dugWorms": "Achou minhocas! +{n}",
     "nextBait": "Isca: {bait} {n} >",
-    "nothingBites": "Nada está mordendo aqui agora.",
+    "nothingBites": "Nada morde por aqui agora.",
     "title": "Pescaria",
     "leave": "Recolher e sair",
     "tookBait": "Lento demais! O peixe levou a isca.",
@@ -258,12 +258,12 @@
     "shop": "Loja",
     "giftFor": "Um presente para {name}?",
     "nothingToGive": "Nada para dar. Colha ou cate algo no mato!",
-    "replyLove": "É a coisa que eu mais gosto no mundo!",
+    "replyLove": "É a minha coisa favorita do mundo!",
     "replyLike": "Que gentileza, valeu!",
     "replyNeutral": "Ah! Que gentileza.",
     "replyDislike": "Hum... valeu, eu acho.",
     "partOffer": "O açude precisa de uma {part}. Eu faço uma para você.",
-    "partNoGold": "Ouro insuficiente: {gold}.",
+    "partNoGold": "Falta ouro: {gold}.",
     "partBagFull": "Sua mochila está cheia.",
     "partBought": "{part} na mochila. Leve até a obra."
   },
@@ -279,7 +279,7 @@
     "ready": "Feito: {job}. Receba no mural!",
     "byPost": "Bicos não entregues, pagos pelo correio: +{gold}",
     "atBoard": "no mural",
-    "turnIn": "entregar"
+    "turnIn": "receber"
   },
   "mail": {
     "festTitle": "{festival} amanhã",
@@ -377,7 +377,7 @@
     "stakes": "a vila paga {gold} e põe um troféu na sua casa",
     "quietSeason": "O mural ficou parado na estação passada: ninguém pontuou.",
     "bestTitle": "O melhor do mural",
-    "bestFirst": "Você passou {name} no mural na estação passada, {you} a {rival}! A vila pôs um troféu na sua casa, e {gold} são seus.",
+    "bestFirst": "Você ganhou de {name} no mural na estação passada, {you} a {rival}! A vila pôs um troféu na sua casa, e {gold} são seus.",
     "bestAgain": "De novo o melhor do mural, {you} a {rival}! Seu troféu em casa já conta {wins} estações, e {gold} são seus.",
     "youBeat": "Você venceu {name} no mural na estação passada ({you} a {rival}): +{gold}.",
     "mineTitle": "O mural é meu",
@@ -445,7 +445,7 @@
     "empty": "Vazio. Traga: {name}.",
     "fed": "Alimentados!",
     "needs": "Precisa de {n} {feed}.",
-    "pat": "Você fez um carinho. Parecem mais felizes!",
+    "pat": "Você fez carinho neles. Parecem mais felizes!",
     "allFed": "Todos alimentados. {mood}",
     "happy": "Felizes!",
     "roomForMore": "Cabem mais."
@@ -486,7 +486,7 @@
       "other": "Ainda crescendo: faltam {count} dias."
     },
     "noFruit": "Nada de fruta ainda. Volte em um ou dois dias.",
-    "onlyIn": "Ela só dá fruta no(a) {season}."
+    "onlyIn": "Só dá fruta na época: {season}."
   },
   "jar": {
     "moreDays": {
@@ -528,7 +528,7 @@
     "subtitle": "um joguinho de roça aconchegante",
     "version": "versão {build}",
     "newerSave": "Seu jogo salvo é de uma versão mais nova. Atualize o jogo para continuar.",
-    "recovered": "Recuperado do seu jogo salvo reserva.",
+    "recovered": "Jogo recuperado da cópia de segurança.",
     "continue": "Continuar",
     "saveLine": "{season} {day}, ano {year}  {gold}",
     "eraseConfirm": "Apagar? Toque de novo",
@@ -554,7 +554,7 @@
     "sellsFor": "Vende por {gold}",
     "costs": "Custa {gold} na vila",
     "title": "Mochila",
-    "help": "As casas de borda azul são sua barra. Toque num item e depois em outra casa para mudar de lugar. Toque na mesma casa para segurar.",
+    "help": "Os espaços de borda azul são sua barra. Toque num item e depois em outro espaço para mudar de lugar. Toque no mesmo espaço para equipar.",
     "meters": "Energia {energy}/{maxEnergy}   Água {water}/{maxWater}",
     "gold": "Ouro {gold}",
     "tip": "Dica: segure Ação e arraste para trabalhar um canteiro inteiro."
@@ -571,13 +571,13 @@
     "autosave2": "dormir e ao sair.",
     "saveNow": "Salvar agora",
     "saved": "Salvo!",
-    "saveFailed": "Falhou",
+    "saveFailed": "Não salvou",
     "saveUnavailable": "Não dá para salvar neste navegador. O progresso não fica guardado.",
     "tapAgain": "Toque de novo!",
     "quitAnyway": "Sair assim?",
-    "quit": "Sair ao início",
+    "quit": "Voltar ao início",
     "couldNotSave": "Não deu para salvar. Toque de novo para sair e perder o progresso.",
-    "leftHand": "Canhoto: {state}",
+    "leftHand": "Lado esq.: {state}",
     "fullscreen": "Tela cheia",
     "addHome1": "Compartilhar >",
     "addHome2": "Tela de Início",
@@ -597,13 +597,13 @@
     "sizeM": "M",
     "sizeL": "G",
     "autoTool": "Auto-ferr.: {state}",
-    "tapToWalk": "Toque-anda: {state}",
+    "tapToWalk": "Andar tocando: {state}",
     "paint": "Fileiras: {state}",
-    "fineStick": "Dir. fina: {state}",
+    "fineStick": "Direcional fino: {state}",
     "stickSize": "Direcional: {size}",
     "replayGuide": "Rever o guia",
     "title": "CONTROLES",
-    "help": "Toque num lugar para andar até lá (e colher, regar, abrir...). Segure Ação e arraste para trabalhar uma fileira; faça a curva para um canteiro inteiro. Deslize Ação para o lado para o círculo de ferramentas. A auto-ferramenta escolhe enxada, regador, foice ou picareta, e as últimas sementes plantadas."
+    "help": "Toque num lugar para andar até lá (e colher, regar, abrir...). Segure Ação e arraste para trabalhar uma fileira; faça a curva para um canteiro inteiro. Deslize Ação para o lado para o círculo de ferramentas. A ferramenta automática escolhe enxada, regador, foice ou picareta, e as últimas sementes plantadas."
   },
   "help": {
     "tap1": "Toque:",
@@ -625,7 +625,7 @@
     "tagHotbar": "Barra",
     "skip": "Pular guia",
     "skipSure": "Certeza?",
-    "leftHand": "Canhoto"
+    "leftHand": "Mão esquerda"
   },
   "bin": {
     "wantedInBin": "Mural {want}  caixa {inBin}",
@@ -653,7 +653,7 @@
     "rivalTook": "{name} pegou: nenhum ponto.",
     "rivalFilled": "{name} atendeu este.",
     "thanks": "Valeu!",
-    "gone": "Foi",
+    "gone": "Sumiu",
     "nothing": "Nada hoje. Volte amanhã!",
     "savedForRequest": "Guardado para um pedido.",
     "giveN": "Dar {n}",
@@ -678,7 +678,7 @@
     "locked": "Bloqueado",
     "needsLevel": "{skill} nv {level} (você: {have})",
     "title": "BANCADA",
-    "make": "Fazer",
+    "make": "Criar",
     "fiber": "Você tem {n} de fibra. Corte o mato com a foice.",
     "made": "Fez {n} {item}",
     "madeOne": "Fez {item}"
@@ -721,7 +721,7 @@
     "more": "Mais terra é mais colheita, mas você precisa de energia para trabalhar.",
     "price": "Preço {price}   Você tem {have}",
     "buy": "Comprar por {gold}",
-    "yours": "{name} agora é sua!"
+    "yours": "Agora é sua: {name}!"
   },
   "shop": {
     "again": ", rebrota {n}d",
@@ -846,7 +846,7 @@
       "other": "+{count} Madeira"
     },
     "needHook": "O Orin vende um gancho para os troncos do rio.",
-    "bagFull": "Não cabe a madeira na sua bolsa.",
+    "bagFull": "A madeira não cabe na sua mochila.",
     "slip": "A rampa de troncos. Reboque a madeira até aqui.",
     "slipDry": "Uma velha rampa de troncos, no seco.",
     "hookHere": "Fisgue a madeira da margem do rio da vila."
@@ -872,15 +872,15 @@
     "lineOff": "Salvar na nuvem está desligado.",
     "lineSignedOut": "Nuvem: você não entrou.",
     "lineSynced": "Nuvem: sincronizado {ago}",
-    "lineIdle": "Nuvem: conectado",
+    "lineIdle": "Nuvem: pronta",
     "lineSyncing": "Nuvem: sincronizando...",
     "linePending": "Nuvem: esperando conexão",
     "lineConflict": "Nuvem: dois saves para escolher",
     "lineNewer": "Nuvem: save de uma versão nova.",
     "lineError": "Nuvem: falhou, tentando de novo",
     "title": "Salvar na nuvem",
-    "signedInAs": "Conectado como {name}",
-    "signedIn": "Conectado ao Play Games",
+    "signedInAs": "Login como {name}",
+    "signedIn": "Login no Play Games feito",
     "notSignedIn": "Você não entrou.",
     "off": "Salvar na nuvem está desligado neste celular.",
     "lastSynced": "Sincronizado {ago}",
@@ -921,7 +921,7 @@
   "privacy": {
     "ask": "Compartilhar estatísticas de jogo para melhorar o jogo? Sem nomes, sem anúncios. Dá para mudar em Opções.",
     "yes": "Compartilhar",
-    "no": "Não, obrigado",
-    "toggle": "Estatística: {state}"
+    "no": "Não, valeu",
+    "toggle": "Estatísticas: {state}"
   }
 }
