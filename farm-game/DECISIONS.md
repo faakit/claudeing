@@ -2487,7 +2487,7 @@ it.
 | Day 2 (guided, rain) | one note and Mara's one letter (potato seeds); the walk to town (the stick); Mara's shop, one intro ("Tap Mara to buy seeds.", then a price); the board's jobs ("Jobs are on the board: tap it.", "Tap Take to start the job.") | the town is where the seeds and the jobs are; the rain keeps the morning free for it |
 | Day 3 | the first dry morning: water the crops, nothing new; a job turned in when done | the core loop again, alone |
 | Day 4 | money and the Guide: the Book tab, "Menu > Book > Gold"; the planting cycle and jobs pages wait marked NEW | the player has sold twice and done a job: gold means something now |
-| Day 5 | Rosa's "Your first harvest!" letter (fertilizer), the morning the player's day-1 rows ripen | it used to come on day 2, for her own parsnips |
+| Day 5 | Rosa's letter "For your rows" (fertilizer), from the morning the day-1 rows ripen, the next quiet one | it came on day 2 as "Your first harvest!", for her own parsnips; it may wait, so it no longer says "first" |
 | From day 5 | the first gift moment: on the next villager sheet, "A gift they like adds hearts."; friends and hearts (Mara's letter, the Guide page) the next free morning after a gift, or after a week of chats | they have met everyone by now; hearts mean nothing before a gift |
 | Day 6 (or the first catch, or the fish goal) | fishing and bait: Finn's letter and 5 worms; the rod, cast and bait lines come when the rod is used | the goal chain's fish goal and Finn's jobs come about here |
 | Day 7 | the crows: Rosa's letter and a scarecrow (placing it is a need-driven line) | crows can come from day 8 |
@@ -2497,12 +2497,12 @@ it.
 | Day 12 (or the first level-up) | Skill: the tab, "Menu > Skill" | levels start to matter at the first one |
 | Day 15 (or Farming 2 once Make is here, or the place goal) | sprinklers and jars | the sprinkler unlocks at Farming 2 and is made at Make; placing Rosa's scarecrow no longer counts |
 | Day 16, 21 | animals, cooking | never on a festival morning unless overdue |
-| The first-green morning | the valley: the banner, Rosa's letter with Ilse's tin; the spring's ask, stone before the site, the site: one a day | it is the story's turn; nothing else is introduced that morning |
+| The first-green morning | the valley: the banner, Rosa's letter with Ilse's tin; the spring's ask, stone before the site, the site: one a day | it is the story's turn; nothing else is introduced that morning, and the next mornings hold the schedule (not the crows, Clay or a goal's feature) until the spring's ask has shown, three at most |
 
 A system play needs early is still there at once (its tab included); only its introduction waits for a free
 morning, and one the goal on screen asks for comes that very morning. A light player who never fishes or gifts
-(`tests/tutorial-review.test.ts`) meets, one a morning: the Guide (4), Rosa's first-harvest letter (5), the first
-green (6), the crows (7), Clay (8), fishing (9), Make (10), Mara's birthday hint (11), the mine (12), the Flower Show
+(`tests/tutorial-review.test.ts`) meets, one a morning: the Guide (4), Rosa's fertilizer letter (5), the first
+green (6, the spring's ask on 7), the crows (7), Clay (8), fishing (9), Make (10), Mara's birthday hint (11), the mine (12), the Flower Show
 notice (13), Skill (14, two mornings past its day), sprinklers (15), animals (16), friends (17), cooking (21).
 
 ### The rules
@@ -2524,7 +2524,11 @@ notice (13), Skill (14, two mornings past its day), sprinklers (15), animals (16
   first-green sheet, its banner and Rosa's letter come first (critic C1-4).
 - **One letter a morning** (ruling 3): in a scheduled save a letter that leads (a feature's: `when.reveal` or a
   `reveal.*` stat; the valley's story; a dated one) always comes; any other waits for a morning with no other letter,
-  and never takes a system's morning (critic C1-2). Old saves get their post as before.
+  and never takes a system's morning (critic C1-2). A feature that came overdue on a calendar morning sends its letter
+  the next morning, and feature letters go one a morning, the oldest first. Old saves get their post as before.
+- **A goal shown can be done:** a stall skip never moves to a goal whose first step is locked (the place goal before a
+  sprinkler or jar recipe is open, the preserve goal before a jar, the chicken goal before a coop: `goalDoable`); the
+  stalled goal stays instead (critic C2-1).
 - **The morning sheet** (ruling 2): at most four notes, in this order: the morning's headline, the letter, the new
   thing, other news, one board line ("New jobs and requests on the board."; Clay's moves sit with it), one line of
   every-day goods; the tip counts as one of the four. A crowded morning cuts from the end; there is no "...and N

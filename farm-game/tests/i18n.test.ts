@@ -115,7 +115,7 @@ describe('i18n core', () => {
   });
 
   it('a letter kept in the save shows in the language of the day', () => {
-    const en = 'Your first harvest!';
+    const en = 'For your rows';
     const pt = overlayFor('pt-BR', 'mail')[en]!;
     expect(relocalize(en)).toBe(en);
     expect(relocalize(pt)).toBe(en);

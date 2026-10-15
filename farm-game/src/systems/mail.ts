@@ -80,7 +80,20 @@ export function letterLeads(def: LetterDef): boolean {
 export function deliverDueLetters(state: GameState, already = 0): number {
   const paced = revealOn(state);
   const due = mail.letters.filter((def) => !state.stats[sentKey(def.id)] && letterDue(state, def));
-  const lead = paced ? due.filter(letterLeads) : due;
+  // a feature's letter on a morning the calendar already wrote waits a morning too (the feature came because it
+  // was overdue; its note says so): the valley's story and dated letters never wait
+  const isFeature = (def: LetterDef): boolean =>
+    def.when.reveal !== undefined || /^reveal\./.test(def.when.stat ?? '');
+  // and one feature's letter a morning, the oldest first (a feature that came overdue on a calendar morning)
+  const since = (def: LetterDef): number =>
+    state.stats[`reveal.${def.when.reveal ?? (def.when.stat ?? '').slice(7)}`] ?? 0;
+  const featureLetters = due
+    .filter((def) => letterLeads(def) && isFeature(def))
+    .sort((a, b) => since(a) - since(b));
+  const firstFeature = already > 0 ? undefined : featureLetters[0];
+  const lead = paced
+    ? due.filter((def) => letterLeads(def) && (!isFeature(def) || def === firstFeature))
+    : due;
   const rest = paced ? due.filter((def) => !letterLeads(def)) : [];
   const send = [...lead, ...(already + lead.length === 0 ? rest.slice(0, 1) : [])];
   for (const def of send) {

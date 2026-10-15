@@ -23,8 +23,8 @@
     {
       "id": "first_harvest",
       "from": "rosa",
-      "title": "Your first harvest!",
-      "text": "I saw your first crops come in. Fertilizer on tilled soil makes silver and gold ones more likely. Have a few on me.",
+      "title": "For your rows",
+      "text": "Your rows are coming along. Fertilizer on tilled soil makes silver and gold crops more likely. Have a few on me.",
       "when": {
         "stat": "planted",
         "min": 5,

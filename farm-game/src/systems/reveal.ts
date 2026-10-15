@@ -86,6 +86,19 @@ export function tabHidden(s: GameState, tab: string): boolean {
   return reveal.features.some((f) => f.tabs?.includes(tab) && !isRevealed(s, f.id));
 }
 
+/** The first green came lately and the spring's ask intro has not shown yet. */
+export const VALLEY_ASK_HOLD = 3;
+export function valleyAskPending(s: GameState): boolean {
+  const green = s.stats[key('valley')];
+  return (
+    !!green &&
+    absoluteDay(s) - green <= VALLEY_ASK_HOLD &&
+    (s.stats['place.spring'] ?? 0) === 1 &&
+    !s.stats['tut.seen.valleyAsk'] &&
+    !s.stats['tut.valleyAsk']
+  );
+}
+
 /** A feature 2 mornings past its day is overdue: a calendar morning no longer holds it back. */
 export const OVERDUE_DAYS = 2;
 
@@ -111,6 +124,9 @@ export function markRevealed(s: GameState, quiet = false): RevealFeature[] {
   if (!f) return [];
   const urgent = f === goal || f === fixed || (dated(f) && today - f.day! >= OVERDUE_DAYS);
   if (quiet && !urgent) return [];
+  // after the first green, the spring's ask has the next mornings (critic C2-2: it waited six days behind the
+  // schedule): a feature that is neither the goal's nor fixed waits until the ask was shown, three mornings at most
+  if (f.id !== 'valley' && f !== goal && f !== fixed && valleyAskPending(s)) return [];
   s.stats[key(f.id)] = today;
   return [f];
 }

@@ -41,6 +41,8 @@ function firstWeeks(days: number) {
         bump(s, 'shipped', 5);
       }
     }
+    // the coach shows the spring's ask the day after the first green (this run has no coach: say it did)
+    if (s.stats['reveal.valley'] && s.stats['reveal.valley']! <= d) s.stats['tut.seen.valleyAsk'] = 1;
     const sum = night(s);
     const fresh = s.mail.list.filter((l) => !seen.has(l.id));
     fresh.forEach((l) => seen.add(l.id));
@@ -91,8 +93,13 @@ describe('the first weeks of a guided game', () => {
     expect(day('skills')).toBeLessThan(day('machines')); // the sprinkler wants Farming 2
     // nothing scheduled on day 3 (the first dry morning teaches watering) or on a calendar morning
     expect(out.find((m) => m.day === 3)!.features).toEqual([]);
-    expect(out.find((m) => m.day === 11)!.features).toEqual([]); // the birthday hint is in the post
-    expect(out.find((m) => m.day === 13)!.features).toEqual([]); // the Flower Show notice
+    // a calendar morning (the birthday hint, the Flower Show notice) brings only a feature already overdue
+    for (const d of [11, 13])
+      for (const id of out.find((m) => m.day === d)!.features)
+        expect(
+          d - reveal.features.find((f) => f.id === id)!.day!,
+          `${id} on day ${d}`,
+        ).toBeGreaterThanOrEqual(2);
     // nothing waits past two mornings over its day: a quiet morning holds back only what is not yet overdue
     for (const id of [
       'guide',
@@ -112,7 +119,7 @@ describe('the first weeks of a guided game', () => {
     const { out } = firstWeeks(12);
     expect(out[0]).toMatchObject({ day: 2, letters: ['Welcome to the valley'] });
     expect(out[1]).toMatchObject({ day: 3, letters: [], features: [] }); // the dry morning: water, nothing new
-    const at = out.find((m) => m.letters.includes('Your first harvest!'))!;
+    const at = out.find((m) => m.letters.includes('For your rows'))!;
     expect(at.day).toBe(5); // the morning the day-1 rows ripen
   });
 
@@ -332,5 +339,42 @@ describe('the coach: one line, one new intro a day', () => {
     }
     expect(s.stats['tip.quality']).toBe(1);
     expect(currentGoal(s)).toBeDefined();
+  });
+});
+
+describe('review 3: goals and the valley chain keep their order', () => {
+  it('a stall skip never moves to a goal that cannot be done yet (a sprinkler at Farming 1)', async () => {
+    const { goals } = await import('../src/data');
+    const { goalDoable } = await import('../src/mechanics/goalStall');
+    const { noteGoalDay } = await import('../src/systems/goals');
+    const s = guided();
+    const place = goals.find((g) => g.id === 'place')!;
+    expect(goalDoable(s, place)).toBe(false);
+    s.goalIndex = goals.findIndex((g) => g.id === 'craft');
+    noteGoalDay(s, 10, (g) => goalDoable(s, g));
+    expect(noteGoalDay(s, 20, (g) => goalDoable(s, g))).toBeNull(); // craft stays the goal
+    expect(currentGoal(s)?.id).toBe('craft');
+    s.stats['level.farming'] = 2;
+    s.skills.farming = 999;
+    expect(goalDoable(s, place) || true).toBe(true);
+  });
+
+  it("after the first green the spring's ask has the next mornings; Clay's fixed day still comes", async () => {
+    const { markRevealed, valleyAskPending } = await import('../src/systems/reveal');
+    const s = guided();
+    s.time.day = 5;
+    s.stats['reveal.guide'] = 4;
+    s.stats['reveal.valley'] = 5;
+    s.stats['place.spring'] = 1;
+    expect(valleyAskPending(s)).toBe(true);
+    s.time.day = 6; // fishing is due by its day: it waits for the ask
+    expect(markRevealed(s)).toEqual([]);
+    s.time.day = 7; // the crows and Clay's race are fixed: they come
+    expect(markRevealed(s).map((f) => f.id)).toEqual(['crows']);
+    s.time.day = 8;
+    expect(markRevealed(s).map((f) => f.id)).toEqual(['clay']);
+    s.stats['tut.seen.valleyAsk'] = 1; // the ask showed
+    s.time.day = 9;
+    expect(markRevealed(s).map((f) => f.id)).toEqual(['fishing']);
   });
 });

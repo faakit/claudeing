@@ -59,7 +59,11 @@ export const STALL_DAYS = 3;
  * waiting goal stays under "Also open" and still completes when met; nothing is reordered. Tracked in stats
  * (`goalStall.*`, `goalWait.<id>`), so no save change. Returns the goal that now waits, if any.
  */
-export function noteGoalDay(state: GameState, day: number): GoalDef | null {
+export function noteGoalDay(
+  state: GameState,
+  day: number,
+  doable: (g: GoalDef) => boolean = () => true,
+): GoalDef | null {
   const cur = currentGoal(state);
   if (!cur) return null;
   const at = goals.indexOf(cur) + 1;
@@ -73,8 +77,10 @@ export function noteGoalDay(state: GameState, day: number): GoalDef | null {
   if (day - (state.stats['goalStall.day'] ?? day) < STALL_DAYS) return null;
   state.stats[waitKey(cur)] = 1;
   const next = currentGoal(state);
-  if (!next || next === cur || next.aside) {
-    delete state.stats[waitKey(cur)]; // nothing better to show: it stays the goal
+  // nothing better to show, or the next goal cannot be done yet (a sprinkler with no recipe for it: tutorial
+  // review C2-1): it stays the goal
+  if (!next || next === cur || next.aside || !doable(next)) {
+    delete state.stats[waitKey(cur)];
     return null;
   }
   checkGoals(state); // goals the player already met on the way pay now, so the note names a real next goal
