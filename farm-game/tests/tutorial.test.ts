@@ -325,6 +325,10 @@ describe('guided start: the step machine', () => {
     for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
     expect(guidedTracksDone(s)).toBe(true);
     checkTips(s);
+    expect(seen.some((t) => t.includes('Wild goods'))).toBe(false); // nor on day 1 or 2 (tutorial review)
+    s.time.day = 3;
+    s.time.minutes = 9 * 60; // past the morning's first hour
+    checkTips(s);
     off();
     expect(seen.some((t) => t.includes('Wild goods'))).toBe(true);
   });
@@ -860,6 +864,9 @@ describe('guided start: review 6', () => {
     const s = freshGuided();
     expect(tipsHeldNow(s)).toBe(true);
     for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    expect(tipsHeldNow(s)).toBe(true); // still day 1 (tutorial review: no tips on the guided days)
+    s.time.day = 3;
+    s.time.minutes = 9 * 60;
     expect(tipsHeldNow(s)).toBe(false);
   });
 });

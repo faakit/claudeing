@@ -36,7 +36,7 @@ import { addStat, currentGoal, stat, tipsHeldNow } from '../systems/goals';
 import { cycleSlot, selectSlot, selectedStack } from '../systems/inventory';
 import { iconKey, refOf } from '../systems/itemRef';
 import { STICK_RADIUS } from '../systems/settings';
-import { seasonLabel } from '../systems/time';
+import { absoluteDay, seasonLabel } from '../systems/time';
 import { teleportPlayer, type TiledMapLike } from '../systems/world';
 import { mixColor } from '../ui/color';
 import { daylightColor, indoorColor, nightAmount } from '../ui/daylight';
@@ -411,15 +411,24 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  /** After a long quiet spell, remind the player what the current goal wants (at most every 90 s). */
+  /**
+   * After a long quiet spell, remind the player what the current goal wants: once a day, never in a morning's first
+   * hour (the wake-up sheet and its intro) or late at night (tutorial review: it came at 01:46 and again at wake-up).
+   */
+  private hintDay = -1;
   private updateIdleHint(delta: number): void {
     if (runtime.blocked || this.sleeping || runtime.coaching) return;
     if (inputHub.direction !== null || inputHub.actionHeld) this.idleMs = 0;
     else this.idleMs += delta;
     if (this.idleMs < IDLE_HINT_MS) return;
     this.idleMs = -IDLE_HINT_MS / 2;
-    const goal = currentGoal(getState());
-    if (goal) this.hud.toast(t('ui.hint', { hint: goal.hint }), 'info');
+    const s = getState();
+    const day = absoluteDay(s);
+    if (day === this.hintDay || s.time.minutes < 7 * 60 || s.time.minutes >= 22 * 60) return;
+    const goal = currentGoal(s);
+    if (!goal) return;
+    this.hintDay = day;
+    this.hud.toast(t('ui.hint', { hint: goal.hint }), 'info');
   }
 
   // ---- thumb controls ----
@@ -863,6 +872,8 @@ export class UIScene extends Phaser.Scene {
     this.sleeping = true;
     runtime.busy = true;
     inputHub.clearHeld();
+    // yesterday's toasts end with it ("It's getting late..." stayed up into the morning after passing out)
+    this.hud.clearToasts();
     // The house map is parsed during the fade (scenes/mapCache.ts), so the rollover frame stays short.
     this.time.delayedCall(100, () => preparseMap(this, mapsData.wake.map));
     await this.fadeBlackout(1, 650);

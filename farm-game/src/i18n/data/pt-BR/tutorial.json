@@ -30,7 +30,7 @@
   "It's late! Tap the bed to sleep.": "Está tarde! Toque na cama e durma.",
   "Tap Sleep before 2 AM.": "Toque em Dormir antes das 2h.",
   "It's late! Tap the door, then bed.": "Está tarde! Entre e vá para a cama.",
-  "It's late! Head home to sleep.": "Tarde! Volte para casa e durma.",
+  "It's late! Head home to sleep.": "Está tarde! Volte e vá dormir.",
   "Low energy: eat, or go to sleep.": "Pouca energia: coma ou vá dormir.",
   "Sunny! Water your crops: {dry} left.": "Sol! Regue as plantas. Secas: {dry}.",
   "Something sparkles! Tap to pick it.": "Algo brilha! Toque para pegar.",
@@ -51,7 +51,6 @@
   "Not your land yet. Follow the ring.": "Ainda não é sua. Siga o círculo.",
   "Can't get there. Follow the ring.": "Não dá para chegar. Siga o círculo.",
   "Tap a log, tow it to the slip.": "Toque num tronco, leve até a rampa.",
-  "Stone comes from rocks in the mine.": "Pedra sai das rochas da mina.",
   "Pick the pickaxe on the hotbar.": "Escolha a picareta na barra.",
   "Tap a rock: the pickaxe breaks it.": "Toque na rocha: a picareta quebra.",
   "Jobs are on the board: tap it.": "Os bicos ficam no mural: toque nele.",
@@ -73,5 +72,7 @@
   "Tap Make: fiber into things.": "Toque em Criar: fibra vira coisa.",
   "Tap Mara to buy seeds.": "Toque na Mara e compre sementes.",
   "Tap Take to start the job.": "Toque em Pegar e comece o bico.",
-  "Face the water and press Action.": "Olhe para a água e aperte Ação."
+  "Face the water and press Action.": "Olhe para a água e aperte Ação.",
+  "The spring wants stone: the mine.": "A nascente pede pedra: vá à mina.",
+  "The weir wants stone: the mine.": "O açude pede pedra: vá à mina."
 }

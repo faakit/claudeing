@@ -48,6 +48,7 @@ function guidedWith(...open: string[]): GameState {
   startTutorial(s, { on: true, gift: false });
   for (const st of tutorial.steps) if (!open.includes(st.id)) s.stats[`tut.${st.id}`] = 1;
   s.time.day = 3;
+  s.time.minutes = 9 * 60; // past a morning's first hour (the stone line waits for it)
   return s;
 }
 

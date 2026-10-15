@@ -1062,46 +1062,53 @@
       "optional": true,
       "leave": true,
       "when": {
-        "any": [
+        "all": [
           {
-            "all": [
+            "any": [
               {
-                "stat": "place.spring",
-                "min": 1
+                "all": [
+                  {
+                    "stat": "place.spring",
+                    "min": 1
+                  },
+                  {
+                    "stat": "place.spring",
+                    "max": 1
+                  },
+                  {
+                    "short": {
+                      "project": "place_spring",
+                      "item": "stone"
+                    }
+                  }
+                ]
               },
               {
-                "stat": "place.spring",
-                "max": 1
-              },
-              {
-                "short": {
-                  "project": "place_spring",
-                  "item": "stone"
-                }
+                "all": [
+                  {
+                    "stat": "place.weir",
+                    "min": 1
+                  },
+                  {
+                    "stat": "place.weir",
+                    "max": 1
+                  },
+                  {
+                    "short": {
+                      "project": "place_weir",
+                      "item": "stone"
+                    }
+                  }
+                ]
               }
             ]
           },
           {
-            "all": [
-              {
-                "stat": "place.weir",
-                "min": 1
-              },
-              {
-                "stat": "place.weir",
-                "max": 1
-              },
-              {
-                "short": {
-                  "project": "place_weir",
-                  "item": "stone"
-                }
-              }
-            ]
+            "minute": 420
           }
         ]
       },
-      "text": "Stone comes from rocks in the mine.",
+      "text": "The spring wants stone: the mine.",
       "target": {
         "find": "node",
         "map": "mine"
@@ -1145,6 +1152,21 @@
             "find": "node",
             "map": "mine"
           }
+        },
+        {
+          "when": {
+            "all": [
+              {
+                "stat": "place.weir",
+                "min": 1
+              },
+              {
+                "stat": "place.weir",
+                "max": 1
+              }
+            ]
+          },
+          "text": "The weir wants stone: the mine."
         }
       ],
       "done": [

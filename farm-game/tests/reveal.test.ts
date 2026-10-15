@@ -223,7 +223,11 @@ describe('first-time tips that name a tab', () => {
     }
     expect(s.stats['reveal.crafting']).toBe(9);
     expect(s.stats['reveal.skills']).toBeLessThanOrEqual(12);
-    for (let i = 0; i < 10 && !s.stats['tip.skills']; i++) checkTips(s);
+    s.time.minutes = 9 * 60; // past the morning's first hour, when tips may show
+    for (let d = 12; d < 20 && !s.stats['tip.skills']; d++) {
+      toDay(s, d); // one tip a day: earlier ones (quality, forage...) may come first
+      for (let i = 0; i < 3; i++) checkTips(s);
+    }
     expect(s.stats['tip.skills']).toBe(1);
   });
 });

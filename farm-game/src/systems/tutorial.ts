@@ -20,6 +20,7 @@ import {
   npcs,
   plots,
   projects,
+  reveal,
   tools,
   tutorial,
 } from '../data';
@@ -468,6 +469,25 @@ export const guidedStepIds = (steps: readonly TutorialStep[] = data().steps): st
 /** The day a paced intro (any intro but a `need` one) first showed: one new one a day. */
 export const PACE_DAY = 'tut.paceDay';
 const paced = (st: TutorialStep): boolean => st.track === 'intro' && !st.need;
+/** The reveal feature an intro belongs to: the one its `when` waits for, the valley's, or none. */
+function topicOf(st: TutorialStep): string | null {
+  if (st.valley) return 'valley';
+  let found: string | null = null;
+  const walk = (c: TutorialCond | undefined): void => {
+    if (!c || found) return;
+    if (c.revealed) found = c.revealed;
+    c.any?.forEach(walk);
+    c.all?.forEach(walk);
+  };
+  walk(st.when);
+  return found;
+}
+/** The feature this morning introduced, if any. */
+function arrivedToday(s: GameState): string | null {
+  if (!revealOn(s)) return null;
+  const day = absoluteDay(s);
+  return reveal.features.find((f) => s.stats[`reveal.${f.id}`] === day)?.id ?? null;
+}
 
 /** Mark finished steps done; return the step to show now (null: nothing to coach) and what finished. */
 export function advance(
@@ -516,8 +536,13 @@ export function advance(
   for (const st of steps) {
     if (st.track !== 'intro' || stepDone(s, st.id)) continue;
     // at most one new paced intro a day (all but the `need` ones): another waits for tomorrow,
-    // unmarked meanwhile (tutorial review: one new thing a morning, never two systems at once)
-    if (paced(st) && !s.stats[`tut.seen.${st.id}`] && s.stats[PACE_DAY] === absoluteDay(s)) continue;
+    // unmarked meanwhile (tutorial review: one new thing a morning, never two systems at once); on the morning a
+    // feature arrives, a paced intro of another topic waits too (critic C1-5: fishing and the spring's ask)
+    if (paced(st) && !s.stats[`tut.seen.${st.id}`]) {
+      if (s.stats[PACE_DAY] === absoluteDay(s)) continue;
+      const today = arrivedToday(s);
+      if (today && topicOf(st) !== today) continue;
+    }
     const ctx = { s, world, facts, step: st };
     const on = !st.when || holds(st.when, ctx);
     if (!on) {
@@ -915,7 +940,7 @@ export function coachView(
     const d = doorToward(world, wantMap);
     pointer = d ? { kind: 'tile', tx: d.tx, ty: d.ty } : null;
     away = true;
-    // A one-off intro keeps its own line (it says why: "Stone comes from rocks in the mine.") while the pointer
+    // A one-off intro keeps its own line (it says why: "The spring wants stone: the mine.") while the pointer
     // leads to the door; the guided days' steps say where to head.
     if (st.track !== 'intro')
       text =

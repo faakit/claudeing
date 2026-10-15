@@ -13,7 +13,7 @@ import { C } from '../theme';
 import { Modal } from '../widgets';
 import { fmt } from './format';
 import { summaryTip } from './summaryTips';
-import { arrangeNotes } from './summaryNotes';
+import { arrangeNotes, MAX_NOTES } from './summaryNotes';
 import { guidedMorning, guidedNotes } from '../../systems/tutorial';
 import { fmtGold, t } from '../../i18n';
 
@@ -80,7 +80,8 @@ export class SummaryPanel extends WaitModal {
     // they are never the part that is cut.
     // The first guided morning stays short (the guide shows the rest one thing at a time).
     // Then the sales list shrinks to two lines (critique 12, F3: the season result was cut for the 7th sale).
-    let withTip = !guidedMorning(getState());
+    // the tip is one of the morning's four lines: a full morning has none (tutorial review)
+    let withTip = !guidedMorning(getState()) && this.notes(this.summary).length < MAX_NOTES;
     let maxNotes = this.notes(this.summary).length;
     let maxSales = SALES_LINES;
     let end = this.draw(this.summary, withTip, maxNotes, maxSales);
@@ -122,8 +123,11 @@ export class SummaryPanel extends WaitModal {
     maxSales = SALES_LINES,
   ): number {
     const s = getState();
-    const lines = sum.shipped.slice(0, maxSales);
-    const extra = sum.shipped.length - lines.length;
+    // one row more than fits is shown rather than "...and 1 more"; past that the rest fold into one row with its
+    // gold, so no sale is hidden (tutorial review)
+    const fits = sum.shipped.length <= maxSales + 1;
+    const lines = fits ? sum.shipped : sum.shipped.slice(0, maxSales);
+    const rest = fits ? [] : sum.shipped.slice(maxSales);
     this.panel();
     let y = 8;
     const text = (
@@ -156,7 +160,11 @@ export class SummaryPanel extends WaitModal {
       this.label(192, y, fmtGold(l.gold), C.gold, 1, 'right');
       y += text(`${displayName(parseKey(l.item))} x${l.qty}`, C.cream, { wrap: 130 });
     }
-    if (extra > 0) y += text(t('summary.andMore', { n: extra }), C.creamDim);
+    if (rest.length > 0) {
+      this.label(192, y, fmtGold(rest.reduce((g, l) => g + l.gold, 0)), C.gold, 1, 'right');
+      const n = rest.reduce((q, l) => q + l.qty, 0);
+      y += text(t('summary.otherGoods', { n }), C.creamDim, { wrap: 130 });
+    }
     y += 3;
     this.label(192, y, `+${fmtGold(sum.total)}`, C.green, 1, 'right');
     y += text(t('summary.total'), C.cream, { gap: 8 });

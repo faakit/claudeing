@@ -829,7 +829,7 @@
     "slept": "Você dormiu feito pedra.",
     "sold": "VENDIDO HOJE CEDO",
     "nothingShipped": "Nada enviado. Use a caixa perto da casa!",
-    "andMore": "...e mais {n}",
+    "otherGoods": "Outros itens x{n}",
     "total": "Total",
     "withered": {
       "one": "{count} planta murchou com a nova estação.",

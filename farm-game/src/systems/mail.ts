@@ -85,28 +85,9 @@ export function deliverDueLetters(state: GameState, already = 0): number {
   const send = [...lead, ...(already + lead.length === 0 ? rest.slice(0, 1) : [])];
   for (const def of send) {
     state.stats[sentKey(def.id)] = 1;
-    delete state.stats[waitKey(def.id)];
     sendLetter(state, def);
   }
-  // a letter left waiting remembers since when (the schedule yields it a morning: letterOverdue)
-  for (const def of rest)
-    if (!send.includes(def)) state.stats[waitKey(def.id)] ??= absoluteDay(state);
   return send.length;
-}
-
-const waitKey = (id: string): string => `mail.wait.${id}`;
-/** A paced letter has waited this many mornings: the next morning is its own (nothing new is introduced). */
-export const LETTER_MAX_WAIT = 2;
-/** Has a waiting letter waited long enough that this morning's post should be its alone? */
-export function letterOverdue(state: GameState): boolean {
-  const today = absoluteDay(state);
-  return mail.letters.some(
-    (def) =>
-      !state.stats[sentKey(def.id)] &&
-      state.stats[waitKey(def.id)] !== undefined &&
-      today - state.stats[waitKey(def.id)]! >= LETTER_MAX_WAIT &&
-      letterDue(state, def),
-  );
 }
 
 /** Will the calendar write a letter this morning (a festival or a birthday tomorrow, not yet sent)? */

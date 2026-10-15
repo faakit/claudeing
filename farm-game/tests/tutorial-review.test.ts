@@ -2,7 +2,7 @@
 // morning, one letter a morning, one coach line at a time, and the order a new player needs things in.
 import { describe, expect, it } from 'vitest';
 import '../src/mechanics';
-import { mail, tutorial } from '../src/data';
+import { mail, reveal, tutorial } from '../src/data';
 import { endDay } from '../src/systems/day';
 import { checkTips, currentGoal, tipsHeldNow } from '../src/systems/goals';
 import { deliverDueLetters, letterLeads } from '../src/systems/mail';
@@ -67,7 +67,7 @@ describe('the first weeks of a guided game', () => {
     const order = out.flatMap((m) => m.features);
     // the core loop and the town come first (days 1-2), then the Guide, then one system at a time. This player
     // never fishes or gifts: the farm greens on day 6 and takes that morning, the crows and Clay keep their days,
-    // fishing and Make slide to free mornings, friends come with a week of chats
+    // fishing and Make slide a few mornings, friends come with a week of chats
     expect(order).toEqual([
       'guide',
       'valley',
@@ -92,7 +92,20 @@ describe('the first weeks of a guided game', () => {
     // nothing scheduled on day 3 (the first dry morning teaches watering) or on a calendar morning
     expect(out.find((m) => m.day === 3)!.features).toEqual([]);
     expect(out.find((m) => m.day === 11)!.features).toEqual([]); // the birthday hint is in the post
-    expect(out.find((m) => m.day === 14)!.features).toEqual([]); // the Flower Show
+    expect(out.find((m) => m.day === 13)!.features).toEqual([]); // the Flower Show notice
+    // nothing waits past two mornings over its day: a quiet morning holds back only what is not yet overdue
+    for (const id of [
+      'guide',
+      'crows',
+      'clay',
+      'fishing',
+      'crafting',
+      'mine',
+      'skills',
+      'machines',
+      'animals',
+    ])
+      expect(day(id) - reveal.features.find((f) => f.id === id)!.day!, id).toBeLessThanOrEqual(3);
   });
 
   it("day 2 brings Mara's welcome alone; Rosa's first-harvest letter waits for the player's own crops", () => {
@@ -100,8 +113,7 @@ describe('the first weeks of a guided game', () => {
     expect(out[0]).toMatchObject({ day: 2, letters: ['Welcome to the valley'] });
     expect(out[1]).toMatchObject({ day: 3, letters: [], features: [] }); // the dry morning: water, nothing new
     const at = out.find((m) => m.letters.includes('Your first harvest!'))!;
-    expect(at.day).toBeGreaterThan(5); // this player's own crops came in on day 5
-    expect(at.day).toBeLessThanOrEqual(9); // a waiting letter gets a morning within two of its time
+    expect(at.day).toBe(5); // the morning the day-1 rows ripen
   });
 
   it('a waiting letter comes on the next quiet morning; an old save still gets every letter at once', () => {
@@ -169,6 +181,7 @@ describe('the coach: one line, one new intro a day', () => {
   });
   const afterGuide = (): S => {
     const s = guided();
+    s.time.minutes = 9 * 60; // past the morning's first hour
     for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
     for (const id of ['forage', 'waterDaily', 'late', 'tired']) s.stats[`tut.${id}`] = 1;
     s.stats['foraged'] = 3;
@@ -180,7 +193,7 @@ describe('the coach: one line, one new intro a day', () => {
     const s = afterGuide();
     s.time.day = 12;
     s.stats['reveal.guide'] = 4;
-    s.stats['reveal.skills'] = 12;
+    s.stats['reveal.skills'] = 11; // arrived yesterday: today's paced intros are not held for another topic
     const first = advance(s, world(), { panel: null, tab: null }).current;
     expect(first?.id).toBe('guideGold');
     expect(s.stats[PACE_DAY]).toBe(12);
@@ -295,6 +308,7 @@ describe('the coach: one line, one new intro a day', () => {
 
   it('first-time tips wait while a coach line or a sheet is on screen', () => {
     const s = afterGuide();
+    s.time.day = 6;
     s.stats['harvested'] = 1;
     s.stats['qualityHarvested'] = 1;
     expect(tipsHeldNow(s)).toBe(false);
@@ -312,7 +326,10 @@ describe('the coach: one line, one new intro a day', () => {
     } finally {
       runtime.modals = 0;
     }
-    for (let i = 0; i < 12 && !s.stats['tip.quality']; i++) checkTips(s);
+    for (let d = 6; d < 12 && !s.stats['tip.quality']; d++) {
+      s.time.day = d; // one tip a day: another may come first
+      checkTips(s);
+    }
     expect(s.stats['tip.quality']).toBe(1);
     expect(currentGoal(s)).toBeDefined();
   });

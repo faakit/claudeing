@@ -26,8 +26,9 @@
       "title": "Your first harvest!",
       "text": "I saw your first crops come in. Fertilizer on tilled soil makes silver and gold ones more likely. Have a few on me.",
       "when": {
-        "stat": "harvested",
-        "min": 4
+        "stat": "planted",
+        "min": 5,
+        "day": 5
       },
       "gift": {
         "item": "fertilizer",

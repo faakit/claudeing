@@ -1,5 +1,6 @@
 import { registerDayHook } from '../systems/dayHooks';
 import { runtime } from '../state/runtime';
+import { absoluteDay } from '../systems/time';
 import { waterCapacity } from '../systems/actions';
 import { holdTipsWhile, registerStatWatcher } from '../systems/goals';
 import {
@@ -21,12 +22,19 @@ registerStatWatcher('tutorial', (state) => {
   if (ctx && tutorialOn(state)) advance(state, ctx.world, ctx.facts);
 });
 
-// First-time tips wait until the guided days are over, and after them while a coach line or a sheet is on screen
-// (the day-2 shop's "Wild goods grow back..." toast sat on "Tap a price"; the Book's tip on the morning sheet), so
-// only one instruction is ever on screen. A held tip shows at the next check once the screen is clear.
+// First-time tips never show on the guided days, in a morning's first hour (its sheet and its intro), or while a
+// coach line or a sheet is on screen (the day-2 shop's "Wild goods grow back..." toast sat on "Tap a price"; the
+// Book's tip on the wake-up screen), so only one instruction is ever on screen. A held tip shows at the next check
+// once the screen is clear (and a guided game gets one a day: systems/goals.ts).
+export const TIP_QUIET_UNTIL = 7 * 60;
 holdTipsWhile(
   (state) =>
-    tutorialOn(state) && (!guidedTracksDone(state) || runtime.coaching || runtime.modals > 0),
+    tutorialOn(state) &&
+    (!guidedTracksDone(state) ||
+      absoluteDay(state) <= 2 ||
+      state.time.minutes < TIP_QUIET_UNTIL ||
+      runtime.coaching ||
+      runtime.modals > 0),
 );
 
 // The first guided morning: Rosa fills the can (critic review 3: day 2's watering kept starting empty).

@@ -3371,7 +3371,7 @@ async function guidedDepth() {
     ['tut-job-board', 'Jobs are on the board: tap it.'],
     ['tut-job-turn-in', 'Job done! Turn it in at the board.'],
     ['tut-no-bait', 'No bait: the hoe digs up worms.'],
-    ['tut-stone-before-site', 'Stone comes from rocks in the mine.'],
+    ['tut-stone-before-site', 'The spring wants stone: the mine.'],
     ['tut-stone-empty-mine', 'No rocks today: back tomorrow.'],
   ]) {
     const farm = await openScenario(browser, url, name, { profile: PROFILE });

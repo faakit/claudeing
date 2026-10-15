@@ -829,7 +829,7 @@
     "slept": "You slept soundly.",
     "sold": "SOLD THIS MORNING",
     "nothingShipped": "Nothing shipped. Use the bin by the house!",
-    "andMore": "...and {n} more",
+    "otherGoods": "Other goods x{n}",
     "total": "Total",
     "withered": {
       "one": "{count} crop withered with the new season.",

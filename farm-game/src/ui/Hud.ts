@@ -654,6 +654,17 @@ export class Hud {
   // ---- toasts ----
   /** Toasts waiting for room in the lane. */
   private queue: { text: string; kind: ToastKind }[] = [];
+  /** Drop every toast on screen and waiting (a new day starts clean). */
+  clearToasts(): void {
+    for (const t of this.toasts) {
+      t.label.destroy();
+      t.bg.destroy();
+      t.lit?.destroy();
+    }
+    this.toasts = [];
+    this.queue.length = 0;
+  }
+
   /** When the player last touched the screen (sticky toasts go on a touch). */
   private touchedAt = -Infinity;
 

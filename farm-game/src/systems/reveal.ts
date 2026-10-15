@@ -29,15 +29,38 @@ export const revealOn = (s: Pick<GameState, 'stats'>): boolean => !!s.stats[REVE
 export const feature = (id: string): RevealFeature | undefined =>
   reveal.features.find((f) => f.id === id);
 
+/**
+ * The index of the goal the HUD shows (goals.ts `currentGoal`, kept here to stay free of an import cycle): the first
+ * open goal from `goalIndex` that was not passed over for stalling, else the first passed-over one. After stall
+ * skips it is above `goalIndex` (critic C1-1: the craft goal showed while Make was hidden).
+ */
+export function shownGoalIndex(s: GameState): number {
+  let aside = -1;
+  for (let i = s.goalIndex; i < goals.length; i++) {
+    const g = goals[i]!;
+    if (s.stats[`goal.${g.id}`]) continue;
+    if (!g.aside && !s.stats[`goalWait.${g.id}`]) return i;
+    if (aside < 0) aside = i;
+  }
+  return aside < 0 ? goals.length : aside;
+}
+
+/** The goal chain shows this goal or one past it (or it is done). */
+function goalReached(s: GameState, id: string): boolean {
+  const at = goals.findIndex((g) => g.id === id);
+  return at >= 0 && (s.goalIndex >= at || shownGoalIndex(s) >= at || !!s.stats[`goal.${id}`]);
+}
+
+/** Does the goal the player is shown need this feature (it is introduced ahead of anything that morning)? */
+export const goalNeeds = (s: GameState, f: RevealFeature): boolean =>
+  (f.early ?? []).some((e) => e.goal !== undefined && goalReached(s, e.goal));
+
 /** Does play already need this feature (its goal reached, or the thing already used)? */
 export function needsEarly(s: GameState, f: RevealFeature): boolean {
   return (f.early ?? []).some((e) => {
     if (e.after !== undefined && revealOn(s) && !s.stats[key(e.after)]) return false;
     if (e.stat !== undefined) return (s.stats[e.stat] ?? 0) >= (e.min ?? 1);
-    if (e.goal !== undefined) {
-      const at = goals.findIndex((g) => g.id === e.goal);
-      return at >= 0 && (s.goalIndex >= at || !!s.stats[`goal.${e.goal}`]);
-    }
+    if (e.goal !== undefined) return goalReached(s, e.goal);
     return false;
   });
 }
@@ -63,36 +86,34 @@ export function tabHidden(s: GameState, tab: string): boolean {
   return reveal.features.some((f) => f.tabs?.includes(tab) && !isRevealed(s, f.id));
 }
 
+/** A feature 2 mornings past its day is overdue: a calendar morning no longer holds it back. */
+export const OVERDUE_DAYS = 2;
+
 /**
- * Introduce the first feature (in schedule order) that is due this morning, by its day or because play needs it:
- * one a morning, so two systems never arrive together; another due one waits for the next morning. Returns it (its
- * note goes in the morning summary, its letter in the mailbox), or nothing. Days 1 and 2 never mark anything (the
- * guided start's two days stay as tuned: the onboarding gate); a feature needed early on them is shown, and
- * introduced from day 3.
+ * Introduce one feature this morning, if one is due by its day or because play needs it: one a morning, so two
+ * systems never arrive together; another due one waits. In order: one the goal on screen needs (its tab is there,
+ * its note must be too), a `fixed` one (the crows, Clay's race: their mechanics start that day), the first green,
+ * the earliest day that has come, then one play needed early. On a `quiet` morning (a festival, or a festival notice
+ * or birthday hint in the post) only an urgent one comes: the goal's, a fixed one, or one overdue by
+ * `OVERDUE_DAYS`. Returns it (its note goes in the morning summary, its letter in the mailbox), or nothing. Days 1
+ * and 2 never mark anything (the guided start's two days stay as tuned: the onboarding gate); a feature needed
+ * early on them is shown, and introduced from day 3.
  */
-export function markRevealed(s: GameState): RevealFeature[] {
+export function markRevealed(s: GameState, quiet = false): RevealFeature[] {
   if (!revealOn(s) || absoluteDay(s) < 3) return [];
   const today = absoluteDay(s);
-  const due = reveal.features.filter(
-    (f) => !s.stats[key(f.id)] && ((f.day !== undefined && today >= f.day) || needsEarly(s, f)),
-  );
-  // a feature tied to a mechanic that starts that day (the crows, Clay's race: `fixed`) goes first; then the first
-  // green; then the earliest day that has come; then the first of those play needed early, in schedule order
-  const byDay = due
-    .filter((f) => f.day !== undefined && today >= f.day)
-    .sort((a, b) => a.day! - b.day!);
-  const f = byDay.find((x) => x.fixed) ?? due.find((x) => x.id === 'valley') ?? byDay[0] ?? due[0];
+  const dated = (f: RevealFeature): boolean => f.day !== undefined && today >= f.day;
+  const due = reveal.features.filter((f) => !s.stats[key(f.id)] && (dated(f) || needsEarly(s, f)));
+  const byDay = due.filter(dated).sort((a, b) => a.day! - b.day!);
+  const goal = due.find((x) => goalNeeds(s, x));
+  const fixed = byDay.find((x) => x.fixed);
+  const f = goal ?? fixed ?? due.find((x) => x.id === 'valley') ?? byDay[0] ?? due[0];
   if (!f) return [];
+  const urgent = f === goal || f === fixed || (dated(f) && today - f.day! >= OVERDUE_DAYS);
+  if (quiet && !urgent) return [];
   s.stats[key(f.id)] = today;
   return [f];
 }
-
-/** Is a `fixed` feature due this morning (it is never held back by a waiting letter)? */
-export const fixedDue = (s: GameState): boolean =>
-  revealOn(s) &&
-  reveal.features.some(
-    (f) => f.fixed && f.day !== undefined && !s.stats[key(f.id)] && absoluteDay(s) >= f.day,
-  );
 
 /** Was this feature introduced this very day (its intro may show today)? */
 export const revealedToday = (s: GameState, id: string): boolean =>

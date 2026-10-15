@@ -15,6 +15,7 @@ import { animalOrderCap, animalOutput } from './animals';
 import { isProjectDone } from './projects';
 import { shops } from '../data';
 import { fmtGold, t } from '../i18n';
+import { revealOn } from './reveal';
 
 /** Is this crop's seed on a shelf the player can buy from (not waiting on a town project)? */
 function seedOnSale(state: GameState, cropId: string): boolean {
@@ -82,8 +83,11 @@ export function orderCandidates(state: GameState): ItemRef[] {
       (ready.get(c.harvestItem) ?? Infinity) <= CROP_WAIT
     )
       add({ item: c.harvestItem });
+  // a guided game asks for fiber only once Make is here: before it, weeds are few (tutorial review)
+  const noFiber = revealOn(state) && !state.stats['reveal.crafting'];
   for (const map of ['farm', 'town', 'woods'])
-    for (const f of forageTable(map, season)) add({ item: f.item });
+    for (const f of forageTable(map, season))
+      if (!(noFiber && f.item === 'fiber')) add({ item: f.item });
   // the river's fish only once the weir has brought them back (never a request nobody could fill)
   for (const f of fishTable)
     if (f.seasons.includes(season) && !f.legend && fishOpen(state, f)) add({ item: f.item });
