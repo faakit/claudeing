@@ -14,6 +14,7 @@ registerDayHook({
     if (tutorialOn(state) && !guidedTracksDone(state)) return;
     const waits = noteGoalDay(state, absoluteDay(state));
     const next = currentGoal(state);
-    if (waits && next) ctx.notes.push(t('goals.stallNote', { next: next.text, waits: waits.text }));
+    if (waits && next)
+      ctx.notes.push(t('goals.stallNote', { next: next.text, waits: waits.text }));
   },
 });

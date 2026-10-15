@@ -9,7 +9,6 @@ registerDayHook({
   order: 45,
   run(state, ctx) {
     const f = festivalToday(state);
-    if (f && !hasEntered(state, f.id))
-      ctx.notes.push(t('festival.todayNote', { festival: f.def.name }));
+    if (f && !hasEntered(state, f.id)) ctx.notes.push(t('festival.todayNote', { festival: f.def.name }));
   },
 });
