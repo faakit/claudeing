@@ -189,6 +189,7 @@ describe('the coach: one line, one new intro a day', () => {
   const afterGuide = (): S => {
     const s = guided();
     s.time.minutes = 9 * 60; // past the morning's first hour
+    s.stats['reveal.skills'] = 1; // the quality tip names skills: it waits for the Skill tab
     for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
     for (const id of ['forage', 'waterDaily', 'late', 'tired']) s.stats[`tut.${id}`] = 1;
     s.stats['foraged'] = 3;

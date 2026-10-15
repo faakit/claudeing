@@ -9,7 +9,8 @@
     "id": "quality",
     "stat": "qualityHarvested",
     "min": 1,
-    "text": "Silver and gold goods sell for more. Fertilizer and skills raise the odds."
+    "text": "Silver and gold goods sell for more. Fertilizer and skills raise the odds.",
+    "reveal": "skills"
   },
   {
     "id": "forage",
