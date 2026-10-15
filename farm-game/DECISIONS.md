@@ -2550,6 +2550,9 @@ notice (13), Skill (14, two mornings past its day), sprinklers (15), animals (16
   both (a tip's `reveal` may list features).
 - **Kept:** the guided start reaches town on day 2 (shorter now: the clock, energy and Menu lines are gone); the bait
   intros; stone before the stone site; jobs at the board.
+- **The onboarding gate** (the critic's paired run14, ABBA against 1ef7e1d, one browser at a time, on e136619; e52adb4
+  changes only a tip that never shows on days 1-2): base 28/28, median 172 s; this branch 28/28 (one probe crash on a
+  screenshot, rerun), median 160 s. Every run reached town on day 2. Pass (bar: base + 5 s).
 
 ### Fiber
 
