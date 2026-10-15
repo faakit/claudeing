@@ -67,7 +67,7 @@ const postJobs = (s: GameState) =>
   });
 
 describe('guided start: no new step before the walk to town (onboarding gate)', () => {
-  it('day 1 and day 2 hold exactly the steps they held, less the Goal-tab jobs step', () => {
+  it('day 1 and day 2 hold exactly these steps (the review cut the clock, energy and Menu lines)', () => {
     const tracks = (t: string) => tutorial.steps.filter((s) => s.track === t).map((s) => s.id);
     expect(tracks('day1')).toEqual([
       'harvest',
@@ -76,13 +76,11 @@ describe('guided start: no new step before the walk to town (onboarding gate)', 
       'water',
       'grow',
       'ship',
-      'clock',
-      'energy',
       'errands',
       'bedOffer',
       'sleep',
     ]);
-    expect(tracks('day2')).toEqual(['water2', 'mail', 'menu', 'town']);
+    expect(tracks('day2')).toEqual(['water2', 'mail', 'town']);
   });
 
   it('no new intro can show on day 1 or 2 before town: every one waits for town, a job, bait, a goal or an ask', () => {
@@ -330,6 +328,7 @@ describe('a leading intro keeps the floor (critic D2-4)', () => {
     const s = guidedWith('stone', 'clay');
     s.stats['place.spring'] = 1;
     s.time.day = 9;
+    s.stats['reveal.clay'] = 8; // the race's morning came (its letter and note)
     expect(step(s, world('farm'))).toBe('stone');
     const town = world('town', {
       objects: [

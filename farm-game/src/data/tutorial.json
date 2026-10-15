@@ -275,32 +275,6 @@
       "closeSheet": true
     },
     {
-      "id": "clock",
-      "track": "day1",
-      "text": "Days end at 2 AM. Sleep any time.",
-      "target": {
-        "hud": "clock"
-      },
-      "done": [
-        {
-          "touched": 1
-        }
-      ]
-    },
-    {
-      "id": "energy",
-      "track": "day1",
-      "text": "Work uses energy. Sleep refills it.",
-      "target": {
-        "hud": "energy"
-      },
-      "done": [
-        {
-          "touched": 1
-        }
-      ]
-    },
-    {
       "id": "errands",
       "track": "day1",
       "text": "Free time! Try the errand up top.",
@@ -573,23 +547,6 @@
       "closeSheet": true
     },
     {
-      "id": "menu",
-      "track": "day2",
-      "when": {
-        "day": 2
-      },
-      "text": "Tap Menu: bag, goals, options.",
-      "target": {
-        "ui": "menu"
-      },
-      "done": [
-        {
-          "panel": "menu"
-        }
-      ],
-      "optional": true
-    },
-    {
       "id": "town",
       "track": "day2",
       "when": {
@@ -666,7 +623,8 @@
             "door": "farm"
           }
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "tired",
@@ -685,41 +643,8 @@
         }
       ],
       "leave": true,
-      "optional": true
-    },
-    {
-      "id": "welcomeJobs",
-      "track": "intro",
       "optional": true,
-      "leave": true,
-      "when": {
-        "fact": "welcomeJobs"
-      },
-      "text": "Settling in: board jobs pay double!",
-      "target": {
-        "object": "board",
-        "map": "town"
-      },
-      "alt": [
-        {
-          "when": {
-            "panel": "board"
-          },
-          "text": "Tap Take: today's jobs pay double.",
-          "target": {
-            "button": "^Take$"
-          }
-        }
-      ],
-      "done": [
-        {
-          "stat": "jobsTaken",
-          "min": 1
-        },
-        {
-          "panel": "board"
-        }
-      ]
+      "need": true
     },
     {
       "id": "waterDaily",
@@ -812,13 +737,23 @@
       "when": {
         "fact": "forageInView"
       },
-      "optional": true
+      "optional": true,
+      "need": true
     },
     {
       "id": "townHello",
       "track": "intro",
       "when": {
-        "map": "town"
+        "all": [
+          {
+            "map": "town"
+          },
+          {
+            "not": {
+              "goal": "buy"
+            }
+          }
+        ]
       },
       "text": "That's Mara. Tap her to say hello.",
       "target": {
@@ -852,7 +787,8 @@
             "map": "town"
           }
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "buySeeds",
@@ -868,7 +804,7 @@
           }
         ]
       },
-      "text": "Mara sells seeds: tap her to shop.",
+      "text": "Tap Mara to buy seeds.",
       "target": {
         "npc": "mara"
       },
@@ -902,26 +838,8 @@
           }
         }
       ],
-      "leave": true
-    },
-    {
-      "id": "shop",
-      "track": "intro",
-      "when": {
-        "panel": "shop"
-      },
-      "text": "Tap a price to buy seeds.",
-      "target": {
-        "button": "^[0-9,]+g$"
-      },
-      "done": [
-        {
-          "not": {
-            "goal": "buy"
-          }
-        }
-      ],
-      "optional": true
+      "leave": true,
+      "need": true
     },
     {
       "id": "villager",
@@ -940,7 +858,8 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "need": true
     },
     {
       "id": "giving",
@@ -955,7 +874,7 @@
             "min": 1
           },
           {
-            "day": 3
+            "revealed": "guide"
           }
         ]
       },
@@ -995,7 +914,8 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "need": true
     },
     {
       "id": "fish",
@@ -1035,7 +955,8 @@
       ],
       "leave": true,
       "optional": true,
-      "teaches": ["tip.ring"]
+      "teaches": ["tip.ring"],
+      "need": true
     },
     {
       "id": "cast",
@@ -1043,7 +964,7 @@
       "when": {
         "selected": "tool:fish"
       },
-      "text": "Face water, Action, tap on a bite!",
+      "text": "Face the water and press Action.",
       "target": {
         "ui": "action"
       },
@@ -1054,7 +975,8 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "need": true
     },
     {
       "id": "mine",
@@ -1082,7 +1004,8 @@
           },
           "text": "No rocks today: back tomorrow."
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "place",
@@ -1101,7 +1024,8 @@
         }
       ],
       "leave": true,
-      "optional": true
+      "optional": true,
+      "need": true
     },
     {
       "id": "clay",
@@ -1114,6 +1038,9 @@
           },
           {
             "map": "town"
+          },
+          {
+            "revealed": "clay"
           }
         ]
       },
@@ -1225,7 +1152,8 @@
           "fresh": "mined",
           "min": 1
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "valleyAsk",
@@ -1449,7 +1377,7 @@
           "when": {
             "panel": "board"
           },
-          "text": "Tap Take: the job counts from now.",
+          "text": "Tap Take to start the job.",
           "target": {
             "button": "^Take$"
           }
@@ -1460,7 +1388,8 @@
           "stat": "jobsTaken",
           "min": 1
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "jobTurnIn",
@@ -1491,7 +1420,8 @@
           "stat": "jobsDone",
           "min": 1
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "noBait",
@@ -1516,7 +1446,8 @@
         {
           "some": "bait"
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "baitNext",
@@ -1545,7 +1476,8 @@
           "stat": "baitSwitched",
           "min": 1
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "craft",
@@ -1578,7 +1510,8 @@
           "stat": "crafted",
           "min": 1
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "festival",
@@ -1615,7 +1548,8 @@
         {
           "panel": "festival"
         }
-      ]
+      ],
+      "need": true
     },
     {
       "id": "guideGold",
@@ -1656,57 +1590,6 @@
       ]
     },
     {
-      "id": "guideCrops",
-      "track": "intro",
-      "optional": true,
-      "leave": true,
-      "when": {
-        "all": [
-          {
-            "revealed": "guide"
-          },
-          {
-            "read": "gold"
-          },
-          {
-            "daysSince": {
-              "step": "guideGold",
-              "min": 1
-            }
-          }
-        ]
-      },
-      "text": "How crops grow: tap Menu.",
-      "target": {
-        "ui": "menu"
-      },
-      "alt": [
-        {
-          "when": {
-            "tab": "book"
-          },
-          "text": "Tap The planting cycle.",
-          "target": {
-            "button": "^The planting cycle$"
-          }
-        },
-        {
-          "when": {
-            "panel": "menu"
-          },
-          "text": "Tap Book: how crops grow.",
-          "target": {
-            "button": "^Book$"
-          }
-        }
-      ],
-      "done": [
-        {
-          "read": "crops"
-        }
-      ]
-    },
-    {
       "id": "skillsNew",
       "track": "intro",
       "optional": true,
@@ -1732,52 +1615,6 @@
       "done": [
         {
           "tab": "skills"
-        }
-      ]
-    },
-    {
-      "id": "skillsGuide",
-      "track": "intro",
-      "optional": true,
-      "leave": true,
-      "when": {
-        "all": [
-          {
-            "revealed": "skills"
-          },
-          {
-            "stat": "tut.skillsNew",
-            "min": 1
-          }
-        ]
-      },
-      "text": "How skills grow: tap Menu.",
-      "target": {
-        "ui": "menu"
-      },
-      "alt": [
-        {
-          "when": {
-            "tab": "book"
-          },
-          "text": "Tap Skills to read it.",
-          "target": {
-            "button": "^Skills$"
-          }
-        },
-        {
-          "when": {
-            "panel": "menu"
-          },
-          "text": "Tap Book: how skills grow.",
-          "target": {
-            "button": "^Book$"
-          }
-        }
-      ],
-      "done": [
-        {
-          "read": "skills"
         }
       ]
     },

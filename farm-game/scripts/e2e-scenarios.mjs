@@ -4136,7 +4136,7 @@ async function cloud() {
 
 /**
  * QA round (depth lane): the reveal schedule's tabs, the Guide reached through the coach, the villager sheet's
- * next-heart line and a dry-grass bundle. Scenarios: reveal-day2-tabs, reveal-old-save, reveal-day3-guide,
+ * next-heart line and a dry-grass bundle. Scenarios: reveal-day2-tabs, reveal-old-save, reveal-day4-guide,
  * friend-next-heart, fiber-dry-grass.
  */
 async function qaDepth() {
@@ -4159,7 +4159,7 @@ async function qaDepth() {
   check('reveal-old-save: an old save shows all six tabs', tabs.length === 6, tabs.join());
   await farm.close();
 
-  farm = await openScenario(browser, url, 'reveal-day3-guide', { profile: PROFILE });
+  farm = await openScenario(browser, url, 'reveal-day4-guide', { profile: PROFILE });
   const coachSays = (want) =>
     farm
       .until(
@@ -4178,18 +4178,18 @@ async function qaDepth() {
       .then(() => true)
       .catch(() => false);
   check(
-    'reveal-day3-guide: the coach says "New: a Guide. Tap Menu."',
+    'reveal-day4-guide: the coach says "New: a Guide. Tap Menu."',
     await coachSays('New: a Guide. Tap Menu.'),
   );
   await farm.tapButton('MENU');
   await farm.panel('menu');
   check(
-    'reveal-day3-guide: then "Tap Book: the new Guide."',
+    'reveal-day4-guide: then "Tap Book: the new Guide."',
     await coachSays('Tap Book: the new Guide.'),
   );
   await farm.tapButton('Book');
   check(
-    'reveal-day3-guide: then "Tap Gold: how money works."',
+    'reveal-day4-guide: then "Tap Gold: how money works."',
     await coachSays('Tap Gold: how money works.'),
   );
   await farm.tapButton(/^Gold$/);
@@ -4201,8 +4201,8 @@ async function qaDepth() {
     )
     .then(() => true)
     .catch(() => false);
-  check('reveal-day3-guide: the Gold page opens and the intro ends', read, await uiText(farm));
-  check('reveal-day3-guide: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
+  check('reveal-day4-guide: the Gold page opens and the intro ends', read, await uiText(farm));
+  check('reveal-day4-guide: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();
 
   farm = await openScenario(browser, url, 'friend-next-heart', { profile: PROFILE });
@@ -4223,13 +4223,13 @@ async function qaDepth() {
       () =>
         window.__farm
           .getState()
-          .inventory.slots.reduce((n, st) => n + (st?.item === 'fiber' ? st.qty : 0), 0) >= 4,
+          .inventory.slots.reduce((n, st) => n + (st?.item === 'fiber' ? st.qty : 0), 0) >= 3,
       null,
-      'three fiber from the bundle',
+      'two fiber from the bundle',
     )
     .then(() => true)
     .catch(() => false);
-  check('fiber-dry-grass: a bundle of dry grass gives three fiber', got);
+  check('fiber-dry-grass: a bundle of dry grass gives two fiber', got);
   check('fiber-dry-grass: no page errors', farm.errors.length === 0, farm.errors.join(' | '));
   await farm.close();
 }

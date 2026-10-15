@@ -212,7 +212,7 @@
     "title": "Fishing",
     "leave": "Reel in & leave",
     "tookBait": "Too slow! The fish took the bait.",
-    "perfect": " (perfect!)",
+    "perfectCatch": "{fish} (perfect!)",
     "waiting": "Waiting for a bite...",
     "tapNow": "! TAP NOW !",
     "anyTap": "Any tap on the sheet hooks it.",
@@ -696,7 +696,7 @@
     "needsLevel": "{skill} Lv {level} (you: {have})",
     "title": "WORKBENCH",
     "make": "Make",
-    "fiber": "Fiber: {n}. Cut weeds (2 each), pick up dry grass, or buy at Mara's.",
+    "fiber": "Fiber: {n}. Cut weeds, pick up dry grass, or buy at Mara's.",
     "made": "Made {n} {item}",
     "madeOne": "Made {item}",
     "needsFriend": "{name} teaches it at {count} hearts",
@@ -857,7 +857,9 @@
   "notes": {
     "wild": "wild goods",
     "ore": "ore",
-    "requests": "requests",
+    "boardBoth": "New jobs and requests on the board.",
+    "boardJobs": "New jobs on the board.",
+    "boardRequests": "New requests on the board.",
     "fresh": "Fresh {list} today."
   },
   "summaryTips": {

@@ -107,7 +107,11 @@ describe('F6: the morning summary keeps news over routine', () => {
         'New requests on the town board.',
         'Flower Show tomorrow!',
       ]),
-    ).toEqual(['Flower Show tomorrow!', 'Fresh wild goods, ore and requests today.']);
+    ).toEqual([
+      'Flower Show tomorrow!',
+      'New requests on the board.', // one board line (tutorial review)
+      'Fresh wild goods and ore today.',
+    ]);
     expect(arrangeNotes(['Fresh ore in the mine.'])).toEqual(['Fresh ore today.']);
     expect(arrangeNotes([])).toEqual([]);
   });

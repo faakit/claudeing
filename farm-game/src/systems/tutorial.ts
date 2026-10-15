@@ -44,7 +44,7 @@ import { festivalToday, hasEntered } from './festivals';
 import { countItem } from './inventory';
 import { isTaken, jobReady, PAID_AT_PAYOUT, postedJobs } from './jobs';
 import { isWet } from './weather';
-import { isRevealed, revealOn, startReveal, topicRead } from './reveal';
+import { introduced, revealOn, startReveal, topicRead } from './reveal';
 import { t, toEnglish, type Key } from '../i18n';
 
 export interface Tile {
@@ -419,7 +419,8 @@ export function holds(c: TutorialCond, ctx: Ctx): boolean {
   if (c.fact === 'forageInView' && !forageInView(s, world)) return false;
   if (c.fact === 'welcomeJobs' && !welcomeJobsToday(s)) return false;
   if (c.wet !== undefined && isWet(s.weather) !== c.wet) return false;
-  if (c.revealed !== undefined && !(revealOn(s) && isRevealed(s, c.revealed))) return false;
+  // an intro waits for its feature's morning (the note and letter), not just for the tab
+  if (c.revealed !== undefined && !(revealOn(s) && introduced(s, c.revealed))) return false;
   if (c.read !== undefined && !topicRead(s, c.read)) return false;
   if (c.after !== undefined) {
     const at = s.stats[`tut.at.${step.id}.clock`];
@@ -463,6 +464,10 @@ function finish(s: GameState, st: TutorialStep, out: string[]): void {
 /** The guided steps (the day-1 and day-2 tracks, not the one-off intros) in order: the tutorial funnel. */
 export const guidedStepIds = (steps: readonly TutorialStep[] = data().steps): string[] =>
   steps.filter((st) => st.track !== 'intro').map((st) => st.id);
+
+/** The day a paced intro (any intro but a `need` one) first showed: one new one a day. */
+export const PACE_DAY = 'tut.paceDay';
+const paced = (st: TutorialStep): boolean => st.track === 'intro' && !st.need;
 
 /** Mark finished steps done; return the step to show now (null: nothing to coach) and what finished. */
 export function advance(
@@ -510,10 +515,9 @@ export function advance(
   }
   for (const st of steps) {
     if (st.track !== 'intro' || stepDone(s, st.id)) continue;
-    // at most one new valley intro a morning: another waits for tomorrow (it is not marked seen meanwhile)
-    const valleyWait =
-      st.valley && !s.stats[`tut.seen.${st.id}`] && s.stats['tut.valleyDay'] === absoluteDay(s);
-    if (valleyWait) continue;
+    // at most one new paced intro a day (all but the `need` ones): another waits for tomorrow,
+    // unmarked meanwhile (tutorial review: one new thing a morning, never two systems at once)
+    if (paced(st) && !s.stats[`tut.seen.${st.id}`] && s.stats[PACE_DAY] === absoluteDay(s)) continue;
     const ctx = { s, world, facts, step: st };
     const on = !st.when || holds(st.when, ctx);
     if (!on) {
@@ -521,7 +525,7 @@ export function advance(
       continue;
     }
     (ctx as Ctx).justSeen = markSeen(s, st);
-    if (st.valley && (ctx as Ctx).justSeen) s.stats['tut.valleyDay'] = absoluteDay(s);
+    if (paced(st) && (ctx as Ctx).justSeen) s.stats[PACE_DAY] = absoluteDay(s);
     if ((st.skip && holds(st.skip, ctx)) || st.done.some((c) => holds(c, ctx))) {
       finish(s, st, completed);
       continue;
@@ -541,7 +545,7 @@ export function guidedTracksDone(
 
 /** Is the day-1 guided morning (the first wake-up of a guided save) the one being summarised? */
 export function guidedMorning(s: GameState): boolean {
-  return tutorialOn(s) && absoluteDay(s) === 2 && !stepDone(s, 'water2');
+  return tutorialOn(s) && absoluteDay(s) === 2 && !stepDone(s, 'town');
 }
 
 /** The one morning note a guided first morning keeps: the letter if there is one, else the first. */

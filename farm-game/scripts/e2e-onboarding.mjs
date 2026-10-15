@@ -400,8 +400,6 @@ async function run(p, hand, deviant = false) {
     'water',
     'grow',
     'ship',
-    'clock',
-    'energy',
     'errands',
     'sleep',
   ];
@@ -429,8 +427,8 @@ async function run(p, hand, deviant = false) {
   check(`${tag}: the row tip was offered`, paintSeen || !!stats['painted'], '');
   check(`${tag}: the long walk to town teaches the stick`, stickUsed, '');
   check(
-    `${tag}: the clock, energy and errands lines each showed and went with a touch`,
-    ['clock', 'energy', 'errands'].every((id) => infoLines.includes(id)),
+    `${tag}: the errands line showed and went with a touch`,
+    ['errands'].every((id) => infoLines.includes(id)),
     JSON.stringify(infoLines),
   );
   check(`${tag}: day-1 free play followed the goals' own arrows`, freeTaps > 0, `${freeTaps}`);

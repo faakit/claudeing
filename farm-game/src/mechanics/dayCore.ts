@@ -10,6 +10,8 @@ import { ownsTile } from '../systems/plots';
 import { advanceCalendar } from '../systems/time';
 import { isWet, rollWeather, waterAllSoil } from '../systems/weather';
 import { t } from '../i18n';
+import { revealOn } from '../systems/reveal';
+import type { GameState } from '../state/GameState';
 
 // The original rollover, expressed as hooks. Order inside the pipeline is what the design requires:
 // crops grow, shipped goods are paid, then the calendar moves on and the new day sets itself up.
@@ -64,13 +66,18 @@ registerDayHook({
     ctx.scratch['seasonChanged'] = seasonChanged;
     // Teach the greenhouse rule where it bites (critique 6, F8).
     const spent = seasonChanged ? spentUnderGlass(state) : 0;
-    if (spent > 0)
-      ctx.notes.push(
-        t('farm.glassSpent', { count: spent }),
-      );
+    if (spent > 0) ctx.notes.push(t('farm.glassSpent', { count: spent }));
     ctx.summary.withered = seasonChanged ? killOutOfSeason(state) : 0;
   },
 });
+
+/**
+ * A guided game grows fewer weeds until Make arrives (tutorial review: fiber piled up before there was anything to
+ * make with it). Saves off the reveal schedule, the sims among them, grow `game.weedsPerDay` as always.
+ */
+export const WEEDS_BEFORE_MAKE = 1;
+export const weedsToday = (state: GameState): number =>
+  revealOn(state) && !state.stats['reveal.crafting'] ? WEEDS_BEFORE_MAKE : game.weedsPerDay;
 
 registerDayHook({
   id: 'core:morning',
@@ -80,6 +87,7 @@ registerDayHook({
     spawnWeeds(
       state,
       ctx.weedCandidates.filter(([x, y]) => ownsTile(state, x, y)),
+      weedsToday(state),
     );
     ctx.scratch['prevWeather'] = state.weather;
     // Today's weather was announced last night; tomorrow's is rolled now.

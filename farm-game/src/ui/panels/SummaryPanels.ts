@@ -190,9 +190,9 @@ export class SummaryPanel extends WaitModal {
         },
       );
     const notes = this.notes(sum);
+    // at most four notes, arranged news first (summaryNotes.ts): a sheet too short for them drops the last, with
+    // no "...and N more" (tutorial review: hidden notes read as lost)
     for (const note of notes.slice(0, maxNotes)) y += text(note, C.cream, { wrap: 184, gap: 4 });
-    if (notes.length > maxNotes)
-      y += text(t('summary.andMore', { n: notes.length - maxNotes }), C.creamDim, { gap: 4 });
     if (withTip && !guided)
       y += text(
         t('summary.tip', { tip: summaryTip(s.time.season, s.time.day, s.time.year) }),

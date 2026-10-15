@@ -300,8 +300,8 @@ export interface TipDef {
   stat: string;
   min: number;
   text: string;
-  /** Wait until this reveal feature has arrived (the tip names a menu tab it brings). */
-  reveal?: string;
+  /** Wait until this reveal feature (or each of these) has arrived (the tip names a menu tab it brings). */
+  reveal?: string | string[];
 }
 export interface SkillDef {
   name: string;
@@ -524,6 +524,11 @@ export interface LetterWhen {
   /** On this date of the calendar (any year). */
   season?: Season;
   date?: number;
+  /**
+   * In a save that follows the reveal schedule (systems/reveal.ts), also waits for this feature's morning, so the
+   * letter comes with its note (Clay's race, the crows); other saves go by the rest of `when`.
+   */
+  reveal?: string;
 }
 /** A letter's `from` when nobody signs it (Clay's sack of fertilizer after the spring opens). */
 export const UNSIGNED = 'unsigned';
@@ -882,8 +887,14 @@ export interface TutorialStep {
   refusals?: Record<string, string>;
   /** Close the open sheet when this step finishes (Ship all: the bin closes, the guide goes on). */
   closeSheet?: boolean;
-  /** A valley intro (WORLD-PLAN 2): at most one new valley intro shows per morning. */
+  /** A valley intro (WORLD-PLAN 2). */
   valley?: boolean;
+  /**
+   * An intro fired by what the player is doing this minute (the rod in hand, at the mine, no bait, in the shop, a
+   * job done): it shows when needed. Every other intro is paced: at most one new one a day, another waits for
+   * tomorrow (tutorial review).
+   */
+  need?: boolean;
   /** Stats set to 1 when the step first shows (e.g. `tip.paint`: the old first-run tip is then not needed). */
   teaches?: string[];
 }
@@ -1136,10 +1147,18 @@ export interface RevealFeature {
   day?: number;
   /** Menu tabs hidden until then (`book`, `craft`, `skills`). */
   tabs?: string[];
-  /** Any of these introduces it before its day: a lifetime stat at `min`, or the goal chain at `goal` or past it. */
-  early?: { stat?: string; min?: number; goal?: string }[];
+  /**
+   * Any of these introduces it before its day: a lifetime stat at `min`, or the goal chain at `goal` or past it;
+   * with `after`, only once that feature was introduced (the sprinklers' Farming 2 waits for Make).
+   */
+  early?: { stat?: string; min?: number; goal?: string; after?: string }[];
   /** The morning note on the day it arrives. */
   note: string;
+  /**
+   * A mechanic starts on its day (the crows, Clay's race): it goes before any other feature due that morning and is
+   * never held back by a waiting letter.
+   */
+  fixed?: boolean;
 }
 export interface RevealData {
   features: RevealFeature[];
@@ -1174,12 +1193,14 @@ export function validateReveal(r: RevealData, g: GuideData, goalIds: readonly st
     for (const e of f.early ?? []) {
       if (!e.stat && !e.goal) bad(`"${f.id}": an early way in needs a stat or a goal`);
       if (e.goal && !goalIds.includes(e.goal)) bad(`"${f.id}": unknown goal "${e.goal}"`);
+      if (e.after !== undefined && !ids.includes(e.after))
+        bad(`"${f.id}": waits after an unknown feature "${e.after}"`);
     }
     if (!f.note) bad(`"${f.id}" has no note`);
   }
   for (const tip of tips)
-    if (tip.reveal !== undefined && !ids.includes(tip.reveal))
-      fail('tips', `"${tip.id}" waits for an unknown feature "${tip.reveal}"`);
+    for (const r of tip.reveal === undefined ? [] : [tip.reveal].flat())
+      if (!ids.includes(r)) fail('tips', `"${tip.id}" waits for an unknown feature "${r}"`);
   const topicIds = g.topics.map((t) => t.id);
   if (new Set(topicIds).size !== topicIds.length) fail('guide', 'two topics share an id');
   for (const t of g.topics) {
@@ -1488,6 +1509,8 @@ export function validateContent(): void {
     if (w.season !== undefined && !SEASONS.includes(w.season))
       fail('mail', `"${l.id}" has a bad season`);
     if (Object.keys(w).length === 0) fail('mail', `"${l.id}" has no "when"`);
+    if (w.reveal !== undefined && !reveal.features.some((f) => f.id === w.reveal))
+      fail('mail', `"${l.id}" waits for an unknown feature "${w.reveal}"`);
   }
   for (const sp of specials) {
     if (!npcs[sp.giver]) fail('specials', `"${sp.id}" is from unknown villager "${sp.giver}"`);
@@ -1690,7 +1713,7 @@ export function validateTutorial(t: TutorialData): void {
     const w = `step "${st.id}"`;
     if (!st.id || ids.has(st.id)) bad(`${w} needs a unique id`);
     // Progress is kept in `tut.<id>` stats next to these flags: a step may not share their names.
-    if (['on', 'off', 'gift', 'seen', 'at', 'base'].includes(st.id))
+    if (['on', 'off', 'gift', 'seen', 'at', 'base', 'can', 'paceDay'].includes(st.id))
       bad(`${w}: "${st.id}" is a reserved name`);
     ids.add(st.id);
     if (!['day1', 'day2', 'intro'].includes(st.track)) bad(`${w} has an unknown track`);

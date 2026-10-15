@@ -1,11 +1,13 @@
 /**
  * The reveal schedule (QA round: "phase the game's depth, show mechanics over the following days and weeks").
  *
- * A guided new game meets its systems one at a time: the Book and its Guide on day 3, friendship on day 4, skills
- * on day 5, crafting on day 6, fishing on day 7, then the mine, machines, animals, cooking and the valley over the
- * following weeks (`data/reveal.json`). Until a feature arrives its menu tab is hidden. A feature also arrives early
- * the moment play needs it (the goal chain reaches it, or the player already uses it), so nothing is ever locked
- * away from someone who got there first: the schedule only decides when the game *introduces* a thing.
+ * A guided new game meets its systems one at a time, one a morning at most (tutorial review): the Book and its
+ * Guide on day 4, friendship on day 5, fishing on day 6, crafting on day 9, the mine on day 10, skills on day 12,
+ * machines on day 15, animals on day 16, cooking on day 21, and the valley on the first-green morning
+ * (`data/reveal.json`, in the order they are introduced). A feature due on a morning another took waits for the
+ * next one. Until a feature arrives its menu tab is hidden. A feature is also shown early the moment play needs it
+ * (the goal chain reaches it, or the player already uses it), so nothing is ever locked away from someone who got
+ * there first: the schedule only decides when the game *introduces* a thing (its note, letter and intro).
  *
  * State is stats only (no save change):
  * - `reveal.on`: this save follows the schedule (set when the guided start begins). Saves without it (every save
@@ -30,6 +32,7 @@ export const feature = (id: string): RevealFeature | undefined =>
 /** Does play already need this feature (its goal reached, or the thing already used)? */
 export function needsEarly(s: GameState, f: RevealFeature): boolean {
   return (f.early ?? []).some((e) => {
+    if (e.after !== undefined && revealOn(s) && !s.stats[key(e.after)]) return false;
     if (e.stat !== undefined) return (s.stats[e.stat] ?? 0) >= (e.min ?? 1);
     if (e.goal !== undefined) {
       const at = goals.findIndex((g) => g.id === e.goal);
@@ -39,13 +42,21 @@ export function needsEarly(s: GameState, f: RevealFeature): boolean {
   });
 }
 
-/** Is this feature introduced (or does the save not follow the schedule)? Pure: it never marks anything. */
+/**
+ * Is this feature here (or does the save not follow the schedule)? Introduced (marked by the morning), or needed
+ * early by play. Its day alone is not enough: the morning that introduces it marks it, so the tab, the note, the
+ * letter and the intro arrive together. Pure: it never marks anything.
+ */
 export function isRevealed(s: GameState, id: string): boolean {
   if (!revealOn(s) || s.stats[key(id)]) return true;
   const f = feature(id);
   if (!f) return true;
-  return (f.day !== undefined && absoluteDay(s) >= f.day) || needsEarly(s, f);
+  return needsEarly(s, f);
 }
+
+/** Has this feature's introduction (note, letter) gone out? Intros wait for it. */
+export const introduced = (s: GameState, id: string): boolean =>
+  !revealOn(s) || !feature(id) || !!s.stats[key(id)];
 
 /** Is a menu tab hidden because the feature it belongs to has not arrived yet? */
 export function tabHidden(s: GameState, tab: string): boolean {
@@ -53,22 +64,35 @@ export function tabHidden(s: GameState, tab: string): boolean {
 }
 
 /**
- * Mark every feature that has arrived and was not marked yet: returns them in schedule order (their notes go in
- * the morning summary, their letters in the mailbox). Days 1 and 2 never mark anything (the guided start's two
- * days stay as tuned: the onboarding gate); a feature needed early on them is shown, and introduced on day 3.
+ * Introduce the first feature (in schedule order) that is due this morning, by its day or because play needs it:
+ * one a morning, so two systems never arrive together; another due one waits for the next morning. Returns it (its
+ * note goes in the morning summary, its letter in the mailbox), or nothing. Days 1 and 2 never mark anything (the
+ * guided start's two days stay as tuned: the onboarding gate); a feature needed early on them is shown, and
+ * introduced from day 3.
  */
 export function markRevealed(s: GameState): RevealFeature[] {
   if (!revealOn(s) || absoluteDay(s) < 3) return [];
-  const out: RevealFeature[] = [];
-  for (const f of reveal.features) {
-    if (s.stats[key(f.id)]) continue;
-    if ((f.day !== undefined && absoluteDay(s) >= f.day) || needsEarly(s, f)) {
-      s.stats[key(f.id)] = absoluteDay(s);
-      out.push(f);
-    }
-  }
-  return out;
+  const today = absoluteDay(s);
+  const due = reveal.features.filter(
+    (f) => !s.stats[key(f.id)] && ((f.day !== undefined && today >= f.day) || needsEarly(s, f)),
+  );
+  // a feature tied to a mechanic that starts that day (the crows, Clay's race: `fixed`) goes first; then the first
+  // green; then the earliest day that has come; then the first of those play needed early, in schedule order
+  const byDay = due
+    .filter((f) => f.day !== undefined && today >= f.day)
+    .sort((a, b) => a.day! - b.day!);
+  const f = byDay.find((x) => x.fixed) ?? due.find((x) => x.id === 'valley') ?? byDay[0] ?? due[0];
+  if (!f) return [];
+  s.stats[key(f.id)] = today;
+  return [f];
 }
+
+/** Is a `fixed` feature due this morning (it is never held back by a waiting letter)? */
+export const fixedDue = (s: GameState): boolean =>
+  revealOn(s) &&
+  reveal.features.some(
+    (f) => f.fixed && f.day !== undefined && !s.stats[key(f.id)] && absoluteDay(s) >= f.day,
+  );
 
 /** Was this feature introduced this very day (its intro may show today)? */
 export const revealedToday = (s: GameState, id: string): boolean =>

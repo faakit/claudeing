@@ -9,8 +9,9 @@ registerDayHook({
   phase: 'morning',
   order: 60,
   run(state, ctx) {
-    const n = deliverDueLetters(state) + deliverCalendarLetters(state);
-    if (n > 0)
-      ctx.notes.push(t('mail.newLetters', { count: n }));
+    // the calendar's letters first: a paced save's other post waits for a quiet morning (systems/mail.ts)
+    const cal = deliverCalendarLetters(state);
+    const n = cal + deliverDueLetters(state, cal);
+    if (n > 0) ctx.notes.push(t('mail.newLetters', { count: n }));
   },
 });

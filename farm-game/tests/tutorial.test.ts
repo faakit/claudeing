@@ -161,12 +161,11 @@ describe('guided start: the step machine', () => {
     expect(step(s, w)).toBe('ship');
     expect(step(s, w)).toBe('ship');
     addStat(s, 'shipped', 3);
-    // three info lines (clock, energy, errands), each gone with the player's next touch
-    expect(step(s, w)).toBe('clock');
+    // one info line (the errands; the clock and energy lines were cut in the tutorial review: the late and tired
+    // intros teach them when they matter), gone with the player's next touch
+    expect(step(s, w)).toBe('errands');
     const touch = (id: string) => ({ panel: null, tab: null, touches: 1, touchStep: id });
-    expect(step(s, w, touch('clock'))).toBe('energy');
-    expect(step(s, w, touch('clock'))).toBe('energy'); // a touch counted for another step does nothing
-    expect(step(s, w, touch('energy'))).toBe('errands');
+    expect(step(s, w, touch('ship'))).toBe('errands'); // a touch counted for another step does nothing
     expect(step(s, w, touch('errands'))).not.toBe('sleep'); // free play until evening
     s.time.minutes = 1080;
     expect(step(s, w)).toBe('sleep');
@@ -227,17 +226,7 @@ describe('guided start: the step machine', () => {
 
   it('points at the bed tile that has a free side (the top half has none)', () => {
     const s = freshGuided();
-    for (const id of [
-      'harvest',
-      'seeds',
-      'plant',
-      'water',
-      'grow',
-      'ship',
-      'clock',
-      'energy',
-      'errands',
-    ])
+    for (const id of ['harvest', 'seeds', 'plant', 'water', 'grow', 'ship', 'errands'])
       s.stats[`tut.${id}`] = 1;
     s.time.minutes = 1100;
     const house = world(s, {
@@ -309,11 +298,10 @@ describe('guided start: the step machine', () => {
     expect(tutorial.steps.find((x) => x.id === step(s))?.track).toBe('intro');
     s.stats['tut.forage'] = 1;
     s.time.day = 2;
-    // nothing dry and no letter: those two pass at once, the Menu is next
-    expect(step(s)).toBe('menu');
+    // nothing dry and no letter: those two pass at once, the walk to town is next (no Goal-tab step since the bait
+    // round, no Menu step since the tutorial review: the Guide's intro teaches the Menu on day 4)
+    expect(step(s)).toBe('town');
     expect(stepDone(s, 'water2') && stepDone(s, 'mail')).toBe(true);
-    // then the walk to town (the day's jobs are on the town board now: no Goal-tab step; bait round)
-    expect(step(s, world(s), { panel: 'menu', tab: 'bag' })).toBe('town');
   });
 
   it('the first guided morning keeps one note: the letter', () => {
@@ -478,11 +466,11 @@ describe('guided start: day 1 ends in the evening, never at breakfast', () => {
     const s = freshGuided();
     for (const id of ['harvest', 'seeds', 'plant', 'water', 'grow', 'ship'])
       s.stats[`tut.${id}`] = 1;
-    expect(step(s)).toBe('clock');
-    expect(step(s)).toBe('clock');
-    expect(step(s, world(s), { panel: null, tab: null, touches: 1, touchStep: 'clock' })).toBe(
-      'energy',
-    );
+    expect(step(s)).toBe('errands');
+    expect(step(s)).toBe('errands');
+    expect(
+      step(s, world(s), { panel: null, tab: null, touches: 1, touchStep: 'errands' }),
+    ).not.toBe('errands');
   });
 
   it('an empty can points at the pond', () => {
@@ -877,44 +865,32 @@ describe('guided start: review 6', () => {
 });
 
 describe('guided start: depth round 4 introductions', () => {
-  it('on the settling-in days an open job gets one line: the town board, then Take', async () => {
-    const { game } = await import('../src/data');
-    const g = game as { welcomeJobs?: { from: number; to: number; factor: number } };
-    const before = g.welcomeJobs;
-    g.welcomeJobs = { from: 3, to: 4, factor: 2 };
-    try {
-      const s = freshGuided();
-      for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
-      s.stats['foraged'] = 3;
-      s.time.day = 3;
-      s.jobs = {
-        day: 3,
-        list: [{ id: 'j', giver: 'finn', stat: 'caught', base: 0, n: 1, reward: 40, done: false }],
-      };
-      const house = world(s, { map: 'house', objects: [] });
-      expect(step(s, house)).toBe('welcomeJobs');
-      const cur = tutorial.steps.find((x) => x.id === 'welcomeJobs')!;
-      // in the house it heads for town (the board is there)
-      expect(coachView(s, house, NO_SHEET, cur).away).toBe(true);
-      const town = world(s, {
-        map: 'town',
-        objects: [{ type: 'board', tx: 14, ty: 11, w: 1, h: 1 }],
-      });
-      const board: CoachFacts = { panel: 'board', tab: null };
-      expect(coachView(s, town, board, cur).pointer).toEqual({ kind: 'button', pattern: '^Take$' });
-      step(s, town, board);
-      expect(stepDone(s, 'welcomeJobs')).toBe(true);
-      // without settling-in days in the data, it never shows
-      g.welcomeJobs = undefined;
-      const t = freshGuided();
-      for (const st of tutorial.steps) if (st.track !== 'intro') t.stats[`tut.${st.id}`] = 1;
-      t.stats['foraged'] = 3;
-      t.time.day = 3;
-      t.jobs = s.jobs;
-      expect(step(t, house)).not.toBe('welcomeJobs');
-    } finally {
-      g.welcomeJobs = before;
-    }
+  it('the settling-in days are news in the morning, not a second jobs intro: the board teaches jobs once', () => {
+    const s = freshGuided();
+    for (const st of tutorial.steps) if (st.track !== 'intro') s.stats[`tut.${st.id}`] = 1;
+    s.stats['foraged'] = 3;
+    s.stats['tut.forage'] = 1;
+    s.stats['talked'] = 1;
+    s.stats['bought'] = 5;
+    s.time.day = 3;
+    s.jobs = {
+      day: 3,
+      list: [{ id: 'j', giver: 'finn', stat: 'caught', base: 0, n: 1, reward: 40, done: false }],
+    };
+    expect(tutorial.steps.some((x) => x.id === 'welcomeJobs')).toBe(false);
+    // at home nothing about jobs; in town the one jobs intro points at the board, then Take
+    expect(step(s, world(s, { map: 'house', objects: [] }))).toBeNull();
+    const town = world(s, {
+      map: 'town',
+      objects: [{ type: 'board', tx: 14, ty: 11, w: 1, h: 1 }],
+    });
+    expect(step(s, town)).toBe('jobBoard');
+    const cur = tutorial.steps.find((x) => x.id === 'jobBoard')!;
+    const board: CoachFacts = { panel: 'board', tab: null };
+    expect(coachView(s, town, board, cur)).toMatchObject({
+      text: 'Tap Take to start the job.',
+      pointer: { kind: 'button', pattern: '^Take$' },
+    });
   });
 });
 
@@ -966,19 +942,18 @@ describe('guided start: review 7', () => {
     expect(stepDone(s, 'waterDaily')).toBe(true);
   });
 
-  it('the shop line stays for every purchase while the goal is to buy', () => {
+  it('the shop line stays for every purchase while the goal is to buy (one intro: Mara, then a price)', () => {
     const s = afterGuide();
-    s.stats['tut.townHello'] = 1;
-    s.stats['tut.buySeeds'] = 1;
     s.goalIndex = goals.findIndex((g) => g.id === 'buy');
     s.time.day = 2;
     const shop: CoachFacts = { panel: 'shop', tab: null };
     const town = world(s, { map: 'town', objects: [] });
-    expect(step(s, town, shop)).toBe('shop');
+    expect(step(s, town, shop)).toBe('buySeeds');
     s.stats['bought'] = (s.stats['bought'] ?? 0) + 1;
-    expect(step(s, town, shop)).toBe('shop');
+    expect(step(s, town, shop)).toBe('buySeeds');
     s.goalIndex += 1;
-    expect(step(s, town, shop)).not.toBe('shop');
+    expect(step(s, town, shop)).not.toBe('buySeeds');
+    expect(tutorial.steps.some((x) => x.id === 'shop')).toBe(false); // merged into buySeeds
   });
 });
 
@@ -1033,6 +1008,5 @@ describe('guided start: buy 5 items (owner bug: "when you tap Mara it shows to t
     advance(s, town, shop);
     advance(s, town, NO_SHEET);
     expect(stepDone(s, 'buySeeds')).toBe(true);
-    expect(stepDone(s, 'shop')).toBe(true);
   });
 });

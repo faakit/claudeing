@@ -1,5 +1,6 @@
 import { goals, tips } from '../data';
-import { isRevealed } from './reveal';
+import { isRevealed, revealOn } from './reveal';
+import { absoluteDay } from './time';
 import type { GoalDef } from '../data';
 import type { GameState } from '../state/GameState';
 import { gameEvents, toast } from './events';
@@ -131,15 +132,22 @@ export function holdTipsWhile(fn: (state: GameState) => boolean): void {
 /** Are first-time tips held back right now (the controls' gesture tips ask too)? */
 export const tipsHeldNow = (state: GameState): boolean => tipsHeld(state);
 
+/** The day the last first-time tip showed (a guided game: one a day). */
+export const TIP_DAY = 'tip.day';
+
 /** One-time explanations the first time a mechanic shows up (stored as `tip.<id>` stats, so saved). */
 export function checkTips(state: GameState): void {
   if (tipsHeld(state)) return;
+  // a guided game gets one first-time tip a day at most (tutorial review); the rest wait for tomorrow
+  const today = absoluteDay(state);
+  if (revealOn(state) && state.stats[TIP_DAY] === today) return;
   for (const tip of tips) {
     const key = `tip.${tip.id}`;
     if (state.stats[key] || stat(state, tip.stat) < tip.min) continue;
     // a tip naming a menu tab waits for the reveal schedule to bring that tab (QA round)
-    if (tip.reveal && !isRevealed(state, tip.reveal)) continue;
+    if (tip.reveal && [tip.reveal].flat().some((r) => !isRevealed(state, r))) continue;
     state.stats[key] = 1;
+    state.stats[TIP_DAY] = today;
     toast(tip.text, 'tip');
     return; // one at a time; the next waits for the next check
   }

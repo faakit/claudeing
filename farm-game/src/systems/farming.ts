@@ -167,14 +167,18 @@ export function killOutOfSeason(state: GameState): number {
 }
 
 /** Scatter a few weeds on untouched farmable tiles. */
-export function spawnWeeds(state: GameState, candidates: readonly [number, number][]): void {
+export function spawnWeeds(
+  state: GameState,
+  candidates: readonly [number, number][],
+  perDay: number = game.weedsPerDay,
+): void {
   const placed = new Set((state.placed['farm'] ?? []).map((o) => tileKey(o.tx, o.ty)));
   const free = candidates.filter(([x, y]) => {
     const k = tileKey(x, y);
     return !state.farm.tiles[k] && !state.farm.weeds[k] && !placed.has(k);
   });
   let room = game.maxWeeds - Object.keys(state.farm.weeds).length;
-  for (let i = 0; i < game.weedsPerDay && room > 0 && free.length > 0; i++) {
+  for (let i = 0; i < perDay && room > 0 && free.length > 0; i++) {
     const [x, y] = free.splice(Math.floor(random(state) * free.length), 1)[0] as [number, number];
     state.farm.weeds[tileKey(x, y)] = true;
     room -= 1;

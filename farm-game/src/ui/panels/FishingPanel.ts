@@ -236,7 +236,9 @@ export class FishingPanel extends Modal {
       audio.play('harvest');
       haptic('success');
       gameEvents.emit('fishCaught', undefined);
-      this.resultText = `${displayName({ item: this.fishId, q: res.q })}${out.perfect ? t('fishing.perfect') : ''}`;
+      // pt-BR: "Perfeito!" leads as an exclamation, so it never has to agree with the fish's gender ("Carpa", "Bagre")
+      const fish = displayName({ item: this.fishId, q: res.q });
+      this.resultText = out.perfect ? t('fishing.perfectCatch', { fish }) : fish;
     } else {
       audio.play('error');
       this.resultText = t('fishing.gotAway');

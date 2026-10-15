@@ -30,7 +30,9 @@ registerPlaceableBehavior('animalHouse', {
     if (!sp || (h.n === 0 && h.ready === 0)) return null;
     const parts: string[] = [];
     if (h.n > 0)
-      parts.push(t('animals.count', { n: h.n, name: sp.name.toLowerCase(), s: h.n > 1 ? 's' : '' }));
+      parts.push(
+        t('animals.count', { n: h.n, name: sp.name.toLowerCase(), s: h.n > 1 ? 's' : '' }),
+      );
     if (h.ready > 0) {
       const good = items[sp.product]?.name.toLowerCase() ?? sp.product;
       const plural = h.ready > 1 && !['milk', 'wool', 'honey'].includes(sp.product);
@@ -67,7 +69,10 @@ registerPlaceableBehavior('animalHouse', {
     const fed = feed(state, obj);
     if (fed === 'ok') said.push(t('animals.fed'));
     else if (fed === 'no_feed' && said.length === 0)
-      return { kind: 'message', text: t('animals.needs', { n: h.n, feed: items[sp.feed]?.name ?? '' }) };
+      return {
+        kind: 'message',
+        text: t('animals.needs', { n: h.n, feed: items[sp.feed]?.name ?? '' }),
+      };
     else if (fed === 'fed' && said.length === 0) {
       if (pet(obj)) {
         toast(t('animals.pat'), 'good');
@@ -75,7 +80,9 @@ registerPlaceableBehavior('animalHouse', {
       }
       return {
         kind: 'message',
-        text: t('animals.allFed', { mood: t(h.joy >= 3 ? 'animals.happy' : 'common.backTomorrow') }),
+        text: t('animals.allFed', {
+          mood: t(h.joy >= 3 ? 'animals.happy' : 'common.backTomorrow'),
+        }),
       };
     }
     if (!isFull(obj) && said.length > 0) said.push(t('animals.roomForMore'));

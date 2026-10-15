@@ -203,7 +203,7 @@
     "gotAway": "Escapou...",
     "fullReleased": "Mochila cheia! Você soltou o peixe.",
     "derbyBest": "Recorde no torneio! {fish}. Pontos: {score}.",
-    "legend": "Uma lenda! Você pescou o {fish}!",
+    "legend": "Uma lenda! Você pescou: {fish}!",
     "castAtWater": "Jogue a linha na água.",
     "needBait": "Sem isca: cave minhocas ou compre.",
     "dugWorms": "Achou minhocas! +{n}",
@@ -212,7 +212,7 @@
     "title": "Pescaria",
     "leave": "Recolher e sair",
     "tookBait": "Lento demais! O peixe levou a isca.",
-    "perfect": " (perfeito!)",
+    "perfectCatch": "Perfeito! {fish}",
     "waiting": "Esperando beliscar...",
     "tapNow": "! TOQUE JÁ !",
     "anyTap": "Qualquer toque na janela fisga o peixe.",
@@ -696,7 +696,7 @@
     "needsLevel": "{skill} nv {level} (você: {have})",
     "title": "BANCADA",
     "make": "Criar",
-    "fiber": "Fibra: {n}. Corte o mato (2 cada), cate capim seco ou compre na Mara.",
+    "fiber": "Fibra: {n}. Corte o mato, cate capim seco ou compre na Mara.",
     "made": "Fez {n} {item}",
     "madeOne": "Fez {item}",
     "needsFriend": "{name} ensina com {count} corações",
@@ -857,7 +857,9 @@
   "notes": {
     "wild": "coisas do mato",
     "ore": "minério",
-    "requests": "pedidos",
+    "boardBoth": "Bicos e pedidos novos no mural.",
+    "boardJobs": "Bicos novos no mural.",
+    "boardRequests": "Pedidos novos no mural.",
     "fresh": "Novidades hoje: {list}."
   },
   "summaryTips": {

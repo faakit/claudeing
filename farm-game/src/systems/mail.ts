@@ -8,6 +8,7 @@ import { villagerHome } from './houses';
 import { stat } from './goals';
 import { addItem, removeStack, roomFor } from './inventory';
 import { absoluteDay, seasonLabel } from './time';
+import { revealOn } from './reveal';
 import { t } from '../i18n';
 
 /** The mailbox keeps this many letters; the oldest read ones go first. */
@@ -52,19 +53,78 @@ export function letterDue(state: GameState, def: LetterDef): boolean {
   if (w.npc !== undefined && heartsOf(state, w.npc) < (w.hearts ?? 1)) return false;
   if (w.season !== undefined && state.time.season !== w.season) return false;
   if (w.date !== undefined && state.time.day !== w.date) return false;
+  if (w.reveal !== undefined && revealOn(state) && !state.stats[`reveal.${w.reveal}`]) return false;
   return true;
 }
 
-/** Send every data letter whose time has come (each only once, remembered as a `mail.<id>` stat). */
-export function deliverDueLetters(state: GameState): number {
-  let n = 0;
-  for (const def of mail.letters) {
-    if (state.stats[sentKey(def.id)] || !letterDue(state, def)) continue;
+/**
+ * A letter that comes the morning its moment does, whatever else is in the post: a feature's introduction
+ * (`reveal.*`, or `when.reveal`), the valley's story (`valley.*`, `place.*`, `house.*`), a notice about bait, or a dated letter (a
+ * season's first day). The others (a first catch, a heart, a day's news) may wait a morning in a paced save.
+ */
+export function letterLeads(def: LetterDef): boolean {
+  const w = def.when;
+  return (
+    w.date !== undefined ||
+    w.reveal !== undefined ||
+    /^(reveal|valley|place|house|bait)\./.test(w.stat ?? '')
+  );
+}
+
+/**
+ * Send every data letter whose time has come (each only once, remembered as a `mail.<id>` stat). A guided save
+ * that follows the reveal schedule gets its post spread out (tutorial review: letters came three at a time): the
+ * leading letters always come, and of the rest at most one a morning, and only on a morning with no other letter
+ * (`already` counts the calendar's); the others wait, in data order, for the next quiet morning.
+ */
+export function deliverDueLetters(state: GameState, already = 0): number {
+  const paced = revealOn(state);
+  const due = mail.letters.filter((def) => !state.stats[sentKey(def.id)] && letterDue(state, def));
+  const lead = paced ? due.filter(letterLeads) : due;
+  const rest = paced ? due.filter((def) => !letterLeads(def)) : [];
+  const send = [...lead, ...(already + lead.length === 0 ? rest.slice(0, 1) : [])];
+  for (const def of send) {
     state.stats[sentKey(def.id)] = 1;
+    delete state.stats[waitKey(def.id)];
     sendLetter(state, def);
-    n += 1;
   }
-  return n;
+  // a letter left waiting remembers since when (the schedule yields it a morning: letterOverdue)
+  for (const def of rest)
+    if (!send.includes(def)) state.stats[waitKey(def.id)] ??= absoluteDay(state);
+  return send.length;
+}
+
+const waitKey = (id: string): string => `mail.wait.${id}`;
+/** A paced letter has waited this many mornings: the next morning is its own (nothing new is introduced). */
+export const LETTER_MAX_WAIT = 2;
+/** Has a waiting letter waited long enough that this morning's post should be its alone? */
+export function letterOverdue(state: GameState): boolean {
+  const today = absoluteDay(state);
+  return mail.letters.some(
+    (def) =>
+      !state.stats[sentKey(def.id)] &&
+      state.stats[waitKey(def.id)] !== undefined &&
+      today - state.stats[waitKey(def.id)]! >= LETTER_MAX_WAIT &&
+      letterDue(state, def),
+  );
+}
+
+/** Will the calendar write a letter this morning (a festival or a birthday tomorrow, not yet sent)? */
+export function calendarLetterDue(state: GameState): boolean {
+  const now = state.time;
+  for (const [id, f] of Object.entries(festivals))
+    if (
+      f.season === now.season &&
+      f.day === now.day + 1 &&
+      !state.stats[`mail.fest.${id}.y${now.year}`]
+    )
+      return true;
+  for (const [id, def] of Object.entries(npcs)) {
+    const b = def.birthday;
+    if (b && b.season === now.season && b.day === now.day + 1 && villagerHome(state, id))
+      if (!state.stats[`mail.bday.${id}.y${now.year}`]) return true;
+  }
+  return false;
 }
 
 /** Letters written from the calendar: a festival notice and a birthday hint the day before. */

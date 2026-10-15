@@ -199,7 +199,7 @@
     "sellPrice": 2,
     "source": "cut weeds, or at Mara's",
     "description": "Cut weeds or pick up dry grass.",
-    "buyPrice": 5
+    "buyPrice": 12
   },
   "wild_leek": {
     "name": "Wild Leek",

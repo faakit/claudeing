@@ -8,6 +8,7 @@ import { countItem, removeItem } from './inventory';
 import { isProjectDone } from './projects';
 import { random } from './rng';
 import { absoluteDay } from './time';
+import { revealOn } from './reveal';
 import { animalOutput } from './animals';
 import { fmtGold, t } from '../i18n';
 
@@ -25,6 +26,11 @@ export const SPECIAL_MULT = 1.5;
 export const SPECIAL_FRIENDSHIP = 60;
 /** A new special is posted only if at least this many days are left in the season. */
 export const SPECIAL_MIN_DAYS = 10;
+/**
+ * A guided game's first special waits for this day (tutorial review: a season-long order for a crop never seen,
+ * on the first real morning, was premature). Saves off the reveal schedule post from day 2 as before.
+ */
+export const SPECIAL_FIRST_DAY = 7;
 
 export const specialCandidates = (state: GameState): SpecialDef[] =>
   specials.filter(
@@ -95,7 +101,8 @@ export function morningSpecial(state: GameState): string | null {
     }).trim();
     state.special = null;
   }
-  if (!state.special && game.seasonLength - state.time.day + 1 >= SPECIAL_MIN_DAYS) {
+  const early = revealOn(state) && today < SPECIAL_FIRST_DAY;
+  if (!state.special && !early && game.seasonLength - state.time.day + 1 >= SPECIAL_MIN_DAYS) {
     const pool = specialCandidates(state);
     if (pool.length > 0) {
       const def = pool[Math.floor(random(state) * pool.length)] as SpecialDef;

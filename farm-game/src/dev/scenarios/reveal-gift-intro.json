@@ -1,0 +1,50 @@
+{
+  "title": "Reveal schedule: the first gift moment",
+  "about": "Tutorial review. A guided game on day 5 at 10:00 in town, facing Mara at the counter, a daffodil in the bag; the Guide came on day 4 and its Gold page is read. Talk to Mara (Interact): on her sheet the coach says \"A gift they like adds hearts.\" on Gift (the day's one new intro). Giving the daffodil ends it, and the next free morning brings friends and hearts (the note, Mara's letter, the Guide page). Before the Guide the line never shows.",
+  "tags": ["town", "reveal", "friendship", "qa"],
+  "at": {
+    "map": "town",
+    "tx": 8,
+    "ty": 11,
+    "facing": "up"
+  },
+  "time": {
+    "day": 5,
+    "clock": "10:00"
+  },
+  "tutorial": "day2",
+  "hints": "on",
+  "stats": {
+    "harvested": 3,
+    "planted": 5,
+    "shipped": 3,
+    "foraged": 3,
+    "talked": 2,
+    "slept": 2,
+    "bought": 5,
+    "tut.water2": 1,
+    "tut.mail": 1,
+    "tut.town": 1,
+    "tut.townHello": 1,
+    "tut.buySeeds": 1,
+    "tut.villager": 1,
+    "tut.forage": 1,
+    "tut.waterDaily": 1,
+    "tut.late": 1,
+    "tut.tired": 1,
+    "tut.jobBoard": 1,
+    "tut.board": 1,
+    "reveal.guide": 4,
+    "guide.read.gold": 1,
+    "tut.guideGold": 1
+  },
+  "letters": [],
+  "goal": "job1",
+  "version": 18,
+  "items": [
+    {
+      "item": "daffodil",
+      "qty": 1
+    }
+  ]
+}

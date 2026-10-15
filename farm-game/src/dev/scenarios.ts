@@ -23,6 +23,7 @@ import {
   npcs,
   placeables,
   plots,
+  reveal as revealData,
   tips,
   tutorial as tutorialData,
 } from '../data';
@@ -551,6 +552,12 @@ export function buildScenarioState(def: ScenarioDef, mapInfo?: MapInfoFn): GameS
   if (def.stats) Object.assign(s.stats, def.stats);
   for (const [k, v] of Object.entries(def.valley ?? {})) s.stats[valleyStatKey(k)] = v;
   const today = ((s.time.year - 1) * 4 + SEASONS.indexOf(s.time.season)) * 28 + s.time.day; // absolute day
+  // a scheduled scenario lived its past mornings: each feature due by today was introduced on its day (the morning
+  // marks a feature, the day alone does not: systems/reveal.ts), unless the scenario says otherwise in `stats`
+  if (s.stats[REVEAL_ON])
+    for (const f of revealData.features)
+      if (f.day !== undefined && f.day <= today && s.stats[`reveal.${f.id}`] === undefined)
+        s.stats[`reveal.${f.id}`] = f.day;
   for (const [id, hearts] of Object.entries(def.friends ?? {}))
     s.friends[id] = { points: pointsForHearts(hearts), talkedDay: 0, giftedDay: 0 };
   for (const it of def.items ?? []) {

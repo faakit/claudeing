@@ -420,35 +420,53 @@ A guided new game meets its systems over days and weeks, not all on day 1 (QA ro
 `systems/reveal.ts`, the schedule is `src/data/reveal.json`, and the Guide's pages are `src/data/guide.json`
 (translations in `src/i18n/data/pt-BR/reveal.json` and `guide.json`).
 
-| Day         | Feature                                             | What arrives                                                              | How it is introduced                                                                                   |
-| ----------- | --------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| 1-2         | the guided start                                    | farming, the bin, energy, the clock, town, Mara's shop, villagers, mail   | the guided steps (unchanged; nothing new may show)                                                     |
-| 3           | `guide`                                             | the **Book** tab, Guide pages Gold, The planting cycle, Jobs and requests | morning note, Rosa's letter, coach: Menu > Book > Gold; next morning: Menu > Book > The planting cycle |
-| 4           | `friends`                                           | Guide page Friends and hearts                                             | morning note, Mara's letter                                                                            |
-| 5           | `skills` (or any skill at level 3)                  | the **Skill** tab, Guide page Skills                                      | morning note, Orin's letter, coach: Menu > Skill, then Menu > Book > Skills                            |
-| 6           | `crafting` (or the craft goal, or anything crafted) | the **Make** tab, Guide page Making things                                | morning note, Orin's letter (10 fiber), coach: Menu > Make                                             |
-| 7           | `fishing` (or the fish goal, or a catch)            | Guide page Fishing and bait                                               | morning note, Finn's letter (5 worms)                                                                  |
-| 9           | `mine` (or a rock broken)                           | Guide page The mine                                                       | morning note, Orin's letter                                                                            |
-| 10          | `machines` (or the place goal, or anything placed)  | Guide page Sprinklers and jars                                            | morning note, Rosa's letter                                                                            |
-| 14          | `animals` (or the chicken goal, or an animal)       | Guide page Animals                                                        | morning note, Mara's letter                                                                            |
-| 21          | `cooking` (or the kitchen bought)                   | Guide page Cooking                                                        | morning note, Mara's letter                                                                            |
-| first green | `valley`                                            | Guide page Mending the valley                                             | morning note (the first-green letter is Rosa's already)                                                |
+One new thing a morning (the tutorial review): the schedule introduces at most one feature a morning (a `fixed` one
+first, then the first green, then the earliest day that has come, then one play needed early); a morning the
+calendar fills (a festival, or a festival notice or birthday hint in the post), or that a waiting letter is owed,
+introduces none. The days below are a player's earliest.
+
+| Day         | Feature                                                         | What arrives                                                              | How it is introduced                                                            |
+| ----------- | --------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1-2         | the guided start                                                | the core loop, then town, the shop, the board's jobs                      | the guided steps and their intros (nothing scheduled)                           |
+| 3           | (none)                                                          | the first dry morning                                                     | coach: water the crops (`waterDaily`)                                           |
+| 4           | `guide`                                                         | the **Book** tab, Guide pages Gold, The planting cycle, Jobs and requests | note, Rosa's letter, coach: Menu > Book > Gold; the other pages wait marked NEW |
+| 6           | `fishing` (or the fish goal, or a catch)                        | Guide page Fishing and bait                                               | note, Finn's letter (5 worms); the rod and bait intros come when used           |
+| 7           | `crows` (fixed)                                                 | crows may come (from day 8)                                               | note, Rosa's letter (a scarecrow)                                               |
+| 8           | `clay` (fixed)                                                  | Clay's race to the board                                                  | note, Clay's letter, coach in town: the board                                   |
+| 9           | `crafting` (or the craft goal, a third catch, anything crafted) | the **Make** tab, Guide page Making things                                | note, Orin's letter (5 fiber), coach: Menu > Make                               |
+| 10          | `mine` (or a rock broken)                                       | Guide page The mine                                                       | note, Orin's letter                                                             |
+| 12          | `skills` (or any skill at level 2)                              | the **Skill** tab, Guide page Skills                                      | note, Orin's letter, coach: Menu > Skill                                        |
+| 15          | `machines` (or the place goal, or Farming 2 after Make)         | Guide page Sprinklers and jars                                            | note, Rosa's letter                                                             |
+| 16          | `animals` (or the chicken goal, or an animal)                   | Guide page Animals                                                        | note, Mara's letter                                                             |
+| 21          | `cooking` (or the kitchen bought)                               | Guide page Cooking                                                        | note, Mara's letter                                                             |
+| no day      | `friends` (a gift, or eight chats)                              | Guide page Friends and hearts                                             | note, Mara's letter; the gift intro comes on a villager sheet from the Guide on |
+| first green | `valley`                                                        | Guide page Mending the valley                                             | the banner, the note, Rosa's first-green letter; the valley intros one a day    |
 
 Rules:
 
-- **Only the introduction is scheduled.** A feature arrives early the moment play needs it (its goal, or the thing
-  already used), so nothing is ever locked away. Gameplay itself is never gated: only menu tabs (`tabs`), Guide pages,
-  notes, letters and intros.
+- **Only the introduction is scheduled.** A feature is shown early the moment play needs it (its goal, or the thing
+  already used), so nothing is ever locked away: its tab appears at once, and its note, letter and intro come on the
+  next free morning. Gameplay itself is never gated: only menu tabs (`tabs`), Guide pages, notes, letters and intros.
+  A feature's day alone does not bring its tab: the morning that introduces it does (`isRevealed`), so the tab, the
+  note, the letter and the intro arrive together.
 - **Days 1 and 2 never change** (the onboarding gate): no feature may have a day under 3 (validated), and nothing is
   marked or announced before day 3.
+- **One intro a day:** every intro shares one budget, at most one new one a day (`tut.paceDay`), except those marked
+  `need`: fired by what the player is doing this minute (no bait at the water, a job done, the stone before a site,
+  the shop). The Book tab carries a gold mark while a Guide page is unread.
+- **One letter a morning:** in a scheduled save, a letter that leads (a feature's, `when.reveal` or a `reveal.*`
+  stat; the valley's story; a dated one) always comes; any other waits for a morning with no other letter, and after
+  two mornings of waiting the schedule gives it a morning of its own.
 - **Who follows it:** a save with the stat `reveal.on`, set when the guided start begins. Saves from before the QA
   round, bare `?tutorial=0` games and sandbox scenarios (unless `"reveal": "schedule"`, or `tutorial` `on`/`day2`)
-  see everything at once and get no reveal letters or intros.
+  see everything at once and get no reveal letters or intros. A scheduled scenario counts every feature due by its
+  day as introduced on that day, unless its `stats` say otherwise.
 - **State:** stats only: `reveal.<id>` (the day it was introduced), `guide.read.<topic>`.
-- **Add a system:** a feature in `reveal.json` (a day of its own, `early` ways in, a one-line `note`), a page in
-  `guide.json` (`reveal`: its feature; short paragraphs, the Book pages them), a letter in `mail.json`
-  (`when: {stat: "reveal.<id>"}`), and, if it needs a coach mark, an `intro` step with `{"revealed": "<id>"}` and a
-  done condition the player meets by looking (`{"read": "<topic>"}` or `{"tab": "<tab>"}`).
+- **Add a system:** a feature in `reveal.json` (a day of its own, in the list in day order, `early` ways in, a
+  one-line `note`), a page in `guide.json` (`reveal`: its feature; short paragraphs, the Book pages them), a letter in
+  `mail.json` (`when: {stat: "reveal.<id>"}`, or `when.reveal` beside a day), and, if it needs a coach mark, an
+  `intro` step with `{"revealed": "<id>"}` and a done condition the player meets by looking
+  (`{"read": "<topic>"}` or `{"tab": "<tab>"}`).
 
 ## Checklist for a new mechanic
 

@@ -27,7 +27,7 @@
       "text": "I saw your first crops come in. Fertilizer on tilled soil makes silver and gold ones more likely. Have a few on me.",
       "when": {
         "stat": "harvested",
-        "min": 1
+        "min": 4
       },
       "gift": {
         "item": "fertilizer",
@@ -182,7 +182,8 @@
       "title": "Nothing personal",
       "text": "I've fed this town alone seven years. Board requests left to their last day are mine at 2 PM. Crops, eggs and what you make of them count; fish and wild goods don't. I ship a crate a week, more often while you lead. Beat me in a season: 300¤ and a trophy for your house.",
       "when": {
-        "day": 7
+        "day": 8,
+        "reveal": "clay"
       }
     },
     {
@@ -191,7 +192,8 @@
       "title": "Mind the crows",
       "text": "Crows come down to the fields after the first week. A scarecrow keeps them off the crops around it. Here, take my spare one!",
       "when": {
-        "day": 7
+        "day": 7,
+        "reveal": "crows"
       },
       "gift": {
         "item": "scarecrow",
@@ -429,7 +431,7 @@
       },
       "gift": {
         "item": "fiber",
-        "qty": 10
+        "qty": 5
       }
     },
     {

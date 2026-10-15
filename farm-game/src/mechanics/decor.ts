@@ -34,7 +34,9 @@ registerPlaceableBehavior('decor', {
       return {
         kind: 'message',
         text:
-          state.stats['rested.day'] === today ? t('decor.restedToday') : t('decor.sitWhenTired', { n: rest }),
+          state.stats['rested.day'] === today
+            ? t('decor.restedToday')
+            : t('decor.sitWhenTired', { n: rest }),
       };
     return { kind: 'message', text: def.name };
   },

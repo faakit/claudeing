@@ -316,8 +316,11 @@ registerToolAction('water', ({ state, tile, tool }) => {
   };
 });
 
-/** Fiber a cut weed gives (the sickle's yield; dry-grass bundles in the wild give 3: forage.json). */
-export const FIBER_PER_WEED = 2;
+/**
+ * Fiber a cut weed gives (tutorial review: two a weed plus big grass bundles made fiber free; one a weed keeps a
+ * day's light gathering at the first recipes, never a wall; dry-grass bundles give 2: forage.json).
+ */
+export const FIBER_PER_WEED = 1;
 
 registerToolAction('clear', ({ state, tile, tool }) => {
   const key = tileKey(tile.tx, tile.ty);
@@ -332,7 +335,7 @@ registerToolAction('clear', ({ state, tile, tool }) => {
       run: () => {
         spendEnergy(state, tool.energyCost);
         delete state.farm.weeds[key];
-        // two fiber a weed (QA round: fiber was too slow to gather), as much as the bag takes
+        // one fiber a weed, if the bag has room
         const qty = Math.min(FIBER_PER_WEED, roomFor(state, 'fiber', FIBER_PER_WEED));
         addItem(state, 'fiber', qty);
         gameEvents.emit('farmChanged', undefined);

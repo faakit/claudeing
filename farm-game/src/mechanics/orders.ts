@@ -29,8 +29,7 @@ registerDayHook({
           orders: cleared.map(orderLabel).join(t('common.and')),
         }),
       );
-    if (rivalCrate(state))
-      ctx.notes.push(t('orders.rivalCrate', { name: rivalName() }));
+    if (rivalCrate(state)) ctx.notes.push(t('orders.rivalCrate', { name: rivalName() }));
     // A new season: the board's score for the last one is settled, after his last take that counts in it
     // (critique 9, F6).
     if (ctx.scratch['seasonChanged']) {

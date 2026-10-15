@@ -2468,3 +2468,102 @@ QA feedback from the owner's testers (pt-BR), one entry per item. Probes in `age
   with real touches gives exactly the 3x3, and a row across Home and the West Field works all 8 tiles; both hands,
   i13 and SE). Unit: `tests/land-tools.test.ts` (Home + West, 12 to 5: 8 tiles; Home alone: 4; Home and East across
   the road: two fields).
+
+## Tutorial review: one progression (depth lane, tutorial/review, 2026-10-15)
+
+Owner: "Review the whole tutorial: a few dialogs feel cluttered and the progression doesn't make sense. Also, fiber is
+now super easy to get." The tutorial had grown piece by piece (the guided days, one-off intros, stone before the
+site, bait, the board's jobs, the reveal schedule, the Guide, Clay's race). The audit of a fresh game's first two
+weeks is in `agents/out/tutorial-audit.md` (git-ignored); the new-player critic's review 1 confirmed it, added four
+findings (the day-2 sheet showed six notes, sheets cut notes with "...and N more", day 6 had two intros, fiber piled
+up before Make) and ruled on the order. This is the progression that replaces it.
+
+### What is taught when, and why
+
+| When                                                       | What                                                                                                                                                                                                                            | Why there                                                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Day 1 (guided)                                             | the core loop: pick Rosa's parsnips, plant, water, the row tip, sell in the bin; one line ("Free time! Try the errand up top."); the wild goods and Rosa's hello; the bed offer                                                 | everything else needs a crop and a sale first                                                     |
+| Day 2 (guided, rain)                                       | one note and Mara's one letter (potato seeds); the walk to town (the stick); Mara's shop, one intro ("Tap Mara to buy seeds.", then a price); the board's jobs ("Jobs are on the board: tap it.", "Tap Take to start the job.") | the town is where the seeds and the jobs are; the rain keeps the morning free for it              |
+| Day 3                                                      | the first dry morning: water the crops, nothing new; a job turned in when done                                                                                                                                                  | the core loop again, alone                                                                        |
+| Day 4                                                      | money and the Guide: the Book tab, "Menu > Book > Gold"; the planting cycle and jobs pages wait marked NEW                                                                                                                      | the player has sold twice and done a job: gold means something now                                |
+| From day 5                                                 | the first gift moment: on the next villager sheet, "A gift they like adds hearts."; friends and hearts (Mara's letter, the Guide page) the next free morning after a gift, or after a week of chats                             | they have met everyone by now; hearts mean nothing before a gift                                  |
+| The player's own first harvest                             | Rosa's "Your first harvest!" letter (fertilizer), the next quiet morning                                                                                                                                                        | it used to come on day 2, for her own parsnips                                                    |
+| Day 6 (or the first catch, or the fish goal)               | fishing and bait: Finn's letter and 5 worms; the rod, cast and bait lines come when the rod is used                                                                                                                             | the goal chain's fish goal and Finn's jobs come about here                                        |
+| Day 7                                                      | the crows: Rosa's letter and a scarecrow (placing it is a need-driven line)                                                                                                                                                     | crows can come from day 8                                                                         |
+| Day 8                                                      | Clay's race: his letter, then "Clay now races you to the board." in town                                                                                                                                                        | the race starts on day 8                                                                          |
+| Day 9 (or the craft goal, a third catch, anything crafted) | Make: the tab, "Menu > Make", Orin's letter and 5 fiber                                                                                                                                                                         | the bait mix and fertilizer want it, and the fish goal comes before the craft goal                |
+| Day 10                                                     | the mine: Orin's letter (the mine and stone lines come at the mine)                                                                                                                                                             |                                                                                                   |
+| Day 12 (or the first level-up)                             | Skill: the tab, "Menu > Skill"                                                                                                                                                                                                  | levels start to matter at the first one                                                           |
+| Day 15 (or Farming 2 once Make is here, or the place goal) | sprinklers and jars                                                                                                                                                                                                             | the sprinkler unlocks at Farming 2 and is made at Make; placing Rosa's scarecrow no longer counts |
+| Day 16, 21                                                 | animals, cooking                                                                                                                                                                                                                | never on a festival morning                                                                       |
+| The first-green morning                                    | the valley: the banner, Rosa's letter with Ilse's tin; the spring's ask, stone before the site, the site: one a day                                                                                                             | it is the story's turn; nothing else is introduced that morning                                   |
+
+A system play needs early is still there at once (its tab included); only its introduction waits for a free
+morning. A light player who never fishes or gifts (`tests/tutorial-review.test.ts`) meets, one a morning: the Guide
+(4), the first green (6), the crows (7), Clay (8), the first-harvest letter (9), fishing (10), Mara's birthday hint
+(11), Make (12), the Flower Show notice (13), the show (14), the mine (15), Skill (16), sprinklers (17), animals (18),
+friends (19), cooking (21).
+
+### The rules
+
+- **One new system a morning** (`markRevealed`): of the features due, a `fixed` one first (the crows, Clay: their
+  mechanics start that day), then the first green, then the earliest day that has come, then one play needed early.
+  The rest wait. A morning the calendar fills (a festival, or a festival notice or birthday hint in the post), or
+  that a letter has waited two mornings for, introduces nothing (a `fixed` one still comes). A feature's day alone no
+  longer shows its tab: the morning that introduces it does, so the tab, the note, the letter and the intro come
+  together.
+- **One new coach intro a day** (critic ruling 1): every intro is paced (`tut.paceDay`; it was valley intros only)
+  except the `need` ones, fired by what the player is doing this minute: late, tired, the wild goods, the shop, a new
+  villager, the board, the rod and cast, no bait, the bait switch, the mine, placing, the stone before a site, jobs
+  taken and turned in, the craft goal, the festival.
+- **One letter a morning** (ruling 3): in a scheduled save a letter that leads (a feature's: `when.reveal` or a
+  `reveal.*` stat; the valley's story; a dated one) always comes; any other waits for a morning with no other letter,
+  and after two mornings of waiting that morning is its own. Old saves get their post as before.
+- **The morning sheet** (ruling 2): at most four notes, in this order: the morning's headline, the letter, the new
+  thing, other news, one board line ("New jobs and requests on the board."; Clay's moves sit with it), one line of
+  every-day goods. A crowded morning cuts from the end; there is no "...and N more". The first guided morning keeps
+  one note until the walk to town (it went long the moment day 2's rain passed the watering step). A guided game's
+  first special order waits for day 7.
+- **One message on screen** (ruling 4): first-time tips (toasts) wait while a coach line or a sheet shows, never on
+  the guided days, and come one a day in a guided game.
+- **Short lines, one action, one target.** The Guide holds the details. Cut: the clock and energy info lines on day
+  1 (the late and tired intros teach them when they matter), the day-2 Menu step (the Guide's intro teaches the
+  Menu), the shop's second intro (merged into the seeds one), the settling-in jobs intro (the board's jobs intro
+  covers it, the morning says the pay is double), the planting-cycle and skills Guide intros (the Guide marks its
+  pages NEW, and the Book tab carries a gold mark while one is unread). "Face water, Action, tap on a bite!" is
+  "Face the water and press Action." (the fishing sheet says when to tap).
+- **Nothing points ahead:** the gift intro waits for the Guide; the skills tip, which names Make and Skill, waits for
+  both (a tip's `reveal` may list features).
+- **Kept:** the guided start reaches town on day 2 (shorter now: the clock, energy and Menu lines are gone); the bait
+  intros; stone before the stone site; jobs at the board.
+
+### Fiber
+
+QA had asked for easier fiber (weeds 2, dry-grass bundles of 3 in a quarter of wild spawns, Mara at 5): about 11 a
+day for free, and 30 or more on the morning Make opened. Now (critic ruling 6):
+
+- **A weed gives 1 fiber.**
+- **Dry grass is a rare find:** weight 3 to 1 (a fifth of winter's farm finds, a tenth or less elsewhere), 2 fiber a
+  bundle instead of 3.
+- **A guided game grows one weed a morning until Make arrives** (`WEEDS_BEFORE_MAKE`), then the usual four: nothing
+  piles up before there is a use for it (under 20 by Make's latest morning, gathering everything). Saves off the
+  schedule, the sims among them, grow four as always.
+- **Orin's workbench letter brings 5 fiber** (was 10). **Mara sells it at 12** (was 5): the shelf is the way past a
+  wall, not the way in. 10 tipped the board-race sim's fisher seed 99 a point under its bound (81 against 81.6; the
+  year-one race is chaotic to early gold: 8 and 12 both pass), so 12.
+- Once Make is open a day of light gathering (4 weeds, every wild good on three maps, spring) is about 5.5 fiber: a
+  bait mix (3) in a morning, chum (1), glow grub (2), fertilizer (6) in about a day, a sprinkler (12) or a jar (10) in
+  about two, a coop (20) in three or four. No place or site asks for fiber; the board's canopy (20) is late game.
+  Tested in `tests/fiber.test.ts`; every sim stays in its bounds.
+
+### pt-BR
+
+- The perfect catch read "Carpa (perfeito!)": the adjective took the masculine whatever the fish. It is now
+  "Perfeito! {fish}", an exclamation that agrees with nothing. (The critic's "Carpa: pesca perfeita!" runs 216 px for
+  "Truta-cintilante de ouro: pesca perfeita!" on the 184 px status line; "Perfeito! Truta-cintilante de ouro" is 180.)
+  The legend toast "Você pescou o {fish}!" (wrong for Truta-cintilante and Carpa-sol) is "Uma lenda! Você pescou:
+  {fish}!" (toasts wrap). Every fish was checked: Carpa, Perca, Truta, Truta-cintilante and Carpa-sol are feminine;
+  Peixe-sol, Bagre, Salmão, Velho Bigodes and Lúcio-do-gelo masculine. No other `{fish}` or `{item}` line carries an
+  article.
+- Count lines are number-neutral: "Sol! Regue as plantas. Secas: {dry}." (was "faltam 1"); "Está tarde! Entre e vá
+  para a cama." for the clipped "Tarde! Porta, e depois a cama.".

@@ -37,7 +37,7 @@ import { C, CH } from '../theme';
 import { Button, drawBar, drawSlot, Modal, type ButtonStyle, type RowSpec } from '../widgets';
 import { fmt } from './format';
 import { buildBook } from './GuideTab';
-import { tabHidden } from '../../systems/reveal';
+import { revealOn, tabHidden, unreadTopics } from '../../systems/reveal';
 import { tabLabel } from './tabLabels';
 import { menuTabGrid } from '../layout';
 import { buildCraft } from './CraftTab';
@@ -145,6 +145,17 @@ export class MenuPanel extends Modal {
         rim: active ? C.select : C.creamDim,
         textColor: active ? C.gold : C.cream,
       });
+      // a Guide page waits unread: a gold mark on the Book tab (the coach points at the Guide once, then the
+      // marks do; tutorial review)
+      if (
+        tab.id === 'book' &&
+        !active &&
+        revealOn(getState()) &&
+        unreadTopics(getState()).length > 0
+      )
+        this.content.add(
+          this.scene.add.rectangle(r.x + r.w - 6, r.y + 4, 3, 3, CH.gold).setOrigin(0),
+        );
     });
     const cr = grid.close;
     this.button(cr.x, cr.y, cr.w, cr.h, t('common.close'), () => this.close(), {
