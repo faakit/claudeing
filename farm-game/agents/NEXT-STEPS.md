@@ -351,8 +351,9 @@ bitmask stats (`jobs.taken`, one bit per job of the day) are save data: never re
 
 **Now:**
 
-- Day 1 is a guided harvest, plant, water and ship, then free time, errands and a bed offer.
-- Day 2 is a rain morning: the letter, the Menu and the walk to town. The Goal-tab jobs step went with the job board,
+- Day 1 is a guided harvest, plant, water and ship, then one line of free time, errands and a bed offer (the clock
+  and energy lines were cut in the tutorial review).
+- Day 2 is a rain morning: one note, one letter and the walk to town (the Menu step was cut in the tutorial review). The Goal-tab jobs step went with the job board,
   so day 2 got shorter. The new-player critic's paired gate (ABBA, 14 configs, 28 runs each) at 7cf1305: base
   median 173.5 s, this branch 167.5 s (-6 s; gate 173).
 - From day 3, one-time intros follow. New ones (bait round), one line each and one control each:
@@ -366,17 +367,15 @@ bitmask stats (`jobs.taken`, one bit per job of the day) are save data: never re
 
 **Open:**
 
-- The tip burst after the first purchase.
 - The overlap of "+1" with the goal banner.
 - With a world-target intro on and the fishing sheet open mid-fight, the coach says "Close this to carry on" over a
   sheet whose bottom button is "Reel in & leave".
 
 **Next:**
 
-1. Release held tips one at a time, at most one per in-game hour (`systems/goals.ts`).
-2. Rewrite the guided start for the Dry Year opening (Rosa's letter, arriving at a fading farm). It is data in
+1. Rewrite the guided start for the Dry Year opening (Rosa's letter, arriving at a fading farm). It is data in
    `src/data/tutorial.json` (`docs/EXTENDING.md` section 10).
-3. Run the paired gate (base vs branch, ABBA) for any change to day 1 or 2: the median must stay within 5 s of base
+2. Run the paired gate (base vs branch, ABBA) for any change to day 1 or 2: the median must stay within 5 s of base
    and under 173 s.
 
 ### QA round: teaching, balance and pacing (depth lane, `qa/depth`, 2026-10-13)
@@ -384,14 +383,13 @@ bitmask stats (`jobs.taken`, one bit per job of the day) are save data: never re
 **Now:**
 
 - **Reveal schedule** (`systems/reveal.ts`, `data/reveal.json`, table in `docs/EXTENDING.md` section 13): a guided
-  game meets one system a morning from day 3: the Book and Guide on day 3, friends on day 4, Skill tab on day 5,
-  Make tab on day 6, fishing on day 7, the mine on day 9, machines on day 10, animals on day 14, cooking on day 21,
-  and the valley at the first green. Each arrives early when play needs it. Days 1-2 show Bag, Goal and Opts only.
+  game meets one system a morning from day 4 (the days and rules since the tutorial review are in the section
+  below). Each arrives early when play needs it. Days 1-2 show Bag, Goal and Opts only.
   Old saves (no `reveal.on`), `?tutorial=0` games and sandbox scenarios see everything.
 - **The Guide:** the Book's Guide page (`data/guide.json`, `ui/panels/GuideTab.ts`), 12 rereadable pages that are
-  NEW until opened. Coach intros: `guideGold`, `guideCrops`, `skillsNew`, `skillsGuide`, `craftNew`. Each feature
+  NEW until opened. Coach intros: `guideGold`, `skillsNew`, `craftNew` (`guideCrops` and `skillsGuide` were cut). Each feature
   also has a morning note and a letter.
-- **Fiber:** 2 per weed, dry-grass bundles (3) in the wild, and sources named on craft rows and fund sheets.
+- **Fiber:** sources named on craft rows and fund sheets (the amounts changed in the tutorial review).
 - **Friendship:** hearts at 100/250/450/700/1000 points, two gifts a week, repeats worth half, quality counts. Every
   heart brings something: letters, perks, recipes villagers teach, scenes, Rosa's watering help. The sheet names
   the next heart's rewards. Story gates keep their old effort: the weir wants Finn at 1 heart.
@@ -408,6 +406,29 @@ bitmask stats (`jobs.taken`, one bit per job of the day) are save data: never re
 
 1. Watch play for which Guide pages are opened (an analytics event per page would tell).
 2. A coach intro for the crafting page's fiber line, if players still miss it.
+
+### Tutorial review: one progression (depth lane, `tutorial/review`, 2026-10-15)
+
+**Now:** the whole first weeks follow one order (DECISIONS: "Tutorial review"; the table in `docs/EXTENDING.md`
+section 13): the core loop on day 1, the town and the board's jobs on day 2, watering alone on day 3, the Guide on
+day 4, then one system a morning (fishing 6, crows 7, Clay 8, Make 9, mine 10, Skill 12, machines 15, animals 16,
+cooking 21; friends at the first gift). One new coach intro a day except need-driven ones (`need`), one letter a
+morning, at most four notes on the morning sheet, first-time tips one a day and never under a coach line or a sheet.
+Fiber: 1 a weed, rare dry grass (2), one weed a morning before Make, Mara at 12, Orin's gift 5. Audit:
+`agents/out/tutorial-audit.md` (git-ignored); probe outside the repo (`tutorial-audit/probes/audit.mjs`). Scenarios
+`reveal-*`, `fiber-*`; tests `tests/tutorial-review.test.ts`, `fiber.test.ts`, `reveal.test.ts`.
+
+**Open:**
+
+- The day-1 bin step's line flips between "Tap the lit button to open it." and "Tap Ship all produce." while the bin
+  opens (cosmetic).
+- A player who neither fishes nor gifts meets fishing on day 10 and Make on day 12 (the first green and the fixed
+  crows and Clay mornings come first); one who fishes meets both earlier.
+
+**Next:**
+
+1. Play the first two weeks on a phone in both languages and count what shows each morning.
+2. If the morning sheet's fourth note is often cut on busy days, show the board line on the board's sheet instead.
 
 ### One-thumb controls
 
