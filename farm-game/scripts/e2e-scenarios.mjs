@@ -83,12 +83,17 @@ async function smoke() {
 }
 
 /** Every scenario starts in the browser, in one page, switching without reloads. */
-async function everyScenario() {
+/** Every scenario starts, in two halves (even and odd places in the list) that run side by side. */
+const everyScenario = () => everyScenarioPart(0);
+const everyScenarioOdd = () => everyScenarioPart(1);
+async function everyScenarioPart(half) {
   const farm = await openScenario(browser, url, 'day1-fresh', {
     profile: PROFILE,
     query: '&tutorial=0',
   });
-  const names = (await farm.eval(() => window.__farm.dev.scenarios())).map((x) => x.name);
+  const names = (await farm.eval(() => window.__farm.dev.scenarios()))
+    .map((x) => x.name)
+    .filter((_, i) => i % 2 === half);
   const bad = [];
   for (const name of names) {
     try {
@@ -102,8 +107,17 @@ async function everyScenario() {
       bad.push(`${name}: ${e.message}`);
     }
   }
-  check(`all ${names.length} scenarios start in the game`, bad.length === 0, bad.join(' | '));
-  check('scenarios: no console errors', farm.errors.length === 0, farm.errors.join(' | '));
+  const part = half ? 'odd' : 'even';
+  check(
+    `all ${names.length} scenarios (${part} places) start in the game`,
+    bad.length === 0,
+    bad.join(' | '),
+  );
+  check(
+    `scenarios (${part} places): no console errors`,
+    farm.errors.length === 0,
+    farm.errors.join(' | '),
+  );
   await farm.close();
 }
 
@@ -1429,9 +1443,9 @@ async function towing() {
 // M7 on the town river: the probe bar for tow-first-log (under 20 s) and tow-east-lane (under 30 s), the long log's
 // two tugs and 3 timber, winter, the Marls' house taking its last timber, the homecoming, the lit window, and a save
 // from before M7.
+const timber = (s) => s.inventory.slots.reduce((n, x) => n + (x?.item === 'timber' ? x.qty : 0), 0);
+
 async function weirTow() {
-  const timber = (s) =>
-    s.inventory.slots.reduce((n, x) => n + (x?.item === 'timber' ? x.qty : 0), 0);
   for (const [scenario, hand, strategy, maxMs, extra] of [
     ['tow-first-log', 'right', 'wait', 20000, (r, s) => timber(s) === 1 && r.tugs >= 1],
     ['tow-first-log', 'left', 'action', 20000, (_r, s) => timber(s) === 1],
@@ -1459,6 +1473,11 @@ async function weirTow() {
     );
     await farm.close();
   }
+}
+
+// The river after the tows (split from weirTow so the two halves run side by side): winter's half speed, the Marls'
+// house, the homecoming, the lit window, and a save from before M7.
+async function weirTowAfter() {
   // winter: half speed (a middle-lane log takes twice as long to reach the spur)
   {
     const farm = await openScenario(browser, url, 'tow-winter', { profile: PROFILE });
@@ -1468,9 +1487,12 @@ async function weirTow() {
         const sc = window.__farm.game.scene.getScene('Town');
         return { y: sc.tow.metrics.logs[0].y, now: sc.tow.now };
       });
+    // sixty exact 16.7 ms steps of the dev loop: real frames came late and uneven under load, and the drift read
+    // 7.1 px/s when this block started beside seven others booting at once
     const a = await at();
-    await farm.frames(60);
+    await farm.eval(() => window.__farm.dev.loop.step(60));
     const b = await at();
+    await farm.eval(() => window.__farm.dev.loop.resume());
     const speed = ((b.y - a.y) / (b.now - a.now)) * 1000;
     check(
       'tow-winter: a log drifts at half speed (5 px/s)',
@@ -3395,6 +3417,10 @@ async function guidedDepth() {
     check(`${name}: no page errors`, farm.errors.length === 0, farm.errors.join(' | '));
     await farm.close();
   }
+}
+
+/** The stone walks of the guided depth (split from guidedDepth so they run beside it). */
+async function stoneWalks() {
   await stoneWalk(PROFILE);
   await stoneWalk('se');
 }
@@ -4240,6 +4266,7 @@ try {
     : [
         smoke,
         everyScenario,
+        everyScenarioOdd,
         mechanics,
         stages,
         ambient,
@@ -4254,11 +4281,13 @@ try {
         towing,
         towingLane,
         weirTow,
+        weirTowAfter,
         bait,
         fishEarly,
         paintPlot,
         townBoard,
         guidedDepth,
+        stoneWalks,
         qaDepth,
         lang,
         cloud,
@@ -4280,7 +4309,16 @@ try {
   // once the browser itself went down. A pool keeps the machine busy without starving any page.
   const PARALLEL = Math.max(1, Number(process.env.SCENARIO_PARALLEL ?? 8));
   // the longest blocks (50-70 s alone) go first, so none of them starts last and holds up the end
-  const LONG = ['weirTow', 'guidedDepth', 'towingLane', 'everyScenario', 'towing'];
+  const LONG = [
+    'weirTow',
+    'towingLane',
+    'towing',
+    'guidedDepth',
+    'everyScenario',
+    'everyScenarioOdd',
+    'stoneWalks',
+    'weirTowAfter',
+  ];
   const rank = (b) => (LONG.includes(b.name) ? LONG.indexOf(b.name) : LONG.length);
   const queue = blocks
     .filter((b) => !only || only.includes(b.name))
