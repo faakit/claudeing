@@ -57,8 +57,9 @@ cd farm-game
 npm ci
 npm run dev              # http://localhost:5173 (add ?scenario=lab for the developer map)
 npm run build            # static site in dist/
-npm run verify:fast      # lint, types, unit tests, build, smoke e2e (about 30 s)
-npm run verify           # every suite: e2e, phones, controls, feel, onboarding, perf (about 6 min)
+npm run verify:fast      # lint, types, unit tests, build, smoke e2e (about 17 s)
+npm run verify:changed   # the same, plus the browser suites your changes touch
+npm run verify           # every suite: e2e, phones, controls, feel, onboarding, perf (about 11 min)
 ```
 
 The browser suites need a Chromium: on Windows, set `CHROMIUM_PATH` (see

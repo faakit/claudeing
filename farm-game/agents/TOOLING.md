@@ -30,22 +30,52 @@ suites at the same time must use different ports (see below).
 
 ## Gates
 
-| Command                 | What it runs                                                                                                                                                                                                                    | Time    |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `npm run verify:fast`   | lint, typecheck, unit tests, build, bundle check, lab-map check, scenario smoke e2e (one phone)                                                                                                                                 | ~30 s   |
-| `npm run verify`        | Phase 1: lint, types, unit, build, then e2e, mobile, scenarios, onboarding (five phones at once) and the bundle check side by side. Phase 2: controls, alone. Phase 3: feel, alone. Phase 4: perf at 1x, 4x and 6x CPU throttle | ~6 min  |
-| `npm run verify:serial` | the same suites one after another, for a busy machine                                                                                                                                                                           | ~15 min |
+| Command                  | What it runs                                                                                                                                                                                                              | Time        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `npm run verify:fast`    | lint, typecheck, unit tests, build, bundle check, lab-map check, scenario smoke e2e (one phone)                                                                                                                           | ~17 s       |
+| `npm run verify:changed` | `verify:fast`, plus the browser suites (and `e2e:scenarios` blocks) that cover the files changed since the merge base with the branch's upstream (`--base=<ref>` or `VERIFY_BASE` to pick another)                        | 16 s-11 min |
+| `npm run verify`         | everything: lint, types, unit, build, bundle, lab-map, then e2e, mobile, analytics, scenarios and onboarding within the page budget; then controls alone; then feel and joystick; then perf at 1x, 4x and 6x CPU throttle | ~11 min     |
+| `npm run verify:serial`  | the same suites one after another                                                                                                                                                                                         | ~17 min     |
 
-Run `verify:fast` for each commit and `verify` before a merge. Run `verify` in the background, because it takes
-longer than a foreground command may. On a loaded machine, use `VERIFY_JOBS=2`, `VERIFY_SUITE_PARALLEL=2`,
-`E2E_CONTROLS_PARALLEL=2` or `SCENARIO_PARALLEL=4` (`e2e:scenarios` runs 8 blocks at once by default). A suite marked `retryAlone` that fails beside others runs once more alone, and the
-summary then says FLAKY.
+When to use which:
+
+- **While you work:** `verify:fast`, or the one suite you are changing (`BLOCKS=towing npm run e2e:scenarios`).
+- **Each commit:** `verify:changed`. It prints which file selected which suite. Docs, `agents/` notes and unit tests
+  alone need no browser; a scenario fixture runs only the blocks that open it; game code runs `e2e` and
+  `e2e:scenarios` plus whatever its area touches (input: controls, joystick, feel, onboarding; drawing: perf and feel;
+  the guided start: onboarding); `package.json`, the Vite config, `public/` and `thumb-lib` run everything. The map
+  is `scripts/lib/select.mjs` (tested in `tests/select.test.ts`); add a rule there when a new area gets its own suite.
+- **Before a merge, and before a release:** `verify`, in the background (it takes longer than a foreground command
+  may). A release also runs `npm run bench:thumb` when the controls changed (it is not in `verify`).
+
+Load: `verify` starts one static server of `dist/` and one shared Chromium for every suite that runs beside others
+(each suite opens its own browser contexts in it). The timing suites (controls, feel, joystick, perf) and any retry
+get a Chromium of their own and run with nothing else beside them. At most `VERIFY_PAGES` game pages are open at once
+across all suites (default: half the logical cores, 2 to 8) and at most `VERIFY_JOBS` jobs (a quarter of the cores, 1
+to 4); a suite's own parallelism is cut to fit the page budget. An onboarding page counts as half a page (the bot
+mostly reads and waits), so all six players run beside a scenario pool of five. On a laptop the defaults are 4 pages
+and 2 jobs; on the owner's 16-thread desktop 8 and 4. Raise them on a big idle machine
+(`VERIFY_PAGES=12 VERIFY_JOBS=6`), lower them when the machine is busy (`VERIFY_PAGES=2`). The suites' own knobs still win:
+`SCENARIO_PARALLEL`, `E2E_ONBOARDING_PARALLEL`, `E2E_CONTROLS_PARALLEL`. `VERIFY_SHARED_BROWSER=0` gives every suite
+its own Chromium again. A suite marked `retryAlone` that fails beside others runs once more alone, and the summary
+then says FLAKY.
 
 Single suites: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run e2e`, `e2e:mobile`,
-`e2e:scenarios`, `e2e:controls`, `e2e:feel`, `e2e:onboarding`, `e2e:analytics`, `perf`, `check:bundle`, `format:check`. The browser
-suites run against `dist/`, so run `npm run build` first.
+`e2e:scenarios`, `e2e:controls`, `e2e:feel`, `e2e:onboarding`, `e2e:analytics`, `perf`, `check:bundle`,
+`format:check`. The browser suites run against `dist/`, so run `npm run build` first. Lint and typecheck keep caches
+in `node_modules/.cache/` (a warm run takes about 1.5 s each).
+
+Measuring: `npm run measure -- <label> -- node scripts/e2e.mjs` prints the wall time and the CPU of the command's
+whole process tree, split by process kind (renderer, GPU, browser, node), and appends it to
+`agents/out/test-speed.jsonl`. `BLOCK_TIMES=1 npm run e2e:scenarios` prints each block's time. The numbers behind the
+current gates are in `agents/out/test-speed.md` (scratch, not tracked) and `DECISIONS.md` ("Faster, lighter tests").
 
 ## Ports
+
+`verify` serves every suite from one port: `VERIFY_PORT`, else `E2E_PORT`, else 4173. A second worktree running
+`verify` at the same time needs only `E2E_PORT=4400 npm run verify`.
+
+Run alone, each suite starts its own server (in process, no extra process) on its own port:
 
 | What                                         | Default                                 | Env to change it                                            |
 | -------------------------------------------- | --------------------------------------- | ----------------------------------------------------------- |
@@ -54,18 +84,12 @@ suites run against `dist/`, so run `npm run build` first.
 | `e2e:controls`, `e2e:onboarding`, `e2e:feel` | `E2E_PORT` + 10, + 20, + 25             | `E2E_CONTROLS_PORT`, `E2E_ONBOARDING_PORT`, `E2E_FEEL_PORT` |
 | `e2e:scenarios`                              | 4830 (`E2E_PORT` + 30 when that is set) | `E2E_SCENARIOS_PORT`                                        |
 | `e2e:mobile`                                 | 4178                                    | `E2E_MOBILE_PORT`                                           |
-| `perf` (1x; 4x and 6x at + 41, + 42)         | 4174                                    | `PERF_PORT`                                                 |
+| `perf`                                       | 4174                                    | `PERF_PORT`                                                 |
 | `bench:thumb`                                | 5180                                    | `BENCH_PORT`                                                |
-| `e2e:analytics`                              | `E2E_PORT` + 35                         | `E2E_ANALYTICS_PORT`                                        |
+| `e2e:analytics`, `e2e:joystick`              | `E2E_PORT` + 35                         | `E2E_ANALYTICS_PORT`, `E2E_JOYSTICK_PORT`                   |
 
-A second worktree running suites at the same time moves all of them at once:
-
-```sh
-E2E_PORT=4400 E2E_MOBILE_PORT=4450 PERF_PORT=4460 BENCH_PORT=5280 npm run verify
-```
-
-That puts e2e on 4400, controls, onboarding, feel and scenarios on 4410-4430, mobile on 4450, and perf on 4460,
-4501 and 4502.
+Any suite also takes `URL=http://localhost:5173/` to run against a server already running (a dev server), and
+`VITE_PREVIEW=1` to serve with `vite preview` as before.
 
 ## The dev sandbox
 

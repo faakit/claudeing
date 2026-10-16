@@ -46,8 +46,9 @@ transitionDone / idle / frames / event`.
    run (valid references, walkable tiles, a state that survives a save round trip). A map change that blocks a
    scenario's tile fails there with the scenario's name: move the scenario, do not delete it.
 
-`npm run verify:fast` (lint, typecheck, unit tests, build, bundle check, scenario smoke e2e; about 30 seconds) is
-the inner-loop gate; `npm run verify` (everything, suites in parallel) gates every commit.
+`npm run verify:fast` (lint, typecheck, unit tests, build, bundle check, scenario smoke e2e; about 17 seconds) is
+the inner-loop gate; `npm run verify:changed` (the same plus the browser suites and scenario blocks that cover the
+files you changed) gates a commit; `npm run verify` (everything) gates a merge. See `agents/TOOLING.md`.
 
 ## 1. What does Action do? (action handlers)
 

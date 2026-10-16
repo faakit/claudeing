@@ -2585,3 +2585,43 @@ day for free, and 30 or more on the morning Make opened. Now (critic ruling 6):
 - Count lines are number-neutral: "Sol! Regue as plantas. Secas: {dry}." (was "faltam 1"). The late chain reads
   "Está tarde! Volte e vá dormir." ("...Volte para casa e durma." is 188 px), then "Está tarde! Entre e vá para a
   cama." (was the clipped "Tarde! Porta, e depois a cama.").
+
+## Faster, lighter tests (devtools lane, devtools/fast-tests, 2026-10-16)
+
+Owner: "can you improve our testing to make it faster?", and "the PC is suffering" (a full verify ran about 70
+Chromium processes). Measured first, one suite at a time on the owner's desktop; the numbers are in
+`agents/out/test-speed.md` (scratch) and the tool is `npm run measure` (`scripts/measure.mjs`).
+
+- **Three gates, by when they run.** `verify:fast` while working (16-17 s, was 33 s), `verify:changed` for each
+  commit (the fast gate plus only the browser suites and scenario blocks the changed files touch; 16 s for docs, 38 s
+  for a scenario fixture), `verify` before a merge or a release (11 min, was 9-16). The file-to-suite map is
+  `scripts/lib/select.mjs`, deliberately coarse: unknown files (dependencies, config, `public/`, the shared test
+  libraries) select everything, and a scenario fixture selects the blocks that open it, helpers resolved to their
+  callers. `verify:changed` never replaces `verify` before a merge.
+- **A page budget instead of everything at once.** `VERIFY_PAGES` (half the logical cores, 2 to 8) caps the game
+  pages open across suites and `VERIFY_JOBS` (a quarter, 1 to 4) the jobs; suites' pools are cut to fit. Measured: a
+  page costs about 0.4 core whatever the pool size, so a smaller pool only trades wall time for peak load (scenario
+  pool 4: 357 s, pool 8: 308 s, same CPU). An onboarding page counts half (six took 1.2 cores). The full run peaked at
+  31 Chromium processes and 3.3 cores on average. The timing suites keep their quiet phases.
+- **One server and one Chromium.** Every suite now serves through thumb-lib's `startPreview` and starts Chromium
+  through its `launch`: verify runs one static server (`scripts/lib/static-server.mjs`: files in memory, no gzip;
+  `vite preview` gzipped every file for every new context, about 100 CPU-s in the scenario suite) and one shared
+  Chromium (`BROWSER_WS`) for the suites that run beside others. Timing suites and retries get their own Chromium.
+  `VITE_PREVIEW=1` and `VERIFY_SHARED_BROWSER=0` bring the old way back.
+- **Game state, not the clock, for setup waits.** e2e had 43 fixed waits (about 47 s): it waits on the dev API now
+  (55.6 s -> 16.6 s), and so does mobile (24.9 s -> 9.5 s). The winter drift check steps the dev loop 60 exact frames.
+  A scene started from a script is "ready" one frame before its first update unlocks input: e2e waits for that too.
+- **Real time stays where it is the thing measured.** Not moved to the dev clock: the onboarding bot (no debug
+  shortcuts; its seconds are the pacing gate), the tows (reaction frames, the critic's per-run bar), painted rows,
+  stone walks, controls gestures, feel, joystick and perf. Onboarding instead runs all six players at once
+  (223 s -> 113 s). No gate was loosened: perf budgets, onboarding bars, door timings and every check are as before.
+- **Unit tests:** the year-long sims were one 24 s file; they are six files (`tests/sim*.test.ts`, the bot in
+  `tests/sim-bot.ts`) and vitest runs them side by side (26.7 s -> 13-14 s). Lint and typecheck keep caches in
+  `node_modules/.cache/`. The forks pool stays: threads was 2 s faster for twice the CPU.
+- **Found on the way:** e2e was red on integration/qa (the shop's Home tab clicks hit fixed points the taller sheet
+  header had moved); it taps the live price buttons now. The scenario blocks that set the suite's end (weirTow,
+  guidedDepth, everyScenario, paintPlot) are split in two and start first.
+- **Reliability:** every changed suite ran three times alone with no failure (the scenario file after its last change
+  four more times, one beside e2e). In the one full verify, e2e lost a tap on a just-rebuilt project sheet beside the
+  other suites (FLAKY, green alone); that step now waits for the first gift and an idle sheet, and passed three times
+  alone and three times beside the scenario suite.

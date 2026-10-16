@@ -49,11 +49,12 @@ A feature is done when:
 5. its scenarios load in `tests/dev-scenarios.test.ts` (every scenario does, migrated across save versions);
 6. it has unit tests for every new system (including failure paths and "nothing changes on a refusal"), its text
    is in both languages (`t()` and `src/i18n/*.json`, data text in `src/i18n/data/pt-BR/`; `docs/EXTENDING.md`
-   section 12) and fits (`fitText` / `measureText`), it has a balance bound in the sims (`tests/sim*.test.ts`, the bot in `tests/sim-bot.ts`) if it earns money, and it has a
-   goal or a tutorial `intro` step if it needs teaching;
+   section 12) and fits (`fitText` / `measureText`), it has a balance bound in the sims (`tests/sim*.test.ts`, the
+   bot in `tests/sim-bot.ts`) if it earns money, and it has a goal or a tutorial `intro` step if it needs teaching;
 7. `npm run verify` is green.
 
-Use `npm run verify:fast` (about 30 s) in the inner loop.
+Use `npm run verify:fast` (about 17 s) in the inner loop and `npm run verify:changed` before each commit (the suites
+your change touches); `npm run verify` before a merge. See [TOOLING.md](TOOLING.md#gates).
 
 ## Budgets
 
