@@ -335,11 +335,19 @@ try {
     const c = document.querySelector('canvas').getBoundingClientRect();
     return { x: c.x, y: c.y, k: c.width / 200 };
   });
+  // a click, then the frames that handle it and any sheet rebuilt or sliding after it
   const pClick = async (lx, ly) => {
     await pp.mouse.click(pBox.x + lx * pBox.k, pBox.y + ly * pBox.k);
-    await pw.frames(4);
+    await pw.frames(3);
+    await pw.idle(3);
   };
   await pClick(99, 150 + 168 + 11); // +1,000g
+  // the first gift is in (the page rebuilt its buttons) before the second tap
+  await pp
+    .waitForFunction(() => window.__farm.getState().stats['fund.canopy'] >= 1000, null, {
+      timeout: 5000,
+    })
+    .catch(() => undefined);
   await pClick(99, 150 + 168 + 11); // +1,000g (gives only the 200 still needed)
   let ps = await pState();
   check(
