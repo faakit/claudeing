@@ -3684,11 +3684,14 @@ async function fishEarly() {
  * QA "segurar o toque pra mexer automatico com multiplos tiles": a painted serpentine in a plot, drawn sloppily with
  * real touches (the first row dragged two tiles past the plot's edge, the second turned a tile early, the last run
  * on), works exactly the 3x3 beside the farmer's column: rows stop at the plot edge, steps are one tile, rows after
- * the first are whole. Scenario paint-plot-3x3; both hands, i13 and SE.
+ * the first are whole. Scenario paint-plot-3x3; both hands, i13 (paintPlot) and SE (paintPlotSe, a block of its own
+ * so the two run side by side: each phone takes about 40 s of real touches and work).
  */
-async function paintPlot() {
+const paintPlot = () => paintPlotOn('i13');
+const paintPlotSe = () => paintPlotOn('se');
+async function paintPlotOn(...profiles) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  for (const profile of ['i13', 'se'])
+  for (const profile of profiles)
     for (const hand of ['right', 'left']) {
       const farm = await openScenario(browser, url, 'paint-plot-3x3', { profile, hand });
       const right = hand === 'right';
@@ -4285,6 +4288,7 @@ try {
         bait,
         fishEarly,
         paintPlot,
+        paintPlotSe,
         townBoard,
         guidedDepth,
         stoneWalks,
@@ -4308,15 +4312,18 @@ try {
   // or wait on an Action result failed in turn (mechanics, actions, spring, weir, bait, fish-cast, tow-spike), and
   // once the browser itself went down. A pool keeps the machine busy without starving any page.
   const PARALLEL = Math.max(1, Number(process.env.SCENARIO_PARALLEL ?? 8));
-  // the longest blocks (50-70 s alone) go first, so none of them starts last and holds up the end
+  // the longest blocks (30-70 s alone, measured with BLOCK_TIMES=1) go first, longest first, so none of them starts
+  // last and holds up the end
   const LONG = [
     'weirTow',
     'towingLane',
-    'towing',
-    'guidedDepth',
-    'everyScenario',
-    'everyScenarioOdd',
     'stoneWalks',
+    'paintPlot',
+    'paintPlotSe',
+    'towing',
+    'everyScenarioOdd',
+    'everyScenario',
+    'guidedDepth',
     'weirTowAfter',
   ];
   const rank = (b) => (LONG.includes(b.name) ? LONG.indexOf(b.name) : LONG.length);
