@@ -1,42 +1,15 @@
-// End-to-end smoke test: builds nothing, serves dist/ with `vite preview`, and plays the core
+// End-to-end smoke test: builds nothing, serves dist/ (scripts/lib/static-server.mjs), and plays the core
 // loop in headless Chromium, in a portrait phone viewport. Run `npm run build` first. Needs a Chromium: set CHROMIUM_PATH
 // (defaults to the Playwright cache location used in CI/cloud sandboxes).
-import { spawn } from 'node:child_process';
-import { chromium } from 'playwright-core';
+import { launch, liveTargets, startPreview } from './thumb-lib.mjs';
 
 // Override with E2E_PORT when another checkout runs its checks at the same time.
 const PORT = Number(process.env.E2E_PORT ?? 4173);
-const URL_ = `http://localhost:${PORT}/?debug&tutorial=0`; // a bare new game (no guided start)
-const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
+const URL_SUFFIX = '?debug&tutorial=0'; // a bare new game (no guided start)
 
-const server = spawn(
-  process.execPath,
-  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
-  {
-    stdio: 'ignore',
-  },
-);
-// With strictPort a busy port makes the preview exit: fail instead of testing someone else's server.
-server.on('exit', (code) => {
-  if (code) {
-    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
-    process.exit(1);
-  }
-});
-const stop = () => server.kill();
-process.on('exit', stop);
-
-async function waitForServer() {
-  for (let i = 0; i < 50; i++) {
-    try {
-      if ((await fetch(URL_)).ok) return;
-    } catch {
-      /* not up yet */
-    }
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  throw new Error('preview server did not start');
-}
+// The preview of dist/ on PORT, or the one server a verify run shares (env URL).
+const { url: SERVED, stop } = await startPreview(PORT);
+const URL_ = `${SERVED}${URL_SUFFIX}`;
 
 let failed = 0;
 const check = (name, ok, detail = '') => {
@@ -44,8 +17,43 @@ const check = (name, ok, detail = '') => {
   if (!ok) failed++;
 };
 
-await waitForServer();
-const browser = await chromium.launch({ executablePath: CHROMIUM });
+/**
+ * The dev API's awaits on a page (window.__farm.dev.wait, loaded by ?debug): every step waits on game state, never on
+ * a fixed delay. `title()` resolves once the title takes input; `scene(key)` once that map and the UI run with no
+ * fade, door or flow in progress; `panel(name)` once that sheet has slid in; `idle()` once nothing moves.
+ */
+const devWaits = (page) => {
+  const w = (name, ...args) =>
+    page.evaluate(([n, a]) => window.__farm.dev.wait[n](...a), [name, args]);
+  return {
+    title: async () => {
+      await page.waitForFunction(
+        () =>
+          window.__farm?.dev?.readyState === 'ready' &&
+          window.__farm.game.scene.getScene('Title')?.sys.isActive() &&
+          window.__farm.game.scene.getScene('Title').buttons?.length > 0,
+        null,
+        { timeout: 30000 },
+      );
+      await w('frames', 10);
+    },
+    // ...and the new map has run its first update, which unlocks input (a scene started straight from a script is
+    // "ready" before that, and a key pressed then is ignored)
+    scene: async (key) => {
+      await w('sceneReady', key);
+      await page.waitForFunction(
+        (k) => window.__farm.game.scene.getScene(k)?.inputLocked === false,
+        key,
+        { timeout: 10000 },
+      );
+    },
+    panel: (name) => w('panelOpen', name),
+    idle: (n = 3) => w('idle', n),
+    frames: (n = 1) => w('frames', n),
+  };
+};
+
+const browser = await launch();
 try {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
   // Count AudioContexts the page creates: Phaser must not make its own next to ours.
@@ -88,19 +96,20 @@ try {
       },
       [tx, ty, facing],
     );
+  const wait = devWaits(page);
   const tap = async (key, ms = 120) => {
     await page.keyboard.down(key);
     await page.waitForTimeout(ms);
     await page.keyboard.up(key);
-    await page.waitForTimeout(300);
+    await wait.idle();
   };
 
   // 1. Title -> New Game (Enter)
   await page.goto(URL_);
-  await page.waitForTimeout(1500);
+  await wait.title();
   check('title scene shows first', (await sceneKeys()).includes('Title'));
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(1500);
+  await wait.scene('Farm');
   check('new game enters the farm with the UI overlay', (await sceneKeys()).join() === 'Farm,UI');
 
   // 2. Till, plant, water on the farm
@@ -132,9 +141,9 @@ try {
 
   // 3. Sleep: confirm dialog + summary both driven by Enter
   await page.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
-  await page.waitForTimeout(3200);
+  await wait.panel('summary');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(2200);
+  await wait.scene('House');
   s = await state();
   check(
     'sleeping advances the day and grows the crop',
@@ -160,7 +169,16 @@ try {
     .catch(() => undefined);
   await page.keyboard.press('Digit1');
   await tap('Space'); // hoe swing: a recorded take, not the synth
-  await page.waitForTimeout(2500);
+  await page
+    .waitForFunction(
+      () => {
+        const a = window.__farm.audio.debugInfo();
+        return a.sfx?.played > 0 && a.music?.sampled > 0;
+      },
+      null,
+      { timeout: 10000 },
+    )
+    .catch(() => undefined);
   const au = await page.evaluate(() => ({
     ...window.__farm.audio.debugInfo(),
     contexts: window.__audioContexts,
@@ -184,11 +202,11 @@ try {
 
   // 4. Persistence: reload -> Continue restores the same world
   await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
-  await page.waitForTimeout(600);
+  await wait.frames(5); // the pagehide save is written
   await page.reload();
-  await page.waitForTimeout(1800);
+  await wait.title();
   await page.keyboard.press('Enter'); // primary button is Continue now
-  await page.waitForTimeout(1500);
+  await wait.scene('House');
   const after = await state();
   check(
     'continue restores day, farm and map',
@@ -209,7 +227,7 @@ try {
   await page.keyboard.up('ArrowLeft'); // ...whose key-up the page never sees
   await page.waitForTimeout(300); // let any in-flight frame finish
   const t0 = (await state()).time;
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(1000); // a second of real time: the clock must not move
   const t1 = (await state()).time;
   check(
     'backgrounded app: clock frozen',
@@ -221,7 +239,16 @@ try {
     await page.evaluate(() => window.__farm.inputHub.direction === null),
   );
   await setHidden(false);
-  await page.waitForTimeout(3000);
+  await page
+    .waitForFunction(
+      (t1) => {
+        const t = window.__farm.getState().time;
+        return t.minutes > t1.minutes || t.acc > t1.acc;
+      },
+      t1,
+      { timeout: 10000 },
+    )
+    .catch(() => undefined);
   const t2 = (await state()).time;
   check(
     'foregrounded app: clock runs again',
@@ -258,14 +285,15 @@ try {
   // its perk (a 4th request) shows on the next morning's board.
   const pCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
   const pp = await pCtx.newPage();
+  const pw = devWaits(pp);
   const pErrors = [];
   pp.on('console', (m) => m.type() === 'error' && pErrors.push(m.text()));
   pp.on('pageerror', (e) => pErrors.push(String(e)));
   const pState = () => pp.evaluate(() => JSON.parse(JSON.stringify(window.__farm.getState())));
   await pp.goto(URL_);
-  await pp.waitForTimeout(1500);
+  await pw.title();
   await pp.keyboard.press('Enter');
-  await pp.waitForTimeout(1500);
+  await pw.scene('Farm');
   await pp.evaluate(() => {
     window.__toasts = [];
     window.__farm.gameEvents.on('toast', (t) => window.__toasts.push(t.text));
@@ -285,11 +313,11 @@ try {
       .find((x) => x.scene.key === 'Farm')
       .scene.start('Town');
   });
-  await pp.waitForTimeout(1500);
+  await pw.scene('Town');
   await pp.keyboard.down('KeyE');
   await pp.waitForTimeout(120);
   await pp.keyboard.up('KeyE');
-  await pp.waitForTimeout(500);
+  await pw.panel('board').catch(() => undefined);
   const ui = (fn, arg) => pp.evaluate(fn, arg);
   check(
     'Interact at the town board opens the requests board',
@@ -302,14 +330,14 @@ try {
     panel.id = 'canopy';
     panel.rebuild();
   });
-  await pp.waitForTimeout(400);
+  await pw.panel('projects');
   const pBox = await pp.evaluate(() => {
     const c = document.querySelector('canvas').getBoundingClientRect();
     return { x: c.x, y: c.y, k: c.width / 200 };
   });
   const pClick = async (lx, ly) => {
     await pp.mouse.click(pBox.x + lx * pBox.k, pBox.y + ly * pBox.k);
-    await pp.waitForTimeout(250);
+    await pw.frames(4);
   };
   await pClick(99, 150 + 168 + 11); // +1,000g
   await pClick(99, 150 + 168 + 11); // +1,000g (gives only the 200 still needed)
@@ -334,9 +362,15 @@ try {
     shop.tab = 'home';
     shop.rebuild();
   });
-  await pp.waitForTimeout(400);
-  await pClick(163, 150 + 44 + 11); // Bigger Bag 1,500g
-  await pClick(170, 150 + 96 + 11); // Wood Fence 15g (below the Bigger Bag and Kitchen rows)
+  await pw.panel('shop');
+  // by the price on the live button, not a fixed point: the sheet's rows moved when its header grew
+  const pPrice = async (label) => {
+    const hit = (await liveTargets(pp)).find((t) => t.text === label);
+    if (hit) await pClick(hit.cx, hit.cy);
+    return !!hit;
+  };
+  await pPrice('1,500¤'); // Bigger Bag
+  await pPrice('15¤'); // Wood Fence (the first decoration row, below the Bigger Bag and Kitchen)
   ps = await pState();
   check(
     'Home tab: the Bigger Bag adds 8 slots and a fence can be bought',
@@ -364,7 +398,7 @@ try {
     s.inventory.slots[7] = { item: 'tomato', qty: 5 };
     window.__farm.game.scene.getScene('UI').jar.openFor(301);
   });
-  await pp.waitForTimeout(400);
+  await pw.panel('jar');
   await pClick(138, 150 + 34 + 11); // All
   ps = await pState();
   check(
@@ -374,9 +408,9 @@ try {
   );
   await ui(() => (window.__farm.getState().placed.town = []));
   await pp.evaluate(() => window.__farm.gameEvents.emit('sleepRequest', { passedOut: false }));
-  await pp.waitForTimeout(3200);
+  await pw.panel('summary');
   await pp.keyboard.press('Enter');
-  await pp.waitForTimeout(1500);
+  await pw.scene('House');
   ps = await pState();
   check(
     'the Board Canopy posts a 4th request the next morning',
@@ -406,11 +440,11 @@ try {
       .find((x) => x.scene.key === 'House')
       .scene.start('Farm');
   });
-  await pp.waitForTimeout(1500);
+  await pw.scene('Farm');
   await pp.keyboard.down('KeyE');
   await pp.waitForTimeout(120);
   await pp.keyboard.up('KeyE');
-  await pp.waitForTimeout(500);
+  await pw.panel('mail').catch(() => undefined);
   check(
     'Interact at the mailbox opens the mail sheet',
     await ui(() => window.__farm.game.scene.getScene('UI').panels.get('mail').isOpen),
@@ -432,7 +466,7 @@ try {
     s.time.minutes = 900;
     f.gameEvents.emit('openPanel', { type: 'board' });
   });
-  await pp.waitForTimeout(500);
+  await pw.panel('board').catch(() => undefined);
   ps = await pState();
   check(
     'after 2 PM the rival has taken one of the requests',
@@ -511,9 +545,9 @@ try {
     s.special = null; // only the request wants potatoes here
     f.gameEvents.emit('openPanel', { type: 'bin' });
   });
-  await pp.waitForTimeout(400);
+  await pw.panel('bin');
   const tappedShip = await tapLabel('Ship all produce');
-  await pp.waitForTimeout(200);
+  await pw.frames(4);
   // Critique 10, F1: a toast raised while a sheet is open is drawn above the sheet (depth over 210).
   const keptDepth = await ui(() => {
     const has = (o) =>
@@ -555,7 +589,7 @@ try {
     f.game.scene.getScene('UI').panels.get('menu').openTab('goals');
     return was;
   });
-  await pp.waitForTimeout(400);
+  await pw.panel('menu');
   texts = await uiTexts();
   check(
     'Goal tab: day-3 jobs say double pay; the goal after a legend is current, the legend is also open',
@@ -592,12 +626,12 @@ try {
       .find((x) => x.scene.key !== 'UI')
       .scene.restart();
   });
-  await pp.waitForTimeout(1500);
+  await pw.scene('Farm');
   await pp.keyboard.press('Digit7');
   await pp.keyboard.down('Space');
   await pp.waitForTimeout(120);
   await pp.keyboard.up('Space');
-  await pp.waitForTimeout(400);
+  await pw.idle();
   ps = await pState();
   check(
     'in the greenhouse a summer seed grows in winter',
@@ -613,7 +647,7 @@ try {
     s.inventory.slots[8] = { item: 'pumpkin', qty: 2 };
     f.gameEvents.emit('openPanel', { type: 'festival' });
   });
-  await pp.waitForTimeout(500);
+  await pw.panel('festival');
   const moneyBefore = (await pState()).money;
   await pClick(172, 150 + 58 + 11); // Add (first row)
   await pClick(100, 150 + 194 + 12); // Present the basket
@@ -642,7 +676,7 @@ try {
     s.money = 50000;
     f.gameEvents.emit('openPanel', { type: 'projects' });
   });
-  await pp.waitForTimeout(400);
+  await pw.panel('projects');
   await pClick(172, 150 + 34 + 11); // Open on the first row: the statue leads the list (critique 6, F1)
   const opened = await ui(() => window.__farm.game.scene.getScene('UI').panels.get('projects').id);
   check(
@@ -671,7 +705,7 @@ try {
       .find((x) => x.scene.key !== 'UI')
       .scene.start('House');
   });
-  await pp.waitForTimeout(1500);
+  await pw.scene('House');
   check(
     'a season won on the board shows a trophy in the house',
     await ui(() =>
@@ -691,7 +725,7 @@ try {
     s.stats['fest.fishing_derby.y1.fish0'] = 13; // a catfish
     f.gameEvents.emit('openPanel', { type: 'festival' });
   });
-  await pp.waitForTimeout(500);
+  await pw.panel('festival');
   await pClick(100, 150 + 194 + 12); // Hand in my catches
   ps = await pState();
   const asked = !ps.stats['fest.fishing_derby.y1'];
@@ -713,7 +747,7 @@ try {
     s.money = 5000;
     f.gameEvents.emit('openPanel', { type: 'cart' });
   });
-  await pp.waitForTimeout(400);
+  await pw.panel('cart');
   const moneyCart = (await pState()).money;
   await pClick(172, 400 - 196 + 34 + 11); // Buy on the first row
   ps = await pState();
@@ -733,20 +767,24 @@ try {
     hasTouch: true,
   });
   const off = await offCtx.newPage();
+  const ow = devWaits(off);
   const offErrors = [];
   off.on('console', (m) => m.type() === 'error' && offErrors.push(m.text()));
   off.on('pageerror', (e) => offErrors.push(String(e)));
   await off.goto(URL_);
-  await off.waitForTimeout(1500);
+  await ow.title();
   const swReady = await off.evaluate(async () => {
     const reg = await navigator.serviceWorker.ready;
     return Boolean(reg.active);
   });
   check('service worker installs and activates', swReady);
-  await off.waitForTimeout(800); // precache finishes during install; give claim() a moment
+  // precache finishes during install; then claim() hands the page to the worker
+  await off
+    .waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 10000 })
+    .catch(() => undefined);
   await offCtx.setOffline(true);
   await off.reload();
-  await off.waitForTimeout(1800);
+  await ow.title().catch(() => undefined);
   const offScenes = await off.evaluate(() =>
     window.__farm?.game.scene
       .getScenes(true)
@@ -759,7 +797,7 @@ try {
     String(offScenes),
   );
   await off.keyboard.press('Enter');
-  await off.waitForTimeout(1800);
+  await ow.scene('Farm').catch(() => undefined);
   const offGame = await off.evaluate(() =>
     window.__farm?.game.scene
       .getScenes(true)

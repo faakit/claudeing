@@ -1,12 +1,9 @@
 // Phone-profile checks (portrait, one-handed) on the production build: safe-area insets (notch), canvas fit, real
 // touch-target sizes, and the landscape "turn upright" overlay. Run `npm run build` first.
-import { spawn } from 'node:child_process';
-import { chromium } from 'playwright-core';
+import { launch, startPreview } from './thumb-lib.mjs';
 
 // Override with E2E_MOBILE_PORT when another checkout runs its checks at the same time.
 const PORT = Number(process.env.E2E_MOBILE_PORT ?? 4178);
-const BASE = `http://localhost:${PORT}/`;
-const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 const MIN_TOUCH_CSS = 44;
 
 // CSS-pixel viewport, device pixel ratio, and notch/home-indicator safe-area insets (portrait).
@@ -49,29 +46,8 @@ const PROFILES = [
   },
 ];
 
-const server = spawn(
-  process.execPath,
-  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
-  {
-    stdio: 'ignore',
-  },
-);
-// With strictPort a busy port makes the preview exit: fail instead of testing someone else's server.
-server.on('exit', (code) => {
-  if (code) {
-    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
-    process.exit(1);
-  }
-});
-process.on('exit', () => server.kill());
-for (let i = 0; i < 50; i++) {
-  try {
-    if ((await fetch(BASE)).ok) break;
-  } catch {
-    /* wait */
-  }
-  await new Promise((r) => setTimeout(r, 200));
-}
+// The preview of dist/ on PORT, or the one server a verify run shares (env URL).
+const { url: BASE, stop } = await startPreview(PORT);
 
 let failed = 0;
 const check = (name, ok, detail = '') => {
@@ -79,7 +55,7 @@ const check = (name, ok, detail = '') => {
   if (!ok) failed++;
 };
 
-const browser = await chromium.launch({ executablePath: CHROMIUM });
+const browser = await launch();
 const rows = [];
 try {
   for (const p of PROFILES) {
@@ -111,9 +87,17 @@ try {
     const cdp = await ctx.newCDPSession(page);
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: p.insets });
     await page.goto(`${BASE}?debug&tutorial=0`); // a bare new game (no guided start)
-    await page.waitForTimeout(1500);
+    // the title takes input, then the farm and the UI are up (dev waits, ?debug: never a fixed delay)
+    await page.waitForFunction(
+      () =>
+        window.__farm?.dev?.readyState === 'ready' &&
+        window.__farm.game.scene.getScene('Title')?.buttons?.length > 0,
+      null,
+      { timeout: 30000 },
+    );
+    await page.evaluate(() => window.__farm.dev.wait.frames(10));
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(1800);
+    await page.evaluate(() => window.__farm.dev.wait.sceneReady('Farm'));
 
     const m = await page.evaluate(() => {
       const c = document.querySelector('canvas').getBoundingClientRect();
@@ -212,7 +196,15 @@ try {
   });
   const page = await ctx.newPage();
   await page.goto(BASE);
-  await page.waitForTimeout(800);
+  await page
+    .waitForFunction(
+      () => getComputedStyle(document.querySelector('#rotate')).display !== 'none',
+      null,
+      {
+        timeout: 5000,
+      },
+    )
+    .catch(() => undefined);
   check(
     'landscape phone shows the turn-upright overlay',
     await page.evaluate(
@@ -222,7 +214,7 @@ try {
   await ctx.close();
 } finally {
   await browser.close();
-  server.kill();
+  stop();
 }
 console.table(rows);
 console.log(failed === 0 ? '\nMOBILE E2E OK' : `\nMOBILE E2E FAILED (${failed})`);
