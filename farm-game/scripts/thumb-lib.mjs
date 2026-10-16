@@ -6,6 +6,7 @@
 import { spawn } from 'node:child_process';
 import { cpSync, rmSync } from 'node:fs';
 import { chromium } from 'playwright-core';
+import { serveStatic } from './lib/static-server.mjs';
 
 export const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
 
@@ -93,17 +94,28 @@ export function zoneAt(p, hand, x, y) {
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Start `vite preview` on a port (strict), resolve when it answers. Returns { url, stop }. With `snapshot`, it
- * serves a private copy of dist/ so a long benchmark is not disturbed by a rebuild meanwhile.
+ * Serve the build on a port (strict), resolve when it answers. Returns { url, stop }. It is a plain in-process
+ * static server (scripts/lib/static-server.mjs: no gzip, files kept in memory); VITE_PREVIEW=1 runs `vite preview`
+ * instead, as the suites did before. With `snapshot`, it serves a private copy of dist/ so a long benchmark is not
+ * disturbed by a rebuild meanwhile. With env URL set (a server already running: the one `npm run verify` shares
+ * between its suites, or a dev server), it starts nothing and returns that URL.
  */
 export async function startPreview(port, { snapshot = false, from = 'dist' } = {}) {
-  const args = ['node_modules/vite/bin/vite.js', 'preview', '--port', String(port), '--strictPort'];
+  if (process.env.URL && !snapshot)
+    return { url: process.env.URL.replace(/\/?$/, '/'), stop: () => {} };
+  let dir = from;
   if (snapshot) {
-    const dir = `.bench-dist/${port}`;
+    dir = `.bench-dist/${port}`;
     rmSync(dir, { recursive: true, force: true });
     cpSync(from, dir, { recursive: true });
-    args.push('--outDir', dir);
   }
+  if (!process.env.VITE_PREVIEW)
+    return serveStatic(port, dir).catch((e) => {
+      console.error(String(e.message ?? e));
+      process.exit(1);
+    });
+  const args = ['node_modules/vite/bin/vite.js', 'preview', '--port', String(port), '--strictPort'];
+  if (dir !== 'dist') args.push('--outDir', dir);
   const server = spawn(process.execPath, args, { stdio: 'ignore' });
   server.on('exit', (code) => {
     if (code) {
@@ -125,7 +137,15 @@ export async function startPreview(port, { snapshot = false, from = 'dist' } = {
   return { url, stop };
 }
 
-export const launch = () => chromium.launch({ executablePath: CHROMIUM });
+/**
+ * A Chromium (CHROMIUM_PATH). With env BROWSER_WS (the one browser `npm run verify` shares between its suites), it
+ * connects to that browser instead of starting one: each suite still gets its own contexts, and close() only
+ * disconnects.
+ */
+export const launch = () =>
+  process.env.BROWSER_WS
+    ? chromium.connect(process.env.BROWSER_WS)
+    : chromium.launch({ executablePath: CHROMIUM });
 
 /** New game on a phone profile with touch; returns page, CDP session and the canvas geometry. */
 export async function openGame(

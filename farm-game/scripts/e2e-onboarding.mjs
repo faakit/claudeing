@@ -504,7 +504,8 @@ if (which.includes('se') && hands.includes('left'))
   combos.push([PROFILES.find((x) => x.id === 'se'), 'left', 'never']);
 // One player who wanders off and opens the Menu mid-step (recovery).
 if (which.includes('i13') && hands.includes('right')) combos.push([PROFILES[0], 'right', true]);
-const PARALLEL = Number(process.env.E2E_ONBOARDING_PARALLEL ?? 3);
+// All six runs at once by default: the bot mostly reads and waits (six pages kept about 1.2 cores busy).
+const PARALLEL = Number(process.env.E2E_ONBOARDING_PARALLEL ?? 6);
 try {
   const queue = [...combos];
   await Promise.all(

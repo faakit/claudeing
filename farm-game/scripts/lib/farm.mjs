@@ -3,7 +3,7 @@
 // critic reviews instead of copying setup code. Built on scripts/thumb-lib.mjs (profiles, real CDP touches).
 //
 //   import { serve, launch, openScenario, checker } from './lib/farm.mjs';
-//   const { url, stop } = await serve(4830);            // vite preview of dist/ (or URL=http://localhost:5195/)
+//   const { url, stop } = await serve(4830);            // a static server of dist/ (or URL=http://localhost:5195/)
 //   const browser = await launch();
 //   const farm = await openScenario(browser, url, 'ripe-plot', { profile: 'i13', hand: 'right' });
 //   const act = await farm.act();                       // press Action, resolve on the action's result
@@ -37,7 +37,7 @@ export function profile(id) {
 }
 
 /**
- * Serve the game: `vite preview` of dist/ on `port` (run `npm run build` first), or the running server at
+ * Serve the game: a static server of dist/ on `port` (run `npm run build` first), or the running server at
  * env URL (e.g. the dev server, URL=http://localhost:5195/). Returns { url, stop }.
  */
 export async function serve(port) {

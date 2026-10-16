@@ -2,33 +2,14 @@
 // rests centred, a map change completes inside its wipe and takes input while it opens, a sheet frees the world
 // on the frame it starts to close, Calm mode drops the slide, and nothing visible is drawn at a fractional scale
 // or a free rotation. Headless Chromium on an iPhone 13 profile; software GL.
-import { spawn } from 'node:child_process';
-import { chromium } from 'playwright-core';
+import { launch, startPreview } from './thumb-lib.mjs';
 
 const PORT = Number(process.env.E2E_FEEL_PORT ?? Number(process.env.E2E_PORT ?? 4173) + 25);
-const URL_ = `http://localhost:${PORT}/?debug&tutorial=0`;
-const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
+const URL_SUFFIX = '?debug&tutorial=0';
 
-const server = spawn(
-  process.execPath,
-  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
-  { stdio: 'ignore' },
-);
-server.on('exit', (code) => {
-  if (code) {
-    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
-    process.exit(1);
-  }
-});
-process.on('exit', () => server.kill());
-for (let i = 0; i < 50; i++) {
-  try {
-    if ((await fetch(URL_)).ok) break;
-  } catch {
-    /* not up yet */
-  }
-  await new Promise((r) => setTimeout(r, 200));
-}
+// The preview of dist/ on PORT, or the one server a verify run shares (env URL).
+const { url: SERVED, stop } = await startPreview(PORT);
+const URL_ = `${SERVED}${URL_SUFFIX}`;
 
 let failed = 0;
 const check = (name, ok, detail = '') => {
@@ -36,7 +17,7 @@ const check = (name, ok, detail = '') => {
   if (!ok) failed++;
 };
 
-const browser = await chromium.launch({ executablePath: CHROMIUM });
+const browser = await launch();
 try {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -317,7 +298,7 @@ try {
   check('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
   await browser.close();
-  server.kill();
+  stop();
 }
 if (failed) {
   console.error(`E2E FEEL FAILED (${failed})`);

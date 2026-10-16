@@ -2,43 +2,21 @@
 // Headless Chromium renders with software GL, so absolute numbers are pessimistic; use this to
 // compare before/after a change and to catch regressions, not as a device benchmark.
 // Usage: npm run build && node scripts/perf.mjs [throttle=1,4,6]
-import { spawn } from 'node:child_process';
-import { chromium } from 'playwright-core';
+import { launch, startPreview } from './thumb-lib.mjs';
 import { frameStats, pacingInit, pacingRow, startPacing, stopPacing } from './pacing-lib.mjs';
 
 // Override with PERF_PORT when another checkout runs its checks at the same time.
 const PORT = Number(process.env.PERF_PORT ?? 4174);
-const URL_ = `http://localhost:${PORT}/?debug&tutorial=0`; // a bare new game (no guided start)
-const CHROMIUM = process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
+const URL_SUFFIX = '?debug&tutorial=0'; // a bare new game (no guided start)
 const throttles = (process.argv[2] ?? '1,4,6').split(',').map(Number);
 // Which parts to run: `all` (default), `budget` (draws and JS per frame) or `pacing` (per-frame times in play).
 const PARTS = process.argv[3] ?? 'all';
 const runBudget = PARTS === 'all' || PARTS === 'budget';
 const runPacingPart = PARTS === 'all' || PARTS === 'pacing';
 
-const server = spawn(
-  process.execPath,
-  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
-  {
-    stdio: 'ignore',
-  },
-);
-// With strictPort a busy port makes the preview exit: fail instead of testing someone else's server.
-server.on('exit', (code) => {
-  if (code) {
-    console.error(`preview server exited (${code}): is port ${PORT} taken?`);
-    process.exit(1);
-  }
-});
-process.on('exit', () => server.kill());
-for (let i = 0; i < 50; i++) {
-  try {
-    if ((await fetch(URL_)).ok) break;
-  } catch {
-    /* wait */
-  }
-  await new Promise((r) => setTimeout(r, 200));
-}
+// The preview of dist/ on PORT, or the one server a verify run shares (env URL).
+const { url: SERVED, stop } = await startPreview(PORT);
+const URL_ = `${SERVED}${URL_SUFFIX}`;
 
 /**
  * Frame pacing in real play, one fresh game per throttle level: walking, a tap's walk, a painted row being worked,
@@ -265,7 +243,7 @@ async function runPacing(rate) {
   await ctx.close();
 }
 
-const browser = await chromium.launch({ executablePath: CHROMIUM });
+const browser = await launch();
 const results = [];
 /** Sound effects played from files during the storm scene, per throttle level. */
 const sfxCounts = [];
@@ -522,7 +500,7 @@ try {
   for (const rate of runPacingPart ? throttles : []) await runPacing(rate);
 } finally {
   await browser.close();
-  server.kill();
+  stop();
 }
 if (results.length) console.table(results);
 if (pacing.length) {
