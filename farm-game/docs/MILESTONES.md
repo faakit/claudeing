@@ -18,7 +18,7 @@ Rules for every milestone:
 - **Save:** one version bump in the whole plan (M4), with a migration test. Version numbers are taken in merge order
   (the living-villagers plan's memory also wants a bump).
 - **Goals:** nothing inserted into `goals.json`; places live in THE VALLEY section. Goal texts may change, stats not.
-- **Balance:** `tests/sim.test.ts` medians stay in their bands; each new income source gets a guard-rail test
+- **Balance:** `tests/sim*.test.ts` medians stay in their bands; each new income source gets a guard-rail test
   (WORLD-PLAN 9.2).
 - **No outside dependency:** nothing here waits on the living-villagers plan; its systems enrich later (section E).
 
